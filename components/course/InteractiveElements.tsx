@@ -5,11 +5,12 @@ import { CheckCircle2, XCircle, AlertTriangle, Lightbulb, TrendingUp, Target } f
 import { cn } from '@/lib/utils'
 
 // Quick Knowledge Check Component
-export function QuickCheck({ question, options, correctAnswer, explanation }: {
+export function QuickCheck({ question, options, correctAnswer, explanation, hideTitle = false }: {
   question: string
   options: string[]
   correctAnswer: number
   explanation: string
+  hideTitle?: boolean
 }) {
   const [selected, setSelected] = useState<number | null>(null)
   const [revealed, setRevealed] = useState(false)
@@ -22,11 +23,15 @@ export function QuickCheck({ question, options, correctAnswer, explanation }: {
   return (
     <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl border-2 border-purple-200 p-6 my-6">
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center flex-shrink-0">
-          <Target className="w-5 h-5 text-white" strokeWidth={2} />
-        </div>
-        <div>
-          <h4 className="text-sm font-bold text-purple-900 uppercase tracking-wide mb-1">Quick Knowledge Check</h4>
+        {!hideTitle && (
+          <div className="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center flex-shrink-0">
+            <Target className="w-5 h-5 text-white" strokeWidth={2} />
+          </div>
+        )}
+        <div className="flex-1">
+          {!hideTitle && (
+            <h4 className="text-sm font-bold text-purple-900 uppercase tracking-wide mb-1">Quick Knowledge Check</h4>
+          )}
           <p className="text-sm font-semibold text-slate-900">{question}</p>
         </div>
       </div>
