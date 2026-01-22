@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify the magic token
-    const tokenData = verifyMagicToken(token)
+    const tokenData = await verifyMagicToken(token)
 
     if (!tokenData) {
       return NextResponse.json(
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user data
-    const user = findUserById(tokenData.userId)
+    const user = await findUserById(tokenData.userId)
 
     if (!user) {
       return NextResponse.json(
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Update last login
-    updateLastLogin(user.id)
+    await updateLastLogin(user.id)
 
     // Return user data (without sensitive info)
     return NextResponse.json({

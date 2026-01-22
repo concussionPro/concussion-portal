@@ -1,7 +1,6 @@
-// Magic Link Authentication - Passwordless login system
+// Magic Link Authentication - Passwordless login system using Vercel Blob
 import crypto from 'crypto'
-import fs from 'fs'
-import path from 'path'
+import { put, head } from '@vercel/blob'
 
 export interface MagicToken {
   token: string
@@ -11,44 +10,47 @@ export interface MagicToken {
   used: boolean
 }
 
-const TOKENS_FILE = path.join(process.cwd(), 'data', 'magic-tokens.json')
+const TOKENS_BLOB_PATH = 'magic-tokens.json'
 
-// Ensure data directory exists
-function ensureDataDir() {
-  const dataDir = path.join(process.cwd(), 'data')
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true })
-  }
-}
-
-// Load all tokens
-function loadTokens(): MagicToken[] {
+// Load all tokens from Blob storage
+async function loadTokens(): Promise<MagicToken[]> {
   try {
-    ensureDataDir()
-    if (!fs.existsSync(TOKENS_FILE)) {
-      fs.writeFileSync(TOKENS_FILE, JSON.stringify([]), 'utf8')
+    // Check if blob exists
+    const blobExists = await head(TOKENS_BLOB_PATH).catch(() => null)
+
+    if (!blobExists) {
       return []
     }
-    const data = fs.readFileSync(TOKENS_FILE, 'utf8')
-    return JSON.parse(data)
+
+    // Fetch the blob content
+    const response = await fetch(blobExists.url)
+    const tokens = await response.json()
+    return tokens
   } catch (error) {
     console.error('Error loading tokens:', error)
     return []
   }
 }
 
-// Save tokens
-function saveTokens(tokens: MagicToken[]) {
-  ensureDataDir()
-  fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2), 'utf8')
+// Save tokens to Blob storage
+async function saveTokens(tokens: MagicToken[]) {
+  try {
+    await put(TOKENS_BLOB_PATH, JSON.stringify(tokens, null, 2), {
+      access: 'public',
+      contentType: 'application/json',
+    })
+  } catch (error) {
+    console.error('Error saving tokens:', error)
+    throw error
+  }
 }
 
 // Generate magic link for user
-export function generateMagicLink(userId: string, email: string, baseUrl: string): string {
+export async function generateMagicLink(userId: string, email: string, baseUrl: string): Promise<string> {
   const token = crypto.randomBytes(32).toString('hex')
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
-  const tokens = loadTokens()
+  const tokens = await loadTokens()
 
   // Clean up expired tokens
   const validTokens = tokens.filter(t => new Date(t.expiresAt) > new Date())
@@ -62,14 +64,14 @@ export function generateMagicLink(userId: string, email: string, baseUrl: string
     used: false,
   })
 
-  saveTokens(validTokens)
+  await saveTokens(validTokens)
 
   return `${baseUrl}/auth/verify?token=${token}`
 }
 
 // Verify magic link token
-export function verifyMagicToken(token: string): { userId: string; email: string } | null {
-  const tokens = loadTokens()
+export async function verifyMagicToken(token: string): Promise<{ userId: string; email: string } | null> {
+  const tokens = await loadTokens()
   const magicToken = tokens.find(t => t.token === token)
 
   if (!magicToken) {
@@ -88,7 +90,7 @@ export function verifyMagicToken(token: string): { userId: string; email: string
 
   // Mark as used
   magicToken.used = true
-  saveTokens(tokens)
+  await saveTokens(tokens)
 
   return {
     userId: magicToken.userId,
@@ -97,8 +99,8 @@ export function verifyMagicToken(token: string): { userId: string; email: string
 }
 
 // Clean up old tokens (run periodically)
-export function cleanupExpiredTokens() {
-  const tokens = loadTokens()
+export async function cleanupExpiredTokens() {
+  const tokens = await loadTokens()
   const validTokens = tokens.filter(t => new Date(t.expiresAt) > new Date())
-  saveTokens(validTokens)
+  await saveTokens(validTokens)
 }

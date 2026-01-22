@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const accessLevel = amount >= 1000 ? 'full-course' : 'online-only'
 
     // Create user
-    const user = createUser({
+    const user = await createUser({
       email,
       name,
       accessLevel,
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // Generate magic link
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const magicLink = generateMagicLink(user.id, user.email, baseUrl)
+    const magicLink = await generateMagicLink(user.id, user.email, baseUrl)
 
     // Send welcome email
     const emailSent = await sendWelcomeEmail({

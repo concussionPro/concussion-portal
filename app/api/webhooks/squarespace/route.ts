@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if user already exists (upgrade scenario)
-      const existingUser = findUserByEmail(customerEmail)
+      const existingUser = await findUserByEmail(customerEmail)
 
       if (existingUser) {
         console.log(`👤 Existing user: ${customerEmail}`)
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
         // Generate new magic link
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-        const magicLink = generateMagicLink(existingUser.id, existingUser.email, baseUrl)
+        const magicLink = await generateMagicLink(existingUser.id, existingUser.email, baseUrl)
 
         // Send welcome/upgrade email
         await sendWelcomeEmail({
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       // Create new user
       console.log(`✨ Creating new user: ${customerEmail} (${accessLevel})`)
 
-      const newUser = createUser({
+      const newUser = await createUser({
         email: customerEmail,
         name: customerName,
         accessLevel,
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
       // Generate magic link
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-      const magicLink = generateMagicLink(newUser.id, newUser.email, baseUrl)
+      const magicLink = await generateMagicLink(newUser.id, newUser.email, baseUrl)
 
       // Send welcome email
       const emailSent = await sendWelcomeEmail({
