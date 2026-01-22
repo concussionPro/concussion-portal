@@ -116,31 +116,45 @@ export default function PreviewPage() {
               so you can preview the breadth of content—from acute assessment to return-to-activity protocols. Full course includes <span className="font-bold text-amber-300">100+ sections</span> with
               interactive quizzes, clinical flowcharts, and downloadable resources.
             </p>
-            <div className="flex flex-col items-center justify-center gap-4 mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col items-center justify-center gap-6 mb-6 w-full max-w-4xl mx-auto">
+              {/* Primary CTA Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full">
                 <a
                   href={CONFIG.SHOP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group px-12 py-5 bg-white text-[#5b9aa6] rounded-2xl text-xl font-black hover:bg-amber-400 hover:text-white transition-all shadow-2xl flex items-center gap-3 hover:scale-105 transform"
+                  className="group relative px-8 py-6 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-2xl font-bold text-center hover:from-amber-500 hover:to-amber-600 transition-all shadow-2xl hover:shadow-amber-500/50 hover:scale-[1.02] transform"
                 >
-                  <Sparkles className="w-6 h-6 group-hover:animate-spin" />
-                  Full Course + Workshop - $1,190
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  <div className="flex flex-col items-center gap-2">
+                    <Sparkles className="w-6 h-6 group-hover:animate-spin" />
+                    <div className="text-lg font-black">Full Course + Workshop</div>
+                    <div className="text-3xl font-black">$1,190</div>
+                    <div className="text-sm opacity-90 flex items-center gap-1">
+                      Get Started <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
                 </a>
                 <a
                   href={CONFIG.SHOP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-10 py-5 bg-white/90 text-[#5b9aa6] rounded-2xl text-lg font-bold hover:bg-white transition-all shadow-xl flex items-center gap-2"
+                  className="group px-8 py-6 bg-white text-[#5b9aa6] rounded-2xl font-bold text-center hover:bg-blue-50 transition-all shadow-xl border-2 border-white hover:border-blue-100 hover:scale-[1.02] transform"
                 >
-                  Online Only - $497
-                  <ArrowRight className="w-5 h-5" />
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-6 h-6" /> {/* Spacer for alignment */}
+                    <div className="text-lg font-black">Online Only</div>
+                    <div className="text-3xl font-black">$497</div>
+                    <div className="text-sm opacity-80 flex items-center gap-1">
+                      Get Started <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
                 </a>
               </div>
+
+              {/* Secondary CTA */}
               <button
                 onClick={() => router.push('/assessment')}
-                className="px-8 py-3 bg-white/10 backdrop-blur-sm border-2 border-white text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition-all flex items-center gap-2"
+                className="px-8 py-3 bg-white/10 backdrop-blur-sm border-2 border-white/50 text-white rounded-xl font-semibold hover:bg-white/20 hover:border-white transition-all flex items-center gap-2"
               >
                 <PlayCircle className="w-5 h-5" />
                 Or Try Free Knowledge Test
@@ -366,32 +380,45 @@ export default function PreviewPage() {
             >
               View full workshop agenda →
             </button>
-            <div className="flex flex-col items-center justify-center gap-4 mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col items-center justify-center gap-5 mb-6 w-full max-w-3xl mx-auto">
+              {/* Primary CTA Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 <a
                   href={CONFIG.SHOP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-10 py-4 bg-white text-[#5b9aa6] rounded-xl text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center gap-2"
+                  className="group px-8 py-5 bg-white text-[#5b9aa6] rounded-xl font-bold text-center hover:bg-blue-50 transition-all shadow-xl hover:scale-[1.02] transform"
                 >
-                  Full Course + Workshop - $1,190
-                  <ArrowRight className="w-5 h-5" />
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="text-base font-black">Full Course + Workshop</div>
+                    <div className="text-2xl font-black">$1,190</div>
+                    <div className="text-sm opacity-70 flex items-center gap-1 mt-1">
+                      Enroll Now <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
                 </a>
                 <a
                   href={CONFIG.SHOP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-8 py-4 bg-white/90 text-[#5b9aa6] rounded-xl text-lg font-bold hover:bg-white transition-all shadow-xl flex items-center gap-2"
+                  className="group px-8 py-5 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold text-center border-2 border-white/30 hover:bg-white/20 hover:border-white/50 transition-all hover:scale-[1.02] transform"
                 >
-                  Online Only - $497
-                  <ArrowRight className="w-5 h-5" />
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="text-base font-black">Online Only</div>
+                    <div className="text-2xl font-black">$497</div>
+                    <div className="text-sm opacity-90 flex items-center gap-1 mt-1">
+                      Enroll Now <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
                 </a>
               </div>
+
+              {/* Secondary CTA */}
               <button
                 onClick={() => router.push('/assessment')}
-                className="px-8 py-3 bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition-all flex items-center gap-2"
+                className="px-8 py-3 bg-white/5 backdrop-blur-sm border border-white/30 text-white rounded-lg font-medium hover:bg-white/10 hover:border-white/50 transition-all flex items-center gap-2 text-sm"
               >
-                <PlayCircle className="w-5 h-5" />
+                <PlayCircle className="w-4 h-4" />
                 Try Free Knowledge Test
               </button>
             </div>
