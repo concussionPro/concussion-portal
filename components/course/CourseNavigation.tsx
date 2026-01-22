@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { getAllModules } from '@/data/modules'
 import { useProgress } from '@/contexts/ProgressContext'
-import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, PlayCircle, Brain } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, PlayCircle, Brain, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -14,8 +14,7 @@ export function CourseNavigation() {
   const modules = getAllModules()
   const { isModuleComplete, getModuleProgress } = useProgress()
   const [expandedModules, setExpandedModules] = useState<number[]>([currentModuleId])
-
-  // Import useRouter from next/navigation is already done
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const toggleModule = (moduleId: number) => {
     setExpandedModules(prev =>
@@ -27,10 +26,43 @@ export function CourseNavigation() {
 
   const navigateToSection = (moduleId: number, sectionId?: string) => {
     router.push(`/modules/${moduleId}${sectionId ? `#${sectionId}` : ''}`)
+    setMobileMenuOpen(false)
+  }
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false)
   }
 
   return (
-    <div className="w-80 h-screen sticky top-0 bg-white border-r border-slate-200 flex flex-col">
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 bg-white p-3 rounded-xl shadow-lg"
+        aria-label="Toggle navigation"
+      >
+        {mobileMenuOpen ? (
+          <X className="w-6 h-6 text-slate-800" />
+        ) : (
+          <Menu className="w-6 h-6 text-slate-800" />
+        )}
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* Navigation Sidebar */}
+      <div className={cn(
+        "h-screen bg-white border-r border-slate-200 flex flex-col z-40 transition-transform duration-300",
+        "w-full sm:w-96 md:w-80",
+        "fixed md:sticky md:top-0",
+        mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}>
       {/* Header */}
       <div className="p-6 border-b border-slate-200">
         <div className="flex items-center gap-2 mb-3">
@@ -196,5 +228,6 @@ export function CourseNavigation() {
         </div>
       </div>
     </div>
+    </>
   )
 }

@@ -6,6 +6,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { FileText, Download, Lock, CheckCircle2, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { CONFIG } from '@/lib/config'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { trackDownload, trackShopClick, trackEvent } from '@/lib/analytics'
 
 interface ToolkitResource {
   id: string
@@ -129,15 +131,31 @@ const categoryLabels = {
 
 export default function ClinicalToolkitPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [isPaidUser, setIsPaidUser] = useState(false)
+  const [accessLevel, setAccessLevel] = useState<'online-only' | 'full-course' | null>(null)
+  const [loading, setLoading] = useState(true)
+  useAnalytics() // Track page views
 
   useEffect(() => {
-    // Check if user is authenticated (including demo users)
-    const user = getCurrentUser()
-    const paidStatus = localStorage.getItem('isPaidUser')
+    // Check session-based access level
+    async function checkAccess() {
+      try {
+        const response = await fetch('/api/auth/session', {
+          credentials: 'include',
+        })
 
-    // If logged in as demo or authenticated user, OR if they have paid status, grant access
-    setIsPaidUser(!!user || paidStatus === 'true')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user) {
+            setAccessLevel(data.user.accessLevel)
+          }
+        }
+      } catch (error) {
+        console.error('Access check failed:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkAccess()
   }, [])
 
   const filteredResources = selectedCategory === 'all'
@@ -145,11 +163,15 @@ export default function ClinicalToolkitPage() {
     : toolkitResources.filter(r => r.category === selectedCategory)
 
   const handleDownload = (resource: ToolkitResource) => {
-    if (!resource.isFree && !isPaidUser) {
-      // Redirect to shop for non-paid users trying to access premium resources
+    // Both online-only and full-course users have access to toolkit
+    if (!accessLevel) {
+      trackShopClick('toolkit-locked-resource', { resourceId: resource.id, resourceTitle: resource.title })
       window.location.href = CONFIG.SHOP_URL
       return
     }
+
+    // Track download
+    trackDownload(resource.fileName, resource.category, { resourceId: resource.id, resourceTitle: resource.title })
 
     // Download file via API endpoint
     window.open(`/api/download?file=${encodeURIComponent(resource.fileName)}`, '_blank')
@@ -159,8 +181,8 @@ export default function ClinicalToolkitPage() {
     <ProtectedRoute>
       <div className="flex min-h-screen bg-slate-50">
         <Sidebar />
-        <main className="ml-64 flex-1">
-          <div className="px-8 py-6 max-w-[1400px]">
+        <main className="ml-0 md:ml-64 flex-1">
+          <div className="px-4 sm:px-6 md:px-8 py-6 max-w-[1400px]">
 
             {/* Header */}
             <div className="mb-8">
@@ -178,7 +200,8 @@ export default function ClinicalToolkitPage() {
                 </div>
               </div>
 
-              {!isPaidUser && (
+              {/* Unauthenticated users - prompt to enroll */}
+              {!accessLevel && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
                   <Star className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                   <div>
@@ -186,16 +209,54 @@ export default function ClinicalToolkitPage() {
                       Unlock Full Toolkit Access
                     </p>
                     <p className="text-sm text-amber-700 mt-1">
-                      SCAT6 and SCOAT6 are available for preview. Enroll in the full course to unlock all clinical resources, templates, and flowcharts.
+                      Enroll to access all clinical resources, templates, flowcharts, and assessment tools.
                     </p>
                     <a
                       href={CONFIG.SHOP_URL}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => trackShopClick('toolkit-unauthenticated-banner')}
                       className="inline-block mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
                     >
-                      Enroll in Full Course - $1,190
+                      Enroll Now
                     </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Online-only users - upgrade to full course */}
+              {accessLevel === 'online-only' && (
+                <div className="bg-gradient-to-r from-blue-50 to-teal-50 border-2 border-blue-200 rounded-xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                      <Star className="w-6 h-6 text-white" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">
+                        Upgrade to Full Course + Practical Skills Training
+                      </h3>
+                      <p className="text-sm text-slate-700 mb-4">
+                        You have full access to all online modules and clinical toolkit. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA CPD certificate (8 online + 6 in-person).
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <a
+                          href={CONFIG.SHOP_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => trackShopClick('toolkit-online-only-upgrade', { accessLevel: 'online-only' })}
+                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
+                        >
+                          Upgrade Now - Add Workshop for $693
+                        </a>
+                        <a
+                          href="/in-person"
+                          onClick={() => trackEvent('view_workshop_details', { source: 'toolkit-upgrade-banner' })}
+                          className="px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-all text-center"
+                        >
+                          View Workshop Details
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -231,7 +292,9 @@ export default function ClinicalToolkitPage() {
             {/* Resources Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredResources.map((resource) => {
-                const isLocked = !resource.isFree && !isPaidUser
+                // All resources are locked for unauthenticated users
+                // Both online-only and full-course users get full access
+                const isLocked = !accessLevel
 
                 return (
                   <div

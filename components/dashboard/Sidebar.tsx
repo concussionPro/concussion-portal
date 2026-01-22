@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -19,6 +19,7 @@ const navItems: Array<{
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
   { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit' },
   { icon: Library, label: 'Reference Repository', href: '/references' },
+  { icon: BookMarked, label: 'Complete Reference', href: '/complete-reference' },
   { icon: Settings, label: 'Settings', href: '/settings' },
 ]
 
@@ -28,6 +29,7 @@ export function Sidebar() {
   const router = useRouter()
   const completedModules = getTotalCompletedModules()
   const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     setUser(getCurrentUser())
@@ -38,8 +40,39 @@ export function Sidebar() {
     router.push('/')
   }
 
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false)
+  }
+
   return (
-    <div className="fixed left-0 top-0 h-screen w-64 glass border-r border-border p-6 flex flex-col">
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 glass p-3 rounded-xl"
+        aria-label="Toggle menu"
+      >
+        {mobileMenuOpen ? (
+          <X className="w-6 h-6 text-foreground" />
+        ) : (
+          <Menu className="w-6 h-6 text-foreground" />
+        )}
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={cn(
+        "fixed left-0 top-0 h-screen w-64 glass border-r border-border p-6 flex flex-col z-40 transition-transform duration-300",
+        "md:translate-x-0",
+        mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
       {/* Logo */}
       <Link href="/" className="mb-8 group cursor-pointer">
         <div className="flex items-center gap-3 mb-2">
@@ -79,6 +112,7 @@ export function Sidebar() {
             <Link
               key={item.label}
               href={item.href}
+              onClick={closeMobileMenu}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-lg transition-all',
                 'glass-hover',
@@ -125,5 +159,6 @@ export function Sidebar() {
         </div>
       </div>
     </div>
+    </>
   )
 }

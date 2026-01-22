@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile, access } from 'fs/promises'
 import { join } from 'path'
 import { cookies } from 'next/headers'
+import { verifySessionToken } from '@/lib/jwt-session'
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,23 +32,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 })
     }
 
-    // Authentication check for non-free files
-    const freeFiles = ['SCAT6_Fillable.pdf', 'SCOAT6_Fillable.pdf']
-    if (!freeFiles.includes(fileName)) {
-      // Check authentication from cookies/headers
-      const cookieStore = await cookies()
-      const currentUser = cookieStore.get('current_user')
+    // Authentication check - ALL files now require authentication
+    // Check session JWT token
+    const cookieStore = await cookies()
+    const sessionToken = cookieStore.get('session')?.value
 
-      if (!currentUser) {
-        return NextResponse.json(
-          { error: 'Authentication required. Please log in to download premium resources.' },
-          { status: 401 }
-        )
-      }
+    if (!sessionToken) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please log in to download resources.' },
+        { status: 401 }
+      )
+    }
 
-      // Verify user has paid access (check localStorage would be done client-side)
-      // For server-side, we trust that authenticated users have access
-      // In production, this should check against a database subscription status
+    // Verify JWT session token
+    const sessionData = verifySessionToken(sessionToken)
+    if (!sessionData) {
+      return NextResponse.json(
+        { error: 'Invalid or expired session. Please log in again.' },
+        { status: 401 }
+      )
+    }
+
+    // Verify user has paid access (online-only or full-course)
+    if (!sessionData.accessLevel || (sessionData.accessLevel !== 'online-only' && sessionData.accessLevel !== 'full-course')) {
+      return NextResponse.json(
+        { error: 'Premium access required to download resources.' },
+        { status: 403 }
+      )
     }
 
     // Try multiple possible file paths

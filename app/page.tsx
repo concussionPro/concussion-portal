@@ -8,10 +8,13 @@ import CountdownTimer from '@/components/CountdownTimer'
 import SpotsRemaining from '@/components/SpotsRemaining'
 import { PricingOptions } from '@/components/PricingOptions'
 import { useState } from 'react'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { trackShopClick } from '@/lib/analytics'
 
 export default function HomePage() {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  useAnalytics() // Track page views
 
   return (
     <>
@@ -72,6 +75,7 @@ export default function HomePage() {
                 href={CONFIG.SHOP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackShopClick('nav-desktop')}
                 className="btn-primary px-6 py-2 rounded-full text-sm inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-accent"
                 aria-label="Enroll in course"
               >

@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { BookOpen, Lock, Search, ExternalLink, FileText, Award } from 'lucide-react'
+import { BookOpen, Lock, Search, ExternalLink, FileText, Award, Star } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
+import { trackShopClick, trackEvent, trackSearch } from '@/lib/analytics'
 
 interface Reference {
   id: string
@@ -1238,7 +1240,12 @@ const categories = [
   { id: 'Return to Activity', label: 'Return to Activity', count: references.filter(r => r.category === 'Return to Activity').length },
 ]
 
-export function ReferenceRepository({ isPaidUser }: { isPaidUser: boolean }) {
+interface ReferenceRepositoryProps {
+  accessLevel: 'online-only' | 'full-course' | null
+  loading: boolean
+}
+
+export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositoryProps) {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -1251,10 +1258,21 @@ export function ReferenceRepository({ isPaidUser }: { isPaidUser: boolean }) {
     return matchesCategory && matchesSearch
   })
 
+  // Track search when user types
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    if (query.length > 2) {
+      trackSearch(query, filteredReferences.length)
+    }
+  }
+
+  // Both online-only and full-course users have access
+  const hasAccess = !!accessLevel
+
   return (
     <div className="glass rounded-2xl p-6 relative overflow-hidden">
-      {/* Lock overlay for non-paid users */}
-      {!isPaidUser && (
+      {/* Lock overlay for unauthenticated users */}
+      {!hasAccess && !loading && (
         <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="text-center p-8 max-w-md">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -1289,6 +1307,43 @@ export function ReferenceRepository({ isPaidUser }: { isPaidUser: boolean }) {
         </div>
       </div>
 
+      {/* Online-only users - upgrade to full course */}
+      {accessLevel === 'online-only' && (
+        <div className="bg-gradient-to-r from-blue-50 to-teal-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+              <Star className="w-6 h-6 text-white" strokeWidth={2} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">
+                Upgrade to Full Course + Practical Skills Training
+              </h3>
+              <p className="text-sm text-slate-700 mb-4">
+                You have full access to all online modules and research references. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA CPD certificate (8 online + 6 in-person).
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a
+                  href={CONFIG.SHOP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackShopClick('references-online-only-upgrade', { accessLevel: 'online-only' })}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
+                >
+                  Upgrade Now - Add Workshop for $693
+                </a>
+                <a
+                  href="/in-person"
+                  onClick={() => trackEvent('view_workshop_details', { source: 'references-upgrade-banner' })}
+                  className="px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-all text-center"
+                >
+                  View Workshop Details
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search */}
       <div className="mb-6">
         <div className="relative">
@@ -1296,10 +1351,10 @@ export function ReferenceRepository({ isPaidUser }: { isPaidUser: boolean }) {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search by author, title, or journal..."
             className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:border-teal-500 focus:outline-none text-sm"
-            disabled={!isPaidUser}
+            disabled={!hasAccess}
           />
         </div>
       </div>
@@ -1310,12 +1365,12 @@ export function ReferenceRepository({ isPaidUser }: { isPaidUser: boolean }) {
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            disabled={!isPaidUser}
+            disabled={!hasAccess}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
               selectedCategory === cat.id
                 ? 'bg-teal-600 text-white shadow-md'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            } ${!isPaidUser ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${!hasAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {cat.label} <span className="ml-1 opacity-75">({cat.count})</span>
           </button>
@@ -1351,6 +1406,7 @@ export function ReferenceRepository({ isPaidUser }: { isPaidUser: boolean }) {
                   href={ref.doi ? `https://doi.org/${ref.doi}` : ref.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackEvent('reference_view', { referenceId: ref.id, title: ref.title, category: ref.category })}
                   className="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 hover:bg-teal-100 flex items-center justify-center transition-colors group-hover:bg-teal-100"
                 >
                   <ExternalLink className="w-5 h-5 text-slate-600 group-hover:text-teal-600" />

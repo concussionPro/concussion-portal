@@ -6,10 +6,12 @@ import { getCurrentUser, logout } from '@/lib/auth'
 import { User, Mail, Shield, Bell, LogOut, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 export default function SettingsPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
+  useAnalytics() // Track page views
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -25,8 +27,8 @@ export default function SettingsPage() {
     <ProtectedRoute>
       <div className="flex min-h-screen bg-slate-50">
         <Sidebar />
-        <main className="ml-64 flex-1">
-          <div className="px-8 py-6 max-w-[1000px]">
+        <main className="ml-0 md:ml-64 flex-1">
+          <div className="px-4 sm:px-6 md:px-8 py-6 max-w-[1000px]">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-3">

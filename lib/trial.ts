@@ -18,6 +18,7 @@ export function hasModuleAccess(moduleId: number): boolean {
 
   // ONLY paid users have full module access
   // Demo/authenticated users and trial users get preview access only (first 2 sections)
+  // NOTE: Real session-based users should use useModuleAccess hook instead
   return isPaidUser === 'true'
 }
 
@@ -28,6 +29,7 @@ export function hasFullModuleAccess(moduleId: number): boolean {
 
   // ONLY paid users have full module access
   // Demo/authenticated users only get preview access (first 2 sections)
+  // NOTE: Real session-based users should use useModuleAccess hook instead
   return isPaidUser === 'true'
 }
 

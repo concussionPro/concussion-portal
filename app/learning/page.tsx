@@ -7,14 +7,17 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { getAllModules } from '@/data/modules'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { hasModuleAccess, isTrialUser } from '@/lib/trial'
+import { isTrialUser } from '@/lib/trial'
 import { useState, useEffect } from 'react'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 export default function LearningSuite() {
   const router = useRouter()
   const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, isModuleComplete, getModuleProgress } = useProgress()
   const modules = getAllModules()
   const [isTrial, setIsTrial] = useState(false)
+  const [hasAccess, setHasAccess] = useState(false)
+  useAnalytics() // Track page views
 
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
@@ -22,6 +25,35 @@ export default function LearningSuite() {
 
   useEffect(() => {
     setIsTrial(isTrialUser())
+
+    // Check session-based access
+    async function checkAccess() {
+      // Check localStorage first (backward compatibility)
+      const isPaidUser = localStorage.getItem('isPaidUser')
+      if (isPaidUser === 'true') {
+        setHasAccess(true)
+        return
+      }
+
+      // Check session-based authentication
+      try {
+        const response = await fetch('/api/auth/session', {
+          credentials: 'include',
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user && data.user.accessLevel) {
+            // Both online-only and full-course users have full access
+            setHasAccess(data.user.accessLevel === 'online-only' || data.user.accessLevel === 'full-course')
+          }
+        }
+      } catch (error) {
+        console.error('Access check failed:', error)
+      }
+    }
+
+    checkAccess()
   }, [])
 
   const handleModuleClick = (moduleId: number) => {
@@ -32,13 +64,13 @@ export default function LearningSuite() {
     <ProtectedRoute>
       <div className="flex min-h-screen bg-background">
         <Sidebar />
-        <main className="ml-64 flex-1 relative">
+        <main className="ml-0 md:ml-64 flex-1 relative">
           {/* Subtle background gradient */}
-          <div className="fixed inset-0 ml-64 pointer-events-none">
+          <div className="fixed inset-0 ml-0 md:ml-64 pointer-events-none">
             <div className="absolute inset-0 bg-gradient-to-br from-[#64a8b0]/3 via-transparent to-[#7ba8b0]/3" />
           </div>
 
-          <div className="px-8 py-6 max-w-[1400px] relative z-10">
+          <div className="px-4 sm:px-6 md:px-8 py-6 max-w-[1400px] relative z-10">
             {/* Header Card */}
             <div className="glass rounded-xl p-6 mb-5 border-l-4 border-[#64a8b0]">
               <div className="border-b border-slate-200/50 pb-4 mb-4">
@@ -51,7 +83,7 @@ export default function LearningSuite() {
               </div>
 
               {/* Progress Summary */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Modules Complete</div>
                   <div className="text-xl font-bold text-gradient">{completedModules} / 8</div>
@@ -73,7 +105,8 @@ export default function LearningSuite() {
                 const completed = isModuleComplete(module.id)
                 const progress = getModuleProgress(module.id)
                 const hasStarted = progress.startedAt !== null
-                const isLocked = isTrial && !hasModuleAccess(module.id)
+                // Modules are locked if user is trial AND doesn't have paid access
+                const isLocked = isTrial && !hasAccess
 
                 return (
                   <div
@@ -84,7 +117,7 @@ export default function LearningSuite() {
                     )}
                     onClick={() => handleModuleClick(module.id)}
                   >
-                    <div className="p-6">{isLocked && (
+                    <div className="p-5 sm:p-6">{isLocked && (
                         <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-600">
                           <Lock className="w-4 h-4" />
                           <span>Upgrade to unlock</span>

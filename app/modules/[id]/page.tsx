@@ -14,7 +14,7 @@ import { DownloadableResources } from '@/components/course/DownloadableResources
 import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
 import { LockedModuleOverlay } from '@/components/course/LockedModuleOverlay'
 import { ContentLockedBanner } from '@/components/course/ContentLockedBanner'
-import { hasModuleAccess, hasFullModuleAccess } from '@/lib/trial'
+import { useModuleAccess } from '@/hooks/useModuleAccess'
 
 export default function ModulePage() {
   return (
@@ -42,11 +42,11 @@ function ModulePageContent() {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({})
   const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
-  const [hasFullAccess, setHasFullAccess] = useState(false)
   const [lastViewedSection, setLastViewedSection] = useState<number>(0)
   const [currentVideoTime, setCurrentVideoTime] = useState<number>(0)
 
   const moduleProgress = getModuleProgress(moduleId)
+  const { hasFullAccess, loading: accessLoading } = useModuleAccess(moduleId)
 
   // Auto-save checkpoint: Save last viewed section
   useEffect(() => {
@@ -81,10 +81,6 @@ function ModulePageContent() {
   }, [moduleId, module])
 
   useEffect(() => {
-    setHasFullAccess(hasFullModuleAccess(moduleId))
-  }, [moduleId])
-
-  useEffect(() => {
     if (module && moduleProgress) {
       const canComplete = canMarkModuleComplete(moduleId, module.videoRequiredMinutes)
       setShowCompleteButton(canComplete && !isModuleComplete(moduleId))
@@ -95,7 +91,7 @@ function ModulePageContent() {
     return (
       <div className="flex min-h-screen bg-slate-50">
         <CourseNavigation />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 sm:p-6 md:p-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-slate-900">Module not found</h1>
           </div>
@@ -150,8 +146,8 @@ function ModulePageContent() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <CourseNavigation />
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto py-12 px-8">
+      <main className="flex-1 w-full md:ml-0 overflow-y-auto">
+        <div className="max-w-4xl mx-auto py-6 md:py-12 px-4 sm:px-6 md:px-8 lg:px-12">
           {/* Module Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
