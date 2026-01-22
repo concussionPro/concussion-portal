@@ -1,20 +1,21 @@
 // API endpoint to send magic link login emails
 import { NextResponse } from 'next/server'
-import { sendMagicLinkEmail } from '@/lib/email'
+import { findUserByEmail } from '@/lib/users'
+import { generateMagicLink } from '@/lib/magic-link-auth'
+import { sendWelcomeEmail } from '@/lib/email-service'
 
 export async function POST(request: Request) {
   try {
-    const { email, token } = await request.json()
+    const { email } = await request.json()
 
-    // Validate required fields
-    if (!email || !token) {
+    // Validate email
+    if (!email) {
       return NextResponse.json(
-        { error: 'Missing required fields: email, token' },
+        { error: 'Email is required' },
         { status: 400 }
       )
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -23,10 +24,29 @@ export async function POST(request: Request) {
       )
     }
 
-    // Send magic link email
-    const success = await sendMagicLinkEmail(email, token)
+    // Check if user exists
+    const user = await findUserByEmail(email)
 
-    if (success) {
+    if (!user) {
+      return NextResponse.json(
+        { error: 'No account found with this email. Please enroll first.' },
+        { status: 404 }
+      )
+    }
+
+    // Generate magic link
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    const magicLink = await generateMagicLink(user.id, user.email, baseUrl)
+
+    // Send welcome email with magic link
+    const emailSent = await sendWelcomeEmail({
+      email: user.email,
+      name: user.name,
+      magicLink,
+      accessLevel: user.accessLevel,
+    })
+
+    if (emailSent) {
       return NextResponse.json({ success: true })
     } else {
       return NextResponse.json(

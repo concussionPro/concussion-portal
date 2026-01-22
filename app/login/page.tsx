@@ -3,8 +3,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, AlertCircle, ArrowLeft, Check } from 'lucide-react'
-import { getCurrentUser } from '@/lib/auth'
-import { generateMagicToken, storeMagicToken } from '@/lib/magicLink'
 import { CONFIG } from '@/lib/config'
 
 function LoginForm() {
@@ -18,10 +16,16 @@ function LoginForm() {
   const redirectTo = searchParams.get('redirect') || '/dashboard'
 
   useEffect(() => {
-    const user = getCurrentUser()
-    if (user) {
-      router.push(redirectTo)
-    }
+    // Check if user has active session
+    fetch('/api/auth/session')
+      .then(res => {
+        if (res.ok) {
+          router.push(redirectTo)
+        }
+      })
+      .catch(() => {
+        // No active session, stay on login page
+      })
   }, [router, redirectTo])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,19 +48,13 @@ function LoginForm() {
     }
 
     try {
-      // Generate magic token
-      const token = generateMagicToken()
-
-      // Store token locally
-      storeMagicToken(email, token)
-
       // Send magic link email via API
       const response = await fetch('/api/send-magic-link', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, token }),
+        body: JSON.stringify({ email }),
       })
 
       if (response.ok) {
