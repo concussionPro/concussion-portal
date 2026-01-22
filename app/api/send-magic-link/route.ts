@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     // Generate magic link
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const magicLink = generateMagicLinkJWT(user.id, user.email, baseUrl)
+    const magicLink = generateMagicLinkJWT(user.id, user.email, user.name, user.accessLevel, baseUrl)
 
     // Send welcome email with magic link
     const emailSent = await sendWelcomeEmail({

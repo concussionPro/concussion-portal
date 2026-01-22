@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
         // Generate new magic link
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-        const magicLink = generateMagicLinkJWT(existingUser.id, existingUser.email, baseUrl)
+        const magicLink = generateMagicLinkJWT(existingUser.id, existingUser.email, existingUser.name, existingUser.accessLevel, baseUrl)
 
         // Send welcome/upgrade email
         await sendWelcomeEmail({
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
       // Generate magic link
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-      const magicLink = generateMagicLinkJWT(newUser.id, newUser.email, baseUrl)
+      const magicLink = generateMagicLinkJWT(newUser.id, newUser.email, newUser.name, newUser.accessLevel, baseUrl)
 
       // Send welcome email
       const emailSent = await sendWelcomeEmail({

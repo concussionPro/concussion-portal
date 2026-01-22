@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicTokenJWT } from '@/lib/magic-link-jwt'
-import { findUserById, updateLastLogin } from '@/lib/users'
+import { updateLastLogin } from '@/lib/users'
 import { createSession } from '@/lib/sessions'
 
 export async function GET(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Verify the magic token
+    // Verify the magic token (contains all user data - no database lookup needed!)
     const tokenData = verifyMagicTokenJWT(token)
 
     if (!tokenData) {
@@ -25,33 +25,25 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user data
-    const user = await findUserById(tokenData.userId)
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    // Update last login
-    await updateLastLogin(user.id)
+    // Update last login (non-critical, async fire-and-forget)
+    updateLastLogin(tokenData.userId).catch(err =>
+      console.error('Failed to update last login:', err)
+    )
 
     // Check if remember me is requested (default to true for convenience)
     const rememberMe = searchParams.get('rememberMe') !== 'false'
 
     // Create session
-    const sessionId = await createSession(user.id, user.email, rememberMe)
+    const sessionId = await createSession(tokenData.userId, tokenData.email, rememberMe)
 
     // Set session cookie
     const response = NextResponse.json({
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        accessLevel: user.accessLevel,
+        id: tokenData.userId,
+        email: tokenData.email,
+        name: tokenData.name,
+        accessLevel: tokenData.accessLevel,
       },
     })
 

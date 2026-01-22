@@ -6,14 +6,18 @@ const SECRET = process.env.MAGIC_LINK_SECRET || 'your-secret-key-change-in-produ
 interface TokenPayload {
   userId: string
   email: string
+  name: string
+  accessLevel: 'online-only' | 'full-course'
   exp: number
 }
 
 // Create a signed token
-function createToken(userId: string, email: string): string {
+function createToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course'): string {
   const payload: TokenPayload = {
     userId,
     email,
+    name,
+    accessLevel,
     exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
   }
 
@@ -62,13 +66,24 @@ function verifyToken(token: string): TokenPayload | null {
 }
 
 // Generate magic link
-export function generateMagicLinkJWT(userId: string, email: string, baseUrl: string): string {
-  const token = createToken(userId, email)
+export function generateMagicLinkJWT(
+  userId: string,
+  email: string,
+  name: string,
+  accessLevel: 'online-only' | 'full-course',
+  baseUrl: string
+): string {
+  const token = createToken(userId, email, name, accessLevel)
   return `${baseUrl}/auth/verify?token=${token}`
 }
 
 // Verify magic link token
-export function verifyMagicTokenJWT(token: string): { userId: string; email: string } | null {
+export function verifyMagicTokenJWT(token: string): {
+  userId: string;
+  email: string;
+  name: string;
+  accessLevel: 'online-only' | 'full-course'
+} | null {
   const payload = verifyToken(token)
 
   if (!payload) {
@@ -78,5 +93,7 @@ export function verifyMagicTokenJWT(token: string): { userId: string; email: str
   return {
     userId: payload.userId,
     email: payload.email,
+    name: payload.name,
+    accessLevel: payload.accessLevel,
   }
 }
