@@ -98,53 +98,53 @@ export default function CompleteReferencePage() {
             ) : (
               <>
                 {/* Download Card */}
-                <div className="glass rounded-xl p-6 mb-6">
-                  <div className="flex items-start justify-between gap-6">
+                <div className="glass rounded-xl p-5 sm:p-6 mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
                     <div className="flex-1">
-                      <h2 className="text-lg font-bold text-foreground mb-2">
+                      <h2 className="text-lg sm:text-xl font-bold text-foreground mb-2">
                         📖 CCM Complete Reference 2026
                       </h2>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                         All-in-one clinical reference guide covering every aspect of concussion management.
                         Includes assessment protocols, treatment algorithms, return-to-activity flowcharts,
                         legal considerations, and clinical pearls.
                       </p>
-                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-accent">✓</span>
+                          <span className="text-accent flex-shrink-0">✓</span>
                           <span>Evidence-based protocols</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-accent">✓</span>
+                          <span className="text-accent flex-shrink-0">✓</span>
                           <span>Clinical decision flowcharts</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-accent">✓</span>
+                          <span className="text-accent flex-shrink-0">✓</span>
                           <span>Assessment tools & forms</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-accent">✓</span>
+                          <span className="text-accent flex-shrink-0">✓</span>
                           <span>Treatment algorithms</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-shrink-0">
                       <a
                         href="/api/complete-reference"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-primary px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap"
+                        className="btn-primary px-6 py-3 rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base font-semibold"
                       >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-4 h-4 flex-shrink-0" />
                         Download PDF
                       </a>
                       <a
                         href="/api/complete-reference"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-secondary px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap"
+                        className="btn-secondary px-6 py-3 rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base font-semibold"
                       >
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="w-4 h-4 flex-shrink-0" />
                         View Online
                       </a>
                     </div>

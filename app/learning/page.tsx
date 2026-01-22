@@ -124,13 +124,13 @@ export default function LearningSuite() {
                         </div>
                       )}
                       {/* Module Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-5 flex-1">
-                          <div className="text-3xl font-bold text-slate-300 tracking-tight min-w-[50px]">
+                      <div className="flex items-start justify-between mb-4 gap-2">
+                        <div className="flex items-start gap-3 sm:gap-5 flex-1 min-w-0">
+                          <div className="text-2xl sm:text-3xl font-bold text-slate-300 tracking-tight min-w-[40px] sm:min-w-[50px] flex-shrink-0">
                             {module.id.toString().padStart(2, '0')}
                           </div>
-                          <div className="flex-1">
-                            <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight group-hover:text-gradient transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-1 tracking-tight group-hover:text-gradient transition-colors">
                               {module.title}
                             </h2>
                             <p className="text-sm text-slate-600 font-medium mb-2">
@@ -150,15 +150,15 @@ export default function LearningSuite() {
                       </div>
 
                       {/* Module Meta */}
-                      <div className="flex items-center justify-between pt-3 border-t border-slate-200/50">
-                        <div className="flex items-center gap-6">
+                      <div className="flex flex-wrap items-center justify-between pt-3 border-t border-slate-200/50 gap-2">
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-6">
                           <div className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={2} />
-                            <span className="text-xs text-muted-foreground font-medium">{module.duration}</span>
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" strokeWidth={2} />
+                            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">{module.duration}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <Award className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={2} />
-                            <span className="text-xs text-muted-foreground font-medium">{module.points} CPD</span>
+                            <Award className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" strokeWidth={2} />
+                            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">{module.points} CPD</span>
                           </div>
                           {hasStarted && !completed && (
                             <div className="text-xs text-[#5b9aa6] bg-blue-50 px-2 py-1 rounded">

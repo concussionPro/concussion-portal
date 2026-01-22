@@ -163,10 +163,10 @@ function ModulePageContent() {
                     </div>
                   )}
                 </div>
-                <h1 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight leading-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2 tracking-tight leading-tight">
                   {module.title}
                 </h1>
-                <p className="text-base text-slate-600 font-medium mb-3">{module.subtitle}</p>
+                <p className="text-sm sm:text-base text-slate-600 font-medium mb-3">{module.subtitle}</p>
                 <p className="text-sm text-slate-500 leading-relaxed max-w-3xl">
                   {module.description}
                 </p>
@@ -174,12 +174,12 @@ function ModulePageContent() {
             </div>
 
             {/* Module Meta */}
-            <div className="flex items-center gap-6 text-sm">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 text-teal-600" />
                 <span className="font-semibold text-slate-700">{module.points} CPD Points</span>
               </div>
-              <div className="w-px h-4 bg-slate-300"></div>
+              <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
               <div className="flex items-center gap-2">
                 <span className="text-slate-600">{module.duration}</span>
               </div>

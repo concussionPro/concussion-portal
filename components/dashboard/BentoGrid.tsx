@@ -49,7 +49,7 @@ function BentoCard({
       whileHover={{ scale: 1.01, y: -2 }}
       onClick={onClick}
       className={cn(
-        'glass glass-hover rounded-2xl p-6 relative overflow-hidden group cursor-pointer',
+        'glass glass-hover rounded-2xl p-5 sm:p-6 relative overflow-hidden group cursor-pointer',
         sizeClasses[size],
         className
       )}
@@ -120,7 +120,7 @@ export function BentoGrid() {
   const studyTime = getTotalStudyTime()
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[240px]">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-[200px] sm:auto-rows-[240px]">
       {/* CPD Points */}
       <BentoCard
         title="Online CPD"
