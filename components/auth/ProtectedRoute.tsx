@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { getCurrentUser } from '@/lib/auth'
 import { Loader2 } from 'lucide-react'
 
 interface ProtectedRouteProps {
@@ -16,18 +15,32 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    const checkAuth = () => {
-      const user = getCurrentUser()
+    const checkAuth = async () => {
+      try {
+        // Check session via server-side API (validates JWT session cookie)
+        const response = await fetch('/api/auth/session', {
+          credentials: 'include', // Include httpOnly cookies
+        })
 
-      if (!user) {
-        // Redirect to login with return URL
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user) {
+            setIsAuthenticated(true)
+            setIsChecking(false)
+            return
+          }
+        }
+
+        // Not authenticated - redirect to login
         const redirectUrl = encodeURIComponent(pathname)
         router.push(`/login?redirect=${redirectUrl}`)
-      } else {
-        setIsAuthenticated(true)
+        setIsChecking(false)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        const redirectUrl = encodeURIComponent(pathname)
+        router.push(`/login?redirect=${redirectUrl}`)
+        setIsChecking(false)
       }
-
-      setIsChecking(false)
     }
 
     checkAuth()
