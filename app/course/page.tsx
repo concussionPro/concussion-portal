@@ -18,6 +18,7 @@ import {
   Clock,
   Shield,
 } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 const locations = [
   {
