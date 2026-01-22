@@ -278,41 +278,68 @@ function ModulePageContent() {
                     <DynamicContentRenderer content={section.content} sectionIndex={index} />
 
                     {/* Add interactive elements based on section content */}
-                    {/* Module 1: Neurometabolic Cascade visualization */}
-                    {moduleId === 1 && section.id === 'neurometabolic-cascade' && (
+                    {/* Module 1: Myths Quiz in Section 1 - From Course_Content.md */}
+                    {moduleId === 1 && section.id === 'myths-intro' && (
                       <>
                         <QuickCheck
-                          question="Myth: 'You must lose consciousness to have a concussion' - Why is this FALSE?"
-                          options={[
-                            "Loss of consciousness always indicates a concussion",
-                            "Only 10% of concussions involve loss of consciousness",
-                            "Unconsciousness means the injury is too mild to be a concussion",
-                            "All head injuries cause unconsciousness"
-                          ]}
+                          question="A person must lose consciousness to be diagnosed with a concussion."
+                          options={["True", "False"]}
                           correctAnswer={1}
-                          explanation="Only 10% of concussions involve loss of consciousness. Most concussions occur without LOC, and symptom severity does not correlate with whether someone lost consciousness."
+                          explanation="FALSE. Only about 10% of concussions involve loss of consciousness. Most concussions occur without LOC, and the presence or absence of unconsciousness does not correlate with injury severity or recovery time."
                         />
                         <QuickCheck
-                          question="Myth: 'Concussions always show up on CT or MRI scans' - Why is this FALSE?"
-                          options={[
-                            "CT/MRI technology is not advanced enough",
-                            "Concussion causes functional, not structural damage - imaging appears normal",
-                            "Scans only work if taken within 1 hour of injury",
-                            "Only severe concussions show on imaging"
-                          ]}
+                          question="Most concussions show up clearly on standard CT or MRI scans."
+                          options={["True", "False"]}
                           correctAnswer={1}
-                          explanation="Concussion is a functional injury (disrupted cell function) rather than structural injury (tissue damage). Standard CT/MRI scans appear normal because they detect structural damage, not functional disturbances."
+                          explanation="FALSE. Concussion is a functional brain injury, not a structural one. Standard CT and MRI typically appear normal in concussion cases. These imaging tools are primarily used to rule out more serious pathologies like skull fractures or intracranial bleeding."
                         />
                         <QuickCheck
-                          question="Myth: 'Complete rest until symptom-free is the best treatment' - Why is this FALSE?"
-                          options={[
-                            "Rest has no benefit for concussion recovery",
-                            "Prolonged strict rest (>48-72 hours) may actually delay recovery",
-                            "Athletes should return to play immediately",
-                            "Rest is only needed for severe concussions"
-                          ]}
+                          question="Concussion symptoms usually resolve within 24-48 hours in all cases."
+                          options={["True", "False"]}
                           correctAnswer={1}
-                          explanation="Current evidence shows 24-48 hours of relative rest followed by gradual return to activity is optimal. Prolonged strict rest beyond 72 hours is associated with increased symptom burden and delayed recovery."
+                          explanation="FALSE. While some concussions resolve quickly, recovery times vary significantly. In adults, recovery typically ranges from 10-14 days, but can be longer. In children, recovery can take 4+ weeks due to their developing brains."
+                        />
+                        <QuickCheck
+                          question="Only contact sports athletes are at risk of concussion."
+                          options={["True", "False"]}
+                          correctAnswer={1}
+                          explanation="FALSE. Falls, motor vehicle accidents, bicycle crashes, and occupational injuries are leading causes of concussions outside of sport. In older adults, falls account for over 60% of TBIs requiring hospitalization."
+                        />
+                        <QuickCheck
+                          question="A clear head CT scan rules out a concussion."
+                          options={["True", "False"]}
+                          correctAnswer={1}
+                          explanation="FALSE. A normal CT scan does NOT rule out concussion. CT scans detect structural damage (bleeding, fractures), but concussion is a functional disturbance. Diagnosis relies on clinical history, observed signs, and symptom assessment."
+                        />
+                        <QuickCheck
+                          question="Children recover more quickly from concussion than adults."
+                          options={["True", "False"]}
+                          correctAnswer={1}
+                          explanation="FALSE. Children actually experience slower recovery and are more susceptible to cognitive and behavioral disturbances post-injury. The developing brain has higher metabolic demands and a longer period of vulnerability to neurometabolic disruption."
+                        />
+                        <QuickCheck
+                          question="You have to 'rest completely' (no activity at all) for two weeks post-concussion."
+                          options={["True", "False"]}
+                          correctAnswer={1}
+                          explanation="FALSE. Current evidence shows 24-48 hours of relative rest followed by gradual return to activity is optimal. Prolonged strict rest beyond 72 hours is associated with increased symptom burden and delayed recovery."
+                        />
+                        <QuickCheck
+                          question="Helmets and mouthguards can prevent concussion."
+                          options={["True", "False"]}
+                          correctAnswer={1}
+                          explanation="FALSE. While helmets and mouthguards reduce the risk of skull fractures and dental injuries, they cannot prevent concussion. Concussion results from rotational forces on the brain, which protective equipment cannot eliminate."
+                        />
+                        <QuickCheck
+                          question="It's safe to return to work or sport once symptoms subside, even without clearance."
+                          options={["True", "False"]}
+                          correctAnswer={1}
+                          explanation="FALSE. Even when symptoms resolve, the brain may still be in a vulnerable state. Medical clearance and graduated return-to-activity protocols are essential to prevent second impact syndrome and ensure full neurometabolic recovery."
+                        />
+                        <QuickCheck
+                          question="Concussion only affects cognition — emotional and physical symptoms are unrelated."
+                          options={["True", "False"]}
+                          correctAnswer={1}
+                          explanation="FALSE. Concussion affects multiple domains: cognitive (memory, concentration), emotional (mood changes, irritability), physical (headaches, dizziness), and sleep patterns. The neurometabolic cascade impacts the entire brain, not just cognitive centers."
                         />
                       </>
                     )}
