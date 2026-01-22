@@ -58,12 +58,12 @@ const toolkitResources: ToolkitResource[] = [
   },
   {
     id: 'pcs-flowchart',
-    title: 'Persistent Post-Concussive Symptoms (PPCS) Clinical Flowchart',
+    title: 'Post-Concussion Syndrome (PCS) Clinical Flowchart',
     description: 'Diagnostic and management decision tree for persistent post-concussion symptoms',
     fileSize: '96 KB',
     category: 'flowcharts',
     isFree: false,
-    fileName: 'Persistent Post-Concussive Symptoms (PPCS) Clinical Flowchart.pdf'
+    fileName: 'Post-Concussion Syndrome (PCS) Clinical Flowchart.pdf'
   },
   {
     id: 'referral-flowchart',
@@ -118,6 +118,24 @@ const toolkitResources: ToolkitResource[] = [
     category: 'education',
     isFree: false,
     fileName: '"What to Expect After a Concussion" .pdf'
+  },
+  {
+    id: 'rehab-flow',
+    title: 'RehabFlow Clinical Pathway',
+    description: 'Visual rehabilitation flowchart for concussion recovery progression',
+    fileSize: '216 KB',
+    category: 'flowcharts',
+    isFree: false,
+    fileName: 'RehabFlow.png'
+  },
+  {
+    id: 'scat-scoat-zip',
+    title: 'SCAT6 & SCOAT6 Fillable PDFs (ZIP)',
+    description: 'Combined archive of SCAT6 and SCOAT6 fillable assessment tools',
+    fileSize: '11 MB',
+    category: 'assessment',
+    isFree: true,
+    fileName: 'SCAT:SCOAT_FIllablePDFs.zip'
   },
 ]
 

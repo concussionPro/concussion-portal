@@ -19,13 +19,15 @@ export async function GET(request: NextRequest) {
       'SCOAT6_Fillable.pdf',
       'Concussion Clinical Cheat Sheet.pdf',
       'Concussion Myth-Buster Sheet .pdf',
-      'Persistent Post-Concussive Symptoms (PPCS) Clinical Flowchart.pdf',
+      'Post-Concussion Syndrome (PCS) Clinical Flowchart.pdf',
       'Referral Flowchart.pdf',
       'Return-to-Play (RTP) & Return-to-Learn (RTL) Progression Ladder.pdf',
       'Return-to-School Plan Template (DOCX).docx',
       'Employer _ School Letter Template.docx',
       'Email Template Pack.docx',
       '"What to Expect After a Concussion" .pdf',
+      'RehabFlow.png',
+      'SCAT:SCOAT_FIllablePDFs.zip',
     ]
 
     if (!allowedFiles.includes(fileName)) {
@@ -63,9 +65,9 @@ export async function GET(request: NextRequest) {
 
     // Try multiple possible file paths
     const possiblePaths = [
-      join(process.cwd(), 'public', 'docs', 'Clinical Toolkit', fileName),
-      join(process.cwd(), 'docs', 'Clinical Toolkit', fileName),
-      join(process.cwd(), '..', 'docs', 'Clinical Toolkit', fileName),
+      join(process.cwd(), 'public', 'docs', fileName),
+      join(process.cwd(), 'docs', fileName),
+      join(process.cwd(), '..', 'docs', fileName),
     ]
 
     let filePath: string | null = null
@@ -93,6 +95,10 @@ export async function GET(request: NextRequest) {
       ? 'application/pdf'
       : fileName.endsWith('.docx')
       ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : fileName.endsWith('.png')
+      ? 'image/png'
+      : fileName.endsWith('.zip')
+      ? 'application/zip'
       : 'application/octet-stream'
 
     // Return file with appropriate headers
