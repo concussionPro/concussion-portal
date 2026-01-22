@@ -14,7 +14,7 @@ export default function SpotsRemaining({ location, className = '' }: SpotsRemain
   }
 
   const locationData = CONFIG.LOCATIONS[location]
-  const spotsLeft = locationData.spotsRemaining
+  const spotsLeft = locationData.spotsRemaining as number
   const isLowSpots = spotsLeft <= 5
 
   return (
