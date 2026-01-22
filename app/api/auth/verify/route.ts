@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicToken } from '@/lib/magic-link-auth'
 import { findUserById, updateLastLogin } from '@/lib/users'
+import { createSession } from '@/lib/sessions'
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,8 +38,14 @@ export async function GET(request: NextRequest) {
     // Update last login
     await updateLastLogin(user.id)
 
-    // Return user data (without sensitive info)
-    return NextResponse.json({
+    // Check if remember me is requested (default to true for convenience)
+    const rememberMe = searchParams.get('rememberMe') !== 'false'
+
+    // Create session
+    const sessionId = await createSession(user.id, user.email, rememberMe)
+
+    // Set session cookie
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -47,6 +54,18 @@ export async function GET(request: NextRequest) {
         accessLevel: user.accessLevel,
       },
     })
+
+    // Set httpOnly cookie for security
+    const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60 // 30 days or 7 days
+    response.cookies.set('session', sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge,
+      path: '/',
+    })
+
+    return response
   } catch (error) {
     console.error('Verification error:', error)
     return NextResponse.json(

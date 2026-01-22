@@ -30,13 +30,9 @@ function VerifyContent() {
       })
       .then((data) => {
         setStatus('success')
-        setMessage('Login successful! Redirecting to your dashboard...')
+        setMessage('Login successful! You\'ll stay logged in. Redirecting to your dashboard...')
 
-        // Save user session
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(data.user))
-        }
-
+        // Session cookie is set automatically by the server
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
           router.push('/dashboard')
