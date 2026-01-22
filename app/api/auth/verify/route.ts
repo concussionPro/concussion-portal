@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicTokenJWT } from '@/lib/magic-link-jwt'
 import { updateLastLogin } from '@/lib/users'
-import { createSession } from '@/lib/sessions'
+import { createJWTSession } from '@/lib/jwt-session'
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,8 +33,14 @@ export async function GET(request: NextRequest) {
     // Check if remember me is requested (default to true for convenience)
     const rememberMe = searchParams.get('rememberMe') !== 'false'
 
-    // Create session
-    const sessionId = await createSession(tokenData.userId, tokenData.email, rememberMe)
+    // Create JWT session token (no Blob storage needed - instant!)
+    const sessionToken = createJWTSession(
+      tokenData.userId,
+      tokenData.email,
+      tokenData.name,
+      tokenData.accessLevel,
+      rememberMe
+    )
 
     // Set session cookie
     const response = NextResponse.json({
@@ -49,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     // Set httpOnly cookie for security
     const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60 // 30 days or 7 days
-    response.cookies.set('session', sessionId, {
+    response.cookies.set('session', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

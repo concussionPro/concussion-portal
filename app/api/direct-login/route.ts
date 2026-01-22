@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { findUserByEmail } from '@/lib/users'
-import { createSession } from '@/lib/sessions'
+import { createJWTSession } from '@/lib/jwt-session'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Create session directly
-    const sessionId = await createSession(user.id, user.email, true)
+    // Create JWT session (instant, no Blob storage)
+    const sessionToken = createJWTSession(user.id, user.email, user.name, user.accessLevel, true)
 
     // Set cookie and return success
     const response = NextResponse.json({
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    response.cookies.set('session', sessionId, {
+    response.cookies.set('session', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

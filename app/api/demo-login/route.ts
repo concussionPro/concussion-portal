@@ -1,25 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createUser } from '@/lib/users'
-import { createSession } from '@/lib/sessions'
+import { findUserByEmail, createUser } from '@/lib/users'
+import { createJWTSession } from '@/lib/jwt-session'
 
 export async function GET(request: NextRequest) {
   try {
-    // Create or get demo user with full access
+    // Get or create demo user with full access
     const demoEmail = 'demo@concussionpro.com'
 
-    const user = await createUser({
-      email: demoEmail,
-      name: 'Demo User',
-      accessLevel: 'full-course',
-    })
+    let user = await findUserByEmail(demoEmail)
+    if (!user) {
+      user = await createUser({
+        email: demoEmail,
+        name: 'Demo User',
+        accessLevel: 'full-course',
+      })
+    }
 
-    // Create session
-    const sessionId = await createSession(user.id, user.email, true)
+    // Create JWT session (instant, no Blob storage)
+    const sessionToken = createJWTSession(user.id, user.email, user.name, user.accessLevel, true)
 
     // Set session cookie and redirect to dashboard
     const response = NextResponse.redirect(new URL('/dashboard', request.url))
 
-    response.cookies.set('session', sessionId, {
+    response.cookies.set('session', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

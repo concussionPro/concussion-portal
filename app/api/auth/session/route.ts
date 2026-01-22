@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifySession } from '@/lib/sessions'
-import { findUserById } from '@/lib/users'
+import { verifySessionToken } from '@/lib/jwt-session'
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionId = request.cookies.get('session')?.value
+    const sessionToken = request.cookies.get('session')?.value
 
-    if (!sessionId) {
+    if (!sessionToken) {
       return NextResponse.json(
         { error: 'No session found' },
         { status: 401 }
       )
     }
 
-    // Verify session
-    const sessionData = await verifySession(sessionId)
+    // Verify JWT session token (instant, no database lookup!)
+    const sessionData = verifySessionToken(sessionToken)
 
     if (!sessionData) {
       return NextResponse.json(
@@ -23,24 +22,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user data
-    const user = await findUserById(sessionData.userId)
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    // Return user data
+    // Return user data (already in the JWT token)
     return NextResponse.json({
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        accessLevel: user.accessLevel,
+        id: sessionData.userId,
+        email: sessionData.email,
+        name: sessionData.name,
+        accessLevel: sessionData.accessLevel,
       },
     })
   } catch (error) {
