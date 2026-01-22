@@ -105,19 +105,19 @@ export default function CoursePage() {
             Full-day medical diagnostic training designed for GPs, physiotherapists, and allied health professionals.
           </p>
 
-          <div className="flex items-center justify-center gap-12 max-w-lg mx-auto">
+          <div className="flex items-center justify-center gap-6 md:gap-12 max-w-lg mx-auto">
             <div className="text-center">
-              <div className="text-4xl font-bold text-gradient mb-2">8</div>
+              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">8</div>
               <div className="text-xs text-muted-foreground font-medium">Online Modules</div>
             </div>
             <div className="h-12 w-px bg-border" />
             <div className="text-center">
-              <div className="text-4xl font-bold text-gradient mb-2">1 Day</div>
+              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">1 Day</div>
               <div className="text-xs text-muted-foreground font-medium">Practical Training</div>
             </div>
             <div className="h-12 w-px bg-border" />
             <div className="text-center">
-              <div className="text-4xl font-bold text-gradient mb-2">14</div>
+              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">14</div>
               <div className="text-xs text-muted-foreground font-medium">CPD Hours</div>
             </div>
           </div>
@@ -362,17 +362,17 @@ export default function CoursePage() {
                   the online modules and attending the practical day you don't feel your concussion management
                   skills have significantly improved, we'll refund your full enrollment fee—no questions asked.
                 </p>
-                <div className="flex flex-wrap gap-3">
-                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-[#5b8d96] bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-200">
-                    <Check className="w-4 h-4" strokeWidth={2.5} />
+                <div className="flex flex-wrap gap-2 md:gap-3 justify-start">
+                  <div className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold text-[#5b8d96] bg-teal-50 px-2.5 md:px-3 py-1.5 rounded-lg border border-teal-200">
+                    <Check className="w-3.5 md:w-4 h-3.5 md:h-4" strokeWidth={2.5} />
                     100% Risk-Free
                   </div>
-                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-[#5b8d96] bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-200">
-                    <Check className="w-4 h-4" strokeWidth={2.5} />
+                  <div className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold text-[#5b8d96] bg-teal-50 px-2.5 md:px-3 py-1.5 rounded-lg border border-teal-200">
+                    <Check className="w-3.5 md:w-4 h-3.5 md:h-4" strokeWidth={2.5} />
                     30 Days to Decide
                   </div>
-                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-[#5b8d96] bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-200">
-                    <Check className="w-4 h-4" strokeWidth={2.5} />
+                  <div className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold text-[#5b8d96] bg-teal-50 px-2.5 md:px-3 py-1.5 rounded-lg border border-teal-200">
+                    <Check className="w-3.5 md:w-4 h-3.5 md:h-4" strokeWidth={2.5} />
                     Full Refund
                   </div>
                 </div>

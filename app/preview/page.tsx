@@ -67,31 +67,34 @@ export default function PreviewPage() {
       <div className="min-h-screen bg-slate-50">
         {/* Sticky Header */}
       <div className="sticky top-0 z-50 glass border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">
-              Course Preview
-            </h1>
-            <p className="text-sm text-slate-600">
-              8 online modules + full-day practical · 14 AHPRA CPD hours
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push('/')}
-              className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              Back to Home
-            </button>
-            <a
-              href={CONFIG.SHOP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-2.5 bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white rounded-lg text-sm font-semibold hover:from-[#5898a0] hover:to-[#5b8d96] transition-all shadow-lg flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              Enroll Now - $1,190
-            </a>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg md:text-xl font-bold text-slate-900">
+                Course Preview
+              </h1>
+              <p className="text-xs md:text-sm text-slate-600 hidden sm:block">
+                8 online modules + full-day practical · 14 AHPRA CPD hours
+              </p>
+            </div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <button
+                onClick={() => router.push('/')}
+                className="text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-colors hidden sm:block"
+              >
+                Back to Home
+              </button>
+              <a
+                href={CONFIG.SHOP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white rounded-lg text-xs md:text-sm font-semibold hover:from-[#5898a0] hover:to-[#5b8d96] transition-all shadow-lg flex items-center gap-1.5 md:gap-2"
+              >
+                <Sparkles className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                <span className="hidden sm:inline">Enroll Now - $1,190</span>
+                <span className="sm:hidden">Enroll</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -117,25 +120,25 @@ export default function PreviewPage() {
               interactive quizzes, clinical flowcharts, and downloadable resources.
             </p>
             <div className="flex flex-col items-center justify-center gap-5 mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 w-full sm:w-auto">
                 <a
                   href={CONFIG.SHOP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group px-12 py-5 bg-white text-[#5b9aa6] rounded-2xl text-xl font-black hover:bg-amber-400 hover:text-white transition-all shadow-2xl flex items-center gap-3 hover:scale-105 transform"
+                  className="group px-6 md:px-12 py-4 md:py-5 bg-white text-[#5b9aa6] rounded-2xl text-lg md:text-xl font-black hover:bg-amber-400 hover:text-white transition-all shadow-2xl flex items-center justify-center gap-2 md:gap-3 hover:scale-105 transform w-full sm:w-auto"
                 >
-                  <Sparkles className="w-6 h-6 group-hover:animate-spin" />
-                  Full Course + Workshop - $1,190
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  <Sparkles className="w-5 md:w-6 h-5 md:h-6 group-hover:animate-spin flex-shrink-0" />
+                  <span className="text-center">Full Course + Workshop - $1,190</span>
+                  <ArrowRight className="w-5 md:w-6 h-5 md:h-6 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                 </a>
                 <a
                   href={CONFIG.SHOP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group px-12 py-5 bg-white text-[#5b9aa6] rounded-2xl text-xl font-black hover:bg-blue-100 transition-all shadow-2xl flex items-center gap-3 hover:scale-105 transform"
+                  className="group px-6 md:px-12 py-4 md:py-5 bg-white text-[#5b9aa6] rounded-2xl text-lg md:text-xl font-black hover:bg-blue-100 transition-all shadow-2xl flex items-center justify-center gap-2 md:gap-3 hover:scale-105 transform w-full sm:w-auto"
                 >
-                  Online Only - $497
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  <span className="text-center">Online Only - $497</span>
+                  <ArrowRight className="w-5 md:w-6 h-5 md:h-6 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                 </a>
               </div>
               <button
@@ -367,24 +370,24 @@ export default function PreviewPage() {
               View full workshop agenda →
             </button>
             <div className="flex flex-col items-center justify-center gap-5 mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 w-full sm:w-auto">
                 <a
                   href={CONFIG.SHOP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group px-10 py-4 bg-white text-[#5b9aa6] rounded-xl text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center gap-2 hover:scale-105 transform"
+                  className="group px-6 md:px-10 py-3.5 md:py-4 bg-white text-[#5b9aa6] rounded-xl text-base md:text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-105 transform w-full sm:w-auto"
                 >
-                  Full Course + Workshop - $1,190
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span className="text-center">Full Course + Workshop - $1,190</span>
+                  <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                 </a>
                 <a
                   href={CONFIG.SHOP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group px-10 py-4 bg-white text-[#5b9aa6] rounded-xl text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center gap-2 hover:scale-105 transform"
+                  className="group px-6 md:px-10 py-3.5 md:py-4 bg-white text-[#5b9aa6] rounded-xl text-base md:text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-105 transform w-full sm:w-auto"
                 >
-                  Online Only - $497
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span className="text-center">Online Only - $497</span>
+                  <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                 </a>
               </div>
               <button
