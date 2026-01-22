@@ -9,7 +9,12 @@ import { usePathname, useRouter } from 'next/navigation'
 import { getCurrentUser, logout } from '@/lib/auth'
 import { useState, useEffect } from 'react'
 
-const navItems = [
+const navItems: Array<{
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  label: string;
+  href: string;
+  soon?: boolean;
+}> = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
   { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit' },
