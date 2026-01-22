@@ -116,22 +116,33 @@ export default function PreviewPage() {
               so you can preview the breadth of content—from acute assessment to return-to-activity protocols. Full course includes <span className="font-bold text-amber-300">100+ sections</span> with
               interactive quizzes, clinical flowcharts, and downloadable resources.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-              <a
-                href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group px-12 py-5 bg-white text-[#5b9aa6] rounded-2xl text-xl font-black hover:bg-amber-400 hover:text-white transition-all shadow-2xl flex items-center gap-3 hover:scale-105 transform"
-              >
-                <Sparkles className="w-6 h-6 group-hover:animate-spin" />
-                Unlock All 8 Modules - $1,190
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-              </a>
+            <div className="flex flex-col items-center justify-center gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a
+                  href={CONFIG.SHOP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group px-12 py-5 bg-white text-[#5b9aa6] rounded-2xl text-xl font-black hover:bg-amber-400 hover:text-white transition-all shadow-2xl flex items-center gap-3 hover:scale-105 transform"
+                >
+                  <Sparkles className="w-6 h-6 group-hover:animate-spin" />
+                  Full Course + Workshop - $1,190
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </a>
+                <a
+                  href={CONFIG.SHOP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-10 py-5 bg-white/90 text-[#5b9aa6] rounded-2xl text-lg font-bold hover:bg-white transition-all shadow-xl flex items-center gap-2"
+                >
+                  Online Only - $497
+                  <ArrowRight className="w-5 h-5" />
+                </a>
+              </div>
               <button
                 onClick={() => router.push('/assessment')}
-                className="px-10 py-5 bg-white/10 backdrop-blur-sm border-3 border-white text-white rounded-2xl text-lg font-bold hover:bg-white/20 transition-all flex items-center gap-2"
+                className="px-8 py-3 bg-white/10 backdrop-blur-sm border-2 border-white text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition-all flex items-center gap-2"
               >
-                <PlayCircle className="w-6 h-6" />
+                <PlayCircle className="w-5 h-5" />
                 Or Try Free Knowledge Test
               </button>
             </div>
@@ -355,19 +366,30 @@ export default function PreviewPage() {
             >
               View full workshop agenda →
             </button>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-              <a
-                href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-10 py-4 bg-white text-[#5b9aa6] rounded-xl text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center gap-2"
-              >
-                Enroll Now - $1,190
-                <ArrowRight className="w-5 h-5" />
-              </a>
+            <div className="flex flex-col items-center justify-center gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a
+                  href={CONFIG.SHOP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-10 py-4 bg-white text-[#5b9aa6] rounded-xl text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center gap-2"
+                >
+                  Full Course + Workshop - $1,190
+                  <ArrowRight className="w-5 h-5" />
+                </a>
+                <a
+                  href={CONFIG.SHOP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-4 bg-white/90 text-[#5b9aa6] rounded-xl text-lg font-bold hover:bg-white transition-all shadow-xl flex items-center gap-2"
+                >
+                  Online Only - $497
+                  <ArrowRight className="w-5 h-5" />
+                </a>
+              </div>
               <button
                 onClick={() => router.push('/assessment')}
-                className="px-10 py-4 bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white rounded-xl text-lg font-bold hover:bg-white/20 transition-all flex items-center gap-2"
+                className="px-8 py-3 bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition-all flex items-center gap-2"
               >
                 <PlayCircle className="w-5 h-5" />
                 Try Free Knowledge Test
