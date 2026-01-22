@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
 
-export default function VerifyMagicLink() {
+function VerifyContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -92,5 +92,17 @@ export default function VerifyMagicLink() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VerifyMagicLink() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center">
+        <Loader2 className="w-16 h-16 text-[#5b9aa6] animate-spin" />
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
   )
 }
