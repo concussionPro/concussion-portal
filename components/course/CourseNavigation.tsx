@@ -144,7 +144,7 @@ export function CourseNavigation() {
                 {/* Module Sections/Lessons */}
                 {isExpanded && (
                   <div className="ml-9 space-y-0.5 mt-0.5">
-                    {/* Video Lesson */}
+                    {/* Module Content */}
                     <button
                       onClick={() => navigateToSection(module.id, 'video')}
                       className={cn(
@@ -154,7 +154,7 @@ export function CourseNavigation() {
                     >
                       <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="text-sm text-slate-600 group-hover:text-slate-800">
-                        Training Video
+                        Module Content
                       </span>
                       {progress.videoCompleted && (
                         <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 ml-auto" />
