@@ -1,137 +1,96 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { CheckCircle, XCircle, Loader2, ArrowLeft } from 'lucide-react'
-import { verifyMagicToken } from '@/lib/magicLink'
-import { login } from '@/lib/auth'
+import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
 
-function VerifyContent() {
+export default function VerifyMagicLink() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
-  const [errorMessage, setErrorMessage] = useState('')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [message, setMessage] = useState('Verifying your login link...')
 
   useEffect(() => {
-    const email = searchParams.get('email')
     const token = searchParams.get('token')
 
-    if (!email || !token) {
+    if (!token) {
       setStatus('error')
-      setErrorMessage('Invalid login link. Please request a new one.')
+      setMessage('Invalid link - no token provided')
       return
     }
 
-    // Verify the magic token
-    const isValid = verifyMagicToken(email, token)
-
-    if (isValid) {
-      // Check if user is enrolled (has paid)
-      const isPaidUser = localStorage.getItem('isPaidUser') === 'true'
-
-      // Create user session
-      login({
-        id: email,
-        email: email,
-        name: email.split('@')[0],
-        enrolledAt: new Date().toISOString(),
+    // Verify token
+    fetch(`/api/auth/verify?token=${token}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json()
+          throw new Error(error.error || 'Verification failed')
+        }
+        return res.json()
       })
+      .then((data) => {
+        setStatus('success')
+        setMessage('Login successful! Redirecting to your dashboard...')
 
-      setStatus('success')
+        // Save user session
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
 
-      // Redirect to dashboard after short delay
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2000)
-    } else {
-      setStatus('error')
-      setErrorMessage('This login link has expired or already been used. Please request a new one.')
-    }
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
+      })
+      .catch((error) => {
+        setStatus('error')
+        setMessage(error.message || 'Link expired or invalid')
+      })
   }, [searchParams, router])
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
-        <button
-          onClick={() => router.push('/login')}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to login
-        </button>
-
-        <div className="glass rounded-2xl p-8">
-          {status === 'verifying' && (
-            <div className="text-center">
-              <div className="icon-container w-14 h-14 mx-auto mb-5">
-                <Loader2 className="w-7 h-7 text-accent animate-spin" />
-              </div>
-              <h1 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
-                Verifying your login...
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Please wait while we authenticate you
-              </p>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-6">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+          {status === 'loading' && (
+            <>
+              <Loader2 className="w-16 h-16 text-[#5b9aa6] mx-auto mb-4 animate-spin" />
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">Verifying...</h1>
+              <p className="text-slate-600">{message}</p>
+            </>
           )}
 
           {status === 'success' && (
-            <div className="text-center">
-              <div className="icon-container w-14 h-14 mx-auto mb-5 bg-green-100">
-                <CheckCircle className="w-7 h-7 text-green-600" />
-              </div>
-              <h1 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
-                Login successful!
-              </h1>
-              <p className="text-sm text-muted-foreground mb-6">
-                Welcome back. Redirecting to your dashboard...
-              </p>
-              <div className="flex justify-center">
-                <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-              </div>
-            </div>
+            <>
+              <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back!</h1>
+              <p className="text-slate-600">{message}</p>
+            </>
           )}
 
           {status === 'error' && (
-            <div className="text-center">
-              <div className="icon-container w-14 h-14 mx-auto mb-5 bg-red-100">
-                <XCircle className="w-7 h-7 text-red-600" />
+            <>
+              <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">Verification Failed</h1>
+              <p className="text-slate-600 mb-6">{message}</p>
+              <div className="space-y-3">
+                <p className="text-sm text-slate-500">Common issues:</p>
+                <ul className="text-sm text-left text-slate-600 space-y-1">
+                  <li>• Link has expired (links last 24 hours)</li>
+                  <li>• Link has already been used</li>
+                  <li>• Link is invalid or corrupted</li>
+                </ul>
+                <button
+                  onClick={() => router.push('/')}
+                  className="mt-6 w-full px-6 py-3 bg-[#5b9aa6] text-white rounded-lg font-semibold hover:bg-[#5898a0] transition-colors"
+                >
+                  Go to Homepage
+                </button>
               </div>
-              <h1 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
-                Verification failed
-              </h1>
-              <p className="text-sm text-muted-foreground mb-6">
-                {errorMessage}
-              </p>
-              <button
-                onClick={() => router.push('/login')}
-                className="btn-primary py-3 px-6 rounded-xl text-base font-semibold"
-              >
-                Request new login link
-              </button>
-            </div>
+            </>
           )}
         </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Need help? Contact zac@concussion-education-australia.com
-        </p>
       </div>
     </div>
-  )
-}
-
-export default function VerifyPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    }>
-      <VerifyContent />
-    </Suspense>
   )
 }
