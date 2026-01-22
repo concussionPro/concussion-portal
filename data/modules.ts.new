@@ -1,0 +1,29 @@
+export interface Module {
+  id: number
+  title: string
+  subtitle: string
+  duration: string
+  points: number
+  description: string
+  videoUrl: string
+  videoRequiredMinutes: number
+  sections: Section[]
+  quiz: QuizQuestion[]
+  clinicalReferences: string[]
+}
+
+export interface Section {
+  id: string
+  title: string
+  content: string[]
+}
+
+export interface QuizQuestion {
+  id: string
+  question: string
+  options: string[]
+  correctAnswer: number
+  explanation: string
+}
+
+export const modules: Module[] = [

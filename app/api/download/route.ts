@@ -1,0 +1,103 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { readFile, access } from 'fs/promises'
+import { join } from 'path'
+import { cookies } from 'next/headers'
+
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const fileName = searchParams.get('file')
+
+    if (!fileName) {
+      return NextResponse.json({ error: 'File name required' }, { status: 400 })
+    }
+
+    // Security: Only allow specific files from Clinical Toolkit
+    const allowedFiles = [
+      'SCAT6_Fillable.pdf',
+      'SCOAT6_Fillable.pdf',
+      'Concussion Clinical Cheat Sheet.pdf',
+      'Concussion Myth-Buster Sheet .pdf',
+      'Persistent Post-Concussive Symptoms (PPCS) Clinical Flowchart.pdf',
+      'Referral Flowchart.pdf',
+      'Return-to-Play (RTP) & Return-to-Learn (RTL) Progression Ladder.pdf',
+      'Return-to-School Plan Template (DOCX).docx',
+      'Employer _ School Letter Template.docx',
+      'Email Template Pack.docx',
+      '"What to Expect After a Concussion" .pdf',
+    ]
+
+    if (!allowedFiles.includes(fileName)) {
+      return NextResponse.json({ error: 'File not found' }, { status: 404 })
+    }
+
+    // Authentication check for non-free files
+    const freeFiles = ['SCAT6_Fillable.pdf', 'SCOAT6_Fillable.pdf']
+    if (!freeFiles.includes(fileName)) {
+      // Check authentication from cookies/headers
+      const cookieStore = await cookies()
+      const currentUser = cookieStore.get('current_user')
+
+      if (!currentUser) {
+        return NextResponse.json(
+          { error: 'Authentication required. Please log in to download premium resources.' },
+          { status: 401 }
+        )
+      }
+
+      // Verify user has paid access (check localStorage would be done client-side)
+      // For server-side, we trust that authenticated users have access
+      // In production, this should check against a database subscription status
+    }
+
+    // Try multiple possible file paths
+    const possiblePaths = [
+      join(process.cwd(), 'public', 'docs', 'Clinical Toolkit', fileName),
+      join(process.cwd(), 'docs', 'Clinical Toolkit', fileName),
+      join(process.cwd(), '..', 'docs', 'Clinical Toolkit', fileName),
+    ]
+
+    let filePath: string | null = null
+    for (const path of possiblePaths) {
+      try {
+        await access(path)
+        filePath = path
+        break
+      } catch {
+        continue
+      }
+    }
+
+    if (!filePath) {
+      return NextResponse.json(
+        { error: 'File not found on server. Please contact support.' },
+        { status: 404 }
+      )
+    }
+
+    const fileBuffer = await readFile(filePath)
+
+    // Determine content type
+    const contentType = fileName.endsWith('.pdf')
+      ? 'application/pdf'
+      : fileName.endsWith('.docx')
+      ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : 'application/octet-stream'
+
+    // Return file with appropriate headers
+    return new NextResponse(fileBuffer, {
+      headers: {
+        'Content-Type': contentType,
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Cache-Control': 'private, max-age=3600',
+      },
+    })
+
+  } catch (error) {
+    console.error('Download error:', error)
+    return NextResponse.json(
+      { error: 'File download failed' },
+      { status: 500 }
+    )
+  }
+}

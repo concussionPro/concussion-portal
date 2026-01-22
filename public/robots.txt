@@ -1,0 +1,12 @@
+# robots.txt for ConcussionPro
+
+User-agent: *
+Allow: /
+
+# Disallow admin/private areas
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://concussionpro.com.au/sitemap.xml
