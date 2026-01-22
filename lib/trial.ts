@@ -1,32 +1,45 @@
-// Trial access management - DEPRECATED: Use secure-access.ts instead
-import { checkUserAccess } from './secure-access'
+// Trial access management
+import { getCurrentUser } from './auth'
 
 export function isTrialUser(): boolean {
-  // DEPRECATED: Trial logic moved to server-side
-  return false
+  if (typeof window === 'undefined') return false
+
+  const trialStarted = localStorage.getItem('trialStarted')
+  const isPaidUser = localStorage.getItem('isPaidUser')
+  const user = getCurrentUser()
+
+  return trialStarted === 'true' && isPaidUser !== 'true' && !user
 }
 
-// DEPRECATED: Use checkUserAccess() from secure-access.ts
-export async function hasModuleAccess(moduleId: number): Promise<boolean> {
-  const { accessLevel } = await checkUserAccess()
-  // Full course users have full access
-  // Online-only users get preview access (first 2 sections)
-  return accessLevel === 'full-course'
+export function hasModuleAccess(moduleId: number): boolean {
+  if (typeof window === 'undefined') return false
+
+  const isPaidUser = localStorage.getItem('isPaidUser')
+
+  // ONLY paid users have full module access
+  // Demo/authenticated users and trial users get preview access only (first 2 sections)
+  return isPaidUser === 'true'
 }
 
-// DEPRECATED: Use checkUserAccess() from secure-access.ts
-export async function hasFullModuleAccess(moduleId: number): Promise<boolean> {
-  const { accessLevel } = await checkUserAccess()
-  return accessLevel === 'full-course'
+export function hasFullModuleAccess(moduleId: number): boolean {
+  if (typeof window === 'undefined') return false
+
+  const isPaidUser = localStorage.getItem('isPaidUser')
+
+  // ONLY paid users have full module access
+  // Demo/authenticated users only get preview access (first 2 sections)
+  return isPaidUser === 'true'
 }
 
-// REMOVED: This function was a security vulnerability allowing payment bypass
-// Access level is now controlled server-side only
-// export function upgradeToPaid(): void {
-//   // SECURITY RISK: Removed - use server-side validation only
-// }
+export function upgradeToPaid(): void {
+  if (typeof window === 'undefined') return
+
+  localStorage.setItem('isPaidUser', 'true')
+  localStorage.removeItem('trialStarted')
+}
 
 export function getTrialEmail(): string | null {
   if (typeof window === 'undefined') return null
+
   return localStorage.getItem('trialEmail')
 }

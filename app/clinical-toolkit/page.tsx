@@ -2,10 +2,10 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { getCurrentUser } from '@/lib/auth'
 import { FileText, Download, Lock, CheckCircle2, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { CONFIG } from '@/lib/config'
-import { checkUserAccess } from '@/lib/secure-access'
 
 interface ToolkitResource {
   id: string
@@ -24,7 +24,7 @@ const toolkitResources: ToolkitResource[] = [
     description: 'Sport Concussion Assessment Tool (6th Edition) - Fillable PDF for comprehensive concussion assessment',
     fileSize: '3.5 MB',
     category: 'assessment',
-    isFree: false, // LOCKED - paid users only
+    isFree: true,
     fileName: 'SCAT6_Fillable.pdf'
   },
   {
@@ -33,7 +33,7 @@ const toolkitResources: ToolkitResource[] = [
     description: 'Sport Concussion Office Assessment Tool (6th Edition) - Streamlined clinical assessment',
     fileSize: '12.6 MB',
     category: 'assessment',
-    isFree: false, // LOCKED - paid users only
+    isFree: true,
     fileName: 'SCOAT6_Fillable.pdf'
   },
   {
@@ -130,16 +130,14 @@ const categoryLabels = {
 export default function ClinicalToolkitPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [isPaidUser, setIsPaidUser] = useState(false)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // SERVER-SIDE access validation - secure and tamper-proof
-    async function validateAccess() {
-      const { accessLevel } = await checkUserAccess()
-      setIsPaidUser(accessLevel === 'full-course')
-      setLoading(false)
-    }
-    validateAccess()
+    // Check if user is authenticated (including demo users)
+    const user = getCurrentUser()
+    const paidStatus = localStorage.getItem('isPaidUser')
+
+    // If logged in as demo or authenticated user, OR if they have paid status, grant access
+    setIsPaidUser(!!user || paidStatus === 'true')
   }, [])
 
   const filteredResources = selectedCategory === 'all'
@@ -147,31 +145,14 @@ export default function ClinicalToolkitPage() {
     : toolkitResources.filter(r => r.category === selectedCategory)
 
   const handleDownload = (resource: ToolkitResource) => {
-    // ALL toolkit resources now require paid access
-    if (!isPaidUser) {
-      // Redirect non-paid users to enrollment
+    if (!resource.isFree && !isPaidUser) {
+      // Redirect to shop for non-paid users trying to access premium resources
       window.location.href = CONFIG.SHOP_URL
       return
     }
 
-    // Download file via API endpoint (paid users only)
+    // Download file via API endpoint
     window.open(`/api/download?file=${encodeURIComponent(resource.fileName)}`, '_blank')
-  }
-
-  if (loading) {
-    return (
-      <ProtectedRoute>
-        <div className="flex min-h-screen bg-slate-50">
-          <Sidebar />
-          <main className="ml-64 flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5b9aa6] mx-auto mb-4"></div>
-              <p className="text-slate-600">Loading...</p>
-            </div>
-          </main>
-        </div>
-      </ProtectedRoute>
-    )
   }
 
   return (
@@ -199,13 +180,13 @@ export default function ClinicalToolkitPage() {
 
               {!isPaidUser && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                  <Lock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <Star className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-amber-900">
-                      🔒 All Toolkit Resources Locked
+                      Unlock Full Toolkit Access
                     </p>
                     <p className="text-sm text-amber-700 mt-1">
-                      All clinical resources (including SCAT6/SCOAT6, templates, and flowcharts) are exclusive to course enrollees. Enroll to unlock professional-grade assessment tools and clinical templates.
+                      SCAT6 and SCOAT6 are available for preview. Enroll in the full course to unlock all clinical resources, templates, and flowcharts.
                     </p>
                     <a
                       href={CONFIG.SHOP_URL}
