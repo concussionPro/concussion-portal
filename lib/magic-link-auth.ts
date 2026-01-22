@@ -22,8 +22,10 @@ async function loadTokens(): Promise<MagicToken[]> {
       return []
     }
 
-    // Fetch the blob content
-    const response = await fetch(blobExists.url)
+    // Fetch the blob content with cache busting
+    const response = await fetch(`${blobExists.url}?t=${Date.now()}`, {
+      cache: 'no-store'
+    })
     const tokens = await response.json()
     return tokens
   } catch (error) {
@@ -69,33 +71,45 @@ export async function generateMagicLink(userId: string, email: string, baseUrl: 
   return `${baseUrl}/auth/verify?token=${token}`
 }
 
-// Verify magic link token
+// Verify magic link token with retry logic for Blob propagation
 export async function verifyMagicToken(token: string): Promise<{ userId: string; email: string } | null> {
-  const tokens = await loadTokens()
-  const magicToken = tokens.find(t => t.token === token)
+  // Retry up to 5 times with delays for Blob propagation
+  const maxRetries = 5
+  const retryDelay = 1000 // 1 second
 
-  if (!magicToken) {
-    return null
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const tokens = await loadTokens()
+    const magicToken = tokens.find(t => t.token === token)
+
+    if (magicToken) {
+      // Check if expired
+      if (new Date(magicToken.expiresAt) < new Date()) {
+        return null
+      }
+
+      // Check if already used
+      if (magicToken.used) {
+        return null
+      }
+
+      // Mark as used
+      magicToken.used = true
+      await saveTokens(tokens)
+
+      return {
+        userId: magicToken.userId,
+        email: magicToken.email,
+      }
+    }
+
+    // If not found and not last attempt, wait before retrying
+    if (attempt < maxRetries - 1) {
+      await new Promise(resolve => setTimeout(resolve, retryDelay))
+    }
   }
 
-  // Check if expired
-  if (new Date(magicToken.expiresAt) < new Date()) {
-    return null
-  }
-
-  // Check if already used
-  if (magicToken.used) {
-    return null
-  }
-
-  // Mark as used
-  magicToken.used = true
-  await saveTokens(tokens)
-
-  return {
-    userId: magicToken.userId,
-    email: magicToken.email,
-  }
+  // Token not found after all retries
+  return null
 }
 
 // Clean up old tokens (run periodically)

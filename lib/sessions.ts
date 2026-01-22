@@ -26,7 +26,9 @@ async function loadSessions(): Promise<Session[]> {
       return []
     }
 
-    const response = await fetch(blobExists.url)
+    const response = await fetch(`${blobExists.url}?t=${Date.now()}`, {
+      cache: 'no-store'
+    })
     const sessions = await response.json()
     return sessions
   } catch (error) {

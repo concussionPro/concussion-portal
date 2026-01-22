@@ -24,8 +24,10 @@ export async function loadUsers(): Promise<User[]> {
       return []
     }
 
-    // Fetch the blob content
-    const response = await fetch(blobExists.url)
+    // Fetch the blob content with cache busting
+    const response = await fetch(`${blobExists.url}?t=${Date.now()}`, {
+      cache: 'no-store'
+    })
     const users = await response.json()
     return users
   } catch (error) {
