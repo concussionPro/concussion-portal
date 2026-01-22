@@ -155,26 +155,8 @@ export default function InPersonTrainingPage() {
             </div>
           </div>
 
-          {/* What to Bring / What's Provided */}
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            <div className="glass rounded-xl p-6">
-              <h3 className="text-lg font-bold mb-4">What to Bring</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
-                  <span>Completed online modules (8 modules)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
-                  <span>Comfortable clothing for practical exercises</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
-                  <span>Lunch and water bottle</span>
-                </li>
-              </ul>
-            </div>
-
+          {/* What's Provided */}
+          <div className="max-w-2xl mx-auto mb-12">
             <div className="glass rounded-xl p-6">
               <h3 className="text-lg font-bold mb-4">What's Provided</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
