@@ -1,0 +1,82 @@
+// JWT-based magic link authentication - no database lookup needed
+import crypto from 'crypto'
+
+const SECRET = process.env.MAGIC_LINK_SECRET || 'your-secret-key-change-in-production'
+
+interface TokenPayload {
+  userId: string
+  email: string
+  exp: number
+}
+
+// Create a signed token
+function createToken(userId: string, email: string): string {
+  const payload: TokenPayload = {
+    userId,
+    email,
+    exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+  }
+
+  const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64url')
+  const signature = crypto
+    .createHmac('sha256', SECRET)
+    .update(payloadStr)
+    .digest('base64url')
+
+  return `${payloadStr}.${signature}`
+}
+
+// Verify and decode token
+function verifyToken(token: string): TokenPayload | null {
+  try {
+    const [payloadStr, signature] = token.split('.')
+
+    if (!payloadStr || !signature) {
+      return null
+    }
+
+    // Verify signature
+    const expectedSignature = crypto
+      .createHmac('sha256', SECRET)
+      .update(payloadStr)
+      .digest('base64url')
+
+    if (signature !== expectedSignature) {
+      return null
+    }
+
+    // Decode payload
+    const payload: TokenPayload = JSON.parse(
+      Buffer.from(payloadStr, 'base64url').toString()
+    )
+
+    // Check expiration
+    if (payload.exp < Date.now()) {
+      return null
+    }
+
+    return payload
+  } catch (error) {
+    return null
+  }
+}
+
+// Generate magic link
+export function generateMagicLinkJWT(userId: string, email: string, baseUrl: string): string {
+  const token = createToken(userId, email)
+  return `${baseUrl}/auth/verify?token=${token}`
+}
+
+// Verify magic link token
+export function verifyMagicTokenJWT(token: string): { userId: string; email: string } | null {
+  const payload = verifyToken(token)
+
+  if (!payload) {
+    return null
+  }
+
+  return {
+    userId: payload.userId,
+    email: payload.email,
+  }
+}

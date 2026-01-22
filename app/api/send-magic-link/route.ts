@@ -1,7 +1,7 @@
 // API endpoint to send magic link login emails
 import { NextResponse } from 'next/server'
 import { findUserByEmail } from '@/lib/users'
-import { generateMagicLink } from '@/lib/magic-link-auth'
+import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendWelcomeEmail } from '@/lib/email-service'
 
 export async function POST(request: Request) {
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     // Generate magic link
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const magicLink = await generateMagicLink(user.id, user.email, baseUrl)
+    const magicLink = generateMagicLinkJWT(user.id, user.email, baseUrl)
 
     // Send welcome email with magic link
     const emailSent = await sendWelcomeEmail({

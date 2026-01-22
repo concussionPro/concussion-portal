@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createUser, findUserByEmail } from '@/lib/users'
-import { generateMagicLink } from '@/lib/magic-link-auth'
+import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendWelcomeEmail } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
         // Generate new magic link
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-        const magicLink = await generateMagicLink(existingUser.id, existingUser.email, baseUrl)
+        const magicLink = generateMagicLinkJWT(existingUser.id, existingUser.email, baseUrl)
 
         // Send welcome/upgrade email
         await sendWelcomeEmail({
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
       // Generate magic link
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-      const magicLink = await generateMagicLink(newUser.id, newUser.email, baseUrl)
+      const magicLink = generateMagicLinkJWT(newUser.id, newUser.email, baseUrl)
 
       // Send welcome email
       const emailSent = await sendWelcomeEmail({

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyMagicToken } from '@/lib/magic-link-auth'
+import { verifyMagicTokenJWT } from '@/lib/magic-link-jwt'
 import { findUserById, updateLastLogin } from '@/lib/users'
 import { createSession } from '@/lib/sessions'
 
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify the magic token
-    const tokenData = await verifyMagicToken(token)
+    const tokenData = verifyMagicTokenJWT(token)
 
     if (!tokenData) {
       return NextResponse.json(
