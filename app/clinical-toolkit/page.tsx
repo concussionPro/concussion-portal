@@ -267,11 +267,13 @@ export default function ClinicalToolkitPage() {
                           Upgrade Now - Add Workshop for $693
                         </a>
                         <a
-                          href="/in-person"
+                          href="https://concussion-education-australia.com/shop"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           onClick={() => trackEvent('view_workshop_details', { source: 'toolkit-upgrade-banner' })}
                           className="px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-all text-center"
                         >
-                          View Workshop Details
+                          View Workshop Dates and Locations
                         </a>
                       </div>
                     </div>
