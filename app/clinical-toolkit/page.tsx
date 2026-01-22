@@ -160,7 +160,7 @@ export default function ClinicalToolkitPage() {
       <div className="flex min-h-screen bg-slate-50">
         <Sidebar />
         <main className="ml-64 flex-1">
-          <div className="px-8 py-10 max-w-[1400px]">
+          <div className="px-8 py-6 max-w-[1400px]">
 
             {/* Header */}
             <div className="mb-8">

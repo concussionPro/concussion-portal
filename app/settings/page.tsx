@@ -26,7 +26,7 @@ export default function SettingsPage() {
       <div className="flex min-h-screen bg-slate-50">
         <Sidebar />
         <main className="ml-64 flex-1">
-          <div className="px-8 py-10 max-w-[1000px]">
+          <div className="px-8 py-6 max-w-[1000px]">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-3">
