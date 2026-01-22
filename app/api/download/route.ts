@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile, access } from 'fs/promises'
 import { join } from 'path'
 import { cookies } from 'next/headers'
+import { verifySession } from '@/lib/sessions'
+import { findUserById } from '@/lib/users'
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,23 +33,44 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 })
     }
 
-    // Authentication check for non-free files
-    const freeFiles = ['SCAT6_Fillable.pdf', 'SCOAT6_Fillable.pdf']
-    if (!freeFiles.includes(fileName)) {
-      // Check authentication from cookies/headers
-      const cookieStore = await cookies()
-      const currentUser = cookieStore.get('current_user')
+    // SECURITY: ALL toolkit resources now require full-course access
+    // Verify session and access level server-side
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('session')
 
-      if (!currentUser) {
-        return NextResponse.json(
-          { error: 'Authentication required. Please log in to download premium resources.' },
-          { status: 401 }
-        )
-      }
+    if (!sessionCookie) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please log in to access clinical toolkit.' },
+        { status: 401 }
+      )
+    }
 
-      // Verify user has paid access (check localStorage would be done client-side)
-      // For server-side, we trust that authenticated users have access
-      // In production, this should check against a database subscription status
+    // Verify session is valid
+    const session = await verifySession(sessionCookie.value)
+
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Invalid session. Please log in again.' },
+        { status: 401 }
+      )
+    }
+
+    // Get user and verify access level
+    const user = await findUserById(session.userId)
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found.' },
+        { status: 404 }
+      )
+    }
+
+    // ONLY full-course users can download toolkit resources
+    if (user.accessLevel !== 'full-course') {
+      return NextResponse.json(
+        { error: 'Full course enrollment required to download clinical toolkit resources. Upgrade to full course access.' },
+        { status: 403 }
+      )
     }
 
     // Try multiple possible file paths

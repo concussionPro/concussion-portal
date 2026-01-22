@@ -24,7 +24,7 @@ const toolkitResources: ToolkitResource[] = [
     description: 'Sport Concussion Assessment Tool (6th Edition) - Fillable PDF for comprehensive concussion assessment',
     fileSize: '3.5 MB',
     category: 'assessment',
-    isFree: true,
+    isFree: false, // LOCKED - paid users only
     fileName: 'SCAT6_Fillable.pdf'
   },
   {
@@ -33,7 +33,7 @@ const toolkitResources: ToolkitResource[] = [
     description: 'Sport Concussion Office Assessment Tool (6th Edition) - Streamlined clinical assessment',
     fileSize: '12.6 MB',
     category: 'assessment',
-    isFree: true,
+    isFree: false, // LOCKED - paid users only
     fileName: 'SCOAT6_Fillable.pdf'
   },
   {
@@ -147,13 +147,14 @@ export default function ClinicalToolkitPage() {
     : toolkitResources.filter(r => r.category === selectedCategory)
 
   const handleDownload = (resource: ToolkitResource) => {
-    if (!resource.isFree && !isPaidUser) {
-      // Redirect to shop for non-paid users trying to access premium resources
+    // ALL toolkit resources now require paid access
+    if (!isPaidUser) {
+      // Redirect non-paid users to enrollment
       window.location.href = CONFIG.SHOP_URL
       return
     }
 
-    // Download file via API endpoint
+    // Download file via API endpoint (paid users only)
     window.open(`/api/download?file=${encodeURIComponent(resource.fileName)}`, '_blank')
   }
 
@@ -198,13 +199,13 @@ export default function ClinicalToolkitPage() {
 
               {!isPaidUser && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                  <Star className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <Lock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-amber-900">
-                      Unlock Full Toolkit Access
+                      🔒 All Toolkit Resources Locked
                     </p>
                     <p className="text-sm text-amber-700 mt-1">
-                      SCAT6 and SCOAT6 are available for preview. Enroll in the full course to unlock all clinical resources, templates, and flowcharts.
+                      All clinical resources (including SCAT6/SCOAT6, templates, and flowcharts) are exclusive to course enrollees. Enroll to unlock professional-grade assessment tools and clinical templates.
                     </p>
                     <a
                       href={CONFIG.SHOP_URL}
