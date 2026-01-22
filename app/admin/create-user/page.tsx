@@ -9,6 +9,7 @@ export default function AdminCreateUser() {
   const [amount, setAmount] = useState<'497' | '1190'>('1190')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
+  const [magicLink, setMagicLink] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,16 +30,18 @@ export default function AdminCreateUser() {
       }
 
       setStatus('success')
-      setMessage(`✅ User created! Email sent to ${email}`)
+      setMessage(`✅ User created! ${data.emailSent ? 'Email sent' : 'Copy magic link below'} to ${email}`)
+      setMagicLink(data.magicLink || '')
 
-      // Clear form after 3 seconds
+      // Clear form after 10 seconds (give time to copy link)
       setTimeout(() => {
         setEmail('')
         setName('')
         setAmount('1190')
         setStatus('idle')
         setMessage('')
-      }, 3000)
+        setMagicLink('')
+      }, 10000)
     } catch (error: any) {
       setStatus('error')
       setMessage(error.message || 'Something went wrong')
@@ -129,10 +132,36 @@ export default function AdminCreateUser() {
 
             {/* Status Messages */}
             {status === 'success' && (
-              <div className="flex items-center gap-3 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-                <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <p className="text-sm font-semibold text-green-900">{message}</p>
-              </div>
+              <>
+                <div className="flex items-center gap-3 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                  <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                  <p className="text-sm font-semibold text-green-900">{message}</p>
+                </div>
+
+                {magicLink && (
+                  <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                    <p className="text-xs font-bold text-blue-900 mb-2">🔗 Magic Login Link (copy & send manually):</p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={magicLink}
+                        readOnly
+                        className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-xs font-mono text-blue-900"
+                        onClick={(e) => e.currentTarget.select()}
+                      />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(magicLink)
+                          alert('Link copied to clipboard!')
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded font-semibold text-xs hover:bg-blue-700"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {status === 'error' && (
