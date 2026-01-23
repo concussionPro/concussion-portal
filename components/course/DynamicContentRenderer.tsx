@@ -15,28 +15,46 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
   while (i < content.length) {
     const line = content[i]
 
-    // Check if this starts a table (has header with pipes + next line is separator)
-    const hasTableHeader = line.includes('|') && i + 1 < content.length
-    const nextLineIsSeparator = i + 1 < content.length && (content[i + 1].includes('──') || content[i + 1].includes('---'))
+    // Check if this line is an emoji table header (includes both emoji AND pipes)
+    const isEmojiTableHeader = (line.startsWith('📊') || line.startsWith('📋')) && line.includes(':')
 
-    if (hasTableHeader && nextLineIsSeparator) {
-      // Start collecting table rows
-      const tableLines = [line, content[i + 1]] // header + separator
-      i += 2
+    // Check if NEXT line starts a table (has pipes + line after that is separator)
+    const nextLineIsTableHeader = i + 1 < content.length && content[i + 1].includes('|')
+    const lineAfterNextIsSeparator = i + 2 < content.length && (content[i + 2].includes('──') || content[i + 2].includes('---'))
 
-      // Collect all subsequent table-related lines
+    if (isEmojiTableHeader && nextLineIsTableHeader && lineAfterNextIsSeparator) {
+      // Include emoji header with the table
+      const tableLines = [line, content[i + 1], content[i + 2]] // emoji + header + separator
+      i += 3
+
+      // Collect all subsequent data rows
       while (i < content.length) {
         const currentLine = content[i]
-        // Stop if we hit a non-table indicator (emoji heading, empty, or new section)
+        // Stop if we hit a new section (new emoji heading without pipes)
         if (currentLine.trim() === '' ||
-            (currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡')) && !currentLine.includes('|')) {
+            ((currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡')) && !currentLine.includes('|'))) {
           break
         }
         tableLines.push(currentLine)
         i++
       }
 
-      // Join all table lines into single string
+      processedContent.push(tableLines.join('\n'))
+    } else if (line.includes('|') && i + 1 < content.length && (content[i + 1].includes('──') || content[i + 1].includes('---'))) {
+      // Regular table without emoji header
+      const tableLines = [line, content[i + 1]]
+      i += 2
+
+      while (i < content.length) {
+        const currentLine = content[i]
+        if (currentLine.trim() === '' ||
+            ((currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡')) && !currentLine.includes('|'))) {
+          break
+        }
+        tableLines.push(currentLine)
+        i++
+      }
+
       processedContent.push(tableLines.join('\n'))
     } else {
       processedContent.push(line)
@@ -178,6 +196,10 @@ function renderParagraph(text: string, key: string) {
 function renderTable(text: string, key: string) {
   const lines = text.split('\n').filter(line => line.trim())
 
+  // Check if first line is emoji table title
+  const hasEmojiTitle = lines[0] && (lines[0].startsWith('📊') || lines[0].startsWith('📋'))
+  const emojiTitle = hasEmojiTitle ? lines[0] : null
+
   // Find header row (first line with pipes)
   const headerIndex = lines.findIndex(line => line.includes('|'))
   if (headerIndex === -1) return null
@@ -207,9 +229,18 @@ function renderTable(text: string, key: string) {
   })
 
   return (
-    <div key={key} className="overflow-x-auto my-6 -mx-4 sm:mx-0">
-      <div className="inline-block min-w-full align-middle px-4 sm:px-0">
-        <table className="min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+    <div key={key} className="my-6">
+      {emojiTitle && (
+        <div className="flex items-start gap-3 bg-white rounded-t-lg p-4 border-x-2 border-t-2 border-slate-200">
+          <span className="text-2xl flex-shrink-0">{emojiTitle.match(/^(📊|📋)/)?.[0]}</span>
+          <p className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+            {emojiTitle.replace(/^(📊|📋)\s*/, '').replace(/:$/, '')}
+          </p>
+        </div>
+      )}
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+          <table className={`min-w-full border-collapse bg-white ${emojiTitle ? '' : 'rounded-lg'} overflow-hidden shadow-sm`}>
           <thead>
             <tr className="bg-gradient-to-r from-teal-500 to-blue-500">
               {headers.map((header, i) => (
@@ -257,6 +288,7 @@ function renderTable(text: string, key: string) {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )
