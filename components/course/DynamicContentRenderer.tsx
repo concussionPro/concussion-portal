@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, AlertTriangle, Info, Lightbulb, Brain, Activity } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 
 interface DynamicContentRendererProps {
   content: string[]
@@ -66,73 +66,10 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     }
   }
 
-  // Split content into chunks for varied layout
-  const chunks: string[][] = []
-  let currentChunk: string[] = []
-
-  processedContent.forEach((paragraph, index) => {
-    currentChunk.push(paragraph)
-
-    // Create a new chunk every 3-4 paragraphs for visual variety
-    if ((index + 1) % 4 === 0 || index === processedContent.length - 1) {
-      chunks.push([...currentChunk])
-      currentChunk = []
-    }
-  })
-
+  // Render all content in single column with consistent spacing
   return (
     <div className="space-y-6">
-      {chunks.map((chunk, chunkIndex) => {
-        // Alternate between different layouts
-        const layoutType = chunkIndex % 3
-
-        if (layoutType === 0) {
-          // Standard single column
-          return (
-            <div key={chunkIndex} className="space-y-4">
-              {chunk.map((para, pIndex) => renderParagraph(para, `${chunkIndex}-${pIndex}`))}
-            </div>
-          )
-        } else if (layoutType === 1 && chunk.length >= 2) {
-          // Side-by-side cards
-          return (
-            <div key={chunkIndex} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {chunk.map((para, pIndex) => (
-                <div
-                  key={`${chunkIndex}-${pIndex}`}
-                  className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-5 border border-slate-200"
-                >
-                  {renderParagraph(para, `${chunkIndex}-${pIndex}`)}
-                </div>
-              ))}
-            </div>
-          )
-        } else {
-          // Highlighted box with icon
-          const iconType = chunkIndex % 4
-          const IconComponent = [Brain, Activity, Info, Lightbulb][iconType]
-          const colors = [
-            { bg: 'bg-blue-50', border: 'border-blue-200', icon: 'text-blue-600' },
-            { bg: 'bg-teal-50', border: 'border-teal-200', icon: 'text-teal-600' },
-            { bg: 'bg-purple-50', border: 'border-purple-200', icon: 'text-purple-600' },
-            { bg: 'bg-emerald-50', border: 'border-emerald-200', icon: 'text-emerald-600' },
-          ][iconType]
-
-          return (
-            <div
-              key={chunkIndex}
-              className={`${colors.bg} border-2 ${colors.border} rounded-xl p-6 relative overflow-hidden`}
-            >
-              <div className={`absolute top-4 right-4 w-10 h-10 rounded-lg ${colors.bg} border ${colors.border} flex items-center justify-center`}>
-                <IconComponent className={`w-5 h-5 ${colors.icon}`} strokeWidth={2} />
-              </div>
-              <div className="space-y-4 pr-14">
-                {chunk.map((para, pIndex) => renderParagraph(para, `${chunkIndex}-${pIndex}`))}
-              </div>
-            </div>
-          )
-        }
-      })}
+      {processedContent.map((paragraph, index) => renderParagraph(paragraph, `content-${index}`))}
     </div>
   )
 }
@@ -250,7 +187,7 @@ function renderTable(text: string, key: string) {
               {headers.map((header, i) => (
                 <th
                   key={i}
-                  className="px-4 py-3 text-left text-xs sm:text-sm font-bold text-white border-r border-white/20 last:border-r-0 whitespace-nowrap"
+                  className="px-4 py-3 text-left text-sm font-bold text-white border-r border-white/20 last:border-r-0"
                 >
                   {header}
                 </th>
@@ -281,7 +218,7 @@ function renderTable(text: string, key: string) {
                     {row.content.map((cell, cellIndex) => (
                       <td
                         key={cellIndex}
-                        className="px-4 py-3 text-xs sm:text-sm text-slate-700 border-r border-slate-200 last:border-r-0 min-w-[120px] sm:min-w-[150px]"
+                        className="px-4 py-3 text-sm text-slate-700 border-r border-slate-200 last:border-r-0"
                       >
                         {cell}
                       </td>
