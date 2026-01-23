@@ -107,6 +107,38 @@ function renderParagraph(text: string, key: string) {
     return renderTable(text, key)
   }
 
+  // Handle checklist items (☐)
+  if (text.trim().startsWith('☐')) {
+    const parts = text.split(':')
+    const title = parts[0].replace('☐', '').trim()
+    const description = parts.slice(1).join(':').trim()
+    return (
+      <div key={key} className="flex items-start gap-3 bg-amber-50 rounded-lg p-4 border-l-4 border-amber-400">
+        <span className="text-2xl flex-shrink-0">☐</span>
+        <div className="flex-1">
+          <div className="font-semibold text-slate-900 text-[15px]">{title}</div>
+          {description && <div className="text-sm text-slate-600 mt-1">{description}</div>}
+        </div>
+      </div>
+    )
+  }
+
+  // Handle key takeaways (✓)
+  if (text.trim().startsWith('✓')) {
+    const parts = text.split(':')
+    const title = parts[0].replace('✓', '').trim()
+    const description = parts.slice(1).join(':').trim()
+    return (
+      <div key={key} className="flex items-start gap-3 bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+        <span className="text-xl flex-shrink-0 text-green-600">✓</span>
+        <div className="flex-1">
+          <div className="font-semibold text-slate-900 text-[15px]">{title}</div>
+          {description && <div className="text-sm text-slate-700 mt-1">{description}</div>}
+        </div>
+      </div>
+    )
+  }
+
   // Handle bullet points
   if (text.trim().startsWith('•') || text.trim().startsWith('-') || text.trim().startsWith('*')) {
     const items = text.split(/\n/).filter(line => line.trim())
