@@ -207,55 +207,57 @@ function renderTable(text: string, key: string) {
   })
 
   return (
-    <div key={key} className="overflow-x-auto my-6">
-      <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
-        <thead>
-          <tr className="bg-gradient-to-r from-teal-500 to-blue-500">
-            {headers.map((header, i) => (
-              <th
-                key={i}
-                className="px-4 py-3 text-left text-sm font-bold text-white border-r border-white/20 last:border-r-0"
-              >
-                {header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, rowIndex) => {
-            if (row.type === 'category') {
-              // Category header spanning all columns
-              return (
-                <tr key={rowIndex} className="bg-slate-100">
-                  <td
-                    colSpan={headers.length}
-                    className="px-4 py-2 text-sm font-bold text-slate-900 uppercase tracking-wide"
-                  >
-                    {row.content[0]}
-                  </td>
-                </tr>
-              )
-            } else {
-              // Data row
-              return (
-                <tr
-                  key={rowIndex}
-                  className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50'}
+    <div key={key} className="overflow-x-auto my-6 -mx-4 sm:mx-0">
+      <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+        <table className="min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+          <thead>
+            <tr className="bg-gradient-to-r from-teal-500 to-blue-500">
+              {headers.map((header, i) => (
+                <th
+                  key={i}
+                  className="px-4 py-3 text-left text-xs sm:text-sm font-bold text-white border-r border-white/20 last:border-r-0 whitespace-nowrap"
                 >
-                  {row.content.map((cell, cellIndex) => (
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, rowIndex) => {
+              if (row.type === 'category') {
+                // Category header spanning all columns
+                return (
+                  <tr key={rowIndex} className="bg-slate-100">
                     <td
-                      key={cellIndex}
-                      className="px-4 py-3 text-sm text-slate-700 border-r border-slate-200 last:border-r-0"
+                      colSpan={headers.length}
+                      className="px-4 py-2 text-sm font-bold text-slate-900 uppercase tracking-wide"
                     >
-                      {cell}
+                      {row.content[0]}
                     </td>
-                  ))}
-                </tr>
-              )
-            }
-          })}
-        </tbody>
-      </table>
+                  </tr>
+                )
+              } else {
+                // Data row
+                return (
+                  <tr
+                    key={rowIndex}
+                    className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50'}
+                  >
+                    {row.content.map((cell, cellIndex) => (
+                      <td
+                        key={cellIndex}
+                        className="px-4 py-3 text-xs sm:text-sm text-slate-700 border-r border-slate-200 last:border-r-0 min-w-[120px] sm:min-w-[150px]"
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                )
+              }
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
