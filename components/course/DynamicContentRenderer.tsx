@@ -23,8 +23,14 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     const lineAfterNextIsSeparator = i + 2 < content.length && (content[i + 2].includes('──') || content[i + 2].includes('---'))
 
     // Check if this is a major section header (emoji + number + title)
-    // Handle emoji with variation selectors (⛓️ = ⛓ + FE0F)
-    const isMajorSection = /^[🎯⛓📅✅💡📚]/u.test(line) && /\d+\./.test(line)
+    // Simple check: starts with emoji (ignoring variation selectors) and has " N. " pattern
+    const startsWithTargetEmoji = line.charCodeAt(0) === 0x1F3AF || // 🎯
+                                   line.charCodeAt(0) === 0x26D3 ||  // ⛓
+                                   line.charCodeAt(0) === 0x1F4C5 || // 📅
+                                   line.charCodeAt(0) === 0x2705 ||  // ✅
+                                   line.charCodeAt(0) === 0x1F4A1 || // 💡
+                                   line.charCodeAt(0) === 0x1F4DA    // 📚
+    const isMajorSection = startsWithTargetEmoji && / \d+\. /.test(line)
 
     // Check if this is a pathway section (A., B., C. followed by content with Mechanism:, Target:, etc.)
     const isPathwayHeader = /^[A-C]\.\s+THE\s+/.test(line)
