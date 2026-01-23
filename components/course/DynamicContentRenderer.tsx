@@ -8,21 +8,51 @@ interface DynamicContentRendererProps {
 }
 
 export function DynamicContentRenderer({ content, sectionIndex }: DynamicContentRendererProps) {
-  // Detect if content has table markers
-  const hasTable = content.some(p => p.includes('|') && p.includes('---'))
+  // Pre-process: Group table rows together
+  const processedContent: string[] = []
+  let i = 0
 
-  // Detect if content has list markers
-  const hasBullets = content.some(p => p.trim().startsWith('•') || p.trim().startsWith('-') || p.trim().startsWith('*'))
+  while (i < content.length) {
+    const line = content[i]
+
+    // Check if this starts a table (has header with pipes + next line is separator)
+    const hasTableHeader = line.includes('|') && i + 1 < content.length
+    const nextLineIsSeparator = i + 1 < content.length && (content[i + 1].includes('──') || content[i + 1].includes('---'))
+
+    if (hasTableHeader && nextLineIsSeparator) {
+      // Start collecting table rows
+      const tableLines = [line, content[i + 1]] // header + separator
+      i += 2
+
+      // Collect all subsequent table-related lines
+      while (i < content.length) {
+        const currentLine = content[i]
+        // Stop if we hit a non-table indicator (emoji heading, empty, or new section)
+        if (currentLine.trim() === '' ||
+            (currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡')) && !currentLine.includes('|')) {
+          break
+        }
+        tableLines.push(currentLine)
+        i++
+      }
+
+      // Join all table lines into single string
+      processedContent.push(tableLines.join('\n'))
+    } else {
+      processedContent.push(line)
+      i++
+    }
+  }
 
   // Split content into chunks for varied layout
   const chunks: string[][] = []
   let currentChunk: string[] = []
 
-  content.forEach((paragraph, index) => {
+  processedContent.forEach((paragraph, index) => {
     currentChunk.push(paragraph)
 
     // Create a new chunk every 3-4 paragraphs for visual variety
-    if ((index + 1) % 4 === 0 || index === content.length - 1) {
+    if ((index + 1) % 4 === 0 || index === processedContent.length - 1) {
       chunks.push([...currentChunk])
       currentChunk = []
     }
@@ -86,8 +116,8 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
 }
 
 function renderParagraph(text: string, key: string) {
-  // Handle tables
-  if (text.includes('|') && text.includes('---')) {
+  // Handle tables - check for pipes and separator
+  if (text.includes('|') && (text.includes('───') || text.includes('---'))) {
     return renderTable(text, key)
   }
 
@@ -147,10 +177,34 @@ function renderParagraph(text: string, key: string) {
 
 function renderTable(text: string, key: string) {
   const lines = text.split('\n').filter(line => line.trim())
-  const headers = lines[0].split('|').map(h => h.trim()).filter(Boolean)
-  const rows = lines.slice(2).map(line =>
-    line.split('|').map(cell => cell.trim()).filter(Boolean)
-  )
+
+  // Find header row (first line with pipes)
+  const headerIndex = lines.findIndex(line => line.includes('|'))
+  if (headerIndex === -1) return null
+
+  const headerLine = lines[headerIndex]
+  const headers = headerLine.split('|').map(h => h.trim()).filter(Boolean)
+
+  // Find separator line
+  const separatorIndex = lines.findIndex(line => line.includes('──') || line.includes('---'))
+  if (separatorIndex === -1) return null
+
+  // Get all rows after separator
+  const dataLines = lines.slice(separatorIndex + 1)
+
+  // Process rows - some are categories (no pipes), some are data (with pipes)
+  const rows: Array<{ type: 'category' | 'data', content: string[] }> = []
+
+  dataLines.forEach(line => {
+    if (line.includes('|')) {
+      // Data row
+      const cells = line.split('|').map(cell => cell.trim()).filter(Boolean)
+      rows.push({ type: 'data', content: cells })
+    } else if (line.trim()) {
+      // Category row (no pipes)
+      rows.push({ type: 'category', content: [line.trim()] })
+    }
+  })
 
   return (
     <div key={key} className="overflow-x-auto my-6">
@@ -168,21 +222,38 @@ function renderTable(text: string, key: string) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className={rowIndex % 2 === 0 ? 'bg-slate-50' : 'bg-white'}
-            >
-              {row.map((cell, cellIndex) => (
-                <td
-                  key={cellIndex}
-                  className="px-4 py-3 text-sm text-slate-700 border-r border-slate-200 last:border-r-0"
+          {rows.map((row, rowIndex) => {
+            if (row.type === 'category') {
+              // Category header spanning all columns
+              return (
+                <tr key={rowIndex} className="bg-slate-100">
+                  <td
+                    colSpan={headers.length}
+                    className="px-4 py-2 text-sm font-bold text-slate-900 uppercase tracking-wide"
+                  >
+                    {row.content[0]}
+                  </td>
+                </tr>
+              )
+            } else {
+              // Data row
+              return (
+                <tr
+                  key={rowIndex}
+                  className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50'}
                 >
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
+                  {row.content.map((cell, cellIndex) => (
+                    <td
+                      key={cellIndex}
+                      className="px-4 py-3 text-sm text-slate-700 border-r border-slate-200 last:border-r-0"
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              )
+            }
+          })}
         </tbody>
       </table>
     </div>
