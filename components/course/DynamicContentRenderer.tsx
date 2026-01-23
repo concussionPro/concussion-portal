@@ -27,12 +27,14 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
       const tableLines = [line, content[i + 1], content[i + 2]] // emoji + header + separator
       i += 3
 
-      // Collect all subsequent data rows
+      // Collect all subsequent data rows (stop only at new emoji HEADINGS with colons)
       while (i < content.length) {
         const currentLine = content[i]
-        // Stop if we hit a new section (new emoji heading without pipes)
-        if (currentLine.trim() === '' ||
-            ((currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡')) && !currentLine.includes('|'))) {
+        // Stop only at new section headings (emoji + colon at end)
+        const isNewSection = (currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡') || currentLine.startsWith('🔴')) &&
+                             currentLine.includes(':') &&
+                             !currentLine.includes('|')
+        if (currentLine.trim() === '' || isNewSection) {
           break
         }
         tableLines.push(currentLine)
@@ -47,8 +49,10 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
 
       while (i < content.length) {
         const currentLine = content[i]
-        if (currentLine.trim() === '' ||
-            ((currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡')) && !currentLine.includes('|'))) {
+        const isNewSection = (currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡') || currentLine.startsWith('🔴')) &&
+                             currentLine.includes(':') &&
+                             !currentLine.includes('|')
+        if (currentLine.trim() === '' || isNewSection) {
           break
         }
         tableLines.push(currentLine)
