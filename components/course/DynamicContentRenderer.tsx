@@ -8,7 +8,7 @@ interface DynamicContentRendererProps {
 }
 
 export function DynamicContentRenderer({ content, sectionIndex }: DynamicContentRendererProps) {
-  // Pre-process: Group table rows together
+  // Pre-process: Group table rows together AND group pathway sections
   const processedContent: string[] = []
   let i = 0
 
@@ -22,7 +22,29 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     const nextLineIsTableHeader = i + 1 < content.length && content[i + 1].includes('|')
     const lineAfterNextIsSeparator = i + 2 < content.length && (content[i + 2].includes('──') || content[i + 2].includes('---'))
 
-    if (isEmojiTableHeader && nextLineIsTableHeader && lineAfterNextIsSeparator) {
+    // Check if this is a pathway section (A., B., C. followed by content with Mechanism:, Target:, etc.)
+    const isPathwayHeader = /^[A-C]\.\s+THE\s+/.test(line)
+
+    if (isPathwayHeader) {
+      // Group the pathway header with all its content (Mechanism, Target, Intervention, etc.)
+      const pathwayLines = [line]
+      i++
+
+      // Collect lines until we hit another pathway header or major section
+      while (i < content.length) {
+        const currentLine = content[i]
+        const isNextPathway = /^[A-C]\.\s+THE\s+/.test(currentLine)
+        const isMajorSection = /^[🎯⛓️📅✅💡📚🔹]/.test(currentLine) && !currentLine.startsWith('• ')
+
+        if (isNextPathway || isMajorSection) {
+          break
+        }
+        pathwayLines.push(currentLine)
+        i++
+      }
+
+      processedContent.push('__PATHWAY__\n' + pathwayLines.join('\n'))
+    } else if (isEmojiTableHeader && nextLineIsTableHeader && lineAfterNextIsSeparator) {
       // Include emoji header with the table
       const tableLines = [line, content[i + 1], content[i + 2]] // emoji + header + separator
       i += 3
@@ -75,6 +97,11 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
 }
 
 function renderParagraph(text: string, key: string) {
+  // Handle pathway sections (grouped A/B/C sections with Mechanism, Target, etc.)
+  if (text.startsWith('__PATHWAY__\n')) {
+    return renderPathwaySection(text.replace('__PATHWAY__\n', ''), key)
+  }
+
   // Handle tables - check for pipes and separator
   if (text.includes('|') && (text.includes('───') || text.includes('---'))) {
     return renderTable(text, key)
@@ -131,6 +158,74 @@ function renderParagraph(text: string, key: string) {
       className="text-[15px] text-slate-700 leading-relaxed"
       dangerouslySetInnerHTML={{ __html: formatted }}
     />
+  )
+}
+
+function renderPathwaySection(text: string, key: string) {
+  const lines = text.split('\n').filter(line => line.trim())
+  if (lines.length === 0) return null
+
+  const title = lines[0] // "A. THE VESTIBULAR & OCULOMOTOR PATHWAY"
+  const contentLines = lines.slice(1)
+
+  // Group content by labels (Mechanism:, Target:, etc.)
+  const sections: Array<{ label: string; content: string[] }> = []
+  let currentLabel = ''
+  let currentContent: string[] = []
+
+  contentLines.forEach(line => {
+    if (line.match(/^(Mechanism|Target|Progressive Loading|Intervention|Key Reference):/)) {
+      if (currentLabel) {
+        sections.push({ label: currentLabel, content: currentContent })
+      }
+      const match = line.match(/^([^:]+):(.*)/)
+      currentLabel = match?.[1] || ''
+      currentContent = match?.[2] ? [match[2].trim()] : []
+    } else if (currentLabel) {
+      currentContent.push(line)
+    }
+  })
+
+  if (currentLabel) {
+    sections.push({ label: currentLabel, content: currentContent })
+  }
+
+  return (
+    <div key={key} className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-xl border-2 border-blue-200 p-6 shadow-sm">
+      <h3 className="text-lg font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
+        {title}
+      </h3>
+      <div className="space-y-4">
+        {sections.map((section, idx) => (
+          <div key={idx} className="bg-white rounded-lg p-4 border border-slate-200">
+            <div className="flex items-start gap-3">
+              <span className="text-xs font-bold uppercase tracking-wide text-teal-600 bg-teal-50 px-2 py-1 rounded">
+                {section.label}
+              </span>
+            </div>
+            <div className="mt-2">
+              {section.content.map((line, lineIdx) => {
+                if (line.trim().startsWith('•')) {
+                  return (
+                    <div key={lineIdx} className="flex items-start gap-2 mt-1">
+                      <span className="text-teal-500 mt-1">•</span>
+                      <span className="text-sm text-slate-700 leading-relaxed flex-1">
+                        {line.replace(/^•\s*/, '')}
+                      </span>
+                    </div>
+                  )
+                }
+                return (
+                  <p key={lineIdx} className="text-sm text-slate-700 leading-relaxed mt-1">
+                    {line}
+                  </p>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
