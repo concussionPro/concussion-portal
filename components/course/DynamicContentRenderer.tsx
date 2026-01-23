@@ -23,7 +23,8 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     const lineAfterNextIsSeparator = i + 2 < content.length && (content[i + 2].includes('──') || content[i + 2].includes('---'))
 
     // Check if this is a major section header (emoji + number + title)
-    const isMajorSection = /^[🎯⛓️📅✅💡📚]\s*\d+\./.test(line)
+    // Handle emoji with variation selectors (⛓️ = ⛓ + FE0F)
+    const isMajorSection = /^[🎯⛓📅✅💡📚]/u.test(line) && /\d+\./.test(line)
 
     // Check if this is a pathway section (A., B., C. followed by content with Mechanism:, Target:, etc.)
     const isPathwayHeader = /^[A-C]\.\s+THE\s+/.test(line)
@@ -35,7 +36,7 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
 
       while (i < content.length) {
         const currentLine = content[i]
-        const isNextMajorSection = /^[🎯⛓️📅✅💡📚🔹]\s*\d+\./.test(currentLine)
+        const isNextMajorSection = (/^[🎯⛓📅✅💡📚🔹]/u.test(currentLine) && /\d+\./.test(currentLine))
         const isPathway = /^[A-C]\.\s+THE\s+/.test(currentLine)
         const isBullet = currentLine.trim().startsWith('•')
         const isChecklist = currentLine.trim().startsWith('☐')
@@ -329,7 +330,8 @@ function renderMajorSection(text: string, key: string) {
   const contentLines = lines.slice(1)
 
   // Extract emoji and title from header
-  const emojiMatch = headerLine.match(/^([🎯⛓️📅✅💡📚])\s*(.+)/)
+  // Handle emoji with variation selectors
+  const emojiMatch = headerLine.match(/^([🎯⛓📅✅💡📚][\uFE0F]?)\s*(.+)/u)
   const emoji = emojiMatch?.[1] || ''
   const title = emojiMatch?.[2] || headerLine
 
