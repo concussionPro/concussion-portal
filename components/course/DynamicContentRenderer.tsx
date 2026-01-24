@@ -35,8 +35,27 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     // Check if this is a pathway section (A., B., C. followed by content with Mechanism:, Target:, etc.)
     const isPathwayHeader = /^[A-C]\.\s+THE\s+/.test(line)
 
-    if (isMajorSection) {
-      // Group major section with following intro paragraphs (until bullets/checklist/tables)
+    if (isPathwayHeader) {
+      // Group the pathway header with all its content (Mechanism, Target, Intervention, etc.)
+      const pathwayLines = [line]
+      i++
+
+      // Collect lines until we hit another pathway header or major section
+      while (i < content.length) {
+        const currentLine = content[i]
+        const isNextPathway = /^[A-C]\.\s+THE\s+/.test(currentLine)
+        const isMajorSection = /^[🎯⛓️📅✅💡📚🔹]/.test(currentLine) && !currentLine.startsWith('• ')
+
+        if (isNextPathway || isMajorSection) {
+          break
+        }
+        pathwayLines.push(currentLine)
+        i++
+      }
+
+      processedContent.push('__PATHWAY__\n' + pathwayLines.join('\n'))
+    } else if (isMajorSection) {
+      // Group major section with following intro paragraphs (until bullets/checklist/tables/pathways)
       const sectionLines = [line]
       i++
 
@@ -56,25 +75,6 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
       }
 
       processedContent.push('__SECTION__\n' + sectionLines.join('\n'))
-    } else if (isPathwayHeader) {
-      // Group the pathway header with all its content (Mechanism, Target, Intervention, etc.)
-      const pathwayLines = [line]
-      i++
-
-      // Collect lines until we hit another pathway header or major section
-      while (i < content.length) {
-        const currentLine = content[i]
-        const isNextPathway = /^[A-C]\.\s+THE\s+/.test(currentLine)
-        const isMajorSection = /^[🎯⛓️📅✅💡📚🔹]/.test(currentLine) && !currentLine.startsWith('• ')
-
-        if (isNextPathway || isMajorSection) {
-          break
-        }
-        pathwayLines.push(currentLine)
-        i++
-      }
-
-      processedContent.push('__PATHWAY__\n' + pathwayLines.join('\n'))
     } else if (isEmojiTableHeader && nextLineIsTableHeader && lineAfterNextIsSeparator) {
       // Include emoji header with the table
       const tableLines = [line, content[i + 1], content[i + 2]] // emoji + header + separator
