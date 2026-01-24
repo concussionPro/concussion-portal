@@ -335,40 +335,44 @@ function renderPathwaySection(text: string, key: string) {
   }
 
   return (
-    <div key={key} className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-xl border-2 border-blue-200 p-6 shadow-sm">
-      <h3 className="text-lg font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
+    <div key={key} className="space-y-4">
+      {/* Pathway title */}
+      <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">
         {title}
       </h3>
-      <div className="space-y-4">
-        {sections.map((section, idx) => (
-          <div key={idx} className="bg-white rounded-lg p-4 border border-slate-200">
-            <div className="flex items-start gap-3">
-              <span className="text-xs font-bold uppercase tracking-wide text-teal-600 bg-teal-50 px-2 py-1 rounded">
-                {section.label}
-              </span>
-            </div>
-            <div className="mt-2">
-              {section.content.map((line, lineIdx) => {
-                if (line.trim().startsWith('•')) {
-                  return (
-                    <div key={lineIdx} className="flex items-start gap-2 mt-1">
-                      <span className="text-teal-500 mt-1">•</span>
-                      <span className="text-sm text-slate-700 leading-relaxed flex-1">
-                        {line.replace(/^•\s*/, '')}
-                      </span>
-                    </div>
-                  )
-                }
-                return (
-                  <p key={lineIdx} className="text-sm text-slate-700 leading-relaxed mt-1">
-                    {line}
-                  </p>
-                )
-              })}
-            </div>
+
+      {/* Each section as a separate card like STRESS MANAGEMENT example */}
+      {sections.map((section, idx) => (
+        <div key={idx} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+          {/* Colored header bar with label */}
+          <div className="bg-gradient-to-r from-indigo-500 to-blue-600 px-5 py-3">
+            <h4 className="text-base font-bold text-white uppercase tracking-wide">
+              {section.label}
+            </h4>
           </div>
-        ))}
-      </div>
+
+          {/* White content area */}
+          <div className="px-5 py-4 bg-slate-50">
+            {section.content.map((line, lineIdx) => {
+              if (line.trim().startsWith('•')) {
+                return (
+                  <div key={lineIdx} className="flex items-start gap-2 mt-2 first:mt-0">
+                    <span className="text-indigo-500 mt-1 font-bold">•</span>
+                    <span className="text-[15px] text-slate-700 leading-relaxed flex-1">
+                      {line.replace(/^•\s*/, '')}
+                    </span>
+                  </div>
+                )
+              }
+              return (
+                <p key={lineIdx} className="text-[15px] text-slate-700 leading-relaxed mt-2 first:mt-0">
+                  {line}
+                </p>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
