@@ -223,6 +223,17 @@ function renderParagraph(text: string, key: string) {
     )
   }
 
+  // Handle intro headers (lines ending with : that introduce a list/section)
+  if (text.trim().endsWith(':') && !text.includes('|') && text.length > 10 && text.length < 200) {
+    return (
+      <div key={key} className="bg-slate-50 rounded-lg px-4 py-3 border-l-4 border-slate-400 mt-4 mb-3">
+        <h4 className="text-base font-bold text-slate-900">
+          {text.trim()}
+        </h4>
+      </div>
+    )
+  }
+
   // Handle headers (markdown-style)
   if (text.startsWith('##')) {
     return (
