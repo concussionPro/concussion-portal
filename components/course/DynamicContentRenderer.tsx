@@ -250,6 +250,24 @@ function renderParagraph(text: string, key: string) {
     )
   }
 
+  // Handle numbered section headers (1. TITLE or 1. TITLE:)
+  const numberedSectionMatch = text.match(/^(\d+)\.\s+([A-Z][A-Z\s\-&()]+):?\s*$/)
+  if (numberedSectionMatch && numberedSectionMatch[2].length > 5) {
+    const [, number, title] = numberedSectionMatch
+    return (
+      <div key={key} className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg px-5 py-3 border-l-4 border-indigo-500 mt-4 mb-3">
+        <div className="flex items-center gap-3">
+          <span className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm">
+            {number}
+          </span>
+          <h4 className="text-base font-bold text-indigo-900 uppercase tracking-wide">
+            {title}
+          </h4>
+        </div>
+      </div>
+    )
+  }
+
   // Handle headers (markdown-style)
   if (text.startsWith('##')) {
     return (
