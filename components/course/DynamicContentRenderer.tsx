@@ -223,6 +223,22 @@ function renderParagraph(text: string, key: string) {
     )
   }
 
+  // Handle definition-style content (LABEL: description)
+  const definitionMatch = text.match(/^([A-Z][A-Z\s&]+):\s*(.+)/)
+  if (definitionMatch && definitionMatch[1].length < 50) {
+    const [, label, content] = definitionMatch
+    return (
+      <div key={key} className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500 my-3">
+        <div className="font-bold text-blue-900 text-sm uppercase tracking-wide mb-2">
+          {label}
+        </div>
+        <div className="text-[15px] text-slate-700 leading-relaxed">
+          {content}
+        </div>
+      </div>
+    )
+  }
+
   // Handle intro headers (lines ending with : that introduce a list/section)
   if (text.trim().endsWith(':') && !text.includes('|') && text.length > 10 && text.length < 200) {
     return (
