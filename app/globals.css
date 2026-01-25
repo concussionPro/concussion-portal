@@ -1,33 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  /* Clean, professional - subtle blue/green palette */
+  /* Professional Medical Palette - Patek Philippe Precision */
   --background: #fafbfc;
-  --foreground: #1e293b;
+  --foreground: #0f172a;
   --border: #e2e8f0;
   --card: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --muted: #f8fafc;
+  --muted-foreground: #475569; /* WCAG AA compliant - improved from #64748b */
 
-  /* Subtle blue/green accents - professional and sleek */
-  --primary: #64a8b0;      /* Soft teal */
-  --accent: #5b9aa6;       /* Muted ocean blue */
-  --secondary: #7ba8b0;    /* Light teal */
-  --tertiary: #88b4be;     /* Soft cyan */
-  --highlight: #6b9da8;    /* Professional teal */
+  /* Consolidated Accent System - Only 3 Shades */
+  --accent: #5b9aa6;           /* Primary teal */
+  --accent-light: #7ba8b0;     /* Light teal */
+  --accent-dark: #4a8590;      /* Dark teal */
 
-  /* Compact spacing scale */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 40px;
-  --space-8: 48px;
-  --space-9: 64px;
-  --space-10: 80px;
-  --space-11: 96px;
+  /* Systematic Spacing Scale (8px base) */
+  --space-xs: 0.5rem;    /* 8px */
+  --space-sm: 0.75rem;   /* 12px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 1.5rem;    /* 24px */
+  --space-xl: 2rem;      /* 32px */
+  --space-2xl: 3rem;     /* 48px */
+  --space-3xl: 4rem;     /* 64px */
+
+  /* Responsive Content Padding */
+  --content-padding-mobile: 1rem;      /* 16px */
+  --content-padding-tablet: 1.5rem;    /* 24px */
+  --content-padding-desktop: 2rem;     /* 32px */
+
+  /* Shadow System - Consistent Depth */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+  /* Border Radius System */
+  --radius-sm: 0.5rem;    /* 8px */
+  --radius-md: 0.75rem;   /* 12px */
+  --radius-lg: 1rem;      /* 16px */
+  --radius-xl: 1.5rem;    /* 24px */
+
+  /* Touch Target Minimum */
+  --touch-target: 44px;
 }
 
 @theme inline {
@@ -37,8 +50,9 @@
   --color-card: var(--card);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-primary: var(--primary);
   --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-dark: var(--accent-dark);
 }
 
 /* Premium dark typography */
@@ -534,5 +548,296 @@ body {
     .animate-pulse-glow {
       animation: none !important;
     }
+  }
+
+  /* === PATEK PHILIPPE DESIGN SYSTEM === */
+
+  /* Standardized Card System */
+  .card-standard {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-standard-hover {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .card-standard-hover:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: rgba(91, 154, 166, 0.3);
+  }
+
+  /* Enhanced Button System with Loading States */
+  .btn-enhanced {
+    display: inline-flex;
+    align-items: center;
+    justify-center: center;
+    gap: 0.5rem;
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: -0.01em;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-enhanced:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .btn-enhanced:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .btn-enhanced:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .btn-primary-enhanced {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 8px rgba(91, 154, 166, 0.25), 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .btn-primary-enhanced:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%);
+    box-shadow: 0 4px 12px rgba(91, 154, 166, 0.35), 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary-enhanced {
+    background: white;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .btn-secondary-enhanced:hover:not(:disabled) {
+    background: rgba(91, 154, 166, 0.05);
+    border-color: var(--accent-dark);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Loading Spinner for Buttons */
+  .btn-loading {
+    color: transparent !important;
+    pointer-events: none;
+    position: relative;
+  }
+
+  .btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid white;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Enhanced Table Styling */
+  .table-premium {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .table-premium thead {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  }
+
+  .table-premium th {
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.01em;
+  }
+
+  .table-premium tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.15s ease;
+  }
+
+  .table-premium tbody tr:hover {
+    background-color: #f8fafc;
+  }
+
+  .table-premium tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .table-premium td {
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: var(--foreground);
+  }
+
+  .table-premium tbody tr:nth-child(even) {
+    background-color: #fafbfc;
+  }
+
+  .table-premium tbody tr:nth-child(even):hover {
+    background-color: #f8fafc;
+  }
+
+  /* Responsive Content Padding System */
+  .content-padding-responsive {
+    padding: var(--content-padding-mobile);
+  }
+
+  @media (min-width: 640px) {
+    .content-padding-responsive {
+      padding: var(--content-padding-tablet);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .content-padding-responsive {
+      padding: var(--content-padding-desktop);
+    }
+  }
+
+  /* Typography System - Reduced to 3 Weights */
+  .text-display {
+    font-weight: 600; /* Semibold for all headers */
+    letter-spacing: -0.02em;
+  }
+
+  .text-body {
+    font-weight: 400; /* Regular for body */
+    letter-spacing: -0.01em;
+  }
+
+  .text-emphasis {
+    font-weight: 600; /* Semibold for emphasis */
+  }
+
+  /* Touch Target Enforcement */
+  button,
+  a[href],
+  [role="button"],
+  [role="tab"],
+  [role="checkbox"],
+  [role="radio"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+
+  /* Focus Ring - Consistent Across All Interactive Elements */
+  *:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Improved Text Contrast */
+  .text-muted-enhanced {
+    color: var(--muted-foreground); /* Now #475569 for WCAG AA */
+  }
+
+  /* Bento Grid Fix - Consistent Heights */
+  .bento-grid-fixed {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    align-items: start; /* Prevents stretching */
+  }
+
+  @media (min-width: 768px) {
+    .bento-grid-fixed {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .bento-grid-fixed {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* Module Content Spacing - Mobile Optimized */
+  .module-content-container {
+    max-width: 56rem; /* 896px */
+    margin: 0 auto;
+    padding: 1rem; /* 16px on mobile */
+  }
+
+  @media (min-width: 640px) {
+    .module-content-container {
+      padding: 1.5rem; /* 24px on tablet */
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .module-content-container {
+      padding: 2rem; /* 32px on desktop */
+    }
+  }
+
+  /* Section Visual Hierarchy - Reduced Complexity */
+  .section-container {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .section-container-nested {
+    background: #fafbfc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+  }
+
+  /* No more than 2 background levels */
+  .content-card-simple {
+    background: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+  }
+
+  /* Systematic Section Spacing */
+  .section-spacing-system > * + * {
+    margin-top: var(--space-lg);
+  }
+
+  .section-spacing-system-tight > * + * {
+    margin-top: var(--space-md);
   }
 }
