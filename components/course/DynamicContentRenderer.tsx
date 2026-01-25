@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 
 interface DynamicContentRendererProps {
@@ -8,9 +9,10 @@ interface DynamicContentRendererProps {
 }
 
 export function DynamicContentRenderer({ content, sectionIndex }: DynamicContentRendererProps) {
-  // Pre-process: Group table rows together AND group pathway sections
-  const processedContent: string[] = []
-  let i = 0
+  // PERFORMANCE: Memoize content preprocessing to avoid re-processing on every render
+  const processedContent = useMemo(() => {
+    const processed: string[] = []
+    let i = 0
 
   while (i < content.length) {
     const line = content[i]
@@ -53,7 +55,7 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
         i++
       }
 
-      processedContent.push('__PATHWAY__\n' + pathwayLines.join('\n'))
+      processed.push('__PATHWAY__\n' + pathwayLines.join('\n'))
     } else if (isMajorSection) {
       // Group major section with following intro paragraphs (until bullets/checklist/tables/pathways)
       const sectionLines = [line]
@@ -74,7 +76,7 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
         i++
       }
 
-      processedContent.push('__SECTION__\n' + sectionLines.join('\n'))
+      processed.push('__SECTION__\n' + sectionLines.join('\n'))
     } else if (isEmojiTableHeader && nextLineIsTableHeader && lineAfterNextIsSeparator) {
       // Include emoji header with the table
       const tableLines = [line, content[i + 1], content[i + 2]] // emoji + header + separator
@@ -94,7 +96,7 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
         i++
       }
 
-      processedContent.push(tableLines.join('\n'))
+      processed.push(tableLines.join('\n'))
     } else if (line.includes('|') && i + 1 < content.length && (content[i + 1].includes('──') || content[i + 1].includes('---'))) {
       // Regular table without emoji header
       const tableLines = [line, content[i + 1]]
@@ -112,12 +114,15 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
         i++
       }
 
-      processedContent.push(tableLines.join('\n'))
+      processed.push(tableLines.join('\n'))
     } else {
-      processedContent.push(line)
+      processed.push(line)
       i++
     }
   }
+
+    return processed
+  }, [content]) // Only re-process when content changes
 
   // Render all content in single column with consistent spacing
   return (
