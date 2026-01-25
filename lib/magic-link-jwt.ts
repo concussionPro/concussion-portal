@@ -2,14 +2,18 @@
 import crypto from 'crypto'
 
 // SECURITY: No fallback secrets - must be configured in environment
-const SECRET = process.env.MAGIC_LINK_SECRET as string
-
-if (!SECRET) {
-  throw new Error(
-    'CRITICAL: MAGIC_LINK_SECRET environment variable must be set. ' +
-    'Generate a secure secret with: openssl rand -base64 32'
-  )
+function getSecret(): string {
+  const secret = process.env.MAGIC_LINK_SECRET
+  if (!secret) {
+    throw new Error(
+      'CRITICAL: MAGIC_LINK_SECRET environment variable must be set. ' +
+      'Generate a secure secret with: openssl rand -base64 32'
+    )
+  }
+  return secret
 }
+
+const SECRET = getSecret()
 
 interface TokenPayload {
   userId: string
