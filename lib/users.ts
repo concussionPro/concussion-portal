@@ -37,11 +37,12 @@ export async function loadUsers(): Promise<User[]> {
 }
 
 // Save users to Blob storage
-// SECURITY FIX: Changed from 'public' to 'private' to protect user data
+// NOTE: Vercel Blob only supports 'public' access. URLs are hard to guess but technically public.
+// For production, consider migrating to a database with proper access control.
 async function saveUsers(users: User[]) {
   try {
     await put(USERS_BLOB_PATH, JSON.stringify(users, null, 2), {
-      access: 'private', // CRITICAL: User data must be private, not publicly accessible!
+      access: 'public',
       contentType: 'application/json',
     })
   } catch (error) {
