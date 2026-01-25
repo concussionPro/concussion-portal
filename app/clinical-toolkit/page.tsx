@@ -26,7 +26,7 @@ const toolkitResources: ToolkitResource[] = [
     description: 'Sport Concussion Assessment Tool (6th Edition) - Fillable PDF for comprehensive concussion assessment',
     fileSize: '3.5 MB',
     category: 'assessment',
-    isFree: true,
+    isFree: false,
     fileName: 'SCAT6_Fillable.pdf'
   },
   {
@@ -35,7 +35,7 @@ const toolkitResources: ToolkitResource[] = [
     description: 'Sport Concussion Office Assessment Tool (6th Edition) - Streamlined clinical assessment',
     fileSize: '12.6 MB',
     category: 'assessment',
-    isFree: true,
+    isFree: false,
     fileName: 'SCOAT6_Fillable.pdf'
   },
   {
@@ -127,15 +127,6 @@ const toolkitResources: ToolkitResource[] = [
     category: 'flowcharts',
     isFree: false,
     fileName: 'RehabFlow.png'
-  },
-  {
-    id: 'scat-scoat-zip',
-    title: 'SCAT6 & SCOAT6 Fillable PDFs (ZIP)',
-    description: 'Combined archive of SCAT6 and SCOAT6 fillable assessment tools',
-    fileSize: '11 MB',
-    category: 'assessment',
-    isFree: true,
-    fileName: 'SCAT:SCOAT_FIllablePDFs.zip'
   },
 ]
 

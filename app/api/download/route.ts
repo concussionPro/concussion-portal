@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
       'Email Template Pack.docx',
       '"What to Expect After a Concussion" .pdf',
       'RehabFlow.png',
-      'SCAT:SCOAT_FIllablePDFs.zip',
     ]
 
     if (!allowedFiles.includes(fileName)) {
