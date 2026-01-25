@@ -277,31 +277,58 @@ function renderParagraph(text: string, key: string) {
     )
   }
 
-  // Handle bold emphasis
-  const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
+  // SECURITY FIX: Safe text rendering without dangerouslySetInnerHTML
+  // Parse bold text **like this** into React components
+  const parseBoldText = (text: string): React.ReactNode[] => {
+    const parts: React.ReactNode[] = []
+    const regex = /\*\*(.*?)\*\*/g
+    let lastIndex = 0
+    let match
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index))
+      }
+      // Add the bold text
+      parts.push(
+        <strong key={match.index} className="font-semibold text-slate-900">
+          {match[1]}
+        </strong>
+      )
+      lastIndex = regex.lastIndex
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex))
+    }
+
+    return parts.length > 0 ? parts : [text]
+  }
 
   // Handle emoji indicators
-  const hasEmoji = /^(🔹|📊|💡|⚡|🧠|🔄|⚠️|✅)/.test(text)
+  const emojiMatch = text.match(/^(🔹|📊|💡|⚡|🧠|🔄|⚠️|✅)\s*(.*)/)
 
-  if (hasEmoji) {
+  if (emojiMatch) {
+    const emoji = emojiMatch[1]
+    const content = emojiMatch[2]
+
     return (
       <div key={key} className="flex items-start gap-3 bg-white rounded-lg p-4 border border-slate-200">
-        <span className="text-2xl flex-shrink-0">{text.match(/^(🔹|📊|💡|⚡|🧠|🔄|⚠️|✅)/)?.[0]}</span>
-        <p
-          className="text-[15px] text-slate-700 leading-relaxed flex-1"
-          dangerouslySetInnerHTML={{ __html: formatted.replace(/^(🔹|📊|💡|⚡|🧠|🔄|⚠️|✅)\s*/, '') }}
-        />
+        <span className="text-2xl flex-shrink-0">{emoji}</span>
+        <p className="text-[15px] text-slate-700 leading-relaxed flex-1">
+          {parseBoldText(content)}
+        </p>
       </div>
     )
   }
 
-  // Standard paragraph
+  // Standard paragraph with safe bold rendering
   return (
-    <p
-      key={key}
-      className="text-[15px] text-slate-700 leading-relaxed"
-      dangerouslySetInnerHTML={{ __html: formatted }}
-    />
+    <p key={key} className="text-[15px] text-slate-700 leading-relaxed">
+      {parseBoldText(text)}
+    </p>
   )
 }
 
