@@ -1,7 +1,15 @@
 // JWT-based magic link authentication - no database lookup needed
 import crypto from 'crypto'
 
-const SECRET = process.env.MAGIC_LINK_SECRET || 'your-secret-key-change-in-production'
+// SECURITY: No fallback secrets - must be configured in environment
+const SECRET = process.env.MAGIC_LINK_SECRET
+
+if (!SECRET) {
+  throw new Error(
+    'CRITICAL: MAGIC_LINK_SECRET environment variable must be set. ' +
+    'Generate a secure secret with: openssl rand -base64 32'
+  )
+}
 
 interface TokenPayload {
   userId: string

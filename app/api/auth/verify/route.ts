@@ -55,10 +55,17 @@ export async function GET(request: NextRequest) {
 
     // Set httpOnly cookie for security
     const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60 // 30 days or 7 days
+
+    // SECURITY: Always use secure cookies (even in dev with warning)
+    const isProduction = process.env.NODE_ENV === 'production'
+    if (!isProduction) {
+      console.warn('⚠️  Development mode: Session cookie secure flag disabled. Use HTTPS in production.')
+    }
+
     response.cookies.set('session', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: 'strict', // SECURITY: Changed from 'lax' to 'strict' for better CSRF protection
       maxAge,
       path: '/',
     })

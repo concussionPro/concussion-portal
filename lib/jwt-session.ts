@@ -1,7 +1,15 @@
 // JWT-based session management - No Blob storage needed
 import crypto from 'crypto'
 
-const SECRET = process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET || 'your-secret-key-change-in-production'
+// SECURITY: No fallback secrets - must be configured in environment
+const SECRET = process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET
+
+if (!SECRET) {
+  throw new Error(
+    'CRITICAL: SESSION_SECRET or MAGIC_LINK_SECRET environment variable must be set. ' +
+    'Generate a secure secret with: openssl rand -base64 32'
+  )
+}
 
 export interface SessionData {
   userId: string
