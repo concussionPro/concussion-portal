@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ProgressProvider } from "@/contexts/ProgressContext";
+import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { CONFIG } from "@/lib/config";
 
 const geistSans = Geist({
@@ -108,9 +109,11 @@ export default function RootLayout({
           Skip to main content
         </a>
         <ProgressProvider>
-          <div id="main-content">
-            {children}
-          </div>
+          <AnalyticsProvider>
+            <div id="main-content">
+              {children}
+            </div>
+          </AnalyticsProvider>
         </ProgressProvider>
       </body>
     </html>
