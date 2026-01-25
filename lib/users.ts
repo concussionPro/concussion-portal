@@ -17,15 +17,24 @@ const USERS_BLOB_PATH = 'users.json'
 // Load all users from Blob storage
 export async function loadUsers(): Promise<User[]> {
   try {
-    // Check if blob exists
-    const blobExists = await head(USERS_BLOB_PATH).catch(() => null)
+    // List all blobs and find users.json files (there may be multiple versions)
+    const { list: listBlobs } = await import('@vercel/blob')
+    const { blobs } = await listBlobs()
 
-    if (!blobExists) {
+    // Find all users.json files and get the most recent one
+    const userBlobs = blobs.filter(b => b.pathname === 'users.json')
+
+    if (userBlobs.length === 0) {
       return []
     }
 
+    // Sort by upload date descending and get the latest
+    const latestBlob = userBlobs.sort((a, b) =>
+      new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+    )[0]
+
     // Fetch the blob content with cache busting
-    const response = await fetch(`${blobExists.url}?t=${Date.now()}`, {
+    const response = await fetch(`${latestBlob.url}?t=${Date.now()}`, {
       cache: 'no-store'
     })
     const users = await response.json()
