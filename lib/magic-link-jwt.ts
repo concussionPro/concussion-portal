@@ -2,7 +2,7 @@
 import crypto from 'crypto'
 
 // SECURITY: No fallback secrets - must be configured in environment
-const SECRET = process.env.MAGIC_LINK_SECRET
+const SECRET = process.env.MAGIC_LINK_SECRET as string
 
 if (!SECRET) {
   throw new Error(
