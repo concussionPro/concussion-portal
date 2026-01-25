@@ -168,10 +168,37 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
 
   if (resources.length === 0) return null
 
-  const handleDownload = (url: string, title: string) => {
-    // In production, this would trigger actual file download
-    // For now, show alert
-    alert(`Download functionality will be implemented for: ${title}\n\nFile: ${url}`)
+  const handleDownload = async (url: string, title: string) => {
+    try {
+      // Extract filename from URL (e.g., "SCAT6_Fillable.pdf" from URL path)
+      const fileName = url.split('/').pop() || title
+
+      // Make API request to download endpoint
+      const response = await fetch(`/api/download?file=${encodeURIComponent(fileName)}`)
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Download failed')
+      }
+
+      // Get the blob from response
+      const blob = await response.blob()
+
+      // Create download link and trigger download
+      const downloadUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
+    } catch (error) {
+      console.error('Download error:', error)
+      alert(`Failed to download ${title}. Please try again or contact support.`)
+    }
   }
 
   return (
