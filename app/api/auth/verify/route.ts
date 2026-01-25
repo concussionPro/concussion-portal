@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicTokenJWT } from '@/lib/magic-link-jwt'
 import { updateLastLogin } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
+import { logAuthFailure, logCriticalError } from '@/lib/monitoring'
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,6 +20,12 @@ export async function GET(request: NextRequest) {
     const tokenData = verifyMagicTokenJWT(token)
 
     if (!tokenData) {
+      // Log failed verification attempts
+      await logAuthFailure({
+        endpoint: '/api/auth/verify',
+        reason: 'Invalid or expired magic link token',
+      })
+
       return NextResponse.json(
         { error: 'Invalid or expired token' },
         { status: 401 }
@@ -73,6 +80,14 @@ export async function GET(request: NextRequest) {
     return response
   } catch (error) {
     console.error('Verification error:', error)
+
+    // Log critical verification errors
+    if (error instanceof Error) {
+      await logCriticalError(error, {
+        endpoint: '/api/auth/verify',
+      })
+    }
+
     return NextResponse.json(
       { error: 'Verification failed' },
       { status: 500 }
