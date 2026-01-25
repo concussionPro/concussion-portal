@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { list } from '@vercel/blob'
 
-export const runtime = 'edge'
+// Changed from 'edge' to 'nodejs' for consistency with other routes
+export const runtime = 'nodejs'
 
 // Retrieve analytics data (admin only)
 export async function GET(request: NextRequest) {

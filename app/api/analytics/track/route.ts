@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { verifySessionToken } from '@/lib/jwt-session'
 
-export const runtime = 'edge'
+// Changed from 'edge' to 'nodejs' to support crypto module in jwt-session
+export const runtime = 'nodejs'
 
 // Store analytics events in Vercel Blob storage
 export async function POST(request: NextRequest) {
