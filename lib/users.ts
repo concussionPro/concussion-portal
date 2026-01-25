@@ -37,10 +37,11 @@ export async function loadUsers(): Promise<User[]> {
 }
 
 // Save users to Blob storage
+// SECURITY FIX: Changed from 'public' to 'private' to protect user data
 async function saveUsers(users: User[]) {
   try {
     await put(USERS_BLOB_PATH, JSON.stringify(users, null, 2), {
-      access: 'public',
+      access: 'private', // CRITICAL: User data must be private, not publicly accessible!
       contentType: 'application/json',
     })
   } catch (error) {
