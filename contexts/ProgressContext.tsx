@@ -8,6 +8,7 @@ export interface ModuleProgress {
   videoWatchedMinutes: number
   videoCompleted: boolean
   quizScore: number | null
+  quizTotalQuestions: number | null
   quizCompleted: boolean
   startedAt: Date | null
   completedAt: Date | null
@@ -40,6 +41,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       videoWatchedMinutes: 0,
       videoCompleted: false,
       quizScore: null,
+      quizTotalQuestions: null,
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
@@ -50,6 +52,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       videoWatchedMinutes: 0,
       videoCompleted: false,
       quizScore: null,
+      quizTotalQuestions: null,
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
@@ -60,6 +63,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       videoWatchedMinutes: 0,
       videoCompleted: false,
       quizScore: null,
+      quizTotalQuestions: null,
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
@@ -70,6 +74,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       videoWatchedMinutes: 0,
       videoCompleted: false,
       quizScore: null,
+      quizTotalQuestions: null,
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
@@ -80,6 +85,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       videoWatchedMinutes: 0,
       videoCompleted: false,
       quizScore: null,
+      quizTotalQuestions: null,
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
@@ -90,6 +96,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       videoWatchedMinutes: 0,
       videoCompleted: false,
       quizScore: null,
+      quizTotalQuestions: null,
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
@@ -100,6 +107,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       videoWatchedMinutes: 0,
       videoCompleted: false,
       quizScore: null,
+      quizTotalQuestions: null,
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
@@ -110,6 +118,7 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       videoWatchedMinutes: 0,
       videoCompleted: false,
       quizScore: null,
+      quizTotalQuestions: null,
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
@@ -231,6 +240,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       [moduleId]: {
         ...prev[moduleId],
         quizScore: score,
+        quizTotalQuestions: totalQuestions,
         quizCompleted: true,
       },
     }))
@@ -277,11 +287,18 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const canMarkModuleComplete = (moduleId: number, requiredMinutes: number): boolean => {
     const moduleProgress = progress[moduleId]
     if (!moduleProgress) return false
+
+    // Calculate quiz pass percentage (must be >= 75%)
+    const quizPassed = moduleProgress.quizCompleted &&
+                       moduleProgress.quizScore !== null &&
+                       moduleProgress.quizTotalQuestions !== null &&
+                       moduleProgress.quizTotalQuestions > 0 &&
+                       (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.75
+
     return (
       moduleProgress.videoCompleted &&
       moduleProgress.videoWatchedMinutes >= requiredMinutes &&
-      moduleProgress.quizCompleted &&
-      (moduleProgress.quizScore || 0) >= 2
+      quizPassed
     )
   }
 

@@ -137,7 +137,7 @@ function ModulePageContent() {
   const getQuizResult = () => {
     if (!quizSubmitted || !moduleProgress.quizScore) return null
     const percentage = (moduleProgress.quizScore / module.quiz.length) * 100
-    const passed = moduleProgress.quizScore >= 2
+    const passed = percentage >= 75
     return { percentage, passed, score: moduleProgress.quizScore }
   }
 
@@ -1398,7 +1398,10 @@ function ModulePageContent() {
               <div className="space-y-4">
                 <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-50">
                   <div className="flex-shrink-0 mt-0.5">
-                    {moduleProgress.quizCompleted && (moduleProgress.quizScore || 0) >= 2 ? (
+                    {moduleProgress.quizCompleted &&
+                     moduleProgress.quizScore !== null &&
+                     moduleProgress.quizTotalQuestions !== null &&
+                     (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.75 ? (
                       <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center">
                         <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={2.5} />
                       </div>
@@ -1411,8 +1414,11 @@ function ModulePageContent() {
                       Pass Final Knowledge Check
                     </p>
                     <p className="text-sm text-slate-600">
-                      Score at least 2 out of 3 questions correctly to demonstrate mastery
-                      {moduleProgress.quizCompleted && (moduleProgress.quizScore || 0) >= 2 && ' ✓ Completed'}
+                      Score at least 75% to demonstrate mastery
+                      {moduleProgress.quizCompleted &&
+                       moduleProgress.quizScore !== null &&
+                       moduleProgress.quizTotalQuestions !== null &&
+                       (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.75 && ' ✓ Completed'}
                     </p>
                   </div>
                 </div>

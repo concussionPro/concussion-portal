@@ -193,10 +193,16 @@ export function CourseNavigation() {
                       <span className="text-sm text-slate-600 group-hover:text-slate-800">
                         Knowledge Check
                       </span>
-                      {progress.quizCompleted && (progress.quizScore || 0) >= 2 && (
+                      {progress.quizCompleted &&
+                       progress.quizScore !== null &&
+                       progress.quizTotalQuestions !== null &&
+                       (progress.quizScore / progress.quizTotalQuestions) >= 0.75 && (
                         <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 ml-auto" />
                       )}
-                      {(!progress.quizCompleted || (progress.quizScore || 0) < 2) && (
+                      {(!progress.quizCompleted ||
+                        progress.quizScore === null ||
+                        progress.quizTotalQuestions === null ||
+                        (progress.quizScore / progress.quizTotalQuestions) < 0.75) && (
                         <div className="w-3.5 h-3.5 border-2 border-slate-300 rounded-full ml-auto" />
                       )}
                     </button>
