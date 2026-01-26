@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     response.cookies.set('session', sessionToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict', // SECURITY: Changed from 'lax' to 'strict' for better CSRF protection
+      sameSite: 'lax', // SECURITY: Use 'lax' for magic link compatibility while maintaining CSRF protection
       maxAge,
       path: '/',
     })
