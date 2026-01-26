@@ -48,6 +48,13 @@ function ModulePageContent() {
   const moduleProgress = getModuleProgress(moduleId)
   const { hasFullAccess, loading: accessLoading } = useModuleAccess(moduleId)
 
+  // CRITICAL FIX: Sync quizSubmitted with persisted progress
+  useEffect(() => {
+    if (moduleProgress.quizCompleted) {
+      setQuizSubmitted(true)
+    }
+  }, [moduleProgress.quizCompleted])
+
   // Auto-save checkpoint: Save last viewed section
   useEffect(() => {
     const handleScroll = () => {
@@ -135,8 +142,10 @@ function ModulePageContent() {
   }
 
   const getQuizResult = () => {
-    if (!quizSubmitted || !moduleProgress.quizScore) return null
-    const percentage = (moduleProgress.quizScore / module.quiz.length) * 100
+    if (!quizSubmitted || moduleProgress.quizScore === null) return null
+    // Use saved total questions if available, otherwise use current module quiz length
+    const totalQuestions = moduleProgress.quizTotalQuestions || module.quiz.length
+    const percentage = (moduleProgress.quizScore / totalQuestions) * 100
     const passed = percentage >= 75
     return { percentage, passed, score: moduleProgress.quizScore }
   }
