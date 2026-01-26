@@ -1365,10 +1365,30 @@ function ModulePageContent() {
                     <p className="text-lg font-bold text-slate-900 mb-1">
                       {quizResult?.passed ? 'Knowledge Check Passed!' : 'Review Required'}
                     </p>
-                    <p className="text-[15px] text-slate-700">
+                    <p className="text-[15px] text-slate-700 mb-4">
                       You scored {quizResult?.score} out of {module.quiz.length} ({quizResult?.percentage.toFixed(0)}%)
                       {!quizResult?.passed && '. Please review the content and try again.'}
                     </p>
+                    {!quizResult?.passed && (
+                      <button
+                        onClick={() => {
+                          setQuizSubmitted(false)
+                          setQuizAnswers({})
+                          // Scroll to quiz section
+                          const quizSection = document.getElementById('quiz')
+                          if (quizSection) {
+                            quizSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                          }
+                        }}
+                        className="px-6 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                          <path d="M3 3v5h5"></path>
+                        </svg>
+                        Retake Quiz
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
