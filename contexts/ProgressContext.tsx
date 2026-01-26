@@ -121,35 +121,87 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<Record<number, ModuleProgress>>(getDefaultProgress())
   const [isInitialized, setIsInitialized] = useState(false)
 
+  // Load progress from backend on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
+    async function loadProgress() {
+      if (typeof window !== 'undefined') {
         try {
-          const parsed = JSON.parse(stored)
-          Object.keys(parsed).forEach((key) => {
-            if (parsed[key].startedAt) {
-              parsed[key].startedAt = new Date(parsed[key].startedAt)
+          // Try to load from backend first
+          const response = await fetch('/api/progress')
+          if (response.ok) {
+            const data = await response.json()
+            if (data.success && data.progress) {
+              // Parse dates from backend data
+              const parsed = data.progress
+              Object.keys(parsed).forEach((key) => {
+                if (parsed[key].startedAt) {
+                  parsed[key].startedAt = new Date(parsed[key].startedAt)
+                }
+                if (parsed[key].completedAt) {
+                  parsed[key].completedAt = new Date(parsed[key].completedAt)
+                }
+              })
+              const merged = { ...getDefaultProgress(), ...parsed }
+              setProgress(merged)
+              // Update localStorage cache
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+              setIsInitialized(true)
+              return
             }
-            if (parsed[key].completedAt) {
-              parsed[key].completedAt = new Date(parsed[key].completedAt)
-            }
-          })
-          // Merge stored data with defaults to ensure all modules exist
-          const merged = { ...getDefaultProgress(), ...parsed }
-          setProgress(merged)
+          }
         } catch (error) {
-          console.error('Failed to parse stored progress:', error)
+          console.error('Failed to load progress from backend:', error)
         }
+
+        // Fallback to localStorage if backend fails or user not logged in
+        const stored = localStorage.getItem(STORAGE_KEY)
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored)
+            Object.keys(parsed).forEach((key) => {
+              if (parsed[key].startedAt) {
+                parsed[key].startedAt = new Date(parsed[key].startedAt)
+              }
+              if (parsed[key].completedAt) {
+                parsed[key].completedAt = new Date(parsed[key].completedAt)
+              }
+            })
+            const merged = { ...getDefaultProgress(), ...parsed }
+            setProgress(merged)
+          } catch (error) {
+            console.error('Failed to parse stored progress:', error)
+          }
+        }
+        setIsInitialized(true)
       }
-      setIsInitialized(true)
     }
+
+    loadProgress()
   }, [])
 
+  // Save progress to backend and localStorage whenever it changes
   useEffect(() => {
-    if (isInitialized && typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+    async function saveProgress() {
+      if (isInitialized && typeof window !== 'undefined') {
+        // Save to localStorage immediately (sync)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+
+        // Save to backend (async)
+        try {
+          await fetch('/api/progress', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ progress }),
+          })
+        } catch (error) {
+          console.error('Failed to save progress to backend:', error)
+        }
+      }
     }
+
+    saveProgress()
   }, [progress, isInitialized])
 
   const updateVideoProgress = (moduleId: number, minutes: number) => {
