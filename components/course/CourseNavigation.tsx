@@ -12,7 +12,7 @@ export function CourseNavigation() {
   const params = useParams()
   const currentModuleId = parseInt(params.id as string)
   const modules = getAllModules()
-  const { isModuleComplete, getModuleProgress } = useProgress()
+  const { isModuleComplete, getModuleProgress, isSectionComplete } = useProgress()
   const [expandedModules, setExpandedModules] = useState<number[]>([currentModuleId])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -178,6 +178,12 @@ export function CourseNavigation() {
                         <span className="text-sm text-slate-600 group-hover:text-slate-800 truncate">
                           {section.title}
                         </span>
+                        {isSectionComplete(module.id, section.id) && (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 ml-auto" />
+                        )}
+                        {!isSectionComplete(module.id, section.id) && (
+                          <div className="w-3.5 h-3.5 border-2 border-slate-300 rounded-full ml-auto" />
+                        )}
                       </button>
                     ))}
 

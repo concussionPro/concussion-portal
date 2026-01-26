@@ -37,6 +37,9 @@ function ModulePageContent() {
     getModuleProgress,
     canMarkModuleComplete,
     isModuleComplete,
+    markSectionComplete,
+    updateLastViewedSection,
+    isSectionComplete,
   } = useProgress()
 
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({})
@@ -55,35 +58,59 @@ function ModulePageContent() {
     }
   }, [moduleProgress.quizCompleted])
 
-  // Auto-save checkpoint: Save last viewed section
+  // CHECKPOINT SYSTEM: Track section completion and scroll position
   useEffect(() => {
+    if (!module) return
+
+    let scrollTimeout: NodeJS.Timeout
+
+    // Throttled scroll handler to save progress
     const handleScroll = () => {
-      const sections = document.querySelectorAll('[data-section-index]')
-      sections.forEach((section) => {
-        const rect = section.getBoundingClientRect()
-        if (rect.top >= 0 && rect.top <= window.innerHeight / 2) {
-          const sectionIndex = parseInt(section.getAttribute('data-section-index') || '0')
-          setLastViewedSection(sectionIndex)
-          localStorage.setItem(`module-${moduleId}-checkpoint`, sectionIndex.toString())
-        }
-      })
+      clearTimeout(scrollTimeout)
+      scrollTimeout = setTimeout(() => {
+        const sections = document.querySelectorAll('[data-section-index]')
+        sections.forEach((section) => {
+          const rect = section.getBoundingClientRect()
+          const sectionHeight = rect.height
+          const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
+          const visibilityPercentage = (visibleHeight / sectionHeight) * 100
+
+          // Update last viewed section when section is prominently visible
+          if (rect.top >= 0 && rect.top <= window.innerHeight / 3) {
+            const sectionIndex = parseInt(section.getAttribute('data-section-index') || '0')
+            if (sectionIndex !== lastViewedSection) {
+              setLastViewedSection(sectionIndex)
+              updateLastViewedSection(moduleId, sectionIndex)
+            }
+          }
+
+          // Mark section complete when user scrolls 75% through it
+          if (visibilityPercentage > 0 && rect.top < window.innerHeight && rect.bottom > 0) {
+            const sectionId = section.getAttribute('data-section-id')
+            if (sectionId && visibilityPercentage >= 75 && !isSectionComplete(moduleId, sectionId)) {
+              markSectionComplete(moduleId, sectionId)
+            }
+          }
+        })
+      }, 500) // Throttle to 500ms
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [moduleId])
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      clearTimeout(scrollTimeout)
+    }
+  }, [moduleId, module, lastViewedSection, updateLastViewedSection, markSectionComplete, isSectionComplete])
 
-  // Restore checkpoint: Scroll to last viewed section
+  // Restore checkpoint: Scroll to last viewed section on load
   useEffect(() => {
-    const savedCheckpoint = localStorage.getItem(`module-${moduleId}-checkpoint`)
-    if (savedCheckpoint && module) {
-      const sectionIndex = parseInt(savedCheckpoint)
+    if (module && moduleProgress.lastViewedSection > 0) {
       setTimeout(() => {
-        const targetSection = document.querySelector(`[data-section-index="${sectionIndex}"]`)
+        const targetSection = document.querySelector(`[data-section-index="${moduleProgress.lastViewedSection}"]`)
         if (targetSection) {
           targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
-      }, 100)
+      }, 500)
     }
   }, [moduleId, module])
 
@@ -267,6 +294,7 @@ function ModulePageContent() {
               <div
                 id={section.id}
                 data-section-index={index}
+                data-section-id={section.id}
                 className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6"
               >
                 <div className="flex items-start gap-6">
@@ -274,7 +302,7 @@ function ModulePageContent() {
                     <span className="text-lg font-bold text-white">
                       {(index + 1).toString().padStart(2, '0')}
                     </span>
-                    {index < lastViewedSection && (
+                    {isSectionComplete(moduleId, section.id) && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-teal-500 border-2 border-white flex items-center justify-center">
                         <CheckCircle2 className="w-3 h-3 text-white" strokeWidth={3} />
                       </div>
