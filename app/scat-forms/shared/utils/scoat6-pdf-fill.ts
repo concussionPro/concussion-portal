@@ -6,19 +6,37 @@ export async function exportSCOAT6ToFilledPDF(
   filename: string = 'SCOAT6_Filled.pdf'
 ) {
   try {
+    console.clear()
+    console.log('%c=== SCOAT6 PDF EXPORT - DEBUG MODE ===', 'background: purple; color: white; font-size: 20px; padding: 10px;')
+    console.log('%cIf you see this, the new code is running', 'background: green; color: white; padding: 5px;')
+    console.log('Form data:', formData)
+
     // Load the blank fillable PDF
     const response = await fetch('/docs/SCOAT6_Fillable.pdf')
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.status}`)
+    }
+
     const arrayBuffer = await response.arrayBuffer()
+    console.log('PDF loaded, size:', arrayBuffer.byteLength, 'bytes')
+
     const pdfDoc = await PDFDocument.load(arrayBuffer)
+    console.log('PDF parsed successfully')
 
     const form = pdfDoc.getForm()
     const fields = form.getFields()
 
-    // Log field names for debugging
-    console.log('SCOAT6 PDF has', fields.length, 'form fields')
-    fields.forEach(field => {
-      console.log('Field:', field.getName(), 'Type:', field.constructor.name)
+    console.log('=== PDF FORM FIELDS ===')
+    console.log(`Total fields: ${fields.length}`)
+
+    // Log ALL field names
+    fields.forEach((field, index) => {
+      const name = field.getName()
+      const type = field.constructor.name
+      console.log(`${index + 1}. "${name}" (${type})`)
     })
+
+    console.log('\n=== Attempting to fill fields ===')
 
     // Fill in Demographics
     setTextFieldIfExists(form, 'athleteName', formData.athleteName)

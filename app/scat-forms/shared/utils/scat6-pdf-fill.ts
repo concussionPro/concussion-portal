@@ -6,7 +6,9 @@ export async function exportSCAT6ToFilledPDF(
   filename: string = 'SCAT6_Filled.pdf'
 ) {
   try {
-    console.log('=== SCAT6 PDF Export Started ===')
+    console.clear()
+    console.log('%c=== SCAT6 PDF EXPORT - DEBUG MODE ===', 'background: blue; color: white; font-size: 20px; padding: 10px;')
+    console.log('%cIf you see this, the new code is running', 'background: green; color: white; padding: 5px;')
     console.log('Form data:', formData)
 
     // Load the blank fillable PDF

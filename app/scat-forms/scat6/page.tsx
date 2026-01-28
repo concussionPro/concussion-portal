@@ -92,6 +92,14 @@ export default function SCAT6Page() {
     }
   }
 
+  const handleClearForm = () => {
+    if (confirm('Clear all form data? This cannot be undone.')) {
+      localStorage.removeItem('scat6-draft')
+      setFormData(getDefaultSCAT6FormData())
+      alert('Form cleared successfully')
+    }
+  }
+
 
   return (
     <div className="space-y-6 pb-20">
@@ -102,9 +110,11 @@ export default function SCAT6Page() {
           <p className="text-sm text-slate-500">Sport Concussion Assessment Tool - For Adolescents (13+) & Adults</p>
         </div>
         <div className="flex gap-2">
-          <button className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center gap-2 transition-colors text-sm">
-            <Save className="w-4 h-4" />
-            Save Progress
+          <button
+            onClick={handleClearForm}
+            className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg flex items-center gap-2 transition-colors text-sm"
+          >
+            Clear Form
           </button>
           <button
             onClick={handleExportPDF}
