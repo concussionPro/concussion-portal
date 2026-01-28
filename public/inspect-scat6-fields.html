@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SCAT6 PDF Field Inspector</title>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+  <h1>SCAT6 PDF Field Inspector</h1>
+  <p>Opening console and inspecting PDF...</p>
+  <div id="output"></div>
+
+  <script>
+    async function inspectPDF() {
+      try {
+        console.clear()
+        console.log('%c=== INSPECTING SCAT6 PDF FIELDS ===', 'background: blue; color: white; font-size: 20px; padding: 10px;')
+
+        const response = await fetch('/docs/SCAT6_Fillable.pdf')
+        const arrayBuffer = await response.arrayBuffer()
+        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer)
+        const form = pdfDoc.getForm()
+        const fields = form.getFields()
+
+        console.log(`Total fields: ${fields.length}`)
+        console.log('\n=== FIELD NAMES ===')
+
+        const fieldList = []
+        fields.forEach((field, index) => {
+          const name = field.getName()
+          const type = field.constructor.name
+          console.log(`${index + 1}. "${name}" (${type})`)
+          fieldList.push({ index: index + 1, name, type })
+        })
+
+        // Display in page
+        document.getElementById('output').innerHTML = `
+          <h2>Found ${fields.length} fields</h2>
+          <p>Check console for full list. First 20 fields:</p>
+          <pre>${JSON.stringify(fieldList.slice(0, 20), null, 2)}</pre>
+        `
+
+        console.log('\n%c=== COPY THIS LIST AND SEND TO DEVELOPER ===', 'background: red; color: white; font-size: 16px; padding: 5px;')
+        console.log('Field names:', fieldList.map(f => f.name))
+
+      } catch (error) {
+        console.error('Failed:', error)
+        document.getElementById('output').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`
+      }
+    }
+
+    inspectPDF()
+  </script>
+</body>
+</html>
