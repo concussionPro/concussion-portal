@@ -120,8 +120,6 @@ export async function exportSCOAT6ToFilledPDF(
 
     // Balance
     setTextFieldIfExists(form, 'footTested', formData.footTested)
-    setTextFieldIfExists(form, 'testingSurface', formData.testingSurface)
-    setTextFieldIfExists(form, 'footwear', formData.footwear)
     setTextFieldIfExists(form, 'mBessDoubleErrors', formData.mBessDoubleErrors.toString())
     setTextFieldIfExists(form, 'mBessTandemErrors', formData.mBessTandemErrors.toString())
     setTextFieldIfExists(form, 'mBessSingleErrors', formData.mBessSingleErrors.toString())
@@ -130,7 +128,6 @@ export async function exportSCOAT6ToFilledPDF(
     setTextFieldIfExists(form, 'tandemGaitTrial1', formData.tandemGaitTrial1)
     setTextFieldIfExists(form, 'tandemGaitTrial2', formData.tandemGaitTrial2)
     setTextFieldIfExists(form, 'tandemGaitTrial3', formData.tandemGaitTrial3)
-    setTextFieldIfExists(form, 'tandemGaitTrial4', formData.tandemGaitTrial4)
 
     // Delayed Recall
     setTextFieldIfExists(form, 'delayedRecallStartTime', formData.delayedRecallStartTime)
