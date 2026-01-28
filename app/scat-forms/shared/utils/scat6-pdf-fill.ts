@@ -51,29 +51,9 @@ export async function exportSCAT6ToFilledPDF(
     setTextField(form, 'Text18', formData.athleteBackgroundNotes)
     setTextField(form, 'Text19', formData.currentMedications)
 
-    // Symptoms - These are RADIO BUTTONS (s1-s22), need to select the right option for 0-6 scale
-    setSymptomRadio(form, 's1', formData.symptoms.headaches)
-    setSymptomRadio(form, 's2', formData.symptoms.pressureInHead)
-    setSymptomRadio(form, 's3', formData.symptoms.neckPain)
-    setSymptomRadio(form, 's4', formData.symptoms.nauseaVomiting)
-    setSymptomRadio(form, 's5', formData.symptoms.dizziness)
-    setSymptomRadio(form, 's6', formData.symptoms.blurredVision)
-    setSymptomRadio(form, 's7', formData.symptoms.balanceProblems)
-    setSymptomRadio(form, 's8', formData.symptoms.sensitivityLight)
-    setSymptomRadio(form, 's9', formData.symptoms.sensitivityNoise)
-    setSymptomRadio(form, 's10', formData.symptoms.feelingSlowedDown)
-    setSymptomRadio(form, 's11', formData.symptoms.feelingInFog)
-    setSymptomRadio(form, 's12', formData.symptoms.dontFeelRight)
-    setSymptomRadio(form, 's13', formData.symptoms.difficultyConcentrating)
-    setSymptomRadio(form, 's14', formData.symptoms.difficultyRemembering)
-    setSymptomRadio(form, 's15', formData.symptoms.fatigueOrLowEnergy)
-    setSymptomRadio(form, 's16', formData.symptoms.confusion)
-    setSymptomRadio(form, 's17', formData.symptoms.drowsiness)
-    setSymptomRadio(form, 's18', formData.symptoms.moreEmotional)
-    setSymptomRadio(form, 's19', formData.symptoms.irritability)
-    setSymptomRadio(form, 's20', formData.symptoms.sadness)
-    setSymptomRadio(form, 's21', formData.symptoms.nervousAnxious)
-    setSymptomRadio(form, 's22', formData.symptoms.troubleFallingAsleep)
+    // Symptoms - Radio buttons (s1-s22) - pdf-lib doesn't support setting radio values
+    // These will need to be filled manually or with a different PDF library
+    console.log('Note: Symptom radio buttons (s1-s22) require manual entry in PDF')
 
     setTextField(form, 'Text26', formData.percentOfNormal)
 
@@ -156,26 +136,5 @@ function setCheckBox(form: any, fieldName: string, value: boolean) {
     console.log(`✓ ${fieldName} = ${value}`)
   } catch (error) {
     // Field doesn't exist - skip silently
-  }
-}
-
-function setSymptomRadio(form: any, fieldName: string, value: number) {
-  try {
-    if (value === undefined || value === null) return
-
-    // Symptom radio buttons have values 0-6
-    // Try to select the radio button option matching the value
-    const field = form.getRadioGroup(fieldName)
-    field.select(value.toString())
-    console.log(`✓ ${fieldName} = ${value}`)
-  } catch (error) {
-    // If radio doesn't work, try as text field
-    try {
-      const field = form.getTextField(fieldName)
-      field.setText(value.toString())
-      console.log(`✓ ${fieldName} = ${value} (as text)`)
-    } catch (e) {
-      // Skip silently
-    }
   }
 }
