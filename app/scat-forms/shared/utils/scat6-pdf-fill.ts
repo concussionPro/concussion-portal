@@ -99,17 +99,11 @@ export async function exportSCAT6ToFilledPDF(
       if (trial3Fields[i]) setCheckBox(form, trial3Fields[i], checked)
     })
 
-    // Balance - mBESS
+    // Balance - mBESS (only error counts, skip text description fields)
     setTextField(form, 'Text37', formData.mBessDoubleErrors.toString())
     setTextField(form, 'Text38', formData.mBessTandemErrors.toString())
     setTextField(form, 'Text39', formData.mBessSingleErrors.toString())
-    setTextField(form, 'Text40', formData.testingSurface)
-    setTextField(form, 'Text41', formData.footwear)
-
-    // Tandem Gait - Skip Text42, Text43, Text44 (rich text fields not supported by pdf-lib)
-
-    // Delayed Recall
-    setTextField(form, 'Text87', formData.differentFromUsualDescription)
+    // Skip Text40, Text41, Text42-44, Text87 - all rich text fields
 
     // Save and download
     const pdfBytes = await pdfDoc.save()
@@ -124,13 +118,8 @@ export async function exportSCAT6ToFilledPDF(
     console.log('✓ PDF exported successfully with data!')
   } catch (error: any) {
     console.error('PDF export failed:', error)
-    // If it's a rich text field error, still save what we can
-    if (error?.message?.includes('rich text')) {
-      console.log('⚠️ Some fields are rich text (not supported) - PDF saved with available data')
-      alert('PDF exported with most data. Some advanced fields require manual entry.')
-    } else {
-      throw new Error(`Failed to fill PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
+    alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw error
   }
 }
 
