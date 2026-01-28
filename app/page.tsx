@@ -51,18 +51,18 @@ export default function HomePage() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-3">
               <button
+                onClick={() => router.push('/scat-forms')}
+                className="text-sm text-accent hover:text-accent/80 transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
+                aria-label="Free SCAT forms"
+              >
+                SCAT Forms
+              </button>
+              <button
                 onClick={() => router.push('/preview')}
                 className="text-sm text-slate-600 hover:text-slate-800 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
                 aria-label="Preview course content"
               >
                 Preview
-              </button>
-              <button
-                onClick={() => router.push('/in-person')}
-                className="text-sm text-slate-600 hover:text-slate-800 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
-                aria-label="Workshop details"
-              >
-                Workshop
               </button>
               <button
                 onClick={() => router.push('/login')}
@@ -104,30 +104,21 @@ export default function HomePage() {
             <div className="md:hidden mt-4 pt-4 border-t border-slate-200 space-y-3">
               <button
                 onClick={() => {
+                  router.push('/scat-forms')
+                  setMobileMenuOpen(false)
+                }}
+                className="block w-full text-left text-sm text-accent hover:text-accent/80 transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 font-semibold"
+              >
+                SCAT Forms (Free)
+              </button>
+              <button
+                onClick={() => {
                   router.push('/preview')
                   setMobileMenuOpen(false)
                 }}
                 className="block w-full text-left text-sm text-slate-700 hover:text-accent transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-accent rounded px-2"
               >
                 Preview Course
-              </button>
-              <button
-                onClick={() => {
-                  router.push('/in-person')
-                  setMobileMenuOpen(false)
-                }}
-                className="block w-full text-left text-sm text-slate-700 hover:text-accent transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-accent rounded px-2"
-              >
-                Workshop Details
-              </button>
-              <button
-                onClick={() => {
-                  router.push('/assessment')
-                  setMobileMenuOpen(false)
-                }}
-                className="block w-full text-left text-sm text-slate-700 hover:text-accent transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-accent rounded px-2"
-              >
-                Test Your Knowledge
               </button>
               <button
                 onClick={() => {
@@ -181,20 +172,20 @@ export default function HomePage() {
               {/* Primary CTAs - Focus on Value */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
                 <button
-                  onClick={() => router.push('/preview')}
+                  onClick={() => router.push('/scat-forms')}
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                  aria-label="Access free SCAT6 and SCOAT6 forms online"
+                >
+                  <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
+                  Free SCAT6/SCOAT6 Forms
+                </button>
+                <button
+                  onClick={() => router.push('/preview')}
+                  className="btn-secondary px-8 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label="Preview course content"
                 >
                   <Sparkles className="w-5 h-5" aria-hidden="true" />
-                  Explore Course Content
-                </button>
-                <button
-                  onClick={() => router.push('/assessment')}
-                  className="btn-secondary px-8 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                  aria-label="Take free knowledge assessment"
-                >
-                  Test Your Knowledge
-                  <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                  Preview Course
                 </button>
               </div>
 
