@@ -116,7 +116,7 @@ export async function exportSCAT6ToFilledPDF(
 
     // Save and download
     const pdfBytes = await pdfDoc.save()
-    const blob = new Blob([pdfBytes.buffer], { type: 'application/pdf' })
+    const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
