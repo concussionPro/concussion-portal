@@ -106,10 +106,7 @@ export async function exportSCAT6ToFilledPDF(
     setTextField(form, 'Text40', formData.testingSurface)
     setTextField(form, 'Text41', formData.footwear)
 
-    // Tandem Gait
-    setTextField(form, 'Text42', formData.tandemGaitTrial1)
-    setTextField(form, 'Text43', formData.tandemGaitTrial2)
-    setTextField(form, 'Text44', formData.tandemGaitTrial3)
+    // Tandem Gait - Skip Text42, Text43, Text44 (rich text fields not supported by pdf-lib)
 
     // Delayed Recall
     setTextField(form, 'Text87', formData.differentFromUsualDescription)
