@@ -51,9 +51,29 @@ export async function exportSCAT6ToFilledPDF(
     setTextField(form, 'Text18', formData.athleteBackgroundNotes)
     setTextField(form, 'Text19', formData.currentMedications)
 
-    // Symptoms - Radio buttons (s1-s22) - pdf-lib doesn't support setting radio values
-    // These will need to be filled manually or with a different PDF library
-    console.log('Note: Symptom radio buttons (s1-s22) require manual entry in PDF')
+    // Symptoms - Radio buttons (s1-s22) with values 0-6
+    setRadioButton(form, 's1', formData.symptoms.headaches)
+    setRadioButton(form, 's2', formData.symptoms.pressureInHead)
+    setRadioButton(form, 's3', formData.symptoms.neckPain)
+    setRadioButton(form, 's4', formData.symptoms.nauseaVomiting)
+    setRadioButton(form, 's5', formData.symptoms.dizziness)
+    setRadioButton(form, 's6', formData.symptoms.blurredVision)
+    setRadioButton(form, 's7', formData.symptoms.balanceProblems)
+    setRadioButton(form, 's8', formData.symptoms.sensitivityLight)
+    setRadioButton(form, 's9', formData.symptoms.sensitivityNoise)
+    setRadioButton(form, 's10', formData.symptoms.feelingSlowedDown)
+    setRadioButton(form, 's11', formData.symptoms.feelingInFog)
+    setRadioButton(form, 's12', formData.symptoms.dontFeelRight)
+    setRadioButton(form, 's13', formData.symptoms.difficultyConcentrating)
+    setRadioButton(form, 's14', formData.symptoms.difficultyRemembering)
+    setRadioButton(form, 's15', formData.symptoms.fatigueOrLowEnergy)
+    setRadioButton(form, 's16', formData.symptoms.confusion)
+    setRadioButton(form, 's17', formData.symptoms.drowsiness)
+    setRadioButton(form, 's18', formData.symptoms.moreEmotional)
+    setRadioButton(form, 's19', formData.symptoms.irritability)
+    setRadioButton(form, 's20', formData.symptoms.sadness)
+    setRadioButton(form, 's21', formData.symptoms.nervousAnxious)
+    setRadioButton(form, 's22', formData.symptoms.troubleFallingAsleep)
 
     setTextField(form, 'Text26', formData.percentOfNormal)
 
@@ -136,5 +156,38 @@ function setCheckBox(form: any, fieldName: string, value: boolean) {
     console.log(`✓ ${fieldName} = ${value}`)
   } catch (error) {
     // Field doesn't exist - skip silently
+  }
+}
+
+function setRadioButton(form: any, fieldName: string, value: number) {
+  try {
+    if (value === undefined || value === null) return
+
+    // Radio buttons in pdf-lib are button fields with options
+    const field = form.getButton(fieldName)
+
+    // Get all options for this radio group
+    const options = field.acroField.getOnValues()
+
+    // Find the option that matches our value (0-6)
+    const targetValue = value.toString()
+    if (options.includes(targetValue)) {
+      field.select(targetValue)
+      console.log(`✓ ${fieldName} = ${value}`)
+    } else {
+      // Try common radio value formats
+      const alternateFormats = [`${value}`, `Choice${value}`, `Option${value}`, `${value}.0`]
+      for (const format of alternateFormats) {
+        if (options.includes(format)) {
+          field.select(format)
+          console.log(`✓ ${fieldName} = ${value} (as ${format})`)
+          return
+        }
+      }
+      console.log(`○ ${fieldName}: value ${value} not in options [${options.join(', ')}]`)
+    }
+  } catch (error) {
+    // Field doesn't exist or isn't a button - skip silently
+    console.log(`○ ${fieldName}: ${error}`)
   }
 }
