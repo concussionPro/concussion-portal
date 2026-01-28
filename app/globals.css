@@ -274,15 +274,15 @@ body {
     padding: 8px 16px;
     border-radius: 9999px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.01em;
-    background: linear-gradient(135deg, rgba(100, 168, 176, 0.2) 0%, rgba(123, 168, 176, 0.15) 100%);
-    color: #2d6a73;
-    border: 1px solid rgba(100, 168, 176, 0.4);
+    background: linear-gradient(135deg, rgba(100, 168, 176, 0.35) 0%, rgba(123, 168, 176, 0.28) 100%);
+    color: #1a4a52;
+    border: 1px solid rgba(100, 168, 176, 0.5);
     box-shadow:
-      0 0 12px rgba(100, 168, 176, 0.15),
-      0 2px 8px rgba(0, 0, 0, 0.06),
-      0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      0 0 16px rgba(100, 168, 176, 0.2),
+      0 3px 10px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.6) inset;
   }
 
   /* Professional icon container - soft blue/green */

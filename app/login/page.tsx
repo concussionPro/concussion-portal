@@ -16,19 +16,6 @@ function LoginForm() {
 
   const redirectTo = searchParams.get('redirect') || '/dashboard'
 
-  useEffect(() => {
-    // Check if user has active session
-    fetch('/api/auth/session')
-      .then(res => {
-        if (res.ok) {
-          router.push(redirectTo)
-        }
-      })
-      .catch(() => {
-        // No active session, stay on login page
-      })
-  }, [router, redirectTo])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
