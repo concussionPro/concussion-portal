@@ -155,13 +155,23 @@ function setCheckBox(form: any, fieldName: string, value: boolean) {
   try {
     if (value === undefined || value === null) return
 
-    const field = form.getCheckBox(fieldName)
-    if (value) {
-      field.check()
-    } else {
-      field.uncheck()
+    // Try as traditional checkbox first
+    try {
+      const field = form.getCheckBox(fieldName)
+      if (value) {
+        field.check()
+      } else {
+        field.uncheck()
+      }
+      console.log(`✓ ${fieldName} = ${value}`)
+      return
+    } catch (e) {
+      // Not a traditional checkbox, try as button field
+      const field = form.getButton(fieldName)
+      // SCAT6 uses button fields with /0 (unchecked) and /1 (checked)
+      field.select(value ? '/1' : '/0')
+      console.log(`✓ ${fieldName} = ${value} (button checkbox)`)
     }
-    console.log(`✓ ${fieldName} = ${value}`)
   } catch (error) {
     // Field doesn't exist - skip silently
   }
@@ -174,26 +184,10 @@ function setRadioButton(form: any, fieldName: string, value: number) {
     // Radio buttons in pdf-lib are button fields with options
     const field = form.getButton(fieldName)
 
-    // Get all options for this radio group
-    const options = field.acroField.getOnValues()
-
-    // Find the option that matches our value (0-6)
-    const targetValue = value.toString()
-    if (options.includes(targetValue)) {
-      field.select(targetValue)
-      console.log(`✓ ${fieldName} = ${value}`)
-    } else {
-      // Try common radio value formats
-      const alternateFormats = [`${value}`, `Choice${value}`, `Option${value}`, `${value}.0`]
-      for (const format of alternateFormats) {
-        if (options.includes(format)) {
-          field.select(format)
-          console.log(`✓ ${fieldName} = ${value} (as ${format})`)
-          return
-        }
-      }
-      console.log(`○ ${fieldName}: value ${value} not in options [${options.join(', ')}]`)
-    }
+    // SCAT6 PDF uses options with forward slash prefix: /0, /1, /2, /3, /4, /5, /6
+    const targetValue = `/${value}`
+    field.select(targetValue)
+    console.log(`✓ ${fieldName} = ${value}`)
   } catch (error) {
     // Field doesn't exist or isn't a button - skip silently
     console.log(`○ ${fieldName}: ${error}`)
