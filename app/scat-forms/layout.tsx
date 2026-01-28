@@ -1,7 +1,8 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { FileText, ArrowLeft } from 'lucide-react'
+import { FileText, ArrowLeft, GraduationCap, Sparkles } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 export default function SCATFormsLayout({
   children,
@@ -94,6 +95,43 @@ export default function SCATFormsLayout({
             </button>
           </div>
         </div>
+
+        {/* Course Promotion Banner - Subtle Sales Funnel */}
+        {(isSCAT6 || isSCOAT6) && (
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 mb-6 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-blue-500 rounded-lg">
+                <GraduationCap className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-lg font-bold text-slate-900">Master Concussion Assessment</h3>
+                  <span className="badge text-xs">14 CPD Hours</span>
+                </div>
+                <p className="text-sm text-slate-700 mb-3 leading-relaxed">
+                  Using these forms clinically? Our AHPRA-accredited training goes beyond the form—master VOMS, BESS, clinical decision-making, and return-to-play protocols. Includes hands-on workshop.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => router.push('/preview')}
+                    className="text-sm px-4 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center gap-1"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Preview Course
+                  </button>
+                  <a
+                    href={CONFIG.SHOP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    View Training Options
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Form Content */}
         {children}
