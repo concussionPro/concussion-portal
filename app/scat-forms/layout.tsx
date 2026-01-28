@@ -21,8 +21,9 @@ export default function SCATFormsLayout({
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/')}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Back to home"
             >
               <ArrowLeft className="w-5 h-5 text-slate-600" />
             </button>
