@@ -8,6 +8,38 @@ import { exportSCAT6ToFilledPDF } from '../shared/utils/scat6-pdf-fill'
 import { WORD_LISTS, WordListKey } from '../shared/constants/wordLists'
 import { DIGIT_LISTS, DigitListKey } from '../shared/constants/digitLists'
 
+const SectionHeader = ({
+  id,
+  title,
+  children,
+  expandedSections,
+  toggleSection
+}: {
+  id: string
+  title: string
+  children?: React.ReactNode
+  expandedSections: Set<string>
+  toggleSection: (id: string) => void
+}) => {
+  const isExpanded = expandedSections.has(id)
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => toggleSection(id)}
+        className="w-full flex items-center justify-between bg-[#3f51b5] text-white px-4 py-3 rounded-t-lg hover:bg-[#354499] transition-colors"
+      >
+        <h3 className="text-lg font-bold">{title}</h3>
+        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+      </button>
+      {isExpanded && (
+        <div className="bg-[#E3F2FD] p-6 rounded-b-lg border border-slate-200">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function SCAT6Page() {
   const [formData, setFormData] = useState<SCAT6FormData>(getDefaultSCAT6FormData())
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -60,25 +92,6 @@ export default function SCAT6Page() {
     }
   }
 
-  const SectionHeader = ({ id, title, children }: { id: string; title: string; children?: React.ReactNode }) => {
-    const isExpanded = expandedSections.has(id)
-    return (
-      <div className="mb-4">
-        <button
-          onClick={() => toggleSection(id)}
-          className="w-full flex items-center justify-between bg-[#3f51b5] text-white px-4 py-3 rounded-t-lg hover:bg-[#354499] transition-colors"
-        >
-          <h3 className="text-lg font-bold">{title}</h3>
-          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-        </button>
-        {isExpanded && (
-          <div className="bg-[#E3F2FD] p-6 rounded-b-lg border border-slate-200">
-            {children}
-          </div>
-        )}
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6 pb-20">
@@ -121,7 +134,7 @@ export default function SCAT6Page() {
 
         <div className="p-8 space-y-6">
           {/* ===== DEMOGRAPHICS SECTION ===== */}
-          <SectionHeader id="demographics" title="Athlete Information">
+          <SectionHeader id="demographics" title="Athlete Information" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Athlete Name:</label>
@@ -284,7 +297,7 @@ export default function SCAT6Page() {
           </SectionHeader>
 
           {/* ===== CONCUSSION HISTORY ===== */}
-          <SectionHeader id="history" title="Concussion History">
+          <SectionHeader id="history" title="Concussion History" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -338,7 +351,7 @@ export default function SCAT6Page() {
           </SectionHeader>
 
           {/* ===== ATHLETE BACKGROUND ===== */}
-          <SectionHeader id="background" title="Step 1: Athlete Background">
+          <SectionHeader id="background" title="Step 1: Athlete Background" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
               <p className="text-sm font-medium text-slate-700 mb-3">Has the athlete ever been:</p>
 
@@ -401,7 +414,7 @@ export default function SCAT6Page() {
           </SectionHeader>
 
           {/* ===== SYMPTOM EVALUATION ===== */}
-          <SectionHeader id="symptoms" title="Step 2: Symptom Evaluation">
+          <SectionHeader id="symptoms" title="Step 2: Symptom Evaluation" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-900 font-medium">
@@ -560,7 +573,7 @@ export default function SCAT6Page() {
           </SectionHeader>
 
           {/* ===== COGNITIVE SCREENING ===== */}
-          <SectionHeader id="cognitive" title="Step 3: Cognitive Screening">
+          <SectionHeader id="cognitive" title="Step 3: Cognitive Screening" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-6">
               {/* Orientation */}
               <div>
@@ -849,7 +862,7 @@ export default function SCAT6Page() {
           </SectionHeader>
 
           {/* ===== BALANCE EXAMINATION ===== */}
-          <SectionHeader id="balance" title="Step 4: Coordination and Balance Examination">
+          <SectionHeader id="balance" title="Step 4: Coordination and Balance Examination" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-6">
               {/* mBESS Setup */}
               <div>
@@ -1182,7 +1195,7 @@ export default function SCAT6Page() {
           </SectionHeader>
 
           {/* ===== DELAYED RECALL ===== */}
-          <SectionHeader id="delayedRecall" title="Step 5: Delayed Recall">
+          <SectionHeader id="delayedRecall" title="Step 5: Delayed Recall" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-900 font-medium">
@@ -1284,7 +1297,7 @@ export default function SCAT6Page() {
           </SectionHeader>
 
           {/* ===== DECISION & HCP ATTESTATION ===== */}
-          <SectionHeader id="decision" title="Step 6: Decision">
+          <SectionHeader id="decision" title="Step 6: Decision" expandedSections={expandedSections} toggleSection={toggleSection}>
             <div className="space-y-6">
               {/* Decision Tracking Table */}
               <div>
