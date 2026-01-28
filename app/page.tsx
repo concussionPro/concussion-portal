@@ -143,11 +143,11 @@ export default function HomePage() {
         </nav>
 
         {/* HERO - Compact */}
-        <section className="section-padding pt-32 md:pt-40 pb-12 relative z-10">
+        <section className="section-padding pt-40 md:pt-48 pb-12 relative z-10">
           <div className="container-lg px-6 md:px-8 text-center">
             <div className="animate-fade-in max-w-4xl mx-auto">
               {/* Glowing badge */}
-              <div className="badge mb-5 animate-pulse-glow relative z-10">
+              <div className="badge mb-5 animate-pulse-glow">
                 <Award className="w-4 h-4 mr-2" aria-hidden="true" />
                 {CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD Hours · AHPRA Accredited Training
               </div>
