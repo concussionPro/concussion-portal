@@ -157,8 +157,11 @@ function setTextFieldIfExists(form: any, fieldName: string, value: string | numb
     if (field && value !== undefined && value !== null && value !== '') {
       field.setText(String(value))
     }
-  } catch (error) {
-    console.log(`Field not found or not text: ${fieldName}`)
+  } catch (error: any) {
+    // Skip rich text fields (not supported by pdf-lib) and non-existent fields
+    if (error?.message?.includes('rich text')) {
+      console.log(`⊘ ${fieldName}: Rich text field (not supported)`)
+    }
   }
 }
 
