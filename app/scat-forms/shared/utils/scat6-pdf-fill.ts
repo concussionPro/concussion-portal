@@ -16,7 +16,10 @@ export async function exportSCAT6ToFilledPDF(
     }
 
     const arrayBuffer = await response.arrayBuffer()
-    const pdfDoc = await PDFDocument.load(arrayBuffer)
+    const pdfDoc = await PDFDocument.load(arrayBuffer, {
+      ignoreEncryption: true,
+      throwOnInvalidObject: false
+    })
     const form = pdfDoc.getForm()
 
     console.log('PDF loaded, filling fields with correct mapping...')
@@ -105,8 +108,33 @@ export async function exportSCAT6ToFilledPDF(
     setTextField(form, 'Text39', formData.mBessSingleErrors.toString())
     // Skip Text40, Text41, Text42-44, Text87 - all rich text fields
 
+    // Remove problematic fields from form entirely before saving
+    try {
+      const problematicFields = ['Text40', 'Text41', 'Text42', 'Text43', 'Text44', 'Text87']
+      for (const fieldName of problematicFields) {
+        try {
+          form.removeField(form.getField(fieldName))
+        } catch (e) {
+          // Field doesn't exist or already removed
+        }
+      }
+    } catch (e) {
+      console.log('Could not remove problematic fields, attempting save anyway')
+    }
+
     // Save and download
-    const pdfBytes = await pdfDoc.save()
+    let pdfBytes
+    try {
+      pdfBytes = await pdfDoc.save({ useObjectStreams: false })
+    } catch (saveError: any) {
+      if (saveError?.message?.includes('rich text')) {
+        console.log('Rich text error during save, trying alternative method')
+        pdfBytes = await pdfDoc.save({ useObjectStreams: false, addDefaultPage: false })
+      } else {
+        throw saveError
+      }
+    }
+
     const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -118,7 +146,13 @@ export async function exportSCAT6ToFilledPDF(
     console.log('✓ PDF exported successfully with data!')
   } catch (error: any) {
     console.error('PDF export failed:', error)
-    alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    if (error?.message?.includes('rich text')) {
+      alert('This PDF contains unsupported field types. Downloading blank PDF instead.')
+      // Download blank PDF as fallback
+      window.open('/docs/SCAT6_Fillable.pdf', '_blank')
+    } else {
+      alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
     throw error
   }
 }
