@@ -98,34 +98,39 @@ export default function SCATFormsLayout({
 
         {/* Course Promotion Banner - Subtle Sales Funnel */}
         {(isSCAT6 || isSCOAT6) && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 mb-6 shadow-sm">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-6 mb-6 shadow-md">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-500 rounded-lg">
+              <div className="p-3 bg-blue-600 rounded-lg">
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-lg font-bold text-slate-900">Master Concussion Assessment</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Confident using this form clinically?</h3>
                   <span className="badge text-xs">14 CPD Hours</span>
                 </div>
-                <p className="text-sm text-slate-700 mb-3 leading-relaxed">
-                  Using these forms clinically? Our AHPRA-accredited training goes beyond the form—master VOMS, BESS, clinical decision-making, and return-to-play protocols. Includes hands-on workshop.
+                <p className="text-sm text-slate-700 mb-2 leading-relaxed">
+                  <strong>Most clinicians miss subtle signs.</strong> Beyond the form: master VOMS interpretation, vestibular red flags, BESS scoring nuances, and evidence-based RTP decisions. AHPRA-accredited with hands-on practice.
                 </p>
+                <div className="flex items-center gap-2 mb-3 text-xs text-slate-600">
+                  <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">🔥 Limited workshop spots</span>
+                  <span>•</span>
+                  <span>500+ Australian clinicians trained</span>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => router.push('/preview')}
-                    className="text-sm px-4 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center gap-1"
+                    className="text-sm px-4 py-2 bg-white border-2 border-blue-400 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-semibold flex items-center gap-1"
                   >
                     <Sparkles className="w-4 h-4" />
-                    Preview Course
+                    Preview Course Free
                   </button>
                   <a
                     href={CONFIG.SHOP_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    className="text-sm px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold shadow-sm"
                   >
-                    View Training Options
+                    Secure Your Spot →
                   </a>
                 </div>
               </div>
