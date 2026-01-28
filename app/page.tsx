@@ -143,7 +143,7 @@ export default function HomePage() {
         </nav>
 
         {/* HERO - Compact */}
-        <section className="section-padding pt-48 md:pt-56 pb-12 relative z-10">
+        <section className="section-padding pt-56 md:pt-64 pb-12 relative z-10">
           <div className="container-lg px-6 md:px-8 text-center">
             <div className="animate-fade-in max-w-4xl mx-auto">
               {/* Glowing badge */}
