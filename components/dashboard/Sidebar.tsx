@@ -18,6 +18,7 @@ const navItems: Array<{
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
   { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit' },
+  { icon: Activity, label: 'SCAT Forms', href: '/scat-forms' },
   { icon: Library, label: 'Reference Repository', href: '/references' },
   { icon: BookMarked, label: 'Complete Reference', href: '/complete-reference' },
   { icon: Settings, label: 'Settings', href: '/settings' },

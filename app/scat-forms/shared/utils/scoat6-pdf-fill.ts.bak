@@ -1,0 +1,397 @@
+// PDF Form Filling utility for SCOAT6 using original fillable PDF
+import { PDFDocument } from 'pdf-lib'
+import { SCOAT6FormData } from '../types/scoat6.types'
+import { getAllCalculatedScores } from './scoat6-calculations'
+
+export async function fillSCOAT6PDF(formData: SCOAT6FormData): Promise<Uint8Array> {
+  // Load the original SCOAT6 fillable PDF
+  const pdfPath = '/docs/SCOAT6_Fillable.pdf'
+  const existingPdfBytes = await fetch(pdfPath).then(res => res.arrayBuffer())
+  const pdfDoc = await PDFDocument.load(existingPdfBytes)
+  const form = pdfDoc.getForm()
+  const calculated = getAllCalculatedScores(formData)
+
+  // Helper to safely set text field
+  const setText = (fieldName: string, value: string) => {
+    try {
+      const field = form.getTextField(fieldName)
+      field.setText(value || '')
+    } catch (e) {
+      console.warn(`Field not found or error: ${fieldName}`)
+    }
+  }
+
+  // Helper to safely set checkbox
+  const setCheckbox = (fieldName: string, checked: boolean) => {
+    try {
+      const field = form.getCheckBox(fieldName)
+      if (checked) {
+        field.check()
+      } else {
+        field.uncheck()
+      }
+    } catch (e) {
+      console.warn(`Checkbox not found or error: ${fieldName}`)
+    }
+  }
+
+  // SECTION 1: Demographics
+  setText('Text14', formData.athleteName || '') // Athlete Name
+  setText('Text3', formData.idNumber || '') // ID Number
+  setText('Text4a', formData.dateOfBirth || '') // DOB
+  setCheckbox('Sex', formData.sex === 'Male') // Sex (checkbox - may need mapping)
+  setText('Text6', formData.age || '') // Age
+  setText('Text8b', formData.yearsEducation || '') // Years of Education
+  setText('Text8', formData.dominantHand || '') // Dominant Hand
+  setText('Text10', formData.sport || '') // Sport/Team
+  setText('Text11a', formData.dateOfInjury || '') // Date of Injury
+  setText('Text11', formData.assessmentDate || '') // Assessment Date
+  setText('Text12', formData.examinerName || '') // Examiner Name
+  setText('Text13', formData.examinerContact || '') // Examiner Contact
+
+  // Concussion History
+  setText('Text73', formData.previousConcussions || '') // Number of previous
+  setText('Text74', formData.mostRecentConcussion || '') // Most recent date
+  setText('Text75', formData.totalTimeLost || '') // Total time lost
+  setCheckbox('Cur', formData.persistentSymptoms || false) // Persistent symptoms >3 months
+
+  // Current Injury
+  setText('Text81', formData.mechanismOfInjury || '') // Mechanism
+  setCheckbox('Check Box86', formData.lossOfConsciousness || false) // LOC
+  if (formData.lossOfConsciousness) {
+    setText('Text82', formData.consciousnessDuration || '') // LOC duration
+  }
+  setCheckbox('Check Box87', formData.retrogradeAmnesia || false) // Retrograde amnesia
+  setCheckbox('Check Box88', formData.anterogradeAmnesia || false) // Anterograde amnesia
+
+  // Medications
+  setText('Text83', formData.currentMedications || '') // Current medications
+  setText('Text84', formData.preExistingConditions || '') // Pre-existing conditions
+
+  // SECTION 2: Symptom Evaluation (24 symptoms × 5 date columns)
+  // Date headers
+  setText('Text137', formData.symptomDatePreInjury || '')
+  setText('Text138', formData.symptomDateDayInjured || '')
+  setText('Text139', formData.symptomDateConsult1 || '')
+  setText('Text140', formData.symptomDateConsult2 || '')
+  setText('Text141', formData.symptomDateConsult3 || '')
+
+  // Symptoms grid (Text142-Text165 for symptom names, then a/b/c/d suffixes for date columns)
+  // Mapping: 24 symptoms, each has 5 columns (no suffix, a, b, c, d for the 5 dates)
+  if (formData.symptoms) {
+    const symptomFieldMapping = [
+      { base: 'Text142', key: 'headaches' },
+      { base: 'Text143', key: 'pressureInHead' },
+      { base: 'Text144', key: 'neckPain' },
+      { base: 'Text145', key: 'nauseaVomiting' },
+      { base: 'Text146', key: 'dizziness' },
+      { base: 'Text147', key: 'blurredVision' },
+      { base: 'Text148', key: 'balanceProblems' },
+      { base: 'Text149', key: 'lightSensitivity' },
+      { base: 'Text150', key: 'noiseSensitivity' },
+      { base: 'Text151', key: 'feelingSlowed' },
+      { base: 'Text152', key: 'feelingFogged' },
+      { base: 'Text153', key: 'dontFeelRight' },
+      { base: 'Text154', key: 'concentrationDifficulty' },
+      { base: 'Text155', key: 'memoryDifficulty' },
+      { base: 'Text156', key: 'fatigue' },
+      { base: 'Text157', key: 'confusion' },
+      { base: 'Text158', key: 'drowsiness' },
+      { base: 'Text159', key: 'emotionalChange' },
+      { base: 'Text160', key: 'irritability' },
+      { base: 'Text161', key: 'sadness' },
+      { base: 'Text162', key: 'nervousAnxious' },
+      { base: 'Text163', key: 'troubleFallingAsleep' },
+      { base: 'Text164', key: 'sleepingMore' },
+      { base: 'Text165', key: 'sleepingLess' },
+    ]
+
+    symptomFieldMapping.forEach(({ base, key }) => {
+      const symptom = formData.symptoms[key as keyof typeof formData.symptoms]
+      if (symptom && typeof symptom === 'object' && 'preInjury' in symptom) {
+        setText(base, symptom.preInjury.toString()) // Pre-Injury (no suffix)
+        setText(base + 'a', symptom.dayInjured.toString()) // Day Injured
+        setText(base + 'b', symptom.consult1.toString()) // Consult 1
+        setText(base + 'c', symptom.consult2.toString()) // Consult 2
+        setText(base + 'd', symptom.consult3.toString()) // Consult 3
+      }
+    })
+  }
+
+  // Symptom totals (calculated fields)
+  setText('Text171', calculated.symptomNumberPreInjury.toString())
+  setText('Text172', calculated.symptomNumberDayInjured.toString())
+  setText('Text173', calculated.symptomNumberConsult1.toString())
+  setText('Text174', calculated.symptomNumberConsult2.toString())
+  setText('Text165a', calculated.symptomNumberConsult3.toString()) // May need adjustment
+
+  setText('Text166', calculated.symptomSeverityPreInjury.toString())
+  setText('Text170', calculated.symptomSeverityDayInjured.toString())
+  setText('Text167', calculated.symptomSeverityConsult1.toString())
+  setText('Text168', calculated.symptomSeverityConsult2.toString())
+  setText('Text169', calculated.symptomSeverityConsult3.toString())
+
+  // SECTION 3: Cognitive Testing
+
+  // Word List Selection
+  setCheckbox('A', formData.wordList === 'A')
+  setCheckbox('A_2', formData.wordList === 'B')
+  setCheckbox('C_2', formData.wordList === 'C')
+
+  // Immediate Memory - Trial 1 (Tri1a-Tri1j checkboxes)
+  if (formData.immediateMemoryTrial1 && Array.isArray(formData.immediateMemoryTrial1)) {
+    const trial1Fields = ['Tri1a', 'Tri1b', 'Tri1c', 'Tri1d', 'Tri1e', 'Tri1f', 'Tri1g', 'Tri1h', 'Tri1i', 'Tri1j']
+    trial1Fields.forEach((fieldName, index) => {
+      setCheckbox(fieldName, formData.immediateMemoryTrial1[index])
+    })
+  }
+
+  // Immediate Memory - Trial 2
+  if (formData.immediateMemoryTrial2 && Array.isArray(formData.immediateMemoryTrial2)) {
+    const trial2Fields = ['Tri2a', 'Tri2b', 'Tri2c', 'Tri2d', 'Tri2e', 'Tri2f', 'Tri2g', 'Tri2h', 'Tri2i', 'Tri2j']
+    trial2Fields.forEach((fieldName, index) => {
+      setCheckbox(fieldName, formData.immediateMemoryTrial2[index])
+    })
+  }
+
+  // Immediate Memory - Trial 3
+  if (formData.immediateMemoryTrial3 && Array.isArray(formData.immediateMemoryTrial3)) {
+    const trial3Fields = ['Tri3a', 'Tri3b', 'Tri3c', 'Tri3d', 'Tri3e', 'Tri3f', 'Tri3g', 'Tri3h', 'Tri3i', 'Tri3j']
+    trial3Fields.forEach((fieldName, index) => {
+      setCheckbox(fieldName, formData.immediateMemoryTrial3[index])
+    })
+  }
+
+  // Immediate Memory Score
+  setText('Text175', calculated.immediateMemory.toString())
+
+  // Concentration
+  setText('Text31', formData.digitsBackward?.toString() || '0')
+  setText('Text29', formData.monthsReverseTime || '')
+  setText('Text30', formData.monthsReverseErrors?.toString() || '0')
+  setText('Text32', calculated.concentration.toString())
+
+  // Optional 15-word list
+  setCheckbox('Check Box131', formData.optional15WordNotDone || false)
+  if (!formData.optional15WordNotDone) {
+    setText('Text176', formData.optional15WordScore?.toString() || '0')
+  }
+
+  // SECTION 4: Physical Examination
+
+  // Orthostatic Vitals
+  setText('Text177', formData.orthostaticBPSupine || '') // Supine BP
+  setText('Text178', formData.orthostaticHRSupine || '') // Supine HR
+  setText('Text179', formData.orthostaticBPStanding || '') // Standing BP
+  setText('Text180', formData.orthostaticHRStanding || '') // Standing HR
+  setText('Text181', formData.orthostaticResult || '') // Result
+
+  // Cervical Spine - Palpation
+  setCheckbox('Nor', formData.cervicalPalpationMuscleSpasm)
+  setCheckbox('Nor1', formData.cervicalPalpationMidlineTenderness)
+  setCheckbox('Nor2', formData.cervicalPalpationParavertebral)
+
+  // Cervical Spine - Range of Motion
+  setCheckbox('Nor3', formData.cervicalROMFlexion === 'Normal')
+  setCheckbox('Nor4', formData.cervicalROMExtension === 'Normal')
+  setCheckbox('Nor5', formData.cervicalROMLateralFlexionL === 'Normal')
+  setCheckbox('Nor6', formData.cervicalROMLateralFlexionR === 'Normal')
+  setCheckbox('Nor7', formData.cervicalROMRotationL === 'Normal')
+  setCheckbox('Nor8', formData.cervicalROMRotationR === 'Normal')
+
+  // Neurological Examination
+  setCheckbox('Nor9', formData.neurologicalCranialNerves === 'Normal')
+  setCheckbox('Nor10', formData.neurologicalLimbTone === 'Normal')
+  setCheckbox('Nor11', formData.neurologicalStrength === 'Normal')
+  setCheckbox('Nor12', formData.neurologicalReflexes === 'Normal')
+  setCheckbox('Nor13', formData.neurologicalSensation === 'Normal')
+  setCheckbox('Nor14', formData.neurologicalCerebellar === 'Normal')
+
+  // Balance - mBESS
+  setText('Text185', formData.mBessDoubleErrors?.toString() || '0')
+  setText('Text186', formData.mBessTandemErrors?.toString() || '0')
+  setText('Text187', formData.mBessSingleErrors?.toString() || '0')
+  setText('Text188', calculated.mBessTotal.toString())
+
+  // mBESS on Foam (optional)
+  if (calculated.mBessFoamTotal !== null) {
+    setText('Text189', formData.mBessFoamDoubleErrors?.toString() || '0')
+    setText('Text190', formData.mBessFoamTandemErrors?.toString() || '0')
+    setText('Text191', formData.mBessFoamSingleErrors?.toString() || '0')
+    setText('Text192', calculated.mBessFoamTotal.toString())
+  }
+
+  // Tandem Gait
+  setText('Text193', formData.tandemGaitTrial1 || '')
+  setText('Text194', formData.tandemGaitTrial2 || '')
+  setText('Text195', formData.tandemGaitTrial3 || '')
+  setText('Text196', calculated.tandemGaitAverage)
+  setText('Text197', calculated.tandemGaitFastest)
+
+  // Complex Tandem Gait
+  setText('Text198', formData.complexTandemForwardEyesOpen?.toString() || '0')
+  setText('Text199', formData.complexTandemForwardEyesClosed?.toString() || '0')
+  setText('Text200', calculated.complexTandemForward.toString())
+  setText('Text201', formData.complexTandemBackwardEyesOpen?.toString() || '0')
+  setText('Text202', formData.complexTandemBackwardEyesClosed?.toString() || '0')
+  setText('Text203', calculated.complexTandemBackward.toString())
+  setText('Text204', calculated.complexTandemTotal.toString())
+
+  // Dual Task Gait
+  setText('Text205', formData.dualTaskTrialsAttempted?.toString() || '0')
+  setText('Text206', formData.dualTaskTrialsCorrect?.toString() || '0')
+  setText('Text207', formData.dualTaskTime || '')
+  setText('Text208', calculated.dualTaskAccuracy)
+
+  // SECTION 5: mVOMS
+
+  // Baseline
+  if (formData.mvomsBaseline) {
+    setText('Text209', formData.mvomsBaseline.headache?.toString() || '0')
+    setText('Text210', formData.mvomsBaseline.dizziness?.toString() || '0')
+    setText('Text211', formData.mvomsBaseline.nausea?.toString() || '0')
+    setText('Text212', formData.mvomsBaseline.fogginess?.toString() || '0')
+  }
+
+  // Smooth Pursuits
+  if (formData.mvomsSmoothPursuits) {
+    setCheckbox('Check Box224', formData.mvomsSmoothPursuits.notTested || false)
+    if (!formData.mvomsSmoothPursuits.notTested) {
+      setText('Text213', formData.mvomsSmoothPursuits.headache?.toString() || '0')
+      setText('Text214', formData.mvomsSmoothPursuits.dizziness?.toString() || '0')
+      setText('Text215', formData.mvomsSmoothPursuits.nausea?.toString() || '0')
+      setText('Text216', formData.mvomsSmoothPursuits.fogginess?.toString() || '0')
+    }
+  }
+
+  // Saccades
+  if (formData.mvomsSaccades) {
+    setCheckbox('Check Box225', formData.mvomsSaccades.notTested || false)
+    if (!formData.mvomsSaccades.notTested) {
+      setText('Text217', formData.mvomsSaccades.headache?.toString() || '0')
+      setText('Text218', formData.mvomsSaccades.dizziness?.toString() || '0')
+      setText('Text219', formData.mvomsSaccades.nausea?.toString() || '0')
+      setText('Text220v', formData.mvomsSaccades.fogginess?.toString() || '0')
+    }
+  }
+
+  // Convergence
+  if (formData.mvomsConvergence) {
+    setCheckbox('DEL7', formData.mvomsConvergence.notTested || false)
+    if (!formData.mvomsConvergence.notTested) {
+      setText('Text220a', formData.mvomsConvergence.headache?.toString() || '0')
+      setText('Text220b', formData.mvomsConvergence.dizziness?.toString() || '0')
+      setText('Text220c', formData.mvomsConvergence.nausea?.toString() || '0')
+      setText('Text220d', formData.mvomsConvergence.fogginess?.toString() || '0')
+      setText('Text220e', formData.mvomsConvergence.nearPointConvergence || '')
+    }
+  }
+
+  // VOR
+  if (formData.mvomsVOR) {
+    setCheckbox('DEL8', formData.mvomsVOR.notTested || false)
+    if (!formData.mvomsVOR.notTested) {
+      setText('Text221b', formData.mvomsVOR.headache?.toString() || '0')
+      setText('Text222c', formData.mvomsVOR.dizziness?.toString() || '0')
+      setText('Text223d', formData.mvomsVOR.nausea?.toString() || '0')
+      setText('Text221c', formData.mvomsVOR.fogginess?.toString() || '0')
+    }
+  }
+
+  // SECTION 6: Mental Health Screens
+
+  // GAD-7
+  setCheckbox('ss1', formData.gad7NotDone)
+  if (!formData.gad7NotDone) {
+    setText('Text1', formData.gad7_1.toString())
+    // GAD-7 questions 2-7 would follow similar pattern
+    // Need to map each GAD-7 question to specific fields
+  }
+
+  // PHQ-2
+  setCheckbox('ss2', formData.phq2NotDone)
+  if (!formData.phq2NotDone) {
+    // Map PHQ-2 fields
+  }
+
+  // Sleep Screen
+  setCheckbox('ss0', formData.sleepNotDone)
+  if (!formData.sleepNotDone) {
+    // Map sleep fields
+  }
+
+  // SECTION 7: Delayed Recall
+  if (formData.delayedRecall && Array.isArray(formData.delayedRecall)) {
+    const delayedRecallFields = ['DEL3', 'DEL4', 'DEL5', 'DEL6', 'DEL4A', 'DEL8', 'DEL9']
+    formData.delayedRecall.slice(0, 7).forEach((recalled, index) => {
+      if (delayedRecallFields[index]) {
+        setCheckbox(delayedRecallFields[index], recalled)
+      }
+    })
+  }
+  setText('Text84D', calculated.delayedRecall.toString())
+
+  // SECTION 8: Overall Assessment & Management
+  setText('Text226', formData.overallAssessment || '')
+
+  // Imaging
+  setCheckbox('Check Box2', formData.imagingPerformed || false)
+  if (formData.imagingPerformed) {
+    setText('Text5', formData.imagingType || '')
+    setText('Text7', formData.imagingReason || '')
+    setText('Text9', formData.imagingFindings || '')
+  }
+
+  // Return Recommendations
+  setText('Text15', formData.returnClass || '')
+  setText('Text16', formData.returnWork || '')
+  setText('Text17', formData.returnDriving || '')
+  setCheckbox('Check Box18', formData.returnSport === 'Cleared')
+
+  // Referrals (Check Box48-Check Box61)
+  if (formData.referrals) {
+    setCheckbox('Check Box48', formData.referrals.athleticTrainer?.checked || false)
+    setCheckbox('Check Box49', formData.referrals.neurologist?.checked || false)
+    setCheckbox('Check Box50', formData.referrals.neurosurgeon?.checked || false)
+    setCheckbox('Check Box51', formData.referrals.sportPhysician?.checked || false)
+    setCheckbox('Check Box52', formData.referrals.physicalTherapist?.checked || false)
+    setCheckbox('Check Box53', formData.referrals.neuropsychologist?.checked || false)
+    setCheckbox('Check Box54', formData.referrals.psychologist?.checked || false)
+    setCheckbox('Check Box55', formData.referrals.occupationalTherapist?.checked || false)
+    setCheckbox('Check Box56', formData.referrals.vestibularTherapist?.checked || false)
+    setCheckbox('Check Box57', formData.referrals.primaryCare?.checked || false)
+    setCheckbox('Check Box58', formData.referrals.emergencyDept?.checked || false)
+    setCheckbox('Check Box59', formData.referrals.optometrist?.checked || false)
+    setCheckbox('Check Box60', formData.referrals.speechTherapist?.checked || false)
+    setCheckbox('Check Box61', formData.referrals.other?.checked || false)
+  }
+
+  // HCP Information
+  setText('Text62', formData.hcpName || '')
+  setText('Text63', formData.hcpTitle || '')
+  setText('Text64', formData.hcpRegistration || '')
+  setText('Text65', formData.hcpDate || '')
+
+  // Additional Notes
+  setText('Text66', formData.additionalNotes || '')
+
+  // Save and return the filled PDF
+  const pdfBytes = await pdfDoc.save()
+  return pdfBytes
+}
+
+export async function exportSCOAT6ToFilledPDF(
+  formData: SCOAT6FormData,
+  filename: string = 'SCOAT6_Filled.pdf'
+) {
+  const pdfBytes = await fillSCOAT6PDF(formData)
+
+  // Create blob and trigger download
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}

@@ -1,6 +1,8 @@
-// User storage system using Vercel Blob
+// User storage system using Vercel Blob with local file fallback
 import { put, head } from '@vercel/blob'
 import crypto from 'crypto'
+import fs from 'fs/promises'
+import path from 'path'
 
 export interface User {
   id: string
@@ -13,9 +15,42 @@ export interface User {
 }
 
 const USERS_BLOB_PATH = 'users.json'
+const LOCAL_USERS_PATH = path.join(process.cwd(), 'data', 'users.local.json')
 
-// Load all users from Blob storage
+// Check if Vercel Blob is configured
+function isBlobConfigured(): boolean {
+  return !!process.env.BLOB_READ_WRITE_TOKEN
+}
+
+// Load users from local file (development fallback)
+async function loadUsersFromLocalFile(): Promise<User[]> {
+  try {
+    const data = await fs.readFile(LOCAL_USERS_PATH, 'utf-8')
+    return JSON.parse(data)
+  } catch (error) {
+    console.error('Error loading users from local file:', error)
+    return []
+  }
+}
+
+// Save users to local file (development fallback)
+async function saveUsersToLocalFile(users: User[]): Promise<void> {
+  try {
+    await fs.writeFile(LOCAL_USERS_PATH, JSON.stringify(users, null, 2), 'utf-8')
+  } catch (error) {
+    console.error('Error saving users to local file:', error)
+    throw error
+  }
+}
+
+// Load all users from Blob storage or local file
 export async function loadUsers(): Promise<User[]> {
+  // If Blob storage is not configured, use local file
+  if (!isBlobConfigured()) {
+    console.log('📝 Using local file storage for users (development mode)')
+    return loadUsersFromLocalFile()
+  }
+
   try {
     // List all blobs and find users.json files (there may be multiple versions)
     const { list: listBlobs } = await import('@vercel/blob')
@@ -40,23 +75,33 @@ export async function loadUsers(): Promise<User[]> {
     const users = await response.json()
     return users
   } catch (error) {
-    console.error('Error loading users:', error)
-    return []
+    console.error('Error loading users from Blob:', error)
+    // Fallback to local file if Blob fails
+    console.log('⚠️  Blob storage failed, falling back to local file')
+    return loadUsersFromLocalFile()
   }
 }
 
-// Save users to Blob storage
+// Save users to Blob storage or local file
 // NOTE: Vercel Blob only supports 'public' access. URLs are hard to guess but technically public.
 // For production, consider migrating to a database with proper access control.
 async function saveUsers(users: User[]) {
+  // If Blob storage is not configured, use local file
+  if (!isBlobConfigured()) {
+    console.log('📝 Saving users to local file (development mode)')
+    return saveUsersToLocalFile(users)
+  }
+
   try {
     await put(USERS_BLOB_PATH, JSON.stringify(users, null, 2), {
       access: 'public',
       contentType: 'application/json',
     })
   } catch (error) {
-    console.error('Error saving users:', error)
-    throw error
+    console.error('Error saving users to Blob:', error)
+    // Fallback to local file if Blob fails
+    console.log('⚠️  Blob storage failed, falling back to local file')
+    return saveUsersToLocalFile(users)
   }
 }
 

@@ -59,7 +59,21 @@ export async function POST(request: Request) {
     if (emailSent) {
       return NextResponse.json({ success: true })
     } else {
-      // Log email send failures
+      // In development mode, if email fails, return the magic link directly
+      const isDevelopment = process.env.NODE_ENV === 'development'
+
+      if (isDevelopment) {
+        console.log('⚠️  Email service not configured - returning magic link directly')
+        console.log('🔗 Magic Link:', magicLink)
+        return NextResponse.json({
+          success: true,
+          devMode: true,
+          magicLink,
+          message: 'Email service not configured. Use /dev-login for direct access.'
+        })
+      }
+
+      // Log email send failures in production
       await logCriticalError(new Error('Failed to send magic link email'), {
         endpoint: '/api/send-magic-link',
         userId: user.id,
@@ -67,7 +81,7 @@ export async function POST(request: Request) {
       })
 
       return NextResponse.json(
-        { error: 'Failed to send email' },
+        { error: 'Failed to send email. Please contact support.' },
         { status: 500 }
       )
     }

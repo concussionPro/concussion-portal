@@ -12,10 +12,6 @@ export interface ModuleProgress {
   quizCompleted: boolean
   startedAt: Date | null
   completedAt: Date | null
-  // Checkpoint tracking for long modules
-  sectionsCompleted: string[]
-  lastViewedSection: number
-  lastSavedAt: Date | null
 }
 
 interface ProgressContextType {
@@ -31,10 +27,6 @@ interface ProgressContextType {
   isModuleComplete: (moduleId: number) => boolean
   canMarkModuleComplete: (moduleId: number, requiredMinutes: number) => boolean
   resetProgress: () => void
-  // Checkpoint methods for long modules
-  markSectionComplete: (moduleId: number, sectionId: string) => void
-  updateLastViewedSection: (moduleId: number, sectionIndex: number) => void
-  isSectionComplete: (moduleId: number, sectionId: string) => boolean
 }
 
 const ProgressContext = createContext<ProgressContextType | undefined>(undefined)
@@ -53,9 +45,6 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
-      sectionsCompleted: [],
-      lastViewedSection: 0,
-      lastSavedAt: null,
     },
     2: {
       moduleId: 2,
@@ -67,9 +56,6 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
-      sectionsCompleted: [],
-      lastViewedSection: 0,
-      lastSavedAt: null,
     },
     3: {
       moduleId: 3,
@@ -81,9 +67,6 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
-      sectionsCompleted: [],
-      lastViewedSection: 0,
-      lastSavedAt: null,
     },
     4: {
       moduleId: 4,
@@ -95,9 +78,6 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
-      sectionsCompleted: [],
-      lastViewedSection: 0,
-      lastSavedAt: null,
     },
     5: {
       moduleId: 5,
@@ -109,9 +89,6 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
-      sectionsCompleted: [],
-      lastViewedSection: 0,
-      lastSavedAt: null,
     },
     6: {
       moduleId: 6,
@@ -123,9 +100,6 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
-      sectionsCompleted: [],
-      lastViewedSection: 0,
-      lastSavedAt: null,
     },
     7: {
       moduleId: 7,
@@ -137,9 +111,6 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
-      sectionsCompleted: [],
-      lastViewedSection: 0,
-      lastSavedAt: null,
     },
     8: {
       moduleId: 8,
@@ -151,9 +122,6 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       quizCompleted: false,
       startedAt: null,
       completedAt: null,
-      sectionsCompleted: [],
-      lastViewedSection: 0,
-      lastSavedAt: null,
     },
   }
 }
@@ -341,43 +309,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Checkpoint: Mark section as completed (auto-saves progress)
-  const markSectionComplete = (moduleId: number, sectionId: string) => {
-    setProgress((prev) => {
-      const currentSections = prev[moduleId]?.sectionsCompleted || []
-      if (currentSections.includes(sectionId)) {
-        return prev // Already completed, no update needed
-      }
-      return {
-        ...prev,
-        [moduleId]: {
-          ...prev[moduleId],
-          sectionsCompleted: [...currentSections, sectionId],
-          lastSavedAt: new Date(),
-          startedAt: prev[moduleId].startedAt || new Date(),
-        },
-      }
-    })
-  }
-
-  // Checkpoint: Update last viewed section (auto-saves every 10 seconds)
-  const updateLastViewedSection = (moduleId: number, sectionIndex: number) => {
-    setProgress((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        lastViewedSection: sectionIndex,
-        lastSavedAt: new Date(),
-        startedAt: prev[moduleId].startedAt || new Date(),
-      },
-    }))
-  }
-
-  // Check if specific section is completed
-  const isSectionComplete = (moduleId: number, sectionId: string): boolean => {
-    return progress[moduleId]?.sectionsCompleted.includes(sectionId) || false
-  }
-
   return (
     <ProgressContext.Provider
       value={{
@@ -393,9 +324,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         isModuleComplete,
         canMarkModuleComplete,
         resetProgress,
-        markSectionComplete,
-        updateLastViewedSection,
-        isSectionComplete,
       }}
     >
       {children}

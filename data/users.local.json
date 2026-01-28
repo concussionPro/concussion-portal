@@ -1,0 +1,16 @@
+[
+  {
+    "id": "demo-user-001",
+    "email": "demo@concussionpro.com",
+    "name": "Demo User",
+    "accessLevel": "full-course",
+    "createdAt": "2026-01-28T00:00:00.000Z"
+  },
+  {
+    "id": "zac-admin-001",
+    "email": "zac@concussion-education-australia.com",
+    "name": "Zac Lewis",
+    "accessLevel": "full-course",
+    "createdAt": "2026-01-28T00:00:00.000Z"
+  }
+]

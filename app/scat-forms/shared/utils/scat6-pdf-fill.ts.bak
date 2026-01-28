@@ -1,0 +1,270 @@
+// PDF Form Filling utility for SCAT6 using original fillable PDF
+import { PDFDocument } from 'pdf-lib'
+import { SCAT6FormData } from '../types/scat6.types'
+import { getAllCalculatedScores } from './scat6-calculations'
+
+export async function fillSCAT6PDF(formData: SCAT6FormData): Promise<Uint8Array> {
+  // Load the original SCAT6 fillable PDF
+  const pdfPath = '/docs/SCAT6_Fillable.pdf'
+  const existingPdfBytes = await fetch(pdfPath).then(res => res.arrayBuffer())
+  const pdfDoc = await PDFDocument.load(existingPdfBytes)
+  const form = pdfDoc.getForm()
+  const calculated = getAllCalculatedScores(formData)
+
+  // Helper to safely set text field
+  const setText = (fieldName: string, value: string) => {
+    try {
+      const field = form.getTextField(fieldName)
+      field.setText(value || '')
+    } catch (e) {
+      console.warn(`Field not found or error: ${fieldName}`)
+    }
+  }
+
+  // Helper to safely set radio group
+  const setRadio = (fieldName: string, value: string) => {
+    try {
+      const field = form.getRadioGroup(fieldName)
+      field.select(value)
+    } catch (e) {
+      console.warn(`Radio field not found or error: ${fieldName}`)
+    }
+  }
+
+  // Helper to safely set checkbox
+  const setCheckbox = (fieldName: string, checked: boolean) => {
+    try {
+      const field = form.getCheckBox(fieldName)
+      if (checked) {
+        field.check()
+      } else {
+        field.uncheck()
+      }
+    } catch (e) {
+      console.warn(`Checkbox not found or error: ${fieldName}`)
+    }
+  }
+
+  // SECTION 1: Demographics
+  setText('Text1', formData.athleteName || '') // Athlete Name
+  setText('Text3', formData.dateOfBirth || '') // DOB
+  setText('Text4', formData.age || '') // Age
+  setText('Text7', formData.sport || '') // Sport/Team/School
+  setText('Text2', formData.dateOfInjury || '') // Date of Injury
+  setText('Text5', formData.timeOfInjury || '') // Time of Injury
+  setText('Text6', formData.examinerName || '') // Examiner
+  setText('Text8', formData.assessmentDate || '') // Assessment Date
+
+  // Sex - Radio group
+  if (formData.sex) {
+    setRadio('Sex', formData.sex)
+  }
+
+  // SECTION 2: Red Flags - Checkboxes
+  if (formData.redFlags) {
+    setCheckbox('Check Box1', formData.redFlags.neckPainTenderness)
+    setCheckbox('Check Box2', formData.redFlags.doubleVision)
+    setCheckbox('Check Box3', formData.redFlags.weaknessTinglingBurning)
+    setCheckbox('Check Box4', formData.redFlags.severeContinuingHeadache)
+    setCheckbox('Check Box5', formData.redFlags.seizureConvulsion)
+    setCheckbox('Check Box6', formData.redFlags.lossOfConsciousness)
+    setCheckbox('Check Box7', formData.redFlags.deterioratingConsciousState)
+    setCheckbox('Check Box8', formData.redFlags.vomiting)
+    setCheckbox('Check Box9', formData.redFlags.increasingRestlessness)
+  }
+
+  // Observable Signs - Checkboxes
+  if (formData.observableSigns) {
+    setCheckbox('Check Box10', formData.observableSigns.lyingMotionless)
+    setCheckbox('Check Box11', formData.observableSigns.facialInjury)
+    setCheckbox('Check Box12', formData.observableSigns.slowGettingUp)
+    setCheckbox('Check Box13', formData.observableSigns.disorientation)
+    setCheckbox('Check Box14', formData.observableSigns.blankVacantLook)
+    setCheckbox('Check Box15', formData.observableSigns.balanceGaitProblems)
+  }
+
+  // Maddocks Questions - Radio groups (Correct/Incorrect)
+  if (formData.maddocksQuestions) {
+    setRadio('madscore1', formData.maddocksQuestions.venue ? 'Correct' : 'Incorrect')
+    setRadio('madscore2', formData.maddocksQuestions.half ? 'Correct' : 'Incorrect')
+    setRadio('madscore3', formData.maddocksQuestions.lastScored ? 'Correct' : 'Incorrect')
+    setRadio('madscore4', formData.maddocksQuestions.opponent ? 'Correct' : 'Incorrect')
+    setRadio('madscore5', formData.maddocksQuestions.winLastGame ? 'Correct' : 'Incorrect')
+  }
+
+  // Maddocks Score
+  setText('Text26', calculated.maddocksScore.toString())
+
+  // SECTION 3: Symptoms (s1-s22 radio groups, 0-6 scale)
+  if (formData.symptoms) {
+    const symptomMapping: Record<string, keyof typeof formData.symptoms> = {
+      's1': 'headache',
+      's2': 'pressureInHead',
+      's3': 'neckPain',
+      's4': 'nauseaVomiting',
+      's5': 'dizziness',
+      's6': 'blurredVision',
+      's7': 'balanceProblems',
+      's8': 'lightSensitivity',
+      's9': 'noiseSensitivity',
+      's10': 'feelingSlowed',
+      's11': 'feelingFogged',
+      's12': 'dontFeelRight',
+      's13': 'concentrationDifficulty',
+      's14': 'memoryDifficulty',
+      's15': 'fatigue',
+      's16': 'confusion',
+      's17': 'drowsiness',
+      's18': 'troubleFallingAsleep',
+      's19': 'emotionalChange',
+      's20': 'irritability',
+      's21': 'sadness',
+      's22': 'nervousAnxious',
+    }
+
+    Object.entries(symptomMapping).forEach(([fieldName, symptomKey]) => {
+      const value = formData.symptoms[symptomKey]
+      if (value !== undefined && value !== null) {
+        setRadio(fieldName, value.toString())
+      }
+    })
+  }
+
+  // Symptom totals
+  setText('Text27', calculated.symptomNumber.toString())
+  setText('Text28', calculated.symptomSeverity.toString())
+
+  // SECTION 4: Cognitive Testing
+
+  // Orientation (ori1-ori5)
+  setRadio('ori1', formData.orientationMonth ? '1' : '0')
+  setRadio('ori2', formData.orientationDate ? '1' : '0')
+  setRadio('ori3', formData.orientationDay ? '1' : '0')
+  setRadio('ori4', formData.orientationYear ? '1' : '0')
+  setRadio('ori5', formData.orientationTime ? '1' : '0')
+  setText('Text29', calculated.orientation.toString())
+
+  // Word List Selection
+  setCheckbox('A', formData.wordList === 'A')
+  setCheckbox('B', formData.wordList === 'B')
+  setCheckbox('C', formData.wordList === 'C')
+
+  // Immediate Memory Trial 1 (Tri1a-Tri1j)
+  if (formData.immediateMemoryTrial1 && Array.isArray(formData.immediateMemoryTrial1)) {
+    const trial1Words = ['Tri1a', 'Tri1b', 'Tri1c', 'Tri1d', 'Tri1e', 'Tri1f', 'Tri1g', 'Tri1h', 'Tri1i', 'Tri1j']
+    trial1Words.forEach((fieldName, index) => {
+      setRadio(fieldName, formData.immediateMemoryTrial1[index] ? '1' : '0')
+    })
+  }
+
+  // Immediate Memory Trial 2 (Tri2a-Tri2j)
+  if (formData.immediateMemoryTrial2 && Array.isArray(formData.immediateMemoryTrial2)) {
+    const trial2Words = ['Tri2a', 'Tri2b', 'Tri2c', 'Tri2d', 'Tri2e', 'Tri2f', 'Tri2g', 'Tri2h', 'Tri2i', 'Tri2j']
+    trial2Words.forEach((fieldName, index) => {
+      setRadio(fieldName, formData.immediateMemoryTrial2[index] ? '1' : '0')
+    })
+  }
+
+  // Immediate Memory Trial 3 (Tri3a-Tri3j)
+  if (formData.immediateMemoryTrial3 && Array.isArray(formData.immediateMemoryTrial3)) {
+    const trial3Words = ['Tri3a', 'Tri3b', 'Tri3c', 'Tri3d', 'Tri3e', 'Tri3f', 'Tri3g', 'Tri3h', 'Tri3i', 'Tri3j']
+    trial3Words.forEach((fieldName, index) => {
+      setRadio(fieldName, formData.immediateMemoryTrial3[index] ? '1' : '0')
+    })
+  }
+
+  // Immediate Memory Score
+  setText('Text30', calculated.immediateMemory.toString())
+
+  // Concentration - Digits Backward
+  setText('Text32', formData.digitsBackward?.toString() || '0')
+
+  // Months Reverse
+  setText('Text33', formData.monthsReverseTime || '')
+  setText('Text34', formData.monthsReverseErrors?.toString() || '0')
+
+  // Concentration Score
+  setText('Text35', calculated.concentration.toString())
+
+  // Neurological Screen
+  if (formData.neurological) {
+    setRadio('athelete1', formData.neurological.eyeMovements)
+    setRadio('athelete2', formData.neurological.pupils)
+    setRadio('athelete3', formData.neurological.speech)
+    setRadio('athelete4', formData.neurological.limbCoordination)
+  }
+
+  // Balance - mBESS
+  setText('Text37', formData.mBessDoubleErrors?.toString() || '0')
+  setText('Text38', formData.mBessSingleErrors?.toString() || '0')
+  setText('Text39', formData.mBessTandemErrors?.toString() || '0')
+  setText('Text40', calculated.mBessTotal.toString())
+
+  // Tandem Gait
+  setText('Text41', formData.tandemGaitTrial1 || '')
+  setText('Text42', formData.tandemGaitTrial2 || '')
+  setText('Text43', formData.tandemGaitTrial3 || '')
+  setText('Text44', calculated.tandemGaitFastest)
+
+  // SECTION 5: Delayed Recall
+  setText('Text83A', formData.delayedRecallTime || '')
+
+  // Delayed Recall words (DEL3-DEL7, etc. - map to 10 words)
+  if (formData.delayedRecall && Array.isArray(formData.delayedRecall)) {
+    const delayedWords = ['DEL3', 'DEL4', 'DEL5', 'DEL6', 'DEL7', 'DEL4A', 'DEL8', 'DEL9']
+    formData.delayedRecall.slice(0, 8).forEach((recalled, index) => {
+      if (delayedWords[index]) {
+        setRadio(delayedWords[index], recalled ? '1' : '0')
+      }
+    })
+  }
+
+  setText('Text87', calculated.delayedRecall.toString())
+
+  // Different from usual self
+  setRadio('TTL12', formData.delayedRecallDifferent ? 'Yes' : 'No')
+
+  // Total Cognitive Score
+  setText('Text88', calculated.totalCognitive.toString())
+
+  // SECTION 6: Decision
+  if (formData.disposition) {
+    setRadio('Concussion diagnosed', formData.disposition)
+  }
+
+  // HCP Information
+  setText('Text89', formData.hcpName || '')
+  setText('Text90', formData.hcpTitle || '')
+  setText('Text91', formData.hcpRegistration || '')
+  setText('Text92', formData.hcpDate || '')
+
+  // Additional Notes
+  setText('Text93', formData.additionalNotes || '')
+
+  // Calculate scores for tracking table (pages may have these fields)
+  // These would need to be mapped to specific date column fields
+  // For now, we'll fill in the main assessment fields
+
+  // Flatten the form (make fields read-only)
+  // form.flatten() // Uncomment if you want to make the PDF non-editable
+
+  // Save and return the filled PDF
+  const pdfBytes = await pdfDoc.save()
+  return pdfBytes
+}
+
+export async function exportSCAT6ToFilledPDF(
+  formData: SCAT6FormData,
+  filename: string = 'SCAT6_Filled.pdf'
+) {
+  const pdfBytes = await fillSCAT6PDF(formData)
+
+  // Create blob and trigger download
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}

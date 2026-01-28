@@ -12,6 +12,7 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [devMagicLink, setDevMagicLink] = useState('')
 
   const redirectTo = searchParams.get('redirect') || '/dashboard'
 
@@ -58,7 +59,12 @@ function LoginForm() {
       })
 
       if (response.ok) {
+        const data = await response.json()
         setEmailSent(true)
+        // In dev mode, save the magic link to display it
+        if (data.devMode && data.magicLink) {
+          setDevMagicLink(data.magicLink)
+        }
       } else {
         const data = await response.json()
         setError(data.error || 'Failed to send login link. Please try again.')
@@ -158,12 +164,33 @@ function LoginForm() {
                 </p>
 
                 <div className="glass rounded-xl p-5 mb-6 border border-accent/20">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Click the link in your email to access your course. The link expires in 15 minutes.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Don't see it? Check your spam folder.
-                  </p>
+                  {devMagicLink ? (
+                    <>
+                      <div className="glass rounded-xl p-4 mb-4 border border-yellow-500/20 bg-yellow-50/50">
+                        <p className="text-xs text-yellow-800 font-medium mb-2">
+                          Development Mode - Email service not configured
+                        </p>
+                        <a
+                          href={devMagicLink}
+                          className="text-sm text-accent hover:underline break-all"
+                        >
+                          Click here to login directly
+                        </a>
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Or use <a href="/dev-login" className="text-accent hover:underline">/dev-login</a> for easier access
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Click the link in your email to access your course. The link expires in 15 minutes.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Don't see it? Check your spam folder.
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 <button
@@ -209,6 +236,17 @@ function LoginForm() {
         <p className="text-center text-xs text-muted-foreground mt-6">
           Need help? Contact zac@concussion-education-australia.com
         </p>
+
+        {process.env.NODE_ENV === 'development' && (
+          <div className="text-center mt-4">
+            <a
+              href="/dev-login"
+              className="text-xs text-accent hover:underline"
+            >
+              Development: Direct Login (bypass email)
+            </a>
+          </div>
+        )}
       </div>
     </div>
   )
