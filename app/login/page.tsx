@@ -7,14 +7,12 @@ import { CONFIG } from '@/lib/config'
 
 function LoginForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [devMagicLink, setDevMagicLink] = useState('')
-
-  const redirectTo = searchParams.get('redirect') || '/dashboard'
+  const redirectTo = '/dashboard'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
