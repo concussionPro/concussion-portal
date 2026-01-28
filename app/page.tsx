@@ -147,7 +147,7 @@ export default function HomePage() {
           <div className="container-lg px-6 md:px-8 text-center">
             <div className="animate-fade-in max-w-4xl mx-auto">
               {/* Glowing badge */}
-              <div className="badge mb-5 animate-pulse-glow">
+              <div className="badge mb-5 animate-pulse-glow mt-8">
                 <Award className="w-4 h-4 mr-2" aria-hidden="true" />
                 {CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD Hours · AHPRA Accredited Training
               </div>
