@@ -143,11 +143,11 @@ export default function HomePage() {
         </nav>
 
         {/* HERO - Compact */}
-        <section className="section-padding pt-32 md:pt-40 pb-12">
-          <div className="container-lg px-6 md:px-8 text-center relative z-10">
+        <section className="section-padding pt-32 md:pt-40 pb-12 relative z-10">
+          <div className="container-lg px-6 md:px-8 text-center">
             <div className="animate-fade-in max-w-4xl mx-auto">
               {/* Glowing badge */}
-              <div className="badge mb-5 animate-pulse-glow">
+              <div className="badge mb-5 animate-pulse-glow relative z-10">
                 <Award className="w-4 h-4 mr-2" aria-hidden="true" />
                 {CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD Hours · AHPRA Accredited Training
               </div>
@@ -169,23 +169,37 @@ export default function HomePage() {
                 One price includes both online learning and in-person practical training at your chosen location.
               </p>
 
-              {/* Primary CTAs - Focus on Value */}
+              {/* Primary CTAs - Focus on Course */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
                 <button
-                  onClick={() => router.push('/scat-forms')}
-                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                  aria-label="Access free SCAT6 and SCOAT6 forms online"
-                >
-                  <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
-                  Free SCAT6/SCOAT6 Forms
-                </button>
-                <button
                   onClick={() => router.push('/preview')}
-                  className="btn-secondary px-8 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label="Preview course content"
                 >
                   <Sparkles className="w-5 h-5" aria-hidden="true" />
                   Preview Course
+                </button>
+                <a
+                  href={CONFIG.SHOP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackShopClick('hero-cta')}
+                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                  aria-label="Enroll in course"
+                >
+                  Enroll Now
+                  <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                </a>
+              </div>
+
+              {/* Secondary link to SCAT Forms */}
+              <div className="text-center mb-4">
+                <button
+                  onClick={() => router.push('/scat-forms')}
+                  className="text-sm text-slate-600 hover:text-accent transition-colors font-medium underline focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
+                  aria-label="Access free SCAT6 and SCOAT6 forms"
+                >
+                  Or access free SCAT6/SCOAT6 forms
                 </button>
               </div>
 
