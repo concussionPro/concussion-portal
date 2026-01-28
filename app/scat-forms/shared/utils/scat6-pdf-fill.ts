@@ -106,34 +106,13 @@ export async function exportSCAT6ToFilledPDF(
     setTextField(form, 'Text37', formData.mBessDoubleErrors.toString())
     setTextField(form, 'Text38', formData.mBessTandemErrors.toString())
     setTextField(form, 'Text39', formData.mBessSingleErrors.toString())
-    // Skip Text40, Text41, Text42-44, Text87 - all rich text fields
+    // Skip Text40, Text41, Text42-44, Text87 - all rich text fields (not supported by pdf-lib)
 
-    // Remove problematic fields from form entirely before saving
-    try {
-      const problematicFields = ['Text40', 'Text41', 'Text42', 'Text43', 'Text44', 'Text87']
-      for (const fieldName of problematicFields) {
-        try {
-          form.removeField(form.getField(fieldName))
-        } catch (e) {
-          // Field doesn't exist or already removed
-        }
-      }
-    } catch (e) {
-      console.log('Could not remove problematic fields, attempting save anyway')
-    }
-
-    // Save and download
-    let pdfBytes
-    try {
-      pdfBytes = await pdfDoc.save({ useObjectStreams: false })
-    } catch (saveError: any) {
-      if (saveError?.message?.includes('rich text')) {
-        console.log('Rich text error during save, trying alternative method')
-        pdfBytes = await pdfDoc.save({ useObjectStreams: false, addDefaultPage: false })
-      } else {
-        throw saveError
-      }
-    }
+    // Save with updateFieldAppearances: false to skip rich text field processing
+    const pdfBytes = await pdfDoc.save({
+      useObjectStreams: false,
+      updateFieldAppearances: false
+    })
 
     const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
     const url = URL.createObjectURL(blob)

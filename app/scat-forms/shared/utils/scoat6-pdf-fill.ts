@@ -133,8 +133,11 @@ export async function exportSCOAT6ToFilledPDF(
     setTextFieldIfExists(form, 'delayedRecallStartTime', formData.delayedRecallStartTime)
 
     // Note: Not flattening form so users can manually edit if field names don't match exactly
-
-    const pdfBytes = await pdfDoc.save()
+    // Save with updateFieldAppearances: false to skip rich text field processing
+    const pdfBytes = await pdfDoc.save({
+      useObjectStreams: false,
+      updateFieldAppearances: false
+    })
     const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
