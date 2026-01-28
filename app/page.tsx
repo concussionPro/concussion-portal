@@ -149,7 +149,7 @@ export default function HomePage() {
               {/* Glowing badge */}
               <div className="badge mb-5 animate-pulse-glow mt-8">
                 <Award className="w-4 h-4 mr-2" aria-hidden="true" />
-                {CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD Hours · AHPRA Accredited Training
+                {CONFIG.COURSE.CPD_BADGE_TEXT}
               </div>
 
               {/* Compact animated gradient headline */}

@@ -32,13 +32,13 @@ export function CourseSchema() {
     '@context': 'https://schema.org',
     '@type': 'Course',
     name: 'Concussion Management Clinical Course',
-    description: 'Comprehensive concussion management training covering SCAT6, VOMS, BESS protocols. 8 online modules plus hands-on practical training. AHPRA-accredited for 14 CPD hours.',
+    description: 'Comprehensive concussion management training covering SCAT6, VOMS, BESS protocols. 8 online modules plus hands-on practical training. 14 CPD points, AHPRA-aligned, endorsed by Osteopathy Australia.',
     provider: {
       '@type': 'Organization',
       name: 'Concussion Education Australia',
       url: CONFIG.SEO.SITE_URL,
     },
-    educationalCredentialAwarded: `${CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD Hours`,
+    educationalCredentialAwarded: '14 CPD points - AHPRA Aligned, Endorsed by Osteopathy Australia',
     timeRequired: 'P2W',
     aggregateRating: {
       '@type': 'AggregateRating',

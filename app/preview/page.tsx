@@ -150,7 +150,7 @@ export default function PreviewPage() {
               </button>
             </div>
             <p className="text-blue-200 text-sm font-semibold">
-              ✓ Choose Any Workshop Date · ✓ 14 AHPRA CPD Hours · ✓ Lifetime Access
+              ✓ Choose Any Workshop Date · ✓ 14 CPD points - AHPRA Aligned · ✓ Lifetime Access
             </p>
           </div>
         </div>

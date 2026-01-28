@@ -91,7 +91,7 @@ export default function CoursePage() {
         <div className="container-lg px-6 md:px-8 text-center">
           <div className="badge mb-5">
             <Award className="w-3.5 h-3.5 mr-1.5" />
-            14 AHPRA CPD Hours
+            {CONFIG.COURSE.CPD_BADGE_TEXT}
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-5 tracking-tight leading-[1.1]">

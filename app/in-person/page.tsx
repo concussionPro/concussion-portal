@@ -49,7 +49,7 @@ export default function InPersonTrainingPage() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-4">
               <Award className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold text-accent">6 AHPRA CPD Hours · Limited Spots</span>
+              <span className="text-sm font-semibold text-accent">6 CPD points - AHPRA Aligned · Limited Spots</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
               Master Clinical Assessment <span className="text-gradient">You Can't Learn Online</span>
