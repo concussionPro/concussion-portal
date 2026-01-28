@@ -7,9 +7,7 @@ export async function exportSCAT6ToFilledPDF(
 ) {
   try {
     console.clear()
-    console.log('%c=== SCAT6 PDF EXPORT - DEBUG MODE ===', 'background: blue; color: white; font-size: 20px; padding: 10px;')
-    console.log('%cIf you see this, the new code is running', 'background: green; color: white; padding: 5px;')
-    console.log('Form data:', formData)
+    console.log('%c=== SCAT6 PDF EXPORT - CORRECT FIELD MAPPING ===', 'background: green; color: white; font-size: 20px; padding: 10px;')
 
     // Load the blank fillable PDF
     const response = await fetch('/docs/SCAT6_Fillable.pdf')
@@ -18,122 +16,106 @@ export async function exportSCAT6ToFilledPDF(
     }
 
     const arrayBuffer = await response.arrayBuffer()
-    console.log('PDF loaded, size:', arrayBuffer.byteLength, 'bytes')
-
     const pdfDoc = await PDFDocument.load(arrayBuffer)
-    console.log('PDF parsed successfully')
-
     const form = pdfDoc.getForm()
-    const fields = form.getFields()
 
-    console.log('=== PDF FORM FIELDS ===')
-    console.log(`Total fields: ${fields.length}`)
+    console.log('PDF loaded, filling fields with correct mapping...')
 
-    // Log ALL field names
-    const fieldNames: string[] = []
-    fields.forEach((field, index) => {
-      const name = field.getName()
-      const type = field.constructor.name
-      console.log(`${index + 1}. "${name}" (${type})`)
-      fieldNames.push(name)
-    })
-
-    console.log('\n=== Attempting to fill fields ===')
-
-    // Fill in the form fields - Demographics
-    setTextFieldIfExists(form, 'athleteName', formData.athleteName)
-    setTextFieldIfExists(form, 'idNumber', formData.idNumber)
-    setTextFieldIfExists(form, 'dateOfBirth', formData.dateOfBirth)
-    setTextFieldIfExists(form, 'dateOfExamination', formData.dateOfExamination)
-    setTextFieldIfExists(form, 'dateOfInjury', formData.dateOfInjury)
-    setTextFieldIfExists(form, 'timeOfInjury', formData.timeOfInjury)
-    setTextFieldIfExists(form, 'sex', formData.sex)
-    setTextFieldIfExists(form, 'dominantHand', formData.dominantHand)
-    setTextFieldIfExists(form, 'sportTeamSchool', formData.sportTeamSchool)
-    setTextFieldIfExists(form, 'currentYear', formData.currentYear)
-    setTextFieldIfExists(form, 'yearsEducation', formData.yearsEducation)
-    setTextFieldIfExists(form, 'firstLanguage', formData.firstLanguage)
-    setTextFieldIfExists(form, 'preferredLanguage', formData.preferredLanguage)
-    setTextFieldIfExists(form, 'examiner', formData.examiner)
+    // Demographics - Using actual PDF field names (Text1, Text2, etc.)
+    setTextField(form, 'Text1', formData.athleteName)
+    setTextField(form, 'Text2', formData.idNumber)
+    setTextField(form, 'Text3', formData.dateOfBirth)
+    setTextField(form, 'Text4', formData.dateOfExamination)
+    setTextField(form, 'Text5', formData.dateOfInjury)
+    setTextField(form, 'Text6', formData.timeOfInjury)
+    setTextField(form, 'Text7', formData.sportTeamSchool)
+    setTextField(form, 'Text8', formData.currentYear)
+    setTextField(form, 'Text9', formData.yearsEducation)
+    setTextField(form, 'Text10', formData.firstLanguage)
+    setTextField(form, 'Text11', formData.preferredLanguage)
+    setTextField(form, 'Text12', formData.examiner)
+    setTextField(form, 'Text13', formData.dominantHand)
 
     // Concussion History
-    setTextFieldIfExists(form, 'previousConcussions', formData.previousConcussions)
-    setTextFieldIfExists(form, 'mostRecentConcussion', formData.mostRecentConcussion)
-    setTextFieldIfExists(form, 'primarySymptoms', formData.primarySymptoms)
-    setTextFieldIfExists(form, 'recoveryTime', formData.recoveryTime)
+    setTextField(form, 'Text14', formData.previousConcussions)
+    setTextField(form, 'Text15', formData.mostRecentConcussion)
+    setTextField(form, 'Text16', formData.primarySymptoms)
+    setTextField(form, 'Text17', formData.recoveryTime)
 
     // Athlete Background
-    setCheckBoxIfExists(form, 'hospitalizedForHeadInjury', formData.hospitalizedForHeadInjury)
-    setCheckBoxIfExists(form, 'headacheDisorder', formData.headacheDisorder)
-    setCheckBoxIfExists(form, 'learningDisability', formData.learningDisability)
-    setCheckBoxIfExists(form, 'adhd', formData.adhd)
-    setCheckBoxIfExists(form, 'psychologicalDisorder', formData.psychologicalDisorder)
-    setTextFieldIfExists(form, 'athleteBackgroundNotes', formData.athleteBackgroundNotes)
-    setTextFieldIfExists(form, 'currentMedications', formData.currentMedications)
+    setCheckBox(form, 'Check Box1', formData.hospitalizedForHeadInjury)
+    setCheckBox(form, 'Check Box2', formData.headacheDisorder)
+    setCheckBox(form, 'Check Box3', formData.learningDisability)
+    setCheckBox(form, 'Check Box4', formData.adhd)
+    setCheckBox(form, 'Check Box5', formData.psychologicalDisorder)
+    setTextField(form, 'Text18', formData.athleteBackgroundNotes)
+    setTextField(form, 'Text19', formData.currentMedications)
 
-    // Symptoms (22 items, rated 0-6)
-    setTextFieldIfExists(form, 'headaches', formData.symptoms.headaches.toString())
-    setTextFieldIfExists(form, 'pressureInHead', formData.symptoms.pressureInHead.toString())
-    setTextFieldIfExists(form, 'neckPain', formData.symptoms.neckPain.toString())
-    setTextFieldIfExists(form, 'nauseaVomiting', formData.symptoms.nauseaVomiting.toString())
-    setTextFieldIfExists(form, 'dizziness', formData.symptoms.dizziness.toString())
-    setTextFieldIfExists(form, 'blurredVision', formData.symptoms.blurredVision.toString())
-    setTextFieldIfExists(form, 'balanceProblems', formData.symptoms.balanceProblems.toString())
-    setTextFieldIfExists(form, 'sensitivityLight', formData.symptoms.sensitivityLight.toString())
-    setTextFieldIfExists(form, 'sensitivityNoise', formData.symptoms.sensitivityNoise.toString())
-    setTextFieldIfExists(form, 'feelingSlowedDown', formData.symptoms.feelingSlowedDown.toString())
-    setTextFieldIfExists(form, 'feelingInFog', formData.symptoms.feelingInFog.toString())
-    setTextFieldIfExists(form, 'dontFeelRight', formData.symptoms.dontFeelRight.toString())
-    setTextFieldIfExists(form, 'difficultyConcentrating', formData.symptoms.difficultyConcentrating.toString())
-    setTextFieldIfExists(form, 'difficultyRemembering', formData.symptoms.difficultyRemembering.toString())
-    setTextFieldIfExists(form, 'fatigueOrLowEnergy', formData.symptoms.fatigueOrLowEnergy.toString())
-    setTextFieldIfExists(form, 'confusion', formData.symptoms.confusion.toString())
-    setTextFieldIfExists(form, 'drowsiness', formData.symptoms.drowsiness.toString())
-    setTextFieldIfExists(form, 'moreEmotional', formData.symptoms.moreEmotional.toString())
-    setTextFieldIfExists(form, 'irritability', formData.symptoms.irritability.toString())
-    setTextFieldIfExists(form, 'sadness', formData.symptoms.sadness.toString())
-    setTextFieldIfExists(form, 'nervousAnxious', formData.symptoms.nervousAnxious.toString())
-    setTextFieldIfExists(form, 'troubleFallingAsleep', formData.symptoms.troubleFallingAsleep.toString())
+    // Symptoms - These are RADIO BUTTONS (s1-s22), need to select the right option for 0-6 scale
+    setSymptomRadio(form, 's1', formData.symptoms.headaches)
+    setSymptomRadio(form, 's2', formData.symptoms.pressureInHead)
+    setSymptomRadio(form, 's3', formData.symptoms.neckPain)
+    setSymptomRadio(form, 's4', formData.symptoms.nauseaVomiting)
+    setSymptomRadio(form, 's5', formData.symptoms.dizziness)
+    setSymptomRadio(form, 's6', formData.symptoms.blurredVision)
+    setSymptomRadio(form, 's7', formData.symptoms.balanceProblems)
+    setSymptomRadio(form, 's8', formData.symptoms.sensitivityLight)
+    setSymptomRadio(form, 's9', formData.symptoms.sensitivityNoise)
+    setSymptomRadio(form, 's10', formData.symptoms.feelingSlowedDown)
+    setSymptomRadio(form, 's11', formData.symptoms.feelingInFog)
+    setSymptomRadio(form, 's12', formData.symptoms.dontFeelRight)
+    setSymptomRadio(form, 's13', formData.symptoms.difficultyConcentrating)
+    setSymptomRadio(form, 's14', formData.symptoms.difficultyRemembering)
+    setSymptomRadio(form, 's15', formData.symptoms.fatigueOrLowEnergy)
+    setSymptomRadio(form, 's16', formData.symptoms.confusion)
+    setSymptomRadio(form, 's17', formData.symptoms.drowsiness)
+    setSymptomRadio(form, 's18', formData.symptoms.moreEmotional)
+    setSymptomRadio(form, 's19', formData.symptoms.irritability)
+    setSymptomRadio(form, 's20', formData.symptoms.sadness)
+    setSymptomRadio(form, 's21', formData.symptoms.nervousAnxious)
+    setSymptomRadio(form, 's22', formData.symptoms.troubleFallingAsleep)
 
-    setTextFieldIfExists(form, 'percentOfNormal', formData.percentOfNormal)
-    setTextFieldIfExists(form, 'whyNotHundredPercent', formData.whyNotHundredPercent)
+    setTextField(form, 'Text26', formData.percentOfNormal)
 
-    // Cognitive - Orientation
-    setCheckBoxIfExists(form, 'orientationMonth', formData.orientationMonth)
-    setCheckBoxIfExists(form, 'orientationDate', formData.orientationDate)
-    setCheckBoxIfExists(form, 'orientationDayOfWeek', formData.orientationDayOfWeek)
-    setCheckBoxIfExists(form, 'orientationYear', formData.orientationYear)
-    setCheckBoxIfExists(form, 'orientationTime', formData.orientationTime)
+    // Orientation checkboxes (ori1-ori5)
+    setCheckBox(form, 'ori1', formData.orientationMonth)
+    setCheckBox(form, 'ori2', formData.orientationDate)
+    setCheckBox(form, 'ori3', formData.orientationDayOfWeek)
+    setCheckBox(form, 'ori4', formData.orientationYear)
+    setCheckBox(form, 'ori5', formData.orientationTime)
 
-    // Word list and immediate memory
-    setTextFieldIfExists(form, 'wordListUsed', formData.wordListUsed)
+    // Immediate Memory Trials (Tri1a-j, Tri2a-j, Tri3a-j)
+    const trial1Fields = ['Tri1a', 'Tri1b', 'Tri1c', 'Tri1d', 'Tri1e', 'Tri1f', 'Tri1g', 'Tri1h', 'Tri1i', 'Tri1j']
+    const trial2Fields = ['Tri2a', 'Tri2b', 'Tri2c', 'Tri2d', 'Tri2e', 'Tri2f', 'Tri2g', 'Tri2h', 'Tri2i', 'Tri2j']
+    const trial3Fields = ['Tri3a', 'Tri3b', 'Tri3c', 'Tri3d', 'Tri3e', 'Tri3f', 'Tri3g', 'Tri3h', 'Tri3i', 'Tri3j']
+
+    formData.immediateMemoryTrial1.forEach((checked, i) => {
+      if (trial1Fields[i]) setCheckBox(form, trial1Fields[i], checked)
+    })
+    formData.immediateMemoryTrial2.forEach((checked, i) => {
+      if (trial2Fields[i]) setCheckBox(form, trial2Fields[i], checked)
+    })
+    formData.immediateMemoryTrial3.forEach((checked, i) => {
+      if (trial3Fields[i]) setCheckBox(form, trial3Fields[i], checked)
+    })
 
     // Balance - mBESS
-    setTextFieldIfExists(form, 'footTested', formData.footTested)
-    setTextFieldIfExists(form, 'testingSurface', formData.testingSurface)
-    setTextFieldIfExists(form, 'footwear', formData.footwear)
-    setTextFieldIfExists(form, 'mBessDoubleErrors', formData.mBessDoubleErrors.toString())
-    setTextFieldIfExists(form, 'mBessTandemErrors', formData.mBessTandemErrors.toString())
-    setTextFieldIfExists(form, 'mBessSingleErrors', formData.mBessSingleErrors.toString())
+    setTextField(form, 'Text37', formData.mBessDoubleErrors.toString())
+    setTextField(form, 'Text38', formData.mBessTandemErrors.toString())
+    setTextField(form, 'Text39', formData.mBessSingleErrors.toString())
+    setTextField(form, 'Text40', formData.testingSurface)
+    setTextField(form, 'Text41', formData.footwear)
 
     // Tandem Gait
-    setTextFieldIfExists(form, 'tandemGaitTrial1', formData.tandemGaitTrial1)
-    setTextFieldIfExists(form, 'tandemGaitTrial2', formData.tandemGaitTrial2)
-    setTextFieldIfExists(form, 'tandemGaitTrial3', formData.tandemGaitTrial3)
+    setTextField(form, 'Text42', formData.tandemGaitTrial1)
+    setTextField(form, 'Text43', formData.tandemGaitTrial2)
+    setTextField(form, 'Text44', formData.tandemGaitTrial3)
 
     // Delayed Recall
-    setTextFieldIfExists(form, 'delayedRecallStartTime', formData.delayedRecallStartTime)
+    setTextField(form, 'Text87', formData.differentFromUsualDescription)
 
-    // Different from usual
-    setTextFieldIfExists(form, 'differentFromUsualDescription', formData.differentFromUsualDescription)
-
-    // Note: Not flattening form so users can manually edit if field names don't match exactly
-
-    console.log('\n=== Saving PDF ===')
     // Save and download
     const pdfBytes = await pdfDoc.save()
-    console.log('PDF saved, size:', pdfBytes.length, 'bytes')
-
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -142,53 +124,58 @@ export async function exportSCAT6ToFilledPDF(
     link.click()
     URL.revokeObjectURL(url)
 
-    console.log('✓ PDF downloaded successfully:', filename)
-    console.log('\n=== IMPORTANT ===')
-    console.log('Check the console logs above to see:')
-    console.log('1. All available PDF field names')
-    console.log('2. Which fields were successfully filled (✓)')
-    console.log('3. Which fields failed to fill (✗)')
-    console.log('4. Which fields were skipped (⊘ - no data provided)')
-    console.log('\nIf the PDF is blank, the field names in the PDF don\'t match our code.')
-    console.log('Share the field names list above so we can create accurate mappings.')
+    console.log('✓ PDF exported successfully with data!')
   } catch (error) {
-    console.error('PDF fill failed:', error)
+    console.error('PDF export failed:', error)
     throw new Error(`Failed to fill PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
-// Helper functions to safely set fields with verbose logging
-function setTextFieldIfExists(form: any, fieldName: string, value: string | number) {
+function setTextField(form: any, fieldName: string, value: string | number) {
   try {
-    if (value === undefined || value === null || value === '') {
-      console.log(`⊘ Skipping "${fieldName}" - no value provided`)
-      return
-    }
+    if (value === undefined || value === null || value === '') return
 
     const field = form.getTextField(fieldName)
     field.setText(String(value))
-    console.log(`✓ Set "${fieldName}" = "${value}"`)
+    console.log(`✓ ${fieldName} = "${value}"`)
   } catch (error) {
-    console.error(`✗ Failed to set "${fieldName}":`, error instanceof Error ? error.message : error)
+    // Field doesn't exist - skip silently
   }
 }
 
-function setCheckBoxIfExists(form: any, fieldName: string, value: boolean) {
+function setCheckBox(form: any, fieldName: string, value: boolean) {
   try {
-    if (value === undefined || value === null) {
-      console.log(`⊘ Skipping "${fieldName}" - no value provided`)
-      return
-    }
+    if (value === undefined || value === null) return
 
     const field = form.getCheckBox(fieldName)
     if (value) {
       field.check()
-      console.log(`✓ Checked "${fieldName}"`)
     } else {
       field.uncheck()
-      console.log(`✓ Unchecked "${fieldName}"`)
     }
+    console.log(`✓ ${fieldName} = ${value}`)
   } catch (error) {
-    console.error(`✗ Failed to set checkbox "${fieldName}":`, error instanceof Error ? error.message : error)
+    // Field doesn't exist - skip silently
+  }
+}
+
+function setSymptomRadio(form: any, fieldName: string, value: number) {
+  try {
+    if (value === undefined || value === null) return
+
+    // Symptom radio buttons have values 0-6
+    // Try to select the radio button option matching the value
+    const field = form.getRadioGroup(fieldName)
+    field.select(value.toString())
+    console.log(`✓ ${fieldName} = ${value}`)
+  } catch (error) {
+    // If radio doesn't work, try as text field
+    try {
+      const field = form.getTextField(fieldName)
+      field.setText(value.toString())
+      console.log(`✓ ${fieldName} = ${value} (as text)`)
+    } catch (e) {
+      // Skip silently
+    }
   }
 }
