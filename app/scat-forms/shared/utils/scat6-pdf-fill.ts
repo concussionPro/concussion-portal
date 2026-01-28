@@ -1,4 +1,4 @@
-import { PDFDocument, PDFTextField, PDFCheckBox } from 'pdf-lib'
+import { PDFDocument } from 'pdf-lib'
 import { SCAT6FormData } from '../types/scat6.types'
 
 export async function exportSCAT6ToFilledPDF(
@@ -6,19 +6,37 @@ export async function exportSCAT6ToFilledPDF(
   filename: string = 'SCAT6_Filled.pdf'
 ) {
   try {
+    console.log('=== SCAT6 PDF Export Started ===')
+    console.log('Form data:', formData)
+
     // Load the blank fillable PDF
     const response = await fetch('/docs/SCAT6_Fillable.pdf')
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.status}`)
+    }
+
     const arrayBuffer = await response.arrayBuffer()
+    console.log('PDF loaded, size:', arrayBuffer.byteLength, 'bytes')
+
     const pdfDoc = await PDFDocument.load(arrayBuffer)
+    console.log('PDF parsed successfully')
 
     const form = pdfDoc.getForm()
     const fields = form.getFields()
 
-    // Log field names for debugging (can remove later)
-    console.log('PDF has', fields.length, 'form fields')
-    fields.forEach(field => {
-      console.log('Field:', field.getName(), 'Type:', field.constructor.name)
+    console.log('=== PDF FORM FIELDS ===')
+    console.log(`Total fields: ${fields.length}`)
+
+    // Log ALL field names
+    const fieldNames: string[] = []
+    fields.forEach((field, index) => {
+      const name = field.getName()
+      const type = field.constructor.name
+      console.log(`${index + 1}. "${name}" (${type})`)
+      fieldNames.push(name)
     })
+
+    console.log('\n=== Attempting to fill fields ===')
 
     // Fill in the form fields - Demographics
     setTextFieldIfExists(form, 'athleteName', formData.athleteName)
@@ -109,8 +127,11 @@ export async function exportSCAT6ToFilledPDF(
 
     // Note: Not flattening form so users can manually edit if field names don't match exactly
 
+    console.log('\n=== Saving PDF ===')
     // Save and download
     const pdfBytes = await pdfDoc.save()
+    console.log('PDF saved, size:', pdfBytes.length, 'bytes')
+
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -119,38 +140,53 @@ export async function exportSCAT6ToFilledPDF(
     link.click()
     URL.revokeObjectURL(url)
 
-    console.log('PDF filled and downloaded successfully')
+    console.log('✓ PDF downloaded successfully:', filename)
+    console.log('\n=== IMPORTANT ===')
+    console.log('Check the console logs above to see:')
+    console.log('1. All available PDF field names')
+    console.log('2. Which fields were successfully filled (✓)')
+    console.log('3. Which fields failed to fill (✗)')
+    console.log('4. Which fields were skipped (⊘ - no data provided)')
+    console.log('\nIf the PDF is blank, the field names in the PDF don\'t match our code.')
+    console.log('Share the field names list above so we can create accurate mappings.')
   } catch (error) {
     console.error('PDF fill failed:', error)
     throw new Error(`Failed to fill PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
-// Helper functions to safely set fields
+// Helper functions to safely set fields with verbose logging
 function setTextFieldIfExists(form: any, fieldName: string, value: string | number) {
   try {
-    const field = form.getTextField(fieldName)
-    if (field && value !== undefined && value !== null && value !== '') {
-      field.setText(String(value))
+    if (value === undefined || value === null || value === '') {
+      console.log(`⊘ Skipping "${fieldName}" - no value provided`)
+      return
     }
+
+    const field = form.getTextField(fieldName)
+    field.setText(String(value))
+    console.log(`✓ Set "${fieldName}" = "${value}"`)
   } catch (error) {
-    // Field doesn't exist or isn't a text field - silently skip
-    console.log(`Field not found or not text: ${fieldName}`)
+    console.error(`✗ Failed to set "${fieldName}":`, error instanceof Error ? error.message : error)
   }
 }
 
 function setCheckBoxIfExists(form: any, fieldName: string, value: boolean) {
   try {
+    if (value === undefined || value === null) {
+      console.log(`⊘ Skipping "${fieldName}" - no value provided`)
+      return
+    }
+
     const field = form.getCheckBox(fieldName)
-    if (field && value !== undefined && value !== null) {
-      if (value) {
-        field.check()
-      } else {
-        field.uncheck()
-      }
+    if (value) {
+      field.check()
+      console.log(`✓ Checked "${fieldName}"`)
+    } else {
+      field.uncheck()
+      console.log(`✓ Unchecked "${fieldName}"`)
     }
   } catch (error) {
-    // Field doesn't exist or isn't a checkbox - silently skip
-    console.log(`Checkbox not found: ${fieldName}`)
+    console.error(`✗ Failed to set checkbox "${fieldName}":`, error instanceof Error ? error.message : error)
   }
 }
