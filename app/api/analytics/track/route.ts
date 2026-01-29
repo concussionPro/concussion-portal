@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { put } from '@vercel/blob'
+import { put, list } from '@vercel/blob'
 import { verifySessionToken } from '@/lib/jwt-session'
 
 // Changed from 'edge' to 'nodejs' to support crypto module in jwt-session
@@ -51,14 +51,40 @@ export async function POST(request: NextRequest) {
     const filename = `analytics/${date}.jsonl`
 
     try {
-      // Append to existing file or create new one
-      const eventLine = JSON.stringify(event) + '\n'
+      // Read existing file content if it exists
+      let existingContent = ''
 
-      await put(filename, eventLine, {
+      try {
+        // Check if file exists by listing blobs with this exact pathname
+        const { blobs } = await list({
+          prefix: filename,
+          limit: 1,
+        })
+
+        // If file exists, fetch its content
+        if (blobs.length > 0 && blobs[0].pathname === filename) {
+          const response = await fetch(blobs[0].url)
+          if (response.ok) {
+            existingContent = await response.text()
+          }
+        }
+      } catch (readError) {
+        // File doesn't exist yet, that's okay
+        console.log('Creating new analytics file for', date)
+      }
+
+      // Append new event line
+      const eventLine = JSON.stringify(event) + '\n'
+      const updatedContent = existingContent + eventLine
+
+      // Write back to blob storage
+      await put(filename, updatedContent, {
         access: 'public',
         addRandomSuffix: false,
         contentType: 'application/x-ndjson',
       })
+
+      console.log('Analytics event stored successfully:', event.eventType)
     } catch (error) {
       console.error('Failed to store analytics event:', error)
     }
