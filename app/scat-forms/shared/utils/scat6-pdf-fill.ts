@@ -17,7 +17,6 @@ export async function exportSCAT6ToFilledPDF(
   formData: SCAT6FormData,
   filename: string = 'SCAT6_Filled.pdf'
 ) {
-  console.clear()
   console.log('%c=== SCAT6 PDF EXPORT ===', 'background: green; color: white; font-size: 20px; padding: 10px;')
 
   try {
@@ -142,9 +141,10 @@ export async function exportSCAT6ToFilledPDF(
     if (formData.footTested === 'Left') filledCount += setCheckBox(form, 'Foot', false)
     if (formData.footTested === 'Right') filledCount += setCheckBox(form, 'Foot', true)
 
-    filledCount += setTextField(form, 'Text38', formData.mBessDoubleErrors.toString())
-    filledCount += setTextField(form, 'Text39', formData.mBessTandemErrors.toString())
-    // Text37 is RICH TEXT - skip
+    // Correct field mapping (Text37 is rich text so will be skipped by error handler)
+    filledCount += setTextField(form, 'Text37', formData.mBessDoubleErrors.toString())
+    filledCount += setTextField(form, 'Text38', formData.mBessTandemErrors.toString())
+    filledCount += setTextField(form, 'Text39', formData.mBessSingleErrors.toString())
     // Text40 (testing surface) is RICH TEXT - skip
     filledCount += setTextField(form, 'Text41', formData.footwear)
 

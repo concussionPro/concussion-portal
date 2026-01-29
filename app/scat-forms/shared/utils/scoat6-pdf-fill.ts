@@ -6,8 +6,7 @@ export async function exportSCOAT6ToFilledPDF(
   filename: string = 'SCOAT6_Filled.pdf'
 ) {
   try {
-    console.clear()
-    console.log('%c=== SCOAT6 PDF EXPORT - DEBUG MODE ===', 'background: purple; color: white; font-size: 20px; padding: 10px;')
+    console.log('%c=== SCOAT6 PDF EXPORT ===', 'background: purple; color: white; font-size: 20px; padding: 10px;')
     console.log('%cIf you see this, the new code is running', 'background: green; color: white; padding: 5px;')
     console.log('Form data:', formData)
 
