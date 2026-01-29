@@ -14,10 +14,11 @@ import { getModuleById } from '@/data/modules'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const moduleId = parseInt(params.id)
+    const { id } = await params
+    const moduleId = parseInt(id)
 
     // Validate module ID
     if (isNaN(moduleId)) {
