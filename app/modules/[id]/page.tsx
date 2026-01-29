@@ -2,10 +2,9 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { CourseNavigation } from '@/components/course/CourseNavigation'
-import { getModuleById } from '@/data/modules'
 import { useProgress } from '@/contexts/ProgressContext'
 import React, { useState, useEffect } from 'react'
-import { CheckCircle2, Award, AlertCircle, ArrowRight, BookOpen, Clock } from 'lucide-react'
+import { CheckCircle2, Award, AlertCircle, ArrowRight, BookOpen, Clock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { QuickCheck, ClinicalInsight, KeyConcept, Flowchart } from '@/components/course/InteractiveElements'
@@ -14,7 +13,7 @@ import { DownloadableResources } from '@/components/course/DownloadableResources
 import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
 import { LockedModuleOverlay } from '@/components/course/LockedModuleOverlay'
 import { ContentLockedBanner } from '@/components/course/ContentLockedBanner'
-import { useModuleAccess } from '@/hooks/useModuleAccess'
+import { useModuleData } from '@/hooks/useModuleData'
 
 export default function ModulePage() {
   return (
@@ -28,7 +27,9 @@ function ModulePageContent() {
   const params = useParams()
   const router = useRouter()
   const moduleId = parseInt(params.id as string)
-  const module = getModuleById(moduleId)
+
+  // Fetch module content from secure API
+  const { module, loading: moduleLoading, error: moduleError, accessLevel } = useModuleData(moduleId)
   const {
     updateVideoProgress,
     markVideoComplete,
@@ -46,7 +47,9 @@ function ModulePageContent() {
   const [currentVideoTime, setCurrentVideoTime] = useState<number>(0)
 
   const moduleProgress = getModuleProgress(moduleId)
-  const { hasFullAccess, loading: accessLoading } = useModuleAccess(moduleId)
+
+  // Determine if user has full access based on API response
+  const hasFullAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
 
   // CRITICAL FIX: Sync quizSubmitted with persisted progress
   useEffect(() => {
@@ -94,6 +97,46 @@ function ModulePageContent() {
     }
   }, [module, moduleProgress, moduleId, canMarkModuleComplete, isModuleComplete])
 
+  // Show loading state while fetching module
+  if (moduleLoading) {
+    return (
+      <div className="flex min-h-screen bg-slate-50">
+        <CourseNavigation />
+        <main className="flex-1 p-4 sm:p-6 md:p-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 text-accent animate-spin mx-auto mb-4" />
+              <p className="text-lg text-slate-600">Loading module content...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Show error state if module fetch failed
+  if (moduleError) {
+    return (
+      <div className="flex min-h-screen bg-slate-50">
+        <CourseNavigation />
+        <main className="flex-1 p-4 sm:p-6 md:p-8">
+          <div className="text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Error Loading Module</h1>
+            <p className="text-slate-600 mb-4">{moduleError}</p>
+            <button
+              onClick={() => router.push('/learning')}
+              className="btn-primary px-6 py-3 rounded-lg"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Show not found if module doesn't exist
   if (!module) {
     return (
       <div className="flex min-h-screen bg-slate-50">

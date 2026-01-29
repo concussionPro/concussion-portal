@@ -13,14 +13,6 @@ export function useModuleAccess(moduleId: number) {
         return
       }
 
-      // First check localStorage for backward compatibility (demo users)
-      const isPaidUser = localStorage.getItem('isPaidUser')
-      if (isPaidUser === 'true') {
-        setHasFullAccess(true)
-        setLoading(false)
-        return
-      }
-
       // Check session-based authentication (JWT)
       try {
         const response = await fetch('/api/auth/session', {

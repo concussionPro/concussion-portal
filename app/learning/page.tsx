@@ -28,13 +28,6 @@ export default function LearningSuite() {
 
     // Check session-based access
     async function checkAccess() {
-      // Check localStorage first (backward compatibility)
-      const isPaidUser = localStorage.getItem('isPaidUser')
-      if (isPaidUser === 'true') {
-        setHasAccess(true)
-        return
-      }
-
       // Check session-based authentication
       try {
         const response = await fetch('/api/auth/session', {
