@@ -151,6 +151,8 @@ function ModulePageContent() {
   }
 
   const handleVideoTimeUpdate = (time: number) => {
+    if (!module) return
+
     const minutes = Math.floor(time / 60)
     setCurrentVideoTime(time)
     updateVideoProgress(moduleId, minutes)
@@ -161,6 +163,8 @@ function ModulePageContent() {
   }
 
   const handleQuizSubmit = () => {
+    if (!module) return
+
     if (Object.keys(quizAnswers).length !== module.quiz.length) {
       alert('Please answer all questions before submitting.')
       return
@@ -178,6 +182,8 @@ function ModulePageContent() {
   }
 
   const handleCompleteModule = () => {
+    if (!module) return
+
     if (canMarkModuleComplete(moduleId, module.videoRequiredMinutes)) {
       markModuleComplete(moduleId)
       router.push('/learning')
