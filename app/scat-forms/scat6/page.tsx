@@ -46,22 +46,50 @@ export default function SCAT6Page() {
     new Set(['demographics', 'symptoms', 'cognitive', 'balance'])
   )
 
-  // Auto-save to localStorage every 3 seconds
+  // Auto-save to localStorage every 3 seconds with timestamp
   useEffect(() => {
     const timer = setTimeout(() => {
-      localStorage.setItem('scat6-draft', JSON.stringify(formData))
+      const draftWithTimestamp = {
+        data: formData,
+        timestamp: Date.now(),
+      }
+      localStorage.setItem('scat6-draft', JSON.stringify(draftWithTimestamp))
     }, 3000)
     return () => clearTimeout(timer)
   }, [formData])
 
-  // Load draft on mount
+  // Load draft on mount - with expiration check and user prompt
   useEffect(() => {
     const draft = localStorage.getItem('scat6-draft')
     if (draft) {
       try {
-        setFormData(JSON.parse(draft))
+        const parsed = JSON.parse(draft)
+        const draftData = parsed.data || parsed // Handle both old and new format
+        const draftTimestamp = parsed.timestamp || 0
+
+        // Check if draft is older than 24 hours (86400000 ms)
+        const isExpired = Date.now() - draftTimestamp > 86400000
+
+        if (isExpired) {
+          // Auto-clear expired draft
+          localStorage.removeItem('scat6-draft')
+          console.log('Previous draft expired (>24 hours old) and was cleared')
+        } else {
+          // Ask user if they want to continue
+          const continueText = draftTimestamp
+            ? `Found a previous draft from ${new Date(draftTimestamp).toLocaleString()}.\n\nWould you like to continue with this assessment?`
+            : 'Found a previous draft. Would you like to continue with this assessment?'
+
+          if (confirm(continueText + '\n\nClick OK to continue, or Cancel to start a new assessment.')) {
+            setFormData(draftData)
+          } else {
+            // User chose to start fresh
+            localStorage.removeItem('scat6-draft')
+          }
+        }
       } catch (e) {
         console.error('Failed to load draft')
+        localStorage.removeItem('scat6-draft')
       }
     }
   }, [])
@@ -93,10 +121,10 @@ export default function SCAT6Page() {
   }
 
   const handleClearForm = () => {
-    if (confirm('Clear all form data? This cannot be undone.')) {
+    if (confirm('Start a new assessment? All current form data will be cleared.\n\nThis cannot be undone.')) {
       localStorage.removeItem('scat6-draft')
       setFormData(getDefaultSCAT6FormData())
-      alert('Form cleared successfully')
+      alert('New assessment started - form cleared successfully')
     }
   }
 
@@ -112,9 +140,9 @@ export default function SCAT6Page() {
         <div className="flex gap-2">
           <button
             onClick={handleClearForm}
-            className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg flex items-center gap-2 transition-colors text-sm"
+            className="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg flex items-center gap-2 transition-colors text-sm font-semibold"
           >
-            Clear Form
+            🆕 New Assessment
           </button>
           <button
             onClick={handleExportPDF}
