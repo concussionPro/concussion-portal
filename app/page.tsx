@@ -267,7 +267,7 @@ export default function HomePage() {
 
               {/* Expert Support */}
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center shadow-md">
                   <CheckCircle2 className="w-6 h-6 text-white" strokeWidth={2.5} />
                 </div>
                 <div>

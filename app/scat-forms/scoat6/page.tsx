@@ -1276,7 +1276,7 @@ export default function SCOAT6Page() {
               </div>
 
               {/* Total Concentration Score */}
-              <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg p-6">
+              <div className="bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg p-6">
                 <div className="text-center">
                   <div className="text-sm opacity-90 mb-2">Concentration Score (Digits + Months):</div>
                   <div className="text-5xl font-bold">{calculated.concentration} <span className="text-2xl opacity-75">of 5</span></div>
@@ -2871,7 +2871,7 @@ export default function SCOAT6Page() {
           </SectionHeader>
 
           {/* Completion Status */}
-          <div className="bg-gradient-to-r from-green-50 to-purple-50 border-2 border-green-300 rounded-xl p-6">
+          <div className="bg-gradient-to-r from-green-50 to-cyan-50 border-2 border-green-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-2xl">
                 ✓
@@ -2913,7 +2913,7 @@ export default function SCOAT6Page() {
           </div>
 
           {/* Form Completion Status */}
-          <div className="bg-gradient-to-r from-green-50 to-purple-50 border-2 border-green-300 rounded-xl p-6">
+          <div className="bg-gradient-to-r from-green-50 to-cyan-50 border-2 border-green-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-2xl">
                 ✓

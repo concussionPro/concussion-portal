@@ -871,7 +871,7 @@ export default function SCAT6Page() {
               </div>
 
               {/* Total Cognitive Score Summary */}
-              <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg p-6">
+              <div className="bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg p-6">
                 <h4 className="text-xl font-bold mb-4 text-center">Total Cognitive Score</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div className="text-center">

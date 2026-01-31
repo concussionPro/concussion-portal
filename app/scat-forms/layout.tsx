@@ -98,7 +98,7 @@ export default function SCATFormsLayout({
 
         {/* Course Promotion Banner - Subtle Sales Funnel */}
         {(isSCAT6 || isSCOAT6) && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-6 mb-6 shadow-md">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-6 mb-6 shadow-md">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-blue-600 rounded-lg">
                 <GraduationCap className="w-6 h-6 text-white" />

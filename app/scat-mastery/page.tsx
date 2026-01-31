@@ -22,24 +22,25 @@ export default function SCATMasteryPage() {
     }
 
     try {
-      // Use FREE Stripe price to collect email and create user
-      const response = await fetch('/api/create-checkout', {
+      // Direct free signup - no Stripe needed
+      const response = await fetch('/api/signup-free', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          priceId: 'price_1SvS2jEEdMQX6vRJy6og9QSL', // FREE SCAT Mastery
           email,
+          name: email.split('@')[0], // Use email prefix as name
         }),
       })
 
       const data = await response.json()
 
-      if (data.url) {
-        // Redirect to Stripe (which will immediately redirect back since it's free)
-        window.location.href = data.url
+      if (data.success && data.loginLink) {
+        // Show success message and redirect to login
+        alert('Success! Check your email for instant access. Redirecting...')
+        window.location.href = data.loginLink
       } else {
-        console.error('No checkout URL returned:', data)
-        alert('Error signing up. Please try again.')
+        console.error('Signup failed:', data)
+        alert(data.error || 'Error signing up. Please try again.')
       }
     } catch (error) {
       console.error('Signup error:', error)
@@ -50,7 +51,7 @@ export default function SCATMasteryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white">
+      <div className="bg-gradient-to-br from-blue-500 to-cyan-400 text-white">
         <div className="max-w-6xl mx-auto px-4 py-20">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
@@ -307,7 +308,7 @@ export default function SCATMasteryPage() {
       </div>
 
       {/* Social Proof */}
-      <div className="bg-gradient-to-br from-blue-600 to-purple-700 text-white py-20">
+      <div className="bg-gradient-to-br from-blue-500 to-teal-500 text-white py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-6">
             Join 3,247 Australian Healthcare Professionals

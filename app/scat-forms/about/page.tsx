@@ -85,7 +85,7 @@ export default function SCATFormsAboutPage() {
       />
 
       <div className="min-h-screen bg-slate-50">
-        <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white py-16">
+        <div className="bg-gradient-to-br from-blue-500 to-cyan-400 text-white py-16">
           <div className="max-w-4xl mx-auto px-4">
             <Link href="/" className="inline-flex items-center gap-2 text-blue-100 hover:text-white mb-6">
               <ArrowLeft className="w-4 h-4" />
