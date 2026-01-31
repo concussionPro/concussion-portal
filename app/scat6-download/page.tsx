@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Download, CheckCircle, Zap, Clock, FileText, ArrowRight, Shield } from 'lucide-react'
+import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
 
 export default function SCAT6DownloadPage() {
   const router = useRouter()
@@ -14,6 +15,12 @@ export default function SCAT6DownloadPage() {
       alert('Please enter a valid email address')
       return
     }
+
+    // Track PDF download button click
+    trackEvent(ANALYTICS_EVENTS.ENROLL_BUTTON_CLICK, {
+      source: 'scat6-download-page',
+      email: email,
+    })
 
     setLoading(true)
 
@@ -31,6 +38,13 @@ export default function SCAT6DownloadPage() {
       const data = await response.json()
 
       if (data.success && data.loginLink) {
+        // Track successful signup
+        trackEvent('signup_success', {
+          source: 'scat6-download',
+          email: email,
+          accessLevel: 'preview',
+        })
+
         alert('Success! Check your email for your fillable SCAT6 & SCOAT6 PDFs + free course access.')
         window.location.href = data.loginLink
       } else {

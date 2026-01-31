@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle, Download, Clock, Award, ArrowRight, Users, FileText, Brain, Shield, Zap } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
 
 export default function SCATMasteryPage() {
   const router = useRouter()
@@ -21,6 +22,12 @@ export default function SCATMasteryPage() {
       return
     }
 
+    // Track enroll button click
+    trackEvent(ANALYTICS_EVENTS.ENROLL_BUTTON_CLICK, {
+      source: 'scat-mastery-hero',
+      email: email,
+    })
+
     try {
       // Direct free signup - no Stripe needed
       const response = await fetch('/api/signup-free', {
@@ -35,6 +42,13 @@ export default function SCATMasteryPage() {
       const data = await response.json()
 
       if (data.success && data.loginLink) {
+        // Track successful signup
+        trackEvent('signup_success', {
+          source: 'scat-mastery',
+          email: email,
+          accessLevel: 'preview',
+        })
+
         // Show success message and redirect to login
         alert('Success! Check your email for instant access. Redirecting...')
         window.location.href = data.loginLink
