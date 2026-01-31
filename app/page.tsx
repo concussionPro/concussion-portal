@@ -51,6 +51,13 @@ export default function HomePage() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-3">
               <button
+                onClick={() => router.push('/scat-mastery')}
+                className="text-sm text-green-600 hover:text-green-700 transition-colors font-bold focus:outline-none focus:ring-2 focus:ring-green-500 rounded px-2 py-1"
+                aria-label="Free SCAT training"
+              >
+                Free Training
+              </button>
+              <button
                 onClick={() => router.push('/scat-forms')}
                 className="text-sm text-accent hover:text-accent/80 transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
                 aria-label="Free SCAT forms"
@@ -102,6 +109,15 @@ export default function HomePage() {
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
             <div className="md:hidden mt-4 pt-4 border-t border-slate-200 space-y-3">
+              <button
+                onClick={() => {
+                  router.push('/scat-mastery')
+                  setMobileMenuOpen(false)
+                }}
+                className="block w-full text-left text-sm text-green-600 hover:text-green-700 transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-green-500 rounded px-2 font-bold"
+              >
+                Free SCAT Training
+              </button>
               <button
                 onClick={() => {
                   router.push('/scat-forms')
@@ -224,6 +240,43 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FREE SCAT Mastery Banner - Lead Magnet */}
+        <section className="py-12 bg-gradient-to-br from-green-500 to-teal-500 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
+          <div className="container-lg px-6 md:px-8 relative z-10">
+            <div className="max-w-4xl mx-auto text-center text-white">
+              <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                ✓ 100% FREE - No Credit Card Required
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Start with FREE SCAT6/SCOAT6 Mastery
+              </h2>
+              <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
+                Master SCAT6 & SCOAT6 in 2 hours. Get step-by-step training on every section, red flags, and medicolegal documentation. <strong>2 AHPRA CPD hours + certificate.</strong>
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                <button
+                  onClick={() => router.push('/scat-mastery')}
+                  className="bg-white text-green-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-green-50 transition-all shadow-2xl flex items-center gap-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+                  aria-label="Start free SCAT Mastery course"
+                >
+                  Get Free Course →
+                </button>
+                <button
+                  onClick={() => router.push('/scat-forms')}
+                  className="bg-white/10 backdrop-blur-sm text-white border-2 border-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-white/20 transition-all flex items-center gap-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+                  aria-label="Access free SCAT forms"
+                >
+                  Free SCAT Forms
+                </button>
+              </div>
+              <p className="text-sm text-white/75">
+                Used by 3,247+ Australian healthcare professionals
+              </p>
             </div>
           </div>
         </section>
