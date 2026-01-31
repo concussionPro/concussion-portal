@@ -67,10 +67,10 @@ export default function SCAT6DownloadPage() {
             ✓ 100% FREE - No Credit Card Required
           </div>
           <h1 className="text-5xl font-bold mb-6 leading-tight">
-            Free Fillable SCAT6 & SCOAT6 PDFs
+            Free SCAT6 & SCOAT6 Forms + Training
           </h1>
           <p className="text-xl mb-8 text-white/90">
-            Auto-calculating, digitally fillable PDFs + FREE training course on how to use them correctly
+            Web-based forms with auto-calculations + fillable PDFs + FREE training course
           </p>
 
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8 max-w-md mx-auto">
@@ -102,11 +102,11 @@ export default function SCAT6DownloadPage() {
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
-              <span>Auto-calculating</span>
+              <span>Web-Based Forms</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
-              <span>Fillable PDFs</span>
+              <span>Downloadable PDFs</span>
             </div>
           </div>
         </div>
@@ -123,26 +123,26 @@ export default function SCAT6DownloadPage() {
           <div className="bg-white rounded-xl p-8 shadow-sm border-2 border-blue-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-blue-500 rounded-lg">
-                <FileText className="w-6 h-6 text-white" />
+                <Zap className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-2xl font-bold">Fillable SCAT6 PDF</h3>
+              <h3 className="text-2xl font-bold">Web-Based SCAT6 & SCOAT6</h3>
             </div>
             <ul className="space-y-3 text-slate-700">
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <span>Auto-calculating scores (saves 5+ minutes per assessment)</span>
+                <span><strong>Auto-calculating scores</strong> - instant symptom totals</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <span>Digitally fillable - no printing required</span>
+                <span>Works on any device - phone, tablet, computer</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <span>Save and print completed assessments</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                 <span>2026 updated to Berlin Consensus standards</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <span>For sideline/acute assessment (0-72 hours)</span>
               </li>
             </ul>
           </div>
@@ -152,24 +152,24 @@ export default function SCAT6DownloadPage() {
               <div className="p-3 bg-purple-500 rounded-lg">
                 <FileText className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-2xl font-bold">Fillable SCOAT6 PDF</h3>
+              <h3 className="text-2xl font-bold">Downloadable PDFs</h3>
             </div>
             <ul className="space-y-3 text-slate-700">
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>Comprehensive clinic-based assessment tool</span>
+                <span>Fillable SCAT6 and SCOAT6 PDFs for offline use</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>Serial monitoring capability for tracking recovery</span>
+                <span>Type directly into forms (no printing needed)</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>Return-to-play/learn/work decision support</span>
+                <span>Email to patients or save to medical records</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>For clinic visits (Day 1-7+ post-injury)</span>
+                <span>Berlin Consensus compliant</span>
               </li>
             </ul>
           </div>
@@ -216,11 +216,11 @@ export default function SCAT6DownloadPage() {
         </div>
       </div>
 
-      {/* Why Better Than Printing */}
+      {/* Why Digital Forms Beat Paper */}
       <div className="bg-slate-50 py-20">
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-12">
-            Why Fillable PDFs Beat Printing
+            Why Digital Forms Beat Paper
           </h2>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -229,15 +229,15 @@ export default function SCAT6DownloadPage() {
                 <Clock className="w-8 h-8 text-blue-600" />
               </div>
               <h3 className="text-xl font-bold mb-2">Save 5+ Minutes</h3>
-              <p className="text-slate-600">Auto-calculating scores means no manual addition or errors</p>
+              <p className="text-slate-600">Web forms auto-calculate symptom scores instantly - no manual counting</p>
             </div>
 
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
                 <Zap className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">No Printing Needed</h3>
-              <p className="text-slate-600">Fill out on tablet, laptop, or phone. Email to patient instantly.</p>
+              <h3 className="text-xl font-bold mb-2">Works Anywhere</h3>
+              <p className="text-slate-600">Use on any device - phone, tablet, laptop. No apps to install.</p>
             </div>
 
             <div className="text-center">
