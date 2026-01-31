@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { createUser, findUserByEmail } from '@/lib/users'
-import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
-import { sendWelcomeEmail } from '@/lib/email-service'
+import { createUser, findUserByEmail, findUserById } from '@/lib/users'
+import { createJWTSession } from '@/lib/jwt-session'
+import { sendMagicLinkEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,17 +66,12 @@ export async function POST(request: NextRequest) {
           existingUser.accessLevel = 'full-course'
         }
 
-        // Generate new magic link
+        // Generate magic link token
+        const token = createJWTSession(existingUser.id, existingUser.email, existingUser.name, existingUser.accessLevel, true)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-        const magicLink = generateMagicLinkJWT(existingUser.id, existingUser.email, existingUser.name, existingUser.accessLevel, baseUrl)
 
-        // Send welcome/upgrade email
-        await sendWelcomeEmail({
-          email: existingUser.email,
-          name: existingUser.name,
-          magicLink,
-          accessLevel: existingUser.accessLevel,
-        })
+        // Send magic link email
+        await sendMagicLinkEmail(existingUser.email, token, baseUrl)
 
         return NextResponse.json({
           success: true,
@@ -89,32 +84,33 @@ export async function POST(request: NextRequest) {
       // Create new user
       console.log(`✨ Creating new user: ${customerEmail} (${accessLevel})`)
 
-      const newUser = await createUser({
+      const userId = await createUser({
         email: customerEmail,
         name: customerName,
-        accessLevel,
+        accessLevel: accessLevel as 'online-only' | 'full-course' | 'preview',
         squarespaceOrderId: orderId,
       })
 
-      // Generate magic link
+      // Get the created user
+      const newUser = await findUserById(userId)
+      if (!newUser) {
+        throw new Error('User creation failed')
+      }
+
+      // Generate magic link token
+      const token = createJWTSession(userId, customerEmail, customerName, accessLevel, true)
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-      const magicLink = generateMagicLinkJWT(newUser.id, newUser.email, newUser.name, newUser.accessLevel, baseUrl)
 
-      // Send welcome email
-      const emailSent = await sendWelcomeEmail({
-        email: newUser.email,
-        name: newUser.name,
-        magicLink,
-        accessLevel: newUser.accessLevel,
-      })
+      // Send magic link email
+      const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
-      console.log(`✅ User created: ${newUser.id}`)
+      console.log(`✅ User created: ${userId}`)
       console.log(`📧 Welcome email ${emailSent ? 'sent' : 'queued'}`)
 
       return NextResponse.json({
         success: true,
-        userId: newUser.id,
-        accessLevel: newUser.accessLevel,
+        userId,
+        accessLevel,
         emailSent,
       })
     }

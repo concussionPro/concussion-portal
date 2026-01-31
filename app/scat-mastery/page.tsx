@@ -9,9 +9,42 @@ export default function SCATMasteryPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
 
-  const handleEnroll = () => {
-    // TODO: Integrate with Stripe
-    window.location.href = CONFIG.SHOP_URL
+  const handleEnroll = async () => {
+    if (!email) {
+      alert('Please enter your email address')
+      return
+    }
+
+    // Validate email
+    if (!email.includes('@')) {
+      alert('Please enter a valid email address')
+      return
+    }
+
+    try {
+      // Use FREE Stripe price to collect email and create user
+      const response = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: 'price_1SvS2jEEdMQX6vRJy6og9QSL', // FREE SCAT Mastery
+          email,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.url) {
+        // Redirect to Stripe (which will immediately redirect back since it's free)
+        window.location.href = data.url
+      } else {
+        console.error('No checkout URL returned:', data)
+        alert('Error signing up. Please try again.')
+      }
+    } catch (error) {
+      console.error('Signup error:', error)
+      alert('Error processing signup. Please try again.')
+    }
   }
 
   return (
@@ -21,8 +54,8 @@ export default function SCATMasteryPage() {
         <div className="max-w-6xl mx-auto px-4 py-20">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                🔥 Limited Time: $99 (Regular $197)
+              <div className="inline-block bg-green-500 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                ✓ 100% FREE - No Credit Card Required
               </div>
               <h1 className="text-5xl font-bold mb-6 leading-tight">
                 SCAT6/SCOAT6 Mastery + Clinical Toolkit
@@ -44,14 +77,24 @@ export default function SCATMasteryPage() {
                   <span className="font-semibold">3,247+ Enrolled</span>
                 </div>
               </div>
-              <button
-                onClick={handleEnroll}
-                className="bg-white text-blue-700 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
-              >
-                Enroll Now - $99 (Save $98) →
-              </button>
-              <p className="text-sm mt-4 text-blue-100">
-                💰 Your $99 fee is <strong>fully deducted</strong> from the full Hybrid Course using code <strong>SCAT99</strong>
+              <div className="space-y-3 mb-4">
+                <input
+                  type="email"
+                  placeholder="Enter your email to get instant access"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleEnroll()}
+                  className="w-full px-6 py-4 rounded-lg text-slate-900 font-semibold text-lg border-2 border-white/30 focus:border-white focus:outline-none"
+                />
+                <button
+                  onClick={handleEnroll}
+                  className="w-full bg-white text-blue-700 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+                >
+                  Get Instant Free Access →
+                </button>
+              </div>
+              <p className="text-sm text-blue-100">
+                💰 <strong>Instant access.</strong> Start learning in 60 seconds. No payment required.
               </p>
             </div>
 

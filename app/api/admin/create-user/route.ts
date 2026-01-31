@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createUser } from '@/lib/users'
-import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
-import { sendWelcomeEmail } from '@/lib/email-service'
+import { createUser, findUserById } from '@/lib/users'
+import { createJWTSession } from '@/lib/jwt-session'
+import { sendMagicLinkEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,31 +19,33 @@ export async function POST(request: NextRequest) {
     const accessLevel = amount >= 1000 ? 'full-course' : 'online-only'
 
     // Create user
-    const user = await createUser({
+    const userId = await createUser({
       email,
       name,
-      accessLevel,
+      accessLevel: accessLevel as 'online-only' | 'full-course' | 'preview',
     })
 
-    // Generate magic link
+    // Get the created user
+    const user = await findUserById(userId)
+    if (!user) {
+      throw new Error('User creation failed')
+    }
+
+    // Generate magic link token
+    const token = createJWTSession(userId, email, name, accessLevel as 'online-only' | 'full-course', true)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const magicLink = generateMagicLinkJWT(user.id, user.email, user.name, user.accessLevel, baseUrl)
+    const magicLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(email)}&token=${token}`
 
-    // Send welcome email
-    const emailSent = await sendWelcomeEmail({
-      email: user.email,
-      name: user.name,
-      magicLink,
-      accessLevel: user.accessLevel,
-    })
+    // Send magic link email
+    const emailSent = await sendMagicLinkEmail(email, token, baseUrl)
 
-    console.log(`✅ User created via admin: ${user.email} (${accessLevel})`)
+    console.log(`✅ User created via admin: ${email} (${accessLevel})`)
     console.log(`📧 Email ${emailSent ? 'sent' : 'queued'}`)
 
     return NextResponse.json({
       success: true,
-      userId: user.id,
-      accessLevel: user.accessLevel,
+      userId,
+      accessLevel,
       emailSent,
       magicLink, // Include link in response for testing
     })

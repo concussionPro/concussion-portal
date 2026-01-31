@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent, PRODUCT_ACCESS_LEVELS } from '@/lib/stripe'
-import { createUser } from '@/lib/user-storage'
-import { generateMagicLinkJWT } from '@/lib/jwt-magic-link'
-import { sendWelcomeEmail } from '@/lib/email'
+import { createUser } from '@/lib/users'
+import { createJWTSession } from '@/lib/jwt-session'
+import { sendMagicLinkEmail } from '@/lib/email'
 import Stripe from 'stripe'
 
 /**
@@ -111,32 +111,28 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const userId = await createUser({
       email: customerEmail,
       name: customerName,
-      accessLevel,
+      accessLevel: accessLevel as 'online-only' | 'full-course' | 'preview',
       stripeCustomerId: session.customer as string,
       stripeSubscriptionId: session.subscription as string,
     })
 
     console.log(`User created: ${userId} (${customerEmail})`)
 
-    // Generate magic link
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const magicLink = generateMagicLinkJWT(
+    // Generate magic link token
+    const token = createJWTSession(
       userId,
       customerEmail,
       customerName,
-      accessLevel,
-      baseUrl
+      accessLevel as 'online-only' | 'full-course',
+      true // Remember me for 30 days
     )
 
-    // Send welcome email with magic link
-    await sendWelcomeEmail({
-      email: customerEmail,
-      name: customerName,
-      magicLink,
-      accessLevel,
-    })
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
-    console.log(`Welcome email sent to: ${customerEmail}`)
+    // Send magic link email
+    await sendMagicLinkEmail(customerEmail, token, baseUrl)
+
+    console.log(`Magic link email sent to: ${customerEmail}`)
   } catch (error) {
     console.error('Failed to create user after checkout:', error)
     throw error

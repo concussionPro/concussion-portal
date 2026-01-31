@@ -8,9 +8,11 @@ export interface User {
   id: string
   email: string
   name: string
-  accessLevel: 'online-only' | 'full-course'
+  accessLevel: 'online-only' | 'full-course' | 'preview'
   createdAt: string
   squarespaceOrderId?: string
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
   lastLoginAt?: string
 }
 
@@ -121,21 +123,25 @@ export async function findUserById(id: string): Promise<User | null> {
 export async function createUser(data: {
   email: string
   name: string
-  accessLevel: 'online-only' | 'full-course'
+  accessLevel: 'online-only' | 'full-course' | 'preview'
   squarespaceOrderId?: string
-}): Promise<User> {
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
+}): Promise<string> {
   const users = await loadUsers()
 
   // Check if user already exists
   const existing = await findUserByEmail(data.email)
   if (existing) {
     // Update access level if upgrading
-    if (existing.accessLevel === 'online-only' && data.accessLevel === 'full-course') {
-      existing.accessLevel = 'full-course'
+    if ((existing.accessLevel === 'online-only' || existing.accessLevel === 'preview') &&
+        (data.accessLevel === 'full-course' || data.accessLevel === 'online-only')) {
+      existing.accessLevel = data.accessLevel
+      if (data.stripeCustomerId) existing.stripeCustomerId = data.stripeCustomerId
+      if (data.stripeSubscriptionId) existing.stripeSubscriptionId = data.stripeSubscriptionId
       await saveUsers(users)
-      return existing
     }
-    return existing
+    return existing.id
   }
 
   // Create new user
@@ -146,11 +152,13 @@ export async function createUser(data: {
     accessLevel: data.accessLevel,
     createdAt: new Date().toISOString(),
     squarespaceOrderId: data.squarespaceOrderId,
+    stripeCustomerId: data.stripeCustomerId,
+    stripeSubscriptionId: data.stripeSubscriptionId,
   }
 
   users.push(newUser)
   await saveUsers(users)
-  return newUser
+  return newUser.id
 }
 
 // Update user's last login

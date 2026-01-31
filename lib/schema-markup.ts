@@ -156,12 +156,7 @@ export function createCourseSchema(params: {
       "Neurocognitive Testing"
     ],
     "timeRequired": `PT${params.cpdHours}H`,
-    "inLanguage": "en-AU",
-    "isAccessibleForFree": false,
-    "hasCourseInstance": {
-      "@type": "CourseInstance",
-      "courseMode": "online"
-    }
+    "isAccessibleForFree": false
   }
 }
 

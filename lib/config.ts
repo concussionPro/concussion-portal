@@ -3,6 +3,7 @@
 
 export const CONFIG = {
   // External URLs
+  APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com',
   SHOP_URL: 'https://concussion-education-australia.com/shop',
   CONTACT_EMAIL: 'zac@concussion-education-australia.com',
 

@@ -100,9 +100,58 @@ export default function PricingPage() {
     },
   ]
 
-  const handleEnroll = (tier: string) => {
-    // TODO: Integrate with Stripe
-    window.location.href = CONFIG.SHOP_URL
+  const handleEnroll = async (tier: string) => {
+    // Map tier name to Stripe price ID
+    const priceMap: Record<string, { annual: string; monthly: string }> = {
+      'Individual Professional': {
+        annual: 'price_1SvS2gEEdMQX6vRJWIXqpes7',
+        monthly: 'price_1SvS2gEEdMQX6vRJujcqQ2U3',
+      },
+      'Premium Professional': {
+        annual: 'price_1SvS2hEEdMQX6vRJ65Zcs9pc',
+        monthly: 'price_1SvS2hEEdMQX6vRJljqEU8Dn',
+      },
+      'Clinic/Team License': {
+        annual: 'price_1SvS2iEEdMQX6vRJITlno4sK',
+        monthly: 'price_1SvS2iEEdMQX6vRJITlno4sK', // Only annual available
+      },
+    }
+
+    // For team license, redirect to contact form
+    if (tier === 'Clinic/Team License') {
+      window.location.href = '/contact?tier=team'
+      return
+    }
+
+    const prices = priceMap[tier]
+    if (!prices) {
+      console.error('Invalid tier:', tier)
+      return
+    }
+
+    const priceId = showAnnual ? prices.annual : prices.monthly
+
+    try {
+      // Create Stripe Checkout Session
+      const response = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId }),
+      })
+
+      const data = await response.json()
+
+      if (data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url
+      } else {
+        console.error('No checkout URL returned:', data)
+        alert('Error creating checkout session. Please try again.')
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Error processing payment. Please try again.')
+    }
   }
 
   return (

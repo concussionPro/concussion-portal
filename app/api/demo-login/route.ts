@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { findUserByEmail, createUser } from '@/lib/users'
+import { findUserByEmail, findUserById, createUser } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
 
 export async function GET(request: NextRequest) {
@@ -9,11 +9,15 @@ export async function GET(request: NextRequest) {
 
     let user = await findUserByEmail(demoEmail)
     if (!user) {
-      user = await createUser({
+      const userId = await createUser({
         email: demoEmail,
         name: 'Demo User',
         accessLevel: 'full-course',
       })
+      user = await findUserById(userId)
+      if (!user) {
+        throw new Error('Failed to create demo user')
+      }
     }
 
     // Create JWT session (instant, no Blob storage)

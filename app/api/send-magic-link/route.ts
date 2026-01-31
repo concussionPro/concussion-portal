@@ -1,8 +1,8 @@
 // API endpoint to send magic link login emails
 import { NextResponse } from 'next/server'
 import { findUserByEmail } from '@/lib/users'
-import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
-import { sendWelcomeEmail } from '@/lib/email-service'
+import { createJWTSession } from '@/lib/jwt-session'
+import { sendMagicLinkEmail } from '@/lib/email'
 import { logAuthFailure, logCriticalError, measurePerformance } from '@/lib/monitoring'
 
 export async function POST(request: Request) {
@@ -42,18 +42,13 @@ export async function POST(request: Request) {
       )
     }
 
-    // Generate magic link
+    // Generate magic link token
+    const token = createJWTSession(user.id, user.email, user.name, user.accessLevel, true)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const magicLink = generateMagicLinkJWT(user.id, user.email, user.name, user.accessLevel, baseUrl)
 
-    // Send welcome email with magic link (with performance monitoring)
-    const emailSent = await measurePerformance('sendWelcomeEmail', () =>
-      sendWelcomeEmail({
-        email: user.email,
-        name: user.name,
-        magicLink,
-        accessLevel: user.accessLevel,
-      })
+    // Send magic link email (with performance monitoring)
+    const emailSent = await measurePerformance('sendMagicLinkEmail', () =>
+      sendMagicLinkEmail(user.email, token, baseUrl)
     )
 
     if (emailSent) {
@@ -63,6 +58,7 @@ export async function POST(request: Request) {
       const isDevelopment = process.env.NODE_ENV === 'development'
 
       if (isDevelopment) {
+        const magicLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(user.email)}&token=${token}`
         console.log('⚠️  Email service not configured - returning magic link directly')
         console.log('🔗 Magic Link:', magicLink)
         return NextResponse.json({

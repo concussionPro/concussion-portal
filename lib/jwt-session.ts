@@ -19,12 +19,12 @@ export interface SessionData {
   userId: string
   email: string
   name: string
-  accessLevel: 'online-only' | 'full-course'
+  accessLevel: 'online-only' | 'full-course' | 'preview'
   exp: number
 }
 
 // Create a signed session token
-function createSessionToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course', expiresInMs: number): string {
+function createSessionToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview', expiresInMs: number): string {
   const payload: SessionData = {
     userId,
     email,
@@ -82,7 +82,7 @@ export function createJWTSession(
   userId: string,
   email: string,
   name: string,
-  accessLevel: 'online-only' | 'full-course',
+  accessLevel: 'online-only' | 'full-course' | 'preview',
   rememberMe: boolean = false
 ): string {
   const duration = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
