@@ -1,12 +1,12 @@
 // JWT-based magic link authentication - no database lookup needed
 import crypto from 'crypto'
 
-// SECURITY: No fallback secrets - must be configured in environment
+// SECURITY: Use MAGIC_LINK_SECRET, fallback to SESSION_SECRET
 function getSecret(): string {
-  const secret = process.env.MAGIC_LINK_SECRET
+  const secret = process.env.MAGIC_LINK_SECRET || process.env.SESSION_SECRET
   if (!secret) {
     throw new Error(
-      'CRITICAL: MAGIC_LINK_SECRET environment variable must be set. ' +
+      'CRITICAL: MAGIC_LINK_SECRET or SESSION_SECRET environment variable must be set. ' +
       'Generate a secure secret with: openssl rand -base64 32'
     )
   }
