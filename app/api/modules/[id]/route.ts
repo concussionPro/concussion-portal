@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { getModuleById } from '@/data/modules'
+import { getSCATModuleById } from '@/data/scat-modules'
 
 /**
  * Secure Module Content API
@@ -48,39 +49,40 @@ export async function GET(
       )
     }
 
-    // Get module data
-    const module = getModuleById(moduleId)
-
-    if (!module) {
-      return NextResponse.json(
-        { error: 'Module not found' },
-        { status: 404 }
-      )
-    }
-
     // Determine access level
     const hasFullAccess =
       sessionData.accessLevel === 'online-only' ||
       sessionData.accessLevel === 'full-course'
 
-    // For preview/free users: return only first 2 sections
-    if (!hasFullAccess) {
-      const previewModule = {
-        ...module,
-        sections: module.sections.slice(0, 2), // Only first 2 sections
-        quiz: [], // No quiz access for preview
-        clinicalReferences: [], // No references for preview
+    // Get appropriate module based on access level
+    let module
+    if (hasFullAccess) {
+      // Paid users: Get from main course modules
+      module = getModuleById(moduleId)
+      if (!module) {
+        return NextResponse.json(
+          { error: 'Module not found' },
+          { status: 404 }
+        )
       }
-
-      return NextResponse.json({
-        success: true,
-        module: previewModule,
-        accessLevel: 'preview',
-        message: 'Preview mode - upgrade to access full content',
-      })
+    } else {
+      // Preview/free users: Get from SCAT modules
+      const scatModule = getSCATModuleById(moduleId)
+      if (!scatModule) {
+        // They're trying to access a paid module
+        return NextResponse.json(
+          {
+            error: 'This module requires full course access',
+            upgrade: true,
+            message: 'Upgrade to the full course to access all 8 modules'
+          },
+          { status: 403 }
+        )
+      }
+      module = scatModule
     }
 
-    // For paid users: return full content
+    // Return full content (both free and paid users get full access to their respective modules)
     return NextResponse.json({
       success: true,
       module: module,

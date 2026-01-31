@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Brain, Activity, Award, Clock, TrendingUp, ArrowUpRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -114,10 +115,26 @@ function BentoCard({
 export function BentoGrid() {
   const router = useRouter()
   const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, progress } = useProgress()
+  const [maxModules, setMaxModules] = useState(5) // Default to SCAT free course
+  const [maxCPD, setMaxCPD] = useState(2) // Default to SCAT free course
 
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
   const studyTime = getTotalStudyTime()
+
+  // Fetch modules to determine max based on user's access level
+  useEffect(() => {
+    fetch('/api/modules/list', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.modules) {
+          setMaxModules(data.modules.length)
+          const totalPoints = data.modules.reduce((sum: number, m: any) => sum + m.points, 0)
+          setMaxCPD(totalPoints)
+        }
+      })
+      .catch(err => console.error('Failed to fetch modules:', err))
+  }, [])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-[200px] sm:auto-rows-[240px]">
@@ -126,7 +143,7 @@ export function BentoGrid() {
         title="Online CPD"
         icon={<Award className="w-6 h-6" strokeWidth={1.5} />}
         metric={{
-          value: `${cpdPoints}/8`,
+          value: `${cpdPoints}/${maxCPD}`,
           label: 'Online Points Earned',
           trend: cpdPoints > 0 ? 'up' : 'neutral',
         }}
@@ -151,9 +168,9 @@ export function BentoGrid() {
         description={
           completedModules === 0
             ? "Start your first module to begin earning CPD points!"
-            : completedModules === 8
+            : completedModules === maxModules
             ? "Outstanding! You've completed all modules. Keep up the excellence!"
-            : `Excellent work! ${completedModules} of 8 online modules completed. You're ${Math.round((completedModules / 8) * 100)}% of the way there!`
+            : `Excellent work! ${completedModules} of ${maxModules} online modules completed. You're ${Math.round((completedModules / maxModules) * 100)}% of the way there!`
         }
       />
     </div>
