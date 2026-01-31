@@ -195,7 +195,7 @@ export default function SCATMasteryPage() {
       <div className="bg-slate-50 py-20">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-12">
-            Course Curriculum (2 Hours Total)
+            Course Curriculum
           </h2>
 
           <div className="space-y-6">
@@ -207,7 +207,6 @@ export default function SCATMasteryPage() {
                   'SCAT6 vs SCOAT6 – Which Tool, When, and Why It Keeps You Safe',
                   'Medico-legal considerations'
                 ],
-                duration: '20 min'
               },
               {
                 module: 'Module 2',
@@ -218,7 +217,6 @@ export default function SCATMasteryPage() {
                   'Full Off-Field Immediate Assessment',
                   'SCAT6 Full Domain-by-Domain Walkthrough'
                 ],
-                duration: '35 min'
               },
               {
                 module: 'Module 3',
@@ -228,7 +226,6 @@ export default function SCATMasteryPage() {
                   'Practical Clinic Essentials & Common Traps',
                   'SCOAT6 Full Domain-by-Domain Walkthrough'
                 ],
-                duration: '40 min'
               },
               {
                 module: 'Module 4',
@@ -237,7 +234,6 @@ export default function SCATMasteryPage() {
                   'Paediatric Concussion (Child SCAT6 & Child SCOAT6)',
                   'Red Flags, Imaging & When to Refer'
                 ],
-                duration: '25 min'
               },
               {
                 module: 'Knowledge Quiz',
@@ -246,18 +242,12 @@ export default function SCATMasteryPage() {
                   'Reality-check quiz (deliberately tough)',
                   'Shows exactly where you have knowledge gaps'
                 ],
-                duration: '15 min'
               }
             ].map((mod, i) => (
               <div key={i} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="text-sm font-semibold text-blue-600 mb-1">{mod.module}</div>
-                    <h3 className="text-xl font-bold text-slate-900">{mod.title}</h3>
-                  </div>
-                  <div className="bg-blue-50 px-4 py-2 rounded-lg">
-                    <span className="text-sm font-semibold text-blue-700">{mod.duration}</span>
-                  </div>
+                <div className="mb-4">
+                  <div className="text-sm font-semibold text-blue-600 mb-1">{mod.module}</div>
+                  <h3 className="text-xl font-bold text-slate-900">{mod.title}</h3>
                 </div>
                 <ul className="space-y-2">
                   {mod.lessons.map((lesson, j) => (
@@ -319,7 +309,7 @@ export default function SCATMasteryPage() {
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {[
               { number: '3,247+', label: 'HCPs Trained' },
-              { number: '2 Hours', label: 'To Mastery' },
+              { number: '2 CPD', label: 'Hours Included' },
               { number: '100%', label: 'AHPRA Aligned' },
             ].map((stat, i) => (
               <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
@@ -332,20 +322,8 @@ export default function SCATMasteryPage() {
             onClick={handleEnroll}
             className="bg-white text-blue-700 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
           >
-            Enroll Now - $99 (Limited Time) →
+            Get Instant Free Access →
           </button>
-        </div>
-      </div>
-
-      {/* Guarantee */}
-      <div className="max-w-4xl mx-auto px-4 py-20">
-        <div className="bg-green-50 border-2 border-green-300 rounded-xl p-8 text-center">
-          <h3 className="text-2xl font-bold text-green-900 mb-4">
-            30-Day Money-Back Guarantee
-          </h3>
-          <p className="text-lg text-slate-700">
-            Complete the course. If you're not 100% confident in your next concussion assessment, email us for a full refund. No questions asked.
-          </p>
         </div>
       </div>
 
@@ -356,16 +334,16 @@ export default function SCATMasteryPage() {
             Ready to Master Concussion Assessment?
           </h2>
           <p className="text-xl mb-8 text-slate-300">
-            Get 100% confident for your next patient. 2 hours. 2 CPD points. $99.
+            Get 100% confident for your next patient. 2 CPD points. Completely FREE.
           </p>
           <button
             onClick={handleEnroll}
             className="bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all shadow-xl"
           >
-            Enroll Now - Start Learning Today →
+            Get Free Access Now →
           </button>
           <p className="text-sm mt-6 text-slate-400">
-            💰 Full $99 credit toward Hybrid Course with code SCAT99
+            ✓ No credit card required • Instant access
           </p>
         </div>
       </div>
