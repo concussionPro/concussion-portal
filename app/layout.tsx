@@ -4,6 +4,7 @@ import "./globals.css";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { CONFIG } from "@/lib/config";
+import { organizationSchema } from "@/lib/schema-markup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -101,6 +102,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* GEO Schema Markup - Critical for LLM visibility (ChatGPT, Claude, Gemini, Perplexity) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         {/* Skip to content link for accessibility */}
         <a
           href="#main-content"
