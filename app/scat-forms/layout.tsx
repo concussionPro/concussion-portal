@@ -98,7 +98,7 @@ export default function SCATFormsLayout({
 
         {/* FREE SCAT Mastery Banner - Lead Magnet */}
         {(isSCAT6 || isSCOAT6) && (
-          <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl p-6 mb-6 shadow-lg">
+          <div className="bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 text-white rounded-xl p-6 mb-6 shadow-lg">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-white/20 backdrop-blur-sm rounded-lg">
                 <GraduationCap className="w-6 h-6 text-white" />
@@ -119,7 +119,7 @@ export default function SCATFormsLayout({
                 </div>
                 <button
                   onClick={() => router.push('/scat-mastery')}
-                  className="text-sm px-6 py-3 bg-white text-green-600 rounded-lg hover:bg-green-50 transition-colors font-bold shadow-md"
+                  className="text-sm px-6 py-3 bg-white text-teal-600 rounded-lg hover:bg-teal-50 transition-colors font-bold shadow-md"
                 >
                   Get Free Course Now →
                 </button>

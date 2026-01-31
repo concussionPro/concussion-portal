@@ -52,7 +52,7 @@ export default function HomePage() {
             <div className="hidden md:flex items-center gap-3">
               <button
                 onClick={() => router.push('/scat-mastery')}
-                className="text-sm text-green-600 hover:text-green-700 transition-colors font-bold focus:outline-none focus:ring-2 focus:ring-green-500 rounded px-2 py-1"
+                className="text-sm text-teal-600 hover:text-teal-700 transition-colors font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-2 py-1"
                 aria-label="Free SCAT training"
               >
                 Free Training
@@ -114,7 +114,7 @@ export default function HomePage() {
                   router.push('/scat-mastery')
                   setMobileMenuOpen(false)
                 }}
-                className="block w-full text-left text-sm text-green-600 hover:text-green-700 transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-green-500 rounded px-2 font-bold"
+                className="block w-full text-left text-sm text-teal-600 hover:text-teal-700 transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded px-2 font-bold"
               >
                 Free SCAT Training
               </button>
@@ -245,7 +245,7 @@ export default function HomePage() {
         </section>
 
         {/* FREE SCAT Mastery Banner - Lead Magnet */}
-        <section className="py-12 bg-gradient-to-br from-green-500 to-teal-500 relative overflow-hidden">
+        <section className="py-12 bg-gradient-to-br from-blue-400 via-teal-400 to-emerald-400 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
           <div className="container-lg px-6 md:px-8 relative z-10">
             <div className="max-w-4xl mx-auto text-center text-white">
@@ -261,7 +261,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
                 <button
                   onClick={() => router.push('/scat-mastery')}
-                  className="bg-white text-green-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-green-50 transition-all shadow-2xl flex items-center gap-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+                  className="bg-white text-teal-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-teal-50 transition-all shadow-2xl flex items-center gap-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
                   aria-label="Start free SCAT Mastery course"
                 >
                   Get Free Course →
