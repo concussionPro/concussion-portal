@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
-import { createJWTSession } from '@/lib/jwt-session'
+import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendEmail } from '@/lib/resend-client'
 
 export async function POST(request: NextRequest) {
@@ -40,10 +40,9 @@ export async function POST(request: NextRequest) {
       console.log(`New user created for free course: ${email}`)
     }
 
-    // Generate session token
-    const token = createJWTSession(userId, email, userName, 'preview', true)
+    // Generate magic link with token
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const loginLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(email)}&token=${token}`
+    const loginLink = generateMagicLinkJWT(userId, email, userName, 'preview', baseUrl)
 
     // Send welcome email (Day 0 of nurture sequence)
     await sendEmail({

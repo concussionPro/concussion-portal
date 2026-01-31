@@ -19,12 +19,12 @@ interface TokenPayload {
   userId: string
   email: string
   name: string
-  accessLevel: 'online-only' | 'full-course'
+  accessLevel: 'online-only' | 'full-course' | 'preview'
   exp: number
 }
 
 // Create a signed token
-function createToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course'): string {
+function createToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview'): string {
   const payload: TokenPayload = {
     userId,
     email,
@@ -82,7 +82,7 @@ export function generateMagicLinkJWT(
   userId: string,
   email: string,
   name: string,
-  accessLevel: 'online-only' | 'full-course',
+  accessLevel: 'online-only' | 'full-course' | 'preview',
   baseUrl: string
 ): string {
   const token = createToken(userId, email, name, accessLevel)
@@ -94,7 +94,7 @@ export function verifyMagicTokenJWT(token: string): {
   userId: string;
   email: string;
   name: string;
-  accessLevel: 'online-only' | 'full-course'
+  accessLevel: 'online-only' | 'full-course' | 'preview'
 } | null {
   const payload = verifyToken(token)
 
