@@ -298,3 +298,37 @@ export function createAggregateRatingSchema(params: {
     "worstRating": 1
   }
 }
+
+/**
+ * BlogPosting Schema - For blog articles
+ */
+export function createBlogPostSchema(params: {
+  title: string
+  description: string
+  datePublished: string
+  dateModified: string
+  author: string
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": params.title,
+    "description": params.description,
+    "datePublished": params.datePublished,
+    "dateModified": params.dateModified,
+    "author": {
+      "@type": "Person",
+      "name": params.author
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Concussion Education Australia",
+      "url": CONFIG.APP_URL
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": CONFIG.APP_URL
+    },
+    "inLanguage": "en-AU"
+  }
+}
