@@ -17,7 +17,7 @@ export interface SCATModule {
   videoRequiredMinutes: number
   sections: Section[]
   quiz: QuizQuestion[]
-  clinicalReferences?: string[]
+  clinicalReferences: string[]
   isFree?: boolean
 }
 
@@ -36,6 +36,7 @@ export const scatModules: SCATModule[] = [
     videoUrl: '/videos/scat-module-1-quick-guide.mp4',
     videoRequiredMinutes: 1,
     isFree: true,
+    clinicalReferences: [],
     sections: [
       {
         id: 'the-golden-rule',
@@ -198,6 +199,7 @@ export const scatModules: SCATModule[] = [
     videoUrl: '/videos/scat-module-2-on-field.mp4',
     videoRequiredMinutes: 1,
     isFree: true,
+    clinicalReferences: [],
     sections: [
       {
         id: 'on-field-assessment',
@@ -371,6 +373,7 @@ export const scatModules: SCATModule[] = [
     videoUrl: '/videos/scat-module-3-scoat6.mp4',
     videoRequiredMinutes: 1,
     isFree: true,
+    clinicalReferences: [],
     sections: [
       {
         id: 'scoat6-overview',
@@ -517,6 +520,7 @@ export const scatModules: SCATModule[] = [
     videoUrl: '/videos/scat-module-4-pediatric.mp4',
     videoRequiredMinutes: 1,
     isFree: true,
+    clinicalReferences: [],
     sections: [
       {
         id: 'pediatric-differences',
@@ -632,6 +636,7 @@ export const scatModules: SCATModule[] = [
     videoUrl: '',
     videoRequiredMinutes: 0,
     isFree: true,
+    clinicalReferences: [],
     sections: [
       {
         id: 'quiz-intro',
