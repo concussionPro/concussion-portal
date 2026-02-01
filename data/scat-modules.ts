@@ -18,6 +18,7 @@ export interface SCATModule {
   sections: Section[]
   quiz: QuizQuestion[]
   clinicalReferences?: string[]
+  isFree?: boolean
 }
 
 // Type aliases for backwards compatibility
