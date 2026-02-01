@@ -6,7 +6,6 @@
 
 import { Section, QuizQuestion } from './modules'
 
-// SCATModule must be structurally identical to Module for type compatibility
 export interface SCATModule {
   id: number
   title: string
@@ -19,6 +18,7 @@ export interface SCATModule {
   sections: Section[]
   quiz: QuizQuestion[]
   clinicalReferences: string[]
+  isFree?: boolean
 }
 
 // Type aliases for backwards compatibility
@@ -35,6 +35,7 @@ export const scatModules: SCATModule[] = [
     description: 'Master when to use SCAT6 vs SCOAT6, understand medicolegal implications, and learn standard-of-care documentation requirements.',
     videoUrl: '/videos/scat-module-1-quick-guide.mp4',
     videoRequiredMinutes: 1,
+    isFree: true,
     clinicalReferences: [],
     sections: [
       {
@@ -187,7 +188,6 @@ export const scatModules: SCATModule[] = [
         explanation: 'Repeated vomiting (≥2 episodes) is a red flag requiring immediate ED referral due to risk of intracranial hemorrhage. Headache, fogginess, and concentration difficulty are expected concussion symptoms. Do not delay referral for red flag symptoms.',
       },
     ],
-    clinicalReferences: [],
   },
   {
     id: 102,
@@ -198,6 +198,7 @@ export const scatModules: SCATModule[] = [
     description: 'Master immediate on-field concussion recognition, red flag identification, and proper SCAT6 administration in acute settings.',
     videoUrl: '/videos/scat-module-2-on-field.mp4',
     videoRequiredMinutes: 1,
+    isFree: true,
     clinicalReferences: [],
     sections: [
       {
@@ -361,7 +362,6 @@ export const scatModules: SCATModule[] = [
         explanation: 'SCAT6 is specifically designed for acute/sideline assessment in the first 0-72 hours. SCOAT6 is for structured clinic visits from day 1 onwards.',
       },
     ],
-    clinicalReferences: [],
   },
   {
     id: 103,
@@ -372,6 +372,7 @@ export const scatModules: SCATModule[] = [
     description: 'Master SCOAT6 administration for clinic-based concussion assessment, serial monitoring, and return-to-play/learn/work decision-making.',
     videoUrl: '/videos/scat-module-3-scoat6.mp4',
     videoRequiredMinutes: 1,
+    isFree: true,
     clinicalReferences: [],
     sections: [
       {
@@ -508,7 +509,6 @@ export const scatModules: SCATModule[] = [
         explanation: 'Symptom provocation with exertion means they are NOT ready for graduated RTP. They must be symptom-free at rest AND with exertion before starting Step 2. Walking provokes symptoms, so they remain in Step 1 (rest).',
       },
     ],
-    clinicalReferences: [],
   },
   {
     id: 104,
@@ -519,6 +519,7 @@ export const scatModules: SCATModule[] = [
     description: 'Understand pediatric-specific concussion assessment, longer recovery timelines, and school accommodation strategies.',
     videoUrl: '/videos/scat-module-4-pediatric.mp4',
     videoRequiredMinutes: 1,
+    isFree: true,
     clinicalReferences: [],
     sections: [
       {
@@ -624,7 +625,6 @@ export const scatModules: SCATModule[] = [
         explanation: 'Children under 13 require conservative management with longer recovery timelines (typically 21-28 days minimum). Even if symptom-free at day 3, they need to complete graduated RTP over 2-3 weeks before full clearance. Rushing pediatric RTP significantly increases reinjury risk.',
       },
     ],
-    clinicalReferences: [],
   },
   {
     id: 105,
@@ -635,6 +635,7 @@ export const scatModules: SCATModule[] = [
     description: 'Reality-check quiz designed to identify knowledge gaps and reinforce critical concepts.',
     videoUrl: '',
     videoRequiredMinutes: 0,
+    isFree: true,
     clinicalReferences: [],
     sections: [
       {
@@ -679,7 +680,6 @@ export const scatModules: SCATModule[] = [
         explanation: 'Symptom provocation with exertion = NOT ready for RTP protocol. She must be symptom-free at rest AND with exertion before starting Step 2. The headache return indicates her brain hasn\'t recovered sufficiently. Continue rest and reassess in 2-3 days.',
       },
     ],
-    clinicalReferences: [],
   },
 ]
 
