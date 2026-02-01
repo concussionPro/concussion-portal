@@ -4,10 +4,18 @@ import { useState, useEffect } from 'react'
 import { Check, X, Users, Sparkles, Clock, TrendingUp, Award, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
+import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
 
 export default function PricingPage() {
   const [showAnnual, setShowAnnual] = useState(true)
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 })
+
+  // Track pricing page view
+  useEffect(() => {
+    trackEvent(ANALYTICS_EVENTS.PRICING_VIEW, {
+      source: 'pricing-page',
+    })
+  }, [])
 
   // Countdown timer - Q1 2026 Cohort closes Feb 28, 2026
   useEffect(() => {
@@ -101,6 +109,13 @@ export default function PricingPage() {
   ]
 
   const handleEnroll = async (tier: string) => {
+    // Track pricing page button click
+    trackEvent(ANALYTICS_EVENTS.ENROLL_BUTTON_CLICK, {
+      source: 'pricing-page',
+      tier,
+      billingPeriod: showAnnual ? 'annual' : 'monthly',
+    })
+
     // Map tier name to Stripe price ID
     const priceMap: Record<string, { annual: string; monthly: string }> = {
       'Individual Professional': {
@@ -142,6 +157,13 @@ export default function PricingPage() {
       const data = await response.json()
 
       if (data.url) {
+        // Track successful checkout initiation
+        trackEvent(ANALYTICS_EVENTS.SHOP_CLICK, {
+          source: 'pricing-page',
+          tier,
+          priceId,
+          billingPeriod: showAnnual ? 'annual' : 'monthly',
+        })
         // Redirect to Stripe Checkout
         window.location.href = data.url
       } else {

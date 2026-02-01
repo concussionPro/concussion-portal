@@ -16,23 +16,74 @@ export default function AdminEmailsPage() {
   const [emails, setEmails] = useState<EmailEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'preview' | 'paid'>('all')
+  const [adminKey, setAdminKey] = useState('')
+  const [authenticated, setAuthenticated] = useState(false)
 
   useEffect(() => {
-    fetchEmails()
-  }, [])
+    if (authenticated) {
+      fetchEmails()
+    }
+  }, [authenticated])
 
   const fetchEmails = async () => {
+    if (!adminKey) return
+
     try {
-      const response = await fetch('/api/admin/emails')
+      const response = await fetch('/api/admin/emails', {
+        headers: {
+          'x-admin-key': adminKey,
+        },
+      })
       const data = await response.json()
-      if (data.success) {
+      if (response.ok && data.success) {
         setEmails(data.emails)
+      } else {
+        alert('Failed to load emails: ' + (data.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Failed to load emails:', error)
+      alert('Failed to load emails. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleAuth = (e: React.FormEvent) => {
+    e.preventDefault()
+    setAuthenticated(true)
+    setLoading(true)
+    fetchEmails()
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+          <h1 className="text-2xl font-bold text-slate-900 mb-6">Admin Authentication</h1>
+          <form onSubmit={handleAuth} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Admin API Key
+              </label>
+              <input
+                type="password"
+                value={adminKey}
+                onChange={(e) => setAdminKey(e.target.value)}
+                placeholder="Enter admin API key"
+                className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Access Dashboard
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   const filteredEmails = emails.filter(email => {

@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { getCurrentUser } from '@/lib/auth'
 import { FileText, Download, Lock, CheckCircle2, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { CONFIG } from '@/lib/config'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { trackDownload, trackShopClick, trackEvent } from '@/lib/analytics'
@@ -139,6 +140,7 @@ const categoryLabels = {
 }
 
 export default function ClinicalToolkitPage() {
+  const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [accessLevel, setAccessLevel] = useState<'online-only' | 'full-course' | null>(null)
   const [loading, setLoading] = useState(true)
@@ -155,6 +157,12 @@ export default function ClinicalToolkitPage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
+            // CRITICAL: Preview users should NOT access clinical toolkit - redirect to SCAT course
+            if (data.user.accessLevel === 'preview') {
+              router.push('/scat-course')
+              return
+            }
+
             setAccessLevel(data.user.accessLevel)
           }
         }
@@ -165,7 +173,7 @@ export default function ClinicalToolkitPage() {
       }
     }
     checkAccess()
-  }, [])
+  }, [router])
 
   const filteredResources = selectedCategory === 'all'
     ? toolkitResources

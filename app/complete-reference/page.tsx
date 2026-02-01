@@ -4,9 +4,11 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { BookMarked, Download, ExternalLink } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAnalytics } from '@/hooks/useAnalytics'
 
 export default function CompleteReferencePage() {
+  const router = useRouter()
   useAnalytics()
   const [accessLevel, setAccessLevel] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -21,6 +23,12 @@ export default function CompleteReferencePage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
+            // CRITICAL: Preview users should NOT access complete reference - redirect to SCAT course
+            if (data.user.accessLevel === 'preview') {
+              router.push('/scat-course')
+              return
+            }
+
             setAccessLevel(data.user.accessLevel)
           }
         }
@@ -32,7 +40,7 @@ export default function CompleteReferencePage() {
     }
 
     checkAccess()
-  }, [])
+  }, [router])
 
   const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
 

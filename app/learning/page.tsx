@@ -37,6 +37,12 @@ export default function LearningSuite() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user && data.user.accessLevel) {
+            // CRITICAL: Preview users should NOT access learning suite - redirect to SCAT course
+            if (data.user.accessLevel === 'preview') {
+              router.push('/scat-course')
+              return
+            }
+
             // Both online-only and full-course users have full access
             setHasAccess(data.user.accessLevel === 'online-only' || data.user.accessLevel === 'full-course')
           }
@@ -47,7 +53,7 @@ export default function LearningSuite() {
     }
 
     checkAccess()
-  }, [])
+  }, [router])
 
   const handleModuleClick = (moduleId: number) => {
     router.push(`/modules/${moduleId}`)
