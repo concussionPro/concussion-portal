@@ -15,6 +15,7 @@ export interface SCATModule {
   videoRequiredMinutes: number
   sections: SCATSection[]
   quiz: SCATQuizQuestion[]
+  clinicalReferences?: string[]
   isFree: true
 }
 

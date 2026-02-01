@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { Module } from '@/data/modules'
+import { SCATModule } from '@/data/scat-modules'
+
+// Support both regular modules and SCAT modules
+type AnyModule = Module | SCATModule
 
 interface UseModuleDataResult {
-  module: Module | null
+  module: AnyModule | null
   loading: boolean
   error: string | null
   accessLevel: 'preview' | 'online-only' | 'full-course' | null
@@ -17,7 +21,7 @@ interface UseModuleDataResult {
  * This prevents unauthorized users from accessing paid content.
  */
 export function useModuleData(moduleId: number): UseModuleDataResult {
-  const [module, setModule] = useState<Module | null>(null)
+  const [module, setModule] = useState<AnyModule | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
