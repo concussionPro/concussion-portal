@@ -4,6 +4,8 @@
  * 2 CPD hours total
  */
 
+import { Section, QuizQuestion } from './modules'
+
 export interface SCATModule {
   id: number
   title: string
@@ -13,25 +15,14 @@ export interface SCATModule {
   description: string
   videoUrl: string
   videoRequiredMinutes: number
-  sections: SCATSection[]
-  quiz: SCATQuizQuestion[]
+  sections: Section[]
+  quiz: QuizQuestion[]
   clinicalReferences?: string[]
-  isFree: true
 }
 
-export interface SCATSection {
-  id: string
-  title: string
-  content: string[]
-}
-
-export interface SCATQuizQuestion {
-  id: string
-  question: string
-  options: string[]
-  correctAnswer: number
-  explanation: string
-}
+// Type aliases for backwards compatibility
+export type SCATSection = Section
+export type SCATQuizQuestion = QuizQuestion
 
 export const scatModules: SCATModule[] = [
   {
