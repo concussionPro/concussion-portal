@@ -123,6 +123,62 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
       startedAt: null,
       completedAt: null,
     },
+    // SCAT Course modules (free preview)
+    101: {
+      moduleId: 101,
+      completed: false,
+      videoWatchedMinutes: 0,
+      videoCompleted: false,
+      quizScore: null,
+      quizTotalQuestions: null,
+      quizCompleted: false,
+      startedAt: null,
+      completedAt: null,
+    },
+    102: {
+      moduleId: 102,
+      completed: false,
+      videoWatchedMinutes: 0,
+      videoCompleted: false,
+      quizScore: null,
+      quizTotalQuestions: null,
+      quizCompleted: false,
+      startedAt: null,
+      completedAt: null,
+    },
+    103: {
+      moduleId: 103,
+      completed: false,
+      videoWatchedMinutes: 0,
+      videoCompleted: false,
+      quizScore: null,
+      quizTotalQuestions: null,
+      quizCompleted: false,
+      startedAt: null,
+      completedAt: null,
+    },
+    104: {
+      moduleId: 104,
+      completed: false,
+      videoWatchedMinutes: 0,
+      videoCompleted: false,
+      quizScore: null,
+      quizTotalQuestions: null,
+      quizCompleted: false,
+      startedAt: null,
+      completedAt: null,
+    },
+    105: {
+      moduleId: 105,
+      completed: false,
+      videoWatchedMinutes: 0,
+      videoCompleted: false,
+      quizScore: null,
+      quizTotalQuestions: null,
+      quizCompleted: false,
+      startedAt: null,
+      completedAt: null,
+    },
   }
 }
 
@@ -214,47 +270,104 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }, [progress, isInitialized])
 
   const updateVideoProgress = (moduleId: number, minutes: number) => {
-    setProgress((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        videoWatchedMinutes: Math.max(prev[moduleId].videoWatchedMinutes, minutes),
-        startedAt: prev[moduleId].startedAt || new Date(),
-      },
-    }))
+    setProgress((prev) => {
+      // Ensure module exists, create default if not
+      const currentModule = prev[moduleId] || {
+        moduleId,
+        completed: false,
+        videoWatchedMinutes: 0,
+        videoCompleted: false,
+        quizScore: null,
+        quizTotalQuestions: null,
+        quizCompleted: false,
+        startedAt: null,
+        completedAt: null,
+      }
+
+      return {
+        ...prev,
+        [moduleId]: {
+          ...currentModule,
+          videoWatchedMinutes: Math.max(currentModule.videoWatchedMinutes, minutes),
+          startedAt: currentModule.startedAt || new Date(),
+        },
+      }
+    })
   }
 
   const markVideoComplete = (moduleId: number) => {
-    setProgress((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        videoCompleted: true,
-      },
-    }))
+    setProgress((prev) => {
+      const currentModule = prev[moduleId] || {
+        moduleId,
+        completed: false,
+        videoWatchedMinutes: 0,
+        videoCompleted: false,
+        quizScore: null,
+        quizTotalQuestions: null,
+        quizCompleted: false,
+        startedAt: null,
+        completedAt: null,
+      }
+
+      return {
+        ...prev,
+        [moduleId]: {
+          ...currentModule,
+          videoCompleted: true,
+        },
+      }
+    })
   }
 
   const updateQuizScore = (moduleId: number, score: number, totalQuestions: number) => {
-    setProgress((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        quizScore: score,
-        quizTotalQuestions: totalQuestions,
-        quizCompleted: true,
-      },
-    }))
+    setProgress((prev) => {
+      const currentModule = prev[moduleId] || {
+        moduleId,
+        completed: false,
+        videoWatchedMinutes: 0,
+        videoCompleted: false,
+        quizScore: null,
+        quizTotalQuestions: null,
+        quizCompleted: false,
+        startedAt: null,
+        completedAt: null,
+      }
+
+      return {
+        ...prev,
+        [moduleId]: {
+          ...currentModule,
+          quizScore: score,
+          quizTotalQuestions: totalQuestions,
+          quizCompleted: true,
+        },
+      }
+    })
   }
 
   const markModuleComplete = (moduleId: number) => {
-    setProgress((prev) => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        completed: true,
-        completedAt: new Date(),
-      },
-    }))
+    setProgress((prev) => {
+      const currentModule = prev[moduleId] || {
+        moduleId,
+        completed: false,
+        videoWatchedMinutes: 0,
+        videoCompleted: false,
+        quizScore: null,
+        quizTotalQuestions: null,
+        quizCompleted: false,
+        startedAt: null,
+        completedAt: null,
+      }
+
+      return {
+        ...prev,
+        [moduleId]: {
+          ...currentModule,
+          completed: true,
+          completedAt: new Date(),
+        },
+      }
+    })
   }
 
   const getTotalCompletedModules = () => {
@@ -277,7 +390,17 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }
 
   const getModuleProgress = (moduleId: number): ModuleProgress => {
-    return progress[moduleId] || getDefaultProgress()[moduleId]
+    return progress[moduleId] || getDefaultProgress()[moduleId] || {
+      moduleId,
+      completed: false,
+      videoWatchedMinutes: 0,
+      videoCompleted: false,
+      quizScore: null,
+      quizTotalQuestions: null,
+      quizCompleted: false,
+      startedAt: null,
+      completedAt: null,
+    }
   }
 
   const isModuleComplete = (moduleId: number): boolean => {
