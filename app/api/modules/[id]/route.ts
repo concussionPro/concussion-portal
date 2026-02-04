@@ -67,14 +67,22 @@ export async function GET(
       }
     } else {
       // Preview/free users: Get from SCAT modules
+      console.log('[MODULE API] Preview user accessing module:', moduleId)
       const scatModule = getSCATModuleById(moduleId)
+      console.log('[MODULE API] SCAT module found:', !!scatModule, scatModule?.id)
+
       if (!scatModule) {
+        console.error('[MODULE API] SCAT module not found for ID:', moduleId)
         // They're trying to access a paid module
         return NextResponse.json(
           {
             error: 'This module requires full course access',
             upgrade: true,
-            message: 'Upgrade to the full course to access all 8 modules'
+            message: 'Upgrade to the full course to access all 8 modules',
+            debug: {
+              requestedId: moduleId,
+              userType: 'preview',
+            }
           },
           { status: 403 }
         )
@@ -82,10 +90,20 @@ export async function GET(
       module = scatModule
     }
 
-    // Return full content (both free and paid users get full access to their respective modules)
+    // For preview users: only return first 2 sections
+    let responseModule = module
+    if (sessionData.accessLevel === 'preview') {
+      responseModule = {
+        ...module,
+        sections: module.sections.slice(0, 2),
+      }
+      console.log('[MODULE API] Limited preview user to first 2 sections')
+    }
+
+    // Return content based on access level
     return NextResponse.json({
       success: true,
-      module: module,
+      module: responseModule,
       accessLevel: sessionData.accessLevel,
     })
 
