@@ -6,7 +6,6 @@ import { useProgress } from '@/contexts/ProgressContext'
 import React, { useState, useEffect } from 'react'
 import { CheckCircle2, Award, AlertCircle, ArrowRight, BookOpen, Clock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { QuickCheck, ClinicalInsight, KeyConcept, Flowchart } from '@/components/course/InteractiveElements'
 import { DynamicContentRenderer } from '@/components/course/DynamicContentRenderer'
 import { DownloadableResources } from '@/components/course/DownloadableResources'
@@ -16,19 +15,129 @@ import { ContentLockedBanner } from '@/components/course/ContentLockedBanner'
 import { useModuleData } from '@/hooks/useModuleData'
 import { CONFIG } from '@/lib/config'
 
-export default function ModulePage() {
+// Upgrade offer screen for unauthenticated users
+function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: any }) {
   return (
-    <ProtectedRoute>
-      <ModulePageContent />
-    </ProtectedRoute>
+    <div className="flex min-h-screen bg-slate-50">
+      <main className="flex-1 p-4 sm:p-6 md:p-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-8 shadow-2xl border-2 border-slate-700 text-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+
+            <h1 className="text-3xl font-bold text-white mb-4">
+              Professional CPD Course
+            </h1>
+            <p className="text-slate-300 text-lg mb-6 leading-relaxed">
+              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">14 AHPRA CPD hours</strong>.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
+                <div className="text-3xl font-bold text-amber-400 mb-1">8</div>
+                <div className="text-sm text-slate-300">Complete Modules</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
+                <div className="text-3xl font-bold text-amber-400 mb-1">14</div>
+                <div className="text-sm text-slate-300">CPD Hours</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
+                <Award className="w-8 h-8 text-amber-400 mx-auto mb-1" />
+                <div className="text-sm text-slate-300">AHPRA Aligned</div>
+              </div>
+            </div>
+
+            <a
+              href={CONFIG.SHOP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 mb-4"
+            >
+              View Course Details & Enroll
+              <ArrowRight className="w-5 h-5" />
+            </a>
+
+            <div className="mt-6 pt-6 border-t border-white/20">
+              <p className="text-slate-300 text-sm mb-4">
+                Looking for free training?
+              </p>
+              <button
+                onClick={() => router.push('/scat-mastery')}
+                className="text-amber-400 hover:text-amber-300 underline font-semibold"
+              >
+                Try Our Free SCAT6 Course (2 CPD Hours) →
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
   )
 }
 
-function ModulePageContent() {
+export default function ModulePage() {
   const params = useParams()
   const router = useRouter()
   const moduleId = parseInt(params.id as string)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
 
+  // Check authentication first
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/session', { credentials: 'include' })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user) {
+            setIsAuthenticated(true)
+            setCheckingAuth(false)
+            return
+          }
+        }
+        // Not authenticated
+        setIsAuthenticated(false)
+        setCheckingAuth(false)
+      } catch (error) {
+        setIsAuthenticated(false)
+        setCheckingAuth(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  // Show loading while checking auth
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-screen bg-slate-50 items-center justify-center">
+        <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      </div>
+    )
+  }
+
+  // If not authenticated and trying to access paid module (1-8), show upgrade offer
+  if (!isAuthenticated && moduleId >= 1 && moduleId <= 8) {
+    return <UpgradeOfferScreen moduleId={moduleId} router={router} />
+  }
+
+  // If not authenticated and trying to access SCAT module (101-105), redirect to signup
+  if (!isAuthenticated && moduleId >= 101 && moduleId <= 105) {
+    router.push('/scat-mastery')
+    return (
+      <div className="flex min-h-screen bg-slate-50 items-center justify-center">
+        <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      </div>
+    )
+  }
+
+  // Authenticated - render module content
+  return <ModulePageContent moduleId={moduleId} router={router} />
+}
+
+function ModulePageContent({ moduleId, router }: { moduleId: number; router: any }) {
   // Fetch module content from secure API
   const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade } = useModuleData(moduleId)
   const {
