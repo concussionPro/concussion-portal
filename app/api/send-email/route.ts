@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
+        from: 'ConcussionPro <noreply@concussion-education-australia.com>',
         to: [to],
         subject,
         html,
