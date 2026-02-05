@@ -22,17 +22,35 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     return true
   }
 
-  // In production, call your API endpoint
+  // In production, call Resend API directly
   try {
-    const response = await fetch('/api/send-email', {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      console.error('RESEND_API_KEY not configured')
+      return false
+    }
+
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(options),
+      body: JSON.stringify({
+        from: 'ConcussionPro <noreply@concussion-education-australia.com>',
+        to: [options.to],
+        subject: options.subject,
+        html: options.html,
+      }),
     })
 
-    return response.ok
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('Resend API error:', error)
+      return false
+    }
+
+    return true
   } catch (error) {
     console.error('Failed to send email:', error)
     return false
