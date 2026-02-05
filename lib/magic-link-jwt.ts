@@ -24,7 +24,7 @@ interface TokenPayload {
 }
 
 // Create a signed token
-function createToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview'): string {
+export function createMagicToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview'): string {
   const payload: TokenPayload = {
     userId,
     email,
@@ -85,7 +85,7 @@ export function generateMagicLinkJWT(
   accessLevel: 'online-only' | 'full-course' | 'preview',
   baseUrl: string
 ): string {
-  const token = createToken(userId, email, name, accessLevel)
+  const token = createMagicToken(userId, email, name, accessLevel)
   return `${baseUrl}/auth/verify?token=${token}`
 }
 

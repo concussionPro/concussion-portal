@@ -1,7 +1,7 @@
 // API endpoint to send magic link login emails
 import { NextResponse } from 'next/server'
 import { findUserByEmail } from '@/lib/users'
-import { createJWTSession } from '@/lib/jwt-session'
+import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/email'
 import { logAuthFailure, logCriticalError, measurePerformance } from '@/lib/monitoring'
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     }
 
     // Generate magic link token
-    const token = createJWTSession(user.id, user.email, user.name, user.accessLevel, true)
+    const token = createMagicToken(user.id, user.email, user.name, user.accessLevel)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
     // Send magic link email (with performance monitoring)

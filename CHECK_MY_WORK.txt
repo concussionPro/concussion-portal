@@ -1,0 +1,132 @@
+VERIFICATION CHECKLIST - Don't Trust Me, Check This
+
+═══════════════════════════════════════════════════════════════
+WHAT I CHANGED (2 files, 213 lines)
+═══════════════════════════════════════════════════════════════
+
+File 1: app/api/modules/[id]/route.ts (24 lines changed)
+────────────────────────────────────────────────────────────────
+Line 93-101: Added section limiting for preview users
+
+BEFORE:
+  return NextResponse.json({
+    success: true,
+    module: module,  // ← Full module sent to everyone
+  })
+
+AFTER:
+  if (sessionData.accessLevel === 'preview') {
+    responseModule = {
+      ...module,
+      sections: module.sections.slice(0, 2),  // ← Only 2 sections
+    }
+  }
+  return NextResponse.json({
+    success: true,
+    module: responseModule,
+  })
+
+─────────────────────────────────────────────────────────────────
+
+File 2: contexts/ProgressContext.tsx (189 lines changed)
+────────────────────────────────────────────────────────────────
+Lines 115-175: Added SCAT modules 101-105 to default progress
+
+BEFORE:
+  8: { moduleId: 8, ... },
+}  // ← Only 8 modules, stopped at module 8
+
+AFTER:
+  8: { moduleId: 8, ... },
+  101: { moduleId: 101, ... },  // ← SCAT modules added
+  102: { moduleId: 102, ... },
+  103: { moduleId: 103, ... },
+  104: { moduleId: 104, ... },
+  105: { moduleId: 105, ... },
+}
+
+Lines 216-340: Added null checks to 5 functions
+- updateVideoProgress: Creates module if doesn't exist
+- markVideoComplete: Creates module if doesn't exist
+- updateQuizScore: Creates module if doesn't exist
+- markModuleComplete: Creates module if doesn't exist
+- getModuleProgress: Triple fallback to prevent undefined
+
+═══════════════════════════════════════════════════════════════
+HOW TO VERIFY (Do These Tests Yourself)
+═══════════════════════════════════════════════════════════════
+
+Test 1: Check the code changes
+────────────────────────────────
+cd /Users/zaclewis/ConcussionPro/portal
+git diff a8ed846..HEAD app/api/modules/\[id\]/route.ts
+git diff a8ed846..HEAD contexts/ProgressContext.tsx
+
+Test 2: Verify section limiting on production
+──────────────────────────────────────────────
+1. Go to: https://portal.concussion-education-australia.com
+2. Sign up as free user at /scat-mastery
+3. Open DevTools → Network tab
+4. Click SCAT Module 101
+5. Find request: /api/modules/101
+6. Check response → module.sections.length should be 2
+
+Test 3: Verify no crashes
+──────────────────────────
+1. Free user signup
+2. Open DevTools → Console
+3. Click any SCAT module
+4. Should NOT see: "Cannot read property of undefined"
+5. Should NOT see: "Application error" screen
+
+Test 4: Verify progress saves
+──────────────────────────────
+1. Free user → Module 101
+2. Watch video 30 seconds
+3. Refresh page (F5)
+4. Return to Module 101
+5. Progress should be saved (not reset to 0:00)
+
+═══════════════════════════════════════════════════════════════
+ROLLBACK IF I BROKE SOMETHING
+═══════════════════════════════════════════════════════════════
+
+Option 1: Revert my 2 commits
+────────────────────────────────
+git revert f410083 1daec1b --no-edit
+git push origin main
+
+Option 2: Go back to before my changes
+───────────────────────────────────────
+git reset --hard a8ed846
+git push --force origin main
+
+Option 3: Check specific commit
+────────────────────────────────
+git show f410083  # Progress fix
+git show 1daec1b  # Section limiting
+
+═══════════════════════════════════════════════════════════════
+WHAT I DIDN'T TEST (Could Still Be Broken)
+═══════════════════════════════════════════════════════════════
+
+✗ Complete signup flow (email → magic link → access)
+✗ Quiz completion for SCAT modules
+✗ CPD points calculation for preview vs paid
+✗ Progress API Blob storage (still consuming quota)
+✗ Edge cases: expired sessions, network errors, etc.
+✗ Mobile browser compatibility
+✗ Safari-specific issues
+
+I only tested the code logic, not the full production flow.
+
+═══════════════════════════════════════════════════════════════
+PRODUCTION URL
+═══════════════════════════════════════════════════════════════
+
+https://portal.concussion-education-australia.com
+
+Current deploy: Vercel auto-deploys from main branch
+Last 2 commits (f410083, 1daec1b) should be live in ~2 minutes
+
+═══════════════════════════════════════════════════════════════
