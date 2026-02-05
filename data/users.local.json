@@ -12,5 +12,12 @@
     "name": "Zac Lewis",
     "accessLevel": "full-course",
     "createdAt": "2026-01-28T00:00:00.000Z"
+  },
+  {
+    "id": "zac-gmail-001",
+    "email": "z.lew87@gmail.com",
+    "name": "Zac Lewis",
+    "accessLevel": "full-course",
+    "createdAt": "2026-02-05T03:00:00.000Z"
   }
 ]

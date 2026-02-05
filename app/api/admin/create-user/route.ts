@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserById } from '@/lib/users'
-import { createJWTSession } from '@/lib/jwt-session'
+import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate magic link token
-    const token = createJWTSession(userId, email, name, accessLevel as 'online-only' | 'full-course', true)
+    const token = createMagicToken(userId, email, name, accessLevel as 'online-only' | 'full-course' | 'preview')
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const magicLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(email)}&token=${token}`
 
