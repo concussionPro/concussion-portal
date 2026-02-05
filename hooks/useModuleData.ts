@@ -8,6 +8,7 @@ interface UseModuleDataResult {
   loading: boolean
   error: string | null
   accessLevel: 'preview' | 'online-only' | 'full-course' | null
+  needsUpgrade: boolean
 }
 
 /**
@@ -21,6 +22,7 @@ export function useModuleData(moduleId: number): UseModuleDataResult {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
+  const [needsUpgrade, setNeedsUpgrade] = useState(false)
 
   useEffect(() => {
     async function fetchModule() {
@@ -33,12 +35,19 @@ export function useModuleData(moduleId: number): UseModuleDataResult {
         })
 
         if (!response.ok) {
-          if (response.status === 401) {
+          const data = await response.json()
+
+          // Check if this is an upgrade requirement (403 with upgrade flag)
+          if (response.status === 403 && data.upgrade) {
+            setNeedsUpgrade(true)
+            setAccessLevel('preview')
+            setError(null) // Don't set error for upgrade prompts
+          } else if (response.status === 401) {
             setError('Authentication required')
           } else if (response.status === 404) {
             setError('Module not found')
           } else {
-            setError('Failed to load module')
+            setError(data.error || 'Failed to load module')
           }
           setLoading(false)
           return
@@ -49,6 +58,7 @@ export function useModuleData(moduleId: number): UseModuleDataResult {
         if (data.success && data.module) {
           setModule(data.module)
           setAccessLevel(data.accessLevel)
+          setNeedsUpgrade(false)
         } else {
           setError('Invalid response from server')
         }
@@ -63,5 +73,5 @@ export function useModuleData(moduleId: number): UseModuleDataResult {
     fetchModule()
   }, [moduleId])
 
-  return { module, loading, error, accessLevel }
+  return { module, loading, error, accessLevel, needsUpgrade }
 }

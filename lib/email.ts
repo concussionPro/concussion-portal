@@ -161,11 +161,8 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
                 </a>
               </center>
 
-              <p style="margin-top: 24px;">Or enter this code on the login page:</p>
-              <div class="code">${token}</div>
-
-              <div class="warning">
-                ⏱️ This link expires in <strong>15 minutes</strong> for security.
+              <div class="warning" style="margin-top: 24px;">
+                ⏱️ This link expires in <strong>1 hour</strong> for security.
               </div>
 
               <p style="color: #64748b; font-size: 14px; margin-top: 24px;">

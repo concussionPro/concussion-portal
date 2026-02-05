@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { getAllModules } from '@/data/modules'
 import { useProgress } from '@/contexts/ProgressContext'
 import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, PlayCircle, Brain, Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 export function CourseNavigation() {
@@ -15,6 +15,24 @@ export function CourseNavigation() {
   const { isModuleComplete, getModuleProgress } = useProgress()
   const [expandedModules, setExpandedModules] = useState<number[]>([currentModuleId])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
+
+  useEffect(() => {
+    async function checkAccess() {
+      try {
+        const response = await fetch('/api/auth/session', { credentials: 'include' })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.user) {
+            setAccessLevel(data.user.accessLevel)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check access level:', error)
+      }
+    }
+    checkAccess()
+  }, [])
 
   const toggleModule = (moduleId: number) => {
     setExpandedModules(prev =>
@@ -72,7 +90,7 @@ export function CourseNavigation() {
           </span>
         </div>
         <button
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push(accessLevel === 'preview' ? '/scat-course' : '/dashboard')}
           className="flex items-start gap-3 text-left hover:opacity-70 transition-all w-full group"
         >
           <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center group-hover:scale-110 transition-transform">
