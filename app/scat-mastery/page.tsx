@@ -1,364 +1,382 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { CheckCircle, Download, Clock, Award, ArrowRight, Users, FileText, Brain, Shield, Zap } from 'lucide-react'
+import {
+  Brain,
+  Mail,
+  User,
+  Check,
+  AlertCircle,
+  Loader2,
+  ArrowRight,
+  Shield,
+  Award,
+  Clock,
+  Zap,
+  BookOpen,
+  CheckCircle2,
+  Star,
+  ChevronRight,
+} from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
+
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
 
 export default function SCATMasteryPage() {
-  const router = useRouter()
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [successData, setSuccessData] = useState<{ loginLink?: string } | null>(null)
 
-  const handleEnroll = async () => {
-    if (!email) {
-      alert('Please enter your email address')
+  const validateEmail = (val: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (!name.trim()) {
+      setError('Please enter your first name.')
+      return
+    }
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address.')
       return
     }
 
-    // Validate email
-    if (!email.includes('@')) {
-      alert('Please enter a valid email address')
-      return
-    }
-
-    // Track enroll button click
-    trackEvent(ANALYTICS_EVENTS.ENROLL_BUTTON_CLICK, {
-      source: 'scat-mastery-hero',
-      email: email,
-    })
+    setIsLoading(true)
 
     try {
-      // Direct free signup - no Stripe needed
-      const response = await fetch('/api/signup-free', {
+      const res = await fetch('/api/signup-free', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          name: email.split('@')[0], // Use email prefix as name
-        }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase() }),
       })
 
-      const data = await response.json()
+      const data = await res.json()
 
-      if (data.success && data.loginLink) {
-        // Track successful signup
-        trackEvent('signup_success', {
-          source: 'scat-mastery',
-          email: email,
-          accessLevel: 'preview',
-        })
-
-        // Show success message and redirect to login
-        alert('Success! Check your email for instant access. Redirecting...')
-        window.location.href = data.loginLink
+      if (data.success) {
+        // Fire gtag conversion
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'generate_lead', {
+            event_category: 'signup',
+            event_label: 'scat_mastery',
+          })
+        }
+        setSuccessData(data)
       } else {
-        console.error('Signup failed:', data)
-        alert(data.error || 'Error signing up. Please try again.')
+        setError(data.error || 'Something went wrong. Please try again.')
       }
-    } catch (error) {
-      console.error('Signup error:', error)
-      alert('Error processing signup. Please try again.')
+    } catch {
+      setError('Network error. Please check your connection and try again.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
+  const learningPoints = [
+    'Administer the full SCAT6 with clinical precision — every domain, step by step',
+    'Score and interpret SCOAT6 findings for safe return-to-sport decisions',
+    'Apply BESS, tandem gait, and dual-task balance testing with confidence',
+    'Identify red-flag symptoms that require emergency referral',
+    'Document assessments to AHPRA standards and satisfy CPD requirements',
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-500 to-cyan-400 text-white">
-        <div className="max-w-6xl mx-auto px-4 py-20">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                ✓ 100% FREE - No Credit Card Required
-              </div>
-              <h1 className="text-5xl font-bold mb-6 leading-tight">
-                SCAT6/SCOAT6 Mastery + Clinical Toolkit
-              </h1>
-              <p className="text-xl mb-6 text-blue-100">
-                Master concussion assessment in 2 hours. Get 100% confident for your next patient tomorrow.
-              </p>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  <span className="font-semibold">2 CPD Hours</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5" />
-                  <span className="font-semibold">AHPRA Aligned</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  <span className="font-semibold">3,247+ Enrolled</span>
-                </div>
-              </div>
-              <div className="space-y-3 mb-4">
-                <input
-                  type="email"
-                  placeholder="Enter your email to get instant access"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleEnroll()}
-                  className="w-full px-6 py-4 rounded-lg text-slate-900 font-semibold text-lg border-2 border-white/30 focus:border-white focus:outline-none"
-                />
-                <button
-                  onClick={handleEnroll}
-                  className="w-full bg-white text-blue-700 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
-                >
-                  Get Instant Free Access →
-                </button>
-              </div>
-              <p className="text-sm text-blue-100">
-                💰 <strong>Instant access.</strong> Start learning in 60 seconds. No payment required.
-              </p>
+    <div className="min-h-screen relative overflow-hidden bg-background">
+      {/* Ambient gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-teal-50/40" />
+      <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-gradient-to-bl from-teal-100/50 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-blue-100/30 to-transparent blur-3xl pointer-events-none" />
+
+      {/* Nav */}
+      <nav className="relative z-20 border-b border-slate-200/60 bg-white/70 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <a href="/" className="inline-flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#5b9aa6] to-[#6b9da8] flex items-center justify-center shadow-md shadow-teal-200/50">
+              <Brain className="w-5 h-5 text-white" strokeWidth={2} />
+            </div>
+            <span className="text-xl font-bold text-slate-900 tracking-tight">
+              Concussion<span className="text-[#5b9aa6]">Pro</span>
+            </span>
+          </a>
+          <a
+            href="/login"
+            className="text-sm font-semibold text-[#5b9aa6] hover:text-[#4a8a96] transition-colors"
+          >
+            Login
+          </a>
+        </div>
+      </nav>
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 md:py-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+
+          {/* ── Left column: copy ── */}
+          <div>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-6">
+              <Zap className="w-3.5 h-3.5 text-[#5b9aa6]" />
+              <span className="text-xs font-bold text-[#5b9aa6] uppercase tracking-wide">
+                Free · 2 AHPRA CPD Hours · No Credit Card
+              </span>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-              <h3 className="text-2xl font-bold mb-6">What You'll Get:</h3>
-              <ul className="space-y-4">
-                {[
-                  'Digitally fillable, auto-scoring SCAT6 & SCOAT6 (2026 updated)',
-                  'Step-by-step training on every section without missing red flags',
-                  'Clinical toolkit: referral letters, parent handouts, RTP forms',
-                  '2025 one-page cheat sheet for quick reference',
-                  'Reality-check quiz showing your knowledge gaps',
-                  'Certificate of completion (2 CPD hours)',
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-6 h-6 flex-shrink-0 text-green-300" />
-                    <span className="text-lg">{item}</span>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 mb-5 leading-tight">
+              Master SCAT6 Assessment —{' '}
+              <span className="bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] bg-clip-text text-transparent">
+                Free 2-Hour Course
+              </span>
+            </h1>
+
+            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+              The complete guide to administering, scoring, and interpreting the SCAT6 and SCOAT6. Built for physiotherapists, osteopaths, and sports medicine clinicians. Free, online, and instantly accessible.
+            </p>
+
+            {/* Trust pills */}
+            <div className="flex flex-wrap gap-3 mb-10">
+              {[
+                { icon: Clock, label: '2 CPD Hours' },
+                { icon: Shield, label: 'AHPRA Aligned' },
+                { icon: Award, label: 'Instant Access' },
+                { icon: Star, label: 'No Credit Card' },
+              ].map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-1.5 bg-white/80 border border-slate-200 px-3.5 py-2 rounded-full text-sm font-medium text-slate-700 shadow-sm"
+                >
+                  <Icon className="w-4 h-4 text-[#5b9aa6]" />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            {/* What you'll learn */}
+            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-6 shadow-lg shadow-slate-200/40">
+              <div className="flex items-center gap-2 mb-5">
+                <BookOpen className="w-5 h-5 text-[#5b9aa6]" />
+                <h2 className="font-bold text-slate-900">What you'll learn</h2>
+              </div>
+              <ul className="space-y-3.5">
+                {learningPoints.map((point) => (
+                  <li key={point} className="flex items-start gap-3 text-sm text-slate-700 leading-snug">
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#5b9aa6] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <span>{point}</span>
                   </li>
                 ))}
               </ul>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Problem/Solution Section */}
-      <div className="max-w-6xl mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-6">
-            40% of Australian GPs Don't Feel Confident Managing Concussion
-          </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-            Guidelines updated. SCAT-6 replaced SCAT-5. New red flag criteria. Stricter medicolegal requirements.
-            <br /><br />
-            <strong>Outdated protocols = liability.</strong> Get up to date in 2 hours.
-          </p>
-        </div>
-
-        {/* The Golden Rule Visual */}
-        <div className="grid md:grid-cols-2 gap-8 mb-20">
-          <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <Zap className="w-8 h-8 text-blue-600" />
-              <h3 className="text-2xl font-bold text-blue-900">SCAT6</h3>
-            </div>
-            <p className="text-lg font-semibold text-blue-800 mb-4">
-              Sideline / Acute Tool
-            </p>
-            <ul className="space-y-2 text-slate-700">
-              <li><strong>When:</strong> 0–72 hours post-injury (ideally &lt;30 min)</li>
-              <li><strong>Where:</strong> Field, change room, acute rooms</li>
-              <li><strong>Time:</strong> 10–15 minutes</li>
-              <li><strong>Purpose:</strong> Immediate remove-from-play decision</li>
-            </ul>
-          </div>
-
-          <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <Brain className="w-8 h-8 text-purple-600" />
-              <h3 className="text-2xl font-bold text-purple-900">SCOAT6</h3>
-            </div>
-            <p className="text-lg font-semibold text-purple-800 mb-4">
-              Office / Clinic Tool
-            </p>
-            <ul className="space-y-2 text-slate-700">
-              <li><strong>When:</strong> Day 1–7+ (structured clinic visits)</li>
-              <li><strong>Where:</strong> Your clinic, GP rooms, concussion clinic</li>
-              <li><strong>Time:</strong> 20–30 minutes</li>
-              <li><strong>Purpose:</strong> Confirm diagnosis + plan RTP/RTL</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Legal Warning */}
-        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-8 mb-20">
-          <div className="flex items-start gap-4">
-            <Shield className="w-8 h-8 text-red-600 flex-shrink-0" />
-            <div>
-              <h3 className="text-2xl font-bold text-red-900 mb-4">
-                Legal Implications You Can't Ignore
-              </h3>
-              <p className="text-lg text-slate-700 mb-4">
-                The <strong>Berlin 2025 Consensus</strong> and <strong>Concussion in Sport Australia</strong> position statement explicitly state you must use the correct tool at the correct time.
-              </p>
-              <p className="text-lg text-slate-700">
-                <strong>AHPRA, the AMA and every major sporting code have adopted it.</strong>
-              </p>
-              <p className="text-lg text-slate-900 font-bold mt-4">
-                If a player suffers second-impact syndrome because you used SCOAT6 on the sideline (or never did proper office follow-up), the documentation trail will show you fell below standard of care.
-              </p>
+            {/* Social proof strip */}
+            <div className="mt-8 flex items-center gap-4 text-sm text-slate-500">
+              <div className="flex -space-x-2">
+                {['PT', 'OT', 'SP', 'GP'].map((initials) => (
+                  <div
+                    key={initials}
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5b9aa6]/20 to-[#6b9da8]/20 border-2 border-white flex items-center justify-center text-xs font-bold text-[#5b9aa6]"
+                  >
+                    {initials}
+                  </div>
+                ))}
+              </div>
+              <span>
+                Join clinicians already enrolled in ConcussionPro
+              </span>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Course Curriculum */}
-      <div className="bg-slate-50 py-20">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">
-            Course Curriculum
-          </h2>
+          {/* ── Right column: form ── */}
+          <div className="lg:sticky lg:top-8">
+            {successData ? (
+              /* Success state */
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-emerald-200 p-8 shadow-xl shadow-emerald-100/50">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-5">
+                    <Check className="w-8 h-8 text-emerald-600" strokeWidth={2.5} />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
+                    You're in! 🎉
+                  </h2>
+                  <p className="text-slate-500 text-sm mb-6">
+                    Check your email for instant access to the SCAT6 Mastery Course.
+                  </p>
 
-          <div className="space-y-6">
-            {[
-              {
-                module: 'Module 1',
-                title: 'Quick Guide & Medico-Legal',
-                lessons: [
-                  'SCAT6 vs SCOAT6 – Which Tool, When, and Why It Keeps You Safe',
-                  'Medico-legal considerations'
-                ],
-              },
-              {
-                module: 'Module 2',
-                title: 'Immediate / On-Field Assessment (SCAT6)',
-                lessons: [
-                  'Immediate / On-Field Assessment',
-                  'Immediate management',
-                  'Full Off-Field Immediate Assessment',
-                  'SCAT6 Full Domain-by-Domain Walkthrough'
-                ],
-              },
-              {
-                module: 'Module 3',
-                title: 'Clinical Use of SCOAT6',
-                lessons: [
-                  'Off-Field Clinical Serial Monitoring',
-                  'Practical Clinic Essentials & Common Traps',
-                  'SCOAT6 Full Domain-by-Domain Walkthrough'
-                ],
-              },
-              {
-                module: 'Module 4',
-                title: 'Paediatric Concussion + Red Flags',
-                lessons: [
-                  'Paediatric Concussion (Child SCAT6 & Child SCOAT6)',
-                  'Red Flags, Imaging & When to Refer'
-                ],
-              },
-              {
-                module: 'Knowledge Quiz',
-                title: 'From SCAT to Synapses',
-                lessons: [
-                  'Reality-check quiz (deliberately tough)',
-                  'Shows exactly where you have knowledge gaps'
-                ],
-              }
-            ].map((mod, i) => (
-              <div key={i} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-                <div className="mb-4">
-                  <div className="text-sm font-semibold text-blue-600 mb-1">{mod.module}</div>
-                  <h3 className="text-xl font-bold text-slate-900">{mod.title}</h3>
+                  <div className="bg-slate-50 rounded-xl p-5 mb-6 border border-slate-200/60 text-left space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Mail className="w-4 h-4 text-[#5b9aa6] flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-slate-700">
+                        A login link has been sent to <strong>{email}</strong>. Check your inbox (and spam folder).
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-4 h-4 text-[#5b9aa6] flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-slate-700">
+                        Link expires in 15 minutes.
+                      </p>
+                    </div>
+                  </div>
+
+                  {successData.loginLink && (
+                    <a
+                      href={successData.loginLink}
+                      className="w-full py-3.5 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#4a8a96] hover:to-[#5a8d98] transition-all shadow-lg shadow-teal-200/50 mb-4"
+                    >
+                      Access Course Now
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  )}
+
+                  <a
+                    href="/scat-course"
+                    className="w-full py-3.5 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200"
+                  >
+                    Go to course
+                    <ChevronRight className="w-4 h-4" />
+                  </a>
                 </div>
-                <ul className="space-y-2">
-                  {mod.lessons.map((lesson, j) => (
-                    <li key={j} className="flex items-center gap-3 text-slate-600">
-                      <FileText className="w-4 h-4 text-slate-400" />
-                      {lesson}
-                    </li>
-                  ))}
-                </ul>
               </div>
-            ))}
+            ) : (
+              /* Sign-up form */
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 p-8 shadow-xl shadow-slate-200/40">
+                <div className="text-center mb-7">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#5b9aa6]/10 to-[#6b9da8]/10 flex items-center justify-center mx-auto mb-4 border border-[#5b9aa6]/20">
+                    <Brain className="w-7 h-7 text-[#5b9aa6]" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900 mb-1.5">
+                    Get free instant access
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    No credit card · Immediate · 2 CPD hours
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 mb-5">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                      <p className="text-sm text-red-800">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Name field */}
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      First name
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        id="name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Your first name"
+                        className="w-full bg-white/80 pl-10 pr-4 py-3.5 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5b9aa6]/40 focus:border-[#5b9aa6]/50 transition-all border border-slate-200 shadow-sm"
+                        disabled={isLoading}
+                        autoComplete="given-name"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email field */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      Email address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@clinic.com.au"
+                        className="w-full bg-white/80 pl-10 pr-4 py-3.5 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5b9aa6]/40 focus:border-[#5b9aa6]/50 transition-all border border-slate-200 shadow-sm"
+                        disabled={isLoading}
+                        autoComplete="email"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full py-3.5 rounded-xl text-base font-semibold bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#4a8a96] hover:to-[#5a8d98] transition-all shadow-lg shadow-teal-200/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Creating your account...
+                      </>
+                    ) : (
+                      <>
+                        Start free course
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Micro-trust */}
+                <div className="mt-5 pt-5 border-t border-slate-100">
+                  <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
+                    <div className="flex items-center gap-1">
+                      <Shield className="w-3.5 h-3.5" />
+                      No spam, ever
+                    </div>
+                    <div className="w-px h-3 bg-slate-200" />
+                    <div className="flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                      Unsubscribe anytime
+                    </div>
+                  </div>
+                </div>
+
+                {/* Login link */}
+                <p className="text-center text-sm text-slate-500 mt-4">
+                  Already have an account?{' '}
+                  <a href="/login" className="text-[#5b9aa6] font-semibold hover:text-[#4a8a96] transition-colors">
+                    Login
+                  </a>
+                </p>
+              </div>
+            )}
+
+            {/* Below-form reassurance */}
+            {!successData && (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/50 p-3.5 text-center">
+                  <p className="text-xl font-black text-slate-900">Free</p>
+                  <p className="text-xs text-slate-500 mt-0.5">No cost, ever</p>
+                </div>
+                <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/50 p-3.5 text-center">
+                  <p className="text-xl font-black text-slate-900">2 CPD</p>
+                  <p className="text-xs text-slate-500 mt-0.5">AHPRA hours</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Toolkit Preview */}
-      <div className="max-w-6xl mx-auto px-4 py-20">
-        <h2 className="text-4xl font-bold text-center mb-12">
-          Clinical Toolkit Included
-        </h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            {
-              icon: Download,
-              title: 'Fillable Forms',
-              desc: 'Auto-scoring SCAT6 & SCOAT6 PDFs (2026 updated)',
-            },
-            {
-              icon: FileText,
-              title: 'Templates',
-              desc: 'Referral letters, parent handouts, RTP clearance forms',
-            },
-            {
-              icon: Brain,
-              title: 'Cheat Sheet',
-              desc: '2025 one-page quick reference for desk/sideline',
-            },
-          ].map((item, i) => (
-            <div key={i} className="bg-white rounded-xl p-8 shadow-sm border border-slate-200 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                <item.icon className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-              <p className="text-slate-600">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Social Proof */}
-      <div className="bg-gradient-to-br from-blue-500 to-teal-500 text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            Join 3,247 Australian Healthcare Professionals
-          </h2>
-          <p className="text-xl mb-8 text-blue-100">
-            Using evidence-based concussion protocols aligned with anzconcussionguidelines.com
+        {/* ── Bottom CTA strip ── */}
+        <div className="mt-20 md:mt-24 border-t border-slate-200/60 pt-12 text-center">
+          <p className="text-sm text-slate-500 mb-2">
+            Ready for the full 14 CPD hour certification?
           </p>
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {[
-              { number: '3,247+', label: 'HCPs Trained' },
-              { number: '2 CPD', label: 'Hours Included' },
-              { number: '100%', label: 'AHPRA Aligned' },
-            ].map((stat, i) => (
-              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                <div className="text-4xl font-bold mb-2">{stat.number}</div>
-                <div className="text-blue-100">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={handleEnroll}
-            className="bg-white text-blue-700 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+          <a
+            href={CONFIG.SHOP_URL}
+            className="inline-flex items-center gap-2 text-[#5b9aa6] font-semibold text-sm hover:text-[#4a8a96] transition-colors"
           >
-            Get Instant Free Access →
-          </button>
-        </div>
-      </div>
-
-      {/* Final CTA */}
-      <div className="bg-slate-900 text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            Ready to Master Concussion Assessment?
-          </h2>
-          <p className="text-xl mb-8 text-slate-300">
-            Get 100% confident for your next patient. 2 CPD points. Completely FREE.
-          </p>
-          <button
-            onClick={handleEnroll}
-            className="bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all shadow-xl"
-          >
-            Get Free Access Now →
-          </button>
-          <p className="text-sm mt-6 text-slate-400">
-            ✓ No credit card required • Instant access
-          </p>
+            View the complete ConcussionPro course
+            <ChevronRight className="w-4 h-4" />
+          </a>
         </div>
       </div>
     </div>
