@@ -71,6 +71,13 @@ export default function HomePage() {
               >
                 Preview
               </button>
+              <a
+                href="https://concussion-education-australia.com/concussion-course"
+                className="text-sm text-slate-600 hover:text-slate-800 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
+                aria-label="Course dates and locations"
+              >
+                Dates & Locations
+              </a>
               <button
                 onClick={() => router.push('/login')}
                 className="text-sm text-slate-600 hover:text-slate-800 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
@@ -80,8 +87,6 @@ export default function HomePage() {
               </button>
               <a
                 href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 onClick={() => trackShopClick('nav-desktop')}
                 className="btn-primary px-6 py-2 rounded-full text-sm inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-accent"
                 aria-label="Enroll in course"
@@ -136,6 +141,13 @@ export default function HomePage() {
               >
                 Preview Course
               </button>
+              <a
+                href="https://concussion-education-australia.com/concussion-course"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full text-left text-sm text-slate-700 hover:text-accent transition-colors py-2 focus:outline-none focus:ring-2 focus:ring-accent rounded px-2"
+              >
+                Dates & Locations
+              </a>
               <button
                 onClick={() => {
                   router.push('/login')
@@ -147,8 +159,6 @@ export default function HomePage() {
               </button>
               <a
                 href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="block w-full btn-primary px-6 py-3 rounded-xl text-sm text-center font-bold focus:outline-none focus:ring-2 focus:ring-accent"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -197,8 +207,6 @@ export default function HomePage() {
                 </button>
                 <a
                   href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   onClick={() => trackShopClick('hero-cta')}
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label="Enroll in course"
@@ -590,8 +598,6 @@ export default function HomePage() {
                   </button>
                   <a
                     href={CONFIG.SHOP_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="btn-secondary px-10 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                     aria-label="Enroll in course"
                   >
