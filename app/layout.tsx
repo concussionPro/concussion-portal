@@ -114,16 +114,21 @@ export default function RootLayout({
             gtag('config', 'AW-17984048021');
           `}
         </Script>
+
+        {/* Umami Analytics */}
+        <Script
+          src="https://cloud.umami.is/script.js"
+          data-website-id="78007a9523265d8a53b15efc8457b60c2f3394d2d5ad0259a38761afb69a02d3"
+          strategy="afterInteractive"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* GEO Schema Markup - Critical for LLM visibility (ChatGPT, Claude, Gemini, Perplexity) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
-        {/* Skip to content link for accessibility */}
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-6 focus:py-3 focus:bg-accent focus:text-white focus:rounded-lg focus:shadow-lg"

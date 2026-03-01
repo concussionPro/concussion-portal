@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCourseCheckoutSession, VALID_LOCATIONS } from '@/lib/stripe'
+import { createCourseCheckoutSession, VALID_LOCATIONS, VALID_COURSE_TYPES } from '@/lib/stripe'
+import type { CourseType } from '@/lib/stripe'
 
 /**
  * POST /api/create-checkout
@@ -7,7 +8,7 @@ import { createCourseCheckoutSession, VALID_LOCATIONS } from '@/lib/stripe'
  * Creates a Stripe Checkout session for course purchases.
  *
  * Body params:
- *   courseType: 'online-only' | 'full-course'
+ *   courseType: 'online-only' | 'full-course' | 'international-online'
  *   location?: 'sydney' | 'melbourne' | 'byron-bay' (required for full-course)
  *   email?: string (optional, pre-fills checkout)
  */
@@ -17,9 +18,9 @@ export async function POST(request: NextRequest) {
     const { courseType, location, email } = body
 
     // Validate course type
-    if (!courseType || !['online-only', 'full-course'].includes(courseType)) {
+    if (!courseType || !VALID_COURSE_TYPES.includes(courseType)) {
       return NextResponse.json(
-        { error: 'Invalid course type. Must be "online-only" or "full-course".' },
+        { error: 'Invalid course type. Must be "online-only", "full-course", or "international-online".' },
         { status: 400 }
       )
     }
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe Checkout Session
     const session = await createCourseCheckoutSession({
-      courseType,
+      courseType: courseType as CourseType,
       location: courseType === 'full-course' ? location : undefined,
       customerEmail: email,
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
