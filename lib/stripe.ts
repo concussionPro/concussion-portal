@@ -1,7 +1,15 @@
 /**
  * Stripe Configuration & Utilities
  *
- * Server-side Stripe instance for secure payment processing
+ * One-time payment checkout for concussion courses:
+ *   - Online Only: $497 AUD
+ *   - Full Course (online + in-person): $1,190 AUD (early bird) / $1,400 AUD (regular)
+ *
+ * Uses Stripe Checkout in 'payment' mode (no subscriptions).
+ * Environment variables required:
+ *   STRIPE_SECRET_KEY
+ *   STRIPE_WEBHOOK_SECRET
+ *   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
  */
 
 import Stripe from 'stripe'
@@ -16,77 +24,127 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 })
 
 /**
- * Stripe Price IDs for Products
- * Get these from Stripe Dashboard after creating products
+ * Course pricing (AUD cents)
  */
-export const STRIPE_PRICES = {
-  // Individual Professional
-  INDIVIDUAL_ANNUAL: process.env.STRIPE_PRICE_INDIVIDUAL_ANNUAL || '',
-  INDIVIDUAL_MONTHLY: process.env.STRIPE_PRICE_INDIVIDUAL_MONTHLY || '',
-
-  // Premium Professional
-  PREMIUM_ANNUAL: process.env.STRIPE_PRICE_PREMIUM_ANNUAL || '',
-  PREMIUM_MONTHLY: process.env.STRIPE_PRICE_PREMIUM_MONTHLY || '',
-
-  // Clinic/Team License
-  TEAM_ANNUAL: process.env.STRIPE_PRICE_TEAM_ANNUAL || '',
-
-  // SCAT Mastery Short Course
-  SCAT_MASTERY: process.env.STRIPE_PRICE_SCAT_MASTERY || '',
-}
-
-/**
- * Product Metadata - Maps Stripe products to access levels
- */
-export const PRODUCT_ACCESS_LEVELS = {
-  [STRIPE_PRICES.INDIVIDUAL_ANNUAL]: 'online-only',
-  [STRIPE_PRICES.INDIVIDUAL_MONTHLY]: 'online-only',
-  [STRIPE_PRICES.PREMIUM_ANNUAL]: 'online-only', // Premium features handled separately
-  [STRIPE_PRICES.PREMIUM_MONTHLY]: 'online-only',
-  [STRIPE_PRICES.TEAM_ANNUAL]: 'online-only', // Team features handled separately
-  [STRIPE_PRICES.SCAT_MASTERY]: 'preview', // Short course only
+export const COURSE_PRICING = {
+  ONLINE_ONLY: 49700,       // $497
+  FULL_COURSE_EARLY: 119000, // $1,190 (early bird)
+  FULL_COURSE_REGULAR: 140000, // $1,400 (regular)
 } as const
 
 /**
- * Create a Stripe Checkout Session
+ * Course type → access level mapping
  */
-export async function createCheckoutSession({
-  priceId,
+export const COURSE_ACCESS_MAP: Record<string, 'online-only' | 'full-course'> = {
+  'online-only': 'online-only',
+  'full-course': 'full-course',
+}
+
+/**
+ * Valid workshop locations
+ */
+export const VALID_LOCATIONS = ['sydney', 'melbourne', 'byron-bay'] as const
+export type WorkshopLocation = typeof VALID_LOCATIONS[number]
+
+/**
+ * Create a Stripe Checkout Session for course purchase
+ */
+export async function createCourseCheckoutSession({
+  courseType,
+  location,
   customerEmail,
   successUrl,
   cancelUrl,
-  metadata = {},
 }: {
-  priceId: string
+  courseType: 'online-only' | 'full-course'
+  location?: string
   customerEmail?: string
   successUrl: string
   cancelUrl: string
-  metadata?: Record<string, string>
 }) {
+  // Determine price
+  const isEarlyBird = isEarlyBirdActive()
+  let unitAmount: number
+  let productName: string
+  let productDescription: string
+
+  if (courseType === 'online-only') {
+    unitAmount = COURSE_PRICING.ONLINE_ONLY
+    productName = 'ConcussionPro — Online Course'
+    productDescription = '8 online modules (8 CPD hours) · Lifetime access · Clinical Toolkit · Reference Repository · Digital certificate'
+  } else {
+    unitAmount = isEarlyBird ? COURSE_PRICING.FULL_COURSE_EARLY : COURSE_PRICING.FULL_COURSE_REGULAR
+    const locationLabel = location ? formatLocation(location) : 'TBD'
+    productName = `ConcussionPro — Complete Course (${locationLabel})`
+    productDescription = `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD hours · AHPRA aligned · All materials included`
+  }
+
   const session = await stripe.checkout.sessions.create({
-    mode: priceId === STRIPE_PRICES.SCAT_MASTERY ? 'payment' : 'subscription',
+    mode: 'payment',
     payment_method_types: ['card'],
     line_items: [
       {
-        price: priceId,
+        price_data: {
+          currency: 'aud',
+          unit_amount: unitAmount,
+          product_data: {
+            name: productName,
+            description: productDescription,
+          },
+        },
         quantity: 1,
       },
     ],
-    customer_email: customerEmail,
+    customer_email: customerEmail || undefined,
     success_url: successUrl,
     cancel_url: cancelUrl,
-    metadata,
+    metadata: {
+      courseType,
+      location: location || '',
+      accessLevel: COURSE_ACCESS_MAP[courseType],
+      isEarlyBird: isEarlyBird ? 'true' : 'false',
+      source: 'portal',
+      timestamp: new Date().toISOString(),
+    },
     allow_promotion_codes: true,
     billing_address_collection: 'required',
-    automatic_tax: { enabled: true },
+    phone_number_collection: { enabled: true },
+    custom_text: {
+      submit: {
+        message: courseType === 'full-course'
+          ? `Your workshop location: ${formatLocation(location || '')}. You'll receive a login link by email after purchase.`
+          : "You'll receive a login link by email after purchase to start learning immediately.",
+      },
+    },
   })
 
   return session
 }
 
 /**
+ * Check if early bird pricing is still active
+ * Deadline: Feb 1, 2026 23:59:59 AEDT (UTC+11)
+ */
+function isEarlyBirdActive(): boolean {
+  const deadline = new Date('2026-02-01T12:59:59Z') // Feb 1 23:59:59 AEDT = 12:59:59 UTC
+  return new Date() < deadline
+}
+
+/**
+ * Format location slug to display name
+ */
+function formatLocation(slug: string): string {
+  const map: Record<string, string> = {
+    'sydney': 'Sydney',
+    'melbourne': 'Melbourne',
+    'byron-bay': 'Byron Bay',
+  }
+  return map[slug] || slug || 'TBD'
+}
+
+/**
  * Create a Stripe Customer Portal Session
- * (For users to manage subscription, payment methods, invoices)
+ * (For users to view receipts and manage payment methods)
  */
 export async function createPortalSession({
   customerId,
@@ -104,17 +162,12 @@ export async function createPortalSession({
 }
 
 /**
- * Get subscription details
+ * Retrieve a checkout session with line items expanded
  */
-export async function getSubscription(subscriptionId: string) {
-  return await stripe.subscriptions.retrieve(subscriptionId)
-}
-
-/**
- * Cancel subscription
- */
-export async function cancelSubscription(subscriptionId: string) {
-  return await stripe.subscriptions.cancel(subscriptionId)
+export async function retrieveCheckoutSession(sessionId: string) {
+  return await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: ['line_items', 'customer'],
+  })
 }
 
 /**
