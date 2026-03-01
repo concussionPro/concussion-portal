@@ -22,6 +22,12 @@ export const CONFIG = {
 
   // Training Locations & Dates
   LOCATIONS: {
+    MELBOURNE: {
+      city: 'Melbourne',
+      date: 'TBA',
+      dateObj: new Date('2026-06-01'),
+      spotsRemaining: 0,
+    },
     SYDNEY: {
       city: 'Sydney',
       date: 'March 7, 2026',
@@ -38,7 +44,7 @@ export const CONFIG = {
 
   // Social Proof - Real testimonials only, no fake numbers
   SOCIAL_PROOF: {
-    TOTAL_CLINICIANS: 0, // Don't display fake numbers
+    TOTAL_CLINICIANS: 0,
     SATISFACTION_RATING: 0,
     TOTAL_REVIEWS: 0,
     ENROLLMENTS_2026: 0,
@@ -60,7 +66,7 @@ export const CONFIG = {
   FEATURES: {
     SHOW_COUNTDOWN: true,
     SHOW_SPOTS_REMAINING: true,
-    SHOW_SOCIAL_PROOF: false, // Don't show fake social proof numbers
+    SHOW_SOCIAL_PROOF: false,
   },
 } as const
 
