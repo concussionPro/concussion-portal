@@ -27,7 +27,7 @@ export const CONFIG = {
       city: 'Sydney',
       slug: 'sydney',
       date: 'March 7, 2026',
-      dateObj: new Date('2026-03-07'),
+      dateObj: new Date('2026-03-07') as Date | null,
       spotsRemaining: 18,
       status: 'confirmed' as const,
     },
@@ -35,7 +35,7 @@ export const CONFIG = {
       city: 'Byron Bay',
       slug: 'byron-bay',
       date: 'March 28, 2026',
-      dateObj: new Date('2026-03-28'),
+      dateObj: new Date('2026-03-28') as Date | null,
       spotsRemaining: 15,
       status: 'confirmed' as const,
     },
@@ -43,7 +43,7 @@ export const CONFIG = {
       city: 'Melbourne',
       slug: 'melbourne',
       date: '',
-      dateObj: null as unknown as Date,
+      dateObj: null as Date | null,
       spotsRemaining: 0,
       status: 'tba' as const,
     },
@@ -58,14 +58,14 @@ export const CONFIG = {
   },
 
   // Early Bird Pricing Deadline
-  EARLY_BIRD_DEADLINE: new Date('2026-02-01T23:59:59'),
+  EARLY_BIRD_DEADLINE: new Date('2026-03-28T23:59:59'),
 
   // SEO Metadata
   SEO: {
     SITE_NAME: 'ConcussionPro - Concussion Education Australia',
-    SITE_URL: 'https://concussionpro.com.au',
+    SITE_URL: 'https://portal.concussion-education-australia.com',
     TWITTER_HANDLE: '@ConcussionEduAU',
-    OG_IMAGE: '/og-image.jpg',
+    OG_IMAGE: 'https://portal.concussion-education-australia.com/og-image.jpg',
     DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules + practical training. 14 CPD points, endorsed by Osteopathy Australia.',
   },
 
@@ -75,7 +75,7 @@ export const CONFIG = {
     SHOW_SPOTS_REMAINING: true,
     SHOW_SOCIAL_PROOF: false, // Don't show fake social proof numbers
   },
-} as const
+}
 
 export type LocationKey = keyof typeof CONFIG.LOCATIONS
 export type Location = LocationKey

@@ -28,7 +28,71 @@ export function OrganizationSchema() {
 }
 
 export function CourseSchema() {
-  const schema = {
+  // Only include course instances that have confirmed dates
+  const courseInstances = []
+
+  if (CONFIG.LOCATIONS.MELBOURNE.dateObj) {
+    courseInstances.push({
+      '@type': 'CourseInstance',
+      name: 'Melbourne Session',
+      courseMode: 'blended',
+      location: {
+        '@type': 'Place',
+        name: 'Melbourne, Victoria',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Melbourne',
+          addressRegion: 'VIC',
+          addressCountry: 'AU',
+        },
+      },
+      startDate: CONFIG.LOCATIONS.MELBOURNE.dateObj.toISOString(),
+    })
+  }
+
+  if (CONFIG.LOCATIONS.SYDNEY.dateObj) {
+    courseInstances.push({
+      '@type': 'CourseInstance',
+      name: 'Sydney Session - March 2026',
+      courseMode: 'blended',
+      location: {
+        '@type': 'Place',
+        name: 'Sydney, New South Wales',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Sydney',
+          addressRegion: 'NSW',
+          addressCountry: 'AU',
+        },
+      },
+      startDate: CONFIG.LOCATIONS.SYDNEY.dateObj.toISOString(),
+    })
+  }
+
+  if (CONFIG.LOCATIONS.BYRON_BAY.dateObj) {
+    courseInstances.push({
+      '@type': 'CourseInstance',
+      name: 'Byron Bay Session - March 2026',
+      courseMode: 'blended',
+      location: {
+        '@type': 'Place',
+        name: 'Byron Bay, New South Wales',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Byron Bay',
+          addressRegion: 'NSW',
+          addressCountry: 'AU',
+        },
+      },
+      startDate: CONFIG.LOCATIONS.BYRON_BAY.dateObj.toISOString(),
+    })
+  }
+
+  const earlyBirdDate = CONFIG.EARLY_BIRD_DEADLINE
+    ? CONFIG.EARLY_BIRD_DEADLINE.toISOString().split('T')[0]
+    : new Date().toISOString().split('T')[0]
+
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Course',
     name: 'Concussion Management Clinical Course',
@@ -40,71 +104,29 @@ export function CourseSchema() {
     },
     educationalCredentialAwarded: '14 CPD points - AHPRA Aligned, Endorsed by Osteopathy Australia',
     timeRequired: 'P2W',
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: CONFIG.SOCIAL_PROOF.SATISFACTION_RATING,
-      reviewCount: CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS,
-      bestRating: 5,
-      worstRating: 1,
-    },
     offers: {
       '@type': 'Offer',
       price: CONFIG.COURSE.PRICE_EARLY_BIRD,
       priceCurrency: 'AUD',
       availability: 'https://schema.org/InStock',
       url: CONFIG.SHOP_URL,
-      priceValidUntil: CONFIG.EARLY_BIRD_DEADLINE.toISOString().split('T')[0],
+      priceValidUntil: earlyBirdDate,
     },
-    hasCourseInstance: [
-      {
-        '@type': 'CourseInstance',
-        name: 'Melbourne Session - February 2026',
-        courseMode: 'blended',
-        location: {
-          '@type': 'Place',
-          name: 'Melbourne, Victoria',
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: 'Melbourne',
-            addressRegion: 'VIC',
-            addressCountry: 'AU',
-          },
-        },
-        startDate: CONFIG.LOCATIONS.MELBOURNE.dateObj.toISOString(),
-      },
-      {
-        '@type': 'CourseInstance',
-        name: 'Sydney Session - March 2026',
-        courseMode: 'blended',
-        location: {
-          '@type': 'Place',
-          name: 'Sydney, New South Wales',
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: 'Sydney',
-            addressRegion: 'NSW',
-            addressCountry: 'AU',
-          },
-        },
-        startDate: CONFIG.LOCATIONS.SYDNEY.dateObj.toISOString(),
-      },
-      {
-        '@type': 'CourseInstance',
-        name: 'Byron Bay Session - March 2026',
-        courseMode: 'blended',
-        location: {
-          '@type': 'Place',
-          name: 'Byron Bay, New South Wales',
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: 'Byron Bay',
-            addressRegion: 'NSW',
-            addressCountry: 'AU',
-          },
-        },
-        startDate: CONFIG.LOCATIONS.BYRON_BAY.dateObj.toISOString(),
-      },
-    ],
+  }
+
+  // Only include aggregate rating if we have real reviews
+  if (CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS > 0) {
+    schema.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: CONFIG.SOCIAL_PROOF.SATISFACTION_RATING,
+      reviewCount: CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS,
+      bestRating: 5,
+      worstRating: 1,
+    }
+  }
+
+  if (courseInstances.length > 0) {
+    schema.hasCourseInstance = courseInstances
   }
 
   return (
@@ -118,13 +140,22 @@ export function CourseSchema() {
 export function EventSchema({ location }: { location: 'MELBOURNE' | 'SYDNEY' | 'BYRON_BAY' }) {
   const locationData = CONFIG.LOCATIONS[location]
 
+  // If location has no confirmed date, don't render event schema
+  if (!locationData.dateObj) {
+    return null
+  }
+
+  const earlyBirdDate = CONFIG.EARLY_BIRD_DEADLINE
+    ? CONFIG.EARLY_BIRD_DEADLINE.toISOString().split('T')[0]
+    : new Date().toISOString().split('T')[0]
+
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'EducationEvent',
     name: `Concussion Management Training - ${locationData.city}`,
     description: 'Full-day practical training in SCAT6, VOMS, and BESS protocols for concussion assessment and management.',
     startDate: locationData.dateObj.toISOString(),
-    endDate: new Date(locationData.dateObj.getTime() + 8 * 60 * 60 * 1000).toISOString(), // 8 hours later
+    endDate: new Date(locationData.dateObj.getTime() + 8 * 60 * 60 * 1000).toISOString(),
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location: {
@@ -150,7 +181,7 @@ export function EventSchema({ location }: { location: 'MELBOURNE' | 'SYDNEY' | '
         : 'https://schema.org/LimitedAvailability',
       url: CONFIG.SHOP_URL,
       validFrom: new Date().toISOString(),
-      priceValidUntil: CONFIG.EARLY_BIRD_DEADLINE.toISOString().split('T')[0],
+      priceValidUntil: earlyBirdDate,
     },
   }
 
