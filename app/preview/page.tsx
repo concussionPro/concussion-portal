@@ -41,8 +41,8 @@ export default function PreviewPage() {
 
   const upcomingWorkshops = Object.entries(CONFIG.LOCATIONS)
     .map(([key, location]) => ({ key, ...location }))
-    .filter(location => location.dateObj > now && location.dateObj <= threeWeeksFromNow)
-    .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
+    .filter(location => location.dateObj && location.dateObj > now && location.dateObj <= threeWeeksFromNow)
+    .sort((a, b) => (a.dateObj?.getTime() ?? 0) - (b.dateObj?.getTime() ?? 0))
 
   const nextWorkshop = upcomingWorkshops[0] || null
 
