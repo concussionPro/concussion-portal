@@ -145,6 +145,8 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
     markVideoComplete,
     updateQuizScore,
     markModuleComplete,
+    markModuleStarted,
+    trackActiveStudy,
     getModuleProgress,
     canMarkModuleComplete,
     isModuleComplete,
@@ -152,6 +154,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
 
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({})
   const [quizSubmitted, setQuizSubmitted] = useState(false)
+  const [quizValidationError, setQuizValidationError] = useState<string | null>(null)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
   const [lastViewedSection, setLastViewedSection] = useState<number>(0)
   const [currentVideoTime, setCurrentVideoTime] = useState<number>(0)
@@ -197,6 +200,21 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
           targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
       }, 100)
+    }
+  }, [moduleId, module])
+
+  // Mark module as started and track active study time
+  useEffect(() => {
+    if (module) {
+      markModuleStarted(moduleId)
+      trackActiveStudy(moduleId)
+
+      // Track study time every 60 seconds while the user is on the page
+      const interval = setInterval(() => {
+        trackActiveStudy(moduleId)
+      }, 60000)
+
+      return () => clearInterval(interval)
     }
   }, [moduleId, module])
 
@@ -338,13 +356,23 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
   const handleQuizSubmit = () => {
     if (!module) return
 
-    if (Object.keys(quizAnswers).length !== module.quiz.length) {
-      alert('Please answer all questions before submitting.')
+    const answeredCount = Object.keys(quizAnswers).length
+    if (answeredCount !== module.quiz.length) {
+      setQuizValidationError(
+        `Please answer all ${module.quiz.length} questions before submitting. You've answered ${answeredCount} of ${module.quiz.length}.`
+      )
+      // Scroll to first unanswered question
+      const unansweredId = module.quiz.find((q: any) => quizAnswers[q.id] === undefined)?.id
+      if (unansweredId) {
+        const el = document.getElementById(`quiz-q-${unansweredId}`)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
       return
     }
 
+    setQuizValidationError(null)
     let correctCount = 0
-    module.quiz.forEach((question) => {
+    module.quiz.forEach((question: any) => {
       if (quizAnswers[question.id] === question.correctAnswer) {
         correctCount++
       }
@@ -930,7 +958,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
                             "Cervical problem - refer to manual therapy"
                           ]}
                           correctAnswer={1}
-                          explanation="NPC >6cm = convergence insufficiency requiring OPTOMETRY/vision therapy referral. Normal NPC is <6cm. Convergence insufficiency causes difficulty reading, headache with visual tasks, words jumping on page. Responds well to vision therapy (pencil push-ups, convergence exercises)."
+                          explanation="NPC >6cm = convergence insufficiency requiring OPTOMETRY/vision therapy referral. Normal NPC is <6cm. Convergence insufficiency causes difficulty reading, headache with near work, words jumping on page. Responds well to vision therapy (pencil push-ups, convergence exercises)."
                         />
                       </>
                     )}
@@ -1558,13 +1586,22 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
             <div className="border-t border-slate-200 my-8" />
 
             {!quizSubmitted ? (
-              <button
-                onClick={handleQuizSubmit}
-                className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-              >
-                Submit Knowledge Check
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <div>
+                {quizValidationError && (
+                  <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-sm text-amber-800 font-medium">
+                      {quizValidationError}
+                    </p>
+                  </div>
+                )}
+                <button
+                  onClick={handleQuizSubmit}
+                  className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                >
+                  Submit Knowledge Check
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             ) : (
               <div className={cn(
                 "p-6 rounded-xl border-2",

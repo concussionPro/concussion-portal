@@ -1282,7 +1282,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
               Reference Repository Locked
             </h3>
             <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-              Access <strong className="text-slate-900">145+ evidence-based references</strong> from leading journals and researchers. Available exclusively to course enrollees.
+              Access <strong className="text-slate-900">135+ evidence-based references</strong> from leading journals and researchers. Available exclusively to course enrollees.
             </p>
             <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl p-4 border-2 border-teal-200">
               <Award className="w-8 h-8 text-teal-600 mx-auto mb-2" />
@@ -1302,7 +1302,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">Reference Repository</h2>
-            <p className="text-sm text-slate-600">145 evidence-based research articles</p>
+            <p className="text-sm text-slate-600">135+ evidence-based research articles</p>
           </div>
         </div>
       </div>
