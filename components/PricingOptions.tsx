@@ -2,19 +2,15 @@
 
 import { Check, Clock, Calendar, Sparkles, ArrowRight, Zap } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-
-// Direct checkout URLs for each product on Squarespace
-// These deep-link to the specific product, pre-filling the cart
-const CHECKOUT_URLS = {
-  ONLINE_ONLY: 'https://concussion-education-australia.com/shop/p/online-modules-only',
-  FULL_COURSE: 'https://concussion-education-australia.com/shop/p/concussion-clinical-mastery',
-} as const
+import { useRouter } from 'next/navigation'
 
 interface PricingOptionsProps {
   variant?: 'full' | 'compact'
 }
 
 export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
+  const router = useRouter()
+
   const options = [
     {
       id: 'online-only',
@@ -34,7 +30,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         'Upgrade to full course for $693 (code SCAT6)',
       ],
       cta: 'Start for $497',
-      ctaLink: CHECKOUT_URLS.ONLINE_ONLY,
       highlight: false,
       disclaimer: 'Upgrade later for $693 (use code SCAT6) \u2022 Total: $1,190 early bird price',
     },
@@ -57,9 +52,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         'Flexible workshop date selection',
       ],
       cta: 'Enroll in Full Course',
-      ctaLink: CHECKOUT_URLS.FULL_COURSE,
       highlight: true,
-      disclaimer: 'Use code SCAT6 at checkout \u2022 14 total AHPRA CPD hours',
+      disclaimer: 'Early bird pricing \u2022 14 total AHPRA CPD hours',
     },
   ]
 
@@ -96,10 +90,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <p className="text-xs text-slate-500 mt-1">{option.disclaimer}</p>
             </div>
 
-            <a
-              href={option.ctaLink}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => router.push('/pricing')}
               className={`block w-full py-3 px-6 rounded-xl text-center font-bold transition-all ${
                 option.highlight
                   ? 'bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#5898a0] hover:to-[#5b8d96] shadow-lg'
@@ -107,7 +99,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               }`}
             >
               {option.cta}
-            </a>
+            </button>
           </div>
         ))}
       </div>
@@ -145,7 +137,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             {option.highlight && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-full text-sm font-black shadow-lg">
-                  \ud83d\udd25 Early Bird - Save $210
+                  🔥 Early Bird - Save $210
                 </div>
               </div>
             )}
@@ -190,11 +182,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               ))}
             </ul>
 
-            {/* CTA Button */}
-            <a
-              href={option.ctaLink}
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* CTA Button — routes to /pricing for Stripe checkout */}
+            <button
+              onClick={() => router.push('/pricing')}
               className={`flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl text-center font-bold transition-all group ${
                 option.highlight
                   ? 'bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#5898a0] hover:to-[#5b8d96] shadow-lg hover:shadow-xl'
@@ -204,7 +194,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {option.id === 'online-only' ? <Clock className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
               {option.cta}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </a>
+            </button>
 
             {/* Additional Info */}
             {option.id === 'online-only' && (
@@ -218,7 +208,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             {option.id === 'full-course' && (
               <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-xs text-amber-900 font-semibold">
-                  \ud83d\udca1 Early Bird Special: Enter code <span className="font-black">SCAT6</span> at checkout to save $210
+                  💡 Early Bird pricing applied automatically at checkout
                 </p>
               </div>
             )}
