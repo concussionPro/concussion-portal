@@ -1,22 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCheckoutSession, STRIPE_PRICES } from '@/lib/stripe'
+import { createCourseCheckoutSession, VALID_LOCATIONS } from '@/lib/stripe'
 
 /**
- * Create Stripe Checkout Session API
+ * POST /api/create-checkout
  *
- * Called when user clicks "Enroll Now" or "Get Started"
- * Returns Stripe Checkout URL for secure payment
+ * Creates a Stripe Checkout session for course purchases.
+ *
+ * Body params:
+ *   courseType: 'online-only' | 'full-course'
+ *   location?: 'sydney' | 'melbourne' | 'byron-bay' (required for full-course)
+ *   email?: string (optional, pre-fills checkout)
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { priceId, email } = body
+    const { courseType, location, email } = body
 
-    // Validate price ID
-    const validPriceIds = Object.values(STRIPE_PRICES)
-    if (!priceId || !validPriceIds.includes(priceId)) {
+    // Validate course type
+    if (!courseType || !['online-only', 'full-course'].includes(courseType)) {
       return NextResponse.json(
-        { error: 'Invalid price ID' },
+        { error: 'Invalid course type. Must be "online-only" or "full-course".' },
+        { status: 400 }
+      )
+    }
+
+    // Validate location for full-course
+    if (courseType === 'full-course') {
+      if (!location || !VALID_LOCATIONS.includes(location)) {
+        return NextResponse.json(
+          { error: 'Location is required for full course. Must be "sydney", "melbourne", or "byron-bay".' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validate email format if provided
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format.' },
         { status: 400 }
       )
     }
@@ -25,15 +46,12 @@ export async function POST(request: NextRequest) {
     const baseUrl = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
     // Create Stripe Checkout Session
-    const session = await createCheckoutSession({
-      priceId,
+    const session = await createCourseCheckoutSession({
+      courseType,
+      location: courseType === 'full-course' ? location : undefined,
       customerEmail: email,
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${baseUrl}/pricing?canceled=true`,
-      metadata: {
-        source: 'website',
-        timestamp: new Date().toISOString(),
-      },
     })
 
     return NextResponse.json({
@@ -44,7 +62,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Checkout session creation failed:', error)
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: 'Failed to create checkout session. Please try again.' },
       { status: 500 }
     )
   }

@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { constructWebhookEvent, PRODUCT_ACCESS_LEVELS } from '@/lib/stripe'
-import { createUser } from '@/lib/users'
-import { createJWTSession } from '@/lib/jwt-session'
+import { constructWebhookEvent } from '@/lib/stripe'
+import { createUser, findUserByEmail } from '@/lib/users'
 import { sendMagicLinkEmail } from '@/lib/email'
+import { createJWTSession } from '@/lib/jwt-session'
 import Stripe from 'stripe'
 
 /**
  * Stripe Webhook Handler
  *
  * Handles payment events from Stripe:
- * - checkout.session.completed: User completed payment
- * - customer.subscription.created: Subscription started
- * - customer.subscription.updated: Subscription changed
- * - customer.subscription.deleted: Subscription canceled
- * - invoice.payment_succeeded: Recurring payment succeeded
- * - invoice.payment_failed: Payment failed
+ * - checkout.session.completed: User completed one-time payment
+ *   → Create user account, send magic link login email
+ *
+ * Metadata stored on checkout session:
+ *   courseType: 'online-only' | 'full-course'
+ *   location: 'sydney' | 'melbourne' | 'byron-bay' | ''
+ *   accessLevel: 'online-only' | 'full-course'
  */
 export async function POST(request: NextRequest) {
   try {
@@ -42,26 +43,13 @@ export async function POST(request: NextRequest) {
 
     console.log(`Stripe webhook received: ${event.type}`)
 
-    // Handle different event types
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
         break
 
-      case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription)
-        break
-
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
-        break
-
-      case 'invoice.payment_succeeded':
-        await handlePaymentSucceeded(event.data.object as Stripe.Invoice)
-        break
-
-      case 'invoice.payment_failed':
-        await handlePaymentFailed(event.data.object as Stripe.Invoice)
+      case 'payment_intent.payment_failed':
+        await handlePaymentFailed(event.data.object as Stripe.PaymentIntent)
         break
 
       default:
@@ -79,98 +67,98 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Handle successful checkout
+ * Handle successful checkout (one-time payment)
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const customerEmail = session.customer_email || session.customer_details?.email
-  const customerName = session.customer_details?.name || 'User'
+  const customerName = session.customer_details?.name || 'Student'
+  const customerPhone = session.customer_details?.phone || undefined
 
   if (!customerEmail) {
     console.error('No customer email in checkout session')
     return
   }
 
-  // Get line items to determine product
-  const lineItems = session.line_items?.data
-  if (!lineItems || lineItems.length === 0) {
-    console.error('No line items in checkout session')
-    return
-  }
+  // Extract metadata
+  const courseType = session.metadata?.courseType || 'online-only'
+  const location = session.metadata?.location || ''
+  const accessLevel = (session.metadata?.accessLevel || 'online-only') as 'online-only' | 'full-course'
 
-  const priceId = lineItems[0].price?.id
-  if (!priceId) {
-    console.error('No price ID in line items')
-    return
-  }
-
-  // Determine access level based on product
-  const accessLevel = (PRODUCT_ACCESS_LEVELS as any)[priceId] || 'preview'
+  console.log(`✅ Payment completed: ${customerEmail} — ${courseType}${location ? ` (${location})` : ''} — $${(session.amount_total || 0) / 100} AUD`)
 
   try {
-    // Create user account
+    // Check if user already exists (e.g. upgrading from online-only to full-course)
+    const existingUser = await findUserByEmail(customerEmail)
+
+    if (existingUser) {
+      console.log(`👤 Existing user found: ${customerEmail} (current: ${existingUser.accessLevel})`)
+
+      // Only upgrade access level, never downgrade
+      if (
+        (existingUser.accessLevel === 'preview' || existingUser.accessLevel === 'online-only') &&
+        accessLevel === 'full-course'
+      ) {
+        // The createUser function handles upgrades
+        await createUser({
+          email: customerEmail,
+          name: customerName,
+          accessLevel: 'full-course',
+          stripeCustomerId: session.customer as string || undefined,
+        })
+        console.log(`⬆️ Upgraded ${customerEmail} to full-course`)
+      }
+
+      // Send login link
+      const token = await createJWTSession(
+        existingUser.id,
+        existingUser.email,
+        existingUser.name,
+        accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel,
+        true
+      )
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+      await sendMagicLinkEmail(customerEmail, token, baseUrl)
+
+      console.log(`📧 Login link sent to existing user: ${customerEmail}`)
+      return
+    }
+
+    // Create new user
+    console.log(`✨ Creating new user: ${customerEmail} (${accessLevel})`)
+
     const userId = await createUser({
       email: customerEmail,
       name: customerName,
-      accessLevel: accessLevel as 'online-only' | 'full-course' | 'preview',
-      stripeCustomerId: session.customer as string,
-      stripeSubscriptionId: session.subscription as string,
+      accessLevel,
+      stripeCustomerId: session.customer as string || undefined,
     })
 
-    console.log(`User created: ${userId} (${customerEmail})`)
-
-    // Generate magic link token
-    const token = createJWTSession(
+    // Generate JWT and send magic link
+    const token = await createJWTSession(
       userId,
       customerEmail,
       customerName,
-      accessLevel as 'online-only' | 'full-course',
-      true // Remember me for 30 days
+      accessLevel,
+      true // Remember for 30 days
     )
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-
-    // Send magic link email
     await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
-    console.log(`Magic link email sent to: ${customerEmail}`)
+    console.log(`📧 Welcome email + login link sent to: ${customerEmail}`)
+    console.log(`   Course: ${courseType} | Location: ${location || 'N/A'} | Access: ${accessLevel}`)
   } catch (error) {
-    console.error('Failed to create user after checkout:', error)
-    throw error
+    console.error('Failed to provision user after checkout:', error)
+    // Don't throw — Stripe will retry the webhook. Log for manual resolution.
+    console.error(`⚠️ MANUAL ACTION REQUIRED: Provision ${customerEmail} with ${accessLevel} access`)
   }
-}
-
-/**
- * Handle subscription update (e.g., upgrade/downgrade)
- */
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  console.log(`Subscription updated: ${subscription.id}`)
-  // TODO: Update user access level if they upgraded/downgraded
-  // TODO: Send email notification of plan change
-}
-
-/**
- * Handle subscription cancellation
- */
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  console.log(`Subscription canceled: ${subscription.id}`)
-  // TODO: Downgrade user to preview access
-  // TODO: Send cancellation confirmation email
-}
-
-/**
- * Handle successful recurring payment
- */
-async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  console.log(`Payment succeeded: ${invoice.id}`)
-  // TODO: Send receipt email
-  // TODO: Extend access for another billing period
 }
 
 /**
  * Handle failed payment
  */
-async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  console.log(`Payment failed: ${invoice.id}`)
-  // TODO: Send payment failure email with update payment link
-  // TODO: Flag account for suspension if multiple failures
+async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
+  const email = paymentIntent.receipt_email || paymentIntent.metadata?.email || 'unknown'
+  console.log(`❌ Payment failed for ${email}: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`)
+  // TODO: Send payment failure notification email
 }
