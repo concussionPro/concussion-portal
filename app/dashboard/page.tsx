@@ -8,7 +8,7 @@ import { WelcomeModal } from '@/components/dashboard/WelcomeModal'
 import { NextActionCard } from '@/components/dashboard/NextActionCard'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useAnalytics } from '@/hooks/useAnalytics'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -29,7 +29,6 @@ export default function DashboardPage() {
             return
           }
 
-          // Extract user name for greeting
           if (data.user) {
             const name = data.user.name || data.user.email?.split('@')[0] || null
             setUserName(name)
@@ -48,16 +47,15 @@ export default function DashboardPage() {
 
   if (!accessChecked) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen dashboard-bg flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-accent animate-spin mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Checking access...</p>
+          <p className="text-sm text-muted-foreground">Loading your workspace...</p>
         </div>
       </div>
     )
   }
 
-  // Greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good morning'
@@ -65,27 +63,29 @@ export default function DashboardPage() {
     return 'Good evening'
   }
 
+  const firstName = userName ? userName.split(' ')[0] : null
+
   return (
     <ProtectedRoute>
       <WelcomeModal />
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen dashboard-bg">
         <Sidebar />
         <main className="flex-1 ml-0 md:ml-64">
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6">
-            {/* Welcome Greeting */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-5 h-5 text-accent" />
-                <h2 className="text-2xl font-bold text-foreground tracking-tight">
-                  {getGreeting()}{userName ? `, ${userName}` : ''}
-                </h2>
-              </div>
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+            {/* Premium Greeting */}
+            <div className="mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
+                {getGreeting()}{firstName ? `, ${firstName}` : ''}
+              </h2>
               <p className="text-sm text-muted-foreground">
-                Continue your concussion management training below.
+                Pick up where you left off in your concussion management training.
               </p>
             </div>
 
+            {/* Next Action — hero card */}
             <NextActionCard />
+
+            {/* Bento Grid — stats + quick actions */}
             <BentoGrid />
           </div>
         </main>
