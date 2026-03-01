@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { BookMarked, Download, ExternalLink } from 'lucide-react'
+import { BookMarked, Download, ExternalLink, AlertCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -12,6 +12,7 @@ export default function CompleteReferencePage() {
   useAnalytics()
   const [accessLevel, setAccessLevel] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [pdfLoadError, setPdfLoadError] = useState(false)
 
   useEffect(() => {
     async function checkAccess() {
@@ -23,12 +24,10 @@ export default function CompleteReferencePage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
-            // CRITICAL: Preview users should NOT access complete reference - redirect to SCAT course
             if (data.user.accessLevel === 'preview') {
               router.push('/scat-course')
               return
             }
-
             setAccessLevel(data.user.accessLevel)
           }
         }
@@ -43,6 +42,9 @@ export default function CompleteReferencePage() {
   }, [router])
 
   const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
+
+  // Build PDF URL with cache-busting to help browsers render inline
+  const pdfApiUrl = '/api/complete-reference'
 
   return (
     <ProtectedRoute>
@@ -61,7 +63,7 @@ export default function CompleteReferencePage() {
                     Complete Clinical Reference 2026
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    Comprehensive concussion management guide - All protocols in one document
+                    Comprehensive concussion management guide — All protocols in one document
                   </p>
                 </div>
               </div>
@@ -138,35 +140,82 @@ export default function CompleteReferencePage() {
                     </div>
                     <div className="flex flex-col gap-3 sm:flex-shrink-0">
                       <a
-                        href="/api/complete-reference"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={pdfApiUrl}
+                        download="CCM_Complete_Reference_2026.pdf"
                         className="btn-primary px-6 py-3 rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base font-semibold"
                       >
                         <Download className="w-4 h-4 flex-shrink-0" />
                         Download PDF
                       </a>
                       <a
-                        href="/api/complete-reference"
+                        href={pdfApiUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn-secondary px-6 py-3 rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base font-semibold"
                       >
                         <ExternalLink className="w-4 h-4 flex-shrink-0" />
-                        View Online
+                        View in New Tab
                       </a>
                     </div>
                   </div>
                 </div>
 
-                {/* PDF Viewer */}
+                {/* PDF Viewer with error handling */}
                 <div className="glass rounded-xl p-2">
-                  <iframe
-                    src="/api/complete-reference"
-                    className="w-full rounded-lg"
-                    style={{ height: 'calc(100vh - 300px)', minHeight: '600px' }}
-                    title="Complete Clinical Reference 2026"
-                  />
+                  {!pdfLoadError ? (
+                    <iframe
+                      src={pdfApiUrl + '#toolbar=1&navpanes=1&scrollbar=1'}
+                      className="w-full rounded-lg bg-white"
+                      style={{ height: 'calc(100vh - 300px)', minHeight: '600px' }}
+                      title="Complete Clinical Reference 2026"
+                      onError={() => setPdfLoadError(true)}
+                      onLoad={(e) => {
+                        // Check if the iframe loaded successfully by trying to detect error responses
+                        try {
+                          const iframe = e.target as HTMLIFrameElement
+                          // If the content type is not PDF, it may have loaded an error JSON
+                          // We can't access cross-origin content, but we can detect load failures
+                          if (iframe.contentDocument) {
+                            const body = iframe.contentDocument.body
+                            if (body && body.textContent && body.textContent.includes('"error"')) {
+                              setPdfLoadError(true)
+                            }
+                          }
+                        } catch {
+                          // Cross-origin or security error — PDF loaded fine from API
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full rounded-lg bg-white flex flex-col items-center justify-center py-16 px-4" style={{ minHeight: '400px' }}>
+                      <AlertCircle className="w-12 h-12 text-slate-400 mb-4" />
+                      <h3 className="text-lg font-semibold text-slate-700 mb-2">
+                        PDF Preview Unavailable
+                      </h3>
+                      <p className="text-sm text-slate-500 mb-6 text-center max-w-md">
+                        Your browser couldn&apos;t load the inline preview. Use the buttons above to download or view the PDF in a new tab.
+                      </p>
+                      <div className="flex gap-3">
+                        <a
+                          href={pdfApiUrl}
+                          download="CCM_Complete_Reference_2026.pdf"
+                          className="px-5 py-2.5 bg-[#5b9aa6] text-white rounded-lg font-semibold text-sm hover:bg-[#4a8a96] transition-colors flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download PDF
+                        </a>
+                        <a
+                          href={pdfApiUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-200 transition-colors flex items-center gap-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Open in New Tab
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Usage Tips */}

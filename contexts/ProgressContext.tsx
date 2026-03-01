@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 
 export interface ModuleProgress {
   moduleId: number
@@ -12,6 +12,8 @@ export interface ModuleProgress {
   quizCompleted: boolean
   startedAt: Date | null
   completedAt: Date | null
+  activeStudyMinutes: number // NEW: actual tracked study time
+  lastActiveAt: Date | null  // NEW: last time user was actively studying
 }
 
 interface ProgressContextType {
@@ -20,11 +22,14 @@ interface ProgressContextType {
   markVideoComplete: (moduleId: number) => void
   updateQuizScore: (moduleId: number, score: number, totalQuestions: number) => void
   markModuleComplete: (moduleId: number) => void
+  markModuleStarted: (moduleId: number) => void
+  trackActiveStudy: (moduleId: number) => void
   getTotalCompletedModules: () => number
   getTotalCPDPoints: () => number
   getTotalStudyTime: () => number
   getModuleProgress: (moduleId: number) => ModuleProgress
   isModuleComplete: (moduleId: number) => boolean
+  isModuleStarted: (moduleId: number) => boolean
   canMarkModuleComplete: (moduleId: number, requiredMinutes: number) => boolean
   resetProgress: () => void
 }
@@ -33,182 +38,68 @@ const ProgressContext = createContext<ProgressContextType | undefined>(undefined
 
 const STORAGE_KEY = 'concussion-pro-progress'
 
-function getDefaultProgress(): Record<number, ModuleProgress> {
+function createDefaultModuleProgress(moduleId: number): ModuleProgress {
   return {
-    1: {
-      moduleId: 1,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    2: {
-      moduleId: 2,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    3: {
-      moduleId: 3,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    4: {
-      moduleId: 4,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    5: {
-      moduleId: 5,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    6: {
-      moduleId: 6,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    7: {
-      moduleId: 7,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    8: {
-      moduleId: 8,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    // SCAT Course modules (free preview)
-    101: {
-      moduleId: 101,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    102: {
-      moduleId: 102,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    103: {
-      moduleId: 103,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    104: {
-      moduleId: 104,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
-    105: {
-      moduleId: 105,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    },
+    moduleId,
+    completed: false,
+    videoWatchedMinutes: 0,
+    videoCompleted: false,
+    quizScore: null,
+    quizTotalQuestions: null,
+    quizCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    activeStudyMinutes: 0,
+    lastActiveAt: null,
   }
+}
+
+function getDefaultProgress(): Record<number, ModuleProgress> {
+  const defaults: Record<number, ModuleProgress> = {}
+  // Paid modules 1-8
+  for (let i = 1; i <= 8; i++) {
+    defaults[i] = createDefaultModuleProgress(i)
+  }
+  // SCAT free modules 101-105
+  for (let i = 101; i <= 105; i++) {
+    defaults[i] = createDefaultModuleProgress(i)
+  }
+  return defaults
+}
+
+// Parse stored progress, handling migration from old format
+function parseStoredProgress(data: Record<string, any>): Record<number, ModuleProgress> {
+  const parsed: Record<number, ModuleProgress> = {}
+  Object.keys(data).forEach((key) => {
+    const entry = data[key]
+    if (entry.startedAt) entry.startedAt = new Date(entry.startedAt)
+    if (entry.completedAt) entry.completedAt = new Date(entry.completedAt)
+    if (entry.lastActiveAt) entry.lastActiveAt = new Date(entry.lastActiveAt)
+    // Migrate: add new fields if missing
+    if (entry.activeStudyMinutes === undefined) entry.activeStudyMinutes = 0
+    if (entry.lastActiveAt === undefined) entry.lastActiveAt = null
+    parsed[Number(key)] = entry
+  })
+  return parsed
 }
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<Record<number, ModuleProgress>>(getDefaultProgress())
   const [isInitialized, setIsInitialized] = useState(false)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load progress from backend on mount
   useEffect(() => {
     async function loadProgress() {
       if (typeof window !== 'undefined') {
         try {
-          // Try to load from backend first
           const response = await fetch('/api/progress')
           if (response.ok) {
             const data = await response.json()
             if (data.success && data.progress) {
-              // Parse dates from backend data
-              const parsed = data.progress
-              Object.keys(parsed).forEach((key) => {
-                if (parsed[key].startedAt) {
-                  parsed[key].startedAt = new Date(parsed[key].startedAt)
-                }
-                if (parsed[key].completedAt) {
-                  parsed[key].completedAt = new Date(parsed[key].completedAt)
-                }
-              })
+              const parsed = parseStoredProgress(data.progress)
               const merged = { ...getDefaultProgress(), ...parsed }
               setProgress(merged)
-              // Update localStorage cache
               localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
               setIsInitialized(true)
               return
@@ -218,19 +109,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           console.error('Failed to load progress from backend:', error)
         }
 
-        // Fallback to localStorage if backend fails or user not logged in
+        // Fallback to localStorage
         const stored = localStorage.getItem(STORAGE_KEY)
         if (stored) {
           try {
-            const parsed = JSON.parse(stored)
-            Object.keys(parsed).forEach((key) => {
-              if (parsed[key].startedAt) {
-                parsed[key].startedAt = new Date(parsed[key].startedAt)
-              }
-              if (parsed[key].completedAt) {
-                parsed[key].completedAt = new Date(parsed[key].completedAt)
-              }
-            })
+            const parsed = parseStoredProgress(JSON.parse(stored))
             const merged = { ...getDefaultProgress(), ...parsed }
             setProgress(merged)
           } catch (error) {
@@ -244,46 +127,35 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     loadProgress()
   }, [])
 
-  // Save progress to backend and localStorage whenever it changes
+  // Debounced save to backend + localStorage
   useEffect(() => {
-    async function saveProgress() {
-      if (isInitialized && typeof window !== 'undefined') {
-        // Save to localStorage immediately (sync)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+    if (!isInitialized || typeof window === 'undefined') return
 
-        // Save to backend (async)
-        try {
-          await fetch('/api/progress', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ progress }),
-          })
-        } catch (error) {
-          console.error('Failed to save progress to backend:', error)
-        }
+    // Save to localStorage immediately
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+
+    // Debounce backend save (avoid excessive API calls during active tracking)
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ progress }),
+        })
+      } catch (error) {
+        console.error('Failed to save progress to backend:', error)
       }
-    }
+    }, 2000) // 2-second debounce
 
-    saveProgress()
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    }
   }, [progress, isInitialized])
 
   const updateVideoProgress = (moduleId: number, minutes: number) => {
     setProgress((prev) => {
-      // Ensure module exists, create default if not
-      const currentModule = prev[moduleId] || {
-        moduleId,
-        completed: false,
-        videoWatchedMinutes: 0,
-        videoCompleted: false,
-        quizScore: null,
-        quizTotalQuestions: null,
-        quizCompleted: false,
-        startedAt: null,
-        completedAt: null,
-      }
-
+      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       return {
         ...prev,
         [moduleId]: {
@@ -297,18 +169,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const markVideoComplete = (moduleId: number) => {
     setProgress((prev) => {
-      const currentModule = prev[moduleId] || {
-        moduleId,
-        completed: false,
-        videoWatchedMinutes: 0,
-        videoCompleted: false,
-        quizScore: null,
-        quizTotalQuestions: null,
-        quizCompleted: false,
-        startedAt: null,
-        completedAt: null,
-      }
-
+      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       return {
         ...prev,
         [moduleId]: {
@@ -321,18 +182,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const updateQuizScore = (moduleId: number, score: number, totalQuestions: number) => {
     setProgress((prev) => {
-      const currentModule = prev[moduleId] || {
-        moduleId,
-        completed: false,
-        videoWatchedMinutes: 0,
-        videoCompleted: false,
-        quizScore: null,
-        quizTotalQuestions: null,
-        quizCompleted: false,
-        startedAt: null,
-        completedAt: null,
-      }
-
+      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       return {
         ...prev,
         [moduleId]: {
@@ -347,18 +197,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const markModuleComplete = (moduleId: number) => {
     setProgress((prev) => {
-      const currentModule = prev[moduleId] || {
-        moduleId,
-        completed: false,
-        videoWatchedMinutes: 0,
-        videoCompleted: false,
-        quizScore: null,
-        quizTotalQuestions: null,
-        quizCompleted: false,
-        startedAt: null,
-        completedAt: null,
-      }
-
+      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       return {
         ...prev,
         [moduleId]: {
@@ -370,58 +209,120 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  // NEW: Mark a module as started (for "in progress" state)
+  const markModuleStarted = (moduleId: number) => {
+    setProgress((prev) => {
+      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
+      if (currentModule.startedAt) return prev // Already started
+      return {
+        ...prev,
+        [moduleId]: {
+          ...currentModule,
+          startedAt: new Date(),
+          lastActiveAt: new Date(),
+        },
+      }
+    })
+  }
+
+  // NEW: Track active study time (called periodically from module pages)
+  const trackActiveStudy = (moduleId: number) => {
+    setProgress((prev) => {
+      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
+      const now = new Date()
+      let additionalMinutes = 0
+
+      if (currentModule.lastActiveAt) {
+        const elapsed = (now.getTime() - currentModule.lastActiveAt.getTime()) / (1000 * 60)
+        // Only count if user was active within the last 5 minutes
+        // (prevents counting time when tab is backgrounded)
+        if (elapsed > 0 && elapsed <= 5) {
+          additionalMinutes = elapsed
+        }
+      }
+
+      return {
+        ...prev,
+        [moduleId]: {
+          ...currentModule,
+          activeStudyMinutes: currentModule.activeStudyMinutes + additionalMinutes,
+          lastActiveAt: now,
+          startedAt: currentModule.startedAt || now,
+        },
+      }
+    })
+  }
+
   const getTotalCompletedModules = () => {
-    return Object.values(progress).filter((p) => p.completed).length
+    // Only count paid modules (1-8) for the main counter
+    return Object.values(progress)
+      .filter((p) => p.moduleId >= 1 && p.moduleId <= 8 && p.completed)
+      .length
   }
 
   const getTotalCPDPoints = () => {
-    // Each online module = 1 CPD point (8 total online)
-    return getTotalCompletedModules()
+    // 5 CPD points per completed module
+    return getTotalCompletedModules() * 5
   }
 
   const getTotalStudyTime = () => {
-    return Object.values(progress).reduce((total, p) => {
-      if (p.startedAt && p.completedAt) {
-        const hours = (p.completedAt.getTime() - p.startedAt.getTime()) / (1000 * 60 * 60)
-        return total + hours
-      }
-      return total
+    // Use activeStudyMinutes for accurate tracking, convert to hours
+    const totalMinutes = Object.values(progress).reduce((total, p) => {
+      return total + (p.activeStudyMinutes || 0)
     }, 0)
+
+    // If no active tracking data, fall back to completed module time estimates
+    if (totalMinutes === 0) {
+      return Object.values(progress).reduce((total, p) => {
+        if (p.startedAt && p.completedAt) {
+          const hours = (p.completedAt.getTime() - p.startedAt.getTime()) / (1000 * 60 * 60)
+          return total + Math.min(hours, 4) // Cap at 4 hours per module
+        }
+        return total
+      }, 0)
+    }
+
+    return totalMinutes / 60
   }
 
   const getModuleProgress = (moduleId: number): ModuleProgress => {
-    return progress[moduleId] || getDefaultProgress()[moduleId] || {
-      moduleId,
-      completed: false,
-      videoWatchedMinutes: 0,
-      videoCompleted: false,
-      quizScore: null,
-      quizTotalQuestions: null,
-      quizCompleted: false,
-      startedAt: null,
-      completedAt: null,
-    }
+    return (
+      progress[moduleId] ||
+      getDefaultProgress()[moduleId] ||
+      createDefaultModuleProgress(moduleId)
+    )
   }
 
   const isModuleComplete = (moduleId: number): boolean => {
     return progress[moduleId]?.completed || false
   }
 
+  // NEW: Check if module has been started but not completed
+  const isModuleStarted = (moduleId: number): boolean => {
+    const mod = progress[moduleId]
+    return mod ? !!mod.startedAt && !mod.completed : false
+  }
+
   const canMarkModuleComplete = (moduleId: number, requiredMinutes: number): boolean => {
     const moduleProgress = progress[moduleId]
     if (!moduleProgress) return false
 
-    // Calculate quiz pass percentage (must be >= 75%)
-    const quizPassed = moduleProgress.quizCompleted &&
-                       moduleProgress.quizScore !== null &&
-                       moduleProgress.quizTotalQuestions !== null &&
-                       moduleProgress.quizTotalQuestions > 0 &&
-                       (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.75
+    const quizPassed =
+      moduleProgress.quizCompleted &&
+      moduleProgress.quizScore !== null &&
+      moduleProgress.quizTotalQuestions !== null &&
+      moduleProgress.quizTotalQuestions > 0 &&
+      moduleProgress.quizScore / moduleProgress.quizTotalQuestions >= 0.75
+
+    // For text-based modules (no video), just require quiz pass
+    if (requiredMinutes === 0) {
+      return !!quizPassed
+    }
 
     return (
       moduleProgress.videoCompleted &&
       moduleProgress.videoWatchedMinutes >= requiredMinutes &&
-      quizPassed
+      !!quizPassed
     )
   }
 
@@ -440,11 +341,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         markVideoComplete,
         updateQuizScore,
         markModuleComplete,
+        markModuleStarted,
+        trackActiveStudy,
         getTotalCompletedModules,
         getTotalCPDPoints,
         getTotalStudyTime,
         getModuleProgress,
         isModuleComplete,
+        isModuleStarted,
         canMarkModuleComplete,
         resetProgress,
       }}

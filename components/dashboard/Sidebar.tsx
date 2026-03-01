@@ -33,7 +33,28 @@ export function Sidebar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    setUser(getCurrentUser())
+    // Try session API first for accurate data, fallback to localStorage
+    async function loadUser() {
+      try {
+        const response = await fetch('/api/auth/session', { credentials: 'include' })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user) {
+            setUser({
+              id: data.user.id || '1',
+              email: data.user.email || '',
+              name: data.user.name || data.user.email?.split('@')[0] || 'Student',
+              enrolledAt: data.user.enrolledAt || data.user.createdAt || new Date().toISOString(),
+            })
+            return
+          }
+        }
+      } catch (_) {
+        // Fallback to localStorage
+      }
+      setUser(getCurrentUser())
+    }
+    loadUser()
   }, [])
 
   const handleLogout = () => {
@@ -70,7 +91,7 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed left-0 top-0 h-screen w-64 glass border-r border-border p-6 flex flex-col z-40 transition-transform duration-300",
+        "fixed left-0 top-0 h-screen w-64 glass border-r border-border p-6 flex flex-col z-40 transition-transform duration-300 overflow-y-auto overscroll-contain",
         "md:translate-x-0",
         mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>

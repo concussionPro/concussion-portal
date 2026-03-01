@@ -8,15 +8,15 @@ import { WelcomeModal } from '@/components/dashboard/WelcomeModal'
 import { NextActionCard } from '@/components/dashboard/NextActionCard'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useAnalytics } from '@/hooks/useAnalytics'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Sparkles } from 'lucide-react'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [accessChecked, setAccessChecked] = useState(false)
+  const [userName, setUserName] = useState<string | null>(null)
 
-  useAnalytics() // Track page views
+  useAnalytics()
 
-  // CRITICAL: Redirect preview users to SCAT course page
   useEffect(() => {
     const checkAccessLevel = async () => {
       try {
@@ -24,10 +24,15 @@ export default function DashboardPage() {
         if (response.ok) {
           const data = await response.json()
 
-          // Preview users should NOT access the full dashboard
           if (data.user && data.user.accessLevel === 'preview') {
             router.push('/scat-course')
             return
+          }
+
+          // Extract user name for greeting
+          if (data.user) {
+            const name = data.user.name || data.user.email?.split('@')[0] || null
+            setUserName(name)
           }
         }
 
@@ -52,6 +57,14 @@ export default function DashboardPage() {
     )
   }
 
+  // Greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 17) return 'Good afternoon'
+    return 'Good evening'
+  }
+
   return (
     <ProtectedRoute>
       <WelcomeModal />
@@ -59,6 +72,19 @@ export default function DashboardPage() {
         <Sidebar />
         <main className="flex-1 ml-0 md:ml-64">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6">
+            {/* Welcome Greeting */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-5 h-5 text-accent" />
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">
+                  {getGreeting()}{userName ? `, ${userName}` : ''}
+                </h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Continue your concussion management training below.
+              </p>
+            </div>
+
             <NextActionCard />
             <BentoGrid />
           </div>

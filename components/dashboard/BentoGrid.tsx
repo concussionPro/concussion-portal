@@ -114,27 +114,18 @@ function BentoCard({
 
 export function BentoGrid() {
   const router = useRouter()
-  const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, progress } = useProgress()
-  const [maxModules, setMaxModules] = useState(5) // Default to SCAT free course
-  const [maxCPD, setMaxCPD] = useState(2) // Default to SCAT free course
+  const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, progress, isModuleStarted } = useProgress()
 
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
   const studyTime = getTotalStudyTime()
+  const maxModules = 8
+  const maxCPD = 40 // 8 modules × 5 CPD points each
 
-  // Fetch modules to determine max based on user's access level
-  useEffect(() => {
-    fetch('/api/modules/list', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.modules) {
-          setMaxModules(data.modules.length)
-          const totalPoints = data.modules.reduce((sum: number, m: any) => sum + m.points, 0)
-          setMaxCPD(totalPoints)
-        }
-      })
-      .catch(err => console.error('Failed to fetch modules:', err))
-  }, [])
+  // Count in-progress modules
+  const inProgressCount = Object.values(progress)
+    .filter((p) => p.moduleId >= 1 && p.moduleId <= 8 && !!p.startedAt && !p.completed)
+    .length
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-[200px] sm:auto-rows-[240px]">
@@ -155,8 +146,8 @@ export function BentoGrid() {
         title="Study Time"
         icon={<Clock className="w-6 h-6" strokeWidth={1.5} />}
         metric={{
-          value: `${studyTime.toFixed(1)}h`,
-          label: 'Total Learning Hours',
+          value: studyTime < 0.1 ? 'Start Learning' : `${studyTime.toFixed(1)}h`,
+          label: studyTime < 0.1 ? 'Track your progress as you study' : 'Total Learning Hours',
           trend: studyTime > 0 ? 'up' : 'neutral',
         }}
       />
@@ -166,11 +157,13 @@ export function BentoGrid() {
         title="Your Progress"
         icon={<TrendingUp className="w-6 h-6" strokeWidth={1.5} />}
         description={
-          completedModules === 0
+          completedModules === 0 && inProgressCount === 0
             ? "Start your first module to begin earning CPD points!"
             : completedModules === maxModules
-            ? "Outstanding! You've completed all modules. Keep up the excellence!"
-            : `Excellent work! ${completedModules} of ${maxModules} online modules completed. You're ${Math.round((completedModules / maxModules) * 100)}% of the way there!`
+            ? "Outstanding! You've completed all modules. Your CPD certificate is ready."
+            : inProgressCount > 0 && completedModules === 0
+            ? `${inProgressCount} module${inProgressCount > 1 ? 's' : ''} in progress. Complete the Knowledge Check to earn CPD points.`
+            : `${completedModules} of ${maxModules} modules completed (${Math.round((completedModules / maxModules) * 100)}%). ${inProgressCount > 0 ? `${inProgressCount} in progress.` : 'Keep going!'}`
         }
       />
     </div>

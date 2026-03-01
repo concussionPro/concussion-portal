@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { FileText, ArrowLeft, GraduationCap, Sparkles } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { useState, useEffect } from 'react'
 
 export default function SCATFormsLayout({
   children,
@@ -11,9 +12,34 @@ export default function SCATFormsLayout({
 }) {
   const router = useRouter()
   const pathname = usePathname()
+  const [isPaidUser, setIsPaidUser] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const isSCAT6 = pathname?.includes('/scat6')
   const isSCOAT6 = pathname?.includes('/scoat6')
+
+  // Check if user has paid access
+  useEffect(() => {
+    async function checkAccess() {
+      try {
+        const response = await fetch('/api/auth/session', {
+          credentials: 'include',
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user) {
+            const level = data.user.accessLevel
+            setIsPaidUser(level === 'online-only' || level === 'full-course')
+          }
+        }
+      } catch (error) {
+        console.error('Access check failed:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkAccess()
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -22,9 +48,9 @@ export default function SCATFormsLayout({
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push(isPaidUser ? '/dashboard' : '/')}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              aria-label="Back to home"
+              aria-label="Back"
             >
               <ArrowLeft className="w-5 h-5 text-slate-600" />
             </button>
@@ -96,78 +122,100 @@ export default function SCATFormsLayout({
           </div>
         </div>
 
-        {/* FREE SCAT Mastery Banner - Lead Magnet */}
+        {/* Important Notes for form users */}
         {(isSCAT6 || isSCOAT6) && (
-          <div className="bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 text-white rounded-xl p-6 mb-6 shadow-lg">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-lg">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-xl font-bold">🎓 Free Training: Master SCAT6 & SCOAT6 in 2 Hours</h3>
-                </div>
-                <p className="text-sm text-white/90 mb-3 leading-relaxed">
-                  <strong>Learn to use this form correctly.</strong> Step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. <strong>2 AHPRA CPD hours + certificate included.</strong>
-                </p>
-                <div className="flex items-center gap-2 mb-3 text-xs text-white/75">
-                  <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded font-semibold">✓ 100% FREE</span>
-                  <span>•</span>
-                  <span>3,247+ enrolled</span>
-                  <span>•</span>
-                  <span>No credit card required</span>
-                </div>
-                <button
-                  onClick={() => router.push('/scat-mastery')}
-                  className="text-sm px-6 py-3 bg-white text-teal-600 rounded-lg hover:bg-teal-50 transition-colors font-bold shadow-md"
-                >
-                  Get Free Course Now →
-                </button>
-              </div>
-            </div>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+            <h3 className="text-base font-bold text-slate-900 mb-3">Important Notes</h3>
+            <ul className="space-y-2 text-sm text-slate-600">
+              <li className="flex items-start gap-2">
+                <span className="text-[#5b9aa6] mt-0.5 flex-shrink-0">•</span>
+                <span>All fields auto-calculate scores where applicable</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#5b9aa6] mt-0.5 flex-shrink-0">•</span>
+                <span>Export completed assessments as PDF for medical records</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#5b9aa6] mt-0.5 flex-shrink-0">•</span>
+                <span>Forms follow the latest 2023 Consensus Statement standards</span>
+              </li>
+            </ul>
           </div>
         )}
 
-        {/* Course Promotion Banner - Subtle Sales Funnel */}
-        {(isSCAT6 || isSCOAT6) && (
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-6 mb-6 shadow-md">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-600 rounded-lg">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-lg font-bold text-slate-900">Confident using this form clinically?</h3>
-                  <span className="badge text-xs">14 CPD Hours</span>
+        {/* Promotional banners — ONLY shown to non-paid users */}
+        {!loading && !isPaidUser && (isSCAT6 || isSCOAT6) && (
+          <>
+            {/* FREE SCAT Mastery Banner - Lead Magnet */}
+            <div className="bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 text-white rounded-xl p-6 mb-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-lg">
+                  <GraduationCap className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-sm text-slate-700 mb-2 leading-relaxed">
-                  <strong>Most clinicians miss subtle signs.</strong> Beyond the form: master VOMS interpretation, vestibular red flags, BESS scoring nuances, and evidence-based RTP decisions. AHPRA-accredited with hands-on practice.
-                </p>
-                <div className="flex items-center gap-2 mb-3 text-xs text-slate-600">
-                  <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">🔥 Limited workshop spots</span>
-                  <span>•</span>
-                  <span>500+ Australian clinicians trained</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-xl font-bold">🎓 Free Training: Master SCAT6 & SCOAT6 in 2 Hours</h3>
+                  </div>
+                  <p className="text-sm text-white/90 mb-3 leading-relaxed">
+                    <strong>Learn to use this form correctly.</strong> Step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. <strong>2 AHPRA CPD hours + certificate included.</strong>
+                  </p>
+                  <div className="flex items-center gap-2 mb-3 text-xs text-white/75">
+                    <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded font-semibold">✓ 100% FREE</span>
+                    <span>•</span>
+                    <span>3,247+ enrolled</span>
+                    <span>•</span>
+                    <span>No credit card required</span>
+                  </div>
                   <button
-                    onClick={() => router.push('/preview')}
-                    className="text-sm px-4 py-2 bg-white border-2 border-blue-400 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-semibold flex items-center gap-1"
+                    onClick={() => router.push('/scat-mastery')}
+                    className="text-sm px-6 py-3 bg-white text-teal-600 rounded-lg hover:bg-teal-50 transition-colors font-bold shadow-md"
                   >
-                    <Sparkles className="w-4 h-4" />
-                    Preview Course Free
+                    Get Free Course Now →
                   </button>
-                  <a
-                    href={CONFIG.SHOP_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold shadow-sm"
-                  >
-                    Secure Your Spot →
-                  </a>
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* Course Promotion Banner */}
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-6 mb-6 shadow-md">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-blue-600 rounded-lg">
+                  <GraduationCap className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-lg font-bold text-slate-900">Confident using this form clinically?</h3>
+                    <span className="badge text-xs">14 CPD Hours</span>
+                  </div>
+                  <p className="text-sm text-slate-700 mb-2 leading-relaxed">
+                    <strong>Most clinicians miss subtle signs.</strong> Beyond the form: master VOMS interpretation, vestibular red flags, BESS scoring nuances, and evidence-based RTP decisions. AHPRA-accredited with hands-on practice.
+                  </p>
+                  <div className="flex items-center gap-2 mb-3 text-xs text-slate-600">
+                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">🔥 Limited workshop spots</span>
+                    <span>•</span>
+                    <span>500+ Australian clinicians trained</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => router.push('/preview')}
+                      className="text-sm px-4 py-2 bg-white border-2 border-blue-400 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-semibold flex items-center gap-1"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Preview Course Free
+                    </button>
+                    <a
+                      href={CONFIG.SHOP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold shadow-sm"
+                    >
+                      Secure Your Spot →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
         {/* Form Content */}

@@ -89,7 +89,7 @@ export default function LearningSuite() {
                 </div>
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Online CPD Earned</div>
-                  <div className="text-xl font-bold text-gradient">{cpdPoints} / 8</div>
+                  <div className="text-xl font-bold text-gradient">{cpdPoints} / 40</div>
                 </div>
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Study Time</div>
@@ -144,6 +144,12 @@ export default function LearningSuite() {
                           <div className="flex items-center gap-2 text-xs font-semibold text-[#6b9da8] bg-teal-50 px-3 py-1.5 rounded-full">
                             <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
                             Complete
+                          </div>
+                        )}
+                        {!completed && hasStarted && (
+                          <div className="flex items-center gap-2 text-xs font-semibold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full">
+                            <Clock className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            In Progress
                           </div>
                         )}
                       </div>
