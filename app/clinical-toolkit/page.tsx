@@ -183,7 +183,7 @@ export default function ClinicalToolkitPage() {
     // Both online-only and full-course users have access to toolkit
     if (!accessLevel) {
       trackShopClick('toolkit-locked-resource', { resourceId: resource.id, resourceTitle: resource.title })
-      window.location.href = CONFIG.SHOP_URL
+      router.push('/preview')
       return
     }
 
@@ -228,15 +228,12 @@ export default function ClinicalToolkitPage() {
                     <p className="text-sm text-amber-700 mt-1">
                       Enroll to access all clinical resources, templates, flowcharts, and assessment tools.
                     </p>
-                    <a
-                      href={CONFIG.SHOP_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => trackShopClick('toolkit-unauthenticated-banner')}
+                    <button
+                      onClick={() => router.push('/preview')}
                       className="inline-block mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
                     >
                       Enroll Now
-                    </a>
+                    </button>
                   </div>
                 </div>
               )}
@@ -256,24 +253,24 @@ export default function ClinicalToolkitPage() {
                         You have full access to all online modules and clinical toolkit. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA CPD certificate (8 online + 6 in-person).
                       </p>
                       <div className="flex flex-col sm:flex-row gap-3">
-                        <a
-                          href={CONFIG.SHOP_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => trackShopClick('toolkit-online-only-upgrade', { accessLevel: 'online-only' })}
+                        <button
+                          onClick={() => {
+                            trackShopClick('toolkit-online-only-upgrade', { accessLevel: 'online-only' })
+                            router.push('/preview')
+                          }}
                           className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                         >
                           Upgrade Now - Add Workshop for $693
-                        </a>
-                        <a
-                          href="https://concussion-education-australia.com/shop"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => trackEvent('view_workshop_details', { source: 'toolkit-upgrade-banner' })}
+                        </button>
+                        <button
+                          onClick={() => {
+                            trackEvent('view_workshop_details', { source: 'toolkit-upgrade-banner' })
+                            router.push('/in-person')
+                          }}
                           className="px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-all text-center"
                         >
                           View Workshop Dates and Locations
-                        </a>
+                        </button>
                       </div>
                     </div>
                   </div>

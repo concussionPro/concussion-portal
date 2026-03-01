@@ -227,14 +227,12 @@ export default function SettingsPage() {
                       <p className="text-xs text-amber-700 mb-3">
                         Enroll in the complete course to access all modules, workshops, and premium resources.
                       </p>
-                      <a
-                        href="https://concussion-education-australia.com/shop"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => router.push('/preview')}
                         className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
                       >
                         Enroll Now — $1,190
-                      </a>
+                      </button>
                     </div>
                   )}
 

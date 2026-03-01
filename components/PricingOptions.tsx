@@ -1,8 +1,9 @@
 'use client'
 
-import { Check, Clock, Calendar, Sparkles, ArrowRight, Zap } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Check, Clock, Calendar, Sparkles, ArrowRight, Zap, MapPin, Loader2 } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 interface PricingOptionsProps {
   variant?: 'full' | 'compact'
@@ -10,31 +11,73 @@ interface PricingOptionsProps {
 
 export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const router = useRouter()
+  const [selectedLocation, setSelectedLocation] = useState<string>('')
+  const [loading, setLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const locations = [
+    { value: 'melbourne', label: 'Melbourne', date: CONFIG.LOCATIONS.MELBOURNE.date },
+    { value: 'sydney', label: 'Sydney', date: CONFIG.LOCATIONS.SYDNEY.date },
+    { value: 'byron-bay', label: 'Byron Bay', date: CONFIG.LOCATIONS.BYRON_BAY.date },
+  ]
+
+  const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
+    if (courseType === 'full-course' && !selectedLocation) {
+      setError('Please select a workshop location.')
+      return
+    }
+
+    setLoading(courseType)
+    setError(null)
+
+    try {
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseType,
+          location: courseType === 'full-course' ? selectedLocation : undefined,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (data.success && data.url) {
+        window.location.href = data.url
+      } else {
+        setError(data.error || 'Something went wrong. Please try again.')
+        setLoading(null)
+      }
+    } catch {
+      setError('Network error. Please try again.')
+      setLoading(null)
+    }
+  }
 
   const options = [
     {
-      id: 'online-only',
+      id: 'online-only' as const,
       name: 'Online Only',
       price: 497,
       priceLabel: '$497',
       badge: 'Start Under $500',
       badgeColor: 'bg-purple-100 text-purple-700 border-purple-200',
-      description: "Can't commit to a course date? We've got you covered - complete the online section in your own time, then just pay the difference to join a course date in the future.",
+      description: "Can't commit to a course date? Complete the online section in your own time, then just pay the difference to join a workshop later.",
       features: [
         '8 online modules (8 CPD hours)',
-        'Complete at your own pace - no deadlines',
+        'Complete at your own pace — no deadlines',
         'Lifetime access to all modules',
         'Clinical Toolkit & downloadable resources',
-        'Reference Repository (145 articles)',
+        'Reference Repository (145+ articles)',
         'Digital certificate upon completion',
-        'Upgrade to full course for $693 (code SCAT6)',
+        'Upgrade to full course for $693',
       ],
       cta: 'Start for $497',
       highlight: false,
-      disclaimer: 'Upgrade later for $693 (use code SCAT6) \u2022 Total: $1,190 early bird price',
+      disclaimer: 'Upgrade later for $693 · Total: $1,190 early bird price',
     },
     {
-      id: 'full-course',
+      id: 'full-course' as const,
       name: 'Complete Course',
       price: 1190,
       priceLabel: '$1,190',
@@ -47,19 +90,24 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         'Full-day in-person workshop (6 CPD hours)',
         'Hands-on SCAT6, VOMS, BESS training',
         'Clinical Toolkit resources',
-        'Reference Repository (145 articles)',
+        'Reference Repository (145+ articles)',
         'Choose Melbourne, Sydney, or Byron Bay',
         'Flexible workshop date selection',
       ],
       cta: 'Enroll in Full Course',
       highlight: true,
-      disclaimer: 'Early bird pricing \u2022 14 total AHPRA CPD hours',
+      disclaimer: '14 total AHPRA CPD hours · Early bird pricing',
     },
   ]
 
   if (variant === 'compact') {
     return (
       <div className="grid md:grid-cols-2 gap-6">
+        {error && (
+          <div className="col-span-full bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">
+            {error}
+          </div>
+        )}
         {options.map((option) => (
           <div
             key={option.id}
@@ -90,15 +138,40 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <p className="text-xs text-slate-500 mt-1">{option.disclaimer}</p>
             </div>
 
+            {/* Location selector for full course compact */}
+            {option.id === 'full-course' && (
+              <div className="mb-4 space-y-2">
+                {locations.map((loc) => (
+                  <button
+                    key={loc.value}
+                    onClick={() => { setSelectedLocation(loc.value); setError(null) }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-xs transition-all text-left ${
+                      selectedLocation === loc.value
+                        ? 'border-[#5b9aa6] bg-teal-50 ring-1 ring-[#5b9aa6]/20'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className="font-semibold">{loc.label}</span>
+                    <span className="text-slate-500">{loc.date}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             <button
-              onClick={() => router.push('/pricing')}
-              className={`block w-full py-3 px-6 rounded-xl text-center font-bold transition-all ${
+              onClick={() => handleCheckout(option.id)}
+              disabled={loading !== null}
+              className={`flex items-center justify-center gap-2 w-full py-3 px-6 rounded-xl text-center font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                 option.highlight
                   ? 'bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#5898a0] hover:to-[#5b8d96] shadow-lg'
                   : 'bg-slate-900 text-white hover:bg-slate-800'
               }`}
             >
-              {option.cta}
+              {loading === option.id ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                option.cta
+              )}
             </button>
           </div>
         ))}
@@ -118,9 +191,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           Flexible Enrollment Options
         </h2>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Start learning today or commit to the full certification. Either way, you're covered by our quality guarantee.
+          Start learning today or commit to the full certification. Either way, you&apos;re covered by our quality guarantee.
         </p>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="max-w-2xl mx-auto mb-6 bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800 text-center">
+          {error}
+        </div>
+      )}
 
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-2 gap-8">
@@ -136,8 +216,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             {/* Popular Badge */}
             {option.highlight && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-full text-sm font-black shadow-lg">
-                  🔥 Early Bird - Save $210
+                <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-full text-sm font-black shadow-lg whitespace-nowrap">
+                  Early Bird — Save $210
                 </div>
               </div>
             )}
@@ -169,7 +249,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
 
             {/* Features */}
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-3 mb-6">
               {option.features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${
@@ -182,18 +262,51 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               ))}
             </ul>
 
-            {/* CTA Button — routes to /pricing for Stripe checkout */}
+            {/* Location Selector for Full Course */}
+            {option.id === 'full-course' && (
+              <div className="mb-6">
+                <label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  <MapPin className="w-4 h-4 inline mr-1 text-[#5b9aa6]" />
+                  Select Workshop Location
+                </label>
+                <div className="grid gap-2">
+                  {locations.map((loc) => (
+                    <button
+                      key={loc.value}
+                      onClick={() => { setSelectedLocation(loc.value); setError(null) }}
+                      className={`flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-all text-left ${
+                        selectedLocation === loc.value
+                          ? 'border-[#5b9aa6] bg-teal-50/50 ring-2 ring-[#5b9aa6]/20'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <span className="font-semibold text-slate-900">{loc.label}</span>
+                      <span className="text-slate-500 text-xs">{loc.date}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTA Button */}
             <button
-              onClick={() => router.push('/pricing')}
-              className={`flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl text-center font-bold transition-all group ${
+              onClick={() => handleCheckout(option.id)}
+              disabled={loading !== null}
+              className={`flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl text-center font-bold transition-all group disabled:opacity-50 disabled:cursor-not-allowed ${
                 option.highlight
                   ? 'bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#5898a0] hover:to-[#5b8d96] shadow-lg hover:shadow-xl'
                   : 'bg-slate-900 text-white hover:bg-slate-800'
               }`}
             >
-              {option.id === 'online-only' ? <Clock className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
-              {option.cta}
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              {loading === option.id ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  {option.id === 'online-only' ? <Clock className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
+                  {option.cta}
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
 
             {/* Additional Info */}
@@ -201,14 +314,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
                 <p className="text-xs text-purple-900 font-semibold flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  Upgrade Path: Add workshop for $693 (code SCAT6) = $1,190 total
+                  Upgrade Path: Add workshop for $693 = $1,190 total
                 </p>
               </div>
             )}
             {option.id === 'full-course' && (
               <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-xs text-amber-900 font-semibold">
-                  💡 Early Bird pricing applied automatically at checkout
+                  Early bird pricing ends soon — lock in $1,190 before it goes to $1,400
                 </p>
               </div>
             )}
@@ -221,7 +334,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-slate-600">
           <div className="flex items-center gap-2">
             <Check className="w-5 h-5 text-teal-600" strokeWidth={2.5} />
-            <span>AHPRA Accredited</span>
+            <span>AHPRA Aligned</span>
           </div>
           <div className="flex items-center gap-2">
             <Check className="w-5 h-5 text-teal-600" strokeWidth={2.5} />
@@ -233,7 +346,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </div>
           <div className="flex items-center gap-2">
             <Check className="w-5 h-5 text-teal-600" strokeWidth={2.5} />
-            <span>Flexible Scheduling</span>
+            <span>Secure Stripe Checkout</span>
           </div>
         </div>
       </div>

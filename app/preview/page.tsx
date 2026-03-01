@@ -84,16 +84,17 @@ export default function PreviewPage() {
               >
                 Back to Home
               </button>
-              <a
-                href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => {
+                  const pricingEl = document.getElementById('pricing-section')
+                  if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
+                }}
                 className="px-3 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white rounded-lg text-xs md:text-sm font-semibold hover:from-[#5898a0] hover:to-[#5b8d96] transition-all shadow-lg flex items-center gap-1.5 md:gap-2"
               >
                 <Sparkles className="w-3.5 md:w-4 h-3.5 md:h-4" />
                 <span className="hidden sm:inline">Enroll Now - $1,190</span>
                 <span className="sm:hidden">Enroll</span>
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -121,25 +122,27 @@ export default function PreviewPage() {
             </p>
             <div className="flex flex-col items-center justify-center gap-5 mb-6">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 w-full sm:w-auto">
-                <a
-                  href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => {
+                    const pricingEl = document.getElementById('pricing-section')
+                    if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
+                  }}
                   className="group px-6 md:px-12 py-4 md:py-5 bg-white text-[#5b9aa6] rounded-2xl text-lg md:text-xl font-black hover:bg-amber-400 hover:text-white transition-all shadow-2xl flex items-center justify-center gap-2 md:gap-3 hover:scale-105 transform w-full sm:w-auto"
                 >
                   <Sparkles className="w-5 md:w-6 h-5 md:h-6 group-hover:animate-spin flex-shrink-0" />
                   <span className="text-center">Full Course + Workshop - $1,190</span>
                   <ArrowRight className="w-5 md:w-6 h-5 md:h-6 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                </a>
-                <a
-                  href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                </button>
+                <button
+                  onClick={() => {
+                    const pricingEl = document.getElementById('pricing-section')
+                    if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
+                  }}
                   className="group px-6 md:px-12 py-4 md:py-5 bg-white text-[#5b9aa6] rounded-2xl text-lg md:text-xl font-black hover:bg-blue-100 transition-all shadow-2xl flex items-center justify-center gap-2 md:gap-3 hover:scale-105 transform w-full sm:w-auto"
                 >
                   <span className="text-center">Online Only - $497</span>
                   <ArrowRight className="w-5 md:w-6 h-5 md:h-6 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                </a>
+                </button>
               </div>
               <button
                 onClick={() => router.push('/assessment')}
@@ -333,7 +336,7 @@ export default function PreviewPage() {
         </div>
 
         {/* Pricing Options */}
-        <div className="mt-16 mb-12">
+        <div id="pricing-section" className="mt-16 mb-12">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-bold mb-4">
               <Sparkles className="w-4 h-4" />
@@ -371,24 +374,26 @@ export default function PreviewPage() {
             </button>
             <div className="flex flex-col items-center justify-center gap-5 mb-6">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 w-full sm:w-auto">
-                <a
-                  href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => {
+                    const pricingEl = document.getElementById('pricing-section')
+                    if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
+                  }}
                   className="group px-6 md:px-10 py-3.5 md:py-4 bg-white text-[#5b9aa6] rounded-xl text-base md:text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-105 transform w-full sm:w-auto"
                 >
                   <span className="text-center">Full Course + Workshop - $1,190</span>
                   <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                </a>
-                <a
-                  href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                </button>
+                <button
+                  onClick={() => {
+                    const pricingEl = document.getElementById('pricing-section')
+                    if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
+                  }}
                   className="group px-6 md:px-10 py-3.5 md:py-4 bg-white text-[#5b9aa6] rounded-xl text-base md:text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-105 transform w-full sm:w-auto"
                 >
                   <span className="text-center">Online Only - $497</span>
                   <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                </a>
+                </button>
               </div>
               <button
                 onClick={() => router.push('/assessment')}

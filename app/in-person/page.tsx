@@ -32,14 +32,12 @@ export default function InPersonTrainingPage() {
               >
                 Course Preview
               </button>
-              <a
-                href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => router.push('/preview')}
                 className="btn-primary px-6 py-2 rounded-lg text-sm font-semibold"
               >
                 Enroll Now
-              </a>
+              </button>
             </div>
           </div>
         </nav>
@@ -253,16 +251,14 @@ export default function InPersonTrainingPage() {
               Complete 8 evidence-based online modules + full-day practical workshop. Walk away ready to confidently assess, phenotype, and manage concussions from day one.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a
-                href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => router.push('/preview')}
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
               >
                 <Sparkles className="w-5 h-5" />
                 Secure Your Spot - $1,190
                 <ArrowRight className="w-5 h-5" />
-              </a>
+              </button>
               <button
                 onClick={() => router.push('/preview')}
                 className="btn-secondary px-8 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"

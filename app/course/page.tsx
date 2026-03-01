@@ -25,19 +25,19 @@ const locations = [
     city: 'Melbourne',
     date: 'February 7, 2026',
     availability: 'Limited spots',
-    shopUrl: '{CONFIG.SHOP_URL}/p/concussion-clinical-mastery-melbourne-feb-7-2026'
+    shopUrl: '/pricing'
   },
   {
     city: 'Sydney',
     date: 'March 7, 2026',
     availability: 'Available',
-    shopUrl: '{CONFIG.SHOP_URL}/p/concussion-clinical-mastery-sydney-march-7-2026'
+    shopUrl: '/pricing'
   },
   {
     city: 'Byron Bay',
     date: 'March 28, 2026',
     availability: 'Available',
-    shopUrl: '{CONFIG.SHOP_URL}/p/concussion-clinical-mastery-byron-bay-march-28'
+    shopUrl: '/pricing'
   },
 ]
 
@@ -407,15 +407,13 @@ export default function CoursePage() {
                   )}
                 </div>
 
-                <a
-                  href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => router.push('/preview')}
                   className="btn-primary px-10 py-5 rounded-xl text-lg inline-flex items-center gap-2"
                 >
                   Complete enrollment
                   <ArrowRight className="w-5 h-5" />
-                </a>
+                </button>
 
                 <p className="text-xs text-muted-foreground mt-4">
                   Secure checkout · Multiple payment options available

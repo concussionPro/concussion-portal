@@ -1,9 +1,11 @@
 'use client'
 
 import { Lock, ArrowRight, Award } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { useRouter } from 'next/navigation'
 
 export function ContentLockedBanner() {
+  const router = useRouter()
+
   return (
     <div className="relative my-8">
       {/* Fade out effect */}
@@ -42,15 +44,13 @@ export function ContentLockedBanner() {
           </div>
 
           {/* CTA */}
-          <a
-            href={CONFIG.SHOP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => router.push('/preview')}
             className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
           >
             Enroll Now - $1,190
             <ArrowRight className="w-5 h-5" />
-          </a>
+          </button>
 
           <p className="text-slate-400 text-sm mt-4">
             Includes full-day practical workshop + 8 online modules
