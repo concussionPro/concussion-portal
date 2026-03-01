@@ -22,17 +22,11 @@ export const CONFIG = {
 
   // Training Locations & Dates
   LOCATIONS: {
-    MELBOURNE: {
-      city: 'Melbourne',
-      date: 'Feb 7, 2026',
-      dateObj: new Date('2026-02-07'),
-      spotsRemaining: 12,
-    },
     SYDNEY: {
       city: 'Sydney',
       date: 'March 7, 2026',
       dateObj: new Date('2026-03-07'),
-      spotsRemaining: 18,
+      spotsRemaining: 12,
     },
     BYRON_BAY: {
       city: 'Byron Bay',
@@ -51,15 +45,15 @@ export const CONFIG = {
   },
 
   // Early Bird Pricing Deadline
-  EARLY_BIRD_DEADLINE: new Date('2026-02-01T23:59:59'),
+  EARLY_BIRD_DEADLINE: new Date('2026-03-28T23:59:59'),
 
   // SEO Metadata
   SEO: {
-    SITE_NAME: 'ConcussionPro - Concussion Education Australia',
-    SITE_URL: 'https://concussionpro.com.au',
+    SITE_NAME: 'Concussion Education Australia',
+    SITE_URL: 'https://portal.concussion-education-australia.com',
     TWITTER_HANDLE: '@ConcussionEduAU',
-    OG_IMAGE: '/og-image.jpg',
-    DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules + practical training. 14 CPD points, endorsed by Osteopathy Australia.',
+    OG_IMAGE: 'https://portal.concussion-education-australia.com/og-image.jpg',
+    DESCRIPTION: 'AHPRA-aligned concussion management course for Australian clinicians. Master SCAT6, VOMS, and BESS assessment. 8 online modules + practical training. 14 CPD points, endorsed by Osteopathy Australia.',
   },
 
   // Feature Flags
