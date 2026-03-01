@@ -4,7 +4,7 @@
 export const CONFIG = {
   // External URLs
   APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com',
-  SHOP_URL: '/pricing', // Portal checkout — no longer links to Squarespace
+  SHOP_URL: '/pricing', // Portal checkout
   CONTACT_EMAIL: 'zac@concussion-education-australia.com',
 
   // Course Details
@@ -24,9 +24,9 @@ export const CONFIG = {
   LOCATIONS: {
     MELBOURNE: {
       city: 'Melbourne',
-      date: 'Feb 7, 2026',
-      dateObj: new Date('2026-02-07'),
-      spotsRemaining: 12,
+      date: 'TBA',
+      dateObj: new Date('2026-06-01'),
+      spotsRemaining: 0,
     },
     SYDNEY: {
       city: 'Sydney',
@@ -44,21 +44,21 @@ export const CONFIG = {
 
   // Social Proof - Real testimonials only, no fake numbers
   SOCIAL_PROOF: {
-    TOTAL_CLINICIANS: 0, // Don't display fake numbers
+    TOTAL_CLINICIANS: 0,
     SATISFACTION_RATING: 0,
     TOTAL_REVIEWS: 0,
     ENROLLMENTS_2026: 0,
   },
 
   // Early Bird Pricing Deadline
-  EARLY_BIRD_DEADLINE: new Date('2026-02-01T23:59:59'),
+  EARLY_BIRD_DEADLINE: new Date('2026-03-21T23:59:59'),
 
   // SEO Metadata
   SEO: {
     SITE_NAME: 'ConcussionPro - Concussion Education Australia',
-    SITE_URL: 'https://concussionpro.com.au',
+    SITE_URL: 'https://portal.concussion-education-australia.com',
     TWITTER_HANDLE: '@ConcussionEduAU',
-    OG_IMAGE: '/og-image.jpg',
+    OG_IMAGE: 'https://portal.concussion-education-australia.com/og-image.jpg',
     DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules + practical training. 14 CPD points, endorsed by Osteopathy Australia.',
   },
 
@@ -66,7 +66,7 @@ export const CONFIG = {
   FEATURES: {
     SHOW_COUNTDOWN: true,
     SHOW_SPOTS_REMAINING: true,
-    SHOW_SOCIAL_PROOF: false, // Don't show fake social proof numbers
+    SHOW_SOCIAL_PROOF: false,
   },
 } as const
 
