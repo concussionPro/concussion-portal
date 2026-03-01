@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Mail, AlertCircle, ArrowLeft, Check } from 'lucide-react'
+import { Mail, AlertCircle, ArrowLeft, Check, Clock } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
 function LoginForm() {
@@ -43,7 +43,9 @@ function LoginForm() {
         body: JSON.stringify({ email }),
       })
 
-      if (response.ok) {
+      if (response.status === 429) {
+        setError('Too many login attempts. Please wait a few minutes before trying again.')
+      } else if (response.ok) {
         const data = await response.json()
         setEmailSent(true)
         // In dev mode, save the magic link to display it
@@ -92,8 +94,12 @@ function LoginForm() {
               {error && (
                 <div className="glass bg-red-50 border border-red-200 rounded-xl p-3 mb-5">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                    <p className="text-sm text-red-800">{error}</p>
+                    {error.includes('Too many') ? (
+                      <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                    )}
+                    <p className={`text-sm ${error.includes('Too many') ? 'text-amber-800' : 'text-red-800'}`}>{error}</p>
                   </div>
                 </div>
               )}
@@ -136,7 +142,7 @@ function LoginForm() {
             </>
           ) : (
             <>
-              {/* Success state */}
+              {/* Success state - always shows regardless of whether account exists */}
               <div className="text-center">
                 <div className="icon-container w-14 h-14 mx-auto mb-5 bg-green-100">
                   <Check className="w-7 h-7 text-green-600" />
@@ -145,7 +151,7 @@ function LoginForm() {
                   Check your email
                 </h1>
                 <p className="text-sm text-muted-foreground mb-6">
-                  We've sent a login link to <strong className="text-foreground">{email}</strong>
+                  If an account exists for <strong className="text-foreground">{email}</strong>, we've sent a login link.
                 </p>
 
                 <div className="glass rounded-xl p-5 mb-6 border border-accent/20">
@@ -172,7 +178,7 @@ function LoginForm() {
                         Click the link in your email to access your course. The link expires in 15 minutes.
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Don't see it? Check your spam folder.
+                        Don't see it? Check your spam folder, or make sure you're using the email you enrolled with.
                       </p>
                     </>
                   )}
@@ -185,7 +191,7 @@ function LoginForm() {
                   }}
                   className="text-sm text-accent hover:text-accent/80 transition-colors font-medium"
                 >
-                  Use a different email
+                  Try a different email
                 </button>
               </div>
             </>

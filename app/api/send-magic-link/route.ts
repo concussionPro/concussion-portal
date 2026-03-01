@@ -1,12 +1,41 @@
 // API endpoint to send magic link login emails
+// Security: Generic response prevents email enumeration
+// Security: Rate limiting prevents brute force and email spam
 import { NextResponse } from 'next/server'
 import { findUserByEmail } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/email'
 import { logAuthFailure, logCriticalError, measurePerformance } from '@/lib/monitoring'
 
+// In-memory rate limiting (resets on cold start, but sufficient for Vercel serverless)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const EMAIL_RATE_LIMIT = 3 // max attempts per email per window
+const IP_RATE_LIMIT = 10 // max attempts per IP per window
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
+
+function checkRateLimit(key: string, limit: number): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(key)
+  
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
+    return true
+  }
+  
+  if (entry.count >= limit) {
+    return false
+  }
+  
+  entry.count++
+  return true
+}
+
 export async function POST(request: Request) {
   try {
+    // Get IP for rate limiting
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
+    
     const { email } = await request.json()
 
     // Validate email
@@ -25,21 +54,38 @@ export async function POST(request: Request) {
       )
     }
 
+    const normalizedEmail = email.toLowerCase().trim()
+
+    // Rate limit by IP
+    if (!checkRateLimit(`ip:${ip}`, IP_RATE_LIMIT)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again in a few minutes.' },
+        { status: 429 }
+      )
+    }
+
+    // Rate limit by email
+    if (!checkRateLimit(`email:${normalizedEmail}`, EMAIL_RATE_LIMIT)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again in a few minutes.' },
+        { status: 429 }
+      )
+    }
+
     // Check if user exists (with performance monitoring)
-    const user = await measurePerformance('findUserByEmail', () => findUserByEmail(email))
+    const user = await measurePerformance('findUserByEmail', () => findUserByEmail(normalizedEmail))
 
     if (!user) {
-      // Log failed login attempts for monitoring
+      // Log failed login attempts for monitoring (server-side only)
       await logAuthFailure({
         endpoint: '/api/send-magic-link',
-        email,
+        email: normalizedEmail,
         reason: 'User not found',
       })
 
-      return NextResponse.json(
-        { error: 'No account found with this email. Please enroll first.' },
-        { status: 404 }
-      )
+      // SECURITY: Return same success response to prevent email enumeration
+      // Attacker cannot distinguish between existing and non-existing accounts
+      return NextResponse.json({ success: true })
     }
 
     // Generate magic link token
@@ -59,8 +105,8 @@ export async function POST(request: Request) {
 
       if (isDevelopment) {
         const magicLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(user.email)}&token=${token}`
-        console.log('⚠️  Email service not configured - returning magic link directly')
-        console.log('🔗 Magic Link:', magicLink)
+        console.log('\u26a0\ufe0f  Email service not configured - returning magic link directly')
+        console.log('\ud83d\udd17 Magic Link:', magicLink)
         return NextResponse.json({
           success: true,
           devMode: true,

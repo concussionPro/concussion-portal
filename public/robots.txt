@@ -1,4 +1,4 @@
-# robots.txt for Concussion Education Australia
+# robots.txt for ConcussionPro
 
 User-agent: *
 Allow: /
@@ -9,7 +9,6 @@ Disallow: /dashboard/
 Disallow: /admin/
 Disallow: /dev-login/
 Disallow: /direct-access/
-Disallow: /settings/
 
 # Sitemap location
 Sitemap: https://portal.concussion-education-australia.com/sitemap.xml

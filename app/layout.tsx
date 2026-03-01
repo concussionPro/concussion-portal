@@ -5,6 +5,7 @@ import { ProgressProvider } from "@/contexts/ProgressContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { CONFIG } from "@/lib/config";
 import { organizationSchema } from "@/lib/schema-markup";
+import Script from 'next/script';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -99,6 +100,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Ads Conversion Tracking (AW-17984048021) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17984048021"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-tracking" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17984048021');
+          `}
+        </Script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
