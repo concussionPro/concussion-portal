@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadUsers } from '@/lib/users'
 
+function isAdminAuthorized(request: NextRequest): boolean {
+  const adminKey = request.headers.get('x-admin-key')
+  if (adminKey && adminKey === process.env.ADMIN_API_KEY) return true
+  const authHeader = request.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ') && authHeader.slice(7) === process.env.ADMIN_API_KEY) return true
+  return false
+}
+
 /**
  * Admin API: Get all email signups
- * For viewing captured emails in admin dashboard
+ * Protected — requires ADMIN_API_KEY
  */
 export async function GET(request: NextRequest) {
-  try {
-    // TODO: Add admin authentication check here
-    // For now, returning data (secure this in production)
+  if (!isAdminAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
+  try {
     const users = await loadUsers()
 
-    // Format for display
     const emailList = users.map(user => ({
       id: user.id,
       email: user.email,
@@ -22,7 +30,6 @@ export async function GET(request: NextRequest) {
       lastLogin: user.lastLoginAt || null,
     }))
 
-    // Sort by newest first
     emailList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     return NextResponse.json({
