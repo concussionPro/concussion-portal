@@ -78,4 +78,5 @@ export const CONFIG = {
 } as const
 
 export type LocationKey = keyof typeof CONFIG.LOCATIONS
+export type Location = LocationKey
 export type LocationConfig = typeof CONFIG.LOCATIONS[LocationKey]
