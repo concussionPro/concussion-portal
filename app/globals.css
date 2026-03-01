@@ -73,6 +73,7 @@ body {
   border-color: var(--border);
 }
 
+@layer components {
 /* Professional mesh gradient - subtle blue/green */
 .mesh-gradient {
   position: fixed;
@@ -1217,4 +1218,5 @@ input[type="reset"] {
   fill: none;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
 }
