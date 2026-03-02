@@ -22,7 +22,7 @@ import {
   Zap,
   Eye,
 } from 'lucide-react'
-import { getAllModules } from '@/data/modules'
+import { getPreviewModules } from '@/data/preview-modules'
 import { CONFIG } from '@/lib/config'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import CountdownTimer from '@/components/CountdownTimer'
@@ -32,8 +32,8 @@ const moduleIcons = [Brain, FileText, Activity, Clock, Users, Target, BookOpen, 
 
 export default function PreviewPage() {
   const router = useRouter()
-  const modules = getAllModules()
-  const [expandedModule, setExpandedModule] = useState<number>(0) // All collapsed by default
+  const modules = getPreviewModules()
+  const [expandedModule, setExpandedModule] = useState<number>(0)
 
   // Find next workshop within 3 weeks
   const now = new Date()
@@ -48,7 +48,7 @@ export default function PreviewPage() {
 
   // First TWO sections of ALL modules unlocked (to show breadth)
   const isUnlocked = (moduleId: number, sectionIndex: number) => {
-    return sectionIndex === 0 || sectionIndex === 1 // First TWO sections of every module
+    return sectionIndex === 0 || sectionIndex === 1
   }
 
   const toggleModule = (moduleId: number) => {
@@ -109,14 +109,14 @@ export default function PreviewPage() {
           <div className="relative z-10 max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-amber-500 text-white px-5 py-2 rounded-full text-sm font-black mb-6 shadow-lg animate-bounce">
               <Eye className="w-5 h-5" />
-              🔥 PREVIEW: 16 Sections Unlocked 🔥
+              PREVIEW: 16 Sections Unlocked
             </div>
 
             <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight leading-tight">
               Explore the Full Course Structure
             </h2>
             <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-3xl mx-auto">
-              See exactly what you'll learn across all 8 modules. We've unlocked the <span className="font-bold text-amber-300">first TWO sections</span> of each module
+              See exactly what you&apos;ll learn across all 8 modules. We&apos;ve unlocked the <span className="font-bold text-amber-300">first TWO sections</span> of each module
               so you can preview the breadth of content—from acute assessment to return-to-activity protocols. Full course includes <span className="font-bold text-amber-300">100+ sections</span> with
               interactive quizzes, clinical flowcharts, and downloadable resources.
             </p>
@@ -194,7 +194,7 @@ export default function PreviewPage() {
           {modules.map((module, idx) => {
             const ModuleIcon = moduleIcons[idx]
             const isExpanded = expandedModule === module.id
-            const hasUnlockedContent = true // All modules have first section unlocked
+            const hasUnlockedContent = true
 
             return (
               <div
@@ -226,12 +226,6 @@ export default function PreviewPage() {
                             PREVIEW AVAILABLE
                           </span>
                         )}
-                        {!hasUnlockedContent && (
-                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-1">
-                            <Lock className="w-3 h-3" />
-                            LOCKED
-                          </span>
-                        )}
                       </div>
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
                         {module.title}
@@ -253,7 +247,7 @@ export default function PreviewPage() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <FileText className="w-4 h-4" />
-                          <span className="font-medium">{module.sections.length} Sections</span>
+                          <span className="font-medium">{module.sectionCount} Sections</span>
                         </div>
                       </div>
                     </div>
@@ -308,9 +302,9 @@ export default function PreviewPage() {
                               <h4 className={`text-base font-bold mb-1 ${unlocked ? 'text-slate-900' : 'text-slate-500'}`}>
                                 {section.title}
                               </h4>
-                              {section.content && section.content.length > 0 && (
+                              {section.preview && (
                                 <p className={`text-sm leading-relaxed ${unlocked ? 'text-slate-600' : 'text-slate-400'}`}>
-                                  {section.content[0].substring(0, 150)}...
+                                  {section.preview}...
                                 </p>
                               )}
                               {!unlocked && (
@@ -346,7 +340,7 @@ export default function PreviewPage() {
               Choose Your Learning Path
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Can't commit to a workshop date yet? Start with online modules and upgrade anytime.
+              Can&apos;t commit to a workshop date yet? Start with online modules and upgrade anytime.
             </p>
           </div>
           <PricingOptions variant="compact" />
