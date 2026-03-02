@@ -214,77 +214,77 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* BENTO STAT GRID - colored gradient cards, mixed sizes */}
-            <div className="home-bento max-w-4xl mx-auto">
-              {/* Wide teal card - Total CPD (hero stat) */}
-              <div className="home-bento-wide glass-color glass-teal inner-glow inner-glow-teal p-6 flex flex-col justify-between min-h-[160px]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                    <GraduationCap className="w-4 h-4 text-teal-700" />
+            {/* BENTO STAT GRID — compact, rondesignlab-inspired */}
+            <div className="home-bento max-w-3xl mx-auto">
+              {/* Teal — Total CPD (tall hero stat on desktop) */}
+              <div className="home-bento-wide glass-color glass-teal inner-glow inner-glow-teal p-4 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5 mb-auto">
+                  <div className="w-6 h-6 rounded-md bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                    <GraduationCap className="w-3 h-3 text-teal-700" />
                   </div>
-                  <span className="text-xs font-semibold text-teal-700/80 uppercase tracking-wider">Total CPD Hours</span>
+                  <span className="text-[10px] font-bold text-teal-700/80 uppercase tracking-wider">Total CPD Hours</span>
                 </div>
-                <div className="relative z-10">
-                  <div className="text-5xl md:text-6xl font-bold text-teal-800/90 tracking-tight leading-none mb-1">
+                <div className="relative z-10 mt-3">
+                  <div className="text-5xl md:text-6xl font-extrabold text-teal-800/90 tracking-tighter leading-none">
                     {CONFIG.COURSE.TOTAL_CPD_HOURS}
                   </div>
-                  <div className="text-sm font-medium text-teal-700/70">AHPRA Accredited</div>
+                  <div className="text-[11px] font-semibold text-teal-700/60 mt-0.5">AHPRA Accredited</div>
                 </div>
               </div>
 
-              {/* Rose card - Online Modules */}
-              <div className="glass-color glass-rose inner-glow inner-glow-rose p-5 flex flex-col justify-between min-h-[160px]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-rose-700" />
+              {/* Rose — Online Modules */}
+              <div className="glass-color glass-rose inner-glow inner-glow-rose p-3.5 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-md bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                    <BookOpen className="w-3 h-3 text-rose-700" />
                   </div>
-                  <span className="text-xs font-semibold text-rose-700/80 uppercase tracking-wider">Online</span>
+                  <span className="text-[10px] font-bold text-rose-700/80 uppercase tracking-wider">Online</span>
                 </div>
-                <div className="relative z-10">
-                  <div className="text-4xl md:text-5xl font-bold text-rose-800/90 tracking-tight leading-none mb-1">8</div>
-                  <div className="text-sm font-medium text-rose-700/70">Modules · 8 CPD hrs</div>
+                <div className="relative z-10 mt-2">
+                  <div className="text-3xl font-extrabold text-rose-800/90 tracking-tighter leading-none">8</div>
+                  <div className="text-[11px] font-semibold text-rose-700/60 mt-0.5">Modules · 8 CPD hrs</div>
                 </div>
               </div>
 
-              {/* Cobalt card - In-Person */}
-              <div className="glass-color glass-cobalt inner-glow inner-glow-cobalt p-5 flex flex-col justify-between min-h-[160px]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                    <Users className="w-4 h-4 text-blue-700" />
+              {/* Cobalt — In-Person */}
+              <div className="glass-color glass-cobalt inner-glow inner-glow-cobalt p-3.5 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-md bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                    <Users className="w-3 h-3 text-blue-700" />
                   </div>
-                  <span className="text-xs font-semibold text-blue-700/80 uppercase tracking-wider">Practical</span>
+                  <span className="text-[10px] font-bold text-blue-700/80 uppercase tracking-wider">Practical</span>
                 </div>
-                <div className="relative z-10">
-                  <div className="text-4xl md:text-5xl font-bold text-blue-800/90 tracking-tight leading-none mb-1">1 Day</div>
-                  <div className="text-sm font-medium text-blue-700/70">In-Person · 6 CPD hrs</div>
+                <div className="relative z-10 mt-2">
+                  <div className="text-3xl font-extrabold text-blue-800/90 tracking-tighter leading-none">1 Day</div>
+                  <div className="text-[11px] font-semibold text-blue-700/60 mt-0.5">In-Person · 6 CPD hrs</div>
                 </div>
               </div>
 
-              {/* Amber card - Locations */}
-              <div className="glass-color glass-amber inner-glow inner-glow-amber p-5 flex flex-col justify-between min-h-[160px]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-amber-700" />
+              {/* Amber — Locations */}
+              <div className="glass-color glass-amber inner-glow inner-glow-amber p-3.5 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-md bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                    <MapPin className="w-3 h-3 text-amber-700" />
                   </div>
-                  <span className="text-xs font-semibold text-amber-700/80 uppercase tracking-wider">Locations</span>
+                  <span className="text-[10px] font-bold text-amber-700/80 uppercase tracking-wider">Locations</span>
                 </div>
-                <div className="relative z-10">
-                  <div className="text-4xl md:text-5xl font-bold text-amber-800/90 tracking-tight leading-none mb-1">3</div>
-                  <div className="text-sm font-medium text-amber-700/70">Melb / Syd / Byron</div>
+                <div className="relative z-10 mt-2">
+                  <div className="text-3xl font-extrabold text-amber-800/90 tracking-tighter leading-none">3</div>
+                  <div className="text-[11px] font-semibold text-amber-700/60 mt-0.5">Melb / Syd / Byron</div>
                 </div>
               </div>
 
-              {/* Emerald card - Certificate */}
-              <div className="glass-color glass-emerald p-5 flex flex-col justify-between min-h-[160px]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                    <FileCheck className="w-4 h-4 text-emerald-700" />
+              {/* Emerald — Certificate */}
+              <div className="glass-color glass-emerald p-3.5 flex flex-col justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-md bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                    <FileCheck className="w-3 h-3 text-emerald-700" />
                   </div>
-                  <span className="text-xs font-semibold text-emerald-700/80 uppercase tracking-wider">Certificate</span>
+                  <span className="text-[10px] font-bold text-emerald-700/80 uppercase tracking-wider">Certificate</span>
                 </div>
-                <div className="relative z-10">
-                  <div className="text-2xl font-bold text-emerald-800/90 tracking-tight leading-tight mb-1">Digital &amp; PDF</div>
-                  <div className="text-sm font-medium text-emerald-700/70">Completion Certificate</div>
+                <div className="relative z-10 mt-2">
+                  <div className="text-lg font-extrabold text-emerald-800/90 tracking-tight leading-tight">Digital &amp; PDF</div>
+                  <div className="text-[11px] font-semibold text-emerald-700/60 mt-0.5">Completion Certificate</div>
                 </div>
               </div>
             </div>
@@ -351,44 +351,44 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Trust Markers - Bento colored cards */}
-        <section className="py-10 relative z-10">
+        {/* Trust Markers — compact colored pills */}
+        <section className="py-8 relative z-10">
           <div className="container-lg px-6 md:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
               {/* AHPRA */}
-              <div className="glass-color glass-teal p-5 text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg mx-auto mb-3">
-                  <Shield className="w-6 h-6 text-white" strokeWidth={2.5} />
+              <div className="glass-color glass-teal p-3.5 text-center">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-md mx-auto mb-2">
+                  <Shield className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
-                <div className="text-sm font-bold text-slate-900">AHPRA Accredited</div>
-                <div className="text-xs text-slate-600 mt-0.5">{CONFIG.COURSE.TOTAL_CPD_HOURS} CPD Hours</div>
+                <div className="text-xs font-bold text-slate-900">AHPRA Accredited</div>
+                <div className="text-[10px] text-slate-600 mt-0.5">{CONFIG.COURSE.TOTAL_CPD_HOURS} CPD Hours</div>
               </div>
 
               {/* Certificate */}
-              <div className="glass-color glass-amber p-5 text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg mx-auto mb-3">
-                  <Award className="w-6 h-6 text-white" strokeWidth={2.5} />
+              <div className="glass-color glass-amber p-3.5 text-center">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md mx-auto mb-2">
+                  <Award className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
-                <div className="text-sm font-bold text-slate-900">Certificate</div>
-                <div className="text-xs text-slate-600 mt-0.5">Digital &amp; PDF</div>
+                <div className="text-xs font-bold text-slate-900">Certificate</div>
+                <div className="text-[10px] text-slate-600 mt-0.5">Digital &amp; PDF</div>
               </div>
 
               {/* Lifetime */}
-              <div className="glass-color glass-emerald p-5 text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg mx-auto mb-3">
-                  <Clock className="w-6 h-6 text-white" strokeWidth={2.5} />
+              <div className="glass-color glass-emerald p-3.5 text-center">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md mx-auto mb-2">
+                  <Clock className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
-                <div className="text-sm font-bold text-slate-900">Lifetime Access</div>
-                <div className="text-xs text-slate-600 mt-0.5">All Future Updates</div>
+                <div className="text-xs font-bold text-slate-900">Lifetime Access</div>
+                <div className="text-[10px] text-slate-600 mt-0.5">All Future Updates</div>
               </div>
 
               {/* Expert */}
-              <div className="glass-color glass-cobalt p-5 text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg mx-auto mb-3">
-                  <CheckCircle2 className="w-6 h-6 text-white" strokeWidth={2.5} />
+              <div className="glass-color glass-cobalt p-3.5 text-center">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md mx-auto mb-2">
+                  <CheckCircle2 className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
-                <div className="text-sm font-bold text-slate-900">Expert Developed</div>
-                <div className="text-xs text-slate-600 mt-0.5">15+ Years Experience</div>
+                <div className="text-xs font-bold text-slate-900">Expert Developed</div>
+                <div className="text-[10px] text-slate-600 mt-0.5">15+ Years Experience</div>
               </div>
             </div>
           </div>
@@ -498,7 +498,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-3 max-w-5xl mx-auto">
               {[
                 {
                   icon: Brain,
@@ -524,15 +524,15 @@ export default function HomePage() {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className={`glass-color ${item.color} p-6 group`}
+                  className={`glass-color ${item.color} p-4 group`}
                 >
-                  <div className={`w-12 h-12 rounded-xl mb-4 bg-gradient-to-br ${item.iconBg} flex items-center justify-center shadow-lg`} aria-hidden="true">
-                    <item.icon className="w-6 h-6 text-white" strokeWidth={2} />
+                  <div className={`w-9 h-9 rounded-lg mb-3 bg-gradient-to-br ${item.iconBg} flex items-center justify-center shadow-md`} aria-hidden="true">
+                    <item.icon className="w-4 h-4 text-white" strokeWidth={2} />
                   </div>
-                  <h3 className="text-lg font-bold mb-2 tracking-tight text-slate-900">
+                  <h3 className="text-sm font-bold mb-1 tracking-tight text-slate-900">
                     {item.title}
                   </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <p className="text-xs text-slate-600 leading-relaxed">
                     {item.description}
                   </p>
                 </div>
