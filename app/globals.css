@@ -62,7 +62,10 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(13, 115, 119, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(13, 115, 119, 0.03) 0%, transparent 50%),
+    var(--background);
   color: var(--foreground);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
@@ -105,12 +108,10 @@ html {
 }
 
 .hero-gradient {
-  background: linear-gradient(
-    175deg,
-    rgba(13, 115, 119, 0.06) 0%,
-    rgba(13, 115, 119, 0.02) 35%,
-    transparent 60%
-  );
+  background:
+    radial-gradient(ellipse 100% 60% at 30% -10%, rgba(13, 115, 119, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(13, 115, 119, 0.04) 0%, transparent 50%),
+    linear-gradient(175deg, rgba(13, 115, 119, 0.05) 0%, transparent 50%);
 }
 
 .ambient-glow {
@@ -125,6 +126,7 @@ html {
 
 .btn-primary {
   position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--accent) 0%, #0b6165 100%);
   color: white;
   font-weight: 600;
@@ -196,15 +198,7 @@ html {
   background-clip: text;
 }
 
-.glass {
-  background: rgba(248, 250, 251, 0.88);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(13, 115, 119, 0.06);
-  box-shadow:
-    0 1px 3px rgba(0,0,0,0.04),
-    0 8px 24px rgba(13, 115, 119, 0.04);
-}
+/* glass — see enhanced definition below */
 
 .card {
   background: rgba(255, 255, 255, 0.72);
@@ -219,11 +213,12 @@ html {
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   box-shadow:
     0 2px 6px rgba(13, 115, 119, 0.05),
-    0 8px 32px rgba(13, 115, 119, 0.07);
-  border-color: rgba(13, 115, 119, 0.14);
+    0 8px 32px rgba(13, 115, 119, 0.07),
+    0 0 0 1px rgba(13, 115, 119, 0.06);
+  border-color: rgba(13, 115, 119, 0.16);
   transform: translateY(-1px);
 }
 
@@ -255,18 +250,9 @@ html {
   transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.stat-tile:hover {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 4px 20px rgba(13, 115, 119, 0.06);
-  transform: translateY(-2px);
-}
+/* stat-tile hover — see enhanced definition below */
 
-.divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(13, 115, 119, 0.1), transparent);
-  width: 100%;
-}
+/* divider — see enhanced definition below */
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -899,4 +885,269 @@ input[type="reset"] {
   border-color: rgba(13, 115, 119, 0.14);
 }
 
+/* ── Subtle shimmer sweep on cards ────────────────── */
+@keyframes borderShimmer {
+  0% { opacity: 0; transform: translateX(-100%) skewX(-15deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(200%) skewX(-15deg); }
+}
+
+.card::before,
+.stat-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(13, 115, 119, 0.06) 45%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(13, 115, 119, 0.06) 55%,
+    transparent 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  animation: borderShimmer 6s ease-in-out infinite;
+  animation-delay: var(--shimmer-delay, 0s);
+}
+
+.card,
+.stat-tile {
+  position: relative;
+  overflow: hidden;
+}
+
+.card:nth-child(2)::before,
+.stat-tile:nth-child(2)::before { --shimmer-delay: 1.5s; }
+.card:nth-child(3)::before,
+.stat-tile:nth-child(3)::before { --shimmer-delay: 3s; }
+.card:nth-child(4)::before,
+.stat-tile:nth-child(4)::before { --shimmer-delay: 4.5s; }
+
+/* ── Subtle gradient border accent on accent cards ── */
+.card-accent {
+  position: relative;
+}
+
+.card-accent::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(13, 115, 119, 0.2), var(--accent), rgba(13, 115, 119, 0.2), transparent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  opacity: 0.6;
+}
+
+/* ── Badge gentle pulse ─────────────────────────────── */
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 1px 4px rgba(13, 115, 119, 0.06), 0 0 0 0 rgba(13, 115, 119, 0); }
+  50% { box-shadow: 0 1px 4px rgba(13, 115, 119, 0.06), 0 0 0 4px rgba(13, 115, 119, 0.04); }
+}
+
+.badge {
+  animation: badgePulse 4s ease-in-out infinite;
+}
+
+/* ── Stat tile gradient tint on hover ───────────────── */
+.stat-tile:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(13, 115, 119, 0.04) 100%
+  );
+  box-shadow: 0 4px 20px rgba(13, 115, 119, 0.06);
+  transform: translateY(-2px);
+}
+
+/* ── Gradient divider (richer) ──────────────────────── */
+.divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(13, 115, 119, 0.06) 20%,
+    rgba(13, 115, 119, 0.12) 50%,
+    rgba(13, 115, 119, 0.06) 80%,
+    transparent
+  );
+}
+
+/* ── CTA button inner shimmer ───────────────────────── */
+@keyframes ctaShimmer {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 60%
+  );
+  pointer-events: none;
+  animation: ctaShimmer 5s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+/* ── Section transition gradient strips ─────────────── */
+.section-glow {
+  position: relative;
+}
+
+.section-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  max-width: 400px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(13, 115, 119, 0.1), transparent);
+}
+
+/* ── Glass nav subtle gradient ──────────────────────── */
+.glass {
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 251, 0.92) 0%,
+    rgba(248, 250, 251, 0.86) 100%
+  );
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(13, 115, 119, 0.06);
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.04),
+    0 8px 24px rgba(13, 115, 119, 0.04);
+}
+
+/* ── Respect reduced motion ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .card::before,
+  .stat-tile::before,
+  .btn-primary::after,
+  .badge {
+    animation: none !important;
+  }
+}
+
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FLOATING BRAIN ACCENTS
+   Pure CSS, GPU-composited (transform + opacity only). No layout triggers.
+   Usage: <div class="floating-brains" aria-hidden="true">
+            <span class="brain-accent-1"></span>
+            <span class="brain-accent-2"></span>
+          </div>
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes float-brain-1 {
+  0%   { transform: translateY(0px) rotate(-3deg); }
+  33%  { transform: translateY(-22px) rotate(0deg); }
+  66%  { transform: translateY(-8px) rotate(3deg); }
+  100% { transform: translateY(0px) rotate(-3deg); }
+}
+
+@keyframes float-brain-2 {
+  0%   { transform: translateY(0px) rotate(4deg); }
+  40%  { transform: translateY(-30px) rotate(0deg); }
+  80%  { transform: translateY(-12px) rotate(-4deg); }
+  100% { transform: translateY(0px) rotate(4deg); }
+}
+
+@keyframes float-brain-3 {
+  0%   { transform: translateY(0px) rotate(-6deg); }
+  50%  { transform: translateY(-18px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(-6deg); }
+}
+
+@keyframes float-brain-4 {
+  0%   { transform: translateY(0px) rotate(2deg); }
+  45%  { transform: translateY(-25px) rotate(-3deg); }
+  100% { transform: translateY(0px) rotate(2deg); }
+}
+
+.floating-brains {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.floating-brains::before,
+.floating-brains::after,
+.floating-brains .brain-accent-1,
+.floating-brains .brain-accent-2 {
+  content: '';
+  display: block;
+  position: absolute;
+  background-repeat: no-repeat;
+  background-size: contain;
+  will-change: transform, opacity;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20160%22%20fill%3D%22none%22%3E%3Cg%20stroke%3D%22%230d7377%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M%20100%20130%20C%20100%20130%2C%2055%20132%2C%2042%20115%20C%2028%2097%2C%2020%2077%2C%2022%2060%20C%2025%2040%2C%2040%2022%2C%2062%2018%20C%2076%2015%2C%2092%2020%2C%20100%2030%22%2F%3E%3Cpath%20d%3D%22M%20100%20130%20C%20100%20130%2C%20145%20132%2C%20158%20115%20C%20172%2097%2C%20180%2077%2C%20178%2060%20C%20175%2040%2C%20160%2022%2C%20138%2018%20C%20124%2015%2C%20108%2020%2C%20100%2030%22%2F%3E%3Cpath%20d%3D%22M%20100%2030%20C%20100%2055%2C%20100%2090%2C%20100%20130%22%20stroke-width%3D%221.5%22%20opacity%3D%220.5%22%2F%3E%3Cpath%20d%3D%22M%2048%2070%20C%2058%2062%2C%2072%2068%2C%2078%2080%22%20stroke-width%3D%221.5%22%20opacity%3D%220.6%22%2F%3E%3Cpath%20d%3D%22M%2040%2090%20C%2052%2084%2C%2066%2088%2C%2070%20100%22%20stroke-width%3D%221.5%22%20opacity%3D%220.6%22%2F%3E%3Cpath%20d%3D%22M%2055%2048%20C%2065%2042%2C%2080%2048%2C%2084%2060%22%20stroke-width%3D%221.5%22%20opacity%3D%220.5%22%2F%3E%3Cpath%20d%3D%22M%20152%2070%20C%20142%2062%2C%20128%2068%2C%20122%2080%22%20stroke-width%3D%221.5%22%20opacity%3D%220.6%22%2F%3E%3Cpath%20d%3D%22M%20160%2090%20C%20148%2084%2C%20134%2088%2C%20130%20100%22%20stroke-width%3D%221.5%22%20opacity%3D%220.6%22%2F%3E%3Cpath%20d%3D%22M%20145%2048%20C%20135%2042%2C%20120%2048%2C%20116%2060%22%20stroke-width%3D%221.5%22%20opacity%3D%220.5%22%2F%3E%3Cpath%20d%3D%22M%2088%20130%20C%2086%20140%2C%2088%20148%2C%2096%20150%20C%20104%20150%2C%20108%20144%2C%20106%20134%22%20stroke-width%3D%222%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Brain 1 — large, top-left, 30s float */
+.floating-brains::before {
+  width: 420px;
+  height: 336px;
+  top: -80px;
+  left: -60px;
+  opacity: 0.04;
+  animation: float-brain-1 30s ease-in-out infinite;
+}
+
+/* Brain 2 — medium, bottom-right, 38s float */
+.floating-brains::after {
+  width: 320px;
+  height: 256px;
+  bottom: -40px;
+  right: -20px;
+  opacity: 0.035;
+  animation: float-brain-2 38s ease-in-out infinite;
+  animation-delay: -14s;
+}
+
+/* Brain 3 — small, mid-right, 25s float */
+.floating-brains .brain-accent-1 {
+  width: 200px;
+  height: 160px;
+  top: 35%;
+  right: 5%;
+  opacity: 0.03;
+  animation: float-brain-3 25s ease-in-out infinite;
+  animation-delay: -8s;
+}
+
+/* Brain 4 — medium, lower-left, 34s float */
+.floating-brains .brain-accent-2 {
+  width: 280px;
+  height: 224px;
+  bottom: 20%;
+  left: 3%;
+  opacity: 0.04;
+  animation: float-brain-4 34s ease-in-out infinite;
+  animation-delay: -22s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-brains::before,
+  .floating-brains::after,
+  .floating-brains .brain-accent-1,
+  .floating-brains .brain-accent-2 {
+    animation: none !important;
+  }
 }
