@@ -135,6 +135,11 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        {/* Floating brain accents — subtle, GPU-composited, aria-hidden */}
+        <div className="floating-brains" aria-hidden="true">
+          <span className="brain-accent-1"></span>
+          <span className="brain-accent-2"></span>
+        </div>
         <ProgressProvider>
           <AnalyticsProvider>
             <div id="main-content">
