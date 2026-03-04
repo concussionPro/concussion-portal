@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { deleteSession } from '@/lib/sessions'
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionId = request.cookies.get('session')?.value
-
-    if (sessionId) {
-      // Delete session from storage
-      await deleteSession(sessionId)
-    }
-
-    // Clear the cookie
+    // JWT sessions are stateless — just clear the cookie
     const response = NextResponse.json({
       success: true,
       message: 'Logged out successfully',

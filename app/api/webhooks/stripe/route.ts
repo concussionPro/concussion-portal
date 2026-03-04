@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { sendMagicLinkEmail } from '@/lib/email'
-import { createJWTSession } from '@/lib/jwt-session'
+import { createMagicToken } from '@/lib/magic-link-jwt'
 import Stripe from 'stripe'
 
 /**
@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const customerEmail = session.customer_email || session.customer_details?.email
   const customerName = session.customer_details?.name || 'Student'
-  const customerPhone = session.customer_details?.phone || undefined
 
   if (!customerEmail) {
     console.error('No customer email in checkout session')
@@ -98,7 +97,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         (existingUser.accessLevel === 'preview' || existingUser.accessLevel === 'online-only') &&
         accessLevel === 'full-course'
       ) {
-        // The createUser function handles upgrades
         await createUser({
           email: customerEmail,
           name: customerName,
@@ -108,14 +106,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         console.log(`⬆️ Upgraded ${customerEmail} to full-course`)
       }
 
-      // Send login link
-      const token = await createJWTSession(
-        existingUser.id,
-        existingUser.email,
-        existingUser.name,
-        accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel,
-        true
-      )
+      // FIX: Use createMagicToken (not createJWTSession) so /auth/verify can decode it
+      const finalAccess = accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel
+      const token = createMagicToken(existingUser.id, existingUser.email, existingUser.name, finalAccess)
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
       await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
@@ -133,15 +126,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       stripeCustomerId: session.customer as string || undefined,
     })
 
-    // Generate JWT and send magic link
-    const token = await createJWTSession(
-      userId,
-      customerEmail,
-      customerName,
-      accessLevel,
-      true // Remember for 30 days
-    )
-
+    // FIX: Use createMagicToken (not createJWTSession) for magic link emails
+    const token = createMagicToken(userId, customerEmail, customerName, accessLevel)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
@@ -149,7 +135,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.log(`   Course: ${courseType} | Location: ${location || 'N/A'} | Access: ${accessLevel}`)
   } catch (error) {
     console.error('Failed to provision user after checkout:', error)
-    // Don't throw — Stripe will retry the webhook. Log for manual resolution.
     console.error(`⚠️ MANUAL ACTION REQUIRED: Provision ${customerEmail} with ${accessLevel} access`)
   }
 }
@@ -160,5 +145,4 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   const email = paymentIntent.receipt_email || paymentIntent.metadata?.email || 'unknown'
   console.log(`❌ Payment failed for ${email}: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`)
-  // TODO: Send payment failure notification email
 }

@@ -1,6 +1,8 @@
 /**
  * Test API: Send a nurture sequence email to a specific address
+ * REQUIRES ADMIN_API_KEY header for security
  * Usage: POST /api/test/send-nurture
+ * Headers: x-admin-key: <ADMIN_API_KEY>
  * Body: { email: string, day: number, name?: string }
  */
 
@@ -10,6 +12,12 @@ import { SCAT_MASTERY_SEQUENCE } from '@/lib/email-sequences'
 
 export async function POST(request: NextRequest) {
   try {
+    // Require admin API key
+    const adminKey = request.headers.get('x-admin-key') || request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!process.env.ADMIN_API_KEY || adminKey !== process.env.ADMIN_API_KEY) {
+      return NextResponse.json({ error: 'Unauthorized — admin API key required' }, { status: 401 })
+    }
+
     const { email, day, name } = await request.json()
 
     if (!email || typeof day !== 'number') {

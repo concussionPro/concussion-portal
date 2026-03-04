@@ -6,8 +6,14 @@ import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { getCurrentUser, logout } from '@/lib/auth'
 import { useState, useEffect } from 'react'
+
+interface UserInfo {
+  id: string
+  email: string
+  name: string
+  enrolledAt: string
+}
 
 const navItems: Array<{
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
@@ -29,7 +35,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const completedModules = getTotalCompletedModules()
-  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null)
+  const [user, setUser] = useState<UserInfo | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -43,21 +49,23 @@ export function Sidebar() {
               id: data.user.id || '1',
               email: data.user.email || '',
               name: data.user.name || data.user.email?.split('@')[0] || 'Student',
-              enrolledAt: data.user.enrolledAt || data.user.createdAt || new Date().toISOString(),
+              enrolledAt: new Date().toISOString(),
             })
-            return
           }
         }
-      } catch (_) {
-        // Fallback to localStorage
+      } catch (error) {
+        console.error('Failed to load user:', error)
       }
-      setUser(getCurrentUser())
     }
     loadUser()
   }, [])
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    } catch (_) {
+      // Continue with redirect even if API fails
+    }
     router.push('/')
   }
 

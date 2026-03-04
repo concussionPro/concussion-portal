@@ -3,14 +3,35 @@
 import { useState, useEffect } from 'react'
 import { X, CheckCircle2, Play, Target, Award } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { getCurrentUser } from '@/lib/auth'
 import { cn } from '@/lib/utils'
+
+interface UserInfo {
+  name?: string
+  email?: string
+}
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false)
   const [step, setStep] = useState(1)
   const router = useRouter()
-  const user = getCurrentUser()
+  const [user, setUser] = useState<UserInfo | null>(null)
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const response = await fetch('/api/auth/session', { credentials: 'include' })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user) {
+            setUser(data.user)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load user:', error)
+      }
+    }
+    loadUser()
+  }, [])
 
   useEffect(() => {
     // Check if user has seen welcome modal

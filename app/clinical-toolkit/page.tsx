@@ -2,7 +2,6 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { getCurrentUser } from '@/lib/auth'
 import { FileText, Download, Lock, CheckCircle2, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { createUser, findUserByEmail, findUserById } from '@/lib/users'
-import { createJWTSession } from '@/lib/jwt-session'
+import { createUser, findUserByEmail } from '@/lib/users'
+import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
@@ -38,13 +38,10 @@ export async function POST(request: NextRequest) {
       let accessLevel: 'online-only' | 'full-course' = 'online-only'
 
       if (orderTotal >= 1000) {
-        // Full course ($1,190 or higher)
         accessLevel = 'full-course'
       } else if (orderTotal >= 400) {
-        // Online only ($497 or similar)
         accessLevel = 'online-only'
       } else {
-        // Not a course product - ignore
         console.log('⏭️  Order total too low - not a course purchase')
         return NextResponse.json({ success: true, message: 'Not a course product' })
       }
@@ -60,24 +57,32 @@ export async function POST(request: NextRequest) {
       if (existingUser) {
         console.log(`👤 Existing user: ${customerEmail}`)
 
-        // Upgrade if needed
-        if (existingUser.accessLevel === 'online-only' && accessLevel === 'full-course') {
+        // FIX: Use createUser() to properly persist the upgrade (it handles save internally)
+        if (
+          (existingUser.accessLevel === 'preview' || existingUser.accessLevel === 'online-only') &&
+          accessLevel === 'full-course'
+        ) {
           console.log(`⬆️  Upgrading ${customerEmail} to full course`)
-          existingUser.accessLevel = 'full-course'
+          await createUser({
+            email: customerEmail,
+            name: customerName,
+            accessLevel: 'full-course',
+            squarespaceOrderId: orderId,
+          })
         }
 
-        // Generate magic link token
-        const token = createJWTSession(existingUser.id, existingUser.email, existingUser.name, existingUser.accessLevel, true)
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+        const finalAccess = accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel
 
-        // Send magic link email
+        // FIX: Use createMagicToken (not createJWTSession) for magic link emails
+        const token = createMagicToken(existingUser.id, existingUser.email, existingUser.name, finalAccess)
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
         await sendMagicLinkEmail(existingUser.email, token, baseUrl)
 
         return NextResponse.json({
           success: true,
           userId: existingUser.id,
-          accessLevel: existingUser.accessLevel,
-          upgraded: existingUser.accessLevel === 'full-course' && accessLevel === 'full-course',
+          accessLevel: finalAccess,
+          upgraded: finalAccess === 'full-course',
         })
       }
 
@@ -87,21 +92,13 @@ export async function POST(request: NextRequest) {
       const userId = await createUser({
         email: customerEmail,
         name: customerName,
-        accessLevel: accessLevel as 'online-only' | 'full-course' | 'preview',
+        accessLevel,
         squarespaceOrderId: orderId,
       })
 
-      // Get the created user
-      const newUser = await findUserById(userId)
-      if (!newUser) {
-        throw new Error('User creation failed')
-      }
-
-      // Generate magic link token
-      const token = createJWTSession(userId, customerEmail, customerName, accessLevel, true)
+      // FIX: Use createMagicToken for magic link emails
+      const token = createMagicToken(userId, customerEmail, customerName, accessLevel)
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-
-      // Send magic link email
       const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
       console.log(`✅ User created: ${userId}`)

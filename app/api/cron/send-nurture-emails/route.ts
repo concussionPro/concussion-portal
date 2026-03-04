@@ -1,8 +1,8 @@
 /**
  * Cron Job: Send Nurture Sequence Emails
  *
- * Vercel Cron: Runs daily at 9am AEST
- * Add to vercel.json: { "path": "/api/cron/send-nurture-emails", "schedule": "0 9 * * *" }
+ * Vercel Cron: Runs daily at 9am AEDT (UTC 22:00)
+ * Configured in vercel.json
  */
 
 import { NextResponse } from 'next/server'
@@ -12,6 +12,12 @@ import { SCAT_MASTERY_SEQUENCE } from '@/lib/email-sequences'
 
 export async function GET(request: Request) {
   try {
+    // Guard: CRON_SECRET must be set
+    if (!process.env.CRON_SECRET) {
+      console.error('CRON_SECRET not configured — refusing to run')
+      return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
+    }
+
     // Verify cron secret
     const authHeader = request.headers.get('authorization')
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
