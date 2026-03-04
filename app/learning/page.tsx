@@ -7,7 +7,6 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { getAllModules } from '@/data/modules'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { isTrialUser } from '@/lib/trial'
 import { useState, useEffect } from 'react'
 import { useAnalytics } from '@/hooks/useAnalytics'
 
@@ -15,7 +14,6 @@ export default function LearningSuite() {
   const router = useRouter()
   const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, isModuleComplete, getModuleProgress } = useProgress()
   const modules = getAllModules()
-  const [isTrial, setIsTrial] = useState(false)
   const [hasAccess, setHasAccess] = useState(false)
   useAnalytics() // Track page views
 
@@ -24,8 +22,6 @@ export default function LearningSuite() {
   const studyTime = getTotalStudyTime()
 
   useEffect(() => {
-    setIsTrial(isTrialUser())
-
     // Check session-based access
     async function checkAccess() {
       // Check session-based authentication
@@ -104,8 +100,8 @@ export default function LearningSuite() {
                 const completed = isModuleComplete(module.id)
                 const progress = getModuleProgress(module.id)
                 const hasStarted = progress.startedAt !== null
-                // Modules are locked if user is trial AND doesn't have paid access
-                const isLocked = isTrial && !hasAccess
+                // Modules are locked if user doesn't have paid access
+                const isLocked = !hasAccess
 
                 return (
                   <div
