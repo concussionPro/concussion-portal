@@ -17,9 +17,9 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // ── Env vars ──────────────────────────────────────────────────────────────────
 // Set these in Vercel dashboard:
-//   UMAMI_WEBSITE_ID  = 78007a9523265d8a53b15efc8457b60c2f3394d2d5ad0259a38761afb69a02d3
-//   UMAMI_API_TOKEN   = 78007a9523265d8a53b15efc8457b60c2f3394d2d5ad0259a38761afb69a02d3
-//   ANALYTICS_API_KEY = (any secret key you want admins to use for dashboard auth)
+//   UMAMI_WEBSITE_ID  = your Umami website ID
+//   UMAMI_API_TOKEN   = your Umami API token
+//   ANALYTICS_API_KEY = admin dashboard auth key
 
 const UMAMI_BASE = 'https://cloud.umami.is/api'
 const WEBSITE_ID = process.env.UMAMI_WEBSITE_ID ?? ''
@@ -40,7 +40,29 @@ function getPeriodTimestamps(period: string): { startAt: number; endAt: number }
 }
 
 // ── Mock data (shown when env vars are not configured) ────────────────────────
-const MOCK_STATS = {
+interface MockStats {
+  _isMockData: boolean
+  _message: string
+  pageviews: { value: number; prev: number }
+  uniques: { value: number; prev: number }
+  bounces: { value: number; prev: number }
+  totaltime: { value: number; prev: number }
+}
+
+interface MockPageviews {
+  _isMockData: boolean
+  _message: string
+  pageviews: never[]
+  sessions: never[]
+}
+
+interface MockMetrics {
+  _isMockData: boolean
+  _message: string
+  data: never[]
+}
+
+const MOCK_STATS: MockStats = {
   _isMockData: true,
   _message: 'Set UMAMI_API_TOKEN and UMAMI_WEBSITE_ID in Vercel environment variables to see real data.',
   pageviews: { value: 0, prev: 0 },
@@ -49,14 +71,14 @@ const MOCK_STATS = {
   totaltime: { value: 0, prev: 0 },
 }
 
-const MOCK_PAGEVIEWS = {
+const MOCK_PAGEVIEWS: MockPageviews = {
   _isMockData: true,
   _message: 'Set UMAMI_API_TOKEN and UMAMI_WEBSITE_ID in Vercel environment variables to see real data.',
   pageviews: [],
   sessions: [],
 }
 
-const MOCK_METRICS = {
+const MOCK_METRICS: MockMetrics = {
   _isMockData: true,
   _message: 'Set UMAMI_API_TOKEN and UMAMI_WEBSITE_ID in Vercel environment variables to see real data.',
   data: [],
@@ -72,9 +94,14 @@ async function fetchUmami(path: string, params: Record<string, string>): Promise
       Authorization: `Bearer ${API_TOKEN}`,
       Accept: 'application/json',
     },
-    // Edge/Node fetch — no cache so we always get fresh data
     cache: 'no-store',
   })
+}
+
+function getMockForType(type: string): MockStats | MockPageviews | MockMetrics {
+  if (type === 'stats') return MOCK_STATS
+  if (type === 'pageviews') return MOCK_PAGEVIEWS
+  return MOCK_METRICS
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────
@@ -82,7 +109,6 @@ export async function GET(request: NextRequest) {
   // ── Auth check ────────────────────────────────────────────────────────────
   const adminKey = request.headers.get('x-admin-key') ?? ''
 
-  // Allow through if ANALYTICS_API_KEY is not set (dev mode) OR if keys match
   if (ADMIN_KEY && adminKey !== ADMIN_KEY) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -91,7 +117,7 @@ export async function GET(request: NextRequest) {
   if (!WEBSITE_ID || !API_TOKEN) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') ?? 'stats'
-    const mock = type === 'stats' ? MOCK_STATS : type === 'pageviews' ? MOCK_PAGEVIEWS : MOCK_METRICS
+    const mock = getMockForType(type)
     return NextResponse.json(mock, {
       headers: {
         'Cache-Control': 'no-store',
@@ -117,13 +143,11 @@ export async function GET(request: NextRequest) {
 
     switch (type) {
       case 'stats': {
-        // GET /api/websites/{id}/stats?startAt=&endAt=
         umamiResponse = await fetchUmami(`/websites/${WEBSITE_ID}/stats`, timeParams)
         break
       }
 
       case 'pageviews': {
-        // GET /api/websites/{id}/pageviews?startAt=&endAt=&unit=day
         const unit = period === '24h' ? 'hour' : 'day'
         umamiResponse = await fetchUmami(`/websites/${WEBSITE_ID}/pageviews`, {
           ...timeParams,
@@ -134,7 +158,6 @@ export async function GET(request: NextRequest) {
       }
 
       case 'metrics': {
-        // GET /api/websites/{id}/metrics?startAt=&endAt=&type=url|referrer|browser|os
         umamiResponse = await fetchUmami(`/websites/${WEBSITE_ID}/metrics`, {
           ...timeParams,
           type: metricType,
@@ -143,11 +166,10 @@ export async function GET(request: NextRequest) {
       }
 
       case 'events': {
-        // GET /api/websites/{id}/events?startAt=&endAt=&unit=day
-        const unit = period === '24h' ? 'hour' : 'day'
+        const evtUnit = period === '24h' ? 'hour' : 'day'
         umamiResponse = await fetchUmami(`/websites/${WEBSITE_ID}/events`, {
           ...timeParams,
-          unit,
+          unit: evtUnit,
           timezone: 'Australia/Sydney',
         })
         break
@@ -162,15 +184,14 @@ export async function GET(request: NextRequest) {
       const errorText = await umamiResponse.text()
       console.error(`[analytics/umami] Umami API error ${umamiResponse.status}:`, errorText)
 
-      // If 401/403, the token is probably wrong — return helpful error
       if (umamiResponse.status === 401 || umamiResponse.status === 403) {
+        const mock = getMockForType(type)
         return NextResponse.json(
           {
+            ...mock,
             error: 'Umami API authentication failed. Check UMAMI_API_TOKEN in Vercel env vars.',
-            _isMockData: true,
-            ...getMockForType(type),
           },
-          { status: 200 } // Return 200 so dashboard can show the error gracefully
+          { status: 200 }
         )
       }
 
@@ -195,10 +216,4 @@ export async function GET(request: NextRequest) {
       { status: 502 }
     )
   }
-}
-
-function getMockForType(type: string) {
-  if (type === 'stats') return MOCK_STATS
-  if (type === 'pageviews') return MOCK_PAGEVIEWS
-  return MOCK_METRICS
 }
