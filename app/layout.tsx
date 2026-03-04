@@ -114,13 +114,6 @@ export default function RootLayout({
             gtag('config', 'AW-17984048021');
           `}
         </Script>
-
-        {/* Umami Analytics */}
-        <Script
-          src="https://cloud.umami.is/script.js"
-          data-website-id="78007a9523265d8a53b15efc8457b60c2f3394d2d5ad0259a38761afb69a02d3"
-          strategy="afterInteractive"
-        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
