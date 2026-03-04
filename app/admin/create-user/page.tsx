@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Check, AlertCircle, Loader2, Mail, DollarSign, User } from 'lucide-react'
 
 export default function AdminCreateUser() {
@@ -10,16 +10,33 @@ export default function AdminCreateUser() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [magicLink, setMagicLink] = useState('')
+  const [adminKey, setAdminKey] = useState('')
+
+  // Hydrate admin key from sessionStorage (set by admin layout)
+  useEffect(() => {
+    const stored = sessionStorage.getItem('admin_api_key')
+    if (stored) setAdminKey(stored)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
     setMessage('')
 
+    // Guard: ensure admin key is available
+    if (!adminKey) {
+      setStatus('error')
+      setMessage('Unauthorized \u2014 admin API key required. Please refresh the page and re-enter your admin key.')
+      return
+    }
+
     try {
       const response = await fetch('/api/admin/create-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey,
+        },
         body: JSON.stringify({ email, name, amount: parseInt(amount) }),
       })
 
@@ -30,7 +47,7 @@ export default function AdminCreateUser() {
       }
 
       setStatus('success')
-      setMessage(`✅ User created! ${data.emailSent ? 'Email sent' : 'Copy magic link below'} to ${email}`)
+      setMessage(`\u2705 User created! ${data.emailSent ? 'Email sent' : 'Copy magic link below'} to ${email}`)
       setMagicLink(data.magicLink || '')
 
       // Clear form after 10 seconds (give time to copy link)
@@ -140,7 +157,7 @@ export default function AdminCreateUser() {
 
                 {magicLink && (
                   <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                    <p className="text-xs font-bold text-blue-900 mb-2">🔗 Magic Login Link (copy & send manually):</p>
+                    <p className="text-xs font-bold text-blue-900 mb-2">\ud83d\udd17 Magic Login Link (copy & send manually):</p>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -192,13 +209,13 @@ export default function AdminCreateUser() {
 
           {/* Instructions */}
           <div className="mt-8 pt-8 border-t-2 border-slate-200">
-            <h3 className="text-sm font-bold text-slate-900 mb-3">📋 Quick Instructions:</h3>
+            <h3 className="text-sm font-bold text-slate-900 mb-3">\ud83d\udccb Quick Instructions:</h3>
             <ol className="text-sm text-slate-600 space-y-2">
               <li><strong>1.</strong> Receive order notification from Squarespace</li>
               <li><strong>2.</strong> Copy customer email and name</li>
               <li><strong>3.</strong> Select purchase amount ($497 or $1,190)</li>
               <li><strong>4.</strong> Click "Create User & Send Email"</li>
-              <li><strong>5.</strong> Customer receives login email instantly! ✅</li>
+              <li><strong>5.</strong> Customer receives login email instantly! \u2705</li>
             </ol>
           </div>
         </div>
@@ -206,7 +223,7 @@ export default function AdminCreateUser() {
         {/* Security Note */}
         <div className="mt-6 p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
           <p className="text-xs text-amber-900">
-            <strong>🔒 Security Note:</strong> This page should be bookmarked and kept private.
+            <strong>\ud83d\udd12 Security Note:</strong> This page should be bookmarked and kept private.
             Consider adding password protection in production.
           </p>
         </div>
