@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, CheckCircle2, Play, Target, Award } from 'lucide-react'
+import { X, Play, Award, BookOpen, Clock, GraduationCap, ChevronRight, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
 
 interface UserInfo {
   name?: string
@@ -12,7 +11,6 @@ interface UserInfo {
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false)
-  const [step, setStep] = useState(1)
   const router = useRouter()
   const [user, setUser] = useState<UserInfo | null>(null)
 
@@ -34,11 +32,8 @@ export function WelcomeModal() {
   }, [])
 
   useEffect(() => {
-    // Check if user has seen welcome modal
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
-
     if (!hasSeenWelcome && user) {
-      // Delay showing modal slightly for better UX
       setTimeout(() => setIsOpen(true), 500)
     }
   }, [user])
@@ -67,129 +62,223 @@ export function WelcomeModal() {
 
   if (!isOpen) return null
 
+  const firstName = user?.name?.split(' ')[0] || 'there'
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      <div
+        className="relative w-full max-w-2xl overflow-hidden rounded-3xl"
+        style={{
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.92) 50%, rgba(255,255,255,0.95) 100%)',
+          backdropFilter: 'blur(40px)',
+          boxShadow: '0 0 0 1px rgba(13,115,119,0.08), 0 8px 40px -8px rgba(13,115,119,0.18), 0 32px 80px -16px rgba(0,0,0,0.12)',
+        }}
+      >
+        {/* Ambient glow effects */}
+        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full opacity-40" style={{ background: 'radial-gradient(circle, rgba(13,115,119,0.15) 0%, transparent 70%)' }} />
+        <div className="pointer-events-none absolute -bottom-32 -left-32 h-64 w-64 rounded-full opacity-40" style={{ background: 'radial-gradient(circle, rgba(13,115,119,0.1) 0%, transparent 70%)' }} />
+        
+        {/* Top accent stripe */}
+        <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #0d7377, #0a9396, #0d7377)' }} />
+
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors z-10"
+          className="absolute top-5 right-5 z-10 flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+          style={{
+            background: 'rgba(255,255,255,0.7)',
+            backdropFilter: 'blur(8px)',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+          }}
         >
-          <X className="w-4 h-4 text-slate-600" />
+          <X className="h-4 w-4 text-slate-500" />
         </button>
 
         {/* Content */}
-        <div className="p-8 md:p-12">
+        <div className="px-8 pt-8 pb-8 md:px-10 md:pt-10 md:pb-10">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Award className="w-8 h-8 text-white" strokeWidth={2} />
+          <div className="mb-8 text-center">
+            <div
+              className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg, #0d7377 0%, #0a9396 100%)',
+                boxShadow: '0 8px 24px -4px rgba(13,115,119,0.35)',
+              }}
+            >
+              <GraduationCap className="h-8 w-8 text-white" strokeWidth={1.8} />
             </div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">
-              Welcome, {user?.name?.split(' ')[0] || 'Doctor'}! 🎉
+            <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+              Welcome, {firstName}
             </h2>
-            <p className="text-base text-slate-600">
-              Let's get you clinically confident in concussion management
+            <p className="text-sm text-slate-500 md:text-base">
+              Your concussion management CPD starts here
             </p>
           </div>
 
           {/* Quick Start Steps */}
           <div className="mb-8">
-            <h3 className="text-lg font-bold text-slate-900 mb-4 text-center">
-              Your 3-Step Quick Start
-            </h3>
-            <div className="space-y-3">
-              {/* Step 1 */}
-              <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-teal-50 border-2 border-teal-200">
-                <div className="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm">1</span>
+            <div className="mb-4 flex items-center justify-center gap-2">
+              <Sparkles className="h-4 w-4 text-teal-600" />
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                Getting Started
+              </h3>
+            </div>
+            <div className="space-y-2.5">
+              {/* Step 1 — Browse Course Overview */}
+              <button
+                onClick={handleViewModules}
+                className="group flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all duration-200 hover:scale-[1.01]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(13,115,119,0.06) 0%, rgba(10,147,150,0.04) 100%)',
+                  border: '1px solid rgba(13,115,119,0.12)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                }}
+              >
+                <div
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #0d7377 0%, #0a9396 100%)',
+                    boxShadow: '0 2px 8px -2px rgba(13,115,119,0.4)',
+                  }}
+                >
+                  <span className="text-sm font-bold text-white">1</span>
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 mb-1">Watch 2-Minute Orientation</p>
-                  <p className="text-sm text-slate-600">Understand the course structure and CPD requirements</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">Browse the Course Modules</p>
+                  <p className="text-xs text-slate-500">Preview the 8 clinical modules and learning outcomes</p>
                 </div>
-                <div className="flex-shrink-0">
-                  <Play className="w-5 h-5 text-teal-600" />
-                </div>
-              </div>
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
+              </button>
 
-              {/* Step 2 */}
-              <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border-2 border-slate-200">
-                <div className="w-8 h-8 rounded-lg bg-slate-400 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm">2</span>
+              {/* Step 2 — Start Module 1 */}
+              <button
+                onClick={handleStartModule}
+                className="group flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all duration-200 hover:scale-[1.01]"
+                style={{
+                  background: 'rgba(255,255,255,0.6)',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                }}
+              >
+                <div
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: 'rgba(13,115,119,0.1)' }}
+                >
+                  <span className="text-sm font-bold" style={{ color: '#0d7377' }}>2</span>
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 mb-1">Start Module 1</p>
-                  <p className="text-sm text-slate-600">Master concussion biomechanics and pathophysiology</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">Start Module 1</p>
+                  <p className="text-xs text-slate-500">Concussion biomechanics and pathophysiology</p>
                 </div>
-                <div className="flex-shrink-0">
-                  <Target className="w-5 h-5 text-slate-400" />
-                </div>
-              </div>
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
+              </button>
 
-              {/* Step 3 */}
-              <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border-2 border-slate-200">
-                <div className="w-8 h-8 rounded-lg bg-slate-400 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm">3</span>
+              {/* Step 3 — Earn CPD Hours */}
+              <div
+                className="flex items-center gap-4 rounded-2xl p-4"
+                style={{
+                  background: 'rgba(255,255,255,0.6)',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                }}
+              >
+                <div
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: 'rgba(13,115,119,0.1)' }}
+                >
+                  <span className="text-sm font-bold" style={{ color: '#0d7377' }}>3</span>
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 mb-1">Earn Your First CPD Points</p>
-                  <p className="text-sm text-slate-600">Complete Module 1 quiz and earn 5 AHPRA CPD points</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">Complete Quizzes & Earn CPD</p>
+                  <p className="text-xs text-slate-500">Pass module assessments to earn AHPRA CPD hours</p>
                 </div>
-                <div className="flex-shrink-0">
-                  <Award className="w-5 h-5 text-slate-400" />
-                </div>
+                <Award className="h-5 w-5 flex-shrink-0 text-slate-300" />
               </div>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            <div className="text-center p-3 rounded-xl bg-slate-50">
-              <div className="text-2xl font-bold text-teal-600 mb-1">8</div>
-              <div className="text-xs text-slate-600 font-medium">Modules</div>
+          {/* Stats row — glass cards */}
+          <div className="mb-8 grid grid-cols-3 gap-2.5">
+            <div
+              className="rounded-xl p-3.5 text-center"
+              style={{
+                background: 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(13,115,119,0.08)',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <BookOpen className="h-3.5 w-3.5 text-teal-600" />
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>8</span>
+              </div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Modules</div>
             </div>
-            <div className="text-center p-3 rounded-xl bg-slate-50">
-              <div className="text-2xl font-bold text-teal-600 mb-1">40</div>
-              <div className="text-xs text-slate-600 font-medium">CPD Points</div>
+            <div
+              className="rounded-xl p-3.5 text-center"
+              style={{
+                background: 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(13,115,119,0.08)',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Award className="h-3.5 w-3.5 text-teal-600" />
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>14</span>
+              </div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">CPD Hours</div>
             </div>
-            <div className="text-center p-3 rounded-xl bg-slate-50">
-              <div className="text-2xl font-bold text-teal-600 mb-1">~6</div>
-              <div className="text-xs text-slate-600 font-medium">Hours Total</div>
+            <div
+              className="rounded-xl p-3.5 text-center"
+              style={{
+                background: 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(13,115,119,0.08)',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Clock className="h-3.5 w-3.5 text-teal-600" />
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>~6</span>
+              </div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Hours Total</div>
             </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-2.5 sm:flex-row">
             <button
               onClick={handleStartModule}
-              className="flex-1 px-6 py-3.5 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl text-base font-semibold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #0d7377 0%, #0a9396 100%)',
+                boxShadow: '0 4px 16px -4px rgba(13,115,119,0.4)',
+              }}
             >
-              <Play className="w-5 h-5" />
+              <Play className="h-4 w-4" />
               Start Module 1
             </button>
             <button
               onClick={handleViewModules}
-              className="flex-1 px-6 py-3.5 bg-white border-2 border-slate-200 text-slate-700 rounded-xl text-base font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(0,0,0,0.08)',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              }}
             >
               View All Modules
             </button>
           </div>
 
           {/* Skip link */}
-          <div className="text-center mt-4">
+          <div className="mt-4 text-center">
             <button
               onClick={handleSkip}
-              className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+              className="text-xs text-slate-400 transition-colors hover:text-slate-600"
             >
               Skip introduction
             </button>
           </div>
         </div>
-
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-teal-500/10 to-blue-500/10 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-500/10 to-teal-500/10 rounded-full blur-3xl -z-10"></div>
       </div>
     </div>
   )
