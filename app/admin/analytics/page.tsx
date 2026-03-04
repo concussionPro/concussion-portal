@@ -1,21 +1,23 @@
 'use client'
 
 /**
- * app/admin/analytics/page.tsx  (or wherever you mount it)
+ * app/admin/analytics/page.tsx
  *
  * Analytics dashboard — fetches from /api/analytics/umami proxy.
  * Design: frosted glass cards, teal accent, Geist font.
  * No external chart libraries — pure CSS progress bars for data viz.
+ *
+ * Auth: handled by parent admin layout (reads admin_api_key from sessionStorage).
+ * This page reads the same key for API calls — no double login.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Users,
   Eye,
   TrendingUp,
   Clock,
   RefreshCw,
-  ArrowRight,
   Globe,
   Monitor,
   FileText,
@@ -24,7 +26,6 @@ import {
   ChevronDown,
   Activity,
   BarChart2,
-  Lock,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -57,7 +58,6 @@ interface MetricRow {
 interface UmamiMetrics {
   _isMockData?: boolean
   data?: MetricRow[]
-  // Umami v2 returns array directly
   [index: number]: MetricRow
 }
 
@@ -104,13 +104,12 @@ function pct(value: number, prev: number): { delta: number; sign: string; color:
 
 function normaliseMetrics(data: UmamiMetrics | null): MetricRow[] {
   if (!data) return []
-  // Umami v2 returns the array directly
   if (Array.isArray(data)) return data as MetricRow[]
   if (Array.isArray((data as any).data)) return (data as any).data as MetricRow[]
   return []
 }
 
-// ── Skeleton loader ─────────────────────────────────────────────────────────
+// ── Skeleton loader ───────────────────────────────────────────────────────────
 function Skeleton({ className = '' }: { className?: string }) {
   return (
     <div
@@ -119,7 +118,7 @@ function Skeleton({ className = '' }: { className?: string }) {
   )
 }
 
-// ── Stat card ───────────────────────────────────────────────────────────────
+// ── Stat card ─────────────────────────────────────────────────────────────────
 function StatCard({
   label,
   value,
@@ -173,8 +172,8 @@ function StatCard({
   )
 }
 
-// ── Bar row for top-pages / referrers / browsers ───────────────────────
-function MetricRow({ label, value, max }: { label: string; value: number; max: number }) {
+// ── Bar row for top-pages / referrers / browsers ─────────────────────────────
+function MetricRowBar({ label, value, max }: { label: string; value: number; max: number }) {
   const widthPct = max > 0 ? (value / max) * 100 : 0
   return (
     <div className="group py-2.5">
@@ -199,7 +198,7 @@ function MetricRow({ label, value, max }: { label: string; value: number; max: n
   )
 }
 
-// ── Setup banner ────────────────────────────────────────────────────────────
+// ── Setup banner ──────────────────────────────────────────────────────────────
 function SetupBanner({ message }: { message?: string }) {
   return (
     <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 mb-6">
@@ -215,7 +214,7 @@ function SetupBanner({ message }: { message?: string }) {
   )
 }
 
-// ── Funnel step ─────────────────────────────────────────────────────────────
+// ── Funnel step ───────────────────────────────────────────────────────────────
 function FunnelStep({
   step,
   count,
@@ -260,7 +259,7 @@ function FunnelStep({
   )
 }
 
-// ── Sparkline (CSS only) ─────────────────────────────────────────────────
+// ── Sparkline (CSS only) ─────────────────────────────────────────────────────
 function Sparkline({ data }: { data: PageviewPoint[] }) {
   if (!data || data.length === 0) return null
   const maxY = Math.max(...data.map((d) => d.y), 1)
@@ -298,67 +297,8 @@ function Sparkline({ data }: { data: PageviewPoint[] }) {
   )
 }
 
-// ── Auth gate ───────────────────────────────────────────────────────────────
-function AuthGate({ onAuth }: { onAuth: (key: string) => void }) {
-  const [key, setKey] = useState('')
-  const [error, setError] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (key.trim().length < 8) {
-      setError('Please enter a valid admin key.')
-      return
-    }
-    onAuth(key.trim())
-  }
-
-  return (
-    <div className="min-h-screen dashboard-bg flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <div className="card p-8">
-          <div className="flex justify-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-[rgba(13,115,119,0.08)] border border-[rgba(13,115,119,0.12)] flex items-center justify-center">
-              <Lock size={20} className="text-[var(--accent)]" />
-            </div>
-          </div>
-          <h1 className="text-xl font-bold text-center text-[var(--foreground)] mb-1" style={{ letterSpacing: '-0.02em' }}>
-            Analytics
-          </h1>
-          <p className="text-sm text-center text-[var(--muted-foreground)] mb-6">
-            Enter your admin key to access the dashboard
-          </p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <input
-                type="password"
-                value={key}
-                onChange={(e) => { setKey(e.target.value); setError('') }}
-                placeholder="Admin key"
-                className="w-full px-4 py-3 rounded-xl border border-[rgba(13,115,119,0.12)] bg-[rgba(255,255,255,0.7)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(13,115,119,0.1)] transition-all"
-                autoFocus
-              />
-              {error && <p className="text-xs text-rose-500 mt-1.5">{error}</p>}
-            </div>
-            <button
-              type="submit"
-              className="btn-enhanced btn-primary-enhanced w-full"
-            >
-              Access Dashboard
-              <ArrowRight size={15} />
-            </button>
-          </form>
-          <p className="text-xs text-center text-[var(--muted-foreground)] mt-4 opacity-60">
-            portal.concussion-education-australia.com
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Main dashboard ──────────────────────────────────────────────────────────
+// ── Main dashboard ────────────────────────────────────────────────────────────
 export default function AnalyticsDashboard() {
-  const [adminKey, setAdminKey] = useState<string | null>(null)
   const [period, setPeriod] = useState<Period>('7d')
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [loading, setLoading] = useState(false)
@@ -366,49 +306,40 @@ export default function AnalyticsDashboard() {
   const [isMockData, setIsMockData] = useState(false)
   const [mockMessage, setMockMessage] = useState<string>()
 
-  // Data state
   const [stats, setStats] = useState<UmamiStats | null>(null)
   const [pageviews, setPageviews] = useState<UmamiPageviews | null>(null)
   const [topPages, setTopPages] = useState<MetricRow[]>([])
   const [referrers, setReferrers] = useState<MetricRow[]>([])
   const [browsers, setBrowsers] = useState<MetricRow[]>([])
 
-  // Hydrate admin key from sessionStorage
-  useEffect(() => {
-    const stored = sessionStorage.getItem('analytics_admin_key')
-    if (stored) setAdminKey(stored)
+  // Read admin key from sessionStorage (set by parent admin layout)
+  const getAdminKey = useCallback((): string => {
+    if (typeof window === 'undefined') return ''
+    return sessionStorage.getItem('admin_api_key') ?? ''
   }, [])
 
-  const handleAuth = useCallback((key: string) => {
-    sessionStorage.setItem('analytics_admin_key', key)
-    setAdminKey(key)
-  }, [])
-
-  // ── Fetch helper ────────────────────────────────────────────────────────────
   const fetchData = useCallback(
     async (type: string, extra: Record<string, string> = {}): Promise<any> => {
+      const adminKey = getAdminKey()
       if (!adminKey) return null
       const params = new URLSearchParams({ type, period, ...extra })
       const res = await fetch(`/api/analytics/umami?${params}`, {
         headers: { 'x-admin-key': adminKey },
         cache: 'no-store',
       })
-      if (!res.ok) {
-        throw new Error(`API error ${res.status}`)
-      }
+      if (!res.ok) throw new Error(`API error ${res.status}`)
       const data = await res.json()
-      // Track mock data status
       if (data._isMockData) {
         setIsMockData(true)
         setMockMessage(data._message)
       }
       return data
     },
-    [adminKey, period]
+    [getAdminKey, period]
   )
 
-  // ── Load all data ───────────────────────────────────────────────────────────
   const loadAll = useCallback(async () => {
+    const adminKey = getAdminKey()
     if (!adminKey) return
     setLoading(true)
     setIsMockData(false)
@@ -420,50 +351,30 @@ export default function AnalyticsDashboard() {
         fetchData('metrics', { metricType: 'referrer' }),
         fetchData('metrics', { metricType: 'browser' }),
       ])
-
-      if (statsData.status === 'fulfilled' && statsData.value) {
-        setStats(statsData.value as UmamiStats)
-      }
-      if (pvData.status === 'fulfilled' && pvData.value) {
-        setPageviews(pvData.value as UmamiPageviews)
-      }
-      if (pagesData.status === 'fulfilled') {
-        setTopPages(normaliseMetrics(pagesData.value as UmamiMetrics).slice(0, 10))
-      }
-      if (refData.status === 'fulfilled') {
-        setReferrers(normaliseMetrics(refData.value as UmamiMetrics).slice(0, 8))
-      }
-      if (browserData.status === 'fulfilled') {
-        setBrowsers(normaliseMetrics(browserData.value as UmamiMetrics).slice(0, 6))
-      }
+      if (statsData.status === 'fulfilled' && statsData.value) setStats(statsData.value as UmamiStats)
+      if (pvData.status === 'fulfilled' && pvData.value) setPageviews(pvData.value as UmamiPageviews)
+      if (pagesData.status === 'fulfilled') setTopPages(normaliseMetrics(pagesData.value as UmamiMetrics).slice(0, 10))
+      if (refData.status === 'fulfilled') setReferrers(normaliseMetrics(refData.value as UmamiMetrics).slice(0, 8))
+      if (browserData.status === 'fulfilled') setBrowsers(normaliseMetrics(browserData.value as UmamiMetrics).slice(0, 6))
       setLastRefresh(new Date())
     } catch (err) {
       console.error('[Analytics] Load error:', err)
     } finally {
       setLoading(false)
     }
-  }, [adminKey, fetchData])
+  }, [getAdminKey, fetchData])
 
-  // Load on auth / period change
   useEffect(() => {
-    if (adminKey) loadAll()
-  }, [adminKey, period, loadAll])
+    loadAll()
+  }, [period, loadAll])
 
-  // ── Not authenticated ─────────────────────────────────────────────────────
-  if (!adminKey) {
-    return <AuthGate onAuth={handleAuth} />
-  }
-
-  // ── Funnel: find page counts from topPages data ──────────────────────
   const getFunnelCount = (path: string): number => {
     const row = topPages.find((p) => p.x === path || p.x?.startsWith(path))
     return row?.y ?? 0
   }
   const funnelTotal = getFunnelCount('/') || stats?.pageviews.value || 0
-
   const bounceRate = stats ? stats.bounces.value / Math.max(stats.uniques.value, 1) : 0
   const avgDuration = stats ? Math.round(stats.totaltime.value / Math.max(stats.uniques.value, 1)) : 0
-
   const maxPages = topPages[0]?.y ?? 1
   const maxRef = referrers[0]?.y ?? 1
   const maxBrowser = browsers[0]?.y ?? 1
@@ -478,7 +389,6 @@ export default function AnalyticsDashboard() {
 
   return (
     <div className="min-h-screen dashboard-bg">
-      {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="glass sticky top-0 z-50 px-4 sm:px-6">
         <div className="container-xl mx-auto flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
@@ -486,9 +396,7 @@ export default function AnalyticsDashboard() {
               <BarChart2 size={14} className="text-[var(--accent)]" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-[var(--foreground)]" style={{ letterSpacing: '-0.01em' }}>
-                Analytics
-              </h1>
+              <h1 className="text-sm font-bold text-[var(--foreground)]" style={{ letterSpacing: '-0.01em' }}>Analytics</h1>
               {lastRefresh && (
                 <p className="text-xs text-[var(--muted-foreground)] hidden sm:block">
                   Updated {lastRefresh.toLocaleTimeString('en-AU', { timeStyle: 'short' })}
@@ -496,9 +404,7 @@ export default function AnalyticsDashboard() {
               )}
             </div>
           </div>
-
           <div className="flex items-center gap-2">
-            {/* Period selector */}
             <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.08)]">
               {PERIODS.map((p) => (
                 <button
@@ -514,77 +420,24 @@ export default function AnalyticsDashboard() {
                 </button>
               ))}
             </div>
-
-            {/* Refresh */}
-            <button
-              onClick={loadAll}
-              disabled={loading}
-              className="action-pill"
-              title="Refresh"
-            >
-              <RefreshCw
-                size={13}
-                className={loading ? 'animate-spin text-[var(--accent)]' : 'text-[var(--muted-foreground)]'}
-              />
+            <button onClick={loadAll} disabled={loading} className="action-pill" title="Refresh">
+              <RefreshCw size={13} className={loading ? 'animate-spin text-[var(--accent)]' : 'text-[var(--muted-foreground)]'} />
               <span className="hidden sm:inline">{loading ? 'Refreshing…' : 'Refresh'}</span>
-            </button>
-
-            {/* Sign out */}
-            <button
-              onClick={() => {
-                sessionStorage.removeItem('analytics_admin_key')
-                setAdminKey(null)
-              }}
-              className="action-pill text-[var(--muted-foreground)] hover:text-rose-500"
-              title="Sign out"
-            >
-              <Lock size={13} />
-              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
       </div>
 
       <div className="container-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-
-        {/* ── Setup banner ─────────────────────────────────────── */}
         {isMockData && <SetupBanner message={mockMessage} />}
 
-        {/* ── KPI grid ───────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard
-            label="Unique Visitors"
-            value={stats?.uniques.value ?? 0}
-            prev={stats?.uniques.prev ?? 0}
-            icon={Users}
-            loading={loading && !stats}
-          />
-          <StatCard
-            label="Page Views"
-            value={stats?.pageviews.value ?? 0}
-            prev={stats?.pageviews.prev ?? 0}
-            icon={Eye}
-            loading={loading && !stats}
-          />
-          <StatCard
-            label="Bounce Rate"
-            value={bounceRate}
-            prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0}
-            icon={TrendingUp}
-            format="percent"
-            loading={loading && !stats}
-          />
-          <StatCard
-            label="Avg. Session"
-            value={avgDuration}
-            prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0}
-            icon={Clock}
-            format="duration"
-            loading={loading && !stats}
-          />
+          <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} />
+          <StatCard label="Page Views" value={stats?.pageviews.value ?? 0} prev={stats?.pageviews.prev ?? 0} icon={Eye} loading={loading && !stats} />
+          <StatCard label="Bounce Rate" value={bounceRate} prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0} icon={TrendingUp} format="percent" loading={loading && !stats} />
+          <StatCard label="Avg. Session" value={avgDuration} prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0} icon={Clock} format="duration" loading={loading && !stats} />
         </div>
 
-        {/* ── Pageviews sparkline ───────────────────────────── */}
         {(pageviews?.pageviews?.length ?? 0) > 0 && (
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">
@@ -607,9 +460,7 @@ export default function AnalyticsDashboard() {
           </div>
         )}
 
-        {/* ── Tabs ──────────────────────────────────────────── */}
         <div className="card overflow-hidden">
-          {/* Tab bar */}
           <div className="flex overflow-x-auto border-b border-[rgba(13,115,119,0.07)] bg-[rgba(13,115,119,0.02)]">
             {TABS.map(({ id, label, icon: TabIcon }) => (
               <button
@@ -627,9 +478,7 @@ export default function AnalyticsDashboard() {
             ))}
           </div>
 
-          {/* Tab content */}
           <div className="p-5">
-            {/* Overview */}
             {activeTab === 'overview' && (
               <div className="space-y-2">
                 {loading && topPages.length === 0 ? (
@@ -646,13 +495,12 @@ export default function AnalyticsDashboard() {
                   </div>
                 ) : (
                   topPages.slice(0, 8).map((row) => (
-                    <MetricRow key={row.x} label={row.x} value={row.y} max={maxPages} />
+                    <MetricRowBar key={row.x} label={row.x} value={row.y} max={maxPages} />
                   ))
                 )}
               </div>
             )}
 
-            {/* Top pages */}
             {activeTab === 'pages' && (
               <div className="space-y-1">
                 {topPages.length === 0 && !loading ? (
@@ -662,13 +510,12 @@ export default function AnalyticsDashboard() {
                   </div>
                 ) : (
                   topPages.map((row) => (
-                    <MetricRow key={row.x} label={row.x} value={row.y} max={maxPages} />
+                    <MetricRowBar key={row.x} label={row.x} value={row.y} max={maxPages} />
                   ))
                 )}
               </div>
             )}
 
-            {/* Referrers */}
             {activeTab === 'referrers' && (
               <div className="space-y-1">
                 {referrers.length === 0 && !loading ? (
@@ -678,13 +525,12 @@ export default function AnalyticsDashboard() {
                   </div>
                 ) : (
                   referrers.map((row) => (
-                    <MetricRow key={row.x} label={row.x || '(direct)'} value={row.y} max={maxRef} />
+                    <MetricRowBar key={row.x} label={row.x || '(direct)'} value={row.y} max={maxRef} />
                   ))
                 )}
               </div>
             )}
 
-            {/* Browsers */}
             {activeTab === 'browsers' && (
               <div className="space-y-1">
                 {browsers.length === 0 && !loading ? (
@@ -694,21 +540,18 @@ export default function AnalyticsDashboard() {
                   </div>
                 ) : (
                   browsers.map((row) => (
-                    <MetricRow key={row.x} label={row.x} value={row.y} max={maxBrowser} />
+                    <MetricRowBar key={row.x} label={row.x} value={row.y} max={maxBrowser} />
                   ))
                 )}
               </div>
             )}
 
-            {/* Funnel */}
             {activeTab === 'funnel' && (
               <div className="space-y-1">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-sm font-semibold text-[var(--foreground)]">Google Ads Conversion Funnel</p>
-                    <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
-                      Tracks visitor journey from homepage → enrolment
-                    </p>
+                    <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Tracks visitor journey from homepage → enrolment</p>
                   </div>
                   {funnelTotal > 0 && (
                     <div className="text-right">
@@ -721,46 +564,23 @@ export default function AnalyticsDashboard() {
                 </div>
                 <div className="space-y-0">
                   {FUNNEL_STEPS.map((step, i) => (
-                    <FunnelStep
-                      key={step.path}
-                      step={step}
-                      count={getFunnelCount(step.path)}
-                      total={funnelTotal}
-                      isLast={i === FUNNEL_STEPS.length - 1}
-                    />
+                    <FunnelStep key={step.path} step={step} count={getFunnelCount(step.path)} total={funnelTotal} isLast={i === FUNNEL_STEPS.length - 1} />
                   ))}
                 </div>
                 {funnelTotal === 0 && (
-                  <p className="text-xs text-center text-[var(--muted-foreground)] mt-4">
-                    Funnel data populates once pageview metrics load.
-                  </p>
+                  <p className="text-xs text-center text-[var(--muted-foreground)] mt-4">Funnel data populates once pageview metrics load.</p>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        {/* ── Footer ──────────────────────────────────────────── */}
         <div className="text-center py-2">
           <p className="text-xs text-[var(--muted-foreground)] opacity-40">
             Powered by{' '}
-            <a
-              href="https://umami.is"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-70 transition-opacity"
-            >
-              Umami Analytics
-            </a>
-            {' \u00b7 '}
-            <a
-              href="https://www.perplexity.ai/computer"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-70 transition-opacity"
-            >
-              Built with Perplexity Computer
-            </a>
+            <a href="https://umami.is" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">Umami Analytics</a>
+            {' · '}
+            <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">Built with Perplexity Computer</a>
           </p>
         </div>
       </div>
