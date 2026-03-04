@@ -19,7 +19,11 @@ export default function HomePage() {
       <OrganizationSchema />
       <CourseSchema />
 
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[var(--background)] relative">
+
+        {/* ── Ambient gradient wash behind hero ──────────── */}
+        <div className="absolute inset-0 hero-gradient pointer-events-none" aria-hidden="true" />
+        <div className="ambient-glow -top-[200px] left-1/2 -translate-x-1/2" aria-hidden="true" />
 
         {/* ── Nav ──────────────────────────────────────────── */}
         <nav
@@ -31,10 +35,10 @@ export default function HomePage() {
             <div className="flex items-center justify-between h-[60px]">
               <button
                 onClick={() => router.push('/')}
-                className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-accent rounded"
+                className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-accent rounded"
                 aria-label="ConcussionPro home"
               >
-                <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center shadow-sm">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="none" stroke="white" strokeWidth="1.5"/>
                     <path d="M12 6C9.5 6 7 8 7 12s2.5 6 5 6" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
@@ -53,25 +57,25 @@ export default function HomePage() {
               <div className="hidden md:flex items-center gap-1">
                 <button
                   onClick={() => router.push('/scat-mastery')}
-                  className="text-[13px] text-[var(--accent)] font-semibold px-3 py-2 rounded-md hover:bg-[var(--accent-muted)] transition-colors"
+                  className="text-[13px] text-[var(--accent)] font-semibold px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.05)] transition-colors"
                 >
                   Free Training
                 </button>
                 <button
                   onClick={() => router.push('/scat-forms')}
-                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[var(--muted)] transition-colors"
+                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
                 >
                   SCAT Forms
                 </button>
                 <button
                   onClick={() => router.push('/preview')}
-                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[var(--muted)] transition-colors"
+                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
                 >
                   Preview
                 </button>
                 <button
                   onClick={() => router.push('/login')}
-                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[var(--muted)] transition-colors"
+                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
                 >
                   Login
                 </button>
@@ -88,7 +92,7 @@ export default function HomePage() {
               {/* Mobile burger */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-md hover:bg-[var(--muted)] transition-colors"
+                className="md:hidden p-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
                 aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileMenuOpen}
               >
@@ -103,7 +107,7 @@ export default function HomePage() {
 
           {/* Mobile menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-[var(--border)] bg-white px-5 pb-4 pt-2">
+            <div className="md:hidden border-t border-[rgba(13,115,119,0.06)] bg-[rgba(248,250,251,0.95)] backdrop-blur-xl px-5 pb-4 pt-2">
               <div className="flex flex-col gap-1">
                 {[
                   { label: 'Free SCAT Training', path: '/scat-mastery', accent: true },
@@ -114,7 +118,7 @@ export default function HomePage() {
                   <button
                     key={item.path}
                     onClick={() => { router.push(item.path); setMobileMenuOpen(false) }}
-                    className={`text-left text-sm py-2.5 px-3 rounded-md transition-colors ${item.accent ? 'text-[var(--accent)] font-semibold' : 'text-[var(--muted-foreground)]'} hover:bg-[var(--muted)]`}
+                    className={`text-left text-sm py-2.5 px-3 rounded-md transition-colors ${item.accent ? 'text-[var(--accent)] font-semibold' : 'text-[var(--muted-foreground)]'} hover:bg-[rgba(13,115,119,0.04)]`}
                   >
                     {item.label}
                   </button>
@@ -133,7 +137,7 @@ export default function HomePage() {
 
 
         {/* ── Hero ─────────────────────────────────────────── */}
-        <section className="pt-[140px] md:pt-[180px] pb-12 md:pb-20 px-5 md:px-8">
+        <section className="pt-[140px] md:pt-[180px] pb-12 md:pb-16 px-5 md:px-8 relative z-10">
           <div className="max-w-[720px] mx-auto animate-fade-in">
 
             {/* Badge */}
@@ -144,7 +148,7 @@ export default function HomePage() {
             {/* Headline */}
             <h1 className="text-[2.25rem] md:text-[3.25rem] leading-[1.1] font-bold tracking-[-0.03em] text-[var(--foreground)] mb-5">
               Stop guessing.{' '}
-              <span className="text-[var(--accent)]">
+              <span className="text-gradient">
                 Master concussion management.
               </span>
             </h1>
@@ -192,21 +196,21 @@ export default function HomePage() {
         </section>
 
 
-        {/* ── Stats row ────────────────────────────────────── */}
-        <section className="px-5 md:px-8 pb-16 md:pb-24">
-          <div className="max-w-[720px] mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border)] rounded-xl overflow-hidden border border-[var(--border)]">
+        {/* ── Stats bento grid ────────────────────────────── */}
+        <section className="px-5 md:px-8 pb-16 md:pb-20 relative z-10">
+          <div className="max-w-[760px] mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-delay-1">
               {[
                 { value: CONFIG.COURSE.TOTAL_CPD_HOURS.toString(), label: 'AHPRA CPD Hours', sub: 'Accredited' },
                 { value: '8', label: 'Online Modules', sub: '8 CPD hours' },
                 { value: '1 Day', label: 'Practical Workshop', sub: '6 CPD hours' },
                 { value: '3', label: 'Locations', sub: 'Melb · Syd · Byron' },
               ].map((stat) => (
-                <div key={stat.label} className="bg-white p-5 md:p-6 text-center">
-                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--foreground)] mb-1">
+                <div key={stat.label} className="stat-tile text-center">
+                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--accent)] mb-1">
                     {stat.value}
                   </div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-0.5">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--foreground)] mb-0.5">
                     {stat.label}
                   </div>
                   <div className="text-[11px] text-[var(--muted-foreground)] opacity-70">
@@ -219,16 +223,10 @@ export default function HomePage() {
         </section>
 
 
-        {/* ── Divider ──────────────────────────────────────── */}
-        <div className="max-w-[720px] mx-auto px-5 md:px-8">
-          <div className="divider" />
-        </div>
-
-
         {/* ── Free SCAT Training ───────────────────────────── */}
-        <section className="section-padding">
-          <div className="max-w-[720px] mx-auto">
-            <div className="card-accent rounded-xl p-6 md:p-8">
+        <section className="section-padding relative z-10">
+          <div className="max-w-[760px] mx-auto">
+            <div className="card-accent rounded-2xl p-6 md:p-8 animate-fade-in-delay-2">
               <div className="flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
                 <div className="flex-1">
                   <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)] mb-2">
@@ -276,11 +274,11 @@ export default function HomePage() {
 
 
         {/* ── What clinicians miss ─────────────────────────── */}
-        <section className="section-padding">
+        <section className="section-padding relative z-10">
           <div className="max-w-[860px] mx-auto">
             <div className="text-center mb-10">
               <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
-                What 40-50% of clinicians miss
+                What 40-50% of clinicians <span className="text-gradient">miss</span>
               </h2>
               <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-md mx-auto">
                 Convergence insufficiency, vestibular dysfunction, cervicogenic factors. Learn to identify them all.
@@ -289,12 +287,12 @@ export default function HomePage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               {/* Online */}
-              <div className="card rounded-xl p-5 md:p-6">
+              <div className="card rounded-2xl p-5 md:p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center shadow-sm">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" stroke="var(--accent)" strokeWidth="1.5"/>
-                      <path d="M8 21h8M12 17v4" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" stroke="white" strokeWidth="1.5"/>
+                      <path d="M8 21h8M12 17v4" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
                   </div>
                   <div>
@@ -318,13 +316,13 @@ export default function HomePage() {
               </div>
 
               {/* In-Person */}
-              <div className="card rounded-xl p-5 md:p-6">
+              <div className="card rounded-2xl p-5 md:p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center shadow-sm">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="9" cy="7" r="3" stroke="var(--accent)" strokeWidth="1.5"/>
-                      <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"/>
-                      <path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                      <circle cx="9" cy="7" r="3" stroke="white" strokeWidth="1.5"/>
+                      <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
                     </svg>
                   </div>
                   <div>
@@ -369,7 +367,7 @@ export default function HomePage() {
 
 
         {/* ── Pricing ──────────────────────────────────────── */}
-        <section className="section-padding">
+        <section className="section-padding relative z-10">
           <div className="max-w-[860px] mx-auto">
             <PricingOptions variant="full" />
           </div>
@@ -383,13 +381,13 @@ export default function HomePage() {
 
 
         {/* ── FAQ ──────────────────────────────────────────── */}
-        <section className="section-padding">
+        <section className="section-padding relative z-10">
           <div className="max-w-[640px] mx-auto">
             <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--foreground)] mb-6">
               Common Questions
             </h2>
 
-            <div className="space-y-0 divide-y divide-[var(--border)]">
+            <div className="space-y-2.5">
               {[
                 {
                   q: 'When do I get access to the online modules?',
@@ -408,12 +406,12 @@ export default function HomePage() {
                   a: 'Everything: 8 online modules (lifetime access), full-day practical workshop at your chosen location, all materials and workbook, and your 14 AHPRA CPD certificate upon completion.',
                 },
               ].map((faq, i) => (
-                <details key={i} className="group py-4 first:pt-0 last:pb-0">
-                  <summary className="text-sm font-semibold text-[var(--foreground)] cursor-pointer list-none flex items-center justify-between gap-4 select-none">
+                <details key={i} className="card rounded-xl group">
+                  <summary className="text-sm font-semibold text-[var(--foreground)] cursor-pointer list-none flex items-center justify-between gap-4 select-none px-5 py-4">
                     {faq.q}
-                    <span className="text-[var(--muted-foreground)] text-lg shrink-0 group-open:rotate-45 transition-transform duration-200">+</span>
+                    <span className="text-[var(--accent)] text-lg shrink-0 group-open:rotate-45 transition-transform duration-200">+</span>
                   </summary>
-                  <p className="text-[13px] text-[var(--muted-foreground)] mt-2 leading-relaxed pr-8">
+                  <p className="text-[13px] text-[var(--muted-foreground)] px-5 pb-4 -mt-1 leading-relaxed pr-10">
                     {faq.a}
                   </p>
                 </details>
@@ -437,7 +435,7 @@ export default function HomePage() {
 
 
         {/* ── Testimonials ─────────────────────────────────── */}
-        <section className="section-padding">
+        <section className="section-padding relative z-10">
           <div className="max-w-[640px] mx-auto">
             <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--foreground)] mb-6">
               What clinicians say
@@ -456,7 +454,7 @@ export default function HomePage() {
                   role: 'University Clinical Educator, QLD',
                 },
               ].map((t) => (
-                <div key={t.name} className="card rounded-xl p-5 md:p-6">
+                <div key={t.name} className="card rounded-2xl p-5 md:p-6">
                   <div className="flex gap-0.5 mb-3">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -466,7 +464,7 @@ export default function HomePage() {
                     &ldquo;{t.quote}&rdquo;
                   </p>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[var(--accent-muted)] flex items-center justify-center text-xs font-semibold text-[var(--accent)]">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
                       {t.name[0]}
                     </div>
                     <div>
@@ -482,20 +480,23 @@ export default function HomePage() {
 
 
         {/* ── Final CTA ────────────────────────────────────── */}
-        <section className="px-5 md:px-8 pb-16 md:pb-24">
+        <section className="px-5 md:px-8 pb-16 md:pb-24 relative z-10">
           <div className="max-w-[640px] mx-auto text-center">
-            <div className="bg-[var(--foreground)] rounded-2xl p-8 md:p-12">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-3">
+            <div className="bg-gradient-to-br from-[var(--foreground)] to-[#1a2332] rounded-2xl p-8 md:p-12 relative overflow-hidden">
+              {/* Subtle glow inside dark CTA */}
+              <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-[var(--accent)] opacity-[0.06] blur-[80px] pointer-events-none" aria-hidden="true" />
+
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-3 relative z-10">
                 Ready to master evidence-based concussion management?
               </h2>
-              <p className="text-sm text-white/60 mb-6 max-w-md mx-auto">
+              <p className="text-sm text-white/60 mb-6 max-w-md mx-auto relative z-10">
                 {CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD hours · Lifetime access · Melbourne, Sydney &amp; Byron Bay
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
                 <a
                   href={CONFIG.SHOP_URL}
                   onClick={() => trackShopClick('footer-cta')}
-                  className="bg-white text-[var(--foreground)] px-7 py-3.5 rounded-xl text-[15px] font-semibold inline-flex items-center gap-2 hover:bg-white/90 transition-colors"
+                  className="bg-white text-[var(--foreground)] px-7 py-3.5 rounded-xl text-[15px] font-semibold inline-flex items-center gap-2 hover:bg-white/90 transition-colors shadow-lg"
                 >
                   Enroll Now
                   <ArrowRight className="w-4 h-4" />
@@ -513,7 +514,7 @@ export default function HomePage() {
 
 
         {/* ── Footer ───────────────────────────────────────── */}
-        <footer className="py-6 px-5 border-t border-[var(--border)]" role="contentinfo">
+        <footer className="py-6 px-5 border-t border-[rgba(13,115,119,0.06)] relative z-10" role="contentinfo">
           <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <p className="text-xs text-[var(--muted-foreground)]">
               © 2026 Concussion Education Australia

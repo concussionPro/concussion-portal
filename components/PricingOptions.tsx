@@ -129,7 +129,7 @@ function InterestForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`mt-2 p-3 bg-[var(--muted)] border border-[var(--border)] rounded-lg space-y-2.5 ${compact ? 'text-xs' : 'text-sm'}`}
+      className={`mt-2 p-3 bg-[rgba(13,115,119,0.03)] border border-[rgba(13,115,119,0.08)] rounded-lg space-y-2.5 ${compact ? 'text-xs' : 'text-sm'}`}
     >
       <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
         Register Interest — {cityLabel}
@@ -151,7 +151,7 @@ function InterestForm({
           onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
           required
           minLength={2}
-          className="w-full pl-7 pr-2.5 py-2 text-xs rounded-lg border border-[var(--border)] bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40 placeholder:text-[var(--muted-foreground)]/50"
+          className="w-full pl-7 pr-2.5 py-2 text-xs rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40 placeholder:text-[var(--muted-foreground)]/50"
         />
       </div>
 
@@ -163,7 +163,7 @@ function InterestForm({
           value={form.email}
           onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
           required
-          className="w-full pl-7 pr-2.5 py-2 text-xs rounded-lg border border-[var(--border)] bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40 placeholder:text-[var(--muted-foreground)]/50"
+          className="w-full pl-7 pr-2.5 py-2 text-xs rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40 placeholder:text-[var(--muted-foreground)]/50"
         />
       </div>
 
@@ -212,10 +212,10 @@ function LocationRow({
           compact ? 'px-3 py-2' : 'px-4 py-3'
         } ${
           isSelected && isConfirmed
-            ? 'border-[var(--accent)] bg-[var(--accent-muted)] ring-1 ring-[var(--accent)]/20'
+            ? 'border-[var(--accent)] bg-[rgba(13,115,119,0.06)] ring-1 ring-[var(--accent)]/20'
             : isSelected && !isConfirmed
-            ? 'border-[var(--accent)]/30 bg-[var(--accent-muted)]'
-            : 'border-[var(--border)] hover:border-[#d4d4d4] bg-white'
+            ? 'border-[var(--accent)]/30 bg-[rgba(13,115,119,0.04)]'
+            : 'border-[rgba(13,115,119,0.08)] hover:border-[rgba(13,115,119,0.15)] bg-[rgba(255,255,255,0.6)]'
         }`}
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -326,7 +326,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
         <div className="grid sm:grid-cols-2 gap-4">
           {/* Online Course - Compact */}
-          <div className="bg-white border border-[var(--border)] rounded-xl p-5 flex flex-col">
+          <div className="card rounded-xl p-5 flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-[var(--foreground)]">Online Course</h3>
             </div>
@@ -365,7 +365,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </div>
 
           {/* Complete Course - Compact */}
-          <div className="bg-white border-2 border-[var(--accent)]/30 rounded-xl p-5 flex flex-col relative">
+          <div className="card rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="bg-[var(--accent)] text-white px-3 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap">
                 Save $210
@@ -462,7 +462,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       <div className="grid md:grid-cols-2 gap-5">
 
         {/* Online Course */}
-        <div className="bg-white border border-[var(--border)] rounded-xl p-6 md:p-7 flex flex-col">
+        <div className="card rounded-2xl p-6 md:p-7 flex flex-col">
           <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">Online Course</h3>
           <p className="text-[13px] text-[var(--muted-foreground)] mb-5 leading-relaxed">
             Complete the online section in your own time. Upgrade to add a hands-on workshop later.
@@ -514,7 +514,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
 
         {/* Complete Course */}
-        <div className="bg-white border-2 border-[var(--accent)]/30 rounded-xl p-6 md:p-7 flex flex-col relative">
+        <div className="card rounded-2xl p-6 md:p-7 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
             <div className="bg-[var(--accent)] text-white px-4 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap">
               Early Bird — Save $210
