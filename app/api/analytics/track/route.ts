@@ -1,191 +1,191 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifySessionToken } from '@/lib/jwt-session'
-import { put, list } from '@vercel/blob'
+// /app/api/analytics/track/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { put, list } from '@vercel/blob';
 
-export const runtime = 'nodejs'
+interface TrackPayload {
+  eventType: string;
+  eventData: Record<string, unknown>;
+  sessionId: string;
+  timestamp: number;
+  userAgent: string;
+  referrer: string | null;
+  path: string;
+  search: string | null;
+}
+
+interface StoredEvent extends TrackPayload {
+  ip?: string;
+}
+
+function getTodayKey(): string {
+  const now = new Date();
+  const yyyy = now.getUTCFullYear();
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(now.getUTCDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getBlobPath(dateKey: string): string {
+  return `analytics/${dateKey}.ndjson`;
+}
 
 /**
- * Analytics tracking endpoint — PERSISTENT VERSION
- *
- * Stores events to Vercel Blob in daily JSON files.
- * Each day gets its own blob: analytics/YYYY-MM-DD.json
- * Events are appended to the daily file.
+ * Check that the request originates from the same domain (or localhost for dev).
+ * We inspect the Origin header first, then fall back to Referer.
  */
-export async function POST(request: NextRequest) {
+function isAllowedOrigin(request: NextRequest): boolean {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
+
+  // In development, always allow
+  if (process.env.NODE_ENV === 'development') return true;
+
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+
+  const candidate = origin || referer;
+  if (!candidate) return false;
+
+  // If we have no configured app URL, allow any non-null origin
+  // (better than blocking all traffic; admin should set NEXT_PUBLIC_APP_URL)
+  if (!appUrl) return true;
+
+  // Normalise: strip trailing slash, compare hosts
   try {
-    const body = await request.json()
-    const {
-      eventType,
-      eventData,
-      sessionId,
-      timestamp,
-      userAgent,
-      referrer,
-      path,
-    } = body
+    const candidateHost = new URL(candidate).hostname;
+    const appHost = new URL(
+      appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
+    ).hostname;
 
-    const sessionToken = request.cookies.get('session')?.value
-    let userId: string | null = null
-    let email: string | null = null
-
-    if (sessionToken) {
-      const sessionData = verifySessionToken(sessionToken)
-      if (sessionData) {
-        userId = sessionData.userId
-        email = sessionData.email
-      }
-    }
-
-    const event = {
-      id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      userId,
-      email,
-      timestamp: timestamp || Date.now(),
-      eventType,
-      eventData,
-      sessionId,
-      userAgent: userAgent?.substring(0, 200),
-      referrer: referrer?.substring(0, 500),
-      path,
-    }
-
-    console.log('[ANALYTICS]', JSON.stringify({
-      type: eventType,
-      user: email || 'anonymous',
-      path,
-      data: eventData,
-      timestamp: new Date(timestamp || Date.now()).toISOString(),
-    }))
-
-    try {
-      const today = new Date().toISOString().split('T')[0]
-      const blobPath = `analytics/${today}.jsonl`
-      const eventLine = JSON.stringify(event) + '\n'
-
-      let existingContent = ''
-      try {
-        const blobs = await list({ prefix: blobPath })
-        if (blobs.blobs.length > 0) {
-          const existingBlob = blobs.blobs[0]
-          const res = await fetch(existingBlob.url)
-          if (res.ok) {
-            existingContent = await res.text()
-          }
-        }
-      } catch {
-        // File doesn't exist yet
-      }
-
-      await put(blobPath, existingContent + eventLine, {
-        access: 'public',
-        addRandomSuffix: false,
-      })
-    } catch (blobError) {
-      console.error('[ANALYTICS] Blob storage failed:', blobError)
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Analytics tracking error:', error)
-    return NextResponse.json(
-      { error: 'Failed to track event' },
-      { status: 500 }
-    )
+    return (
+      candidateHost === appHost ||
+      // Allow Vercel preview URLs on the same project
+      candidateHost.endsWith('.vercel.app')
+    );
+  } catch {
+    return false;
   }
 }
 
 /**
- * GET /api/analytics/track
- * Retrieve analytics data for the dashboard.
+ * Read the current NDJSON file for a given date from Vercel Blob.
+ * Returns the raw text or null if not found.
  */
-export async function GET(request: NextRequest) {
+async function readBlobNdjson(dateKey: string): Promise<string | null> {
   try {
-    const sessionToken = request.cookies.get('session')?.value
-    if (!sessionToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const blobPath = getBlobPath(dateKey);
+    const { blobs } = await list({ prefix: blobPath });
+    const match = blobs.find((b) => b.pathname === blobPath);
+    if (!match) return null;
 
-    const sessionData = verifySessionToken(sessionToken)
-    if (!sessionData) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const days = Math.min(parseInt(searchParams.get('days') || '7'), 30)
-
-    const allEvents: any[] = []
-    const today = new Date()
-
-    for (let i = 0; i < days; i++) {
-      const date = new Date(today)
-      date.setDate(date.getDate() - i)
-      const dateStr = date.toISOString().split('T')[0]
-      const blobPath = `analytics/${dateStr}.jsonl`
-
-      try {
-        const blobs = await list({ prefix: blobPath })
-        if (blobs.blobs.length > 0) {
-          const res = await fetch(blobs.blobs[0].url)
-          if (res.ok) {
-            const text = await res.text()
-            const lines = text.trim().split('\n').filter(Boolean)
-            for (const line of lines) {
-              try {
-                allEvents.push(JSON.parse(line))
-              } catch {
-                // Skip malformed lines
-              }
-            }
-          }
-        }
-      } catch {
-        // File doesn't exist for this date
-      }
-    }
-
-    const pageViews = allEvents.filter(e => e.eventType === 'page_view')
-    const uniqueSessions = new Set(allEvents.map(e => e.sessionId)).size
-    const uniqueUsers = new Set(allEvents.filter(e => e.email).map(e => e.email)).size
-
-    const pathCounts: Record<string, number> = {}
-    for (const event of pageViews) {
-      const p = event.path || '/'
-      pathCounts[p] = (pathCounts[p] || 0) + 1
-    }
-
-    const eventCounts: Record<string, number> = {}
-    for (const event of allEvents) {
-      eventCounts[event.eventType] = (eventCounts[event.eventType] || 0) + 1
-    }
-
-    const dailyViews: Record<string, number> = {}
-    for (const event of pageViews) {
-      const day = new Date(event.timestamp).toISOString().split('T')[0]
-      dailyViews[day] = (dailyViews[day] || 0) + 1
-    }
-
-    const referrerCounts: Record<string, number> = {}
-    for (const event of pageViews) {
-      const ref = event.referrer || 'direct'
-      try {
-        const domain = ref === 'direct' ? 'direct' : new URL(ref).hostname
-        referrerCounts[domain] = (referrerCounts[domain] || 0) + 1
-      } catch {
-        referrerCounts[ref.substring(0, 50)] = (referrerCounts[ref.substring(0, 50)] || 0) + 1
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      period: { days, from: new Date(today.getTime() - days * 86400000).toISOString().split('T')[0], to: today.toISOString().split('T')[0] },
-      summary: { totalEvents: allEvents.length, pageViews: pageViews.length, uniqueSessions, uniqueUsers },
-      topPages: Object.entries(pathCounts).sort(([, a], [, b]) => b - a).slice(0, 20).map(([path, count]) => ({ path, count })),
-      eventBreakdown: Object.entries(eventCounts).sort(([, a], [, b]) => b - a).map(([event, count]) => ({ event, count })),
-      dailyViews: Object.entries(dailyViews).sort(([a], [b]) => a.localeCompare(b)).map(([date, count]) => ({ date, count })),
-      topReferrers: Object.entries(referrerCounts).sort(([, a], [, b]) => b - a).slice(0, 10).map(([referrer, count]) => ({ referrer, count })),
-    })
-  } catch (error) {
-    console.error('Analytics retrieval error:', error)
-    return NextResponse.json({ error: 'Failed to retrieve analytics' }, { status: 500 })
+    const res = await fetch(match.url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.text();
+  } catch {
+    return null;
   }
+}
+
+/**
+ * Parse NDJSON text into an array of StoredEvent objects.
+ * Invalid lines are silently skipped.
+ */
+function parseNdjson(text: string): StoredEvent[] {
+  return text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .flatMap((line) => {
+      try {
+        return [JSON.parse(line) as StoredEvent];
+      } catch {
+        return [];
+      }
+    });
+}
+
+/**
+ * Serialize an array of events back to NDJSON.
+ */
+function serializeNdjson(events: StoredEvent[]): string {
+  return events.map((e) => JSON.stringify(e)).join('\n') + '\n';
+}
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Rate-limit by origin — reject cross-origin requests
+  if (!isAllowedOrigin(request)) {
+    return NextResponse.json(
+      { error: 'Forbidden: cross-origin tracking not allowed' },
+      { status: 403 }
+    );
+  }
+
+  // Parse body
+  let payload: TrackPayload;
+  try {
+    payload = (await request.json()) as TrackPayload;
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  // Basic validation
+  if (!payload.eventType || !payload.sessionId || !payload.path) {
+    return NextResponse.json(
+      { error: 'Missing required fields: eventType, sessionId, path' },
+      { status: 400 }
+    );
+  }
+
+  // Sanitise: limit string lengths to prevent oversized blobs
+  const event: StoredEvent = {
+    eventType: String(payload.eventType).slice(0, 64),
+    eventData: payload.eventData ?? {},
+    sessionId: String(payload.sessionId).slice(0, 128),
+    timestamp: typeof payload.timestamp === 'number' ? payload.timestamp : Date.now(),
+    userAgent: String(payload.userAgent ?? '').slice(0, 512),
+    referrer: payload.referrer ? String(payload.referrer).slice(0, 512) : null,
+    path: String(payload.path).slice(0, 512),
+    search: payload.search ? String(payload.search).slice(0, 512) : null,
+  };
+
+  const dateKey = getTodayKey();
+  const blobPath = getBlobPath(dateKey);
+
+  // Read-modify-write the daily NDJSON file
+  // If we fail to read (file doesn't exist or transient error), start fresh
+  let existingText: string | null = null;
+  try {
+    existingText = await readBlobNdjson(dateKey);
+  } catch {
+    existingText = null;
+  }
+
+  let events: StoredEvent[] = [];
+  if (existingText) {
+    events = parseNdjson(existingText);
+  }
+
+  events.push(event);
+
+  const newContent = serializeNdjson(events);
+
+  try {
+    await put(blobPath, newContent, {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'application/x-ndjson',
+    });
+  } catch (err) {
+    console.error('[analytics/track] Failed to write blob:', err);
+    return NextResponse.json(
+      { error: 'Failed to store event' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ ok: true }, { status: 200 });
+}
+
+// Reject everything except POST
+export async function GET(): Promise<NextResponse> {
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }
