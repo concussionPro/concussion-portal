@@ -68,6 +68,12 @@ export default function HomePage() {
                   SCAT Forms
                 </button>
                 <button
+                  onClick={() => router.push('/preseason')}
+                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
+                >
+                  Preseason
+                </button>
+                <button
                   onClick={() => router.push('/preview')}
                   className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
                 >
@@ -112,6 +118,7 @@ export default function HomePage() {
                 {[
                   { label: 'Free SCAT Training', path: '/scat-mastery', accent: true },
                   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
+                  { label: 'Preseason Baselines', path: '/preseason', accent: false },
                   { label: 'Preview Course', path: '/preview', accent: false },
                   { label: 'Login', path: '/login', accent: false },
                 ].map(item => (
