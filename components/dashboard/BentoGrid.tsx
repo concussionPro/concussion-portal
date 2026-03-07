@@ -69,7 +69,7 @@ function Card({ children, className, onClick, span2 }: CardProps) {
 }
 
 /* ──────────────── Main Bento Grid ──────────────── */
-export function BentoGrid() {
+export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
   const router = useRouter()
   const {
     getTotalCompletedModules,
@@ -82,7 +82,7 @@ export function BentoGrid() {
   const cpdPoints = getTotalCPDPoints()
   const studyTime = getTotalStudyTime()
   const maxModules = 8
-  const maxCPD = 40
+  const maxCPD = 8
 
   const inProgressCount = Object.values(progress).filter(
     (p) => p.moduleId >= 1 && p.moduleId <= 8 && !!p.startedAt && !p.completed,
@@ -168,7 +168,7 @@ export function BentoGrid() {
         </div>
         <p className="text-sm text-foreground font-semibold mb-1">8 Clinical Modules</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Evidence-based concussion management training with AHPRA-compliant CPD tracking.
+          Evidence-based concussion management training with AHPRA-aligned CPD tracking.
         </p>
       </Card>
 
@@ -208,7 +208,7 @@ export function BentoGrid() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="stat-label">Reference Repository</p>
-            <p className="text-sm text-foreground font-semibold mb-1">135+ Peer-Reviewed Sources</p>
+            <p className="text-sm text-foreground font-semibold mb-1">130+ Peer-Reviewed Sources</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable library of concussion research — journal articles, meta-analyses, and clinical guidelines.
             </p>
@@ -223,8 +223,13 @@ export function BentoGrid() {
             <GraduationCap className="w-4.5 h-4.5 text-rose-600/70" strokeWidth={1.8} />
           </div>
           <p className="stat-label mb-0">In-Person Workshop</p>
+          {accessLevel === 'full-course' && (
+            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+              Included
+            </span>
+          )}
         </div>
-        <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Hours</p>
+        <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Points</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
           Hands-on training with standardised assessments, sideline protocols, and case studies.
         </p>

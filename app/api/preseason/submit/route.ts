@@ -45,11 +45,24 @@ interface AthleteBackground {
   currentMedications: string
 }
 
+interface OculomotorExerciseResult {
+  symptoms: string[]
+  severity: number
+}
+
+interface OculomotorData {
+  horizontalSaccades: OculomotorExerciseResult
+  verticalSaccades: OculomotorExerciseResult
+  horizontalPursuit: OculomotorExerciseResult
+  verticalPursuit: OculomotorExerciseResult
+}
+
 interface SubmitPayload {
   clinicCode: string
   athlete: AthleteBackground
   symptoms: SymptomData
   cognitive: CognitiveData
+  oculomotor?: OculomotorData
 }
 
 const SYMPTOMS = [
@@ -247,12 +260,52 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   }
   y += 10
 
+  // Oculomotor Screening
+  if (data.oculomotor) {
+    checkPage(60)
+    drawLine()
+    addText('OCULOMOTOR SCREENING', margin, y, { fontSize: 12, fontStyle: 'bold' })
+    y += 10
+
+    const oculomotorExercises: { key: keyof OculomotorData; label: string }[] = [
+      { key: 'horizontalSaccades', label: 'Horizontal Saccades' },
+      { key: 'verticalSaccades', label: 'Vertical Saccades' },
+      { key: 'horizontalPursuit', label: 'Horizontal Smooth Pursuit' },
+      { key: 'verticalPursuit', label: 'Vertical Smooth Pursuit' },
+    ]
+
+    // Table header
+    doc.setFillColor(240, 240, 240)
+    doc.rect(margin, y - 4, contentWidth, 8, 'F')
+    addText('Exercise', margin + 2, y, { fontSize: 9, fontStyle: 'bold' })
+    addText('Symptoms', margin + 60, y, { fontSize: 9, fontStyle: 'bold' })
+    addText('Severity', margin + contentWidth - 25, y, { fontSize: 9, fontStyle: 'bold' })
+    y += 8
+
+    let exercisesWithSymptoms = 0
+    for (const ex of oculomotorExercises) {
+      checkPage(7)
+      const result = data.oculomotor[ex.key]
+      const hasSymptoms = result.symptoms.length > 0 && !result.symptoms.includes('None')
+      if (hasSymptoms) exercisesWithSymptoms++
+
+      addText(ex.label, margin + 2, y, { fontSize: 8 })
+      addText(hasSymptoms ? result.symptoms.join(', ') : 'None', margin + 60, y, { fontSize: 8, maxWidth: contentWidth - 90 })
+      addText(hasSymptoms ? `${result.severity}/10` : '—', margin + contentWidth - 25, y, { fontSize: 8 })
+      y += 6
+    }
+
+    y += 4
+    addText(`${exercisesWithSymptoms}/4 exercises provoked symptoms`, margin + 2, y, { fontSize: 9, fontStyle: 'bold' })
+    y += 10
+  }
+
   // Footer / Disclaimer
   checkPage(30)
   drawLine()
   doc.setFontSize(8)
   doc.setTextColor(100)
-  const disclaimer = 'Self-administered baseline — not a clinical assessment. Sections requiring clinical observation (Red Flags, Observable Signs, Maddocks Questions, Glasgow Coma Scale, Cervical Spine Assessment, Coordination & Ocular Motor Screen, Modified BESS, Tandem Gait, Dual Task Gait, Decision & HCP Attestation) were not administered.'
+  const disclaimer = 'Self-administered baseline — not a clinical assessment. Sections requiring clinical observation (Red Flags, Observable Signs, Maddocks Questions, Glasgow Coma Scale, Cervical Spine Assessment, Modified BESS, Tandem Gait, Dual Task Gait, Decision & HCP Attestation) were not administered.'
   doc.text(disclaimer, margin, y, { maxWidth: contentWidth })
   y += 15
 
@@ -260,7 +313,7 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   doc.setFontSize(9)
   doc.text('Powered by ConcussionPro — concussion-education-australia.com', margin, y)
   y += 6
-  doc.text('Free SCAT6/SCOAT6 Mastery Course (2 CPD hrs): portal.concussion-education-australia.com/scat-mastery', margin, y)
+  doc.text('Free SCAT6/SCOAT6 Mastery Course (2 CPD pts): portal.concussion-education-australia.com/scat-mastery', margin, y)
 
   return Buffer.from(doc.output('arraybuffer'))
 }
@@ -354,9 +407,9 @@ export async function POST(request: Request) {
 
               <div class="cta-box">
                 <p style="margin: 0 0 8px; font-weight: 700; font-size: 15px;">Free: SCAT6/SCOAT6 Mastery Course</p>
-                <p style="margin: 0 0 16px; font-size: 13px; color: #475569;">Learn how to properly administer and interpret every SCAT6 section. Fillable forms, clinical toolkit &amp; certificate included. <strong>2 AHPRA CPD hours — free.</strong></p>
+                <p style="margin: 0 0 16px; font-size: 13px; color: #475569;">Learn how to properly administer and interpret every SCAT6 section. Fillable forms, clinical toolkit &amp; certificate included. <strong>2 AHPRA CPD points — free.</strong></p>
                 <a href="${baseUrl}/scat-mastery">Get Free Course →</a>
-                <p style="margin: 12px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_HOURS} CPD hour course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
+                <p style="margin: 12px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
               </div>
             </div>
             <div class="footer">

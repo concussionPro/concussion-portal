@@ -244,7 +244,7 @@ export default function RegisterPage() {
               Free SCAT6/SCOAT6 Mastery Course
             </p>
             <p className="text-xs text-muted-foreground">
-              Learn how to properly administer and interpret every SCAT6 section. 2 AHPRA CPD hours, certificate included.
+              Learn how to properly administer and interpret every SCAT6 section. 2 AHPRA CPD points, certificate included.
             </p>
           </div>
           <div className="flex flex-col gap-2">
@@ -252,15 +252,13 @@ export default function RegisterPage() {
               onClick={() => router.push('/scat-mastery')}
               className="w-full btn-primary py-2.5 rounded-lg text-sm font-semibold"
             >
-              Get Free Course (2 CPD hrs) →
+              Get Free Course (2 CPD pts) →
             </button>
             <a
               href={CONFIG.SHOP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className="text-xs text-muted-foreground hover:text-accent text-center font-medium transition-colors"
             >
-              Or view our full {CONFIG.COURSE.TOTAL_CPD_HOURS} CPD hour course →
+              Or view our full {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course →
             </a>
           </div>
         </div>

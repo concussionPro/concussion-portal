@@ -123,9 +123,9 @@ export async function POST(request: Request) {
 
                 <div class="cta-box">
                   <p style="margin: 0 0 8px; font-weight: 700;">Free: SCAT6/SCOAT6 Mastery Course</p>
-                  <p style="margin: 0 0 16px; font-size: 14px; color: #475569;">Learn how to properly administer and interpret every SCAT6 &amp; SCOAT6 section. Includes fillable forms, clinical toolkit, and certificate. <strong>2 AHPRA CPD hours — completely free.</strong></p>
+                  <p style="margin: 0 0 16px; font-size: 14px; color: #475569;">Learn how to properly administer and interpret every SCAT6 &amp; SCOAT6 section. Includes fillable forms, clinical toolkit, and certificate. <strong>2 AHPRA CPD points — completely free.</strong></p>
                   <a href="${baseUrl}/scat-mastery">Get Free Course →</a>
-                  <p style="margin: 12px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_HOURS} CPD hour course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
+                  <p style="margin: 12px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
                 </div>
               </div>
               <div class="footer">

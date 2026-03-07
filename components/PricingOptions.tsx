@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  BookOpen,
+  Award,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
@@ -324,28 +326,35 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </div>
         )}
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4 pt-5">
           {/* Online Course - Compact */}
           <div className="card rounded-xl p-5 flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-[var(--foreground)]">Online Course</h3>
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+                <BookOpen className="w-4 h-4 text-orange-500" strokeWidth={2} />
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                Start Under $500
+              </span>
             </div>
+
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
 
             <div className="mb-4">
               <div className="text-2xl font-bold text-[var(--foreground)]">$497</div>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD hrs</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
             </div>
 
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
-                '8 online modules (8 CPD hours)',
+                '8 online modules (8 CPD points)',
                 'Own pace — no deadlines',
                 'Clinical Toolkit & resources',
                 'Digital certificate',
                 'Upgrade to full course later',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
-                  <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
+                  <Check className="w-3 h-3 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={3} />
                   <span className="text-[var(--muted-foreground)]">{f}</span>
                 </li>
               ))}
@@ -366,31 +375,36 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           {/* Complete Course - Compact */}
           <div className="card rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span className="bg-[var(--accent)] text-white px-3 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap">
-                Save $210
+            <div className="absolute -top-3.5 right-4">
+              <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-3.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shadow-md shadow-orange-200/50">
+                Early Bird — Save $210
               </span>
             </div>
 
-            <div className="flex items-center justify-between mb-3 mt-1">
-              <h3 className="text-sm font-bold text-[var(--foreground)]">Complete Course</h3>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent-muted)] text-[var(--accent)]">
-                Early Bird
+            <div className="flex items-center gap-2.5 mb-3 mt-1">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+                <Award className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+                Most Popular
               </span>
             </div>
+
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Complete Course</h3>
 
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-sm text-[var(--muted-foreground)] line-through">$1,400</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Save $210</span>
               </div>
               <div className="text-2xl font-bold text-[var(--foreground)]">$1,190</div>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD hours</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>
             </div>
 
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
-                '8 online modules (8 CPD hours)',
-                'Full-day workshop (6 CPD hours)',
+                '8 online modules (8 CPD points)',
+                'Full-day workshop (6 CPD points)',
                 'Hands-on SCAT6, VOMS, BESS',
                 'Clinical Toolkit & resources',
                 'Certificate included',
@@ -439,14 +453,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
   // FULL VARIANT
   return (
-    <div className="max-w-[860px] mx-auto">
+    <div className="max-w-[900px] mx-auto">
       {/* Section Header */}
       <div className="text-center mb-10">
         <h2 className="text-2xl md:text-[2rem] font-bold text-[var(--foreground)] mb-3 tracking-tight">
           Flexible Enrollment Options
         </h2>
-        <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-lg mx-auto">
-          Start learning today or commit to the full certification with hands-on workshop.
+        <p className="text-base text-[var(--muted-foreground)] max-w-2xl mx-auto leading-relaxed">
+          Australia&apos;s most comprehensive concussion management training. Start online at your own pace, or commit to the full certification with hands-on workshop.
         </p>
       </div>
 
@@ -459,35 +473,45 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       )}
 
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="grid md:grid-cols-2 gap-6 pt-5">
 
         {/* Online Course */}
-        <div className="card rounded-2xl p-6 md:p-7 flex flex-col">
-          <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">Online Course</h3>
-          <p className="text-[13px] text-[var(--muted-foreground)] mb-5 leading-relaxed">
-            Complete the online section in your own time. Upgrade to add a hands-on workshop later.
-          </p>
-
-          <div className="mb-5">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-[var(--foreground)]">$497</span>
-              <span className="text-[13px] text-[var(--muted-foreground)]">AUD</span>
+        <div className="card rounded-2xl p-7 md:p-8 flex flex-col">
+          {/* Icon + Badge */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+              <BookOpen className="w-5 h-5 text-orange-500" strokeWidth={2} />
             </div>
-            <p className="text-[11px] text-[var(--muted-foreground)] mt-1">One-time · Lifetime access</p>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+              Start Under $500
+            </span>
           </div>
 
-          <ul className="space-y-2.5 mb-6 flex-1">
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Online Course</h3>
+          <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
+            Complete the 8 online modules in your own time. Upgrade to add a hands-on workshop later — just pay the difference.
+          </p>
+
+          <div className="mb-6">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">$497</span>
+              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+            </div>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access</p>
+          </div>
+
+          <ul className="space-y-3 mb-7 flex-1">
             {[
-              '8 online modules (8 CPD hours)',
-              'Complete at your own pace',
+              '8 online modules (8 CPD points)',
+              'Complete at your own pace — no deadlines',
               'Lifetime access to all modules',
-              'Clinical Toolkit & resources',
-              'Reference Repository (145+ articles)',
+              'Clinical Toolkit & downloadable resources',
+              'Reference Repository (130+ articles)',
               'Digital certificate',
               'Upgrade to full course for $693 later',
             ].map((feature, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-[13px]">
-                <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <Check className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                 <span className="text-[var(--muted-foreground)]">{feature}</span>
               </li>
             ))}
@@ -514,46 +538,55 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
 
         {/* Complete Course */}
-        <div className="card rounded-2xl p-6 md:p-7 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <div className="bg-[var(--accent)] text-white px-4 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap">
+        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+          {/* Early Bird badge — top right, outside card flow */}
+          <div className="absolute -top-4 right-6">
+            <div className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shadow-lg shadow-orange-200/50">
               Early Bird — Save $210
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mb-1 mt-1">
-            <h3 className="text-lg font-bold text-[var(--foreground)]">Complete Course</h3>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent-muted)] text-[var(--accent)]">
+          {/* Icon + Badge */}
+          <div className="flex items-center gap-3 mb-5 mt-1">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+              <Award className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
+            </div>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
               Most Popular
             </span>
           </div>
-          <p className="text-[13px] text-[var(--muted-foreground)] mb-5 leading-relaxed">
-            Full training: 8 online modules plus a full-day hands-on workshop.
+
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Complete Course</h3>
+          <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
+            Full training: 8 online modules plus a full-day hands-on workshop. Everything you need for clinical confidence.
           </p>
 
-          <div className="mb-5">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-sm text-[var(--muted-foreground)] line-through">$1,400</span>
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-1">
+              <span className="text-base text-[var(--muted-foreground)] line-through">$1,400</span>
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                Save $210
+              </span>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-[var(--foreground)]">$1,190</span>
-              <span className="text-[13px] text-[var(--muted-foreground)]">AUD</span>
+              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">$1,190</span>
+              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
             </div>
-            <p className="text-[11px] text-[var(--muted-foreground)] mt-1">One-time · 14 AHPRA CPD hours</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · 14 AHPRA CPD points</p>
           </div>
 
-          <ul className="space-y-2.5 mb-5 flex-1">
+          <ul className="space-y-3 mb-6 flex-1">
             {[
-              '8 online modules (8 CPD hours)',
-              'Full-day in-person workshop (6 CPD hours)',
+              '8 online modules (8 CPD points)',
+              'Full-day in-person workshop (6 CPD points)',
               'Hands-on SCAT6, VOMS, BESS training',
               'Clinical Toolkit & all resources',
-              'Reference Repository (145+ articles)',
+              'Reference Repository (130+ articles)',
               'Choose your preferred location',
               'Flexible workshop date selection',
             ].map((feature, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-[13px]">
-                <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                 <span className="text-[var(--muted-foreground)]">{feature}</span>
               </li>
             ))}
@@ -561,7 +594,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           {/* Location Selector */}
           <div className="mb-4">
-            <label className="text-[13px] font-semibold mb-2 flex items-center gap-1.5 text-[var(--foreground)]">
+            <label className="text-sm font-semibold mb-2 flex items-center gap-1.5 text-[var(--foreground)]">
               <MapPin className="w-3.5 h-3.5 text-[var(--accent)]" />
               Select Workshop Location
             </label>
@@ -580,7 +613,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
             {openTbaCity && !canEnroll && (
               <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
-                Select Sydney or Byron Bay to enroll now, or register your interest above for Melbourne.
+                Select an available location to enroll now, or register your interest for upcoming dates.
               </p>
             )}
           </div>
@@ -610,7 +643,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           )}
 
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-            Early bird pricing ends soon — lock in $1,190 before it returns to $1,400.
+            Early bird pricing ends March 28 — lock in $1,190 before it returns to $1,400.
           </p>
         </div>
       </div>

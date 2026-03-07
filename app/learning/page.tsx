@@ -4,7 +4,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { CheckCircle2, Clock, Award, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
-import { getAllModules } from '@/data/modules'
+import { getModulesMeta } from '@/data/module-meta'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useState, useEffect } from 'react'
@@ -13,7 +13,7 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 export default function LearningSuite() {
   const router = useRouter()
   const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, isModuleComplete, getModuleProgress } = useProgress()
-  const modules = getAllModules()
+  const modules = getModulesMeta()
   const [hasAccess, setHasAccess] = useState(false)
   useAnalytics() // Track page views
 
@@ -73,7 +73,7 @@ export default function LearningSuite() {
                   Clinical Mastery Training
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  8 Online + 6 In-Person CPD Hours (14 Total) · Evidence-Based Concussion Management
+                  8 Online + 6 In-Person CPD Points (14 Total) · Evidence-Based Concussion Management
                 </p>
               </div>
 
@@ -84,8 +84,8 @@ export default function LearningSuite() {
                   <div className="text-xl font-bold text-gradient">{completedModules} / 8</div>
                 </div>
                 <div className="glass rounded-lg p-4">
-                  <div className="text-xs font-medium text-muted-foreground mb-1">Online CPD Earned</div>
-                  <div className="text-xl font-bold text-gradient">{cpdPoints} / 40</div>
+                  <div className="text-xs font-medium text-muted-foreground mb-1">Online CPD Points</div>
+                  <div className="text-xl font-bold text-gradient">{cpdPoints} / 8</div>
                 </div>
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Study Time</div>
@@ -159,11 +159,11 @@ export default function LearningSuite() {
                           </div>
                           <div className="flex items-center gap-1.5">
                             <Award className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" strokeWidth={2} />
-                            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">{module.points} CPD</span>
+                            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">{module.points} CPD pt</span>
                           </div>
                           {hasStarted && !completed && (
                             <div className="text-xs text-[#5b9aa6] bg-blue-50 px-2 py-1 rounded">
-                              {progress.videoWatchedMinutes} min watched
+                              In Progress
                             </div>
                           )}
                         </div>

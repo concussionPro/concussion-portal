@@ -14,6 +14,7 @@ export interface User {
   stripeCustomerId?: string
   stripeSubscriptionId?: string
   lastLoginAt?: string
+  nurtureUnsubscribed?: boolean
 }
 
 const USERS_BLOB_PATH = 'users.json'
@@ -95,8 +96,13 @@ async function saveUsers(users: User[]) {
   }
 
   try {
+    // KNOWN LIMITATION: Vercel Blob only supports 'public' access.
+    // URLs contain random tokens and are not discoverable, but anyone
+    // with the URL can read the data. For production with real user
+    // volume, migrate to Vercel Postgres or similar with proper ACL.
     await put(USERS_BLOB_PATH, JSON.stringify(users, null, 2), {
       access: 'public',
+      addRandomSuffix: true,
       contentType: 'application/json',
     })
   } catch (error) {
@@ -169,6 +175,18 @@ export async function updateLastLogin(userId: string) {
     user.lastLoginAt = new Date().toISOString()
     await saveUsers(users)
   }
+}
+
+// Unsubscribe user from nurture emails
+export async function unsubscribeUser(email: string): Promise<boolean> {
+  const users = await loadUsers()
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase())
+  if (user) {
+    user.nurtureUnsubscribed = true
+    await saveUsers(users)
+    return true
+  }
+  return false
 }
 
 // Upgrade user from online-only to full-course

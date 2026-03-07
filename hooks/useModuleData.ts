@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Module } from '@/data/modules'
+import type { Module } from '@/data/modules'
 
 interface UseModuleDataResult {
   module: Module | null

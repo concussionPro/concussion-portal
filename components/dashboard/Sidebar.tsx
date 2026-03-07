@@ -186,7 +186,7 @@ export function Sidebar() {
 
           <div className="px-1">
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-              AHPRA Compliant
+              AHPRA Aligned
             </p>
             <p className="text-[10px] text-muted-foreground">CPD Tracking Active</p>
           </div>

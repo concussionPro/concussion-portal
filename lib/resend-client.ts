@@ -21,6 +21,7 @@ interface EmailOptions {
   subject: string
   html: string
   tags?: Array<{ name: string; value: string }>
+  headers?: Record<string, string>
 }
 
 /**
@@ -40,10 +41,12 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
     const result = await resend.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      replyTo: FROM_EMAIL,
       to: options.to,
       subject: options.subject,
       html: options.html,
       tags: options.tags,
+      headers: options.headers,
     })
 
     if (result.data) {

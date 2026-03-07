@@ -18,6 +18,34 @@ const SYMPTOMS = [
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const MONTHS_REVERSED = [...MONTHS].reverse()
 
+const OCULOMOTOR_SYMPTOMS = [
+  'Headache', 'Eye fatigue/strain', 'Dizziness', 'Nausea',
+  'Blurred vision', 'Double vision', 'Difficulty focusing', 'None',
+]
+
+const OCULOMOTOR_EXERCISES = [
+  { key: 'horizontalSaccades', label: 'Horizontal Saccades', type: 'saccade', direction: 'horizontal' },
+  { key: 'verticalSaccades', label: 'Vertical Saccades', type: 'saccade', direction: 'vertical' },
+  { key: 'horizontalPursuit', label: 'Horizontal Smooth Pursuit', type: 'pursuit', direction: 'horizontal' },
+  { key: 'verticalPursuit', label: 'Vertical Smooth Pursuit', type: 'pursuit', direction: 'vertical' },
+] as const
+
+type OculomotorExerciseKey = typeof OCULOMOTOR_EXERCISES[number]['key']
+
+interface OculomotorExerciseResult {
+  symptoms: string[]
+  severity: number
+}
+
+type OculomotorResults = Record<OculomotorExerciseKey, OculomotorExerciseResult>
+
+const INITIAL_OCULOMOTOR_RESULTS: OculomotorResults = {
+  horizontalSaccades: { symptoms: [], severity: 0 },
+  verticalSaccades: { symptoms: [], severity: 0 },
+  horizontalPursuit: { symptoms: [], severity: 0 },
+  verticalPursuit: { symptoms: [], severity: 0 },
+}
+
 const MEDICAL_CONDITIONS = [
   { key: 'headacheDisorder', label: 'Headache disorder (e.g. migraine)' },
   { key: 'learningDisability', label: 'Learning disability / Dyslexia' },
@@ -54,6 +82,165 @@ function buildRecallPool(listKey: WordListKey): { word: string; isTarget: boolea
   return shuffle(pool)
 }
 
+function OculomotorExercise({
+  exercise,
+  exerciseIndex,
+  running,
+  onStart,
+  onComplete,
+  timerRef,
+  rafRef,
+}: {
+  exercise: typeof OCULOMOTOR_EXERCISES[number]
+  exerciseIndex: number
+  running: boolean
+  onStart: () => void
+  onComplete: () => void
+  timerRef: React.MutableRefObject<number | null>
+  rafRef: React.MutableRefObject<number | null>
+}) {
+  const [activeSide, setActiveSide] = useState(0) // 0=left/top, 1=right/bottom
+  const [cycleCount, setCycleCount] = useState(0)
+  const [dotPosition, setDotPosition] = useState(0) // 0-1 for pursuit
+  const [started, setStarted] = useState(false)
+  const isHorizontal = exercise.direction === 'horizontal'
+
+  useEffect(() => {
+    if (!started) return
+
+    if (exercise.type === 'saccade') {
+      // Saccade: toggle active dot at ~1Hz for 5 cycles
+      let count = 0
+      const interval = setInterval(() => {
+        count++
+        setActiveSide(prev => prev === 0 ? 1 : 0)
+        setCycleCount(Math.floor(count / 2))
+        if (count >= 10) { // 5 full cycles = 10 toggles
+          clearInterval(interval)
+          onComplete()
+        }
+      }, 500)
+      return () => clearInterval(interval)
+    } else {
+      // Pursuit: smooth motion, 3 full passes (~18s)
+      // Half-cycle = 3s, full pass = 6s, 3 passes = 18s
+      const totalDuration = 18000
+      const halfCycleDuration = 3000
+      const startTime = performance.now()
+      let raf: number
+
+      const animate = (now: number) => {
+        const elapsed = now - startTime
+        if (elapsed >= totalDuration) {
+          setDotPosition(0.5)
+          onComplete()
+          return
+        }
+        // Calculate position: oscillate between 0 and 1
+        const cycleTime = elapsed % (halfCycleDuration * 2)
+        const pos = cycleTime < halfCycleDuration
+          ? cycleTime / halfCycleDuration
+          : 1 - (cycleTime - halfCycleDuration) / halfCycleDuration
+        setDotPosition(pos)
+        raf = requestAnimationFrame(animate)
+        rafRef.current = raf
+      }
+      raf = requestAnimationFrame(animate)
+      rafRef.current = raf
+      return () => cancelAnimationFrame(raf)
+    }
+  }, [started, exercise.type, exercise.direction, onComplete, rafRef])
+
+  const handleStart = () => {
+    setStarted(true)
+    onStart()
+  }
+
+  if (!started) {
+    return (
+      <div>
+        <h2 className="text-lg font-bold mb-2">{exercise.label}</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Exercise {exerciseIndex + 1} of 4 —{' '}
+          {exercise.type === 'saccade'
+            ? 'Follow the highlighted dot as it alternates. Keep your head still.'
+            : 'Follow the dot smoothly as it moves. Keep your head still.'}
+        </p>
+        <div className="text-center">
+          <button onClick={handleStart} className="btn-primary px-8 py-3 rounded-xl text-base font-semibold">
+            Start Exercise
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (exercise.type === 'saccade') {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-bold">{exercise.label}</h2>
+          <span className="text-xs text-muted-foreground">{cycleCount}/5 cycles</span>
+        </div>
+        <div
+          className={`rounded-2xl bg-slate-900 relative overflow-hidden ${
+            isHorizontal ? 'h-[250px] md:h-[300px]' : 'h-[350px] md:h-[400px]'
+          }`}
+        >
+          <div className={`absolute inset-0 flex ${isHorizontal ? 'flex-row items-center justify-between px-2 md:px-4' : 'flex-col items-center justify-between py-2 md:py-3'}`}>
+            <div
+              className={`rounded-full transition-all duration-150 ${
+                activeSide === 0
+                  ? 'w-10 h-10 md:w-14 md:h-14 bg-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.6)]'
+                  : 'w-6 h-6 md:w-8 md:h-8 bg-slate-600'
+              }`}
+            />
+            <div
+              className={`rounded-full transition-all duration-150 ${
+                activeSide === 1
+                  ? 'w-10 h-10 md:w-14 md:h-14 bg-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.6)]'
+                  : 'w-6 h-6 md:w-8 md:h-8 bg-slate-600'
+              }`}
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Pursuit animation
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-lg font-bold">{exercise.label}</h2>
+        <span className="text-xs text-muted-foreground">Follow the dot</span>
+      </div>
+      <div
+        className={`rounded-2xl bg-slate-900 relative overflow-hidden ${
+          isHorizontal ? 'h-[250px] md:h-[300px]' : 'h-[350px] md:h-[400px]'
+        }`}
+      >
+        <div
+          className="absolute w-10 h-10 md:w-14 md:h-14 rounded-full bg-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.6)]"
+          style={
+            isHorizontal
+              ? {
+                  left: `calc(${dotPosition * 96 + 2}% - 20px)`,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }
+              : {
+                  top: `calc(${dotPosition * 94 + 3}% - 20px)`,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                }
+          }
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function AthleteBaselineForm() {
   const params = useParams()
   const router = useRouter()
@@ -66,7 +253,7 @@ export default function AthleteBaselineForm() {
 
   // Form step
   const [step, setStep] = useState(1)
-  const totalSteps = 5 // 4 steps + summary
+  const totalSteps = 6 // 5 steps + summary
 
   // Step 1: Athlete Background
   const [name, setName] = useState('')
@@ -126,7 +313,14 @@ export default function AthleteBaselineForm() {
   // Cognitive sub-step tracking
   const [cognitiveSubStep, setCognitiveSubStep] = useState<'orientation' | 'memory' | 'digits' | 'months'>('orientation')
 
-  // Step 4: Delayed Recall
+  // Step 4: Oculomotor Screening
+  const [oculomotorSubStep, setOculomotorSubStep] = useState(0) // 0=instructions, 1=exercise1, 2=report1, 3=exercise2, ...
+  const [oculomotorResults, setOculomotorResults] = useState<OculomotorResults>({ ...INITIAL_OCULOMOTOR_RESULTS })
+  const [oculomotorExerciseRunning, setOculomotorExerciseRunning] = useState(false)
+  const oculomotorTimerRef = useRef<number | null>(null)
+  const oculomotorRafRef = useRef<number | null>(null)
+
+  // Step 5: Delayed Recall
   const [delayedRecallReady, setDelayedRecallReady] = useState(false)
   const [delayedRecallSelections, setDelayedRecallSelections] = useState<Record<string, boolean>>({})
   const [delayTimeRemaining, setDelayTimeRemaining] = useState(300) // 5 minutes in seconds
@@ -160,7 +354,7 @@ export default function AthleteBaselineForm() {
 
   // Delayed recall timer
   useEffect(() => {
-    if (step !== 4 || delayedRecallReady) return
+    if (step !== 5 || delayedRecallReady) return
 
     const elapsed = memoryTimestamp ? Math.floor((Date.now() - memoryTimestamp) / 1000) : 0
     const remaining = Math.max(0, 300 - elapsed)
@@ -219,6 +413,8 @@ export default function AthleteBaselineForm() {
       if (wordTimerRef.current) clearTimeout(wordTimerRef.current)
       if (digitTimerRef.current) clearTimeout(digitTimerRef.current)
       if (monthsTimerRef.current) clearInterval(monthsTimerRef.current)
+      if (oculomotorTimerRef.current) clearTimeout(oculomotorTimerRef.current)
+      if (oculomotorRafRef.current) cancelAnimationFrame(oculomotorRafRef.current)
     }
   }, [])
 
@@ -355,6 +551,7 @@ export default function AthleteBaselineForm() {
             },
             delayedRecall: { score: delayedRecallScore },
           },
+          oculomotor: oculomotorResults,
         }),
       })
 
@@ -511,7 +708,7 @@ export default function AthleteBaselineForm() {
 
         {/* Progress bar */}
         <div className="flex items-center gap-2 mb-6">
-          {[1, 2, 3, 4, 5].map(s => (
+          {[1, 2, 3, 4, 5, 6].map(s => (
             <div
               key={s}
               className={`h-1.5 rounded-full flex-1 transition-all ${
@@ -525,7 +722,8 @@ export default function AthleteBaselineForm() {
             step === 1 ? 'Athlete Background' :
             step === 2 ? 'Symptom Evaluation' :
             step === 3 ? 'Cognitive Screening' :
-            step === 4 ? 'Delayed Recall' :
+            step === 4 ? 'Oculomotor Screening' :
+            step === 5 ? 'Delayed Recall' :
             'Score Summary'
           }
         </p>
@@ -1084,8 +1282,185 @@ export default function AthleteBaselineForm() {
           </div>
         )}
 
-        {/* STEP 4: Delayed Recall */}
+        {/* STEP 4: Oculomotor Screening */}
         {step === 4 && (
+          <div className="glass rounded-2xl p-6 animate-fade-in">
+            {/* Sub-step 0: Instructions */}
+            {oculomotorSubStep === 0 && (
+              <div>
+                <h2 className="text-lg font-bold mb-2">Oculomotor Screening</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  This screen tests your eye movements. You will follow a dot with your eyes through 4 short exercises, then report any symptoms after each.
+                </p>
+                <div className="glass rounded-xl p-4 mb-4 space-y-2">
+                  <p className="text-sm font-semibold">Instructions:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-4">
+                    <li>Hold your device at arm&apos;s length</li>
+                    <li>Keep your head still throughout</li>
+                    <li>Follow the dot with your eyes only</li>
+                  </ul>
+                </div>
+                <div className="text-center">
+                  <button
+                    onClick={() => setOculomotorSubStep(1)}
+                    className="btn-primary px-8 py-3 rounded-xl text-base font-semibold"
+                  >
+                    Begin Exercises
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Exercise sub-steps: 1=exercise, 2=report, 3=exercise, 4=report, etc. */}
+            {oculomotorSubStep >= 1 && oculomotorSubStep <= 8 && (() => {
+              const isExercise = oculomotorSubStep % 2 === 1
+              const exerciseIndex = Math.floor((oculomotorSubStep - 1) / 2)
+              const exercise = OCULOMOTOR_EXERCISES[exerciseIndex]
+
+              if (isExercise) {
+                // Exercise animation sub-step
+                return (
+                  <OculomotorExercise
+                    key={exercise.key}
+                    exercise={exercise}
+                    exerciseIndex={exerciseIndex}
+                    running={oculomotorExerciseRunning}
+                    onStart={() => setOculomotorExerciseRunning(true)}
+                    onComplete={() => {
+                      setOculomotorExerciseRunning(false)
+                      setOculomotorSubStep(prev => prev + 1)
+                    }}
+                    timerRef={oculomotorTimerRef}
+                    rafRef={oculomotorRafRef}
+                  />
+                )
+              } else {
+                // Symptom report sub-step
+                const result = oculomotorResults[exercise.key]
+                return (
+                  <div>
+                    <h2 className="text-lg font-bold mb-1">Symptom Report</h2>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      After <strong>{exercise.label}</strong>, did you experience any of the following?
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {OCULOMOTOR_SYMPTOMS.map(symptom => {
+                        const isNone = symptom === 'None'
+                        const isSelected = result.symptoms.includes(symptom)
+                        return (
+                          <button
+                            key={symptom}
+                            onClick={() => {
+                              setOculomotorResults(prev => {
+                                const current = prev[exercise.key]
+                                let newSymptoms: string[]
+                                if (isNone) {
+                                  newSymptoms = isSelected ? [] : ['None']
+                                } else {
+                                  newSymptoms = current.symptoms.filter(s => s !== 'None')
+                                  if (isSelected) {
+                                    newSymptoms = newSymptoms.filter(s => s !== symptom)
+                                  } else {
+                                    newSymptoms = [...newSymptoms, symptom]
+                                  }
+                                }
+                                return {
+                                  ...prev,
+                                  [exercise.key]: {
+                                    ...current,
+                                    symptoms: newSymptoms,
+                                    severity: newSymptoms.length === 0 || (newSymptoms.length === 1 && newSymptoms[0] === 'None') ? 0 : current.severity,
+                                  },
+                                }
+                              })
+                            }}
+                            className={`p-2.5 rounded-xl text-sm font-medium transition-all ${
+                              isSelected
+                                ? isNone ? 'bg-green-100 text-green-700 ring-1 ring-green-400' : 'bg-accent text-white'
+                                : 'glass hover:bg-slate-50'
+                            } ${isNone ? 'col-span-2' : ''}`}
+                          >
+                            {symptom}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {result.symptoms.length > 0 && !result.symptoms.includes('None') && (
+                      <div className="mb-4">
+                        <label className="block text-xs font-semibold mb-2">Overall severity (0-10)</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="range"
+                            min="0"
+                            max="10"
+                            value={result.severity}
+                            onChange={e => {
+                              setOculomotorResults(prev => ({
+                                ...prev,
+                                [exercise.key]: { ...prev[exercise.key], severity: parseInt(e.target.value) },
+                              }))
+                            }}
+                            className="flex-1 accent-accent"
+                          />
+                          <span className="text-sm font-bold w-8 text-right">{result.severity}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => setOculomotorSubStep(prev => prev + 1)}
+                        className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1"
+                      >
+                        {exerciseIndex < 3 ? 'Next Exercise' : 'View Summary'} <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              }
+            })()}
+
+            {/* Sub-step 9: Summary */}
+            {oculomotorSubStep === 9 && (
+              <div>
+                <h2 className="text-lg font-bold mb-4">Oculomotor Summary</h2>
+                <div className="space-y-3">
+                  {OCULOMOTOR_EXERCISES.map(ex => {
+                    const result = oculomotorResults[ex.key]
+                    const hasSymptoms = result.symptoms.length > 0 && !result.symptoms.includes('None')
+                    return (
+                      <div key={ex.key} className="glass rounded-xl p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-semibold">{ex.label}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {hasSymptoms ? result.symptoms.join(', ') : 'No symptoms'}
+                            </p>
+                          </div>
+                          {hasSymptoms && (
+                            <span className="text-sm font-bold text-accent">{result.severity}/10</span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="glass rounded-xl p-3 mt-3 text-center border border-accent/20">
+                  <p className="text-sm">
+                    <strong>{OCULOMOTOR_EXERCISES.filter(ex => {
+                      const r = oculomotorResults[ex.key]
+                      return r.symptoms.length > 0 && !r.symptoms.includes('None')
+                    }).length}/4</strong> exercises provoked symptoms
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STEP 5: Delayed Recall */}
+        {step === 5 && (
           <div className="glass rounded-2xl p-6 animate-fade-in">
             <h2 className="text-lg font-bold mb-2">Delayed Recall</h2>
 
@@ -1140,8 +1515,8 @@ export default function AthleteBaselineForm() {
           </div>
         )}
 
-        {/* STEP 5: Score Summary */}
-        {step === 5 && (
+        {/* STEP 6: Score Summary */}
+        {step === 6 && (
           <div className="glass rounded-2xl p-6 animate-fade-in">
             <h2 className="text-lg font-bold mb-4 text-center">Score Summary</h2>
 
@@ -1195,8 +1570,34 @@ export default function AthleteBaselineForm() {
                 <p className="text-4xl font-bold text-accent">{totalCognitiveScore}/50</p>
               </div>
 
+              {/* Oculomotor Screening Summary */}
+              <div className="glass rounded-xl p-4">
+                <p className="text-sm font-semibold mb-2">Oculomotor Screening</p>
+                <div className="space-y-2">
+                  {OCULOMOTOR_EXERCISES.map(ex => {
+                    const result = oculomotorResults[ex.key]
+                    const hasSymptoms = result.symptoms.length > 0 && !result.symptoms.includes('None')
+                    return (
+                      <div key={ex.key} className="flex justify-between text-sm">
+                        <span>{ex.label}</span>
+                        <span className={hasSymptoms ? 'font-bold text-amber-600' : 'text-muted-foreground'}>
+                          {hasSymptoms ? `${result.symptoms.join(', ')} (${result.severity}/10)` : 'None'}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="mt-2 pt-2 border-t border-slate-200 flex justify-between text-sm">
+                  <span className="font-semibold">Exercises with symptoms</span>
+                  <span className="font-bold">{OCULOMOTOR_EXERCISES.filter(ex => {
+                    const r = oculomotorResults[ex.key]
+                    return r.symptoms.length > 0 && !r.symptoms.includes('None')
+                  }).length}/4</span>
+                </div>
+              </div>
+
               <p className="text-xs text-muted-foreground text-center">
-                Sections requiring clinical observation (balance, coordination, cervical spine, GCS) were not administered.
+                Sections requiring clinical observation (balance, cervical spine, GCS) were not administered.
               </p>
             </div>
 
@@ -1248,7 +1649,7 @@ export default function AthleteBaselineForm() {
                 }
                 setStep(prev => prev + 1)
               }}
-              disabled={step === 4 && !delayedRecallReady}
+              disabled={step === 5 && !delayedRecallReady}
               className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
             >
               Next <ChevronRight className="w-4 h-4" />

@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
 import { SCAT_MASTERY_SEQUENCE } from '@/lib/email-sequences'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
 export async function GET(request: Request) {
   try {
@@ -30,8 +31,9 @@ export async function GET(request: Request) {
 
     // Process each user
     for (const user of users) {
-      // Only send to preview/free users (not paid)
+      // Only send to preview/free users who haven't unsubscribed
       if (user.accessLevel !== 'preview') continue
+      if (user.nurtureUnsubscribed) continue
 
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -45,8 +47,13 @@ export async function GET(request: Request) {
       const loginLink = `${baseUrl}/dashboard`
       const upgradeLink = `${baseUrl}/pricing`
 
-      // Send email
+      // Generate unsubscribe URL
+      const unsubToken = generateUnsubscribeToken(user.email)
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+      // Send email (replace unsubscribe placeholder with real URL)
       const html = email.template(user.name, daysSinceSignup <= 2 ? loginLink : upgradeLink)
+        .replace('{{unsubscribe_url}}', unsubscribeUrl)
 
       await sendEmail({
         to: user.email,
@@ -56,6 +63,10 @@ export async function GET(request: Request) {
           { name: 'sequence', value: 'scat-mastery' },
           { name: 'day', value: String(daysSinceSignup) },
         ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       })
 
       emailsSent++

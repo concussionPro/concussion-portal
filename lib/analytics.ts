@@ -31,8 +31,6 @@ export const ANALYTICS_EVENTS = {
   // Content engagement
   MODULE_START: 'module_start',
   MODULE_COMPLETE: 'module_complete',
-  VIDEO_PLAY: 'video_play',
-  VIDEO_COMPLETE: 'video_complete',
   QUIZ_START: 'quiz_start',
   QUIZ_SUBMIT: 'quiz_submit',
 

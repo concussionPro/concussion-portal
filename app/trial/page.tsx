@@ -124,7 +124,7 @@ export default function TrialPage() {
             <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center mb-4">
               <Award className="w-6 h-6 text-[#6b9da8]" strokeWidth={2} />
             </div>
-            <h3 className="font-bold text-slate-900 mb-2">AHPRA Accredited</h3>
+            <h3 className="font-bold text-slate-900 mb-2">AHPRA Aligned</h3>
             <p className="text-sm text-slate-600">
               Earn CPD points recognized for Australian health practitioner registration
             </p>
@@ -157,7 +157,7 @@ export default function TrialPage() {
             After Your Free Trial
           </h3>
           <p className="text-slate-300 mb-6">
-            If you love Module 1, unlock the remaining 7 modules and earn 39 additional CPD points. Full course includes SCAT6 mastery, VOMS protocols, return-to-play frameworks, and advanced rehabilitation pathways.
+            If you love Module 1, unlock the remaining 7 modules and earn all 14 CPD points (8 online + 6 in-person workshop). Full course includes SCAT6 mastery, VOMS protocols, return-to-play frameworks, and advanced rehabilitation pathways.
           </p>
           <div className="grid md:grid-cols-3 gap-4 text-center">
             <div className="bg-slate-800 rounded-xl p-4">
@@ -165,12 +165,12 @@ export default function TrialPage() {
               <div className="text-sm text-slate-400">Total Modules</div>
             </div>
             <div className="bg-slate-800 rounded-xl p-4">
-              <div className="text-3xl font-bold text-teal-400 mb-1">40</div>
+              <div className="text-3xl font-bold text-teal-400 mb-1">14</div>
               <div className="text-sm text-slate-400">CPD Points</div>
             </div>
             <div className="bg-slate-800 rounded-xl p-4">
-              <div className="text-3xl font-bold text-teal-400 mb-1">~6</div>
-              <div className="text-sm text-slate-400">Hours Total</div>
+              <div className="text-3xl font-bold text-teal-400 mb-1">~11</div>
+              <div className="text-sm text-slate-400">Online Hours</div>
             </div>
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function TrialPage() {
       <footer className="py-8 px-6 border-t border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-sm text-slate-500">
-            © 2026 Concussion Education Australia · AHPRA Accredited CPD
+            © 2026 Concussion Education Australia · AHPRA Aligned CPD
           </p>
         </div>
       </footer>

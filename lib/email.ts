@@ -38,6 +38,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       },
       body: JSON.stringify({
         from: 'ConcussionPro <noreply@concussion-education-australia.com>',
+        reply_to: 'zac@concussion-education-australia.com',
         to: [options.to],
         subject: options.subject,
         html: options.html,
@@ -62,7 +63,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
  */
 export async function sendMagicLinkEmail(email: string, token: string, origin?: string): Promise<boolean> {
   // Use provided origin or try to get from window (client-side) or use production URL
-  const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com')
+  const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_BASE_URL || 'https://portal.concussion-education-australia.com')
   const loginUrl = `${baseUrl}/auth/verify?email=${encodeURIComponent(email)}&token=${token}`
 
   return sendEmail({
@@ -162,7 +163,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
               </center>
 
               <div class="warning" style="margin-top: 24px;">
-                ⏱️ This link expires in <strong>1 hour</strong> for security.
+                ⏱️ This link expires in <strong>24 hours</strong> for security.
               </div>
 
               <p style="color: #64748b; font-size: 14px; margin-top: 24px;">
@@ -184,7 +185,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
  * Send welcome email after successful enrollment
  */
 export async function sendWelcomeEmail(email: string, name: string, origin?: string): Promise<boolean> {
-  const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com')
+  const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_BASE_URL || 'https://portal.concussion-education-australia.com')
 
   return sendEmail({
     to: email,
@@ -287,10 +288,10 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
               <p>Your enrollment is confirmed! You now have lifetime access to:</p>
 
               <div class="highlight">
-                <strong>✓ 8 comprehensive online modules (8 CPD hours)</strong><br>
-                <strong>✓ Full-day practical workshop (6 CPD hours)</strong><br>
-                <strong>✓ 14 total AHPRA CPD hours</strong><br>
-                <strong>✓ All downloadable resources and templates</strong>
+                <strong>✓ 8 comprehensive online modules (8 CPD points)</strong><br>
+                <strong>✓ Clinical Toolkit &amp; downloadable resources</strong><br>
+                <strong>✓ Reference Repository (130+ articles)</strong><br>
+                <strong>✓ AHPRA-aligned CPD certificate</strong>
               </div>
 
               <h3>Your Next Steps:</h3>
@@ -305,15 +306,15 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
                 <div class="checklist-item">
                   <div class="number">2</div>
                   <div>
-                    <strong>Choose your workshop date</strong><br>
-                    <span style="color: #64748b; font-size: 14px;">Melbourne (Feb 7) · Sydney (Mar 7) · Byron Bay (Mar 28)</span>
+                    <strong>Complete all 8 modules at your own pace</strong><br>
+                    <span style="color: #64748b; font-size: 14px;">Pass each quiz to earn your CPD points</span>
                   </div>
                 </div>
                 <div class="checklist-item">
                   <div class="number">3</div>
                   <div>
-                    <strong>Complete all 8 modules before your workshop</strong><br>
-                    <span style="color: #64748b; font-size: 14px;">The practical training builds on the online content</span>
+                    <strong>Download your clinical toolkit</strong><br>
+                    <span style="color: #64748b; font-size: 14px;">Referral templates, RTP forms, and clearance letters</span>
                   </div>
                 </div>
               </div>
@@ -329,7 +330,7 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
               </p>
 
               <p style="color: #64748b;">
-                Looking forward to seeing you at the workshop!<br>
+                Looking forward to supporting your concussion management journey!<br>
                 <br>
                 - Zac<br>
                 <em style="font-size: 14px;">Founder, Concussion Education Australia</em>

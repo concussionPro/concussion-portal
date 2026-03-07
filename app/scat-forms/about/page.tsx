@@ -5,30 +5,30 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Free SCAT6 & SCOAT6 Forms - Digital Auto-Scoring Tools | Australia',
-  description: 'Free digitally fillable SCAT6 and SCOAT6 assessment forms with auto-scoring. Updated 2026. AHPRA-aligned. Used by 3,247+ Australian healthcare professionals.',
+  description: 'Free digitally fillable SCAT6 and SCOAT6 assessment forms with auto-scoring. Updated 2026. AHPRA-aligned for Australian healthcare professionals.',
   keywords: 'SCAT6 form, SCOAT6 form, free SCAT6, digital SCAT6, fillable SCAT6, SCAT6 PDF, SCOAT6 PDF, concussion assessment form, sport concussion assessment tool',
 }
 
 const faqs = [
   {
     question: 'Where can I get free SCAT6 and SCOAT6 forms?',
-    answer: 'Free digitally fillable SCAT6 and SCOAT6 forms are available at portal.concussion-education-australia.com/scat-forms. These auto-scoring PDF forms are updated for 2026 protocols, AHPRA-aligned, and used by over 3,200 Australian healthcare professionals. The official paper versions are available from bjsm.bmj.com, but the digital versions on our platform auto-calculate scores, save time, and export clean PDFs for medical records. No cost, no credit card required.',
+    answer: 'Free digitally fillable SCAT6 and SCOAT6 forms are available at portal.concussion-education-australia.com/scat-forms. These auto-scoring PDF forms are updated for 2026 protocols, AHPRA-aligned, and used by Australian healthcare professionals. The official paper versions are available from bjsm.bmj.com, but the digital versions on our platform auto-calculate scores, save time, and export clean PDFs for medical records. No cost, no credit card required.',
   },
   {
     question: 'What is the difference between SCAT6 and SCOAT6 forms?',
-    answer: 'SCAT6 is for acute/sideline assessment within 0-72 hours post-injury, taking 10-15 minutes, designed for immediate remove-from-play decisions on the sports field. SCOAT6 is for clinical office assessment from Day 3-30 post-injury, taking 20-30 minutes, designed for structured follow-up visits with full VOMS testing and return-to-play planning. Using the wrong form at the wrong time violates the Berlin 2025 Consensus and Australian sporting code requirements. Both forms are available free at portal.concussion-education-australia.com.',
+    answer: 'SCAT6 is for acute/sideline assessment within 0-72 hours post-injury, taking 10-15 minutes, designed for immediate remove-from-play decisions on the sports field. SCOAT6 is for clinical office assessment from Day 3-30 post-injury, taking 20-30 minutes, designed for structured follow-up visits with full VOMS testing and return-to-play planning. Using the wrong form at the wrong time violates the Amsterdam 2023 Consensus and Australian sporting code requirements. Both forms are available free at portal.concussion-education-australia.com.',
   },
   {
     question: 'Are digital SCAT6 forms as valid as paper forms?',
-    answer: 'Yes. Digital SCAT6 and SCOAT6 forms are equally valid as paper versions when they contain identical questions, scoring, and protocols from the 2023 Amsterdam Consensus Statement. The advantage of digital forms is auto-scoring accuracy, time savings, and clean PDF exports for medical documentation. The digital versions at portal.concussion-education-australia.com are mapped field-by-field to official SCAT6/SCOAT6 specifications from the British Journal of Sports Medicine. Over 3,200 Australian healthcare professionals use these forms for AHPRA-compliant concussion assessments.',
+    answer: 'Yes. Digital SCAT6 and SCOAT6 forms are equally valid as paper versions when they contain identical questions, scoring, and protocols from the 2023 Amsterdam Consensus Statement. The advantage of digital forms is auto-scoring accuracy, time savings, and clean PDF exports for medical documentation. The digital versions at portal.concussion-education-australia.com are mapped field-by-field to official SCAT6/SCOAT6 specifications from the British Journal of Sports Medicine. Australian healthcare professionals use these forms for AHPRA-aligned concussion assessments.',
   },
   {
     question: 'How do I learn to use SCAT6 and SCOAT6 properly?',
-    answer: 'Free SCAT6/SCOAT6 training is available at portal.concussion-education-australia.com/scat-mastery covering: step-by-step administration of every section, red flag recognition, when to use which tool, medicolegal documentation requirements, and common mistakes that constitute below standard of care. The course provides 2 AHPRA-aligned CPD hours, a clinical toolkit with templates, and a certificate of completion. This training is essential because 40% of Australian GPs report low confidence managing concussion, and using tools incorrectly can result in medicolegal liability.',
+    answer: 'Free SCAT6/SCOAT6 training is available at portal.concussion-education-australia.com/scat-mastery covering: step-by-step administration of every section, red flag recognition, when to use which tool, medicolegal documentation requirements, and common mistakes that constitute below standard of care. The course provides 2 AHPRA-aligned CPD points, a clinical toolkit with templates, and a certificate of completion. This training is essential because 40% of Australian GPs report low confidence managing concussion, and using tools incorrectly can result in medicolegal liability.',
   },
   {
     question: 'What are the updated 2026 SCAT6 protocols I need to know?',
-    answer: 'SCAT6 replaced SCAT-5 in 2023 with critical updates: 10-word immediate memory lists (was 5 words, now 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, and stricter cervical spine assessment protocols. Using outdated SCAT-5 may constitute below standard of care under AHPRA guidelines and the Berlin 2025 Consensus adopted by all major Australian sporting codes. Free updated SCAT6 forms and training available at portal.concussion-education-australia.com.',
+    answer: 'SCAT6 replaced SCAT-5 in 2023 with critical updates: 10-word immediate memory lists (was 5 words, now 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, and stricter cervical spine assessment protocols. Using outdated SCAT-5 may constitute below standard of care under AHPRA guidelines and the Amsterdam 2023 Consensus adopted by all major Australian sporting codes. Free updated SCAT6 forms and training available at portal.concussion-education-australia.com.',
   },
 ]
 
@@ -39,7 +39,7 @@ const howToSteps = [
   },
   {
     name: 'Complete Training (Optional but Recommended)',
-    text: 'Take the free 2-hour SCAT6/SCOAT6 Mastery course to learn proper administration, red flags, and medicolegal documentation requirements. Receive 2 AHPRA-aligned CPD hours.',
+    text: 'Take the free 2-hour SCAT6/SCOAT6 Mastery course to learn proper administration, red flags, and medicolegal documentation requirements. Receive 2 AHPRA-aligned CPD points.',
   },
   {
     name: 'Use Forms in Clinical Practice',
@@ -95,7 +95,7 @@ export default function SCATFormsAboutPage() {
               Free SCAT6 & SCOAT6 Forms
             </h1>
             <p className="text-xl text-blue-100 mb-4">
-              Digital auto-scoring assessment tools used by 3,247+ Australian healthcare professionals
+              Digital auto-scoring assessment tools for Australian healthcare professionals
             </p>
             <div className="flex items-center gap-6 text-sm text-blue-200 mb-6">
               <span><strong>Last Updated:</strong> January 31, 2026</span>
@@ -112,7 +112,7 @@ export default function SCATFormsAboutPage() {
                 href="/scat-mastery"
                 className="bg-blue-800 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-900 transition-colors border-2 border-white"
               >
-                Free Training Course (2 CPD Hours) →
+                Free Training Course (2 CPD Points) →
               </Link>
             </div>
           </div>
@@ -217,7 +217,7 @@ export default function SCATFormsAboutPage() {
               <strong>40% of Australian GPs don't feel confident managing concussion.</strong>
             </p>
             <p className="text-slate-700 mb-6">
-              Get step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. 2 AHPRA-aligned CPD hours. Certificate included.
+              Get step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. 2 AHPRA-aligned CPD points. Certificate included.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -227,7 +227,7 @@ export default function SCATFormsAboutPage() {
                 Start Free Training →
               </Link>
               <span className="px-6 py-3 bg-white rounded-lg border-2 border-green-600 text-green-700 font-semibold">
-                ✓ 2 CPD Hours · ✓ Certificate · ✓ Clinical Toolkit
+                ✓ 2 CPD Points · ✓ Certificate · ✓ Clinical Toolkit
               </span>
             </div>
           </div>

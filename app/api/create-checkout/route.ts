@@ -8,7 +8,7 @@ import type { CourseType } from '@/lib/stripe'
  * Creates a Stripe Checkout session for course purchases.
  *
  * Body params:
- *   courseType: 'online-only' | 'full-course' | 'international-online'
+ *   courseType: 'online-only' | 'full-course'
  *   location?: 'sydney' | 'melbourne' | 'byron-bay' (required for full-course)
  *   email?: string (optional, pre-fills checkout)
  */
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Validate course type
     if (!courseType || !VALID_COURSE_TYPES.includes(courseType)) {
       return NextResponse.json(
-        { error: 'Invalid course type. Must be "online-only", "full-course", or "international-online".' },
+        { error: 'Invalid course type. Must be "online-only" or "full-course".' },
         { status: 400 }
       )
     }

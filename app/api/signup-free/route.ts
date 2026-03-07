@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
                   ✓ Red flag recognition that avoids medicolegal risk<br>
                   ✓ When to use which tool (most GPs get this wrong)<br>
                   ✓ Clinical toolkit: referral templates, RTP forms<br>
-                  ✓ 2 AHPRA-aligned CPD hours + certificate
+                  ✓ 2 AHPRA-aligned CPD points + certificate
                 </div>
 
                 <center>
@@ -114,8 +114,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Welcome email sent! Check your inbox.',
-      loginLink, // Return for immediate redirect
+      message: 'Welcome email sent! Check your inbox for your login link.',
     })
   } catch (error) {
     console.error('Free signup error:', error)

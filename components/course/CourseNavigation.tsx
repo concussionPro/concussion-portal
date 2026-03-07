@@ -1,9 +1,9 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { getAllModules } from '@/data/modules'
+import { getModulesMeta } from '@/data/module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
-import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, PlayCircle, Brain, Menu, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -11,7 +11,7 @@ export function CourseNavigation() {
   const router = useRouter()
   const params = useParams()
   const currentModuleId = parseInt(params.id as string)
-  const modules = getAllModules()
+  const modules = getModulesMeta()
   const { isModuleComplete, getModuleProgress } = useProgress()
   const [expandedModules, setExpandedModules] = useState<number[]>([currentModuleId])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -164,7 +164,7 @@ export function CourseNavigation() {
                   <div className="ml-9 space-y-0.5 mt-0.5">
                     {/* Module Content */}
                     <button
-                      onClick={() => navigateToSection(module.id, 'video')}
+                      onClick={() => navigateToSection(module.id)}
                       className={cn(
                         "w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-left group",
                         "hover:bg-slate-50"
@@ -174,30 +174,7 @@ export function CourseNavigation() {
                       <span className="text-sm text-slate-600 group-hover:text-slate-800">
                         Module Content
                       </span>
-                      {progress.videoCompleted && (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 ml-auto" />
-                      )}
-                      {!progress.videoCompleted && (
-                        <div className="w-3.5 h-3.5 border-2 border-slate-300 rounded-full ml-auto" />
-                      )}
                     </button>
-
-                    {/* Content Sections */}
-                    {module.sections.map((section, sectionIndex) => (
-                      <button
-                        key={section.id}
-                        onClick={() => navigateToSection(module.id, section.id)}
-                        className={cn(
-                          "w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-left group",
-                          "hover:bg-slate-50"
-                        )}
-                      >
-                        <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                        <span className="text-sm text-slate-600 group-hover:text-slate-800 truncate">
-                          {section.title}
-                        </span>
-                      </button>
-                    ))}
 
                     {/* Quiz */}
                     <button

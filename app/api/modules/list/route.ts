@@ -46,9 +46,8 @@ export async function GET(request: NextRequest) {
       duration: module.duration,
       points: module.points,
       description: module.description,
-      videoRequiredMinutes: module.videoRequiredMinutes,
       isFree: 'isFree' in module ? module.isFree : false,
-      // Do NOT include: sections, quiz, clinicalReferences, videoUrl
+      // Do NOT include: sections, quiz, clinicalReferences
     }))
 
     return NextResponse.json({

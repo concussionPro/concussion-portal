@@ -46,11 +46,6 @@ export default function PreviewPage() {
 
   const nextWorkshop = upcomingWorkshops[0] || null
 
-  // First TWO sections of ALL modules unlocked (to show breadth)
-  const isUnlocked = (moduleId: number, sectionIndex: number) => {
-    return sectionIndex === 0 || sectionIndex === 1
-  }
-
   const toggleModule = (moduleId: number) => {
     setExpandedModule(expandedModule === moduleId ? 0 : moduleId)
   }
@@ -74,7 +69,7 @@ export default function PreviewPage() {
                 Course Preview
               </h1>
               <p className="text-xs md:text-sm text-slate-600 hidden sm:block">
-                8 online modules + full-day practical · 14 AHPRA CPD hours
+                8 online modules + full-day practical · 14 AHPRA CPD points
               </p>
             </div>
             <div className="flex items-center gap-2 md:gap-3">
@@ -101,61 +96,20 @@ export default function PreviewPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Hero CTA - More Prominent */}
-        <div className="relative bg-gradient-to-br from-[#5b9aa6] via-[#6b9da8] to-[#8a8d8e] rounded-3xl border-2 border-blue-400 p-10 md:p-12 mb-10 overflow-hidden shadow-2xl">
-          {/* Animated background element */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-
-          <div className="relative z-10 max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-amber-500 text-white px-5 py-2 rounded-full text-sm font-black mb-6 shadow-lg animate-bounce">
-              <Eye className="w-5 h-5" />
-              PREVIEW: 16 Sections Unlocked
-            </div>
-
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight leading-tight">
-              Explore the Full Course Structure
-            </h2>
-            <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-3xl mx-auto">
-              See exactly what you&apos;ll learn across all 8 modules. We&apos;ve unlocked the <span className="font-bold text-amber-300">first TWO sections</span> of each module
-              so you can preview the breadth of content—from acute assessment to return-to-activity protocols. Full course includes <span className="font-bold text-amber-300">100+ sections</span> with
-              interactive quizzes, clinical flowcharts, and downloadable resources.
-            </p>
-            <div className="flex flex-col items-center justify-center gap-5 mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 w-full sm:w-auto">
-                <button
-                  onClick={() => {
-                    const pricingEl = document.getElementById('pricing-section')
-                    if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  className="group px-6 md:px-12 py-4 md:py-5 bg-white text-[#5b9aa6] rounded-2xl text-lg md:text-xl font-black hover:bg-amber-400 hover:text-white transition-all shadow-2xl flex items-center justify-center gap-2 md:gap-3 hover:scale-105 transform w-full sm:w-auto"
-                >
-                  <Sparkles className="w-5 md:w-6 h-5 md:h-6 group-hover:animate-spin flex-shrink-0" />
-                  <span className="text-center">Full Course + Workshop - $1,190</span>
-                  <ArrowRight className="w-5 md:w-6 h-5 md:h-6 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                </button>
-                <button
-                  onClick={() => {
-                    const pricingEl = document.getElementById('pricing-section')
-                    if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  className="group px-6 md:px-12 py-4 md:py-5 bg-white text-[#5b9aa6] rounded-2xl text-lg md:text-xl font-black hover:bg-blue-100 transition-all shadow-2xl flex items-center justify-center gap-2 md:gap-3 hover:scale-105 transform w-full sm:w-auto"
-                >
-                  <span className="text-center">Online Only - $497</span>
-                  <ArrowRight className="w-5 md:w-6 h-5 md:h-6 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                </button>
-              </div>
-              <button
-                onClick={() => router.push('/assessment')}
-                className="px-8 py-3 bg-white/10 backdrop-blur-sm border-2 border-white text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition-all flex items-center gap-2"
-              >
-                <PlayCircle className="w-5 h-5" />
-                Or Try Free Knowledge Test
-              </button>
-            </div>
-            <p className="text-blue-200 text-sm font-semibold">
-              ✓ Choose Any Workshop Date · ✓ 14 CPD points - AHPRA Aligned · ✓ Lifetime Access
-            </p>
+        {/* Hero - Value-First */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 bg-teal-100 text-[#5b8d96] px-4 py-2 rounded-full text-sm font-bold mb-4">
+            <Eye className="w-4 h-4" />
+            16 Sections Unlocked — Preview Free
           </div>
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
+            Explore the Full Course Structure
+          </h2>
+          <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            See exactly what you&apos;ll learn across all 8 modules. The first two sections of each module
+            are unlocked — from acute assessment to return-to-activity protocols. The full course includes 100+ sections with
+            interactive quizzes, clinical flowcharts, and downloadable resources.
+          </p>
         </div>
 
         {/* Feature Highlights */}
@@ -247,7 +201,7 @@ export default function PreviewPage() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <FileText className="w-4 h-4" />
-                          <span className="font-medium">{module.sectionCount} Sections</span>
+                          <span className="font-medium">Interactive Content</span>
                         </div>
                       </div>
                     </div>
@@ -263,65 +217,19 @@ export default function PreviewPage() {
                   </div>
                 </div>
 
-                {/* Module Sections (Expandable) */}
+                {/* Module Description (Expandable) */}
                 {isExpanded && (
                   <div className="border-t border-slate-200 bg-slate-50 p-6">
-                    <div className="space-y-3">
-                      {module.sections.map((section, sectionIdx) => {
-                        const unlocked = isUnlocked(module.id, sectionIdx)
-
-                        return (
-                          <div
-                            key={section.id}
-                            className={`flex items-start gap-4 p-4 rounded-xl border-2 transition-all ${
-                              unlocked
-                                ? 'bg-white border-teal-200 hover:border-teal-400 hover:shadow-md cursor-pointer'
-                                : 'bg-slate-100 border-slate-200 opacity-75'
-                            }`}
-                            onClick={() => {
-                              if (unlocked) {
-                                router.push(`/modules/${module.id}`)
-                              }
-                            }}
-                          >
-                            {/* Icon */}
-                            <div className="flex-shrink-0 mt-1">
-                              {unlocked ? (
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7ba8b0] to-emerald-600 flex items-center justify-center shadow-sm">
-                                  <CheckCircle2 className="w-5 h-5 text-white" strokeWidth={2.5} />
-                                </div>
-                              ) : (
-                                <div className="w-8 h-8 rounded-lg bg-slate-300 flex items-center justify-center">
-                                  <Lock className="w-4 h-4 text-slate-500" />
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Section Info */}
-                            <div className="flex-1">
-                              <h4 className={`text-base font-bold mb-1 ${unlocked ? 'text-slate-900' : 'text-slate-500'}`}>
-                                {section.title}
-                              </h4>
-                              {section.preview && (
-                                <p className={`text-sm leading-relaxed ${unlocked ? 'text-slate-600' : 'text-slate-400'}`}>
-                                  {section.preview}...
-                                </p>
-                              )}
-                              {!unlocked && (
-                                <div className="mt-2 inline-flex items-center gap-1 text-xs text-amber-600 font-semibold bg-amber-50 px-2 py-1 rounded">
-                                  <Lock className="w-3 h-3" />
-                                  Enroll to unlock
-                                </div>
-                              )}
-                            </div>
-
-                            {unlocked && (
-                              <ChevronRight className="w-5 h-5 text-[#6b9da8] flex-shrink-0 mt-1" />
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
+                    <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                      {module.description}
+                    </p>
+                    <button
+                      onClick={() => router.push('/pricing')}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+                    >
+                      <Lock className="w-4 h-4" />
+                      Enroll to access
+                    </button>
                   </div>
                 )}
               </div>
@@ -347,59 +255,56 @@ export default function PreviewPage() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="mt-12 bg-gradient-to-br from-[#5b9aa6] to-[#6b9da8] rounded-2xl p-8 md:p-12 text-white text-center shadow-2xl">
-          <div className="max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold mb-4">
-              <Sparkles className="w-4 h-4" />
-              Transform Your Concussion Practice
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">
-              Ready to Unlock All 8 Modules + In-Person Training?
-            </h2>
-            <p className="text-blue-100 mb-6 text-lg leading-relaxed">
-              One price includes everything: 8 online modules (8 CPD hrs) + full-day practical workshop (6 CPD hrs)
-              = 14 total AHPRA CPD hours. Lifetime access. Flexible workshop dates in Melbourne, Sydney, and Byron Bay.
-            </p>
-            <button
-              onClick={() => router.push('/in-person')}
-              className="text-blue-200 hover:text-white underline text-sm font-semibold mb-6"
-            >
-              View full workshop agenda →
-            </button>
-            <div className="flex flex-col items-center justify-center gap-5 mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 w-full sm:w-auto">
-                <button
-                  onClick={() => {
-                    const pricingEl = document.getElementById('pricing-section')
-                    if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  className="group px-6 md:px-10 py-3.5 md:py-4 bg-white text-[#5b9aa6] rounded-xl text-base md:text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-105 transform w-full sm:w-auto"
-                >
-                  <span className="text-center">Full Course + Workshop - $1,190</span>
-                  <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                </button>
-                <button
-                  onClick={() => {
-                    const pricingEl = document.getElementById('pricing-section')
-                    if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  className="group px-6 md:px-10 py-3.5 md:py-4 bg-white text-[#5b9aa6] rounded-xl text-base md:text-lg font-bold hover:bg-blue-50 transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-105 transform w-full sm:w-auto"
-                >
-                  <span className="text-center">Online Only - $497</span>
-                  <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-                </button>
+        <div className="mt-12 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-[#5b9aa6] opacity-[0.08] blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full bg-emerald-500 opacity-[0.06] blur-[80px] pointer-events-none" />
+
+          <div className="max-w-3xl mx-auto relative z-10">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="text-left">
+                <h2 className="text-2xl md:text-3xl font-bold mb-4 tracking-tight leading-tight">
+                  Stop second-guessing your concussion assessments.
+                </h2>
+                <p className="text-white/60 mb-6 leading-relaxed">
+                  8 modules covering everything from acute sideline assessment to return-to-play clearance. Add a full-day practical for hands-on SCAT6, VOMS, and BESS training.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => {
+                      const pricingEl = document.getElementById('pricing-section')
+                      if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                    className="group px-6 py-3.5 bg-white text-slate-900 rounded-xl text-sm font-bold hover:bg-white/90 transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    View Pricing
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button
+                    onClick={() => router.push('/assessment')}
+                    className="px-6 py-3.5 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <PlayCircle className="w-4 h-4" />
+                    Free Knowledge Test
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => router.push('/assessment')}
-                className="px-8 py-3 bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition-all flex items-center gap-2"
-              >
-                <PlayCircle className="w-5 h-5" />
-                Try Free Knowledge Test
-              </button>
+              <div className="space-y-3">
+                {[
+                  { label: '14 CPD Points', desc: '8 online + 6 workshop' },
+                  { label: 'Lifetime Access', desc: 'All modules, updates included' },
+                  { label: 'Clinical Toolkit', desc: 'Flowcharts, templates, forms' },
+                  { label: 'Flexible Dates', desc: 'Byron Bay Mar 28 · More TBA' },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 border border-white/10">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-white">{item.label}</span>
+                      <span className="text-xs text-white/50 ml-2">{item.desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-blue-100 text-sm">
-              Melbourne Feb 7 · Sydney March 7 · Byron Bay March 28 · Code: <span className="font-bold">SCAT6</span> for early bird pricing
-            </p>
           </div>
         </div>
       </div>

@@ -95,7 +95,7 @@ export async function sendWelcomeEmail(data: {
       <ul style="margin: 10px 0 0 0; padding-left: 20px; font-size: 14px; color: #1e3a8a;">
         <li>8 comprehensive online modules</li>
         <li>Clinical Toolkit with downloadable resources</li>
-        <li>Reference Repository (145 research articles)</li>
+        <li>Reference Repository (130+ research articles)</li>
         <li>Interactive quizzes and assessments</li>
         ${data.accessLevel === 'full-course' ? '<li>Full-day in-person workshop (choose your date)</li>' : '<li>Upgrade anytime for just $693 more</li>'}
       </ul>
@@ -114,7 +114,7 @@ export async function sendWelcomeEmail(data: {
 
   <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
     <p style="font-size: 12px; color: #999; margin: 0;">
-      ConcussionPro - AHPRA Accredited Concussion Management Training
+      ConcussionPro - AHPRA Aligned Concussion Management Training
     </p>
   </div>
 

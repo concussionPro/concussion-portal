@@ -159,7 +159,7 @@ export default function SCAT6DownloadPage() {
             {/* Trust signals row */}
             <div className="flex flex-wrap gap-3 mb-10">
               {[
-                { icon: Users, label: 'Used by 200+ clinicians' },
+                { icon: Users, label: 'For Australian clinicians' },
                 { icon: FileText, label: 'Fillable PDF' },
                 { icon: Check, label: 'Auto-scoring' },
                 { icon: Shield, label: 'Free' },
@@ -241,7 +241,7 @@ export default function SCAT6DownloadPage() {
                         Want to master SCAT6 administration?
                       </p>
                       <p className="text-xs text-slate-600 mb-3 leading-snug">
-                        Try our free 2-hour course — 2 AHPRA CPD hours, instant access, no credit card.
+                        Try our free 2-hour course — 2 AHPRA CPD points, instant access, no credit card.
                       </p>
                       <a
                         href="/scat-mastery"
@@ -370,7 +370,7 @@ export default function SCAT6DownloadPage() {
                       Want to master SCAT6 administration?
                     </p>
                     <p className="text-xs text-slate-600 mb-2 leading-snug">
-                      Try our free 2-hour course — 2 AHPRA CPD hours, instant access.
+                      Try our free 2-hour course — 2 AHPRA CPD points, instant access.
                     </p>
                     <a
                       href="/scat-mastery"

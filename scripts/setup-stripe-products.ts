@@ -24,7 +24,7 @@ async function setupProducts() {
     // Product 1: Individual Professional
     const individualProduct = await stripe.products.create({
       name: 'Individual Professional',
-      description: 'Comprehensive concussion education with 10 CPD hours, lifetime access, and clinical toolkit',
+      description: 'Comprehensive concussion education with 10 CPD points, lifetime access, and clinical toolkit',
       metadata: {
         access_level: 'online-only',
         cpd_hours: '10',
@@ -107,7 +107,7 @@ async function setupProducts() {
     // Product 4: SCAT Mastery Short Course
     const scatProduct = await stripe.products.create({
       name: 'SCAT6/SCOAT6 Mastery + Clinical Toolkit',
-      description: '2-hour short course with clinical toolkit, checklists, and certificate (2 CPD hours)',
+      description: '2-hour short course with clinical toolkit, checklists, and certificate (2 CPD points)',
       metadata: {
         access_level: 'preview',
         cpd_hours: '2',

@@ -33,11 +33,14 @@ function VerifyContent() {
         setMessage('Login successful! You\'ll stay logged in. Redirecting...')
 
         // Session cookie is set automatically by the server
-        // Redirect based on access level after 2 seconds
+        // Redirect after 2 seconds — respect saved redirect, else access-based default
         setTimeout(() => {
-          // Preview users (free SCAT course) → SCAT course page
-          // Paid users → Full dashboard
-          if (data.user.accessLevel === 'preview') {
+          const savedRedirect = localStorage.getItem('login_redirect')
+          localStorage.removeItem('login_redirect')
+
+          if (savedRedirect && data.user.accessLevel !== 'preview') {
+            router.push(savedRedirect)
+          } else if (data.user.accessLevel === 'preview') {
             router.push('/scat-course')
           } else {
             router.push('/dashboard')

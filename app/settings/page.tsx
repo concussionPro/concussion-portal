@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { User, Mail, Shield, Bell, LogOut, Trash2, CheckCircle2, Crown } from 'lucide-react'
+import { User, Mail, Shield, LogOut, Trash2, CheckCircle2, Crown } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -190,7 +190,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">Reference Repository</div>
-                        <div className="text-xs text-slate-600 mt-1">133+ academic references</div>
+                        <div className="text-xs text-slate-600 mt-1">130+ academic references</div>
                       </div>
                       {isPaidUser ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                       <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <div>
                           <div className="text-sm font-semibold text-slate-900">In-Person Workshop</div>
-                          <div className="text-xs text-slate-600 mt-1">Full-day practical training (6 CPD hours)</div>
+                          <div className="text-xs text-slate-600 mt-1">Full-day practical training (6 CPD points)</div>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                           <CheckCircle2 className="w-3.5 h-3.5" />
@@ -228,7 +228,7 @@ export default function SettingsPage() {
                         Enroll in the complete course to access all modules, workshops, and premium resources.
                       </p>
                       <button
-                        onClick={() => router.push('/preview')}
+                        onClick={() => router.push('/pricing')}
                         className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
                       >
                         Enroll Now — $1,190
@@ -250,32 +250,6 @@ export default function SettingsPage() {
                       </p>
                     </div>
                   )}
-                </div>
-
-                {/* Notifications */}
-                <div className="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Bell className="w-5 h-5 text-[#5b9aa6]" strokeWidth={2} />
-                    <h2 className="text-xl font-bold text-slate-900">Notifications</h2>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">Course Updates</div>
-                        <div className="text-xs text-slate-600 mt-1">New modules and content releases</div>
-                      </div>
-                      <div className="text-xs text-slate-500">Coming Soon</div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">Progress Reminders</div>
-                        <div className="text-xs text-slate-600 mt-1">Weekly study reminders</div>
-                      </div>
-                      <div className="text-xs text-slate-500">Coming Soon</div>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Account Actions */}

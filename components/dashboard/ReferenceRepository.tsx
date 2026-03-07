@@ -1282,7 +1282,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
               Reference Repository Locked
             </h3>
             <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-              Access <strong className="text-slate-900">135+ evidence-based references</strong> from leading journals and researchers. Available exclusively to course enrollees.
+              Access <strong className="text-slate-900">130+ evidence-based references</strong> from leading journals and researchers. Available exclusively to course enrollees.
             </p>
             <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl p-4 border-2 border-teal-200">
               <Award className="w-8 h-8 text-teal-600 mx-auto mb-2" />
@@ -1302,7 +1302,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">Reference Repository</h2>
-            <p className="text-sm text-slate-600">135+ evidence-based research articles</p>
+            <p className="text-sm text-slate-600">130+ evidence-based research articles</p>
           </div>
         </div>
       </div>
@@ -1319,13 +1319,11 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
                 Upgrade to Full Course + Practical Skills Training
               </h3>
               <p className="text-sm text-slate-700 mb-4">
-                You have full access to all online modules and research references. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA CPD certificate (8 online + 6 in-person).
+                You have full access to all online modules and research references. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA CPD point certificate (8 online + 6 in-person).
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   onClick={() => trackShopClick('references-online-only-upgrade', { accessLevel: 'online-only' })}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                 >

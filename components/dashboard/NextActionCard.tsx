@@ -1,22 +1,111 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProgress } from '@/contexts/ProgressContext'
-import { getAllModules } from '@/data/modules'
-import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles } from 'lucide-react'
+import { getModulesMeta } from '@/data/module-meta'
+import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export function NextActionCard() {
   const router = useRouter()
   const { getTotalCompletedModules, isModuleComplete } = useProgress()
-  const modules = getAllModules()
+  const modules = getModulesMeta()
   const completedModules = getTotalCompletedModules()
 
   const nextModule = modules.find((m) => !isModuleComplete(m.id))
   const progressPercentage = Math.round((completedModules / 8) * 100)
 
+  // Certificate state
+  const [certificateStatus, setCertificateStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [certificateDownloading, setCertificateDownloading] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+  const [accessLevel, setAccessLevel] = useState('')
+  const certTriggered = useRef(false)
+
+  const allComplete = !nextModule
+
+  // Fetch session on mount to get email + accessLevel
+  useEffect(() => {
+    fetch('/api/auth/session', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setUserEmail(data.user.email || '')
+          setAccessLevel(data.user.accessLevel || '')
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // Auto-trigger certificate email when all modules complete
+  useEffect(() => {
+    if (allComplete && accessLevel && !certTriggered.current) {
+      certTriggered.current = true
+      const certType = accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      const sentKey = `cert-sent-${certType}-${userEmail}`
+      if (typeof window !== 'undefined' && localStorage.getItem(sentKey)) return
+      setCertificateStatus('sending')
+      fetch('/api/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: certType }),
+        credentials: 'include',
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setCertificateStatus('sent')
+            if (typeof window !== 'undefined') localStorage.setItem(sentKey, '1')
+          } else {
+            setCertificateStatus('error')
+          }
+        })
+        .catch(() => setCertificateStatus('error'))
+    }
+  }, [allComplete, accessLevel, userEmail])
+
+  const handleDownloadCertificate = async () => {
+    setCertificateDownloading(true)
+    try {
+      const certType = accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      const res = await fetch(`/api/certificate?type=${certType}`, { credentials: 'include' })
+      if (!res.ok) throw new Error('Download failed')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CPD-Certificate-${certType}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Certificate download error:', error)
+    } finally {
+      setCertificateDownloading(false)
+    }
+  }
+
+  const handleResendCertificate = async () => {
+    setCertificateStatus('sending')
+    try {
+      const certType = accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      const res = await fetch('/api/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: certType }),
+        credentials: 'include',
+      })
+      const data = await res.json()
+      setCertificateStatus(data.success ? 'sent' : 'error')
+    } catch {
+      setCertificateStatus('error')
+    }
+  }
+
   /* ── All Complete ───────────────────────────── */
-  if (!nextModule) {
+  if (allComplete) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -39,8 +128,55 @@ export function NextActionCard() {
               You&apos;ve Mastered All 8 Online Modules
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-              Outstanding achievement — you&apos;ve earned all 40 online AHPRA CPD points. Complete the 6-hour in-person practical to earn your full 14 CPD certificate.
+              Outstanding achievement — you&apos;ve earned all 8 online AHPRA CPD points. Complete the 6-hour in-person practical to earn your full 14 CPD point certificate.
             </p>
+
+            {/* Certificate Section */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-4 mb-5">
+              <div className="flex items-center gap-2 mb-2">
+                <Award className="w-4 h-4 text-emerald-600" />
+                <span className="text-sm font-bold text-emerald-900">CPD Certificate</span>
+              </div>
+              {certificateStatus === 'sending' && (
+                <p className="text-xs text-emerald-700 mb-3 flex items-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Generating and emailing your certificate...
+                </p>
+              )}
+              {certificateStatus === 'sent' && (
+                <p className="text-xs text-emerald-700 mb-3">
+                  Certificate emailed to <span className="font-semibold">{userEmail}</span>
+                </p>
+              )}
+              {certificateStatus === 'error' && (
+                <p className="text-xs text-red-600 mb-3">
+                  Certificate email failed — you can still download it below.
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleDownloadCertificate}
+                  disabled={certificateDownloading}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                >
+                  {certificateDownloading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5" />
+                  )}
+                  Download Certificate
+                </button>
+                <button
+                  onClick={handleResendCertificate}
+                  disabled={certificateStatus === 'sending'}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-white text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  Email Certificate
+                </button>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => router.push('/learning')}
@@ -105,7 +241,7 @@ export function NextActionCard() {
             </span>
             <span className="action-pill text-xs py-1 px-3">
               <Award className="w-3.5 h-3.5 text-accent" />
-              5 CPD Points
+              1 CPD Point
             </span>
             <span className="action-pill text-xs py-1 px-3">
               <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />

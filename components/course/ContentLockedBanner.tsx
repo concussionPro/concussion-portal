@@ -24,7 +24,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             Unlock the Full Module
           </h3>
           <p className="text-muted-foreground text-base mb-6 leading-relaxed max-w-2xl mx-auto">
-            You&apos;re viewing a preview. Enrol to unlock <strong className="text-foreground">all 8 modules</strong>, downloadable clinical tools, and earn <strong className="text-foreground">up to 14 CPD hours</strong> &mdash; endorsed by <strong className="text-accent">Osteopathy Australia</strong>.
+            You&apos;re viewing a preview. Enrol to unlock <strong className="text-foreground">all 8 modules</strong>, downloadable clinical tools, and earn <strong className="text-foreground">14 CPD points</strong> &mdash; endorsed by <strong className="text-accent">Osteopathy Australia</strong>.
           </p>
 
           {/* Value props row */}
@@ -37,7 +37,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             <div className="glass rounded-xl p-3 border border-border/30">
               <Award className="w-5 h-5 text-accent mx-auto mb-1" />
               <div className="text-lg font-bold text-foreground">14</div>
-              <div className="text-xs text-muted-foreground">CPD Hours</div>
+              <div className="text-xs text-muted-foreground">CPD Points</div>
             </div>
             <div className="glass rounded-xl p-3 border border-border/30">
               <ShieldCheck className="w-5 h-5 text-accent mx-auto mb-1" />

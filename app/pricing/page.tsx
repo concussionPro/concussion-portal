@@ -317,7 +317,7 @@ function PricingContent() {
     },
     {
       q: 'Can I change my workshop date or location?',
-      a: 'Yes — you have full flexibility to attend any workshop date in Melbourne, Sydney, or Byron Bay. Email us to reschedule at no extra charge (subject to availability).',
+      a: 'Yes — you have full flexibility to attend any available workshop date. Email us to reschedule at no extra charge (subject to availability).',
     },
     {
       q: 'Is the purchase refundable?',
@@ -374,7 +374,7 @@ function PricingContent() {
           <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-5 border border-accent/20">
             <Sparkles className="w-4 h-4 text-accent" />
             <span className="text-sm font-semibold text-accent">
-              AHPRA Aligned · 14 CPD Hours · Endorsed by Osteopathy Australia
+              AHPRA Aligned · 14 CPD Points · Endorsed by Osteopathy Australia
             </span>
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
@@ -424,11 +424,11 @@ function PricingContent() {
 
             <ul className="space-y-3 mb-8 flex-1">
               {[
-                '8 online modules (8 CPD hours)',
+                '8 online modules (8 CPD points)',
                 'Complete at your own pace — no deadlines',
                 'Lifetime access to all modules',
                 'Clinical Toolkit & downloadable resources',
-                'Reference Repository (145+ articles)',
+                'Reference Repository (130+ articles)',
                 'Digital certificate upon completion',
                 'Upgrade to full course for $693 later',
               ].map((feature, i) => (
@@ -495,16 +495,16 @@ function PricingContent() {
                 <span className="text-4xl md:text-5xl font-black text-foreground">$1,190</span>
                 <span className="text-muted-foreground text-sm">AUD</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">One-time payment · 14 AHPRA CPD hours</p>
+              <p className="text-xs text-muted-foreground mt-1">One-time payment · 14 AHPRA CPD points</p>
             </div>
 
             <ul className="space-y-3 mb-6 flex-1">
               {[
-                '8 online modules (8 CPD hours)',
-                'Full-day in-person workshop (6 CPD hours)',
+                '8 online modules (8 CPD points)',
+                'Full-day in-person workshop (6 CPD points)',
                 'Hands-on SCAT6, VOMS, BESS training',
                 'Clinical Toolkit & all resources',
-                'Reference Repository (145+ articles)',
+                'Reference Repository (130+ articles)',
                 'Choose your preferred location',
                 'Flexible workshop date selection',
               ].map((feature, i) => (
@@ -536,7 +536,7 @@ function PricingContent() {
               {/* Helper text when a TBA location is open */}
               {openTbaCity && !canEnroll && (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Select Sydney or Byron Bay to enroll now, or register your interest above for Melbourne.
+                  Select an available location to enroll now, or register your interest for upcoming dates.
                 </p>
               )}
             </div>
@@ -568,7 +568,7 @@ function PricingContent() {
 
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
               <p className="text-xs text-amber-900 font-medium">
-                Early bird pricing ends soon — lock in $1,190 before it goes back to $1,400.
+                Early bird pricing ends March 28 — lock in $1,190 before it goes back to $1,400.
               </p>
             </div>
           </div>

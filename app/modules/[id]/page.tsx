@@ -32,7 +32,7 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: an
               Professional CPD Course
             </h1>
             <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">14 AHPRA CPD hours</strong>.
+              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">14 AHPRA CPD points</strong>.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -42,7 +42,7 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: an
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <div className="text-3xl font-bold text-amber-400 mb-1">14</div>
-                <div className="text-sm text-slate-300">CPD Hours</div>
+                <div className="text-sm text-slate-300">CPD Points</div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <Award className="w-8 h-8 text-amber-400 mx-auto mb-1" />
@@ -52,8 +52,6 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: an
 
             <a
               href={CONFIG.SHOP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 mb-4"
             >
               View Course Details & Enroll
@@ -68,7 +66,7 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: an
                 onClick={() => router.push('/scat-mastery')}
                 className="text-amber-400 hover:text-amber-300 underline font-semibold"
               >
-                Try Our Free SCAT6 Course (2 CPD Hours) →
+                Try Our Free SCAT6 Course (2 CPD Points) →
               </button>
             </div>
           </div>
@@ -141,8 +139,6 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
   // Fetch module content from secure API
   const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade } = useModuleData(moduleId)
   const {
-    updateVideoProgress,
-    markVideoComplete,
     updateQuizScore,
     markModuleComplete,
     markModuleStarted,
@@ -157,19 +153,20 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
   const [quizValidationError, setQuizValidationError] = useState<string | null>(null)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
   const [lastViewedSection, setLastViewedSection] = useState<number>(0)
-  const [currentVideoTime, setCurrentVideoTime] = useState<number>(0)
 
   const moduleProgress = getModuleProgress(moduleId)
 
   // Determine if user has full access based on API response
   const hasFullAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
 
-  // CRITICAL FIX: Sync quizSubmitted with persisted progress
+  const [isRetaking, setIsRetaking] = useState(false)
+
+  // Sync quizSubmitted with persisted progress (skip if user is retaking)
   useEffect(() => {
-    if (moduleProgress.quizCompleted) {
+    if (moduleProgress.quizCompleted && !isRetaking) {
       setQuizSubmitted(true)
     }
-  }, [moduleProgress.quizCompleted])
+  }, [moduleProgress.quizCompleted, isRetaking])
 
   // Auto-save checkpoint: Save last viewed section
   useEffect(() => {
@@ -220,7 +217,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
 
   useEffect(() => {
     if (module && moduleProgress) {
-      const canComplete = canMarkModuleComplete(moduleId, module.videoRequiredMinutes)
+      const canComplete = canMarkModuleComplete(moduleId)
       setShowCompleteButton(canComplete && !isModuleComplete(moduleId))
     }
   }, [module, moduleProgress, moduleId, canMarkModuleComplete, isModuleComplete])
@@ -260,7 +257,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
                 Unlock Full Course Access
               </h1>
               <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-                This module is part of the <strong className="text-white">complete 8-module course</strong>. Upgrade to get instant access to all modules, downloadable resources, and earn <strong className="text-white">14 CPD hours</strong>.
+                This module is part of the <strong className="text-white">complete 8-module course</strong>. Upgrade to get instant access to all modules, downloadable resources, and earn <strong className="text-white">14 CPD points</strong>.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -270,18 +267,16 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
                 </div>
                 <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                   <div className="text-3xl font-bold text-amber-400 mb-1">14</div>
-                  <div className="text-sm text-slate-300">CPD Hours</div>
+                  <div className="text-sm text-slate-300">CPD Points</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                   <Award className="w-8 h-8 text-amber-400 mx-auto mb-1" />
-                  <div className="text-sm text-slate-300">AHPRA Accredited</div>
+                  <div className="text-sm text-slate-300">AHPRA Aligned</div>
                 </div>
               </div>
 
               <a
                 href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
               >
                 Upgrade Now - $1,190
@@ -341,18 +336,6 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
     )
   }
 
-  const handleVideoTimeUpdate = (time: number) => {
-    if (!module) return
-
-    const minutes = Math.floor(time / 60)
-    setCurrentVideoTime(time)
-    updateVideoProgress(moduleId, minutes)
-
-    if (minutes >= module.videoRequiredMinutes && !moduleProgress.videoCompleted) {
-      markVideoComplete(moduleId)
-    }
-  }
-
   const handleQuizSubmit = () => {
     if (!module) return
 
@@ -379,13 +362,14 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
     })
 
     updateQuizScore(moduleId, correctCount, module.quiz.length)
+    setIsRetaking(false)
     setQuizSubmitted(true)
   }
 
   const handleCompleteModule = () => {
     if (!module) return
 
-    if (canMarkModuleComplete(moduleId, module.videoRequiredMinutes)) {
+    if (canMarkModuleComplete(moduleId)) {
       markModuleComplete(moduleId)
       router.push('/learning')
     }
@@ -483,7 +467,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-slate-900 mb-2">Interactive Learning Experience</h3>
                 <p className="text-sm text-slate-700 leading-relaxed mb-4">
-                  This module combines clinical content with interactive infographics, decision flowcharts, and knowledge checks. Complete all sections and pass the final quiz (2/3 correct) to earn {module.points} AHPRA CPD points.
+                  This module combines clinical content with interactive infographics, decision flowcharts, and knowledge checks. Complete all sections and pass the final quiz (75% correct) to earn {module.points} AHPRA CPD points.
                 </p>
                 <div className="flex items-center gap-4 text-xs">
                   <div className="flex items-center gap-2">
@@ -1509,7 +1493,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">Knowledge Check</h2>
                 <p className="text-[15px] text-slate-600 leading-relaxed">
-                  Test your understanding of the clinical content. You need at least {Math.ceil(module.quiz.length * 0.67)} out of {module.quiz.length} questions correct to pass and earn your CPD points.
+                  Test your understanding of the clinical content. You need at least {Math.ceil(module.quiz.length * 0.75)} out of {module.quiz.length} questions correct to pass and earn your CPD points.
                 </p>
               </div>
             </div>
@@ -1631,6 +1615,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
                     {!quizResult?.passed && (
                       <button
                         onClick={() => {
+                          setIsRetaking(true)
                           setQuizSubmitted(false)
                           setQuizAnswers({})
                           // Scroll to quiz section
@@ -1732,7 +1717,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
             <div className="mt-6 pt-6 border-t border-slate-200">
               <div className="bg-slate-50 rounded-xl p-5">
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  <span className="font-semibold text-slate-900">AHPRA Accredited:</span> All clinical content is evidence-based and regularly updated to reflect current best practices in concussion management. These references support AHPRA Continuing Professional Development (CPD) requirements for Australian health practitioners.
+                  <span className="font-semibold text-slate-900">AHPRA Aligned:</span> All clinical content is evidence-based and regularly updated to reflect current best practices in concussion management. These references support AHPRA Continuing Professional Development (CPD) requirements for Australian health practitioners.
                 </p>
               </div>
             </div>

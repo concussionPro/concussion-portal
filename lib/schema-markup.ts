@@ -30,10 +30,7 @@ export const organizationSchema = {
     "@type": "Country",
     "name": "Australia"
   },
-  "sameAs": [
-    "https://www.concussioninsport.gov.au/",
-    "https://anzconcussionguidelines.com/"
-  ],
+  "sameAs": [],
   "knowsAbout": [
     "Sport-Related Concussion",
     "SCAT-6 Assessment",
@@ -232,36 +229,6 @@ export function createHowToSchema(params: {
       "text": step.text,
       "url": step.url
     }))
-  }
-}
-
-/**
- * VideoObject Schema - For when AI-generated video is added
- */
-export function createVideoSchema(params: {
-  name: string
-  description: string
-  thumbnailUrl: string
-  uploadDate: string
-  duration: string
-  contentUrl: string
-}) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "VideoObject",
-    "name": params.name,
-    "description": params.description,
-    "thumbnailUrl": params.thumbnailUrl,
-    "uploadDate": params.uploadDate,
-    "duration": params.duration,
-    "contentUrl": params.contentUrl,
-    "embedUrl": params.contentUrl,
-    "about": {
-      "@type": "MedicalCondition",
-      "name": "Sport-Related Concussion"
-    },
-    "educationalLevel": "Professional",
-    "inLanguage": "en-AU"
   }
 }
 

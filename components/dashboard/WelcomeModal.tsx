@@ -173,7 +173,7 @@ export function WelcomeModal() {
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>
 
-              {/* Step 3 — Earn CPD Hours */}
+              {/* Step 3 — Earn CPD Points */}
               <div
                 className="flex items-center gap-4 rounded-2xl p-4"
                 style={{
@@ -190,7 +190,7 @@ export function WelcomeModal() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900">Complete Quizzes & Earn CPD</p>
-                  <p className="text-xs text-slate-500">Pass module assessments to earn AHPRA CPD hours</p>
+                  <p className="text-xs text-slate-500">Pass module assessments to earn AHPRA CPD points</p>
                 </div>
                 <Award className="h-5 w-5 flex-shrink-0 text-slate-300" />
               </div>
@@ -225,7 +225,7 @@ export function WelcomeModal() {
                 <Award className="h-3.5 w-3.5 text-teal-600" />
                 <span className="text-xl font-bold" style={{ color: '#0d7377' }}>14</span>
               </div>
-              <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">CPD Hours</div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">CPD Points</div>
             </div>
             <div
               className="rounded-xl p-3.5 text-center"

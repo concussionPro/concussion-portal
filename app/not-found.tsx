@@ -63,7 +63,7 @@ export default function NotFound() {
             </button>
             <span className="text-muted-foreground">·</span>
             <button
-              onClick={() => router.push('/course')}
+              onClick={() => router.push('/pricing')}
               className="text-sm text-accent hover:underline"
             >
               Enroll Now

@@ -49,16 +49,14 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
           {/* In-Person Note */}
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-left">
             <p className="text-sm text-amber-900 leading-relaxed">
-              <span className="font-semibold">In-Person Component:</span> Course dates posted quarterly. If none work for you, start online modules today and we'll update you with future dates.
+              <span className="font-semibold">In-Person Component:</span> Workshop dates are announced regularly. Start your online modules today and we'll notify you when new dates are available.
             </p>
           </div>
 
           {/* CTAs */}
           <div className="space-y-3">
             <a
-              href="https://concussion-education-australia.com/shop"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/pricing"
               className="block w-full px-6 py-3.5 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl font-semibold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl text-center"
             >
               Unlock Full Course - $1,190

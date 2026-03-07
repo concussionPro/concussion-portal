@@ -194,12 +194,12 @@ export default function AssessmentPage() {
             <div className="glass rounded-2xl p-6 md:p-8 text-center bg-gradient-to-br from-[#5b9aa6]/5 to-[#6b9da8]/5">
               <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">
                 <span className="text-gradient">
-                  Master These Skills in 14 CPD Hours
+                  Master These Skills — 14 CPD Points
                 </span>
               </h2>
               <p className="text-sm md:text-base text-muted-foreground mb-3 max-w-2xl mx-auto leading-relaxed">
                 Complete training: 8 online modules + full-day hands-on practical (SCAT6, VOMS, BESS).
-                Master every assessment you missed above. Choose Melbourne, Sydney, or Byron Bay.
+                Master every assessment you missed above.
               </p>
               <button
                 onClick={() => router.push('/in-person')}
@@ -230,8 +230,6 @@ export default function AssessmentPage() {
               <div className="flex flex-col items-center gap-3">
                 <a
                   href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold text-white inline-flex items-center gap-2 shadow-2xl"
                 >
                   Enroll Now - $1,190

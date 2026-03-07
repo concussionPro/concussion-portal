@@ -7,12 +7,20 @@ import { CONFIG } from '@/lib/config'
 
 function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [devMagicLink, setDevMagicLink] = useState('')
-  const redirectTo = '/dashboard'
+  const redirectParam = searchParams.get('redirect')
+
+  // Persist redirect destination so it survives the magic link email flow
+  useEffect(() => {
+    if (redirectParam) {
+      localStorage.setItem('login_redirect', redirectParam)
+    }
+  }, [redirectParam])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -183,7 +191,7 @@ function LoginForm() {
                     ) : (
                       <>
                         <p className="text-sm text-slate-600 mb-3">
-                          Click the link in your email to access your course. The link expires in 15 minutes.
+                          Click the link in your email to access your course. The link expires in 24 hours.
                         </p>
                         <p className="text-xs text-slate-500">
                           Don't see it? Check your spam folder.
@@ -220,8 +228,6 @@ function LoginForm() {
 
                 <a
                   href={CONFIG.SHOP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="w-full py-3.5 rounded-xl text-base font-semibold inline-block text-center bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200"
                 >
                   View course details
@@ -238,7 +244,7 @@ function LoginForm() {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-400">
               <Award className="w-3.5 h-3.5" />
-              <span>AHPRA Compliant</span>
+              <span>AHPRA Aligned</span>
             </div>
           </div>
 

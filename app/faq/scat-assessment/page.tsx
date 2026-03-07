@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     question: 'How does SCAT-6 differ from SCAT-5?',
-    answer: 'SCAT-6 introduced major updates from SCAT-5 in 2023. Key changes include: 10-word immediate memory lists (upgraded from 5 words for 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, updated symptom evaluation with 22 items, and stricter cervical spine assessment protocols. SCAT-5 is now outdated and using it may constitute below standard of care in Australia under AHPRA guidelines and the Berlin 2025 Consensus.',
+    answer: 'SCAT-6 introduced major updates from SCAT-5 in 2023. Key changes include: 10-word immediate memory lists (upgraded from 5 words for 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, updated symptom evaluation with 22 items, and stricter cervical spine assessment protocols. SCAT-5 is now outdated and using it may constitute below standard of care in Australia under AHPRA guidelines and the Amsterdam 2023 Consensus.',
   },
   {
     question: "What's the difference between SCAT-6 and SCOAT-6?",
@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     question: 'Is SCAT-6 mandatory under Australian sports law?',
-    answer: 'While not explicitly mandated by federal law, SCAT-6 is the required standard under multiple Australian frameworks. The Concussion in Sport Australia position statement, all major sporting codes (AFL, NRL, Rugby Australia, Cricket Australia, FFA), and AHPRA professional standards recognize SCAT-6 as the standard of care. The Berlin 2025 Consensus adopted by Australian medical bodies explicitly requires appropriate tool use at appropriate times. Failure to use SCAT-6 (or Child SCAT-6) when clinically indicated, or using outdated tools like SCAT-5, may constitute negligence in medicolegal proceedings. Documentation using SCAT-6 is essential for WorkCover, insurance claims, and return-to-play clearances.',
+    answer: 'While not explicitly mandated by federal law, SCAT-6 is the required standard under multiple Australian frameworks. The Concussion in Sport Australia position statement, all major sporting codes (AFL, NRL, Rugby Australia, Cricket Australia, FFA), and AHPRA professional standards recognize SCAT-6 as the standard of care. The Amsterdam 2023 Consensus adopted by Australian medical bodies explicitly requires appropriate tool use at appropriate times. Failure to use SCAT-6 (or Child SCAT-6) when clinically indicated, or using outdated tools like SCAT-5, may constitute negligence in medicolegal proceedings. Documentation using SCAT-6 is essential for WorkCover, insurance claims, and return-to-play clearances.',
   },
 ]
 
@@ -109,13 +109,13 @@ export default function SCATAssessmentFAQ() {
               Want to Master SCAT-6 Assessment?
             </h3>
             <p className="text-lg text-slate-700 mb-6">
-              Get 100% confident with step-by-step training, clinical toolkit, and 2 CPD hours.
+              Get 100% confident with step-by-step training, clinical toolkit, and 2 CPD points.
             </p>
             <Link
               href="/scat-mastery"
               className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
-              Learn More - SCAT6/SCOAT6 Mastery Course ($99) →
+              Learn More - Free SCAT6/SCOAT6 Mastery Course →
             </Link>
           </div>
 

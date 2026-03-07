@@ -100,10 +100,15 @@ export async function GET(
       console.log('[MODULE API] Limited preview user to first 2 sections')
     }
 
+    // Strip quiz answers for preview users only — paid users need them for client-side grading
+    const safeModule = sessionData.accessLevel === 'preview'
+      ? { ...responseModule, quiz: responseModule.quiz?.map(({ correctAnswer, explanation, ...q }: any) => q) ?? [] }
+      : responseModule
+
     // Return content based on access level
     return NextResponse.json({
       success: true,
-      module: responseModule,
+      module: safeModule,
       accessLevel: sessionData.accessLevel,
     })
 

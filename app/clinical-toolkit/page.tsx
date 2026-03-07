@@ -182,7 +182,7 @@ export default function ClinicalToolkitPage() {
     // Both online-only and full-course users have access to toolkit
     if (!accessLevel) {
       trackShopClick('toolkit-locked-resource', { resourceId: resource.id, resourceTitle: resource.title })
-      router.push('/preview')
+      router.push('/pricing')
       return
     }
 
@@ -228,7 +228,7 @@ export default function ClinicalToolkitPage() {
                       Enroll to access all clinical resources, templates, flowcharts, and assessment tools.
                     </p>
                     <button
-                      onClick={() => router.push('/preview')}
+                      onClick={() => router.push('/pricing')}
                       className="inline-block mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
                     >
                       Enroll Now
@@ -249,13 +249,13 @@ export default function ClinicalToolkitPage() {
                         Upgrade to Full Course + Practical Skills Training
                       </h3>
                       <p className="text-sm text-slate-700 mb-4">
-                        You have full access to all online modules and clinical toolkit. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA CPD certificate (8 online + 6 in-person).
+                        You have full access to all online modules and clinical toolkit. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA-aligned CPD points certificate (8 online + 6 in-person).
                       </p>
                       <div className="flex flex-col sm:flex-row gap-3">
                         <button
                           onClick={() => {
                             trackShopClick('toolkit-online-only-upgrade', { accessLevel: 'online-only' })
-                            router.push('/preview')
+                            router.push('/pricing')
                           }}
                           className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                         >

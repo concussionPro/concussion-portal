@@ -162,7 +162,7 @@ export default function HomePage() {
 
             {/* Subhead */}
             <p className="text-base md:text-lg text-[var(--muted-foreground)] leading-relaxed mb-8 max-w-[560px]">
-              {CONFIG.COURSE.TOTAL_MODULES} evidence-based modules + full-day practical workshop. {CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD hours. The training Australian clinicians actually need.
+              {CONFIG.COURSE.TOTAL_MODULES} evidence-based modules + full-day practical workshop. {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points. The training Australian clinicians actually need.
             </p>
 
             {/* CTAs */}
@@ -208,10 +208,10 @@ export default function HomePage() {
           <div className="max-w-[760px] mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-delay-1">
               {[
-                { value: CONFIG.COURSE.TOTAL_CPD_HOURS.toString(), label: 'AHPRA CPD Hours', sub: 'Accredited' },
-                { value: '8', label: 'Online Modules', sub: '8 CPD hours' },
-                { value: '1 Day', label: 'Practical Workshop', sub: '6 CPD hours' },
-                { value: '3', label: 'Locations', sub: 'Melb · Syd · Byron' },
+                { value: CONFIG.COURSE.TOTAL_CPD_POINTS.toString(), label: 'AHPRA CPD Points', sub: 'Aligned' },
+                { value: '8', label: 'Online Modules', sub: '8 CPD points' },
+                { value: '1 Day', label: 'Practical Workshop', sub: '6 CPD points' },
+                { value: '2', label: 'Locations', sub: 'Byron Bay + TBA' },
               ].map((stat) => (
                 <div key={stat.label} className="stat-tile text-center">
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--accent)] mb-1">
@@ -243,7 +243,7 @@ export default function HomePage() {
                     Start with Free SCAT6 Mastery
                   </h2>
                   <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-4">
-                    Master SCAT6 &amp; SCOAT6 in 2 hours. Red flags, documentation, step-by-step protocols. 2 AHPRA CPD hours + certificate.
+                    Master SCAT6 &amp; SCOAT6 in 2 hours. Red flags, documentation, step-by-step protocols. 2 AHPRA CPD points + certificate.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2.5">
                     <button
@@ -266,7 +266,7 @@ export default function HomePage() {
                     'SCAT6 & SCOAT6 deep-dive',
                     'Red flag identification',
                     'Medicolegal documentation',
-                    '2 CPD hours + certificate',
+                    '2 CPD points + certificate',
                   ].map(item => (
                     <div key={item} className="flex items-center gap-2.5 text-[13px] text-[var(--foreground)]">
                       <Check className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" strokeWidth={2.5} />
@@ -304,7 +304,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-[var(--foreground)]">Online Modules</h3>
-                    <p className="text-xs text-[var(--accent)] font-medium">8 CPD Hours</p>
+                    <p className="text-xs text-[var(--accent)] font-medium">8 CPD Points</p>
                   </div>
                 </div>
                 <ul className="space-y-2.5">
@@ -334,7 +334,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-[var(--foreground)]">Full-Day Practical</h3>
-                    <p className="text-xs text-[var(--accent)] font-medium">6 CPD Hours</p>
+                    <p className="text-xs text-[var(--accent)] font-medium">6 CPD Points</p>
                   </div>
                 </div>
                 <ul className="space-y-2.5">
@@ -351,7 +351,7 @@ export default function HomePage() {
                   <li className="flex items-start gap-2.5 text-[13px] text-[var(--muted-foreground)]">
                     <Check className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" strokeWidth={2.5} />
                     <span>
-                      Melbourne, Sydney, or Byron Bay ·{' '}
+                      Flexible workshop locations ·{' '}
                       <button
                         onClick={() => router.push('/in-person')}
                         className="text-[var(--accent)] font-medium hover:underline"
@@ -402,7 +402,7 @@ export default function HomePage() {
                 },
                 {
                   q: 'Can I change my workshop date or location?',
-                  a: 'Yes — you have full flexibility to attend any workshop date in Melbourne, Sydney, or Byron Bay. Reschedule at no charge, subject to availability.',
+                  a: 'Yes — you have full flexibility to attend any available workshop date. Reschedule at no charge, subject to availability.',
                 },
                 {
                   q: 'Do I need to complete modules before the workshop?',
@@ -410,7 +410,7 @@ export default function HomePage() {
                 },
                 {
                   q: "What's included in the $1,190 enrollment?",
-                  a: 'Everything: 8 online modules (lifetime access), full-day practical workshop at your chosen location, all materials and workbook, and your 14 AHPRA CPD certificate upon completion.',
+                  a: 'Everything: 8 online modules (lifetime access), full-day practical workshop at your chosen location, all materials and workbook, and your 14 AHPRA-aligned CPD points certificate upon completion.',
                 },
               ].map((faq, i) => (
                 <details key={i} className="card rounded-xl group">
@@ -497,7 +497,7 @@ export default function HomePage() {
                 Ready to master evidence-based concussion management?
               </h2>
               <p className="text-sm text-white/60 mb-6 max-w-md mx-auto relative z-10">
-                {CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD hours · Lifetime access · Melbourne, Sydney &amp; Byron Bay
+                {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
                 <a

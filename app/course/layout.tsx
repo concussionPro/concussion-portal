@@ -1,0 +1,17 @@
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Concussion Management Course | 14 CPD Points | Online + Practical',
+  description: 'Australia\'s most comprehensive concussion management course. 8 online modules (8 CPD points) plus full-day hands-on workshop (6 CPD points). AHPRA aligned, endorsed by Osteopathy Australia. Evidence-based training for physiotherapists, osteopaths, and GPs.',
+  keywords: 'concussion management course, concussion CPD australia, AHPRA concussion course, osteopathy concussion training, physiotherapy concussion CPD, concussion education australia, evidence-based concussion management',
+  openGraph: {
+    title: 'Concussion Management Course — 14 CPD Points',
+    description: '8 online modules + full-day workshop. AHPRA aligned, endorsed by Osteopathy Australia. For physiotherapists, osteopaths, and GPs.',
+    type: 'website',
+    url: 'https://portal.concussion-education-australia.com/course',
+  },
+}
+
+export default function CourseLayout({ children }: { children: React.ReactNode }) {
+  return children
+}

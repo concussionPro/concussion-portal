@@ -38,7 +38,7 @@ export default function ByronBayPage() {
 
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
               Master SCAT6, VOMS, and BESS protocols in Byron Bay's premier concussion management course.
-              Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD hours.
+              Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
@@ -53,8 +53,6 @@ export default function ByronBayPage() {
 
             <a
               href={CONFIG.SHOP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
               aria-label={`Enroll in Byron Bay session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
             >
@@ -78,8 +76,8 @@ export default function ByronBayPage() {
                 'BESS testing certification',
                 'Clinical decision-making frameworks',
                 'Return-to-play protocol training',
-                `${CONFIG.COURSE.TOTAL_CPD_HOURS} AHPRA CPD hours`,
-                'Lifetime access to {CONFIG.COURSE.TOTAL_MODULES} online modules',
+                `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points`,
+                `Lifetime access to ${CONFIG.COURSE.TOTAL_MODULES} online modules`,
                 'Course completion certificate',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">
@@ -134,8 +132,6 @@ export default function ByronBayPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
                 href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
               >
                 Enroll Now

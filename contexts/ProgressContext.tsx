@@ -5,8 +5,6 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 export interface ModuleProgress {
   moduleId: number
   completed: boolean
-  videoWatchedMinutes: number
-  videoCompleted: boolean
   quizScore: number | null
   quizTotalQuestions: number | null
   quizCompleted: boolean
@@ -18,8 +16,6 @@ export interface ModuleProgress {
 
 interface ProgressContextType {
   progress: Record<number, ModuleProgress>
-  updateVideoProgress: (moduleId: number, minutes: number) => void
-  markVideoComplete: (moduleId: number) => void
   updateQuizScore: (moduleId: number, score: number, totalQuestions: number) => void
   markModuleComplete: (moduleId: number) => void
   markModuleStarted: (moduleId: number) => void
@@ -30,7 +26,7 @@ interface ProgressContextType {
   getModuleProgress: (moduleId: number) => ModuleProgress
   isModuleComplete: (moduleId: number) => boolean
   isModuleStarted: (moduleId: number) => boolean
-  canMarkModuleComplete: (moduleId: number, requiredMinutes: number) => boolean
+  canMarkModuleComplete: (moduleId: number) => boolean
   resetProgress: () => void
 }
 
@@ -42,8 +38,6 @@ function createDefaultModuleProgress(moduleId: number): ModuleProgress {
   return {
     moduleId,
     completed: false,
-    videoWatchedMinutes: 0,
-    videoCompleted: false,
     quizScore: null,
     quizTotalQuestions: null,
     quizCompleted: false,
@@ -153,33 +147,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
   }, [progress, isInitialized])
 
-  const updateVideoProgress = (moduleId: number, minutes: number) => {
-    setProgress((prev) => {
-      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
-      return {
-        ...prev,
-        [moduleId]: {
-          ...currentModule,
-          videoWatchedMinutes: Math.max(currentModule.videoWatchedMinutes, minutes),
-          startedAt: currentModule.startedAt || new Date(),
-        },
-      }
-    })
-  }
-
-  const markVideoComplete = (moduleId: number) => {
-    setProgress((prev) => {
-      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
-      return {
-        ...prev,
-        [moduleId]: {
-          ...currentModule,
-          videoCompleted: true,
-        },
-      }
-    })
-  }
-
   const updateQuizScore = (moduleId: number, score: number, totalQuestions: number) => {
     setProgress((prev) => {
       const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
@@ -261,8 +228,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }
 
   const getTotalCPDPoints = () => {
-    // 5 CPD points per completed module
-    return getTotalCompletedModules() * 5
+    // 1 CPD point per completed online module (8 total online)
+    return getTotalCompletedModules()
   }
 
   const getTotalStudyTime = () => {
@@ -303,26 +270,16 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     return mod ? !!mod.startedAt && !mod.completed : false
   }
 
-  const canMarkModuleComplete = (moduleId: number, requiredMinutes: number): boolean => {
+  const canMarkModuleComplete = (moduleId: number): boolean => {
     const moduleProgress = progress[moduleId]
     if (!moduleProgress) return false
 
-    const quizPassed =
+    return !!(
       moduleProgress.quizCompleted &&
       moduleProgress.quizScore !== null &&
       moduleProgress.quizTotalQuestions !== null &&
       moduleProgress.quizTotalQuestions > 0 &&
       moduleProgress.quizScore / moduleProgress.quizTotalQuestions >= 0.75
-
-    // For text-based modules (no video), just require quiz pass
-    if (requiredMinutes === 0) {
-      return !!quizPassed
-    }
-
-    return (
-      moduleProgress.videoCompleted &&
-      moduleProgress.videoWatchedMinutes >= requiredMinutes &&
-      !!quizPassed
     )
   }
 
@@ -337,8 +294,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     <ProgressContext.Provider
       value={{
         progress,
-        updateVideoProgress,
-        markVideoComplete,
         updateQuizScore,
         markModuleComplete,
         markModuleStarted,

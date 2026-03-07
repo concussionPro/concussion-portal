@@ -31,7 +31,7 @@ export default function SCATMasteryPage() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [successData, setSuccessData] = useState<{ loginLink?: string } | null>(null)
+  const [successData, setSuccessData] = useState<{ message?: string } | null>(null)
 
   const validateEmail = (val: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
@@ -123,7 +123,7 @@ export default function SCATMasteryPage() {
             <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-6">
               <Zap className="w-3.5 h-3.5 text-[#5b9aa6]" />
               <span className="text-xs font-bold text-[#5b9aa6] uppercase tracking-wide">
-                Free · 2 AHPRA CPD Hours · No Credit Card
+                Free · 2 AHPRA CPD Points · No Credit Card
               </span>
             </div>
 
@@ -141,7 +141,7 @@ export default function SCATMasteryPage() {
             {/* Trust pills */}
             <div className="flex flex-wrap gap-3 mb-10">
               {[
-                { icon: Clock, label: '2 CPD Hours' },
+                { icon: Clock, label: '2 CPD Points' },
                 { icon: Shield, label: 'AHPRA Aligned' },
                 { icon: Award, label: 'Instant Access' },
                 { icon: Star, label: 'No Credit Card' },
@@ -216,20 +216,10 @@ export default function SCATMasteryPage() {
                     <div className="flex items-start gap-3">
                       <Clock className="w-4 h-4 text-[#5b9aa6] flex-shrink-0 mt-0.5" />
                       <p className="text-sm text-slate-700">
-                        Link expires in 15 minutes.
+                        Link expires in 24 hours.
                       </p>
                     </div>
                   </div>
-
-                  {successData.loginLink && (
-                    <a
-                      href={successData.loginLink}
-                      className="w-full py-3.5 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#4a8a96] hover:to-[#5a8d98] transition-all shadow-lg shadow-teal-200/50 mb-4"
-                    >
-                      Access Course Now
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
-                  )}
 
                   <a
                     href="/scat-course"
@@ -251,7 +241,7 @@ export default function SCATMasteryPage() {
                     Get free instant access
                   </h2>
                   <p className="text-sm text-slate-500">
-                    No credit card · Immediate · 2 CPD hours
+                    No credit card · Immediate · 2 CPD points
                   </p>
                 </div>
 
@@ -358,7 +348,7 @@ export default function SCATMasteryPage() {
                 </div>
                 <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/50 p-3.5 text-center">
                   <p className="text-xl font-black text-slate-900">2 CPD</p>
-                  <p className="text-xs text-slate-500 mt-0.5">AHPRA hours</p>
+                  <p className="text-xs text-slate-500 mt-0.5">AHPRA points</p>
                 </div>
               </div>
             )}
@@ -368,7 +358,7 @@ export default function SCATMasteryPage() {
         {/* ── Bottom CTA strip ── */}
         <div className="mt-20 md:mt-24 border-t border-slate-200/60 pt-12 text-center">
           <p className="text-sm text-slate-500 mb-2">
-            Ready for the full 14 CPD hour certification?
+            Ready for the full 14 CPD point certification?
           </p>
           <a
             href={CONFIG.SHOP_URL}

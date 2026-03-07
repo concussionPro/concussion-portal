@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// PDFs in /docs/ that are freely accessible (clinical assessment tools)
+const PUBLIC_DOCS = new Set([
+  '/docs/SCAT6_Fillable.pdf',
+  '/docs/SCOAT6_Fillable.pdf',
+])
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Block direct access to Complete Reference PDF
-  if (pathname === '/docs/CCM_Complete_Reference_2026.pdf') {
+  // Block direct access to paid PDFs in /docs/ (except SCAT6/SCOAT6 forms)
+  if (pathname.startsWith('/docs/') && pathname.endsWith('.pdf') && !PUBLIC_DOCS.has(pathname)) {
     return NextResponse.json(
-      { error: 'Direct access not allowed. Access via /complete-reference page.' },
+      { error: 'Direct access not allowed. Please download via the Clinical Toolkit.' },
       { status: 403 }
     )
   }
@@ -40,7 +46,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/docs/CCM_Complete_Reference_2026.pdf',
+    '/docs/:path*.pdf',
     '/resources/:path*.pdf',
     '/api/admin/:path*',
   ]

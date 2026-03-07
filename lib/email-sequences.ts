@@ -35,7 +35,8 @@ const EMAIL_STYLES = `
   a { color: #0d9488; }
 `
 
-function emailShell(content: string): string {
+function emailShell(content: string, unsubscribeUrl?: string): string {
+  const unsub = unsubscribeUrl || '{{unsubscribe_url}}'
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -51,7 +52,8 @@ function emailShell(content: string): string {
     </div>
     <div class="footer">
       Concussion Education Australia &middot; Endorsed by Osteopathy Australia<br>
-      <a href="https://portal.concussion-education-australia.com" style="color: #94a3b8;">portal.concussion-education-australia.com</a>
+      <a href="https://portal.concussion-education-australia.com" style="color: #94a3b8;">portal.concussion-education-australia.com</a><br>
+      <a href="${unsub}" style="color: #94a3b8; font-size: 11px;">Unsubscribe from this sequence</a>
     </div>
   </div>
 </body>
@@ -104,7 +106,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>Step-by-step SCAT6 and SCOAT6 administration</li>
         <li>Red flag recognition and when to escalate</li>
         <li>Clinical decision flowcharts you can reference in practice</li>
-        <li>2 AHPRA-aligned CPD hours upon completion</li>
+        <li>2 AHPRA-aligned CPD points upon completion</li>
       </ul>
       <center><a href="${loginLink}" class="cta-btn">Start the Free SCAT Course</a></center>
       <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">2 hours &middot; Self-paced &middot; Free &middot; Includes CPD certificate</p>
@@ -150,7 +152,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       </ol>
       <div class="callout">
         <span class="badge">Endorsed by Osteopathy Australia</span><br>
-        The full course provides up to <strong>14 AHPRA-aligned CPD hours</strong> (8 online + 6 hands-on workshop).
+        The full course provides <strong>14 AHPRA-aligned CPD points</strong> (8 online + 6 hands-on workshop).
       </div>
       <center><a href="${upgradeLink}" class="cta-btn">See Full Course Details</a></center>
       <div class="sig">Zac Lewis<br>Founder, Concussion Education Australia</div>
@@ -170,13 +172,13 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p><strong>2. Osteopathy Australia reviewed and endorsed it.</strong><br>
       They evaluated our curriculum, clinical methodology, and assessment framework before granting endorsement.</p>
       <p><strong>3. You get a complete clinical documentation system.</strong><br>
-      Referral templates, return-to-play letters, clearance forms, and a searchable repository of 145+ clinical references.</p>
+      Referral templates, return-to-play letters, clearance forms, and a searchable repository of 130+ clinical references.</p>
       <div style="background: #f8fafc; padding: 18px 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0; font-size: 14px;">
         <em>&ldquo;The VOMS and BESS training was exceptional. I couldn't find this level of practical instruction anywhere else in Australia.&rdquo;</em><br>
         <strong style="color: #475569;">&mdash; Osteopath, Melbourne</strong>
       </div>
       <center><a href="${upgradeLink}" class="cta-btn">View Pricing and Options</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $497 AUD &middot; Full course from $1,190 AUD &middot; International $299 USD</p>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $497 AUD &middot; Full course from $1,190 AUD</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -195,25 +197,21 @@ export const SCAT_MASTERY_SEQUENCE = [
           <td style="padding: 12px 16px; font-weight: 700; text-align: right;">Price</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
-          <td style="padding: 14px 16px;"><strong>Online Course</strong><br><span style="font-size: 13px; color: #64748b;">8 modules &middot; 8 CPD hours &middot; Lifetime access</span></td>
+          <td style="padding: 14px 16px;"><strong>Online Course</strong><br><span style="font-size: 13px; color: #64748b;">8 modules &middot; 8 CPD points &middot; Lifetime access</span></td>
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$497 AUD</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
-          <td style="padding: 14px 16px;"><strong>Complete Course</strong> <span style="font-size: 11px; background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 600;">MOST POPULAR</span><br><span style="font-size: 13px; color: #64748b;">Online + full-day workshop &middot; 14 CPD hours</span></td>
+          <td style="padding: 14px 16px;"><strong>Complete Course</strong> <span style="font-size: 11px; background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 600;">MOST POPULAR</span><br><span style="font-size: 13px; color: #64748b;">Online + full-day workshop &middot; 14 CPD points</span></td>
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$1,190 AUD</td>
-        </tr>
-        <tr>
-          <td style="padding: 14px 16px;"><strong>International Online</strong><br><span style="font-size: 13px; color: #64748b;">8 modules &middot; 8 CPD hours &middot; No workshop</span></td>
-          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$299 USD</td>
         </tr>
       </table>
       <p><strong>Every option includes:</strong></p>
       <ul>
         <li>Lifetime access to all online modules</li>
         <li>Clinical Toolkit (referral templates, RTP forms, clearance letters)</li>
-        <li>Reference Repository (145+ curated articles)</li>
+        <li>Reference Repository (130+ curated articles)</li>
         <li>Digital certificate of completion</li>
-        <li>AHPRA-aligned CPD hours, endorsed by Osteopathy Australia</li>
+        <li>AHPRA-aligned CPD points, endorsed by Osteopathy Australia</li>
       </ul>
       <center><a href="${upgradeLink}" class="cta-btn">Choose Your Option</a></center>
       <p style="font-size: 14px; color: #475569; margin-top: 20px;">You can also start with online ($497) and upgrade to add the workshop later &mdash; just pay the difference.</p>

@@ -1,7 +1,7 @@
 {
   "name": "ConcussionPro - Concussion Management Training",
   "short_name": "ConcussionPro",
-  "description": "AHPRA-accredited concussion management course. SCAT6, VOMS, BESS mastery. 14 CPD hours for Australian clinicians.",
+  "description": "AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 14 CPD points for Australian clinicians.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

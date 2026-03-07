@@ -18,147 +18,112 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
     handout: Users
   }
 
-  // Module-specific resources
+  // Module-specific resources — mapped to real files via /api/download
   const resourcesByModule: Record<number, Resource[]> = {
     1: [
       {
-        title: 'Concussion Science Summary',
-        description: '1-page visual summary of neurometabolic cascade and biomechanics',
-        fileSize: '245 KB',
-        downloadUrl: '/resources/module-1-summary.pdf',
+        title: 'Concussion Clinical Cheat Sheet',
+        description: '1-page clinical reference for concussion assessment and management',
+        fileSize: 'PDF',
+        downloadUrl: '/api/download?file=Concussion Clinical Cheat Sheet.pdf',
         icon: 'pdf'
       },
       {
-        title: 'Risk Factors Checklist',
-        description: 'Assessment tool for identifying high-risk patients',
-        fileSize: '180 KB',
-        downloadUrl: '/resources/risk-factors-checklist.pdf',
+        title: 'Concussion Myth-Buster Sheet',
+        description: 'Common misconceptions debunked with evidence-based corrections',
+        fileSize: 'PDF',
+        downloadUrl: '/api/download?file=Concussion Myth-Buster Sheet .pdf',
         icon: 'checklist'
       }
     ],
     2: [
       {
-        title: 'SCAT6 Quick Reference',
-        description: 'Laminated card-ready SCAT6 scoring guide and red flags',
-        fileSize: '420 KB',
-        downloadUrl: '/resources/scat6-quick-reference.pdf',
+        title: 'SCAT6 Fillable PDF',
+        description: 'Official SCAT6 form — fillable and printable',
+        fileSize: 'PDF',
+        downloadUrl: '/api/download?file=SCAT6_Fillable.pdf',
         icon: 'pdf'
       },
       {
-        title: 'VOMS Testing Protocol',
-        description: 'Step-by-step VOMS administration with scoring criteria',
-        fileSize: '315 KB',
-        downloadUrl: '/resources/voms-protocol.pdf',
-        icon: 'protocol'
+        title: 'SCOAT6 Fillable PDF',
+        description: 'Official SCOAT6 form — fillable and printable',
+        fileSize: 'PDF',
+        downloadUrl: '/api/download?file=SCOAT6_Fillable.pdf',
+        icon: 'pdf'
       },
       {
-        title: 'Cranial Nerve Exam Checklist',
-        description: 'Systematic CN assessment for concussion patients',
-        fileSize: '210 KB',
-        downloadUrl: '/resources/cranial-nerve-checklist.pdf',
+        title: 'SCAT/SCOAT Fillable PDFs (ZIP)',
+        description: 'All SCAT and SCOAT forms bundled in a single download',
+        fileSize: 'ZIP',
+        downloadUrl: '/api/download?file=SCAT:SCOAT_FIllablePDFs.zip',
         icon: 'checklist'
-      },
-      {
-        title: 'Red Flags Reference',
-        description: 'Emergency referral criteria - clinic wall poster',
-        fileSize: '290 KB',
-        downloadUrl: '/resources/red-flags-poster.pdf',
-        icon: 'pdf'
       }
     ],
     3: [
       {
-        title: 'Acute Management Protocol',
-        description: 'First 72-hour management flowchart',
-        fileSize: '380 KB',
-        downloadUrl: '/resources/acute-management-protocol.pdf',
-        icon: 'protocol'
-      },
-      {
-        title: 'Patient Education Handout',
-        description: 'What to expect after concussion - patient-friendly',
-        fileSize: '225 KB',
-        downloadUrl: '/resources/patient-education-handout.pdf',
+        title: '"What to Expect After a Concussion"',
+        description: 'Patient education handout — plain-language guidance for the first weeks',
+        fileSize: 'PDF',
+        downloadUrl: '/api/download?file="What to Expect After a Concussion" .pdf',
         icon: 'handout'
       }
     ],
     4: [
       {
-        title: 'PCS Differential Diagnosis',
-        description: 'Decision tree for persistent symptoms beyond 4 weeks',
-        fileSize: '340 KB',
-        downloadUrl: '/resources/pcs-differential-diagnosis.pdf',
+        title: 'PCS Clinical Flowchart',
+        description: 'Post-Concussion Syndrome decision tree for persistent symptoms',
+        fileSize: 'PDF',
+        downloadUrl: '/api/download?file=Post-Concussion Syndrome (PCS) Clinical Flowchart.pdf',
         icon: 'protocol'
-      },
-      {
-        title: 'Specialist Referral Criteria',
-        description: 'When and who to refer to for complex cases',
-        fileSize: '190 KB',
-        downloadUrl: '/resources/specialist-referral-criteria.pdf',
-        icon: 'checklist'
       }
     ],
     5: [
       {
-        title: 'Multidisciplinary Care Map',
-        description: 'Team roles and communication pathways',
-        fileSize: '310 KB',
-        downloadUrl: '/resources/multidisciplinary-care-map.pdf',
+        title: 'Referral Flowchart',
+        description: 'When and who to refer to — specialist referral decision aid',
+        fileSize: 'PDF',
+        downloadUrl: '/api/download?file=Referral Flowchart.pdf',
         icon: 'protocol'
       }
     ],
     6: [
       {
-        title: 'Return-to-Play Protocol',
-        description: 'Graduated RTP stages with progression criteria',
-        fileSize: '405 KB',
-        downloadUrl: '/resources/return-to-play-protocol.pdf',
+        title: 'Return-to-Play & Return-to-Learn Progression Ladder',
+        description: 'Graduated RTP and RTL stages with progression criteria',
+        fileSize: 'PDF',
+        downloadUrl: '/api/download?file=Return-to-Play (RTP) & Return-to-Learn (RTL) Progression Ladder.pdf',
         icon: 'protocol'
       },
       {
-        title: 'Return-to-Learn Guidelines',
-        description: 'School accommodation recommendations',
-        fileSize: '265 KB',
-        downloadUrl: '/resources/return-to-learn-guidelines.pdf',
+        title: 'Return-to-School Plan Template',
+        description: 'Editable school accommodation plan template',
+        fileSize: 'DOCX',
+        downloadUrl: '/api/download?file=Return-to-School Plan Template (DOCX).docx',
         icon: 'handout'
-      },
-      {
-        title: 'Workplace Return Checklist',
-        description: 'Graduated return-to-work assessment tool',
-        fileSize: '195 KB',
-        downloadUrl: '/resources/workplace-return-checklist.pdf',
-        icon: 'checklist'
       }
     ],
     7: [
       {
-        title: 'Phenotype Assessment Tool',
-        description: 'Identify dominant symptom clusters for targeted treatment',
-        fileSize: '350 KB',
-        downloadUrl: '/resources/phenotype-assessment-tool.pdf',
-        icon: 'checklist'
-      },
-      {
-        title: 'Rehabilitation Protocols by Phenotype',
-        description: 'Evidence-based treatment protocols for each phenotype',
-        fileSize: '520 KB',
-        downloadUrl: '/resources/rehabilitation-protocols.pdf',
+        title: 'Rehabilitation Flowchart',
+        description: 'Visual rehabilitation pathway for concussion recovery',
+        fileSize: 'PNG',
+        downloadUrl: '/api/download?file=RehabFlow.png',
         icon: 'protocol'
       }
     ],
     8: [
       {
-        title: 'Medical-Legal Documentation Template',
-        description: 'AHPRA-compliant progress notes and clearance forms',
-        fileSize: '280 KB',
-        downloadUrl: '/resources/medico-legal-templates.pdf',
-        icon: 'protocol'
+        title: 'Employer / School Letter Template',
+        description: 'Editable letter template for employers and schools',
+        fileSize: 'DOCX',
+        downloadUrl: '/api/download?file=Employer _ School Letter Template.docx',
+        icon: 'handout'
       },
       {
-        title: 'Informed Consent Scripts',
-        description: 'Communication templates for RTP discussions',
-        fileSize: '175 KB',
-        downloadUrl: '/resources/informed-consent-scripts.pdf',
+        title: 'Email Template Pack',
+        description: 'Pre-written email templates for patient communication',
+        fileSize: 'DOCX',
+        downloadUrl: '/api/download?file=Email Template Pack.docx',
         icon: 'handout'
       }
     ]
@@ -170,21 +135,15 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
 
   const handleDownload = async (url: string, title: string) => {
     try {
-      // Extract filename from URL (e.g., "SCAT6_Fillable.pdf" from URL path)
       const fileName = url.split('/').pop() || title
 
-      // Make API request to download endpoint
-      const response = await fetch(`/api/download?file=${encodeURIComponent(fileName)}`)
+      const response = await fetch(url)
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Download failed')
+        throw new Error('Download failed')
       }
 
-      // Get the blob from response
       const blob = await response.blob()
-
-      // Create download link and trigger download
       const downloadUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = downloadUrl
@@ -192,12 +151,18 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
       document.body.appendChild(link)
       link.click()
 
-      // Cleanup
       document.body.removeChild(link)
       window.URL.revokeObjectURL(downloadUrl)
     } catch (error) {
       console.error('Download error:', error)
-      alert(`Failed to download ${title}. Please try again or contact support.`)
+      console.error(`Failed to download ${title}`)
+      // Show inline feedback instead of alert
+      const el = document.getElementById('download-error')
+      if (el) {
+        el.textContent = `Failed to download ${title}. Please try again or contact support.`
+        el.classList.remove('hidden')
+        setTimeout(() => el.classList.add('hidden'), 5000)
+      }
     }
   }
 
@@ -210,10 +175,12 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
         <div className="flex-1">
           <h3 className="text-xl font-bold text-slate-900 mb-2">Downloadable Resources</h3>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Print these clinical tools and use them immediately with your patients. All resources are AHPRA-compliant.
+            Print these clinical tools and use them immediately with your patients. All resources are AHPRA-aligned.
           </p>
         </div>
       </div>
+
+      <div id="download-error" className="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 mb-4" />
 
       <div className="grid md:grid-cols-2 gap-4">
         {resources.map((resource, index) => {
@@ -240,7 +207,7 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
                     <span className="text-xs text-slate-500">{resource.fileSize}</span>
                     <div className="flex items-center gap-1 text-blue-600 group-hover:gap-2 transition-all">
                       <Download className="w-3.5 h-3.5" strokeWidth={2} />
-                      <span className="text-xs font-semibold">Download PDF</span>
+                      <span className="text-xs font-semibold">Download</span>
                     </div>
                   </div>
                 </div>

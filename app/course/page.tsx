@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   FileText,
   Download,
-  Video,
   BookOpen,
   Users,
   Brain,
@@ -20,31 +19,19 @@ import {
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
-const locations = [
-  {
-    city: 'Melbourne',
-    date: 'February 7, 2026',
-    availability: 'Limited spots',
-    shopUrl: '/pricing'
-  },
-  {
-    city: 'Sydney',
-    date: 'March 7, 2026',
+const locations = Object.values(CONFIG.LOCATIONS)
+  .filter(loc => loc.status === 'confirmed' && loc.date)
+  .map(loc => ({
+    city: loc.city,
+    date: loc.date,
     availability: 'Available',
     shopUrl: '/pricing'
-  },
-  {
-    city: 'Byron Bay',
-    date: 'March 28, 2026',
-    availability: 'Available',
-    shopUrl: '/pricing'
-  },
-]
+  }))
 
 const included = [
-  { icon: Video, title: '8 Online Modules', desc: 'Self-paced expert training' },
+  { icon: BookOpen, title: '8 Online Modules', desc: 'Self-paced expert training' },
   { icon: Calendar, title: 'Full-Day Skills Training', desc: 'Full-day practical SCAT6, VOMS, BESS' },
-  { icon: Award, title: '14 CPD Hours', desc: 'AHPRA accredited' },
+  { icon: Award, title: '14 CPD Points', desc: 'AHPRA aligned' },
   { icon: FileText, title: 'Clinical Resources', desc: 'Templates & frameworks' },
   { icon: Users, title: 'Expert Support', desc: 'Direct instructor access' },
   { icon: Brain, title: 'Lifetime Access', desc: 'Ongoing material updates' },
@@ -118,7 +105,7 @@ export default function CoursePage() {
             <div className="h-12 w-px bg-border" />
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">14</div>
-              <div className="text-xs text-muted-foreground font-medium">CPD Hours</div>
+              <div className="text-xs text-muted-foreground font-medium">CPD Points</div>
             </div>
           </div>
         </div>
@@ -223,7 +210,7 @@ export default function CoursePage() {
                 {[
                   'Full access to 8 online modules',
                   '1-day practical training',
-                  '14 AHPRA CPD hours',
+                  '14 AHPRA CPD points',
                   'All clinical resources',
                   'Lifetime platform access',
                 ].map((feature) => (
@@ -262,7 +249,7 @@ export default function CoursePage() {
                 {[
                   'Full access to 8 online modules',
                   '1-day practical training',
-                  '14 AHPRA CPD hours',
+                  '14 AHPRA CPD points',
                   'All clinical resources',
                   'Lifetime platform access',
                 ].map((feature) => (
@@ -408,7 +395,7 @@ export default function CoursePage() {
                 </div>
 
                 <button
-                  onClick={() => router.push('/preview')}
+                  onClick={() => router.push('/pricing')}
                   className="btn-primary px-10 py-5 rounded-xl text-lg inline-flex items-center gap-2"
                 >
                   Complete enrollment

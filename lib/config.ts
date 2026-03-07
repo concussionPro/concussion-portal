@@ -10,9 +10,9 @@ export const CONFIG = {
   // Course Details
   COURSE: {
     TOTAL_MODULES: 8,
-    TOTAL_CPD_HOURS: 14,
-    ONLINE_CPD_HOURS: 8,
-    IN_PERSON_CPD_HOURS: 6,
+    TOTAL_CPD_POINTS: 14,
+    ONLINE_CPD_POINTS: 8,
+    IN_PERSON_CPD_POINTS: 6,
     CPD_BADGE_TEXT: '14 CPD points - AHPRA Aligned, Endorsed by Osteopathy Australia',
     PRICE_REGULAR: 1400,
     PRICE_EARLY_BIRD: 1190,
@@ -26,10 +26,10 @@ export const CONFIG = {
     SYDNEY: {
       city: 'Sydney',
       slug: 'sydney',
-      date: 'March 7, 2026',
-      dateObj: new Date('2026-03-07') as Date | null,
-      spotsRemaining: 18,
-      status: 'confirmed' as const,
+      date: '',
+      dateObj: null as Date | null,
+      spotsRemaining: 0,
+      status: 'tba' as const,
     },
     BYRON_BAY: {
       city: 'Byron Bay',

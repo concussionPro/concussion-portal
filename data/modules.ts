@@ -5,8 +5,6 @@ export interface Module {
   duration: string
   points: number
   description: string
-  videoUrl: string
-  videoRequiredMinutes: number
   sections: Section[]
   quiz: QuizQuestion[]
   clinicalReferences: string[]
@@ -32,10 +30,8 @@ export const modules: Module[] = [
     title: 'What is a Concussion?',
     subtitle: 'The Science & Mechanisms',
     duration: '90 min',
-    points: 5,
+    points: 1,
     description: 'Comprehensive understanding of concussion biomechanics, pathophysiology, neuroanatomy, biochemistry, imaging, biomarkers, and clinical implications.',
-    videoUrl: '/videos/module-1-concussion-science.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'myths-intro',
@@ -1459,10 +1455,8 @@ export const modules: Module[] = [
     title: 'Concussion Diagnosis & Initial Assessment',
     subtitle: 'Theory & Clinical Tools',
     duration: '90 min',
-    points: 5,
+    points: 1,
     description: 'Master diagnostic criteria and assessment tools: SCAT6, VOMS, BESS, cranial nerve screening, and cervical evaluation across age groups.',
-    videoUrl: '/videos/module-2-diagnosis-assessment.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'learning-objectives',
@@ -1934,10 +1928,8 @@ export const modules: Module[] = [
     title: 'Practical Assessment & Acute Concussion Management',
     subtitle: 'Hands-On Clinical Skills',
     duration: '120 min',
-    points: 5,
+    points: 1,
     description: 'Master practical procedures for cervical assessment, cranial nerve examination, VOMS, BESS, clinical decision-making, and acute management protocols.',
-    videoUrl: '/videos/module-3-practical-assessment.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'learning-objectives',
@@ -2276,10 +2268,8 @@ export const modules: Module[] = [
     title: 'Persistent Post-Concussive Symptoms & Long-Term Management',
     subtitle: 'Persistent Symptoms & CTE',
     duration: '90 min',
-    points: 5,
+    points: 1,
     description: 'Understanding persistent post-concussive symptoms, chronic traumatic encephalopathy, long-term outcomes, and management of complex cases beyond 4 weeks.',
-    videoUrl: '/videos/module-4-pcs-longterm.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'learning-objectives',
@@ -2644,10 +2634,8 @@ export const modules: Module[] = [
     title: 'Multidisciplinary Approach to Concussion Management',
     subtitle: 'Team-Based Care',
     duration: '75 min',
-    points: 5,
+    points: 1,
     description: 'Understand the roles of healthcare professionals in comprehensive concussion care, referral pathways, team communication, and coordinated management strategies.',
-    videoUrl: '/videos/module-5-multidisciplinary.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'learning-objectives',
@@ -3123,10 +3111,8 @@ export const modules: Module[] = [
     title: 'Return to Play, Work, and School Protocols',
     subtitle: 'Staged Progression & Clearance',
     duration: '60 min',
-    points: 5,
+    points: 1,
     description: 'Master graduated return-to-activity protocols for sport, work, and school, including clearance criteria, accommodations, and preventing premature return.',
-    videoUrl: '/videos/module-6-return-protocols.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'learning-objectives',
@@ -3521,10 +3507,8 @@ export const modules: Module[] = [
     title: 'Rehabilitation Pathways by Phenotype',
     subtitle: 'Targeted Treatment Strategies',
     duration: '90 min',
-    points: 5,
+    points: 1,
     description: 'Apply phenotype-specific rehabilitation protocols for vestibular, oculomotor, cervicogenic, cognitive-fatigue, post-traumatic migraine, and anxiety/mood presentations.',
-    videoUrl: '/videos/module-7-rehabilitation-phenotypes.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'learning-objectives',
@@ -3869,10 +3853,8 @@ export const modules: Module[] = [
     title: 'Legal, Ethical, Communication & Documentation',
     subtitle: 'Professional Practice Standards',
     duration: '60 min',
-    points: 5,
+    points: 1,
     description: 'Navigate legal responsibilities, ethical obligations, effective communication strategies, and comprehensive documentation requirements in concussion management.',
-    videoUrl: '/videos/module-8-legal-ethical.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'learning-objectives',

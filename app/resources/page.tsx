@@ -15,50 +15,56 @@ export default function ResourcesPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // In production: send to email service
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      const res = await fetch('/api/signup-free', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (!res.ok) throw new Error('Signup failed')
+    } catch (error) {
+      console.error('Resource signup error:', error)
+    }
 
     setSubmitted(true)
     setIsLoading(false)
-
-    // Store email for trial access
     localStorage.setItem('resourceEmail', email)
   }
 
   const resources = [
     {
-      title: 'SCAT6 Quick Reference',
-      description: 'Laminated card format with red flags and scoring criteria',
-      fileSize: '420 KB',
-      downloadUrl: '/resources/scat6-quick-reference.pdf',
+      title: 'Concussion Clinical Cheat Sheet',
+      description: 'One-page clinical reference for concussion assessment and management',
+      fileSize: 'PDF',
+      downloadUrl: '#',
       icon: FileText
     },
     {
-      title: 'Red Flags Emergency Poster',
-      description: 'A4 clinic wall poster for immediate referral criteria',
-      fileSize: '290 KB',
-      downloadUrl: '/resources/red-flags-poster.pdf',
+      title: 'SCAT6 & SCOAT6 Fillable Forms',
+      description: 'Official assessment tools — fillable and printable PDFs',
+      fileSize: 'PDF',
+      downloadUrl: '#',
       icon: CheckSquare
     },
     {
-      title: '3-Minute Screening Checklist',
-      description: 'Rapid patient intake form for concussion assessment',
-      fileSize: '180 KB',
-      downloadUrl: '/resources/3-minute-screening.pdf',
-      icon: CheckSquare
-    },
-    {
-      title: 'Return-to-Play Decision Tree',
-      description: 'Visual flowchart for graduated RTP protocol',
-      fileSize: '380 KB',
-      downloadUrl: '/resources/rtp-decision-tree.pdf',
+      title: '"What to Expect After a Concussion"',
+      description: 'Patient education handout with plain-language recovery guidance',
+      fileSize: 'PDF',
+      downloadUrl: '#',
       icon: FileText
     },
     {
-      title: 'Patient Education Handout',
-      description: 'What to expect after concussion - professional handout',
-      fileSize: '225 KB',
-      downloadUrl: '/resources/patient-education.pdf',
+      title: 'Return-to-Play & Return-to-Learn Ladder',
+      description: 'Graduated RTP and RTL progression stages with criteria',
+      fileSize: 'PDF',
+      downloadUrl: '#',
+      icon: CheckSquare
+    },
+    {
+      title: 'PCS Clinical Flowchart',
+      description: 'Post-Concussion Syndrome decision tree for persistent symptoms',
+      fileSize: 'PDF',
+      downloadUrl: '#',
       icon: FileText
     }
   ]
@@ -84,8 +90,6 @@ export default function ResourcesPage() {
               </button>
               <a
                 href={CONFIG.SHOP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="px-5 py-2 bg-[#6b9da8] text-white rounded-lg text-sm font-semibold hover:bg-[#5b8d96] transition-colors"
               >
                 Enroll Now
@@ -137,7 +141,7 @@ export default function ResourcesPage() {
                 </button>
               </div>
               <p className="text-xs text-slate-500 mt-3 text-center">
-                AHPRA-compliant resources. No spam, unsubscribe anytime.
+                AHPRA-aligned resources. No spam, unsubscribe anytime.
               </p>
             </form>
           </div>
@@ -160,7 +164,7 @@ export default function ResourcesPage() {
 
             <div className="text-center pt-6 border-t border-teal-200">
               <p className="text-slate-700 mb-4">
-                Want full access to 8 interactive modules and 40 AHPRA CPD points?
+                Want full access to 8 interactive modules and 14 AHPRA CPD points?
               </p>
               <button
                 onClick={() => router.push('/trial')}
@@ -228,7 +232,7 @@ export default function ResourcesPage() {
       <footer className="py-8 px-6 border-t border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-sm text-slate-500">
-            © 2026 Concussion Education Australia · AHPRA Accredited CPD
+            © 2026 Concussion Education Australia · AHPRA Aligned CPD
           </p>
         </div>
       </footer>

@@ -33,7 +33,7 @@ export default function InPersonTrainingPage() {
                 Course Preview
               </button>
               <button
-                onClick={() => router.push('/preview')}
+                onClick={() => router.push('/pricing')}
                 className="btn-primary px-6 py-2 rounded-lg text-sm font-semibold"
               >
                 Enroll Now
@@ -72,7 +72,7 @@ export default function InPersonTrainingPage() {
             <div className="glass rounded-xl p-5 text-center">
               <MapPin className="w-8 h-8 text-accent mx-auto mb-2" />
               <h3 className="font-bold mb-1">Locations</h3>
-              <p className="text-sm text-muted-foreground">Melb · Syd · Byron Bay</p>
+              <p className="text-sm text-muted-foreground">Multiple AU Locations</p>
             </div>
           </div>
 
@@ -206,7 +206,7 @@ export default function InPersonTrainingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent mt-1">•</span>
-                  <span>Certificate of completion (14 CPD hours total after workshop)</span>
+                  <span>Certificate of completion (14 CPD points total after workshop)</span>
                 </li>
               </ul>
             </div>
@@ -222,11 +222,11 @@ export default function InPersonTrainingPage() {
                     <MapPin className="w-5 h-5 text-accent" />
                     <div>
                       <h4 className="font-bold">{location.city}</h4>
-                      <p className="text-sm text-muted-foreground">{location.date}</p>
+                      <p className="text-sm text-muted-foreground">{location.date || 'Date TBA'}</p>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold text-accent bg-accent/10 px-3 py-1 rounded-full">
-                    Available
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${location.status === 'confirmed' ? 'text-accent bg-accent/10' : 'text-muted-foreground bg-muted'}`}>
+                    {location.status === 'confirmed' ? 'Available' : 'Coming Soon'}
                   </span>
                 </div>
               ))}
@@ -252,7 +252,7 @@ export default function InPersonTrainingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
-                onClick={() => router.push('/preview')}
+                onClick={() => router.push('/pricing')}
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
               >
                 <Sparkles className="w-5 h-5" />
@@ -268,10 +268,9 @@ export default function InPersonTrainingPage() {
             </div>
             <div className="mt-6 pt-6 border-t border-border/30">
               <p className="text-xs text-muted-foreground">
-                ✓ 14 total AHPRA CPD hours (8 online + 6 in-person)<br/>
+                ✓ 14 total AHPRA CPD points (8 online + 6 in-person)<br/>
                 ✓ Lifetime access to all online modules and clinical toolkit<br/>
-                ✓ Small group sizes (max 12) for personalized feedback<br/>
-                ✓ Choose your preferred location: Melbourne, Sydney, or Byron Bay
+                ✓ Small group sizes (max 12) for personalized feedback
               </p>
             </div>
           </div>

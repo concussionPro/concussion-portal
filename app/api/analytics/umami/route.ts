@@ -24,7 +24,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const UMAMI_BASE = 'https://cloud.umami.is/api'
 const WEBSITE_ID = process.env.UMAMI_WEBSITE_ID ?? ''
 const API_TOKEN = process.env.UMAMI_API_TOKEN ?? ''
-const ADMIN_KEY = process.env.ANALYTICS_API_KEY ?? ''
+const ADMIN_KEY = process.env.ANALYTICS_API_KEY || process.env.ADMIN_API_KEY || ''
 
 // ── Period helpers ────────────────────────────────────────────────────────────
 function getPeriodTimestamps(period: string): { startAt: number; endAt: number } {

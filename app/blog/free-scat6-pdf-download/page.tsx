@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Free SCAT6 PDF Download - Fillable Form with Auto-Scoring | Australia 2026',
-  description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for 2026 Berlin Consensus protocols. Used by 3,200+ Australian healthcare professionals. No registration required.',
+  description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for 2026 Berlin Consensus protocols. Used by Australian healthcare professionals. No registration required.',
   keywords: 'SCAT6 PDF download, free SCAT6 form, fillable SCAT6, SCAT6 PDF Australia, SCAT6 auto-scoring, download SCAT6 2026',
 }
 
@@ -125,7 +125,7 @@ export default function FreeSCAT6PDFDownloadPage() {
               <div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">When NOT to Use SCAT6</h3>
                 <p className="text-slate-700">
-                  Do not use SCAT6 for office-based follow-up visits after Day 3. For structured clinical assessment from Day 3-30 post-injury, use <strong>SCOAT6 (Sport Concussion Office Assessment Tool)</strong> instead. Using the wrong tool at the wrong time violates the Berlin 2025 Consensus and constitutes below standard of care under AHPRA guidelines.
+                  Do not use SCAT6 for office-based follow-up visits after Day 3. For structured clinical assessment from Day 3-30 post-injury, use <strong>SCOAT6 (Sport Concussion Office Assessment Tool)</strong> instead. Using the wrong tool at the wrong time violates the Amsterdam 2023 Consensus and constitutes below standard of care under AHPRA guidelines.
                 </p>
               </div>
               <div>
@@ -151,7 +151,7 @@ export default function FreeSCAT6PDFDownloadPage() {
               Downloading the form is step 1. Knowing how to use it correctly is step 2.
             </p>
             <p className="text-slate-700 mb-6">
-              Our free SCAT6/SCOAT6 Mastery course covers step-by-step administration of every section, red flag recognition, medicolegal documentation requirements, and common mistakes that constitute below standard of care. <strong>2 AHPRA-aligned CPD hours + certificate included.</strong>
+              Our free SCAT6/SCOAT6 Mastery course covers step-by-step administration of every section, red flag recognition, medicolegal documentation requirements, and common mistakes that constitute below standard of care. <strong>2 AHPRA-aligned CPD points + certificate included.</strong>
             </p>
             <Link
               href="/scat-mastery"

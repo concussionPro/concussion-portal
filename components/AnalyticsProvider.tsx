@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useCallback } from 'react';
+import { createContext, useContext, useEffect, useRef, useCallback, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 // ---------------------------------------------------------------------------
@@ -29,7 +29,6 @@ interface AnalyticsContextValue {
   trackCourseView: (courseId: string, courseName: string) => void;
   trackContactForm: (formType: string) => void;
   trackDownload: (fileName: string, fileType: string) => void;
-  trackVideoPlay: (videoTitle: string, videoSource: string) => void;
   trackSearch: (query: string, resultCount: number) => void;
   trackExternalLink: (url: string, linkText: string) => void;
 }
@@ -186,13 +185,6 @@ export function AnalyticsProvider({
     [trackEvent]
   );
 
-  const trackVideoPlay = useCallback(
-    (videoTitle: string, videoSource: string): void => {
-      trackEvent('video_play', { videoTitle, videoSource });
-    },
-    [trackEvent]
-  );
-
   const trackSearch = useCallback(
     (query: string, resultCount: number): void => {
       trackEvent('search', { query, resultCount });
@@ -213,14 +205,15 @@ export function AnalyticsProvider({
     trackCourseView,
     trackContactForm,
     trackDownload,
-    trackVideoPlay,
     trackSearch,
     trackExternalLink,
   };
 
   return (
     <AnalyticsContext.Provider value={value}>
-      <AnalyticsTracker />
+      <Suspense fallback={null}>
+        <AnalyticsTracker />
+      </Suspense>
       {children}
     </AnalyticsContext.Provider>
   );

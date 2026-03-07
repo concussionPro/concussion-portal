@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [accessChecked, setAccessChecked] = useState(false)
   const [userName, setUserName] = useState<string | null>(null)
+  const [accessLevel, setAccessLevel] = useState<string>('')
 
   useAnalytics()
 
@@ -32,6 +33,7 @@ export default function DashboardPage() {
           if (data.user) {
             const name = data.user.name || data.user.email?.split('@')[0] || null
             setUserName(name)
+            setAccessLevel(data.user.accessLevel || '')
           }
         }
 
@@ -86,7 +88,7 @@ export default function DashboardPage() {
             <NextActionCard />
 
             {/* Bento Grid — stats + quick actions */}
-            <BentoGrid />
+            <BentoGrid accessLevel={accessLevel} />
           </div>
         </main>
       </div>

@@ -47,7 +47,7 @@ type MetricPoint = { x: string; y: number };
 
 function isAuthorised(request: NextRequest): boolean {
   const key = request.headers.get('x-admin-key');
-  const expected = process.env.ANALYTICS_API_KEY;
+  const expected = process.env.ANALYTICS_API_KEY || process.env.ADMIN_API_KEY;
   if (!expected) {
     // No key configured — block all access to prevent data leaks
     return false;

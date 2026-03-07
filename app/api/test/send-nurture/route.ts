@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/resend-client'
 import { SCAT_MASTERY_SEQUENCE } from '@/lib/email-sequences'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,12 +46,14 @@ export async function POST(request: NextRequest) {
     const loginLink = `${baseUrl}/dashboard`
     const upgradeLink = `${baseUrl}/pricing`
 
-    // Generate HTML from template
+    // Generate HTML from template with unsubscribe URL
     const recipientName = name || email.split('@')[0]
+    const unsubToken = generateUnsubscribeToken(email)
+    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
     const html = emailTemplate.template(
       recipientName,
       day <= 2 ? loginLink : upgradeLink
-    )
+    ).replace('{{unsubscribe_url}}', unsubscribeUrl)
 
     // Send email
     const success = await sendEmail({
@@ -61,6 +64,10 @@ export async function POST(request: NextRequest) {
         { name: 'sequence', value: 'scat-mastery-test' },
         { name: 'day', value: String(day) },
       ],
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
     })
 
     if (success) {

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { CONFIG } from "@/lib/config";
@@ -88,9 +89,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
   },
-  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({
@@ -134,11 +133,13 @@ export default function RootLayout({
           <span className="brain-accent-2"></span>
         </div>
         <ProgressProvider>
-          <AnalyticsProvider>
-            <div id="main-content">
-              {children}
-            </div>
-          </AnalyticsProvider>
+          <Suspense fallback={null}>
+            <AnalyticsProvider>
+              <div id="main-content">
+                {children}
+              </div>
+            </AnalyticsProvider>
+          </Suspense>
         </ProgressProvider>
       </body>
     </html>

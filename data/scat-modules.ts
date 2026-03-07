@@ -1,7 +1,7 @@
 /**
  * FREE SCAT6/SCOAT6 Mastery Course Modules
  * For preview/free access users only
- * 2 CPD hours total
+ * 2 CPD points total
  * De-cannibalized version — SCAT/SCOAT tool mastery focus
  */
 
@@ -15,8 +15,6 @@ export interface SCATModule {
   duration: string
   points: number
   description: string
-  videoUrl: string
-  videoRequiredMinutes: number
   sections: Section[]
   quiz: QuizQuestion[]
   clinicalReferences: string[]
@@ -37,8 +35,6 @@ export const scatModules: SCATModule[] = [
     duration: '30 min',
     points: 0.5,
     description: 'Master when to use SCAT6 vs SCOAT6, understand medicolegal implications, Australian regulatory requirements, and standard-of-care documentation. This module covers the foundational rules that protect both your patients and your career.',
-    videoUrl: '/videos/scat-module-1-quick-guide.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'the-golden-rule',
@@ -138,7 +134,7 @@ export const scatModules: SCATModule[] = [
           '',
           'DELAYED SYMPTOM PRESENTATION: Some patients minimise symptoms to return to sport. Your notes should document that you asked specifically about minimisation and advised full disclosure. If a patient signs a form saying they are symptom-free but you have reason to believe otherwise, document your concern.',
           '',
-          '🔓 WANT TO GO DEEPER? The full ConcussionPro course (14 CPD hours) covers comprehensive medicolegal frameworks, documentation standards, informed consent, and workers compensation in concussion — everything you need to protect your practice. → Upgrade at concussion-education-australia.com/pricing',
+          '🔓 WANT TO GO DEEPER? The full ConcussionPro course (14 CPD points) covers comprehensive medicolegal frameworks, documentation standards, informed consent, and workers compensation in concussion — everything you need to protect your practice. → Upgrade at concussion-education-australia.com/pricing',
         ],
       },
       {
@@ -406,8 +402,6 @@ export const scatModules: SCATModule[] = [
     duration: '40 min',
     points: 0.5,
     description: 'Master immediate on-field concussion recognition, red flag identification, the complete SCAT6 off-field battery including the new 10-word immediate memory list and timed tandem gait, and sideline decision-making. This module includes detailed form-filling guidance and a practical scenario.',
-    videoUrl: '/videos/scat-module-2-on-field.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'on-field-assessment',
@@ -929,8 +923,6 @@ export const scatModules: SCATModule[] = [
     duration: '40 min',
     points: 0.5,
     description: 'Master SCOAT6 administration for clinic-based concussion assessment including the modified VOMS, timed tandem gait, graduated exercise protocols, and return-to-play decision-making. Covers the 2025 Kontos clinical utility evidence and current rest/activity guidelines.',
-    videoUrl: '/videos/scat-module-3-scoat6.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'scoat6-overview',
@@ -1100,7 +1092,7 @@ export const scatModules: SCATModule[] = [
           '• Multiple positive subtests indicate more widespread vestibular involvement and correlate with longer recovery.',
           '• mVOMS findings guide referral: if findings are persistent at day 10–14, referral to a specialist is indicated.',
           '',
-          '🔓 VOMS MASTERY: The full ConcussionPro course (Modules 2–3) walks through every VOMS subtest with clinical video demonstrations, scoring interpretation, and common errors. Essential for confident vestibular assessment. → Upgrade to the full course at concussion-education-australia.com/pricing',
+          '🔓 VOMS MASTERY: The full ConcussionPro course (Modules 2–3) walks through every VOMS subtest with scoring interpretation and common errors. Essential for confident vestibular assessment. → Upgrade to the full course at concussion-education-australia.com/pricing',
         ],
       },
       {
@@ -1231,7 +1223,7 @@ export const scatModules: SCATModule[] = [
           '• Timed tandem gait within normative range',
           '• Symptom-free with exertion testing',
           '',
-          '🔓 EVIDENCE-BASED PRACTICE: The full ConcussionPro course includes 100+ clinical references, phenotype-based rehabilitation protocols, and the latest research on concussion recovery. 14 CPD hours of career-defining content. → concussion-education-australia.com/pricing',
+          '🔓 EVIDENCE-BASED PRACTICE: The full ConcussionPro course includes 130+ clinical references, phenotype-based rehabilitation protocols, and the latest research on concussion recovery. 14 CPD points of career-defining content. → concussion-education-australia.com/pricing',
         ],
       },
     ],
@@ -1315,8 +1307,6 @@ export const scatModules: SCATModule[] = [
     duration: '30 min',
     points: 0.5,
     description: 'Master paediatric-specific concussion management including Child SCAT6, AIS 2024 under-19 requirements, return-to-learn protocols, and the multiple concussion protocol. Understand the critical differences in assessment, management, and timeline requirements for athletes under 19.',
-    videoUrl: '/videos/scat-module-4-pediatric.mp4',
-    videoRequiredMinutes: 1,
     sections: [
       {
         id: 'pediatric-differences',
@@ -1671,8 +1661,6 @@ export const scatModules: SCATModule[] = [
     duration: '20 min',
     points: 0,
     description: 'Comprehensive scenario-based knowledge assessment covering all modules. These questions require clinical reasoning, not just recall. Most questions present real clinical situations requiring you to apply guidelines to patient care.',
-    videoUrl: '',
-    videoRequiredMinutes: 0,
     sections: [
       {
         id: 'quiz-intro',
@@ -1904,8 +1892,6 @@ export const scatModules: SCATModule[] = [
     duration: '20 min',
     points: 0,
     description: 'Four detailed clinical case studies designed to consolidate your course learning. Each case walks through a complete clinical scenario — from initial assessment to documentation, decision-making, and disposition. Focus is on SCAT6/SCOAT6 tool use and Australian guideline application.',
-    videoUrl: '',
-    videoRequiredMinutes: 0,
     sections: [
       {
         id: 'case-1-rugby',
@@ -2167,7 +2153,7 @@ export const scatModules: SCATModule[] = [
           '• For persistent mVOMS abnormalities, the highest-priority referral is a vestibular physiotherapist.',
           '• Be honest with patients about uncertainty — "I can\'t promise you\'ll be ready" is more appropriate than false reassurance.',
           '',
-          '🔓 READY FOR THE NEXT LEVEL? You\'ve completed 2 CPD hours of essential SCAT6/SCOAT6 training. The full ConcussionPro Certification (14 CPD hours) takes you from assessment to advanced rehabilitation — concussion science, phenotype-based treatment, multidisciplinary care, and complete return-to-activity frameworks. Join clinicians across Australia who\'ve upgraded their concussion practice. → concussion-education-australia.com/pricing',
+          '🔓 READY FOR THE NEXT LEVEL? You\'ve completed 2 CPD points of essential SCAT6/SCOAT6 training. The full ConcussionPro Certification (14 CPD points) takes you from assessment to advanced rehabilitation — concussion science, phenotype-based treatment, multidisciplinary care, and complete return-to-activity frameworks. Join clinicians across Australia who\'ve upgraded their concussion practice. → concussion-education-australia.com/pricing',
         ],
       },
     ],

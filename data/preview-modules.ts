@@ -1,46 +1,18 @@
 /**
- * Preview-safe module data — strips full course content.
- * Only exposes titles, descriptions, section titles, and first 150 chars of first 2 sections.
- * NEVER import getAllModules() in client-side preview pages.
+ * Preview-safe module data for the /preview marketing page.
+ *
+ * SECURITY: This file must NOT import from './modules' or './scat-modules'.
+ * It uses the metadata-only module-meta.ts to prevent full course content,
+ * quiz answers, and clinical references from leaking into client JS bundles.
  */
 
-import { modules, type Module, type Section } from './modules'
+import { getModulesMeta, type ModuleMeta } from './module-meta'
 
-export interface PreviewSection {
-  id: string
-  title: string
-  preview: string // First 150 chars of content[0], or empty
-}
-
-export interface PreviewModule {
-  id: number
-  title: string
-  subtitle: string
-  duration: string
-  description: string
-  sectionCount: number
-  sections: PreviewSection[]
-}
+export type PreviewModule = ModuleMeta
 
 /**
- * Returns module metadata with section titles only.
- * Content is stripped except for a short preview snippet of the first 2 sections.
+ * Returns module metadata only — safe for client-side use.
  */
 export function getPreviewModules(): PreviewModule[] {
-  return modules.map((module) => ({
-    id: module.id,
-    title: module.title,
-    subtitle: module.subtitle,
-    duration: module.duration,
-    description: module.description,
-    sectionCount: module.sections.length,
-    sections: module.sections.map((section, idx) => ({
-      id: section.id,
-      title: section.title,
-      // Only first 2 sections get a content preview snippet
-      preview: idx < 2 && section.content && section.content.length > 0
-        ? section.content[0].substring(0, 150)
-        : '',
-    })),
-  }))
+  return getModulesMeta()
 }
