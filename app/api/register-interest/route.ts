@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { put, list as listBlobs } from '@vercel/blob'
 import { sendEmail } from '@/lib/resend-client'
 
+// Rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkRateLimit(key: string, limit: number): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(key)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 })
+    return true
+  }
+  if (entry.count >= limit) return false
+  entry.count++
+  return true
+}
+
 interface InterestRegistration {
   email: string
   name: string
@@ -29,8 +44,19 @@ const CITY_LABELS: Record<ValidCity, string> = {
  */
 export async function POST(request: NextRequest) {
   try {
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
+
     const body = await request.json()
     const { email, name, city } = body
+
+    // Rate limit by IP
+    if (!checkRateLimit(`ip:${ip}`, 10)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again in a few minutes.' },
+        { status: 429 }
+      )
+    }
 
     // Validate inputs
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

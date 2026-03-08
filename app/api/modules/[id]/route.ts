@@ -67,12 +67,9 @@ export async function GET(
       }
     } else {
       // Preview/free users: Get from SCAT modules
-      console.log('[MODULE API] Preview user accessing module:', moduleId)
       const scatModule = getSCATModuleById(moduleId)
-      console.log('[MODULE API] SCAT module found:', !!scatModule, scatModule?.id)
 
       if (!scatModule) {
-        console.error('[MODULE API] SCAT module not found for ID:', moduleId)
         // They're trying to access a paid module
         return NextResponse.json(
           {

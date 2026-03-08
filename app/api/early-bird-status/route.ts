@@ -57,9 +57,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     isActive,
     deadline: dateDeadline.toISOString(),
-    enrollmentCount,
     spotsRemaining: Math.max(0, spotsRemaining),
-    capacity: CONFIG.WORKSHOP.CAPACITY_PER_COURSE,
     reason,
   })
 }
