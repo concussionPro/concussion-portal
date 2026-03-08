@@ -2,10 +2,11 @@ import { redirect } from 'next/navigation'
 
 // Redirect /learning/module/[id] → /modules/[id]
 // This handles the common URL pattern confusion
-export default function LearningModuleRedirect({
+export default async function LearningModuleRedirect({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  redirect(`/modules/${params.id}`)
+  const { id } = await params
+  redirect(`/modules/${id}`)
 }

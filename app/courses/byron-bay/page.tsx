@@ -63,7 +63,7 @@ export default function ByronBayPage() {
             </a>
 
             <p className="text-sm text-muted-foreground mt-4">
-              Use code <span className="font-bold text-accent">{CONFIG.COURSE.PROMO_CODE}</span> to save ${CONFIG.COURSE.SAVINGS}
+              Early bird pricing — save ${CONFIG.COURSE.SAVINGS} (limited time)
             </p>
           </div>
 

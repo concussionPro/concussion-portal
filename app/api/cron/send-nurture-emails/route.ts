@@ -39,6 +39,8 @@ export async function GET(request: Request) {
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
 
       // Find matching email in sequence
+      // Skip Day 0 — welcome email is already sent by the signup-free API
+      if (daysSinceSignup === 0) continue
       const email = SCAT_MASTERY_SEQUENCE.find(e => e.day === daysSinceSignup)
       if (!email) continue
 

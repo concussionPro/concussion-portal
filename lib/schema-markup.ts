@@ -275,6 +275,8 @@ export function createBlogPostSchema(params: {
   datePublished: string
   dateModified: string
   author: string
+  url: string
+  image?: string
 }) {
   return {
     "@context": "https://schema.org",
@@ -285,7 +287,13 @@ export function createBlogPostSchema(params: {
     "dateModified": params.dateModified,
     "author": {
       "@type": "Person",
-      "name": params.author
+      "name": params.author,
+      "jobTitle": "Osteopath",
+      "credential": "B.Clin.Sci., M.Ost.Med",
+      "memberOf": {
+        "@type": "Organization",
+        "name": "Concussion Education Australia"
+      }
     },
     "publisher": {
       "@type": "Organization",
@@ -294,8 +302,9 @@ export function createBlogPostSchema(params: {
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": CONFIG.APP_URL
+      "@id": params.url
     },
+    "image": params.image || `${CONFIG.APP_URL}/og-image.jpg`,
     "inLanguage": "en-AU"
   }
 }

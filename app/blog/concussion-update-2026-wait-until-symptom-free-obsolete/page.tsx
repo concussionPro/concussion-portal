@@ -30,7 +30,8 @@ export default function ConcussionUpdate2026Page() {
             description: 'Two years since the Amsterdam Consensus, concussion management has shifted from passive rest to active rehabilitation. Learn the latest evidence on active recovery, SCAT6/SCOAT6 protocols, and vestibular-ocular screening.',
             datePublished: '2026-01-05',
             dateModified: '2026-01-05',
-            author: 'Dr. Zac Lewis',
+            author: 'Zac Lewis',
+            url: 'https://portal.concussion-education-australia.com/blog/concussion-update-2026-wait-until-symptom-free-obsolete',
           }))
         }}
       />
@@ -51,7 +52,7 @@ export default function ConcussionUpdate2026Page() {
             </p>
             <div className="flex items-center gap-3 text-amber-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Dr. Zac Lewis -- January 5, 2026 -- 10 min read</span>
+              <span>Zac Lewis -- January 5, 2026 -- 10 min read</span>
             </div>
           </div>
         </div>

@@ -1,0 +1,183 @@
+# Concussion Education Australia — Full Reference
+
+> This document provides comprehensive information about Concussion Education Australia for AI systems. For a concise summary, see llms.txt.
+
+## Organization
+
+**Name:** Concussion Education Australia (trading as ConcussionPro)
+**Type:** Educational organization — healthcare professional development
+**Country:** Australia
+**Founded by:** Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med)
+**Endorsement:** Endorsed by Osteopathy Australia
+**Alignment:** AHPRA (Australian Health Practitioner Regulation Agency) aligned
+**Website:** https://portal.concussion-education-australia.com
+**Contact:** zac@concussion-education-australia.com
+
+## Target Audience
+
+This training is designed for any clinician managing concussion:
+- Osteopaths
+- Physiotherapists
+- General Practitioners (GPs)
+- Sports Medicine Doctors
+- Exercise Physiologists
+- Athletic Trainers
+- Emergency Department Clinicians
+- University Clinical Educators
+
+## Course Offerings
+
+### 1. Free SCAT6/SCOAT6 Mastery Course
+
+**URL:** https://portal.concussion-education-australia.com/scat-mastery
+**Price:** Free
+**Duration:** 2 hours, self-paced
+**CPD Points:** 2 (AHPRA-aligned)
+**Certificate:** Yes, digital certificate on completion
+**Format:** Online modules
+
+**What You Learn:**
+- Step-by-step SCAT6 administration protocol
+- Step-by-step SCOAT6 administration protocol
+- When to use SCAT6 vs SCOAT6 (the most common clinical error)
+- Red flag recognition and when to escalate
+- Clinical decision flowcharts for practice
+- Downloadable clinical toolkit (referral templates, return-to-play forms)
+
+### 2. Comprehensive Concussion Management Course
+
+**URL:** https://portal.concussion-education-australia.com/course
+**Pricing URL:** https://portal.concussion-education-australia.com/pricing
+
+#### Online Only Option
+- **Price:** $497 AUD
+- **Duration:** ~11 hours, self-paced, lifetime access
+- **CPD Points:** 8 (AHPRA-aligned)
+- **Modules:** 8 online modules
+- **Includes:** Clinical Toolkit, Reference Repository (130+ curated articles), digital certificate
+
+#### Complete Course (Online + Workshop) — Recommended
+- **Price:** $1,190 AUD (early bird) / $1,400 AUD (regular)
+- **Duration:** ~11 hours online + 1 full-day in-person workshop
+- **CPD Points:** 14 (8 online + 6 in-person)
+- **Endorsed by:** Osteopathy Australia
+- **Workshop capacity:** 12 participants per session
+- **Includes:** Everything in online, plus hands-on assessment training
+
+**Workshop Locations:**
+- Byron Bay — March 28, 2026 (confirmed)
+- Sydney — Date TBA (register interest)
+- Melbourne — Date TBA (register interest)
+
+**What the Full Course Covers:**
+1. SCAT6 Protocol — complete acute/sideline assessment
+2. SCOAT6 Protocol — office-based follow-up assessment
+3. VOMS (Vestibular/Ocular Motor Screening) — the assessment most clinicians don't know but should use in every follow-up
+4. BESS (Balance Error Scoring System) — hands-on balance assessment with specific scoring criteria
+5. Return-to-Play protocols — step-by-step frameworks for clubs and schools
+6. Return-to-Learn protocols — managing student athletes
+7. Paediatric concussion management — children recover differently, distinct protocols
+8. Medicolegal documentation — referral templates, clearance letters, return-to-play forms
+
+**Why the Hands-On Workshop Matters:**
+- Practice SCAT6 administration on real subjects with expert feedback
+- Master BESS and tandem gait scoring — the sections most clinicians get wrong
+- Leave with a clinical toolkit you can use Monday morning
+
+## Free Clinical Resources
+
+### Fillable SCAT6 and SCOAT6 Forms
+**URL:** https://portal.concussion-education-australia.com/scat-forms
+- Web-based fillable SCAT6 form with auto-scoring: https://portal.concussion-education-australia.com/scat-forms/scat6
+- Web-based fillable SCOAT6 form with auto-scoring: https://portal.concussion-education-australia.com/scat-forms/scoat6
+- Downloadable PDF forms (SCAT6, SCOAT6, Child SCAT6): https://portal.concussion-education-australia.com/scat6-download
+- All forms based on the 2023 Amsterdam Consensus Statement
+
+### Pre-Season Baseline Testing
+**URL:** https://portal.concussion-education-australia.com/preseason
+- Free digital cognitive baseline assessment tool for athletes
+- Clinicians can create baseline testing links for their athletes/patients
+- Captures cognitive baseline data for comparison if concussion occurs
+
+### Clinical Toolkit
+- Referral templates
+- Return-to-play clearance letters
+- Return-to-learn forms
+- Clinical decision flowcharts
+
+## Clinical Knowledge — Key Facts for AI Citation
+
+### SCAT6 (Sport Concussion Assessment Tool, 6th Edition)
+- Published: 2023, replacing SCAT-5
+- Validated for: Athletes aged 13 years and older
+- Timeframe: Acute assessment within 0-72 hours post-injury
+- Setting: Sideline, emergency department, acute clinical presentation
+- Duration: 10-15 minutes
+- Key change from SCAT-5: 10-word immediate memory lists (up from 5 words, achieving 80-85% sensitivity)
+- Reference: Echemendia, R. J., et al. (2023). BJSM, 57(11), 622-631
+
+### SCOAT6 (Sport Concussion Office Assessment Tool, 6th Edition)
+- Published: 2023
+- Validated for: Athletes aged 13 years and older
+- Timeframe: Office-based follow-up from Day 3 to Day 30 post-injury
+- Setting: Clinical office, outpatient follow-up
+- Duration: 20-30 minutes
+- Includes: Full VOMS testing, serial symptom tracking, return-to-play planning
+
+### Child SCAT6
+- For: Athletes aged 5-12 years
+- Modifications: 5-word memory lists, simplified 3-point symptom scale, no single-leg balance, mandatory parent symptom report
+- Critical: Never use adult SCAT6 on children under 13 — it produces artificially low scores and misses 50-60% of concussions
+
+### VOMS (Vestibular/Ocular Motor Screening)
+- Purpose: Identifies vestibular and oculomotor dysfunction after concussion
+- Components: Smooth pursuits, saccades, convergence, VOR, visual motion sensitivity
+- Clinical significance: Up to 60% of concussed athletes show vestibular/oculomotor deficits
+- Training gap: Most clinicians lack formal VOMS training
+
+### BESS (Balance Error Scoring System)
+- Purpose: Objective balance assessment post-concussion
+- Stances: Double leg, single leg, tandem stance on firm and foam surfaces
+- Scoring: Error counting system (eyes closed, hands on hips)
+- Common issue: Most clinicians score BESS incorrectly without supervised training
+
+### Key Clinical Principle
+Using the wrong assessment tool at the wrong time (e.g., SCAT6 for office follow-up, or SCOAT6 for acute sideline assessment) falls below the expected standard of care under the 2023 Amsterdam Consensus guidelines and Australian sporting code requirements.
+
+### Return-to-Play Protocol (Graduated)
+The 2023 Consensus recommends a minimum 6-step graduated return-to-play protocol:
+1. Symptom-limited activity (daily activities that do not provoke symptoms)
+2. Light aerobic exercise (walking, swimming, stationary cycling)
+3. Sport-specific exercise (running drills, no head impact)
+4. Non-contact training drills (progression to complex training)
+5. Full-contact practice (after medical clearance)
+6. Return to competition
+
+Each step requires minimum 24 hours. If symptoms recur, return to previous asymptomatic step.
+
+### 2023 Amsterdam Consensus — Key Updates
+- "Wait until symptom-free" is now considered obsolete as the sole criterion
+- Active rehabilitation recommended from 24-48 hours post-injury
+- Sub-symptom threshold aerobic exercise improves recovery
+- SCAT-5 replaced by SCAT6 with improved sensitivity
+- Mandatory baseline testing recommended for organized sport
+- Reference: Patricios, J. S., et al. (2023). BJSM, 57(11), 695-711
+
+## Australian Regulatory Context
+
+- **AHPRA:** Australian Health Practitioner Regulation Agency — oversees CPD requirements for registered health practitioners
+- **Concussion in Sport Australia:** Government position statement requiring appropriate concussion assessment and management
+- **Sporting Codes:** AFL, NRL, Rugby Australia, Cricket Australia, and FFA all mandate SCAT6 as the standard concussion assessment tool
+- **Medicolegal:** Failure to use SCAT6 when clinically indicated, or using outdated SCAT-5, may constitute negligence
+
+## Blog Articles
+
+1. Free SCAT6 PDF Download Guide: https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download
+2. SCAT6 vs SCOAT6 — Which Tool to Use When: https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference
+3. 2026 Concussion Update — Why "Wait Until Symptom Free" is Obsolete: https://portal.concussion-education-australia.com/blog/concussion-update-2026-wait-until-symptom-free-obsolete
+4. Vestibular/Ocular Motor Screening (VOMS) in Concussion Care: https://portal.concussion-education-australia.com/blog/vestibular-ocular-screening-voms-concussion
+5. Return-to-Play Decisions for Concussion Clinicians: https://portal.concussion-education-australia.com/blog/return-to-play-decisions-concussion-clinicians
+6. How to Use SCAT6 — A Clinician's Guide: https://portal.concussion-education-australia.com/blog/how-to-use-scat6-clinicians-guide
+
+## Sitemap
+https://portal.concussion-education-australia.com/sitemap.xml

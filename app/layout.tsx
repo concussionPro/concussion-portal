@@ -107,7 +107,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en-AU">
       <head>
         {/* Google Ads Conversion Tracking (AW-17984048021) */}
         <Script

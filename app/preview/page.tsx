@@ -101,6 +101,54 @@ export default function PreviewPage() {
           </p>
         </div>
 
+        {/* Quick Knowledge Check */}
+        <div className="bg-white rounded-2xl border-2 border-slate-200 p-6 md:p-8 mb-10">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+              <Brain className="w-5 h-5 text-white" strokeWidth={2} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Quick Knowledge Check</h3>
+          </div>
+          <p className="text-sm text-slate-600 mb-6">How well do you know concussion management? Most clinicians get at least one of these wrong.</p>
+          <div className="space-y-4">
+            {[
+              {
+                q: 'A 16-year-old athlete passes the SCAT6 cognitive screen 15 minutes post-impact. Can they return to play?',
+                a: 'No. A normal cognitive screen does NOT clear an athlete. The SCAT6 is one component of a multi-domain assessment, and no same-day return to play is permitted for anyone under 18.',
+              },
+              {
+                q: 'An athlete reports zero symptoms 48 hours post-concussion. Are they recovered?',
+                a: 'Not necessarily. Symptom resolution does not equal brain recovery. A graduated return-to-sport protocol must be completed, and some deficits (balance, vestibular-ocular) may persist despite symptom clearance.',
+              },
+              {
+                q: 'You perform the BESS test and the athlete has 4 errors on double-leg stance. Is this abnormal?',
+                a: 'It depends on their baseline. Without pre-injury baseline data, you can\'t determine if this represents a change. This is why baseline testing is critical — and why this course teaches you to interpret scores in context.',
+              },
+            ].map((item, i) => (
+              <details key={i} className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <summary className="px-5 py-4 cursor-pointer list-none flex items-start gap-3 hover:bg-slate-100 transition-colors">
+                  <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <span className="text-sm font-semibold text-slate-800">{item.q}</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5 ml-auto group-open:rotate-90 transition-transform" />
+                </summary>
+                <div className="px-5 pb-4 pl-14">
+                  <p className="text-sm text-slate-600 leading-relaxed">{item.a}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
+            <button
+              onClick={() => router.push('/assessment')}
+              className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl text-sm font-bold hover:shadow-lg transition-all"
+            >
+              Take the Full Knowledge Test
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <span className="text-xs text-slate-500">Free — see where you stand</span>
+          </div>
+        </div>
+
         {/* Feature Highlights */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 border border-slate-200">
@@ -285,7 +333,7 @@ export default function PreviewPage() {
               Choose Your Learning Path
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Can&apos;t commit to a workshop date yet? Start with online modules and upgrade anytime.
+              Start online at your own pace, or get the full certification with hands-on workshop.
             </p>
           </div>
           <PricingOptions variant="compact" />

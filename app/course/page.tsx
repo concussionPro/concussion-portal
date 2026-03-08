@@ -304,7 +304,7 @@ export default function CoursePage() {
         </div>
       </section>
 
-      {/* Money-Back Guarantee */}
+      {/* Flexibility Guarantee */}
       <section className="py-12 px-6 md:px-8">
         <div className="container-md">
           <div className="glass rounded-2xl p-8 md:p-10 border-l-4 border-[#7ba8b0]">
@@ -316,25 +316,25 @@ export default function CoursePage() {
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
-                  30-Day Money-Back Guarantee
+                  Total Flexibility — No Expiry
                 </h3>
                 <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-4">
-                  We're confident you'll gain immediate clinical value from this training. If after completing
-                  the online modules and attending the practical day you don't feel your concussion management
-                  skills have significantly improved, we'll refund your full enrollment fee—no questions asked.
+                  Life gets busy. Once enrolled, you get lifetime access to all online modules and can
+                  reschedule your workshop to any future date or location at no extra cost. Start the
+                  online content immediately and attend the hands-on day when it suits you.
                 </p>
                 <div className="flex flex-wrap gap-2 md:gap-3 justify-start">
                   <div className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold text-[#5b8d96] bg-teal-50 px-2.5 md:px-3 py-1.5 rounded-lg border border-teal-200">
                     <Check className="w-3.5 md:w-4 h-3.5 md:h-4" strokeWidth={2.5} />
-                    100% Risk-Free
+                    Lifetime Access
                   </div>
                   <div className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold text-[#5b8d96] bg-teal-50 px-2.5 md:px-3 py-1.5 rounded-lg border border-teal-200">
                     <Check className="w-3.5 md:w-4 h-3.5 md:h-4" strokeWidth={2.5} />
-                    30 Days to Decide
+                    Reschedule Anytime
                   </div>
                   <div className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold text-[#5b8d96] bg-teal-50 px-2.5 md:px-3 py-1.5 rounded-lg border border-teal-200">
                     <Check className="w-3.5 md:w-4 h-3.5 md:h-4" strokeWidth={2.5} />
-                    Full Refund
+                    Any Location
                   </div>
                 </div>
               </div>
@@ -407,6 +407,31 @@ export default function CoursePage() {
         </div>
       </section>
 
+      {/* Your Instructor */}
+      <section className="section-padding">
+        <div className="container-md px-6 md:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
+              Your Instructor
+            </h2>
+          </div>
+          <div className="glass rounded-2xl p-8 md:p-10 max-w-2xl mx-auto" style={{ borderWidth: '2px', borderImage: 'linear-gradient(135deg, rgba(13,115,119,0.3), rgba(91,154,166,0.1)) 1' }}>
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#64a8b0] to-[#5b9aa6] flex items-center justify-center flex-shrink-0 shadow-lg">
+                <span className="text-2xl font-bold text-white">ZL</span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-1 tracking-tight text-center sm:text-left">Zac Lewis</h3>
+                <p className="text-sm font-semibold text-accent mb-3 text-center sm:text-left">Osteopath, B.Clin.Sci., M.Ost.Med</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Founder of Concussion Education Australia. Zac developed this training to bridge the gap between concussion research and clinical practice — giving allied health professionals the confidence and competence to manage concussion cases from sideline to return-to-play.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Social Proof */}
       <section className="section-padding bg-muted/30">
         <div className="container-lg px-6 md:px-8">
@@ -453,23 +478,6 @@ export default function CoursePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-border/50">
-        <div className="container-xl text-center">
-          <p className="text-sm text-muted-foreground mb-3">
-            Questions? Email{' '}
-            <a
-              href="mailto:zac@concussion-education-australia.com"
-              className="text-accent hover:underline"
-            >
-              zac@concussion-education-australia.com
-            </a>
-          </p>
-          <p className="text-sm text-muted-foreground">
-            © 2026 Concussion Education Australia · Evidence-based training for clinical excellence
-          </p>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -14,11 +14,20 @@ export default function TrialPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Store trial email
+    // Store trial email locally as fallback
     localStorage.setItem('trialEmail', email)
     localStorage.setItem('trialStarted', 'true')
 
-    await new Promise(resolve => setTimeout(resolve, 800))
+    // Persist lead server-side (sends welcome email + creates user)
+    try {
+      await fetch('/api/signup-free', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+    } catch {
+      // Don't block the trial experience if API fails
+    }
 
     // Redirect to Module 1
     router.push('/modules/1')

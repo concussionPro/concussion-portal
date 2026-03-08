@@ -109,7 +109,7 @@ export function CourseSchema() {
       price: CONFIG.COURSE.PRICE_EARLY_BIRD,
       priceCurrency: 'AUD',
       availability: 'https://schema.org/InStock',
-      url: CONFIG.SHOP_URL,
+      url: `${CONFIG.APP_URL}${CONFIG.SHOP_URL}`,
       priceValidUntil: earlyBirdDate,
     },
   }
@@ -179,7 +179,7 @@ export function EventSchema({ location }: { location: 'MELBOURNE' | 'SYDNEY' | '
       availability: CONFIG.FEATURES.SHOW_SPOTS_REMAINING && locationData.spotsRemaining > 0
         ? 'https://schema.org/InStock'
         : 'https://schema.org/LimitedAvailability',
-      url: CONFIG.SHOP_URL,
+      url: `${CONFIG.APP_URL}${CONFIG.SHOP_URL}`,
       validFrom: new Date().toISOString(),
       priceValidUntil: earlyBirdDate,
     },

@@ -51,7 +51,8 @@ export default function SCAT6vsSCOAT6Page() {
             description: 'Complete guide to understanding the critical differences between SCAT6 and SCOAT6 concussion assessment tools',
             datePublished: '2026-01-31',
             dateModified: '2026-01-31',
-            author: 'Dr. Zac Lewis',
+            author: 'Zac Lewis',
+            url: 'https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference',
           }))
         }}
       />

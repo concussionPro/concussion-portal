@@ -2134,7 +2134,7 @@ export default function SCOAT6Page() {
                     </p>
 
                     <div className="bg-white border border-slate-300 rounded-lg p-3">
-                      <div className="grid grid-cols-5 gap-2 mb-2 text-xs font-bold text-slate-700">
+                      <div className="grid grid-cols-6 gap-2 mb-2 text-xs font-bold text-slate-700">
                         <div className="col-span-2">Question</div>
                         <div className="text-center">Not at all (0)</div>
                         <div className="text-center">Several days (1)</div>
@@ -2151,7 +2151,7 @@ export default function SCOAT6Page() {
                         { key: 'gad7_6', question: '6. Becoming easily annoyed or irritable' },
                         { key: 'gad7_7', question: '7. Feeling afraid as if something awful might happen' },
                       ].map(({ key, question }) => (
-                        <div key={key} className="grid grid-cols-5 gap-2 py-2 border-t border-slate-200 items-center">
+                        <div key={key} className="grid grid-cols-6 gap-2 py-2 border-t border-slate-200 items-center">
                           <div className="col-span-2 text-xs">{question}</div>
                           {[0, 1, 2, 3].map(val => (
                             <div key={val} className="flex justify-center">
@@ -2203,7 +2203,7 @@ export default function SCOAT6Page() {
                     </p>
 
                     <div className="bg-white border border-slate-300 rounded-lg p-3">
-                      <div className="grid grid-cols-5 gap-2 mb-2 text-xs font-bold text-slate-700">
+                      <div className="grid grid-cols-6 gap-2 mb-2 text-xs font-bold text-slate-700">
                         <div className="col-span-2">Question</div>
                         <div className="text-center">Not at all (0)</div>
                         <div className="text-center">Several days (1)</div>
@@ -2215,7 +2215,7 @@ export default function SCOAT6Page() {
                         { key: 'phq2_1', question: '1. Little interest or pleasure in doing things' },
                         { key: 'phq2_2', question: '2. Feeling down, depressed or hopeless' },
                       ].map(({ key, question }) => (
-                        <div key={key} className="grid grid-cols-5 gap-2 py-2 border-t border-slate-200 items-center">
+                        <div key={key} className="grid grid-cols-6 gap-2 py-2 border-t border-slate-200 items-center">
                           <div className="col-span-2 text-xs">{question}</div>
                           {[0, 1, 2, 3].map(val => (
                             <div key={val} className="flex justify-center">

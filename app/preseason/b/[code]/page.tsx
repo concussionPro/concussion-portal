@@ -678,13 +678,28 @@ export default function AthleteBaselineForm() {
           <p className="text-muted-foreground mb-4">
             Your baseline report has been sent to <strong>{clinicName}</strong>. No data has been stored.
           </p>
-          <div className="glass rounded-xl p-4 mb-6 border border-accent/20">
+          <div className="glass rounded-xl p-4 mb-4 border border-accent/20">
             <p className="text-sm font-semibold mb-1">Your Cognitive Score</p>
             <p className="text-3xl font-bold text-accent">{totalCognitiveScore}/50</p>
           </div>
-          <p className="text-xs text-muted-foreground">
-            You can safely close this page.
+          <p className="text-xs text-muted-foreground mb-6">
+            This score is one piece of a comprehensive baseline. The full SCAT6 covers 7 additional domains.
           </p>
+          <div className="space-y-3">
+            <a
+              href="/scat-mastery"
+              className="btn-primary w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
+            >
+              Learn to Interpret Baseline Data — Free SCAT6 Mastery Course (2 CPD points)
+              <ArrowRight className="w-4 h-4 flex-shrink-0" />
+            </a>
+            <a
+              href="/preview"
+              className="w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 border border-accent/20 text-accent hover:bg-accent/5 transition-colors"
+            >
+              Explore Full Concussion Management Training (14 CPD points)
+            </a>
+          </div>
         </div>
       </div>
     )

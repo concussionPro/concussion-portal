@@ -4,6 +4,15 @@ import { jsPDF } from 'jspdf'
 import { sendEmail } from '@/lib/email'
 import { CONFIG } from '@/lib/config'
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 interface ClinicData {
   clinicName: string
   contactName: string
@@ -152,9 +161,10 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   addText(`Diagnosed Migraines: ${data.athlete.diagnosedMigraines ? 'Yes' : 'No'}`, margin, y, { fontSize: 9 })
   y += 6
 
-  if (data.athlete.medicalHistory.length > 0) {
-    addText(`Medical History: ${data.athlete.medicalHistory.join(', ')}`, margin, y, { fontSize: 9, maxWidth: contentWidth })
-    y += Math.ceil(data.athlete.medicalHistory.join(', ').length / 90) * 5 + 3
+  const medHistory = data.athlete.medicalHistory || []
+  if (medHistory.length > 0) {
+    addText(`Medical History: ${medHistory.join(', ')}`, margin, y, { fontSize: 9, maxWidth: contentWidth })
+    y += Math.ceil(medHistory.join(', ').length / 90) * 5 + 3
   }
   if (data.athlete.currentMedications) {
     addText(`Current Medications: ${data.athlete.currentMedications}`, margin, y, { fontSize: 9, maxWidth: contentWidth })
@@ -332,11 +342,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid clinic code' }, { status: 404 })
     }
 
+    // Rate limit: 50 submissions per clinic per day
+    const today = new Date().toISOString().slice(0, 10)
+    const submitRateKey = `rate:submit:${body.clinicCode.toUpperCase()}:${today}`
+    const submitCount = await kv.get<number>(submitRateKey) || 0
+    if (submitCount >= 50) {
+      return NextResponse.json(
+        { error: 'Daily submission limit reached. Please try again tomorrow.' },
+        { status: 429 }
+      )
+    }
+    await kv.set(submitRateKey, submitCount + 1, { ex: 86400 })
+
     // Generate PDF
     const pdfBuffer = generatePdf(body, clinic.clinicName)
     const pdfBase64 = pdfBuffer.toString('base64')
 
-    const athleteName = body.athlete.name || 'Unknown Athlete'
+    const athleteName = escapeHtml(body.athlete.name || 'Unknown Athlete')
     const date = new Date().toLocaleDateString('en-AU')
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
 
@@ -378,7 +400,7 @@ export async function POST(request: Request) {
               <h1>Baseline Report: ${athleteName}</h1>
             </div>
             <div class="content">
-              <p>Hi ${clinic.contactName},</p>
+              <p>Hi ${escapeHtml(clinic.contactName)},</p>
               <p>A new pre-season baseline has been completed. The full report is attached as a PDF.</p>
 
               <p style="font-weight: 700; margin-bottom: 8px;">Quick Summary:</p>
@@ -403,13 +425,15 @@ export async function POST(request: Request) {
                 </tr>
               </table>
 
-              <p style="font-size: 13px; color: #475569;"><strong>Athlete:</strong> ${athleteName} · <strong>Sport:</strong> ${body.athlete.sport || '—'} · <strong>Team:</strong> ${body.athlete.team || '—'}</p>
+              <p style="font-size: 13px; color: #475569;"><strong>Athlete:</strong> ${athleteName} · <strong>Sport:</strong> ${escapeHtml(body.athlete.sport || '—')} · <strong>Team:</strong> ${escapeHtml(body.athlete.team || '—')}</p>
+
+              <p style="font-size: 13px; color: #475569; margin: 20px 0 8px;">You've captured one dimension of baseline data. The SCAT6 protocol covers symptom evaluation, cognitive screening, neurological exam, balance testing, and more. Are you confident interpreting all 7 domains?</p>
 
               <div class="cta-box">
-                <p style="margin: 0 0 8px; font-weight: 700; font-size: 15px;">Free: SCAT6/SCOAT6 Mastery Course</p>
+                <p style="margin: 0 0 8px; font-weight: 700; font-size: 15px;">Free: Master the Full SCAT6 Protocol (2 CPD Points)</p>
                 <p style="margin: 0 0 16px; font-size: 13px; color: #475569;">Learn how to properly administer and interpret every SCAT6 section. Fillable forms, clinical toolkit &amp; certificate included. <strong>2 AHPRA CPD points — free.</strong></p>
                 <a href="${baseUrl}/scat-mastery">Get Free Course →</a>
-                <p style="margin: 12px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
+                <p style="margin: 8px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
               </div>
             </div>
             <div class="footer">

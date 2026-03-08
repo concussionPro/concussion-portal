@@ -109,16 +109,21 @@ export const SCAT6_FIELD_MAP = {
   tandemGaitTrial3: 'Text49',            // Was Text43C
 
   // ==================== PAGE 8: DELAYED RECALL ====================
-  delayedRecall: ['DEL3', 'DEL4', 'DEL5', 'DEL6', 'DEL4A', 'DEL8'],
+  delayedRecall: ['DEL3', 'DEL4', 'DEL5', 'DEL6', 'DEL7', 'DEL4A', 'DEL8', 'DEL9'],
   delayedRecallStartTime: 'Text80',      // Was Text27
 
   // ==================== PAGE 8: DIFFERENT FROM USUAL ====================
   differentFromUsual: 'TTL12',           // Radio: /Yes_2, /No_2, /Not applicable
   differentFromUsualDescription: 'Text87', // RICH TEXT - wont fill
 
+  // Symptom totals (calculated)
+  symptomNumber: 'Text23',
+  symptomSeverity: 'Text24',
+
   // ==================== PAGE 9: DECISION TABLE ====================
   decision: {
     date: ['100', '101', '102'],
+    neurologicalExam: ['100a', '101b', '102c'],
     symptomNumber: ['100d', '101e', '102f'],
     symptomSeverity: ['100g', '101h', '102i'],
     orientation: ['100j', '101k', '102l'],

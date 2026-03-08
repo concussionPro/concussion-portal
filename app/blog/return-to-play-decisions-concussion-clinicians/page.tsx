@@ -30,7 +30,8 @@ export default function ReturnToPlayPage() {
             description: 'Five evidence-based strategies to improve return-to-play decisions after concussion. Digital tracking, cognitive screening, balance testing, stepwise protocols, and holistic SCAT6 integration.',
             datePublished: '2025-09-15',
             dateModified: '2025-09-15',
-            author: 'Dr. Zac Lewis',
+            author: 'Zac Lewis',
+            url: 'https://portal.concussion-education-australia.com/blog/return-to-play-decisions-concussion-clinicians',
           }))
         }}
       />
@@ -51,7 +52,7 @@ export default function ReturnToPlayPage() {
             </p>
             <div className="flex items-center gap-3 text-emerald-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Dr. Zac Lewis -- September 15, 2025 -- 11 min read</span>
+              <span>Zac Lewis -- September 15, 2025 -- 11 min read</span>
             </div>
           </div>
         </div>

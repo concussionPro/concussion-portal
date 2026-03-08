@@ -9,6 +9,37 @@ Disallow: /dashboard/
 Disallow: /admin/
 Disallow: /dev-login/
 Disallow: /direct-access/
+Disallow: /auth/
+Disallow: /login/
+Disallow: /settings/
+Disallow: /checkout/
+Disallow: /learning/
+Disallow: /modules/
+
+# AI Crawlers — explicitly allowed
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
 
 # Sitemap location
 Sitemap: https://portal.concussion-education-australia.com/sitemap.xml

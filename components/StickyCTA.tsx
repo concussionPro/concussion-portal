@@ -66,10 +66,10 @@ export function StickyCTA() {
               )}
             </div>
             <p className="text-sm text-white/80 truncate">
-              <span className="font-semibold text-white">14 CPD points</span>
-              <span className="hidden sm:inline"> — online + hands-on workshop.</span>
+              <span className="font-semibold text-white">Stop guessing on concussion cases.</span>
+              <span className="hidden sm:inline"> 14 CPD points</span>
               {daysLeft > 0 && (
-                <span className="text-amber-300 font-semibold"> Early bird: save $210</span>
+                <span className="text-amber-300 font-semibold"> — early bird: save $210</span>
               )}
             </p>
           </div>

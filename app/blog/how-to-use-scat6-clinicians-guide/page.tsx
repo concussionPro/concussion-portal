@@ -30,7 +30,8 @@ export default function HowToUseSCAT6Page() {
             description: 'Complete clinician guide to SCAT6 concussion assessment. Step-by-step instructions for all sections including symptom evaluation, cognitive screening, neurological examination, and balance testing.',
             datePublished: '2025-08-01',
             dateModified: '2025-08-01',
-            author: 'Dr. Zac Lewis',
+            author: 'Zac Lewis',
+            url: 'https://portal.concussion-education-australia.com/blog/how-to-use-scat6-clinicians-guide',
           }))
         }}
       />
@@ -51,7 +52,7 @@ export default function HowToUseSCAT6Page() {
             </p>
             <div className="flex items-center gap-3 text-blue-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Dr. Zac Lewis -- August 1, 2025 -- 14 min read</span>
+              <span>Zac Lewis -- August 1, 2025 -- 14 min read</span>
             </div>
           </div>
         </div>

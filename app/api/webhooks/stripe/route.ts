@@ -102,6 +102,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           name: customerName,
           accessLevel: 'full-course',
           stripeCustomerId: session.customer as string || undefined,
+          workshopLocation: location || undefined,
         })
         console.log(`⬆️ Upgraded ${customerEmail} to full-course`)
       }
@@ -124,6 +125,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       name: customerName,
       accessLevel,
       stripeCustomerId: session.customer as string || undefined,
+      workshopLocation: location || undefined,
     })
 
     // FIX: Use createMagicToken (not createJWTSession) for magic link emails

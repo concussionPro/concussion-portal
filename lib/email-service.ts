@@ -97,7 +97,7 @@ export async function sendWelcomeEmail(data: {
         <li>Clinical Toolkit with downloadable resources</li>
         <li>Reference Repository (130+ research articles)</li>
         <li>Interactive quizzes and assessments</li>
-        ${data.accessLevel === 'full-course' ? '<li>Full-day in-person workshop (choose your date)</li>' : '<li>Upgrade anytime for just $693 more</li>'}
+        ${data.accessLevel === 'full-course' ? '<li>Full-day in-person workshop (choose your date)</li>' : ''}
       </ul>
     </div>
 

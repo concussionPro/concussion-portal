@@ -261,6 +261,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const [error, setError] = useState<string | null>(null)
 
   const isCompact = variant === 'compact'
+  const isEarlyBird = new Date() < CONFIG.EARLY_BIRD_DEADLINE
 
   const handleLocationSelect = (value: string) => {
     const loc = LOCATIONS.find(l => l.value === value)
@@ -334,7 +335,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <BookOpen className="w-4 h-4 text-orange-500" strokeWidth={2} />
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                Start Under $500
+                Online Only
               </span>
             </div>
 
@@ -351,7 +352,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 'Own pace — no deadlines',
                 'Clinical Toolkit & resources',
                 'Digital certificate',
-                'Upgrade to full course later',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <Check className="w-3 h-3 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={3} />
@@ -368,36 +368,44 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                'Start for $497'
+                'Online Only — $497'
               )}
             </button>
           </div>
 
           {/* Complete Course - Compact */}
           <div className="card rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
-            <div className="absolute -top-3.5 right-4">
-              <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-3.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shadow-md shadow-orange-200/50">
-                Early Bird — Save $210
-              </span>
-            </div>
+            {isEarlyBird && (
+              <div className="absolute -top-3.5 right-4">
+                <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-3.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shadow-md shadow-orange-200/50">
+                  Early Bird — Save ${CONFIG.COURSE.SAVINGS}
+                </span>
+              </div>
+            )}
 
             <div className="flex items-center gap-2.5 mb-3 mt-1">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
                 <Award className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                Most Popular
+                Recommended
               </span>
             </div>
 
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Complete Course</h3>
 
             <div className="mb-4">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-sm text-[var(--muted-foreground)] line-through">$1,400</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Save $210</span>
-              </div>
-              <div className="text-2xl font-bold text-[var(--foreground)]">$1,190</div>
+              {isEarlyBird ? (
+                <>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Save ${CONFIG.COURSE.SAVINGS}</span>
+                  </div>
+                  <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</div>
+                </>
+              ) : (
+                <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</div>
+              )}
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>
             </div>
 
@@ -415,6 +423,23 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 </li>
               ))}
             </ul>
+
+            {/* Why hands-on matters */}
+            <div className="mb-4 p-3 rounded-lg bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
+              <p className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wide mb-2">Why hands-on matters</p>
+              <ul className="space-y-1.5">
+                {[
+                  'Practice SCAT6 administration on real subjects with expert feedback',
+                  'Master BESS & tandem gait scoring — the sections most clinicians get wrong',
+                  'Leave with a clinical toolkit you can use Monday morning',
+                ].map((item, i) => (
+                  <li key={i} className="text-[11px] text-[var(--muted-foreground)] leading-relaxed flex items-start gap-1.5">
+                    <span className="text-[var(--accent)] mt-0.5">•</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {/* Compact location selector */}
             <div className="mb-3 space-y-1.5">
@@ -457,10 +482,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       {/* Section Header */}
       <div className="text-center mb-10">
         <h2 className="text-2xl md:text-[2rem] font-bold text-[var(--foreground)] mb-3 tracking-tight">
-          Flexible Enrollment Options
+          Enrollment Options
         </h2>
         <p className="text-base text-[var(--muted-foreground)] max-w-2xl mx-auto leading-relaxed">
-          Australia&apos;s most comprehensive concussion management training. Start online at your own pace, or commit to the full certification with hands-on workshop.
+          Australia&apos;s most comprehensive concussion management training — 14 CPD points with hands-on expert workshop. Online-only option also available.
         </p>
       </div>
 
@@ -483,13 +508,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <BookOpen className="w-5 h-5 text-orange-500" strokeWidth={2} />
             </div>
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-              Start Under $500
+              Online Only
             </span>
           </div>
 
           <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Online Course</h3>
           <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-            Complete the 8 online modules in your own time. Upgrade to add a hands-on workshop later — just pay the difference.
+            Complete the 8 online modules at your own pace. Theory and clinical frameworks — no hands-on component.
           </p>
 
           <div className="mb-6">
@@ -508,7 +533,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Clinical Toolkit & downloadable resources',
               'Reference Repository (130+ articles)',
               'Digital certificate',
-              'Upgrade to full course for $693 later',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
@@ -526,25 +550,27 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Start for $497
+                Online Only — $497
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
 
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-            Upgrade path: add workshop for $693 = $1,190 total
+            Online modules only — does not include hands-on workshop
           </p>
         </div>
 
         {/* Complete Course */}
         <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
           {/* Early Bird badge — top right, outside card flow */}
-          <div className="absolute -top-4 right-6">
-            <div className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shadow-lg shadow-orange-200/50">
-              Early Bird — Save $210
+          {isEarlyBird && (
+            <div className="absolute -top-4 right-6">
+              <div className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shadow-lg shadow-orange-200/50">
+                Early Bird — Save ${CONFIG.COURSE.SAVINGS}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Icon + Badge */}
           <div className="flex items-center gap-3 mb-5 mt-1">
@@ -552,7 +578,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <Award className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
             </div>
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-              Most Popular
+              Recommended
             </span>
           </div>
 
@@ -562,16 +588,25 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </p>
 
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-1">
-              <span className="text-base text-[var(--muted-foreground)] line-through">$1,400</span>
-              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                Save $210
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">$1,190</span>
-              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
-            </div>
+            {isEarlyBird ? (
+              <>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-base text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                    Save ${CONFIG.COURSE.SAVINGS}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
+                  <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+              </div>
+            )}
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · 14 AHPRA CPD points</p>
           </div>
 
@@ -591,6 +626,23 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </li>
             ))}
           </ul>
+
+          {/* Why hands-on matters */}
+          <div className="mb-6 p-4 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
+            <p className="text-xs font-bold text-[var(--accent)] uppercase tracking-wide mb-2.5">Why hands-on matters</p>
+            <ul className="space-y-2">
+              {[
+                'Practice SCAT6 administration on real subjects with expert feedback',
+                'Master BESS & tandem gait scoring — the sections most clinicians get wrong',
+                'Leave with a clinical toolkit you can use Monday morning',
+              ].map((item, i) => (
+                <li key={i} className="text-sm text-[var(--muted-foreground)] leading-relaxed flex items-start gap-2">
+                  <span className="text-[var(--accent)] mt-0.5">•</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Location Selector */}
           <div className="mb-4">
@@ -642,9 +694,11 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </p>
           )}
 
-          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-            Early bird pricing ends {CONFIG.EARLY_BIRD_DEADLINE.toLocaleDateString('en-AU', { month: 'long', day: 'numeric' })} — lock in ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} before it returns to ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}.
-          </p>
+          {isEarlyBird && (
+            <p className="text-[11px] text-orange-600 font-semibold mt-3 text-center">
+              Early bird ends {CONFIG.EARLY_BIRD_DEADLINE.toLocaleDateString('en-AU', { month: 'long', day: 'numeric' })} — after that, ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}. Lock in ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} today.
+            </p>
+          )}
         </div>
       </div>
 

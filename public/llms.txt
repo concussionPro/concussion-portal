@@ -1,0 +1,67 @@
+# Concussion Education Australia
+
+> Australia's most comprehensive concussion management training for healthcare professionals. AHPRA-aligned CPD courses covering SCAT6 assessment, VOMS, BESS, and return-to-play protocols. Endorsed by Osteopathy Australia.
+
+## About
+
+Concussion Education Australia (ConcussionPro) provides evidence-based concussion management training for Australian clinicians including osteopaths, physiotherapists, GPs, sports medicine doctors, and exercise physiologists.
+
+Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers online modules and hands-on workshops aligned with the 2023 Amsterdam Consensus Statement on Concussion in Sport.
+
+## Courses
+
+### Free SCAT6/SCOAT6 Mastery Course
+- Cost: Free
+- Duration: 2 hours
+- CPD Points: 2 (AHPRA-aligned)
+- Covers: SCAT6 and SCOAT6 administration, red flag recognition, clinical decision flowcharts
+- URL: https://portal.concussion-education-australia.com/scat-mastery
+
+### Comprehensive Concussion Management Course
+- Cost: From $497 AUD (online only) or $1,190 AUD (online + workshop)
+- Duration: 11 hours online + 1 full-day workshop
+- CPD Points: 14 (8 online + 6 in-person)
+- Endorsed by: Osteopathy Australia
+- Covers: SCAT6, SCOAT6, VOMS (Vestibular/Ocular Motor Screening), BESS (Balance Error Scoring System), return-to-play/return-to-learn protocols, paediatric concussion management, medicolegal documentation
+- Workshop locations: Byron Bay, Sydney, Melbourne
+- URL: https://portal.concussion-education-australia.com/course
+
+## Key Clinical Resources (Free)
+
+### Fillable SCAT6 and SCOAT6 Forms
+- Free downloadable and web-based fillable assessment forms
+- Based on 2023 Amsterdam Consensus Statement
+- Includes: SCAT6, SCOAT6, Child SCAT6
+- URL: https://portal.concussion-education-australia.com/scat-forms
+
+### Pre-Season Baseline Testing Tool
+- Free digital cognitive baseline assessment for athletes
+- URL: https://portal.concussion-education-australia.com/preseason
+
+## Clinical Knowledge Base
+
+### SCAT6 vs SCOAT6
+- SCAT6: Acute/sideline assessment, 0-72 hours post-injury
+- SCOAT6: Office-based follow-up, Day 3-30 post-injury
+- Using the wrong tool at the wrong time may fall below standard of care under 2023 Consensus guidelines
+
+### When to Use Each Tool
+- SCAT6: Sideline, emergency department, acute presentation within 72 hours
+- SCOAT6: Clinic follow-up from Day 3 onwards, includes full VOMS testing
+- Child SCAT6: Athletes aged 5-12 years (never use adult SCAT6 on children under 13)
+
+## FAQ Page
+Comprehensive SCAT6 assessment FAQ for clinicians:
+https://portal.concussion-education-australia.com/faq/scat-assessment
+
+## Blog
+Expert clinical insights on concussion management:
+https://portal.concussion-education-australia.com/blog
+
+## Contact
+- Email: zac@concussion-education-australia.com
+- Website: https://portal.concussion-education-australia.com
+
+## For More Detail
+See llms-full.txt for comprehensive information:
+https://portal.concussion-education-australia.com/llms-full.txt

@@ -1,5 +1,6 @@
 import { PDFDocument } from 'pdf-lib'
 import { SCAT6FormData } from '../types/scat6.types'
+import { calculateSymptomNumber, calculateSymptomSeverity } from './scat6-calculations'
 
 /**
  * SCAT6 PDF Export - CORRECTED Field Mapping
@@ -105,6 +106,10 @@ export async function exportSCAT6ToFilledPDF(
     filledCount += setSymptomRadio(form, 's21', formData.symptoms.nervousAnxious)
     filledCount += setSymptomRadio(form, 's22', formData.symptoms.troubleFallingAsleep)
 
+    // Symptom totals (calculated)
+    filledCount += setTextField(form, 'Text23', calculateSymptomNumber(formData.symptoms).toString())
+    filledCount += setTextField(form, 'Text24', calculateSymptomSeverity(formData.symptoms).toString())
+
     filledCount += setTextField(form, 'Text26', formData.percentOfNormal)
     filledCount += setTextField(form, 'Text25', formData.whyNotHundredPercent || '')
 
@@ -190,8 +195,9 @@ export async function exportSCAT6ToFilledPDF(
     filledCount += setTextField(form, 'Text81', formData.dualTaskAlternateStartingInteger || '')
 
     // ==================== PAGE 8: DELAYED RECALL ====================
-    const delayedRecallFields = ['DEL3', 'DEL4', 'DEL5', 'DEL6', 'DEL4A', 'DEL8']
-    formData.delayedRecall.slice(0, 6).forEach((checked, i) => {
+    // PDF has 8 radio fields for 10 words — words at index 8 and 9 have no PDF field
+    const delayedRecallFields = ['DEL3', 'DEL4', 'DEL5', 'DEL6', 'DEL7', 'DEL4A', 'DEL8', 'DEL9']
+    formData.delayedRecall.slice(0, 8).forEach((checked, i) => {
       if (delayedRecallFields[i]) {
         filledCount += setRadioButtonByValue(form, delayedRecallFields[i], checked ? '/1' : '/0')
       }
@@ -212,6 +218,10 @@ export async function exportSCAT6ToFilledPDF(
       filledCount += setTextField(form, '101', dd.date2)
       filledCount += setTextField(form, '102', dd.date3)
 
+      filledCount += setTextField(form, '100a', dd.neurologicalExam1 || '')
+      filledCount += setTextField(form, '101b', dd.neurologicalExam2 || '')
+      filledCount += setTextField(form, '102c', dd.neurologicalExam3 || '')
+
       filledCount += setTextField(form, '100d', dd.symptomNumber1?.toString() || '')
       filledCount += setTextField(form, '101e', dd.symptomNumber2?.toString() || '')
       filledCount += setTextField(form, '102f', dd.symptomNumber3?.toString() || '')
@@ -228,9 +238,9 @@ export async function exportSCAT6ToFilledPDF(
       filledCount += setTextField(form, '101n', dd.immediateMemory2?.toString() || '')
       filledCount += setTextField(form, '102o', dd.immediateMemory3?.toString() || '')
 
-      filledCount += setTextField(form, '100p', dd.cognitiveTotal1?.toString() || '')
-      filledCount += setTextField(form, '101q', dd.cognitiveTotal2?.toString() || '')
-      filledCount += setTextField(form, '102r', dd.cognitiveTotal3?.toString() || '')
+      filledCount += setTextField(form, '100p', dd.concentration1?.toString() || '')
+      filledCount += setTextField(form, '101q', dd.concentration2?.toString() || '')
+      filledCount += setTextField(form, '102r', dd.concentration3?.toString() || '')
 
       filledCount += setTextField(form, '100s', dd.mBessTotal1?.toString() || '')
       filledCount += setTextField(form, '101s', dd.mBessTotal2?.toString() || '')

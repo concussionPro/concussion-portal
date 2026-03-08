@@ -30,7 +30,8 @@ export default function VOMSConcussionPage() {
             description: 'Evidence-based guide to integrating VOMS into concussion assessment. Covers vestibular-ocular motor screening components, diagnostic accuracy, and clinical implementation.',
             datePublished: '2025-10-18',
             dateModified: '2025-10-18',
-            author: 'Dr. Zac Lewis',
+            author: 'Zac Lewis',
+            url: 'https://portal.concussion-education-australia.com/blog/vestibular-ocular-screening-voms-concussion',
           }))
         }}
       />
@@ -51,7 +52,7 @@ export default function VOMSConcussionPage() {
             </p>
             <div className="flex items-center gap-3 text-purple-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Dr. Zac Lewis -- October 18, 2025 -- 12 min read</span>
+              <span>Zac Lewis -- October 18, 2025 -- 12 min read</span>
             </div>
           </div>
         </div>

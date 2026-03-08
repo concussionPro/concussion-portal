@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { CONFIG, Location } from '@/lib/config'
 import { AlertCircle } from 'lucide-react'
 
@@ -9,12 +10,30 @@ interface SpotsRemainingProps {
 }
 
 export default function SpotsRemaining({ location, className = '' }: SpotsRemainingProps) {
-  if (!CONFIG.FEATURES.SHOW_SPOTS_REMAINING) {
+  const [spotsLeft, setSpotsLeft] = useState<number | null>(null)
+
+  useEffect(() => {
+    const locationData = CONFIG.LOCATIONS[location]
+    if (!locationData || locationData.status !== 'confirmed') return
+
+    // Fetch live enrollment count
+    fetch(`/api/early-bird-status?location=${locationData.slug}`)
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data.spotsRemaining === 'number') {
+          setSpotsLeft(data.spotsRemaining)
+        }
+      })
+      .catch(() => {
+        // Fallback to static config
+        setSpotsLeft(locationData.spotsRemaining as number)
+      })
+  }, [location])
+
+  if (!CONFIG.FEATURES.SHOW_SPOTS_REMAINING || spotsLeft === null) {
     return null
   }
 
-  const locationData = CONFIG.LOCATIONS[location]
-  const spotsLeft = locationData.spotsRemaining as number
   const isLowSpots = spotsLeft <= 5
 
   return (

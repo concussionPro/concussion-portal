@@ -36,7 +36,7 @@ export const CONFIG = {
       slug: 'byron-bay',
       date: 'March 28, 2026',
       dateObj: new Date('2026-03-28') as Date | null,
-      spotsRemaining: 15,
+      spotsRemaining: 12,
       status: 'confirmed' as const,
     },
     MELBOURNE: {
@@ -49,6 +49,13 @@ export const CONFIG = {
     },
   },
 
+  // Workshop Capacity
+  WORKSHOP: {
+    CAPACITY_PER_COURSE: 12,
+    EARLY_BIRD_SEAT_THRESHOLD: 6, // 50% — early bird ends when this many seats sold
+    EARLY_BIRD_DAYS_BEFORE: 7,    // Early bird ends this many days before course date
+  },
+
   // Social Proof - Real testimonials only, no fake numbers
   SOCIAL_PROOF: {
     TOTAL_CLINICIANS: 0, // Don't display fake numbers
@@ -58,7 +65,8 @@ export const CONFIG = {
   },
 
   // Early Bird Pricing Deadline
-  EARLY_BIRD_DEADLINE: new Date('2026-03-28T23:59:59'),
+  // Computed: 7 days before the nearest confirmed course date
+  EARLY_BIRD_DEADLINE: new Date('2026-03-21T23:59:59'),
 
   // SEO Metadata
   SEO: {

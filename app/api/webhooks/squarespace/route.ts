@@ -10,16 +10,19 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('x-squarespace-signature')
     const body = await request.text()
 
-    if (process.env.SQUARESPACE_WEBHOOK_SECRET) {
-      const expectedSignature = crypto
-        .createHmac('sha256', process.env.SQUARESPACE_WEBHOOK_SECRET)
-        .update(body)
-        .digest('base64')
+    if (!process.env.SQUARESPACE_WEBHOOK_SECRET) {
+      console.error('❌ SQUARESPACE_WEBHOOK_SECRET not configured')
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
+    }
 
-      if (signature !== expectedSignature) {
-        console.error('❌ Invalid webhook signature')
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-      }
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.SQUARESPACE_WEBHOOK_SECRET)
+      .update(body)
+      .digest('base64')
+
+    if (signature !== expectedSignature) {
+      console.error('❌ Invalid webhook signature')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
     const data = JSON.parse(body)

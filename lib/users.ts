@@ -13,6 +13,7 @@ export interface User {
   squarespaceOrderId?: string
   stripeCustomerId?: string
   stripeSubscriptionId?: string
+  workshopLocation?: string // e.g. 'byron-bay', 'sydney', 'melbourne'
   lastLoginAt?: string
   nurtureUnsubscribed?: boolean
 }
@@ -133,6 +134,7 @@ export async function createUser(data: {
   squarespaceOrderId?: string
   stripeCustomerId?: string
   stripeSubscriptionId?: string
+  workshopLocation?: string
 }): Promise<string> {
   const users = await loadUsers()
 
@@ -145,6 +147,7 @@ export async function createUser(data: {
       existing.accessLevel = data.accessLevel
       if (data.stripeCustomerId) existing.stripeCustomerId = data.stripeCustomerId
       if (data.stripeSubscriptionId) existing.stripeSubscriptionId = data.stripeSubscriptionId
+      if (data.workshopLocation) existing.workshopLocation = data.workshopLocation
       await saveUsers(users)
     }
     return existing.id
@@ -160,11 +163,20 @@ export async function createUser(data: {
     squarespaceOrderId: data.squarespaceOrderId,
     stripeCustomerId: data.stripeCustomerId,
     stripeSubscriptionId: data.stripeSubscriptionId,
+    workshopLocation: data.workshopLocation,
   }
 
   users.push(newUser)
   await saveUsers(users)
   return newUser.id
+}
+
+// Count full-course enrollments for a specific workshop location
+export async function getEnrollmentCount(location: string): Promise<number> {
+  const users = await loadUsers()
+  return users.filter(
+    u => u.accessLevel === 'full-course' && u.workshopLocation === location
+  ).length
 }
 
 // Update user's last login

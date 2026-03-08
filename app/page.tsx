@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { ArrowRight, Check, Star } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { OrganizationSchema, CourseSchema } from '@/components/SchemaMarkup'
@@ -10,7 +10,6 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { trackShopClick } from '@/lib/analytics'
 
 export default function HomePage() {
-  const router = useRouter()
 
   useAnalytics()
 
@@ -61,29 +60,29 @@ export default function HomePage() {
                 Enroll Now — $1,190
                 <ArrowRight className="w-4 h-4" />
               </a>
-              <button
-                onClick={() => router.push('/preview')}
+              <Link
+                href="/preview"
                 className="btn-secondary px-7 py-3.5 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"
               >
                 Preview Course
-              </button>
+              </Link>
             </div>
 
             <p className="text-[13px] text-[var(--muted-foreground)]">
               Or start with{' '}
-              <button
-                onClick={() => router.push('/scat-mastery')}
+              <Link
+                href="/scat-mastery"
                 className="text-[var(--accent)] font-medium hover:underline"
               >
                 free SCAT6 training
-              </button>
+              </Link>
               {' '}·{' '}
-              <button
-                onClick={() => router.push('/scat-forms')}
+              <Link
+                href="/scat-forms"
                 className="text-[var(--accent)] font-medium hover:underline"
               >
                 free SCAT forms
-              </button>
+              </Link>
             </p>
           </div>
         </section>
@@ -132,19 +131,19 @@ export default function HomePage() {
                     Master SCAT6 &amp; SCOAT6 in 2 hours. Red flags, documentation, step-by-step protocols. 2 AHPRA CPD points + certificate.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2.5">
-                    <button
-                      onClick={() => router.push('/scat-mastery')}
+                    <Link
+                      href="/scat-mastery"
                       className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center justify-center gap-2"
                     >
                       Get Free Course
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => router.push('/scat-forms')}
+                    </Link>
+                    <Link
+                      href="/scat-forms"
                       className="btn-secondary px-5 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center justify-center gap-2"
                     >
                       Free SCAT Forms
-                    </button>
+                    </Link>
                   </div>
                 </div>
                 <div className="hidden md:flex flex-col gap-2.5 shrink-0 w-[200px]">
@@ -238,12 +237,12 @@ export default function HomePage() {
                     <Check className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" strokeWidth={2.5} />
                     <span>
                       Flexible workshop locations ·{' '}
-                      <button
-                        onClick={() => router.push('/in-person')}
+                      <Link
+                        href="/in-person"
                         className="text-[var(--accent)] font-medium hover:underline"
                       >
                         View agenda
-                      </button>
+                      </Link>
                     </span>
                   </li>
                 </ul>
@@ -394,12 +393,12 @@ export default function HomePage() {
                   Enroll Now
                   <ArrowRight className="w-4 h-4" />
                 </a>
-                <button
-                  onClick={() => router.push('/preview')}
+                <Link
+                  href="/preview"
                   className="text-white/70 px-7 py-3.5 rounded-xl text-[15px] font-semibold inline-flex items-center gap-2 hover:text-white transition-colors border border-white/20 hover:border-white/40"
                 >
                   Preview Course
-                </button>
+                </Link>
               </div>
             </div>
           </div>

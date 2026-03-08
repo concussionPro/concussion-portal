@@ -30,7 +30,8 @@ export default function FreeSCAT6PDFDownloadPage() {
             description: 'Complete guide to downloading and using free SCAT6 PDF forms with automatic scoring for concussion assessment',
             datePublished: '2026-01-31',
             dateModified: '2026-01-31',
-            author: 'Dr. Zac Lewis',
+            author: 'Zac Lewis',
+            url: 'https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download',
           }))
         }}
       />

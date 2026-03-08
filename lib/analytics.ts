@@ -95,13 +95,27 @@ export function trackPageView(path: string, additionalData: Record<string, any> 
   })
 }
 
-// Shop/conversion tracking
+// Shop/conversion tracking — also fires Google Ads conversion
 export function trackShopClick(source: string, additionalData: Record<string, any> = {}) {
   trackEvent(ANALYTICS_EVENTS.SHOP_CLICK, {
     source,
     timestamp: new Date().toISOString(),
     ...additionalData,
   })
+
+  // Fire Google Ads conversion event
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'conversion', {
+      send_to: `AW-17984048021/${process.env.NEXT_PUBLIC_ENROL_CONVERSION_LABEL || 'enrol_click'}`,
+    })
+  }
+}
+
+// Type declaration for gtag
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
 }
 
 // Module progress tracking

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { unsubscribeUser } from '@/lib/users'
 
-const UNSUBSCRIBE_SECRET = process.env.JWT_SECRET || 'dev-secret'
+const UNSUBSCRIBE_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'dev-secret'
 
 /** Verify HMAC token for unsubscribe link */
 function verifyUnsubscribeToken(email: string, token: string): boolean {

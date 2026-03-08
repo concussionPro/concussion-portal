@@ -94,6 +94,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    // /clinical-toolkit excluded — noindex page (authenticated content)
     {
       url: `${baseUrl}/faq/scat-assessment`,
       lastModified: new Date(),

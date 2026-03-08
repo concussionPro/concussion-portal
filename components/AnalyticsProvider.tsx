@@ -19,6 +19,37 @@ function getOrCreateSessionId(): string {
 }
 
 // ---------------------------------------------------------------------------
+// UTM Parameter Tracking
+// ---------------------------------------------------------------------------
+
+const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
+const UTM_STORAGE_KEY = 'cea_utm';
+
+function captureUtmParams(): void {
+  if (typeof window === 'undefined') return;
+  const params = new URLSearchParams(window.location.search);
+  const hasUtm = UTM_PARAMS.some(k => params.has(k));
+  if (!hasUtm) return;
+
+  const utm: Record<string, string> = {};
+  UTM_PARAMS.forEach(k => {
+    const v = params.get(k);
+    if (v) utm[k] = v;
+  });
+  sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utm));
+}
+
+function getUtmParams(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = sessionStorage.getItem(UTM_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Context
 // ---------------------------------------------------------------------------
 
@@ -55,9 +86,10 @@ async function sendEvent(
 
   const sessionId = getOrCreateSessionId();
 
+  const utm = getUtmParams();
   const payload = {
     eventType,
-    eventData,
+    eventData: { ...eventData, ...(Object.keys(utm).length > 0 ? { utm } : {}) },
     sessionId,
     timestamp: Date.now(),
     userAgent: navigator.userAgent,
@@ -112,6 +144,9 @@ function AnalyticsTracker(): null {
   const previousPathRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Capture UTM params from URL on every navigation (persists first seen)
+    captureUtmParams();
+
     const search = searchParams.toString() ? `?${searchParams.toString()}` : null;
     const currentPath = pathname + (search ?? '');
 

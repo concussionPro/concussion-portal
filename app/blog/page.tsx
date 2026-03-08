@@ -80,7 +80,7 @@ export default function BlogIndexPage() {
               Blog | Concussion Education Australia
             </h1>
             <p className="text-xl text-slate-300">
-              Evidence-based clinical insights for healthcare professionals managing sport-related concussion. Written by Dr. Zac Lewis.
+              Evidence-based clinical insights for healthcare professionals managing sport-related concussion. Written by Zac Lewis.
             </p>
           </div>
         </div>

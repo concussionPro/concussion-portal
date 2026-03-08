@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     // Send welcome email (Day 0 of nurture sequence)
     await sendEmail({
       to: email,
-      subject: '🎉 Your FREE SCAT6/SCOAT6 Mastery Course is Ready',
+      subject: 'Your free SCAT6/SCOAT6 Mastery Course is ready',
       html: `
         <!DOCTYPE html>
         <html>
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
           <body>
             <div class="container">
               <div class="header">
-                <h1>🎉 Welcome to SCAT Mastery!</h1>
+                <h1>Welcome to SCAT Mastery</h1>
               </div>
               <div class="content">
                 <h2 style="margin-top: 0;">Hi ${userName},</h2>
@@ -94,8 +94,8 @@ export async function POST(request: NextRequest) {
                 </p>
 
                 <p style="color: #64748b;">
-                  - Zac<br>
-                  <em style="font-size: 14px;">Founder, Concussion Education Australia</em>
+                  - Zac Lewis<br>
+                  <em style="font-size: 14px;">Osteopath (B.Clin.Sci., M.Ost.Med) · Founder, Concussion Education Australia</em>
                 </p>
               </div>
               <div class="footer">

@@ -3,6 +3,15 @@ import { kv } from '@vercel/kv'
 import { sendEmail } from '@/lib/email'
 import { CONFIG } from '@/lib/config'
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no I/1/O/0 confusion
   let code = ''
@@ -94,8 +103,8 @@ export async function POST(request: Request) {
                 <h1>Pre-Season Baseline Testing</h1>
               </div>
               <div class="content">
-                <p>Hi ${contactName},</p>
-                <p><strong>${clinicName}</strong> is now registered for pre-season baseline testing. Share the link below with your sports clubs — athletes can self-administer the SCAT6 baseline remotely.</p>
+                <p>Hi ${escapeHtml(contactName)},</p>
+                <p><strong>${escapeHtml(clinicName)}</strong> is now registered for pre-season baseline testing. Share the link below with your sports clubs — athletes can self-administer the SCAT6 baseline remotely.</p>
 
                 <div class="link-box">
                   <p style="margin: 0 0 8px; font-size: 13px; color: #64748b;">Your unique athlete link:</p>
@@ -119,13 +128,15 @@ export async function POST(request: Request) {
                   </div>
                 </div>
 
-                <p style="font-size: 14px; color: #475569;">Each completed baseline gives you pre-injury data for comparison if a concussion occurs. The athlete's report is emailed directly to <strong>${email}</strong>.</p>
+                <p style="font-size: 14px; color: #475569;">Each completed baseline gives you pre-injury data for comparison if a concussion occurs. The athlete's report is emailed directly to <strong>${escapeHtml(email)}</strong>.</p>
+
+                <p style="font-size: 14px; color: #475569; margin: 20px 0 8px;">You've captured one dimension of baseline data. The SCAT6 protocol covers symptom evaluation, cognitive screening, neurological exam, balance testing, and more. Are you confident interpreting all 7 domains?</p>
 
                 <div class="cta-box">
-                  <p style="margin: 0 0 8px; font-weight: 700;">Free: SCAT6/SCOAT6 Mastery Course</p>
+                  <p style="margin: 0 0 8px; font-weight: 700;">Free: Master the Full SCAT6 Protocol (2 CPD Points)</p>
                   <p style="margin: 0 0 16px; font-size: 14px; color: #475569;">Learn how to properly administer and interpret every SCAT6 &amp; SCOAT6 section. Includes fillable forms, clinical toolkit, and certificate. <strong>2 AHPRA CPD points — completely free.</strong></p>
                   <a href="${baseUrl}/scat-mastery">Get Free Course →</a>
-                  <p style="margin: 12px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
+                  <p style="margin: 8px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
                 </div>
               </div>
               <div class="footer">

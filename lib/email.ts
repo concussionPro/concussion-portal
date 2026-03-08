@@ -150,7 +150,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
         <body>
           <div class="container">
             <div class="header">
-              <h1>🧠 ConcussionPro</h1>
+              <h1>ConcussionPro</h1>
             </div>
             <div class="content">
               <h2 style="margin-top: 0;">Login to Your Course</h2>
@@ -189,7 +189,7 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
 
   return sendEmail({
     to: email,
-    subject: '🎉 Welcome to ConcussionPro - Your Course is Ready!',
+    subject: 'Welcome to ConcussionPro — your course is ready',
     html: `
       <!DOCTYPE html>
       <html>
@@ -281,7 +281,7 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
         <body>
           <div class="container">
             <div class="header">
-              <h1>🎉 Welcome to ConcussionPro!</h1>
+              <h1>Welcome to ConcussionPro</h1>
             </div>
             <div class="content">
               <h2 style="margin-top: 0;">Hi ${name},</h2>

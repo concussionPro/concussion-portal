@@ -169,8 +169,8 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p>Three things:</p>
       <p><strong>1. It's the only course with hands-on assessment training.</strong><br>
       Most CPD is a 1&ndash;2 hour webinar. Our full-day workshop has you physically administering SCAT6, VOMS, and BESS under supervision.</p>
-      <p><strong>2. Osteopathy Australia reviewed and endorsed it.</strong><br>
-      They evaluated our curriculum, clinical methodology, and assessment framework before granting endorsement.</p>
+      <p><strong>2. Endorsed by Osteopathy Australia — built for all allied health clinicians.</strong><br>
+      Osteopaths, physiotherapists, sports medicine doctors, GPs, and exercise physiologists all use these assessment tools. The curriculum is designed for any clinician managing concussion.</p>
       <p><strong>3. You get a complete clinical documentation system.</strong><br>
       Referral templates, return-to-play letters, clearance forms, and a searchable repository of 130+ clinical references.</p>
       <div style="background: #f8fafc; padding: 18px 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0; font-size: 14px;">
@@ -201,7 +201,7 @@ export const SCAT_MASTERY_SEQUENCE = [
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$497 AUD</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
-          <td style="padding: 14px 16px;"><strong>Complete Course</strong> <span style="font-size: 11px; background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 600;">MOST POPULAR</span><br><span style="font-size: 13px; color: #64748b;">Online + full-day workshop &middot; 14 CPD points</span></td>
+          <td style="padding: 14px 16px;"><strong>Complete Course</strong> <span style="font-size: 11px; background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 600;">RECOMMENDED</span><br><span style="font-size: 13px; color: #64748b;">Online + full-day workshop &middot; 14 CPD points</span></td>
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$1,190 AUD</td>
         </tr>
       </table>
@@ -214,7 +214,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>AHPRA-aligned CPD points, endorsed by Osteopathy Australia</li>
       </ul>
       <center><a href="${upgradeLink}" class="cta-btn">Choose Your Option</a></center>
-      <p style="font-size: 14px; color: #475569; margin-top: 20px;">You can also start with online ($497) and upgrade to add the workshop later &mdash; just pay the difference.</p>
+      <p style="font-size: 14px; color: #475569; margin-top: 20px;">Early bird pricing is limited &mdash; lock in the best rate before it expires.</p>
       <div class="sig">
         <p>Questions? Just reply to this email &mdash; I'm always happy to help.</p>
         <p>All the best,<br>Zac Lewis<br>Founder, Concussion Education Australia<br><a href="mailto:zac@concussion-education-australia.com">zac@concussion-education-australia.com</a></p>

@@ -69,7 +69,7 @@ export async function createCourseCheckoutSession({
   successUrl: string
   cancelUrl: string
 }) {
-  const isEarlyBird = isEarlyBirdActive()
+  const isEarlyBird = await isEarlyBirdActiveForLocation(location)
   let unitAmount: number
   let currency: string
   let productName: string
@@ -132,9 +132,40 @@ export async function createCourseCheckoutSession({
 }
 
 /**
- * Check if early bird pricing is still active
- * Uses deadline from CONFIG (March 28, 2026)
+ * Check if early bird pricing is active for a location.
+ * Ends when EITHER condition is met:
+ *   1. Within 7 days of course date
+ *   2. 50% of seats sold (6/12)
+ * Falls back to static deadline for non-location purchases.
  */
+async function isEarlyBirdActiveForLocation(location?: string): Promise<boolean> {
+  const now = new Date()
+
+  // Find location config
+  const locationConfig = location
+    ? Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === location)
+    : null
+
+  if (!locationConfig || locationConfig.status !== 'confirmed' || !locationConfig.dateObj) {
+    return now < CONFIG.EARLY_BIRD_DEADLINE
+  }
+
+  // Check date: 7 days before course
+  const dateDeadline = new Date(
+    locationConfig.dateObj.getTime() - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000
+  )
+  dateDeadline.setHours(23, 59, 59, 999)
+  if (now >= dateDeadline) return false
+
+  // Check seats: 50% sold
+  const { getEnrollmentCount } = await import('@/lib/users')
+  const enrolled = await getEnrollmentCount(locationConfig.slug)
+  if (enrolled >= CONFIG.WORKSHOP.EARLY_BIRD_SEAT_THRESHOLD) return false
+
+  return true
+}
+
+/** @deprecated Use isEarlyBirdActiveForLocation instead */
 function isEarlyBirdActive(): boolean {
   return new Date() < CONFIG.EARLY_BIRD_DEADLINE
 }
