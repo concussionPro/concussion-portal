@@ -25,7 +25,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   // In production, call Resend API directly
   try {
     const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey) {
+    if (!apiKey || apiKey === 'YOUR_RESEND_API_KEY_HERE') {
       console.error('RESEND_API_KEY not configured')
       return false
     }

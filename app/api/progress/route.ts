@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
-import { put, head } from '@vercel/blob'
+import { put, list } from '@vercel/blob'
 
 // GET - Load user progress from Blob storage
 export async function GET(request: NextRequest) {
@@ -22,20 +22,25 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if progress file exists
-    const blobUrl = `https://${process.env.BLOB_READ_WRITE_TOKEN?.split('_')[1]}.public.blob.vercel-storage.com/user-progress/${sessionData.userId}.json`
+    // Find the user's progress blob using the SDK
+    const prefix = `user-progress/${sessionData.userId}`
+    const { blobs } = await list({ prefix })
 
-    try {
-      const response = await fetch(blobUrl)
-      if (response.ok) {
-        const progress = await response.json()
-        return NextResponse.json({ success: true, progress })
-      }
-    } catch (e) {
-      // File doesn't exist, return empty progress
+    if (blobs.length === 0) {
+      return NextResponse.json({ success: true, progress: null })
     }
 
-    // No progress found, return null
+    // Get the most recently uploaded blob
+    const latestBlob = blobs.sort(
+      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+    )[0]
+
+    const response = await fetch(latestBlob.url, { cache: 'no-store' })
+    if (response.ok) {
+      const progress = await response.json()
+      return NextResponse.json({ success: true, progress })
+    }
+
     return NextResponse.json({ success: true, progress: null })
   } catch (error) {
     console.error('Error loading progress:', error)
@@ -75,10 +80,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Save progress to Blob storage
+    // Save progress to Blob storage with deterministic path
     const filename = `user-progress/${sessionData.userId}.json`
     const blob = await put(filename, JSON.stringify(progress), {
       access: 'public',
+      addRandomSuffix: false,
       contentType: 'application/json',
     })
 

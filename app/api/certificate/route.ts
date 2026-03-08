@@ -152,8 +152,18 @@ export async function POST(request: NextRequest) {
 
 async function loadUserProgress(userId: string): Promise<Record<string, any> | null> {
   try {
-    const blobUrl = `https://${process.env.BLOB_READ_WRITE_TOKEN?.split('_')[1]}.public.blob.vercel-storage.com/user-progress/${userId}.json`
-    const response = await fetch(blobUrl, { cache: 'no-store' })
+    const { list } = await import('@vercel/blob')
+    const prefix = `user-progress/${userId}`
+    const { blobs } = await list({ prefix })
+
+    if (blobs.length === 0) return null
+
+    // Get the most recently uploaded blob
+    const latestBlob = blobs.sort(
+      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+    )[0]
+
+    const response = await fetch(latestBlob.url, { cache: 'no-store' })
     if (response.ok) {
       return await response.json()
     }

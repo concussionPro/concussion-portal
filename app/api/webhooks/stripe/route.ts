@@ -85,59 +85,58 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   console.log(`✅ Payment completed: ${customerEmail} — ${courseType}${location ? ` (${location})` : ''} — $${(session.amount_total || 0) / 100} AUD`)
 
-  try {
-    // Check if user already exists (e.g. upgrading from online-only to full-course)
-    const existingUser = await findUserByEmail(customerEmail)
+  // Step 1: Create/upgrade user account — MUST succeed or Stripe will retry
+  const existingUser = await findUserByEmail(customerEmail)
+  let userId: string
 
-    if (existingUser) {
-      console.log(`👤 Existing user found: ${customerEmail} (current: ${existingUser.accessLevel})`)
+  if (existingUser) {
+    console.log(`Existing user found: ${customerEmail} (current: ${existingUser.accessLevel})`)
+    userId = existingUser.id
 
-      // Only upgrade access level, never downgrade
-      if (
-        (existingUser.accessLevel === 'preview' || existingUser.accessLevel === 'online-only') &&
-        accessLevel === 'full-course'
-      ) {
-        await createUser({
-          email: customerEmail,
-          name: customerName,
-          accessLevel: 'full-course',
-          stripeCustomerId: session.customer as string || undefined,
-          workshopLocation: location || undefined,
-        })
-        console.log(`⬆️ Upgraded ${customerEmail} to full-course`)
-      }
-
-      // FIX: Use createMagicToken (not createJWTSession) so /auth/verify can decode it
-      const finalAccess = accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel
-      const token = createMagicToken(existingUser.id, existingUser.email, existingUser.name, finalAccess)
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-      await sendMagicLinkEmail(customerEmail, token, baseUrl)
-
-      console.log(`📧 Login link sent to existing user: ${customerEmail}`)
-      return
+    // Only upgrade access level, never downgrade
+    if (
+      (existingUser.accessLevel === 'preview' || existingUser.accessLevel === 'online-only') &&
+      accessLevel === 'full-course'
+    ) {
+      await createUser({
+        email: customerEmail,
+        name: customerName,
+        accessLevel: 'full-course',
+        stripeCustomerId: session.customer as string || undefined,
+        workshopLocation: location || undefined,
+      })
+      console.log(`Upgraded ${customerEmail} to full-course`)
     }
+  } else {
+    console.log(`Creating new user: ${customerEmail} (${accessLevel})`)
 
-    // Create new user
-    console.log(`✨ Creating new user: ${customerEmail} (${accessLevel})`)
-
-    const userId = await createUser({
+    userId = await createUser({
       email: customerEmail,
       name: customerName,
       accessLevel,
       stripeCustomerId: session.customer as string || undefined,
       workshopLocation: location || undefined,
     })
+  }
 
-    // FIX: Use createMagicToken (not createJWTSession) for magic link emails
-    const token = createMagicToken(userId, customerEmail, customerName, accessLevel)
+  // Step 2: Send magic link email — best effort, user can request new link from /login
+  try {
+    const finalAccess = existingUser
+      ? (accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel)
+      : accessLevel
+    const userName = existingUser?.name || customerName
+    const token = createMagicToken(userId, customerEmail, userName, finalAccess)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    await sendMagicLinkEmail(customerEmail, token, baseUrl)
+    const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
-    console.log(`📧 Welcome email + login link sent to: ${customerEmail}`)
-    console.log(`   Course: ${courseType} | Location: ${location || 'N/A'} | Access: ${accessLevel}`)
-  } catch (error) {
-    console.error('Failed to provision user after checkout:', error)
-    console.error(`⚠️ MANUAL ACTION REQUIRED: Provision ${customerEmail} with ${accessLevel} access`)
+    if (emailSent) {
+      console.log(`Login link sent to: ${customerEmail} | Course: ${courseType} | Location: ${location || 'N/A'} | Access: ${finalAccess}`)
+    } else {
+      console.error(`Email send FAILED for ${customerEmail} — user account created, they can request a new link from /login`)
+    }
+  } catch (emailError) {
+    // User account exists — they can request a new login link from /login
+    console.error(`Email send failed for ${customerEmail} (user account created, they can use /login):`, emailError)
   }
 }
 
