@@ -3,11 +3,25 @@
 import { useParams, useRouter } from 'next/navigation'
 import { getModulesMeta } from '@/data/module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
-import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
-export function CourseNavigation() {
+interface CourseNavigationProps {
+  sectionTitles?: string[]
+  currentSectionIndex?: number
+  onSectionNavigate?: (index: number) => void
+  lockedAfterIndex?: number
+  visitedSections?: Set<number>
+}
+
+export function CourseNavigation({
+  sectionTitles,
+  currentSectionIndex,
+  onSectionNavigate,
+  lockedAfterIndex,
+  visitedSections,
+}: CourseNavigationProps = {}) {
   const router = useRouter()
   const params = useParams()
   const currentModuleId = parseInt(params.id as string)
@@ -162,45 +176,94 @@ export function CourseNavigation() {
                 {/* Module Sections/Lessons */}
                 {isExpanded && (
                   <div className="ml-9 space-y-0.5 mt-0.5">
-                    {/* Module Content */}
-                    <button
-                      onClick={() => navigateToSection(module.id)}
-                      className={cn(
-                        "w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-left group",
-                        "hover:bg-slate-50"
-                      )}
-                    >
-                      <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                      <span className="text-sm text-slate-600 group-hover:text-slate-800">
-                        Module Content
-                      </span>
-                    </button>
+                    {/* Per-section navigation for active module */}
+                    {isActive && sectionTitles && sectionTitles.length > 0 ? (
+                      <>
+                        {sectionTitles.map((title, idx) => {
+                          const isCurrent = idx === currentSectionIndex
+                          const isLocked = lockedAfterIndex !== undefined && idx > lockedAfterIndex
+                          const isVisited = visitedSections?.has(idx)
 
-                    {/* Quiz */}
-                    <button
-                      onClick={() => navigateToSection(module.id, 'quiz')}
-                      className={cn(
-                        "w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-left group",
-                        "hover:bg-slate-50"
-                      )}
-                    >
-                      <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                      <span className="text-sm text-slate-600 group-hover:text-slate-800">
-                        Knowledge Check
-                      </span>
-                      {progress.quizCompleted &&
-                       progress.quizScore !== null &&
-                       progress.quizTotalQuestions !== null &&
-                       (progress.quizScore / progress.quizTotalQuestions) >= 0.75 && (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 ml-auto" />
-                      )}
-                      {(!progress.quizCompleted ||
-                        progress.quizScore === null ||
-                        progress.quizTotalQuestions === null ||
-                        (progress.quizScore / progress.quizTotalQuestions) < 0.75) && (
-                        <div className="w-3.5 h-3.5 border-2 border-slate-300 rounded-full ml-auto" />
-                      )}
-                    </button>
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                if (!isLocked && onSectionNavigate) {
+                                  onSectionNavigate(idx)
+                                } else if (!isLocked) {
+                                  navigateToSection(module.id)
+                                }
+                                setMobileMenuOpen(false)
+                              }}
+                              disabled={isLocked}
+                              className={cn(
+                                "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md transition-all text-left group",
+                                isCurrent ? "bg-teal-50 border border-teal-200" : "hover:bg-slate-50",
+                                isLocked && "opacity-40 cursor-not-allowed"
+                              )}
+                            >
+                              {isLocked ? (
+                                <Lock className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
+                              ) : isVisited && !isCurrent ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />
+                              ) : (
+                                <div className={cn(
+                                  "w-3.5 h-3.5 rounded-full border-2 flex-shrink-0",
+                                  isCurrent ? "border-teal-500 bg-teal-500" : "border-slate-300"
+                                )} />
+                              )}
+                              <span className={cn(
+                                "text-xs truncate",
+                                isCurrent ? "text-teal-700 font-semibold" : "text-slate-600 group-hover:text-slate-800"
+                              )}>
+                                {title}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </>
+                    ) : (
+                      <>
+                        {/* Fallback: simple module content + quiz links */}
+                        <button
+                          onClick={() => navigateToSection(module.id)}
+                          className={cn(
+                            "w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-left group",
+                            "hover:bg-slate-50"
+                          )}
+                        >
+                          <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                          <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                            Module Content
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => navigateToSection(module.id, 'quiz')}
+                          className={cn(
+                            "w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-left group",
+                            "hover:bg-slate-50"
+                          )}
+                        >
+                          <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                          <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                            Knowledge Check
+                          </span>
+                          {progress.quizCompleted &&
+                           progress.quizScore !== null &&
+                           progress.quizTotalQuestions !== null &&
+                           (progress.quizScore / progress.quizTotalQuestions) >= 0.75 && (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 ml-auto" />
+                          )}
+                          {(!progress.quizCompleted ||
+                            progress.quizScore === null ||
+                            progress.quizTotalQuestions === null ||
+                            (progress.quizScore / progress.quizTotalQuestions) < 0.75) && (
+                            <div className="w-3.5 h-3.5 border-2 border-slate-300 rounded-full ml-auto" />
+                          )}
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

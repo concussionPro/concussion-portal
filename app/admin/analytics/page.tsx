@@ -3,7 +3,7 @@
 /**
  * app/admin/analytics/page.tsx
  *
- * Analytics dashboard — fetches from /api/analytics/umami proxy.
+ * Analytics dashboard — fetches from /api/analytics/data (self-hosted Vercel Blob).
  * Design: frosted glass cards, teal accent, Geist font.
  * No external chart libraries — pure CSS progress bars for data viz.
  *
@@ -29,10 +29,7 @@ import {
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface UmamiStats {
-  _isMockData?: boolean
-  _message?: string
-  error?: string
+interface AnalyticsStats {
   pageviews: { value: number; prev: number }
   uniques: { value: number; prev: number }
   bounces: { value: number; prev: number }
@@ -44,8 +41,7 @@ interface PageviewPoint {
   y: number
 }
 
-interface UmamiPageviews {
-  _isMockData?: boolean
+interface AnalyticsPageviews {
   pageviews: PageviewPoint[]
   sessions: PageviewPoint[]
 }
@@ -55,8 +51,7 @@ interface MetricRow {
   y: number
 }
 
-interface UmamiMetrics {
-  _isMockData?: boolean
+interface AnalyticsMetrics {
   data?: MetricRow[]
   [index: number]: MetricRow
 }
@@ -102,7 +97,7 @@ function pct(value: number, prev: number): { delta: number; sign: string; color:
   return { delta: Math.abs(delta), sign, color }
 }
 
-function normaliseMetrics(data: UmamiMetrics | null): MetricRow[] {
+function normaliseMetrics(data: AnalyticsMetrics | null): MetricRow[] {
   if (!data) return []
   if (Array.isArray(data)) return data as MetricRow[]
   if (Array.isArray((data as any).data)) return (data as any).data as MetricRow[]
@@ -207,7 +202,7 @@ function SetupBanner({ message }: { message?: string }) {
         <p className="text-sm font-semibold mb-0.5">Setup Required</p>
         <p className="text-xs leading-relaxed">
           {message ??
-            'Add UMAMI_WEBSITE_ID and UMAMI_API_TOKEN to your Vercel environment variables. Dashboard is showing placeholder state.'}
+            'Set ANALYTICS_API_KEY (or ADMIN_API_KEY) in Vercel environment variables and ensure Vercel Blob storage is configured.'}
         </p>
       </div>
     </div>
@@ -303,11 +298,10 @@ export default function AnalyticsDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [loading, setLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
-  const [isMockData, setIsMockData] = useState(false)
-  const [mockMessage, setMockMessage] = useState<string>()
+  const [isMockData] = useState(false)
 
-  const [stats, setStats] = useState<UmamiStats | null>(null)
-  const [pageviews, setPageviews] = useState<UmamiPageviews | null>(null)
+  const [stats, setStats] = useState<AnalyticsStats | null>(null)
+  const [pageviews, setPageviews] = useState<AnalyticsPageviews | null>(null)
   const [topPages, setTopPages] = useState<MetricRow[]>([])
   const [referrers, setReferrers] = useState<MetricRow[]>([])
   const [browsers, setBrowsers] = useState<MetricRow[]>([])
@@ -322,18 +316,15 @@ export default function AnalyticsDashboard() {
     async (type: string, extra: Record<string, string> = {}): Promise<any> => {
       const adminKey = getAdminKey()
       if (!adminKey) return null
-      const params = new URLSearchParams({ type, period, ...extra })
-      const res = await fetch(`/api/analytics/umami?${params}`, {
+      // Convert 24h to 1d for self-hosted analytics API
+      const apiPeriod = period === '24h' ? '1d' : period
+      const params = new URLSearchParams({ type, period: apiPeriod, ...extra })
+      const res = await fetch(`/api/analytics/data?${params}`, {
         headers: { 'x-admin-key': adminKey },
         cache: 'no-store',
       })
       if (!res.ok) throw new Error(`API error ${res.status}`)
-      const data = await res.json()
-      if (data._isMockData) {
-        setIsMockData(true)
-        setMockMessage(data._message)
-      }
-      return data
+      return await res.json()
     },
     [getAdminKey, period]
   )
@@ -342,7 +333,6 @@ export default function AnalyticsDashboard() {
     const adminKey = getAdminKey()
     if (!adminKey) return
     setLoading(true)
-    setIsMockData(false)
     try {
       const [statsData, pvData, pagesData, refData, browserData] = await Promise.allSettled([
         fetchData('stats'),
@@ -351,11 +341,11 @@ export default function AnalyticsDashboard() {
         fetchData('metrics', { metricType: 'referrer' }),
         fetchData('metrics', { metricType: 'browser' }),
       ])
-      if (statsData.status === 'fulfilled' && statsData.value) setStats(statsData.value as UmamiStats)
-      if (pvData.status === 'fulfilled' && pvData.value) setPageviews(pvData.value as UmamiPageviews)
-      if (pagesData.status === 'fulfilled') setTopPages(normaliseMetrics(pagesData.value as UmamiMetrics).slice(0, 10))
-      if (refData.status === 'fulfilled') setReferrers(normaliseMetrics(refData.value as UmamiMetrics).slice(0, 8))
-      if (browserData.status === 'fulfilled') setBrowsers(normaliseMetrics(browserData.value as UmamiMetrics).slice(0, 6))
+      if (statsData.status === 'fulfilled' && statsData.value) setStats(statsData.value as AnalyticsStats)
+      if (pvData.status === 'fulfilled' && pvData.value) setPageviews(pvData.value as AnalyticsPageviews)
+      if (pagesData.status === 'fulfilled') setTopPages(normaliseMetrics(pagesData.value as AnalyticsMetrics).slice(0, 10))
+      if (refData.status === 'fulfilled') setReferrers(normaliseMetrics(refData.value as AnalyticsMetrics).slice(0, 8))
+      if (browserData.status === 'fulfilled') setBrowsers(normaliseMetrics(browserData.value as AnalyticsMetrics).slice(0, 6))
       setLastRefresh(new Date())
     } catch (err) {
       console.error('[Analytics] Load error:', err)
@@ -429,7 +419,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       <div className="container-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {isMockData && <SetupBanner message={mockMessage} />}
+        {isMockData && <SetupBanner />}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} />
@@ -577,10 +567,7 @@ export default function AnalyticsDashboard() {
 
         <div className="text-center py-2">
           <p className="text-xs text-[var(--muted-foreground)] opacity-40">
-            Powered by{' '}
-            <a href="https://umami.is" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">Umami Analytics</a>
-            {' · '}
-            <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">Built with Perplexity Computer</a>
+            Self-hosted analytics · Powered by Vercel Blob
           </p>
         </div>
       </div>

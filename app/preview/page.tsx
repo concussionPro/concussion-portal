@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Lock,
@@ -24,16 +24,49 @@ import {
 } from 'lucide-react'
 import { getPreviewModules } from '@/data/preview-modules'
 import { CONFIG } from '@/lib/config'
+import { SiteNav } from '@/components/SiteNav'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
-import CountdownTimer from '@/components/CountdownTimer'
 import { PricingOptions } from '@/components/PricingOptions'
+import { PreviewSectionContent } from '@/components/course/PreviewSectionContent'
 
 const moduleIcons = [Brain, FileText, Activity, Clock, Users, Target, BookOpen, Scale]
+
+interface PreviewModuleData {
+  id: number
+  title: string
+  subtitle: string
+  duration: string
+  points: number
+  description: string
+  totalSections: number
+  firstSection: { id: string; title: string; content: string[] } | null
+  sectionTitles: string[]
+}
 
 export default function PreviewPage() {
   const router = useRouter()
   const modules = getPreviewModules()
   const [expandedModule, setExpandedModule] = useState<number>(0)
+  const [previewContent, setPreviewContent] = useState<PreviewModuleData[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    async function fetchPreviewContent() {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/preview-content')
+        if (res.ok) {
+          const data = await res.json()
+          setPreviewContent(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch preview content:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPreviewContent()
+  }, [])
 
   // Find next workshop within 3 weeks
   const now = new Date()
@@ -60,42 +93,9 @@ export default function PreviewPage() {
       ]} />
 
       <div className="min-h-screen bg-slate-50">
-        {/* Sticky Header */}
-      <div className="sticky top-0 z-50 glass border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg md:text-xl font-bold text-slate-900">
-                Course Preview
-              </h1>
-              <p className="text-xs md:text-sm text-slate-600 hidden sm:block">
-                8 online modules + full-day practical · 14 AHPRA CPD points
-              </p>
-            </div>
-            <div className="flex items-center gap-2 md:gap-3">
-              <button
-                onClick={() => router.push('/')}
-                className="text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-colors hidden sm:block"
-              >
-                Back to Home
-              </button>
-              <button
-                onClick={() => {
-                  const pricingEl = document.getElementById('pricing-section')
-                  if (pricingEl) pricingEl.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="px-3 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white rounded-lg text-xs md:text-sm font-semibold hover:from-[#5898a0] hover:to-[#5b8d96] transition-all shadow-lg flex items-center gap-1.5 md:gap-2"
-              >
-                <Sparkles className="w-3.5 md:w-4 h-3.5 md:h-4" />
-                <span className="hidden sm:inline">Enroll Now - $1,190</span>
-                <span className="sm:hidden">Enroll</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+        <SiteNav />
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 pt-[80px] pb-8">
         {/* Hero - Value-First */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-teal-100 text-[#5b8d96] px-4 py-2 rounded-full text-sm font-bold mb-4">
@@ -148,7 +148,7 @@ export default function PreviewPage() {
           {modules.map((module, idx) => {
             const ModuleIcon = moduleIcons[idx]
             const isExpanded = expandedModule === module.id
-            const hasUnlockedContent = true
+            const preview = previewContent.find(p => p.id === module.id)
 
             return (
               <div
@@ -174,12 +174,10 @@ export default function PreviewPage() {
                         <span className="text-sm font-bold text-slate-500 tracking-wider">
                           MODULE {module.id}
                         </span>
-                        {hasUnlockedContent && (
-                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-100 text-[#5b8d96] border border-teal-200 flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
-                            PREVIEW AVAILABLE
-                          </span>
-                        )}
+                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-100 text-[#5b8d96] border border-teal-200 flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          PREVIEW AVAILABLE
+                        </span>
                       </div>
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
                         {module.title}
@@ -201,7 +199,7 @@ export default function PreviewPage() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <FileText className="w-4 h-4" />
-                          <span className="font-medium">Interactive Content</span>
+                          <span className="font-medium">{preview ? `${preview.totalSections} Sections` : 'Interactive Content'}</span>
                         </div>
                       </div>
                     </div>
@@ -217,19 +215,69 @@ export default function PreviewPage() {
                   </div>
                 </div>
 
-                {/* Module Description (Expandable) */}
+                {/* Expanded: First Section Content + Lock Overlay */}
                 {isExpanded && (
-                  <div className="border-t border-slate-200 bg-slate-50 p-6">
-                    <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                      {module.description}
-                    </p>
-                    <button
-                      onClick={() => router.push('/pricing')}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
-                    >
-                      <Lock className="w-4 h-4" />
-                      Enroll to access
-                    </button>
+                  <div className="border-t border-slate-200 bg-slate-50 p-6 animate-fadeInUp">
+                    {loading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : preview?.firstSection ? (
+                      <div className="space-y-6">
+                        {/* First section content */}
+                        <PreviewSectionContent
+                          moduleId={module.id}
+                          section={preview.firstSection}
+                        />
+
+                        {/* Lock overlay: remaining sections */}
+                        {preview.sectionTitles.length > 1 && (
+                          <div className="relative">
+                            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
+                                  <Lock className="w-4 h-4" />
+                                  {preview.sectionTitles.length - 1} more sections in this module
+                                </div>
+                              </div>
+                              <div className="p-4 space-y-2">
+                                {preview.sectionTitles.slice(1).map((title, i) => (
+                                  <div
+                                    key={i}
+                                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50 opacity-60"
+                                  >
+                                    <div className="w-6 h-6 rounded-md bg-slate-200 flex items-center justify-center flex-shrink-0">
+                                      <Lock className="w-3 h-3 text-slate-400" />
+                                    </div>
+                                    <span className="text-sm text-slate-500 truncate">{title}</span>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="p-4 pt-2 border-t border-slate-100">
+                                <button
+                                  onClick={() => router.push('/pricing')}
+                                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+                                >
+                                  <Sparkles className="w-4 h-4" />
+                                  Enroll to unlock all {preview.totalSections} sections
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-sm text-slate-500 mb-4">Preview content loading...</p>
+                        <button
+                          onClick={() => router.push('/pricing')}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+                        >
+                          <Lock className="w-4 h-4" />
+                          Enroll to access
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -293,7 +341,7 @@ export default function PreviewPage() {
                   { label: '14 CPD Points', desc: '8 online + 6 workshop' },
                   { label: 'Lifetime Access', desc: 'All modules, updates included' },
                   { label: 'Clinical Toolkit', desc: 'Flowcharts, templates, forms' },
-                  { label: 'Flexible Dates', desc: 'Byron Bay Mar 28 · More TBA' },
+                  { label: 'Flexible Dates', desc: `${CONFIG.LOCATIONS.BYRON_BAY.date || 'Dates TBA'} · More coming` },
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 border border-white/10">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />

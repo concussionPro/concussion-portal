@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Download, FileText, CheckSquare, FileCheck, Users } from 'lucide-react'
 
 interface Resource {
@@ -11,6 +12,7 @@ interface Resource {
 }
 
 export function DownloadableResources({ moduleId }: { moduleId: number }) {
+  const [downloadError, setDownloadError] = useState('')
   const iconMap = {
     pdf: FileText,
     checklist: CheckSquare,
@@ -153,16 +155,9 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
 
       document.body.removeChild(link)
       window.URL.revokeObjectURL(downloadUrl)
-    } catch (error) {
-      console.error('Download error:', error)
-      console.error(`Failed to download ${title}`)
-      // Show inline feedback instead of alert
-      const el = document.getElementById('download-error')
-      if (el) {
-        el.textContent = `Failed to download ${title}. Please try again or contact support.`
-        el.classList.remove('hidden')
-        setTimeout(() => el.classList.add('hidden'), 5000)
-      }
+    } catch {
+      setDownloadError(`Failed to download ${title}. Please try again or contact support.`)
+      setTimeout(() => setDownloadError(''), 5000)
     }
   }
 
@@ -180,7 +175,9 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
         </div>
       </div>
 
-      <div id="download-error" className="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 mb-4" />
+      {downloadError && (
+        <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 mb-4">{downloadError}</div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         {resources.map((resource, index) => {

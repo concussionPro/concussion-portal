@@ -73,7 +73,6 @@ export default function SCAT6Page() {
         if (isExpired) {
           // Auto-clear expired draft
           localStorage.removeItem('scat6-draft')
-          console.log('Previous draft expired (>24 hours old) and was cleared')
         } else {
           // Ask user if they want to continue
           const continueText = draftTimestamp
@@ -111,9 +110,7 @@ export default function SCAT6Page() {
   const handleExportPDF = async () => {
     try {
       const filename = `SCAT6_${formData.athleteName || 'Assessment'}_${formData.dateOfExamination || 'Draft'}.pdf`
-      console.log('Starting PDF export...')
       await exportSCAT6ToFilledPDF(formData, filename)
-      console.log('PDF export completed')
     } catch (error) {
       console.error('PDF export failed:', error)
       alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

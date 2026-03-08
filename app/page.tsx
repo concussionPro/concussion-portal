@@ -5,13 +5,13 @@ import { ArrowRight, Check, Star } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { OrganizationSchema, CourseSchema } from '@/components/SchemaMarkup'
 import { PricingOptions } from '@/components/PricingOptions'
-import { useState } from 'react'
+import { SiteNav } from '@/components/SiteNav'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { trackShopClick } from '@/lib/analytics'
 
 export default function HomePage() {
   const router = useRouter()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   useAnalytics()
 
   return (
@@ -26,121 +26,7 @@ export default function HomePage() {
         <div className="ambient-glow -top-[200px] left-1/2 -translate-x-1/2" aria-hidden="true" />
 
         {/* ── Nav ──────────────────────────────────────────── */}
-        <nav
-          className="fixed top-0 left-0 right-0 z-50 glass"
-          role="navigation"
-          aria-label="Main navigation"
-        >
-          <div className="max-w-[1200px] mx-auto px-5 md:px-8">
-            <div className="flex items-center justify-between h-[60px]">
-              <button
-                onClick={() => router.push('/')}
-                className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-accent rounded"
-                aria-label="ConcussionPro home"
-              >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center shadow-sm">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="none" stroke="white" strokeWidth="1.5"/>
-                    <path d="M12 6C9.5 6 7 8 7 12s2.5 6 5 6" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M12 6c2.5 0 5 2 5 6s-2.5 6-5 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-                    <circle cx="12" cy="12" r="1.5" fill="white"/>
-                  </svg>
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-tight text-[var(--foreground)]">
-                    ConcussionPro
-                  </span>
-                </div>
-              </button>
-
-              {/* Desktop Nav */}
-              <div className="hidden md:flex items-center gap-1">
-                <button
-                  onClick={() => router.push('/scat-mastery')}
-                  className="text-[13px] text-[var(--accent)] font-semibold px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.05)] transition-colors"
-                >
-                  Free Training
-                </button>
-                <button
-                  onClick={() => router.push('/scat-forms')}
-                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
-                >
-                  SCAT Forms
-                </button>
-                <button
-                  onClick={() => router.push('/preseason')}
-                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
-                >
-                  Preseason
-                </button>
-                <button
-                  onClick={() => router.push('/preview')}
-                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
-                >
-                  Preview
-                </button>
-                <button
-                  onClick={() => router.push('/login')}
-                  className="text-[13px] text-[var(--muted-foreground)] font-medium px-3 py-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
-                >
-                  Login
-                </button>
-                <a
-                  href={CONFIG.SHOP_URL}
-                  onClick={() => trackShopClick('nav-desktop')}
-                  className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
-                >
-                  Enroll
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </a>
-              </div>
-
-              {/* Mobile burger */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-md hover:bg-[rgba(13,115,119,0.04)] transition-colors"
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileMenuOpen}
-              >
-                <div className="w-5 h-4 flex flex-col justify-between">
-                  <span className={`block h-[1.5px] w-5 bg-[var(--foreground)] transition-all ${mobileMenuOpen ? 'rotate-45 translate-y-[5px]' : ''}`} />
-                  <span className={`block h-[1.5px] w-5 bg-[var(--foreground)] transition-all ${mobileMenuOpen ? 'opacity-0' : ''}`} />
-                  <span className={`block h-[1.5px] w-5 bg-[var(--foreground)] transition-all ${mobileMenuOpen ? '-rotate-45 -translate-y-[5px]' : ''}`} />
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-[rgba(13,115,119,0.06)] bg-[rgba(248,250,251,0.95)] backdrop-blur-xl px-5 pb-4 pt-2">
-              <div className="flex flex-col gap-1">
-                {[
-                  { label: 'Free SCAT Training', path: '/scat-mastery', accent: true },
-                  { label: 'SCAT Forms', path: '/scat-forms', accent: false },
-                  { label: 'Preseason Baselines', path: '/preseason', accent: false },
-                  { label: 'Preview Course', path: '/preview', accent: false },
-                  { label: 'Login', path: '/login', accent: false },
-                ].map(item => (
-                  <button
-                    key={item.path}
-                    onClick={() => { router.push(item.path); setMobileMenuOpen(false) }}
-                    className={`text-left text-sm py-2.5 px-3 rounded-md transition-colors ${item.accent ? 'text-[var(--accent)] font-semibold' : 'text-[var(--muted-foreground)]'} hover:bg-[rgba(13,115,119,0.04)]`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-                <a
-                  href={CONFIG.SHOP_URL}
-                  onClick={() => { trackShopClick('nav-mobile'); setMobileMenuOpen(false) }}
-                  className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
-                >
-                  Enroll Now
-                </a>
-              </div>
-            </div>
-          )}
-        </nav>
+        <SiteNav />
 
 
         {/* ── Hero ─────────────────────────────────────────── */}
@@ -211,7 +97,7 @@ export default function HomePage() {
                 { value: CONFIG.COURSE.TOTAL_CPD_POINTS.toString(), label: 'AHPRA CPD Points', sub: 'Aligned' },
                 { value: '8', label: 'Online Modules', sub: '8 CPD points' },
                 { value: '1 Day', label: 'Practical Workshop', sub: '6 CPD points' },
-                { value: '2', label: 'Locations', sub: 'Byron Bay + TBA' },
+                { value: Object.values(CONFIG.LOCATIONS).filter(l => l.status === 'confirmed').length.toString(), label: 'Locations', sub: Object.values(CONFIG.LOCATIONS).filter(l => l.status === 'confirmed').map(l => l.city).join(' + ') || 'Coming soon' },
               ].map((stat) => (
                 <div key={stat.label} className="stat-tile text-center">
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--accent)] mb-1">
@@ -520,17 +406,7 @@ export default function HomePage() {
         </section>
 
 
-        {/* ── Footer ───────────────────────────────────────── */}
-        <footer className="py-6 px-5 border-t border-[rgba(13,115,119,0.06)] relative z-10" role="contentinfo">
-          <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p className="text-xs text-[var(--muted-foreground)]">
-              © 2026 Concussion Education Australia
-            </p>
-            <p className="text-xs text-[var(--muted-foreground)]">
-              {CONFIG.CONTACT_EMAIL}
-            </p>
-          </div>
-        </footer>
+        {/* Footer is rendered by FooterWrapper in root layout */}
       </div>
     </>
   )

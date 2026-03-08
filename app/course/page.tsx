@@ -8,16 +8,15 @@ import {
   Check,
   MapPin,
   ArrowRight,
-  ArrowLeft,
   FileText,
   Download,
   BookOpen,
   Users,
   Brain,
-  Clock,
   Shield,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { SiteNav } from '@/components/SiteNav'
 
 const locations = Object.values(CONFIG.LOCATIONS)
   .filter(loc => loc.status === 'confirmed' && loc.date)
@@ -46,35 +45,10 @@ export default function CoursePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
-        <div className="container-xl px-6 md:px-8 py-4 flex items-center justify-between">
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Home
-          </button>
-          <div className="flex flex-col items-center">
-            <div className="text-lg font-semibold text-foreground tracking-tight">
-              Concussion<span className="text-gradient">Pro</span>
-            </div>
-            <div className="text-xs text-slate-500 tracking-wide">
-              Concussion Education Australia
-            </div>
-          </div>
-          <button
-            onClick={() => router.push('/login')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Sign in
-          </button>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* Hero */}
-      <section className="section-padding pt-24 md:pt-32">
+      <section className="section-padding pt-[80px]">
         <div className="container-lg px-6 md:px-8 text-center">
           <div className="badge mb-5">
             <Award className="w-3.5 h-3.5 mr-1.5" />

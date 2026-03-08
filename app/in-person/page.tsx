@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Clock, MapPin, Users, Award, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
+import { SiteNav } from '@/components/SiteNav'
 
 export default function InPersonTrainingPage() {
   const router = useRouter()
@@ -16,33 +17,9 @@ export default function InPersonTrainingPage() {
       ]} />
 
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <nav className="glass border-b border-border/30">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <button
-              onClick={() => router.push('/')}
-              className="text-xl font-bold"
-            >
-              Concussion<span className="text-gradient">Pro</span>
-            </button>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => router.push('/preview')}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Course Preview
-              </button>
-              <button
-                onClick={() => router.push('/pricing')}
-                className="btn-primary px-6 py-2 rounded-lg text-sm font-semibold"
-              >
-                Enroll Now
-              </button>
-            </div>
-          </div>
-        </nav>
+        <SiteNav />
 
-        <div className="max-w-4xl mx-auto px-6 py-16">
+        <div className="max-w-4xl mx-auto px-6 pt-[80px] pb-16">
           {/* Hero */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-4">

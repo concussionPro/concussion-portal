@@ -1,11 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { MapPin, Calendar, Users, ArrowRight, CheckCircle2, Award } from 'lucide-react'
+import { MapPin, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import CountdownTimer from '@/components/CountdownTimer'
 import SpotsRemaining from '@/components/SpotsRemaining'
+import { SiteNav } from '@/components/SiteNav'
 
 export default function ByronBayPage() {
   const router = useRouter()
@@ -21,7 +22,8 @@ export default function ByronBayPage() {
         { name: 'Byron Bay', url: '/courses/byron-bay' },
       ]} />
 
-      <div className="min-h-screen bg-background py-20 px-6">
+      <SiteNav />
+      <div className="min-h-screen bg-background pt-[80px] pb-20 px-6">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-12">

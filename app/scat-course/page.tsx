@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, Lock, BookOpen, Award, Clock, FileText, ExternalLink, Download } from 'lucide-react'
+import { CheckCircle, Lock, BookOpen, Award, Clock, FileText, Download } from 'lucide-react'
 import { getSCATModulesMeta } from '@/data/module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
 

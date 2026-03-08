@@ -86,7 +86,7 @@ export default function SCATFormsLayout({
                   </p>
                   <div className="text-xs text-slate-500 space-y-1">
                     <p>• For Adolescents (13+) & Adults</p>
-                    <p>• Acute phase (within 72 hours to 7 days)</p>
+                    <p>• Acute phase (within 0-72 hours post-injury)</p>
                     <p>• 9 pages • On-field & Off-field assessment</p>
                   </div>
                 </div>

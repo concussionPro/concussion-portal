@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Lightbulb } from 'lucide-react'
 
 interface DynamicContentRendererProps {
   content: string[]
@@ -124,15 +124,81 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     return processed
   }, [content]) // Only re-process when content changes
 
+  // Track consecutive definition blocks for color rotation
+  let definitionCounter = 0
+  const rendered = processedContent.map((paragraph, index) => {
+    const isDefinition = !paragraph.startsWith('__SECTION__') &&
+      !paragraph.startsWith('__PATHWAY__') &&
+      !(paragraph.includes('|') && (paragraph.includes('───') || paragraph.includes('---'))) &&
+      !paragraph.trim().startsWith('☐') &&
+      !paragraph.trim().startsWith('✓') &&
+      !paragraph.trim().startsWith('•') &&
+      !paragraph.trim().startsWith('-') &&
+      !paragraph.trim().startsWith('*') &&
+      !paragraph.startsWith('##') &&
+      !paragraph.trim().endsWith(':') &&
+      !/^(🔹|📊|💡|⚡|🧠|🔄|⚠️|✅)\s/.test(paragraph) &&
+      /^[A-Z][A-Z\s&]+:\s*.+/.test(paragraph) &&
+      (paragraph.match(/^[A-Z][A-Z\s&]+/)?.[0]?.length ?? 999) < 50
+
+    const colorIndex = isDefinition ? definitionCounter++ : 0
+    return renderParagraph(paragraph, `content-${index}`, colorIndex)
+  })
+
+  // Extract key takeaways from definition blocks (first sentence of each)
+  const takeaways = useMemo(() => {
+    const points: string[] = []
+    for (const paragraph of processedContent) {
+      const defMatch = paragraph.match(/^([A-Z][A-Z\s&]+):\s*(.+)/)
+      if (defMatch && defMatch[1].length < 50 &&
+        !paragraph.startsWith('__SECTION__') && !paragraph.startsWith('__PATHWAY__')) {
+        // Get first sentence (up to first period followed by space or end)
+        const fullText = defMatch[2]
+        const firstSentence = fullText.match(/^(.+?\.)\s/) ? fullText.match(/^(.+?\.)\s/)![1] : fullText
+        if (firstSentence.length > 20 && firstSentence.length < 200) {
+          points.push(firstSentence)
+        }
+      }
+    }
+    return points
+  }, [processedContent])
+
   // Render all content in single column with consistent spacing
   return (
     <div className="space-y-6">
-      {processedContent.map((paragraph, index) => renderParagraph(paragraph, `content-${index}`))}
+      {rendered}
+
+      {/* Key Takeaways — auto-generated from definition blocks */}
+      {takeaways.length >= 2 && (
+        <div className="mt-8 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-5 border border-teal-200">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-5 h-5 text-teal-600" />
+            <h4 className="text-sm font-bold text-teal-900 uppercase tracking-wide">Key Takeaways</h4>
+          </div>
+          <ul className="space-y-2">
+            {takeaways.slice(0, 5).map((point, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-teal-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-sm text-slate-700 leading-relaxed">{point}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }
 
-function renderParagraph(text: string, key: string) {
+// Rotating color palette for definition blocks to prevent visual monotony
+const DEFINITION_COLORS = [
+  { bg: 'bg-blue-50', border: 'border-blue-500', label: 'text-blue-900' },
+  { bg: 'bg-teal-50', border: 'border-teal-500', label: 'text-teal-900' },
+  { bg: 'bg-indigo-50', border: 'border-indigo-500', label: 'text-indigo-900' },
+  { bg: 'bg-slate-50', border: 'border-slate-500', label: 'text-slate-900' },
+  { bg: 'bg-purple-50', border: 'border-purple-500', label: 'text-purple-900' },
+]
+
+function renderParagraph(text: string, key: string, definitionColorIndex: number = 0) {
   // Handle major sections with intro text
   if (text.startsWith('__SECTION__\n')) {
     return renderMajorSection(text.replace('__SECTION__\n', ''), key)
@@ -232,9 +298,10 @@ function renderParagraph(text: string, key: string) {
   const definitionMatch = text.match(/^([A-Z][A-Z\s&]+):\s*(.+)/)
   if (definitionMatch && definitionMatch[1].length < 50) {
     const [, label, content] = definitionMatch
+    const colors = DEFINITION_COLORS[definitionColorIndex % DEFINITION_COLORS.length]
     return (
-      <div key={key} className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500 my-3">
-        <div className="font-bold text-blue-900 text-sm uppercase tracking-wide mb-2">
+      <div key={key} className={`${colors.bg} rounded-lg p-4 border-l-4 ${colors.border} my-3`}>
+        <div className={`font-bold ${colors.label} text-sm uppercase tracking-wide mb-2`}>
           {label}
         </div>
         <div className="text-[15px] text-slate-700 leading-relaxed">

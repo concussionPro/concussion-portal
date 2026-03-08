@@ -6,10 +6,6 @@ export async function exportSCOAT6ToFilledPDF(
   filename: string = 'SCOAT6_Filled.pdf'
 ) {
   try {
-    console.log('%c=== SCOAT6 PDF EXPORT ===', 'background: purple; color: white; font-size: 20px; padding: 10px;')
-    console.log('%cIf you see this, the new code is running', 'background: green; color: white; padding: 5px;')
-    console.log('Form data:', formData)
-
     // Load the blank fillable PDF
     const response = await fetch('/docs/SCOAT6_Fillable.pdf')
     if (!response.ok) {
@@ -17,25 +13,9 @@ export async function exportSCOAT6ToFilledPDF(
     }
 
     const arrayBuffer = await response.arrayBuffer()
-    console.log('PDF loaded, size:', arrayBuffer.byteLength, 'bytes')
-
     const pdfDoc = await PDFDocument.load(arrayBuffer)
-    console.log('PDF parsed successfully')
 
     const form = pdfDoc.getForm()
-    const fields = form.getFields()
-
-    console.log('=== PDF FORM FIELDS ===')
-    console.log(`Total fields: ${fields.length}`)
-
-    // Log ALL field names
-    fields.forEach((field, index) => {
-      const name = field.getName()
-      const type = field.constructor.name
-      console.log(`${index + 1}. "${name}" (${type})`)
-    })
-
-    console.log('\n=== Attempting to fill fields ===')
 
     // Fill in Demographics
     setTextFieldIfExists(form, 'athleteName', formData.athleteName)
@@ -145,7 +125,6 @@ export async function exportSCOAT6ToFilledPDF(
     link.click()
     URL.revokeObjectURL(url)
 
-    console.log('SCOAT6 PDF filled and downloaded successfully')
   } catch (error) {
     console.error('SCOAT6 PDF fill failed:', error)
     throw new Error(`Failed to fill PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -161,9 +140,6 @@ function setTextFieldIfExists(form: any, fieldName: string, value: string | numb
     }
   } catch (error: any) {
     // Skip rich text fields (not supported by pdf-lib) and non-existent fields
-    if (error?.message?.includes('rich text')) {
-      console.log(`⊘ ${fieldName}: Rich text field (not supported)`)
-    }
   }
 }
 
@@ -178,6 +154,6 @@ function setCheckBoxIfExists(form: any, fieldName: string, value: boolean) {
       }
     }
   } catch (error) {
-    console.log(`Checkbox not found: ${fieldName}`)
+    // Checkbox not found - skip silently
   }
 }

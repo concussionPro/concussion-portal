@@ -1,6 +1,22 @@
 // /app/api/analytics/data/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { list } from '@vercel/blob';
+import fs from 'fs';
+import path from 'path';
+
+// Conditionally use @vercel/blob when token is available
+let blobList: typeof import('@vercel/blob').list | null = null;
+const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+
+if (useBlob) {
+  try {
+    const blob = require('@vercel/blob');
+    blobList = blob.list;
+  } catch {
+    // @vercel/blob not available
+  }
+}
+
+const LOCAL_DIR = path.join(process.cwd(), '.data', 'analytics');
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,10 +64,7 @@ type MetricPoint = { x: string; y: number };
 function isAuthorised(request: NextRequest): boolean {
   const key = request.headers.get('x-admin-key');
   const expected = process.env.ANALYTICS_API_KEY || process.env.ADMIN_API_KEY;
-  if (!expected) {
-    // No key configured — block all access to prevent data leaks
-    return false;
-  }
+  if (!expected) return false;
   return key === expected;
 }
 
@@ -59,7 +72,6 @@ function isAuthorised(request: NextRequest): boolean {
 // Date helpers
 // ---------------------------------------------------------------------------
 
-/** Format a Date as YYYY-MM-DD in UTC */
 function toDateKey(date: Date): string {
   const yyyy = date.getUTCFullYear();
   const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
@@ -67,7 +79,6 @@ function toDateKey(date: Date): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/** Return an array of YYYY-MM-DD strings for `days` days ending at `endDate` (inclusive) */
 function dateRange(endDate: Date, days: number): string[] {
   const keys: string[] = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -78,7 +89,6 @@ function dateRange(endDate: Date, days: number): string[] {
   return keys;
 }
 
-/** Parse period string like "7d", "30d", "90d" into number of days */
 function parsePeriodDays(period: string): number {
   const match = period.match(/^(\d+)d$/);
   if (match) {
@@ -89,13 +99,31 @@ function parsePeriodDays(period: string): number {
 }
 
 // ---------------------------------------------------------------------------
+// Local filesystem storage (dev fallback)
+// ---------------------------------------------------------------------------
+
+function readLocalNdjson(dateKey: string): StoredEvent[] {
+  const filePath = path.join(LOCAL_DIR, `${dateKey}.ndjson`);
+  try {
+    const text = fs.readFileSync(filePath, 'utf-8');
+    return parseNdjson(text);
+  } catch {
+    return [];
+  }
+}
+
+function fetchEventsLocalForDateRange(dateKeys: string[]): StoredEvent[] {
+  const allEvents: StoredEvent[] = [];
+  for (const key of dateKeys) {
+    allEvents.push(...readLocalNdjson(key));
+  }
+  return allEvents;
+}
+
+// ---------------------------------------------------------------------------
 // Blob fetching
 // ---------------------------------------------------------------------------
 
-/**
- * Fetch NDJSON content for a specific date key.
- * Returns parsed events or empty array.
- */
 async function fetchEventsForDate(
   dateKey: string,
   blobUrlMap: Map<string, string>
@@ -107,33 +135,19 @@ async function fetchEventsForDate(
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return [];
     const text = await res.text();
-    return text
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .flatMap((l) => {
-        try {
-          return [JSON.parse(l) as StoredEvent];
-        } catch {
-          return [];
-        }
-      });
+    return parseNdjson(text);
   } catch {
     return [];
   }
 }
 
-/**
- * Build a map of pathname → url from Vercel Blob listing.
- * Fetches all blobs under the analytics/ prefix.
- */
 async function buildBlobUrlMap(): Promise<Map<string, string>> {
   const map = new Map<string, string>();
+  if (!blobList) return map;
   try {
-    // list() is paginated; handle cursor-based pagination
     let cursor: string | undefined;
     do {
-      const result = await list({
+      const result = await blobList({
         prefix: 'analytics/',
         cursor,
         limit: 1000,
@@ -149,9 +163,6 @@ async function buildBlobUrlMap(): Promise<Map<string, string>> {
   return map;
 }
 
-/**
- * Fetch events for a set of date keys in parallel (max concurrency: 10).
- */
 async function fetchEventsForDateRange(
   dateKeys: string[],
   blobUrlMap: Map<string, string>
@@ -171,6 +182,24 @@ async function fetchEventsForDateRange(
 }
 
 // ---------------------------------------------------------------------------
+// NDJSON parsing
+// ---------------------------------------------------------------------------
+
+function parseNdjson(text: string): StoredEvent[] {
+  return text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .flatMap((l) => {
+      try {
+        return [JSON.parse(l) as StoredEvent];
+      } catch {
+        return [];
+      }
+    });
+}
+
+// ---------------------------------------------------------------------------
 // Aggregation helpers
 // ---------------------------------------------------------------------------
 
@@ -182,9 +211,6 @@ function countUniqueSessionIds(events: StoredEvent[]): number {
   return new Set(events.map((e) => e.sessionId)).size;
 }
 
-/**
- * Bounce count: sessions with exactly 1 pageview.
- */
 function countBounces(events: StoredEvent[]): number {
   const pvPerSession = new Map<string, number>();
   for (const e of events) {
@@ -199,10 +225,6 @@ function countBounces(events: StoredEvent[]): number {
   return bounces;
 }
 
-/**
- * Total time: sum of (lastTimestamp - firstTimestamp) per session.
- * Sessions with only one event contribute 0.
- */
 function calcTotalTime(events: StoredEvent[]): number {
   const firstTs = new Map<string, number>();
   const lastTs = new Map<string, number>();
@@ -221,15 +243,13 @@ function calcTotalTime(events: StoredEvent[]): number {
   for (const [sid, first] of firstTs.entries()) {
     const last = lastTs.get(sid) ?? first;
     const duration = Math.max(0, last - first);
-    // Cap per-session to 30 minutes to filter outliers
     total += Math.min(duration, 30 * 60 * 1000);
   }
-  // Return in seconds
   return Math.round(total / 1000);
 }
 
 // ---------------------------------------------------------------------------
-// Browser detection (simple UA parsing)
+// Browser detection
 // ---------------------------------------------------------------------------
 
 function detectBrowser(userAgent: string): string {
@@ -248,7 +268,7 @@ function extractReferrerDomain(referrer: string | null): string {
   if (!referrer) return '(direct)';
   try {
     const url = new URL(referrer);
-    return url.hostname.replace(/^www\\./, '');
+    return url.hostname.replace(/^www\./, '');
   } catch {
     return referrer.slice(0, 100);
   }
@@ -344,11 +364,22 @@ function buildMetrics(
 }
 
 // ---------------------------------------------------------------------------
+// Unified event fetcher (blob or local)
+// ---------------------------------------------------------------------------
+
+async function getEventsForDateRange(dateKeys: string[]): Promise<StoredEvent[]> {
+  if (useBlob && blobList) {
+    const blobUrlMap = await buildBlobUrlMap();
+    return fetchEventsForDateRange(dateKeys, blobUrlMap);
+  }
+  return fetchEventsLocalForDateRange(dateKeys);
+}
+
+// ---------------------------------------------------------------------------
 // Main handler
 // ---------------------------------------------------------------------------
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  // Auth check
   if (!isAuthorised(request)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
@@ -360,37 +391,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const days = parsePeriodDays(periodParam);
 
-  // Build date ranges
   const today = new Date();
   const currentDates = dateRange(today, days);
 
-  // Previous period: same length, immediately before the current period
   const prevEnd = new Date(today);
   prevEnd.setUTCDate(prevEnd.getUTCDate() - days);
   const prevDates = dateRange(prevEnd, days);
 
-  // All dates we need to fetch
-  const allDates = Array.from(new Set([...currentDates, ...prevDates]));
-
-  // Fetch blob listing once
-  const blobUrlMap = await buildBlobUrlMap();
-
   if (type === 'stats') {
     const [currentEvents, prevEvents] = await Promise.all([
-      fetchEventsForDateRange(currentDates, blobUrlMap),
-      fetchEventsForDateRange(prevDates, blobUrlMap),
+      getEventsForDateRange(currentDates),
+      getEventsForDateRange(prevDates),
     ]);
 
     const stats = buildStats(currentEvents, prevEvents);
     return NextResponse.json(stats, {
-      headers: {
-        'Cache-Control': 'no-store',
-      },
+      headers: { 'Cache-Control': 'no-store' },
     });
   }
 
   if (type === 'pageviews') {
-    const currentEvents = await fetchEventsForDateRange(currentDates, blobUrlMap);
+    const currentEvents = await getEventsForDateRange(currentDates);
     const timeSeries = buildTimeSeries(currentEvents, currentDates);
     return NextResponse.json(timeSeries, {
       headers: { 'Cache-Control': 'no-store' },
@@ -398,8 +419,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   if (type === 'metrics') {
-    // Metrics always use the current period
-    const currentEvents = await fetchEventsForDateRange(currentDates, blobUrlMap);
+    const currentEvents = await getEventsForDateRange(currentDates);
     const metrics = buildMetrics(currentEvents, metricType);
     return NextResponse.json(metrics, {
       headers: { 'Cache-Control': 'no-store' },
@@ -409,7 +429,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ error: `Unknown type: ${type}` }, { status: 400 });
 }
 
-// Reject non-GET
 export async function POST(): Promise<NextResponse> {
   return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }

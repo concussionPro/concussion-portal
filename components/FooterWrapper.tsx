@@ -17,6 +17,9 @@ const PUBLIC_ROUTES = [
   '/scat6-download',
   '/blog',
   '/faq',
+  '/courses',
+  '/course',
+  '/checkout',
 ]
 
 export function FooterWrapper() {

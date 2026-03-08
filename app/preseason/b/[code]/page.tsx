@@ -736,6 +736,13 @@ export default function AthleteBaselineForm() {
           <div className="glass rounded-2xl p-6 animate-fade-in">
             <h2 className="text-lg font-bold mb-4">Athlete Information</h2>
 
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                <p className="text-sm text-red-700">{submitError}</p>
+              </div>
+            )}
+
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -1648,9 +1655,10 @@ export default function AthleteBaselineForm() {
             <button
               onClick={() => {
                 if (step === 1 && !name) {
-                  alert('Please enter the athlete\'s name to continue.')
+                  setSubmitError('Please enter the athlete\'s name to continue.')
                   return
                 }
+                setSubmitError('')
                 setStep(prev => prev + 1)
               }}
               disabled={step === 5 && !delayedRecallReady}

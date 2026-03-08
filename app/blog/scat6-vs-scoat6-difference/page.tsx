@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import { createFAQSchema, createBlogPostSchema } from '@/lib/schema-markup'
-import { ArrowRight, AlertTriangle, CheckCircle, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle, X } from 'lucide-react'
 import Link from 'next/link'
+import { SiteNav } from '@/components/SiteNav'
 
 export const metadata: Metadata = {
   title: 'SCAT6 vs SCOAT6: Which Tool to Use When? | Complete Guide 2026',
@@ -52,13 +53,10 @@ export default function SCAT6vsSCOAT6Page() {
         }}
       />
 
+      <SiteNav />
       <div className="min-h-screen bg-slate-50">
-        <div className="bg-gradient-to-br from-red-600 to-orange-600 text-white py-16">
+        <div className="bg-gradient-to-br from-red-600 to-orange-600 text-white pt-[80px] pb-16">
           <div className="max-w-4xl mx-auto px-4">
-            <Link href="/" className="inline-flex items-center gap-2 text-red-100 hover:text-white mb-4 text-sm">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              ConcussionPro Home
-            </Link>
             <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
               ⚠️ Critical for AHPRA Compliance
             </div>

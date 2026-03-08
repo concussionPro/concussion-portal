@@ -80,8 +80,8 @@ export function NextActionCard() {
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Certificate download error:', error)
+    } catch {
+      setCertificateStatus('error')
     } finally {
       setCertificateDownloading(false)
     }

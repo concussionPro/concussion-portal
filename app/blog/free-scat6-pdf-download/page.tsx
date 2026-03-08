@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
-import { createFAQSchema, createHowToSchema, createBlogPostSchema } from '@/lib/schema-markup'
+import { createBlogPostSchema } from '@/lib/schema-markup'
 import { Download, FileText, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { SiteNav } from '@/components/SiteNav'
 
 export const metadata: Metadata = {
   title: 'Free SCAT6 PDF Download - Fillable Form with Auto-Scoring | Australia 2026',
@@ -31,13 +32,10 @@ export default function FreeSCAT6PDFDownloadPage() {
         }}
       />
 
+      <SiteNav />
       <div className="min-h-screen bg-slate-50">
-        <div className="bg-gradient-to-br from-blue-500 to-cyan-400 text-white py-16">
+        <div className="bg-gradient-to-br from-blue-500 to-cyan-400 text-white pt-[80px] pb-16">
           <div className="max-w-4xl mx-auto px-4">
-            <Link href="/" className="inline-flex items-center gap-2 text-blue-100 hover:text-white mb-4 text-sm">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              ConcussionPro Home
-            </Link>
             <h1 className="text-5xl font-bold mb-4">
               Free SCAT6 PDF Download
             </h1>

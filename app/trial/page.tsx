@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Play, CheckCircle2, ArrowRight, Award, Clock } from 'lucide-react'
+import { SiteNav } from '@/components/SiteNav'
 
 export default function TrialPage() {
   const router = useRouter()
@@ -25,30 +26,10 @@ export default function TrialPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => router.push('/')}
-              className="text-xl font-bold text-slate-900"
-            >
-              Concussion<span className="text-[#6b9da8]">Pro</span>
-            </button>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/login')}
-                className="text-sm text-slate-600 hover:text-slate-900 font-medium"
-              >
-                Already Enrolled? Login
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* Hero */}
-      <div className="max-w-4xl mx-auto px-6 py-16">
+      <div className="max-w-4xl mx-auto px-6 py-16 pt-[80px]">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-teal-100 text-[#5b8d96] px-4 py-2 rounded-full text-sm font-semibold mb-6">
             <Play className="w-4 h-4" />
@@ -176,14 +157,7 @@ export default function TrialPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm text-slate-500">
-            © 2026 Concussion Education Australia · AHPRA Aligned CPD
-          </p>
-        </div>
-      </footer>
+      {/* Footer rendered by FooterWrapper in root layout */}
     </div>
   )
 }

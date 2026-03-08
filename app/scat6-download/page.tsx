@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Users,
 } from 'lucide-react'
+import { SiteNav } from '@/components/SiteNav'
 
 declare global {
   interface Window {
@@ -96,27 +97,9 @@ export default function SCAT6DownloadPage() {
       <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-gradient-to-bl from-teal-100/40 to-transparent blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-blue-100/30 to-transparent blur-3xl pointer-events-none" />
 
-      {/* Nav */}
-      <nav className="relative z-20 border-b border-slate-200/60 bg-white/70 backdrop-blur-xl">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <a href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#5b9aa6] to-[#6b9da8] flex items-center justify-center shadow-md shadow-teal-200/50">
-              <Brain className="w-5 h-5 text-white" strokeWidth={2} />
-            </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">
-              Concussion<span className="text-[#5b9aa6]">Pro</span>
-            </span>
-          </a>
-          <a
-            href="/login"
-            className="text-sm font-semibold text-[#5b9aa6] hover:text-[#4a8a96] transition-colors"
-          >
-            Login
-          </a>
-        </div>
-      </nav>
+      <SiteNav />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-20">
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-20 pt-[80px]">
         <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-start">
 
           {/* ── Left column: hero copy (3 cols) ── */}

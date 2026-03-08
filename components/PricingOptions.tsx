@@ -643,7 +643,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           )}
 
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-            Early bird pricing ends March 28 — lock in $1,190 before it returns to $1,400.
+            Early bird pricing ends {CONFIG.EARLY_BIRD_DEADLINE.toLocaleDateString('en-AU', { month: 'long', day: 'numeric' })} — lock in ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} before it returns to ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}.
           </p>
         </div>
       </div>

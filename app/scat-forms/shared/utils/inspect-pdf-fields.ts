@@ -8,15 +8,10 @@ export async function inspectPDFFields(pdfPath: string) {
     const form = pdfDoc.getForm()
     const fields = form.getFields()
 
-    console.log('=== PDF FIELD INSPECTION ===')
-    console.log(`Total fields: ${fields.length}`)
-    console.log('Field details:')
-
     const fieldInfo: any[] = []
     fields.forEach((field, index) => {
       const name = field.getName()
       const type = field.constructor.name
-      console.log(`${index + 1}. "${name}" - Type: ${type}`)
       fieldInfo.push({ index: index + 1, name, type })
     })
 

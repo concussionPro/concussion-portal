@@ -17,8 +17,6 @@ export async function exportSCAT6ToFilledPDF(
   formData: SCAT6FormData,
   filename: string = 'SCAT6_Filled.pdf'
 ) {
-  console.log('%c=== SCAT6 PDF EXPORT (v2 - Corrected) ===', 'background: green; color: white; font-size: 20px; padding: 10px;')
-
   try {
     // Load the blank fillable PDF
     const response = await fetch('/docs/SCAT6_Fillable.pdf')
@@ -265,8 +263,6 @@ export async function exportSCAT6ToFilledPDF(
     // ==================== PAGE 9: CLINICAL NOTES ====================
     filledCount += setTextField(form, 'Text94', formData.additionalClinicalNotes) // WAS Text93
 
-    console.log(`\u2713 Filled ${filledCount} fields successfully`)
-
     // Save with updateFieldAppearances: false to skip rich text field processing
     const pdfBytes = await pdfDoc.save({
       useObjectStreams: false,
@@ -280,8 +276,6 @@ export async function exportSCAT6ToFilledPDF(
     link.download = filename
     link.click()
     URL.revokeObjectURL(url)
-
-    console.log('\u2713 PDF exported successfully!')
   } catch (error: any) {
     console.error('PDF export failed:', error)
     alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -297,14 +291,9 @@ function setTextField(form: any, fieldName: string, value: string | number): num
 
     const field = form.getTextField(fieldName)
     field.setText(String(value))
-    console.log(`\u2713 ${fieldName} = "${value}"`)
     return 1
   } catch (error: any) {
-    if (error?.message?.includes('rich text')) {
-      console.log(`\u2298 ${fieldName}: Rich text field (not supported by pdf-lib)`)
-    } else {
-      console.log(`\u2717 ${fieldName}: ${error?.message || 'field not found'}`)
-    }
+    // Skip rich text fields (not supported by pdf-lib) and missing fields
     return 0
   }
 }
@@ -320,16 +309,13 @@ function setCheckBox(form: any, fieldName: string, value: boolean): number {
       } else {
         field.uncheck()
       }
-      console.log(`\u2713 ${fieldName} = ${value}`)
       return 1
     } catch (e) {
       const field = form.getButton(fieldName)
       field.select(value ? '/1' : '/0')
-      console.log(`\u2713 ${fieldName} = ${value}`)
       return 1
     }
   } catch (error) {
-    console.log(`\u2717 ${fieldName}: ${(error as any)?.message || 'not found'}`)
     return 0
   }
 }
@@ -344,17 +330,14 @@ function setSymptomRadio(form: any, fieldName: string, value: number): number {
 
     const field = form.getRadioGroup(fieldName)
     field.select(`/${value}`)
-    console.log(`\u2713 ${fieldName} = ${value}`)
     return 1
   } catch (error) {
     // Fallback: try as button
     try {
       const field = form.getButton(fieldName)
       field.select(`/${value}`)
-      console.log(`\u2713 ${fieldName} = ${value} (button fallback)`)
       return 1
     } catch (e) {
-      console.log(`\u2717 ${fieldName}: ${(error as any)?.message || 'not found'}`)
       return 0
     }
   }
@@ -368,17 +351,14 @@ function setRadioButtonByValue(form: any, fieldName: string, value: string): num
     try {
       const field = form.getRadioGroup(fieldName)
       field.select(value)
-      console.log(`\u2713 ${fieldName} = ${value}`)
       return 1
     } catch (e) {
       // Fallback to button
       const field = form.getButton(fieldName)
       field.select(value)
-      console.log(`\u2713 ${fieldName} = ${value} (button fallback)`)
       return 1
     }
   } catch (error) {
-    console.log(`\u2717 ${fieldName}: ${(error as any)?.message || 'not found'}`)
     return 0
   }
 }

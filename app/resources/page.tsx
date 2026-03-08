@@ -2,18 +2,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Download, FileText, CheckSquare, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { FileText, CheckSquare, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { SiteNav } from '@/components/SiteNav'
 
 export default function ResourcesPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
 
     try {
       const res = await fetch('/api/signup-free', {
@@ -22,85 +25,54 @@ export default function ResourcesPage() {
         body: JSON.stringify({ email }),
       })
       if (!res.ok) throw new Error('Signup failed')
-    } catch (error) {
-      console.error('Resource signup error:', error)
+      setSubmitted(true)
+      localStorage.setItem('resourceEmail', email)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
-
-    setSubmitted(true)
-    setIsLoading(false)
-    localStorage.setItem('resourceEmail', email)
   }
 
   const resources = [
     {
       title: 'Concussion Clinical Cheat Sheet',
       description: 'One-page clinical reference for concussion assessment and management',
-      fileSize: 'PDF',
-      downloadUrl: '#',
+      format: 'PDF',
       icon: FileText
     },
     {
       title: 'SCAT6 & SCOAT6 Fillable Forms',
       description: 'Official assessment tools — fillable and printable PDFs',
-      fileSize: 'PDF',
-      downloadUrl: '#',
+      format: 'PDF + ZIP',
       icon: CheckSquare
     },
     {
       title: '"What to Expect After a Concussion"',
       description: 'Patient education handout with plain-language recovery guidance',
-      fileSize: 'PDF',
-      downloadUrl: '#',
+      format: 'PDF',
       icon: FileText
     },
     {
       title: 'Return-to-Play & Return-to-Learn Ladder',
       description: 'Graduated RTP and RTL progression stages with criteria',
-      fileSize: 'PDF',
-      downloadUrl: '#',
+      format: 'PDF',
       icon: CheckSquare
     },
     {
       title: 'PCS Clinical Flowchart',
       description: 'Post-Concussion Syndrome decision tree for persistent symptoms',
-      fileSize: 'PDF',
-      downloadUrl: '#',
+      format: 'PDF',
       icon: FileText
     }
   ]
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => router.push('/')}
-              className="text-xl font-bold text-slate-900"
-            >
-              Concussion<span className="text-[#6b9da8]">Pro</span>
-            </button>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/login')}
-                className="text-sm text-slate-600 hover:text-slate-900 font-medium"
-              >
-                Login
-              </button>
-              <a
-                href={CONFIG.SHOP_URL}
-                className="px-5 py-2 bg-[#6b9da8] text-white rounded-lg text-sm font-semibold hover:bg-[#5b8d96] transition-colors"
-              >
-                Enroll Now
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* Hero */}
-      <div className="max-w-4xl mx-auto px-6 py-16">
+      <div className="max-w-4xl mx-auto px-6 py-16 pt-[80px]">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
             Free Clinical Resources
@@ -122,6 +94,11 @@ export default function ResourcesPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-center">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
               <div className="flex gap-3">
                 <input
                   type="email"
@@ -199,7 +176,7 @@ export default function ResourcesPage() {
                       <p className="text-sm text-slate-600 mb-2">
                         {resource.description}
                       </p>
-                      <p className="text-xs text-slate-500">{resource.fileSize} PDF</p>
+                      <p className="text-xs text-slate-500">{resource.format}</p>
                     </div>
                   </div>
                 </div>
@@ -228,14 +205,7 @@ export default function ResourcesPage() {
         )}
       </div>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm text-slate-500">
-            © 2026 Concussion Education Australia · AHPRA Aligned CPD
-          </p>
-        </div>
-      </footer>
+      {/* Footer rendered by FooterWrapper in root layout */}
     </div>
   )
 }

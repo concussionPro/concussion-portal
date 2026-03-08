@@ -1,6 +1,26 @@
 // /app/api/analytics/track/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { put, list } from '@vercel/blob';
+import fs from 'fs';
+import path from 'path';
+
+// Conditionally import @vercel/blob — only available when BLOB_READ_WRITE_TOKEN is set
+let blobPut: typeof import('@vercel/blob').put | null = null;
+let blobList: typeof import('@vercel/blob').list | null = null;
+
+const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+
+if (useBlob) {
+  try {
+    const blob = require('@vercel/blob');
+    blobPut = blob.put;
+    blobList = blob.list;
+  } catch {
+    // @vercel/blob not available
+  }
+}
+
+// Local filesystem analytics directory (dev fallback)
+const LOCAL_DIR = path.join(process.cwd(), '.data', 'analytics');
 
 interface TrackPayload {
   eventType: string;
@@ -29,36 +49,23 @@ function getBlobPath(dateKey: string): string {
   return `analytics/${dateKey}.ndjson`;
 }
 
-/**
- * Check that the request originates from the same domain (or localhost for dev).
- * We inspect the Origin header first, then fall back to Referer.
- */
 function isAllowedOrigin(request: NextRequest): boolean {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
-
-  // In development, always allow
   if (process.env.NODE_ENV === 'development') return true;
 
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
-
   const candidate = origin || referer;
   if (!candidate) return false;
-
-  // If we have no configured app URL, allow any non-null origin
-  // (better than blocking all traffic; admin should set NEXT_PUBLIC_APP_URL)
   if (!appUrl) return true;
 
-  // Normalise: strip trailing slash, compare hosts
   try {
     const candidateHost = new URL(candidate).hostname;
     const appHost = new URL(
       appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
     ).hostname;
-
     return (
       candidateHost === appHost ||
-      // Allow Vercel preview URLs on the same project
       candidateHost.endsWith('.vercel.app')
     );
   } catch {
@@ -66,17 +73,42 @@ function isAllowedOrigin(request: NextRequest): boolean {
   }
 }
 
-/**
- * Read the current NDJSON file for a given date from Vercel Blob.
- * Returns the raw text or null if not found.
- */
+// ---------------------------------------------------------------------------
+// Local filesystem storage (dev fallback)
+// ---------------------------------------------------------------------------
+
+function ensureLocalDir(): void {
+  if (!fs.existsSync(LOCAL_DIR)) {
+    fs.mkdirSync(LOCAL_DIR, { recursive: true });
+  }
+}
+
+function readLocalNdjson(dateKey: string): string | null {
+  const filePath = path.join(LOCAL_DIR, `${dateKey}.ndjson`);
+  try {
+    return fs.readFileSync(filePath, 'utf-8');
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalNdjson(dateKey: string, content: string): void {
+  ensureLocalDir();
+  const filePath = path.join(LOCAL_DIR, `${dateKey}.ndjson`);
+  fs.writeFileSync(filePath, content, 'utf-8');
+}
+
+// ---------------------------------------------------------------------------
+// Blob storage
+// ---------------------------------------------------------------------------
+
 async function readBlobNdjson(dateKey: string): Promise<string | null> {
+  if (!blobList) return null;
   try {
     const blobPath = getBlobPath(dateKey);
-    const { blobs } = await list({ prefix: blobPath });
+    const { blobs } = await blobList({ prefix: blobPath });
     const match = blobs.find((b) => b.pathname === blobPath);
     if (!match) return null;
-
     const res = await fetch(match.url, { cache: 'no-store' });
     if (!res.ok) return null;
     return await res.text();
@@ -85,10 +117,6 @@ async function readBlobNdjson(dateKey: string): Promise<string | null> {
   }
 }
 
-/**
- * Parse NDJSON text into an array of StoredEvent objects.
- * Invalid lines are silently skipped.
- */
 function parseNdjson(text: string): StoredEvent[] {
   return text
     .split('\n')
@@ -103,15 +131,11 @@ function parseNdjson(text: string): StoredEvent[] {
     });
 }
 
-/**
- * Serialize an array of events back to NDJSON.
- */
 function serializeNdjson(events: StoredEvent[]): string {
   return events.map((e) => JSON.stringify(e)).join('\n') + '\n';
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // Rate-limit by origin — reject cross-origin requests
   if (!isAllowedOrigin(request)) {
     return NextResponse.json(
       { error: 'Forbidden: cross-origin tracking not allowed' },
@@ -119,7 +143,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Parse body
   let payload: TrackPayload;
   try {
     payload = (await request.json()) as TrackPayload;
@@ -127,7 +150,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  // Basic validation
   if (!payload.eventType || !payload.sessionId || !payload.path) {
     return NextResponse.json(
       { error: 'Missing required fields: eventType, sessionId, path' },
@@ -135,7 +157,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Sanitise: limit string lengths to prevent oversized blobs
   const event: StoredEvent = {
     eventType: String(payload.eventType).slice(0, 64),
     eventData: payload.eventData ?? {},
@@ -148,44 +169,54 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   };
 
   const dateKey = getTodayKey();
-  const blobPath = getBlobPath(dateKey);
 
-  // Read-modify-write the daily NDJSON file
-  // If we fail to read (file doesn't exist or transient error), start fresh
-  let existingText: string | null = null;
-  try {
-    existingText = await readBlobNdjson(dateKey);
-  } catch {
-    existingText = null;
+  // --- Vercel Blob path ---
+  if (useBlob && blobPut) {
+    const blobPath = getBlobPath(dateKey);
+    let existingText: string | null = null;
+    try {
+      existingText = await readBlobNdjson(dateKey);
+    } catch {
+      existingText = null;
+    }
+
+    let events: StoredEvent[] = [];
+    if (existingText) {
+      events = parseNdjson(existingText);
+    }
+    events.push(event);
+
+    try {
+      await blobPut(blobPath, serializeNdjson(events), {
+        access: 'public',
+        addRandomSuffix: false,
+        contentType: 'application/x-ndjson',
+      });
+    } catch (err) {
+      console.error('[analytics/track] Failed to write blob:', err);
+      return NextResponse.json({ error: 'Failed to store event' }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true }, { status: 200 });
   }
 
-  let events: StoredEvent[] = [];
-  if (existingText) {
-    events = parseNdjson(existingText);
-  }
-
-  events.push(event);
-
-  const newContent = serializeNdjson(events);
-
+  // --- Local filesystem fallback (dev) ---
   try {
-    await put(blobPath, newContent, {
-      access: 'public',
-      addRandomSuffix: false,
-      contentType: 'application/x-ndjson',
-    });
+    const existingText = readLocalNdjson(dateKey);
+    let events: StoredEvent[] = [];
+    if (existingText) {
+      events = parseNdjson(existingText);
+    }
+    events.push(event);
+    writeLocalNdjson(dateKey, serializeNdjson(events));
   } catch (err) {
-    console.error('[analytics/track] Failed to write blob:', err);
-    return NextResponse.json(
-      { error: 'Failed to store event' },
-      { status: 500 }
-    );
+    console.error('[analytics/track] Failed to write local file:', err);
+    return NextResponse.json({ error: 'Failed to store event' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
 
-// Reject everything except POST
 export async function GET(): Promise<NextResponse> {
   return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }

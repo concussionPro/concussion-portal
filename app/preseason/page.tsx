@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, ArrowLeft, ClipboardList, Share2, FileText, Shield, Brain, Users, CheckCircle2 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { SiteNav } from '@/components/SiteNav'
 
 export default function PreseasonLandingPage() {
   const router = useRouter()
@@ -14,21 +15,10 @@ export default function PreseasonLandingPage() {
       <div className="mesh-gradient" aria-hidden="true" />
       <div className="noise-overlay" aria-hidden="true" />
 
-      {/* Nav */}
-      <div className="relative z-10 px-6 pt-8">
-        <div className="container-lg">
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to ConcussionPro
-          </button>
-        </div>
-      </div>
+      <SiteNav />
 
       {/* Hero */}
-      <section className="section-padding pt-12 pb-8 relative z-10">
+      <section className="section-padding pt-[80px] pb-8 relative z-10">
         <div className="container-lg px-6 md:px-8 text-center">
           <div className="animate-fade-in max-w-3xl mx-auto">
             <div className="badge mb-5">
@@ -258,14 +248,7 @@ export default function PreseasonLandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-6 px-6 border-t border-border/30 relative z-10">
-        <div className="container-xl text-center">
-          <p className="text-xs text-muted-foreground">
-            © 2026 Concussion Education Australia · {CONFIG.CONTACT_EMAIL}
-          </p>
-        </div>
-      </footer>
+      {/* Footer rendered by FooterWrapper in root layout */}
     </div>
   )
 }

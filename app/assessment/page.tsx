@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, CheckCircle2, XCircle, AlertTriangle, Award, Target } from 'lucide-react'
+import { ArrowRight, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
+import { SiteNav } from '@/components/SiteNav'
 
 // 6 HARDEST clinical questions for free "Test Your Knowledge" assessment
 const questions = [
@@ -134,7 +135,9 @@ export default function AssessmentPage() {
 
   if (showResults) {
     return (
-      <div className="min-h-screen bg-background py-20 px-6">
+      <>
+      <SiteNav />
+      <div className="min-h-screen bg-background pt-[80px] px-6 pb-20">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -252,6 +255,7 @@ export default function AssessmentPage() {
           </motion.div>
         </div>
       </div>
+      </>
     )
   }
 
@@ -267,18 +271,9 @@ export default function AssessmentPage() {
         { name: 'Free Skills Assessment', url: '/assessment' },
       ]} />
 
+      <SiteNav />
       <div className="min-h-screen bg-background">
-        {/* Nav Header */}
-        <div className="bg-background/80 backdrop-blur-sm border-b border-slate-200/50 px-6 py-3">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <a href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              ConcussionPro Home
-            </a>
-            <span className="text-xs text-muted-foreground">Free Knowledge Test</span>
-          </div>
-        </div>
-        <div className="px-6 pt-12 pb-20">
+        <div className="px-6 pt-[80px] pb-20">
         <div className="max-w-4xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">

@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { createFAQSchema, createMedicalWebPageSchema, createBreadcrumbSchema } from '@/lib/schema-markup'
-import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { SiteNav } from '@/components/SiteNav'
 
 export const metadata: Metadata = {
   title: 'SCAT-6 Assessment FAQ | Concussion Education Australia',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 const faqs = [
   {
     question: 'What is SCAT-6 and when do I use it?',
-    answer: 'SCAT-6 (Sport Concussion Assessment Tool, 6th Edition) is the gold-standard assessment tool for sport-related concussion in athletes aged 13 years and older. Use SCAT-6 within 72 hours to 7 days post-injury for both on-field and off-field evaluations. It assesses symptom severity, cognitive function, balance, and delayed recall. SCAT-6 replaced SCAT-5 in 2023 with updated protocols aligned with the 2023 Amsterdam Consensus Statement on Concussion in Sport. Best practice is to use it within 30 minutes of suspected concussion for immediate remove-from-play decisions.',
+    answer: 'SCAT-6 (Sport Concussion Assessment Tool, 6th Edition) is the gold-standard assessment tool for sport-related concussion in athletes aged 13 years and older. Use SCAT-6 within 0-72 hours post-injury for acute sideline and off-field evaluations. It assesses symptom severity, cognitive function, balance, and delayed recall. SCAT-6 replaced SCAT-5 in 2023 with updated protocols aligned with the 2023 Amsterdam Consensus Statement on Concussion in Sport. Best practice is to use it within 30 minutes of suspected concussion for immediate remove-from-play decisions.',
   },
   {
     question: 'How does SCAT-6 differ from SCAT-5?',
@@ -69,13 +69,10 @@ export default function SCATAssessmentFAQ() {
         }}
       />
 
+      <SiteNav />
       <div className="min-h-screen bg-slate-50">
-        <div className="bg-blue-600 text-white py-12">
+        <div className="bg-blue-600 text-white pt-[80px] pb-12">
           <div className="max-w-4xl mx-auto px-4">
-            <Link href="/" className="inline-flex items-center gap-2 text-blue-100 hover:text-white mb-4">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
             <h1 className="text-4xl font-bold mb-4">
               SCAT-6 Assessment FAQ
             </h1>

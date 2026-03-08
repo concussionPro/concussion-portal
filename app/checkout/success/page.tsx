@@ -4,6 +4,12 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { CheckCircle2, Mail, BookOpen, ArrowRight, Loader2, AlertTriangle } from 'lucide-react'
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
+
 interface SessionData {
   customerName: string
   customerEmail: string
@@ -36,15 +42,15 @@ function CheckoutSuccessContent() {
           setSessionData(data.session)
 
           // Fire Google Ads conversion (only once)
-          if (!conversionFired && typeof window !== 'undefined' && (window as any).gtag) {
-            (window as any).gtag('event', 'conversion', {
+          if (!conversionFired && typeof window !== 'undefined' && window.gtag) {
+            window.gtag('event', 'conversion', {
               send_to: 'AW-17984048021/checkout_complete',
               value: data.session.amountPaid,
               currency: 'AUD',
               transaction_id: sessionId,
             })
             setConversionFired(true)
-            console.log('📊 Google Ads conversion fired:', data.session.amountPaid, 'AUD')
+            // Google Ads conversion tracked
           }
         } else {
           setError(true)
@@ -53,8 +59,8 @@ function CheckoutSuccessContent() {
       .catch(() => {
         // Even if API fails, the purchase was still successful (Stripe confirmed)
         // Fire a generic conversion
-        if (!conversionFired && typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'conversion', {
+        if (!conversionFired && typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'conversion', {
             send_to: 'AW-17984048021/checkout_complete',
             currency: 'AUD',
           })
