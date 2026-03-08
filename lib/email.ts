@@ -288,8 +288,8 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
               <h1>Welcome to ConcussionPro</h1>
             </div>
             <div class="content">
-              <h2 style="margin-top: 0;">Welcome aboard, ${escapeHtml(name.split(' ')[0])}.</h2>
-              <p>You just made a great decision for your patients and your practice. Here's how to make the most of it.</p>
+              <h2 style="margin-top: 0;">Hi ${escapeHtml(name.split(' ')[0])},</h2>
+              <p>Your course is ready. Here's how to get started.</p>
 
               <h3>Start earning CPD points today:</h3>
               <div class="checklist">
@@ -304,14 +304,14 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
                   <div class="number">2</div>
                   <div>
                     <strong>Start Module 1: What is a Concussion?</strong><br>
-                    <span style="color: #64748b; font-size: 14px;">Earn your first CPD point in under 45 minutes</span>
+                    <span style="color: #64748b; font-size: 14px;">Concussion pathophysiology and the neurometabolic cascade (~45 min)</span>
                   </div>
                 </div>
                 <div class="checklist-item">
                   <div class="number">3</div>
                   <div>
                     <strong>Download the Clinical Toolkit</strong><br>
-                    <span style="color: #64748b; font-size: 14px;">Referral templates, RTP forms, and clearance letters you can use this week</span>
+                    <span style="color: #64748b; font-size: 14px;">Referral templates, RTP protocols, and clearance letters</span>
                   </div>
                 </div>
               </div>
@@ -322,15 +322,8 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
                 </a>
               </center>
 
-              <div class="highlight" style="margin-top: 32px;">
-                <strong>Quick tip:</strong> Most clinicians finish Module 1 in their first sitting. By the end of it, you'll understand the neurometabolic cascade well enough to explain it to patients — and that changes how you manage every concussion case.
-              </div>
-
               <p style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; color: #475569;">
-                I built this course because I was tired of seeing clinicians guess their way through concussion management. You're now one of a growing group of practitioners who are raising the standard of care in Australia.
-              </p>
-              <p style="color: #475569;">
-                If you have any questions as you work through the modules, just reply to this email. I read every message.
+                If you have questions as you work through the modules, reply to this email.
               </p>
 
               <p style="color: #64748b;">

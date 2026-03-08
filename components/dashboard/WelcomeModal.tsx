@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Play, Award, BookOpen, Clock, GraduationCap, ChevronRight, Sparkles } from 'lucide-react'
+import { X, Play, Award, BookOpen, Clock, GraduationCap, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface UserInfo {
@@ -124,9 +124,8 @@ export function WelcomeModal() {
           {/* Quick Start Steps */}
           <div className="mb-8">
             <div className="mb-4 flex items-center justify-center gap-2">
-              <Sparkles className="h-4 w-4 text-teal-600" />
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-                Earn your first CPD point today
+                Getting started
               </h3>
             </div>
             <div className="space-y-2.5">
@@ -151,7 +150,7 @@ export function WelcomeModal() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900">Start Module 1: What is a Concussion?</p>
-                  <p className="text-xs text-slate-500">The neurometabolic cascade — you&apos;ll explain it to patients by the end</p>
+                  <p className="text-xs text-slate-500">Concussion pathophysiology and the neurometabolic cascade</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>

@@ -126,7 +126,7 @@ function CheckoutSuccessContent() {
             <CheckCircle2 className="w-10 h-10 text-emerald-600" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            You&apos;re in{sessionData?.customerName ? `, ${sessionData.customerName.split(' ')[0]}` : ''}!
+            Enrollment confirmed{sessionData?.customerName ? `, ${sessionData.customerName.split(' ')[0]}` : ''}.
           </h1>
           <p className="text-lg text-muted-foreground">
             {sessionData?.courseType === 'full-course'
@@ -201,7 +201,7 @@ function CheckoutSuccessContent() {
 
         {/* Next Steps */}
         <div className="space-y-4 mb-10">
-          <h2 className="font-bold text-lg">Get started in 2 minutes</h2>
+          <h2 className="font-bold text-lg">Next steps</h2>
 
           <div className="flex items-start gap-4 glass rounded-xl p-5">
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
@@ -222,7 +222,7 @@ function CheckoutSuccessContent() {
             <div>
               <h3 className="font-semibold mb-1">Start Module 1</h3>
               <p className="text-sm text-muted-foreground">
-                Jump straight into &ldquo;What is a Concussion?&rdquo; — you&apos;ll earn your first CPD point in under 45 minutes.
+                Begin with &ldquo;What is a Concussion?&rdquo; — covers concussion pathophysiology and the neurometabolic cascade. About 45 minutes.
               </p>
             </div>
           </div>
@@ -232,9 +232,9 @@ function CheckoutSuccessContent() {
               <span className="text-accent font-bold">3</span>
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Download your clinical toolkit</h3>
+              <h3 className="font-semibold mb-1">Download the clinical toolkit</h3>
               <p className="text-sm text-muted-foreground">
-                Grab the referral templates, return-to-play forms, and clearance letters. Use them in your practice this week.
+                Referral templates, return-to-play protocols, and clearance letters — ready to use in practice.
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ function CheckoutSuccessContent() {
         {/* Personal touch */}
         <div className="mt-10 glass rounded-xl p-5">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            <strong className="text-foreground">A note from Zac:</strong> Thanks for investing in your concussion management skills. If you have any questions as you work through the modules, just reply to any email from us — I read every message personally.
+            <strong className="text-foreground">From Zac:</strong> If you have questions as you work through the modules, reply to any email from us. I read every message.
           </p>
         </div>
       </div>
