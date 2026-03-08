@@ -19,6 +19,21 @@ if (useBlob) {
   }
 }
 
+// Rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, limit: number): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 });
+    return true;
+  }
+  if (entry.count >= limit) return false;
+  entry.count++;
+  return true;
+}
+
 // Local filesystem analytics directory (dev fallback)
 const LOCAL_DIR = path.join(process.cwd(), '.data', 'analytics');
 
@@ -140,6 +155,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       { error: 'Forbidden: cross-origin tracking not allowed' },
       { status: 403 }
+    );
+  }
+
+  // Rate limit by IP
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() || 'unknown';
+  if (!checkRateLimit(`ip:${ip}`, 200)) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429 }
     );
   }
 

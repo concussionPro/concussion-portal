@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
 import { SCAT_MASTERY_SEQUENCE } from '@/lib/email-sequences'
@@ -19,9 +20,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
     }
 
-    // Verify cron secret
+    // Verify cron secret (timing-safe)
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const expected = `Bearer ${process.env.CRON_SECRET}`
+    if (!authHeader || authHeader.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

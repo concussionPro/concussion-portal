@@ -1,6 +1,6 @@
 // Health check endpoint for monitoring
 import { NextResponse } from 'next/server'
-import { head, list } from '@vercel/blob'
+import { list } from '@vercel/blob'
 import { verifySessionToken } from '@/lib/jwt-session'
 
 export const runtime = 'nodejs'
@@ -18,20 +18,16 @@ export async function GET() {
   try {
     await list({ limit: 1 })
     checks.blobStorage = true
-  } catch (error) {
+  } catch {
     status = 'degraded'
-    console.error('Blob storage check failed:', error)
   }
 
   // Check authentication system
   try {
-    const testToken = 'invalid.token'
-    const result = verifySessionToken(testToken)
-    // Should return null for invalid token
+    const result = verifySessionToken('invalid.token')
     checks.authentication = result === null
-  } catch (error) {
+  } catch {
     status = 'degraded'
-    console.error('Authentication check failed:', error)
   }
 
   // Check environment variables
@@ -45,20 +41,12 @@ export async function GET() {
     status = 'degraded'
   }
 
-  // If multiple systems are down, mark as down
   const healthyCount = Object.values(checks).filter(Boolean).length
   if (healthyCount < 2) {
     status = 'down'
   }
 
-  const response = {
-    status,
-    checks,
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  }
-
   const statusCode = status === 'healthy' ? 200 : status === 'degraded' ? 503 : 500
 
-  return NextResponse.json(response, { status: statusCode })
+  return NextResponse.json({ status }, { status: statusCode })
 }

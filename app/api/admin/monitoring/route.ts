@@ -1,5 +1,6 @@
 // Admin monitoring dashboard endpoint
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
 
@@ -21,9 +22,10 @@ const LOCAL_ANALYTICS_DIR = path.join(process.cwd(), '.data', 'analytics')
 
 export async function GET(request: NextRequest) {
   try {
-    // Admin auth
+    // Admin auth (timing-safe)
     const adminKey = request.headers.get('x-admin-key')
-    if (adminKey !== process.env.ADMIN_API_KEY) {
+    const expected = process.env.ADMIN_API_KEY
+    if (!expected || !adminKey || adminKey.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(adminKey), Buffer.from(expected))) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

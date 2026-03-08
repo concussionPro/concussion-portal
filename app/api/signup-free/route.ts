@@ -23,6 +23,10 @@ function checkRateLimit(key: string, limit: number): boolean {
   return true
 }
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 export async function POST(request: NextRequest) {
   try {
     const forwarded = request.headers.get('x-forwarded-for')
@@ -47,7 +51,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const userName = name || email.split('@')[0]
+    const rawName = (name || email.split('@')[0]).slice(0, 100)
+    const userName = rawName
 
     // Check if user already exists
     const existingUser = await findUserByEmail(email)
@@ -66,9 +71,10 @@ export async function POST(request: NextRequest) {
       console.log(`New user created for free course: ${email}`)
     }
 
-    // Generate magic link with token
+    // Generate magic link with token — preserve existing access level for paid users
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const loginLink = generateMagicLinkJWT(userId, email, userName, 'preview', baseUrl)
+    const accessLevel = existingUser ? existingUser.accessLevel : 'preview'
+    const loginLink = generateMagicLinkJWT(userId, email, userName, accessLevel, baseUrl)
 
     // Send welcome email (Day 0 of nurture sequence)
     await sendEmail({
@@ -96,7 +102,7 @@ export async function POST(request: NextRequest) {
                 <h1>Welcome to SCAT Mastery</h1>
               </div>
               <div class="content">
-                <h2 style="margin-top: 0;">Hi ${userName},</h2>
+                <h2 style="margin-top: 0;">Hi ${escapeHtml(userName)},</h2>
                 <p>Your FREE 2-hour SCAT6/SCOAT6 Mastery course is ready. Get 100% confident for your next concussion assessment.</p>
 
                 <div class="highlight">

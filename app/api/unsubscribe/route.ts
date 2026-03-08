@@ -14,6 +14,7 @@ function verifyUnsubscribeToken(email: string, token: string): boolean {
     .createHmac('sha256', getUnsubscribeSecret())
     .update(email.toLowerCase())
     .digest('hex')
+  if (token.length !== expected.length) return false
   return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))
 }
 

@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Edge-compatible constant-time string comparison
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let result = 0
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return result === 0
+}
+
 // PDFs in /docs/ that are freely accessible (clinical assessment tools)
 const PUBLIC_DOCS = new Set([
   '/docs/SCAT6_Fillable.pdf',
@@ -39,7 +49,9 @@ export function middleware(request: NextRequest) {
         { status: 503 }
       )
     }
-    if (adminKey !== envKey && bearerToken !== envKey) {
+    const keyMatch = adminKey ? constantTimeEqual(adminKey, envKey) : false
+    const bearerMatch = bearerToken ? constantTimeEqual(bearerToken, envKey) : false
+    if (!keyMatch && !bearerMatch) {
       return NextResponse.json(
         { error: 'Unauthorized \u2014 admin API key required' },
         { status: 401 }

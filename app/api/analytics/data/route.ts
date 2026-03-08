@@ -1,5 +1,6 @@
 // /app/api/analytics/data/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
@@ -64,8 +65,9 @@ type MetricPoint = { x: string; y: number };
 function isAuthorised(request: NextRequest): boolean {
   const key = request.headers.get('x-admin-key');
   const expected = process.env.ANALYTICS_API_KEY || process.env.ADMIN_API_KEY;
-  if (!expected) return false;
-  return key === expected;
+  if (!expected || !key) return false;
+  if (key.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(key), Buffer.from(expected));
 }
 
 // ---------------------------------------------------------------------------

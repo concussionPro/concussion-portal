@@ -80,9 +80,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Prevent abuse: limit progress data size
+    const progressJson = JSON.stringify(progress)
+    if (progressJson.length > 100_000) {
+      return NextResponse.json(
+        { error: 'Progress data too large' },
+        { status: 413 }
+      )
+    }
+
     // Save progress to Blob storage with deterministic path
     const filename = `user-progress/${sessionData.userId}.json`
-    const blob = await put(filename, JSON.stringify(progress), {
+    const blob = await put(filename, progressJson, {
       access: 'public',
       addRandomSuffix: false,
       contentType: 'application/json',
@@ -91,7 +100,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Progress saved',
-      url: blob.url
     })
   } catch (error) {
     console.error('Error saving progress:', error)

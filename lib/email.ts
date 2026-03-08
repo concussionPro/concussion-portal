@@ -181,6 +181,10 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
   })
 }
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 /**
  * Send welcome email after successful enrollment
  */
@@ -284,7 +288,7 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
               <h1>Welcome to ConcussionPro</h1>
             </div>
             <div class="content">
-              <h2 style="margin-top: 0;">Hi ${name},</h2>
+              <h2 style="margin-top: 0;">Hi ${escapeHtml(name)},</h2>
               <p>Your enrollment is confirmed! You now have lifetime access to:</p>
 
               <div class="highlight">

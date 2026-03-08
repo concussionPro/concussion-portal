@@ -20,7 +20,14 @@ export async function POST(request: NextRequest) {
       .update(body)
       .digest('base64')
 
-    if (signature !== expectedSignature) {
+    if (
+      !signature ||
+      signature.length !== expectedSignature.length ||
+      !crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      )
+    ) {
       console.error('❌ Invalid webhook signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
@@ -81,12 +88,7 @@ export async function POST(request: NextRequest) {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
         await sendMagicLinkEmail(existingUser.email, token, baseUrl)
 
-        return NextResponse.json({
-          success: true,
-          userId: existingUser.id,
-          accessLevel: finalAccess,
-          upgraded: finalAccess === 'full-course',
-        })
+        return NextResponse.json({ success: true })
       }
 
       // Create new user
@@ -107,12 +109,7 @@ export async function POST(request: NextRequest) {
       console.log(`✅ User created: ${userId}`)
       console.log(`📧 Welcome email ${emailSent ? 'sent' : 'queued'}`)
 
-      return NextResponse.json({
-        success: true,
-        userId,
-        accessLevel,
-        emailSent,
-      })
+      return NextResponse.json({ success: true })
     }
 
     return NextResponse.json({ success: true, message: 'Event processed' })

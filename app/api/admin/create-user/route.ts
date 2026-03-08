@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { createUser, findUserById } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/email'
 
+function timingSafeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
+
 function isAdminAuthorized(request: NextRequest): boolean {
-  // Check admin API key header
+  const expected = process.env.ADMIN_API_KEY
+  if (!expected) return false
   const adminKey = request.headers.get('x-admin-key')
-  if (adminKey && adminKey === process.env.ADMIN_API_KEY) return true
-  // Check authorization bearer token
+  if (adminKey && timingSafeCompare(adminKey, expected)) return true
   const authHeader = request.headers.get('authorization')
-  if (authHeader?.startsWith('Bearer ') && authHeader.slice(7) === process.env.ADMIN_API_KEY) return true
+  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (bearer && timingSafeCompare(bearer, expected)) return true
   return false
 }
 
@@ -55,7 +62,6 @@ export async function POST(request: NextRequest) {
       userId,
       accessLevel,
       emailSent,
-      magicLink,
     })
   } catch (error: any) {
     console.error('Admin create user error:', error)

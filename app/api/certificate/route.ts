@@ -185,6 +185,10 @@ function getLatestCompletionDate(progress: Record<string, any>, moduleIds: numbe
   return latest.getTime() > 0 ? latest : new Date()
 }
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 async function sendCertificateEmail(opts: {
   to: string
   participantName: string
@@ -233,7 +237,7 @@ async function sendCertificateEmail(opts: {
               </div>
 
               <div style="padding: 32px 24px;">
-                <h2 style="margin-top: 0; color: #1e293b;">Hi ${opts.participantName},</h2>
+                <h2 style="margin-top: 0; color: #1e293b;">Hi ${escapeHtml(opts.participantName)},</h2>
 
                 <p>You've successfully completed:</p>
 

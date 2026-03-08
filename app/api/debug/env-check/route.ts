@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
+
+function timingSafeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
 
 export async function GET(request: NextRequest) {
-  // Require admin API key
+  // Require admin API key (timing-safe)
   const adminKey = request.headers.get('x-admin-key') || request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!process.env.ADMIN_API_KEY || adminKey !== process.env.ADMIN_API_KEY) {
+  if (!process.env.ADMIN_API_KEY || !adminKey || !timingSafeCompare(adminKey, process.env.ADMIN_API_KEY)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Valid email is required.' }, { status: 400 })
     }
-    if (!name || name.trim().length < 2) {
-      return NextResponse.json({ error: 'Name is required.' }, { status: 400 })
+    if (!name || name.trim().length < 2 || name.trim().length > 100) {
+      return NextResponse.json({ error: 'Name is required (max 100 characters).' }, { status: 400 })
     }
     if (!city || !(VALID_CITIES as readonly string[]).includes(city)) {
       return NextResponse.json({ error: 'Invalid city.' }, { status: 400 })
@@ -148,7 +148,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Thanks ${cleanName.split(' ')[0]}! We'll email you as soon as the ${cityLabel} date is confirmed.`,
-      totalInterested: registrations.length,
     })
   } catch (error) {
     console.error('Register interest error:', error)

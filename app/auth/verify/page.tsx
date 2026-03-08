@@ -38,7 +38,7 @@ function VerifyContent() {
           const savedRedirect = localStorage.getItem('login_redirect')
           localStorage.removeItem('login_redirect')
 
-          if (savedRedirect && data.user.accessLevel !== 'preview') {
+          if (savedRedirect && savedRedirect.startsWith('/') && !savedRedirect.startsWith('//') && data.user.accessLevel !== 'preview') {
             router.push(savedRedirect)
           } else if (data.user.accessLevel === 'preview') {
             router.push('/scat-course')
