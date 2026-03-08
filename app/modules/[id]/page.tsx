@@ -332,7 +332,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
                 href={CONFIG.SHOP_URL}
                 className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
               >
-                Upgrade Now - $1,190
+                Upgrade Now — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
                 <ArrowRight className="w-5 h-5" />
               </a>
 

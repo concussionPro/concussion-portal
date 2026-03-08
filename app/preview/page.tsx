@@ -109,7 +109,7 @@ export default function PreviewPage() {
             </div>
             <h3 className="text-xl font-bold text-slate-900">Quick Knowledge Check</h3>
           </div>
-          <p className="text-sm text-slate-600 mb-6">How well do you know concussion management? Most clinicians get at least one of these wrong.</p>
+          <p className="text-sm text-slate-600 mb-6">Test your concussion management knowledge.</p>
           <div className="space-y-4">
             {[
               {

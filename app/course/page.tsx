@@ -176,7 +176,7 @@ export default function CoursePage() {
               </div>
 
               <div className="mb-6">
-                <div className="text-4xl font-bold text-gradient mb-2">$1,190</div>
+                <div className="text-4xl font-bold text-gradient mb-2">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Book 4+ weeks in advance</div>
               </div>
 
@@ -215,7 +215,7 @@ export default function CoursePage() {
               </div>
 
               <div className="mb-6">
-                <div className="text-4xl font-bold text-foreground mb-2">$1,400</div>
+                <div className="text-4xl font-bold text-foreground mb-2">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Book less than 4 weeks advance</div>
               </div>
 
@@ -359,11 +359,11 @@ export default function CoursePage() {
                     {selectedLocation} — {selectedDate}
                   </div>
                   <div className="text-3xl font-bold text-gradient mt-3">
-                    ${pricingTier === 'early' ? '1,190' : '1,400'}
+                    ${pricingTier === 'early' ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
                   </div>
                   {pricingTier === 'early' && (
                     <p className="text-xs text-[#6b9da8] font-medium mt-2">
-                      Save $210 with early bird pricing
+                      Save ${CONFIG.COURSE.SAVINGS} with early bird pricing
                     </p>
                   )}
                 </div>

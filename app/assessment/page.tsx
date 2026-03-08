@@ -236,7 +236,7 @@ export default function AssessmentPage() {
                     href={CONFIG.SHOP_URL}
                     className="btn-primary px-8 py-3.5 rounded-xl text-base font-bold text-white inline-flex items-center gap-2 shadow-2xl"
                   >
-                    Enroll — $1,190 Early Bird
+                    Enroll — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} Early Bird
                     <ArrowRight className="w-5 h-5" />
                   </a>
                   <span className="text-muted-foreground text-sm">or</span>
@@ -248,7 +248,7 @@ export default function AssessmentPage() {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Online only from $497 · Complete course $1,190 early bird (save $210)
+                  Online only from $497 · Complete course ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird (save ${CONFIG.COURSE.SAVINGS})
                 </p>
               </div>
             </div>

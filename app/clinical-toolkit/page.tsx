@@ -259,7 +259,7 @@ export default function ClinicalToolkitPage() {
                           }}
                           className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                         >
-                          Upgrade Now - Add Workshop for $693
+                          Upgrade Now — Add Workshop for ${CONFIG.COURSE.PRICE_EARLY_BIRD - 497}
                         </button>
                         <button
                           onClick={() => {

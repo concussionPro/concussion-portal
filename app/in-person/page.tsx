@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Clock, MapPin, Users, Award, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react'
+import { Clock, MapPin, Users, Award, CheckCircle2, ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
@@ -58,11 +58,11 @@ export default function InPersonTrainingPage() {
             <h2 className="text-2xl font-bold mb-4 text-gradient">Critical Clinical Skills You'll Master</h2>
             <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
               <p className="text-sm text-amber-900 font-semibold">
-                ⚠️ <strong>Reading about assessment isn't the same as performing it.</strong> This workshop bridges the gap between theoretical knowledge and clinical competence through intensive hands-on practice with expert feedback.
+                <strong>Assessment skills require hands-on practice.</strong> This workshop bridges the gap between theoretical knowledge and clinical competence through supervised practice with expert feedback.
               </p>
             </div>
             <p className="text-muted-foreground mb-6 leading-relaxed">
-              <strong className="text-foreground">You can't master these techniques from a textbook.</strong> This full-day workshop gives you live, supervised practice with standardized protocols, immediate feedback, and real-world case simulations—building the clinical confidence that separates competent practitioners from the rest.
+              This full-day workshop provides supervised practice with standardized protocols, expert feedback, and clinical case simulations.
             </p>
 
             <div className="space-y-4">
@@ -71,7 +71,7 @@ export default function InPersonTrainingPage() {
                 <div>
                   <h4 className="font-semibold mb-1">In-Depth Neurological Screening</h4>
                   <p className="text-sm text-muted-foreground">
-                    Master SCAT6 and Child SCAT6 administration with confidence. Practice immediate post-injury assessment protocols, symptom severity grading, cognitive screening (orientation, immediate/delayed memory, concentration), and red flag identification. <strong className="text-foreground">Critical for accurate diagnosis and medicolegal documentation.</strong>
+                    Master SCAT6 and Child SCAT6 administration. Practice immediate post-injury assessment protocols, symptom severity grading, cognitive screening (orientation, immediate/delayed memory, concentration), and red flag identification.
                   </p>
                 </div>
               </div>
@@ -81,7 +81,7 @@ export default function InPersonTrainingPage() {
                 <div>
                   <h4 className="font-semibold mb-1">Concussion-Specific Cranial Nerve Examination</h4>
                   <p className="text-sm text-muted-foreground">
-                    Learn targeted cranial nerve assessments essential for concussion phenotyping: CN II (visual field defects, accommodation), CN III/IV/VI (extraocular movements, convergence insufficiency), CN V (sensory changes, jaw deviation), CN VIII (vestibular function, nystagmus), and CN XI (cervical involvement). <strong className="text-foreground">These subtle findings often differentiate concussion subtypes and guide treatment.</strong>
+                    Targeted cranial nerve assessments for concussion phenotyping: CN II (visual field defects, accommodation), CN III/IV/VI (extraocular movements, convergence insufficiency), CN V (sensory changes, jaw deviation), CN VIII (vestibular function, nystagmus), and CN XI (cervical involvement).
                   </p>
                 </div>
               </div>
@@ -91,7 +91,7 @@ export default function InPersonTrainingPage() {
                 <div>
                   <h4 className="font-semibold mb-1">Vestibular-Ocular Motor Screening (VOMS)</h4>
                   <p className="text-sm text-muted-foreground">
-                    Hands-on practice with smooth pursuit, horizontal/vertical saccades, VOR (horizontal/vertical), VMS, and near point of convergence. Learn to identify vestibular vs oculomotor dysfunction, quantify symptom provocation, and integrate findings with balance testing. <strong className="text-foreground">Essential for phenotyping and predicting prolonged recovery.</strong>
+                    Hands-on practice with smooth pursuit, horizontal/vertical saccades, VOR (horizontal/vertical), VMS, and near point of convergence. Learn to identify vestibular vs oculomotor dysfunction, quantify symptom provocation, and integrate findings with balance testing.
                   </p>
                 </div>
               </div>
@@ -101,7 +101,7 @@ export default function InPersonTrainingPage() {
                 <div>
                   <h4 className="font-semibold mb-1">Advanced Oculomotor Assessment</h4>
                   <p className="text-sm text-muted-foreground">
-                    Master convergence testing (near point of convergence, accommodative facility), smooth pursuit tracking quality, saccadic accuracy and latency, and vestibulo-ocular reflex integrity. Identify oculomotor subtype presentations and understand their impact on return-to-learn protocols. <strong className="text-foreground">These deficits are frequently missed yet critical for academic accommodations.</strong>
+                    Master convergence testing (near point of convergence, accommodative facility), smooth pursuit tracking quality, saccadic accuracy and latency, and vestibulo-ocular reflex integrity. Identify oculomotor subtype presentations and their implications for return-to-learn protocols.
                   </p>
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function InPersonTrainingPage() {
                 <div>
                   <h4 className="font-semibold mb-1">Balance Error Scoring System (BESS)</h4>
                   <p className="text-sm text-muted-foreground">
-                    Standardized balance testing across double-leg, single-leg, and tandem stances on firm and foam surfaces. Practice error recognition, scoring consistency, and integration with mBESS for sideline assessment. <strong className="text-foreground">Objective balance data is essential for return-to-sport clearance and risk stratification.</strong>
+                    Standardized balance testing across double-leg, single-leg, and tandem stances on firm and foam surfaces. Practice error recognition, scoring consistency, and integration with mBESS for sideline assessment.
                   </p>
                 </div>
               </div>
@@ -121,7 +121,7 @@ export default function InPersonTrainingPage() {
                 <div>
                   <h4 className="font-semibold mb-1">Cervicogenic Assessment & Integration</h4>
                   <p className="text-sm text-muted-foreground">
-                    Physical examination of cervical spine dysfunction that mimics or complicates concussion: flexion-rotation test, segmental palpation, upper cervical instability screening, and proprioceptive testing. Differentiate cervicogenic dizziness from vestibular pathology. <strong className="text-foreground">Up to 90% of concussions have concomitant cervical involvement—missing this delays recovery.</strong>
+                    Physical examination of cervical spine dysfunction that mimics or complicates concussion: flexion-rotation test, segmental palpation, upper cervical instability screening, and proprioceptive testing. Differentiate cervicogenic dizziness from vestibular pathology.
                   </p>
                 </div>
               </div>
@@ -131,7 +131,7 @@ export default function InPersonTrainingPage() {
                 <div>
                   <h4 className="font-semibold mb-1">Dual-Task & Multi-Modal Testing</h4>
                   <p className="text-sm text-muted-foreground">
-                    Advanced assessment combining cognitive, motor, and vestibular challenges: dual-task gait testing, cognitive-motor interference paradigms, and sport-specific return-to-play protocols. Learn to identify persistent deficits hidden by single-domain testing. <strong className="text-foreground">Athletes can compensate on basic tests but fail under dual-task conditions—this is where re-injury happens.</strong>
+                    Advanced assessment combining cognitive, motor, and vestibular challenges: dual-task gait testing, cognitive-motor interference paradigms, and sport-specific return-to-play protocols. Learn to identify persistent deficits that single-domain testing may not reveal.
                   </p>
                 </div>
               </div>
@@ -216,13 +216,13 @@ export default function InPersonTrainingPage() {
           {/* CTA */}
           <div className="glass rounded-2xl p-8 text-center bg-gradient-to-br from-accent/5 to-transparent border-2 border-accent/20">
             <div className="inline-flex items-center gap-2 bg-red-100 border border-red-300 text-red-800 px-4 py-2 rounded-full mb-4">
-              <span className="text-sm font-bold">🔥 Limited to 12 Participants Per Workshop</span>
+              <span className="text-sm font-bold">Limited to 12 Participants Per Workshop</span>
             </div>
             <h2 className="text-3xl font-bold mb-3">
-              Stop Guessing. Start Assessing with <span className="text-gradient">Confidence.</span>
+              Build hands-on assessment <span className="text-gradient">competence.</span>
             </h2>
             <p className="text-muted-foreground mb-4 leading-relaxed max-w-2xl mx-auto">
-              <strong className="text-foreground">Your patients deserve accurate assessment.</strong> This intensive workshop gives you the hands-on skills, clinical judgment, and assessment confidence you can't get from online learning alone.
+              Practical skills training in SCAT6 administration, VOMS, BESS, and cervicogenic assessment — supervised by experienced clinicians.
             </p>
             <p className="text-sm text-muted-foreground mb-6 max-w-xl mx-auto">
               Complete 8 evidence-based online modules + full-day practical workshop. Walk away ready to confidently assess, phenotype, and manage concussions from day one.
@@ -232,8 +232,8 @@ export default function InPersonTrainingPage() {
                 onClick={() => router.push('/pricing')}
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
               >
-                <Sparkles className="w-5 h-5" />
-                Secure Your Spot - $1,190
+                <Award className="w-5 h-5" />
+                Secure Your Spot — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
                 <ArrowRight className="w-5 h-5" />
               </button>
               <button

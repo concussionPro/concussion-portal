@@ -214,10 +214,10 @@ export default function SCATFormsAboutPage() {
           {/* Training CTA */}
           <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-8 mb-12">
             <h3 className="text-2xl font-bold text-green-900 mb-4">
-              🎓 Free Training: Master SCAT6 & SCOAT6 in 2 Hours
+              Free Training: Master SCAT6 & SCOAT6 in 2 Hours
             </h3>
             <p className="text-lg text-slate-700 mb-4">
-              <strong>40% of Australian GPs don't feel confident managing concussion.</strong>
+              <strong>Proper SCAT6 administration requires structured training.</strong>
             </p>
             <p className="text-slate-700 mb-6">
               Get step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. 2 AHPRA-aligned CPD points. Certificate included.

@@ -2,6 +2,7 @@
 
 import { Lock, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { CONFIG } from '@/lib/config'
 
 export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
   moduleNumber: number
@@ -59,7 +60,7 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
               href="/pricing"
               className="block w-full px-6 py-3.5 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl font-semibold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl text-center"
             >
-              Unlock Full Course - $1,190
+              Unlock Full Course — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
               <ArrowRight className="w-4 h-4 inline-block ml-2" />
             </a>
             <button

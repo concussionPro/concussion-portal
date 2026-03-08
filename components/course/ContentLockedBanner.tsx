@@ -2,6 +2,7 @@
 
 import { Lock, ArrowRight, Award, BookOpen, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { CONFIG } from '@/lib/config'
 
 export function ContentLockedBanner({ remainingSections }: { remainingSections?: string[] }) {
   const router = useRouter()
@@ -56,7 +57,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
           </button>
 
           <p className="text-muted-foreground text-sm mt-4">
-            Online from $497 AUD &middot; Complete course from $1,190 AUD
+            Online from $497 AUD · Complete course from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD
           </p>
         </div>
       </div>

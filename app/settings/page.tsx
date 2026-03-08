@@ -6,6 +6,7 @@ import { User, Mail, Shield, LogOut, Trash2, CheckCircle2, Crown } from 'lucide-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { CONFIG } from '@/lib/config'
 
 interface SessionUser {
   email: string
@@ -231,7 +232,7 @@ export default function SettingsPage() {
                         onClick={() => router.push('/pricing')}
                         className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
                       >
-                        Enroll Now — $1,190
+                        Enroll Now — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
                       </button>
                     </div>
                   )}
