@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { retrieveCheckoutSession } from '@/lib/stripe'
 
+// Rate limit: max 5 requests per session ID per 15 minutes
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkRateLimit(key: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(key)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 })
+    return true
+  }
+  if (entry.count >= 5) return false
+  entry.count++
+  return true
+}
+
 /**
  * GET /api/checkout-session?session_id=cs_xxx
  *
  * Returns checkout session details for the success page.
- * Only returns non-sensitive info (name, email, course type, amount).
+ * Rate limited. Only returns within 1 hour of session creation.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -18,6 +33,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Rate limit by session ID
+    if (!checkRateLimit(sessionId)) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests' },
+        { status: 429 }
+      )
+    }
+
     const session = await retrieveCheckoutSession(sessionId)
 
     if (!session || session.payment_status !== 'paid') {
@@ -27,11 +50,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Only allow retrieval within 1 hour of session creation
+    const createdAt = (session.created || 0) * 1000
+    if (Date.now() - createdAt > 60 * 60 * 1000) {
+      return NextResponse.json(
+        { success: false, error: 'Session expired' },
+        { status: 410 }
+      )
+    }
+
     return NextResponse.json({
       success: true,
       session: {
         customerName: session.customer_details?.name || '',
-        customerEmail: session.customer_details?.email || session.customer_email || '',
         courseType: session.metadata?.courseType || 'online-only',
         location: session.metadata?.location || '',
         amountPaid: (session.amount_total || 0) / 100,

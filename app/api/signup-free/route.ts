@@ -8,8 +8,26 @@ import { createUser, findUserByEmail } from '@/lib/users'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendEmail } from '@/lib/resend-client'
 
+// Rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkRateLimit(key: string, limit: number): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(key)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 })
+    return true
+  }
+  if (entry.count >= limit) return false
+  entry.count++
+  return true
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
+
     const body = await request.json()
     const { email, name } = body
 
@@ -18,6 +36,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Valid email is required' },
         { status: 400 }
+      )
+    }
+
+    // Rate limit by IP and email
+    if (!checkRateLimit(`ip:${ip}`, 10) || !checkRateLimit(`email:${email.toLowerCase()}`, 3)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again in a few minutes.' },
+        { status: 429 }
       )
     }
 

@@ -87,7 +87,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     async function loadProgress() {
       if (typeof window !== 'undefined') {
         try {
-          const response = await fetch('/api/progress')
+          const response = await fetch('/api/progress', { credentials: 'include' })
           if (response.ok) {
             const data = await response.json()
             if (data.success && data.progress) {
@@ -136,6 +136,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ progress }),
+          credentials: 'include',
         })
       } catch (error) {
         console.error('Failed to save progress to backend:', error)

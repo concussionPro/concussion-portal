@@ -90,18 +90,20 @@ export async function GET(
       module = scatModule
     }
 
-    // For preview users: only return first 2 sections
+    // For preview users accessing PAID modules (1-8): truncate content
+    // SCAT modules (101-105) are the free course — preview users get FULL access
     let responseModule = module
-    if (sessionData.accessLevel === 'preview') {
+    const isSCATModule = moduleId >= 101 && moduleId <= 105
+    if (sessionData.accessLevel === 'preview' && !isSCATModule) {
       responseModule = {
         ...module,
         sections: module.sections.slice(0, 2),
       }
-      console.log('[MODULE API] Limited preview user to first 2 sections')
     }
 
-    // Strip quiz answers for preview users only — paid users need them for client-side grading
-    const safeModule = sessionData.accessLevel === 'preview'
+    // Strip quiz answers for preview users on PAID modules only
+    // SCAT modules need full quiz data so preview users can complete them and earn CPD
+    const safeModule = (sessionData.accessLevel === 'preview' && !isSCATModule)
       ? { ...responseModule, quiz: responseModule.quiz?.map(({ correctAnswer, explanation, ...q }: any) => q) ?? [] }
       : responseModule
 

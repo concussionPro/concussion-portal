@@ -33,7 +33,13 @@ export function middleware(request: NextRequest) {
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
 
     const envKey = process.env.ADMIN_API_KEY
-    if (envKey && adminKey !== envKey && bearerToken !== envKey) {
+    if (!envKey) {
+      return NextResponse.json(
+        { error: 'Admin API not configured' },
+        { status: 503 }
+      )
+    }
+    if (adminKey !== envKey && bearerToken !== envKey) {
       return NextResponse.json(
         { error: 'Unauthorized \u2014 admin API key required' },
         { status: 401 }

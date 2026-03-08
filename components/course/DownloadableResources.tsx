@@ -137,9 +137,10 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
 
   const handleDownload = async (url: string, title: string) => {
     try {
-      const fileName = url.split('/').pop() || title
+      const urlObj = new URL(url, window.location.origin)
+      const fileName = urlObj.searchParams.get('file') || urlObj.pathname.split('/').pop() || title
 
-      const response = await fetch(url)
+      const response = await fetch(url, { credentials: 'include' })
 
       if (!response.ok) {
         throw new Error('Download failed')

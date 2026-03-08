@@ -173,18 +173,25 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
       label: s.title,
       index: i,
     }))
+    const isSCATModule = moduleId >= 101 && moduleId <= 105
     if (hasFullAccess) {
       sections.push(
         { type: 'resources', label: 'Downloadable Resources', index: sections.length },
         { type: 'apply-tomorrow', label: 'Apply Tomorrow', index: sections.length + 1 },
         { type: 'quiz', label: 'Knowledge Check', index: sections.length + 2 },
       )
+    } else if (isSCATModule) {
+      // Free SCAT course users get the quiz (needed to complete modules and earn CPD)
+      sections.push(
+        { type: 'quiz', label: 'Knowledge Check', index: sections.length },
+      )
     }
     return sections
-  }, [module, hasFullAccess])
+  }, [module, hasFullAccess, moduleId])
 
-  // For free/preview users: sections 0-1 are navigable, rest locked
-  const lockedAfterIndex = hasFullAccess ? undefined : 1
+  // For free/preview users: lock paid modules after section 1, but SCAT modules are fully open
+  const isSCATModule = moduleId >= 101 && moduleId <= 105
+  const lockedAfterIndex = (hasFullAccess || isSCATModule) ? undefined : 1
 
   // Sync quizSubmitted with persisted progress (skip if user is retaking)
   useEffect(() => {

@@ -12,7 +12,7 @@ declare global {
 
 interface SessionData {
   customerName: string
-  customerEmail: string
+  customerEmail?: string
   courseType: string
   location: string
   amountPaid: number

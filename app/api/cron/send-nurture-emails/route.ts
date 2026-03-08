@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 
       // Generate URLs
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-      const loginLink = `${baseUrl}/dashboard`
+      const loginLink = `${baseUrl}/scat-course`
       const upgradeLink = `${baseUrl}/pricing`
 
       // Generate unsubscribe URL

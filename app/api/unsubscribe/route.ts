@@ -3,8 +3,8 @@ import crypto from 'crypto'
 import { unsubscribeUser } from '@/lib/users'
 
 function getUnsubscribeSecret(): string {
-  const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET
-  if (!secret) throw new Error('JWT_SECRET or SESSION_SECRET must be configured')
+  const secret = process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET || process.env.JWT_SECRET
+  if (!secret) throw new Error('SESSION_SECRET or MAGIC_LINK_SECRET must be configured')
   return secret
 }
 
