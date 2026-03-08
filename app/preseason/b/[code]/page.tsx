@@ -690,14 +690,14 @@ export default function AthleteBaselineForm() {
               href="/scat-mastery"
               className="btn-primary w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
             >
-              Learn to Interpret Baseline Data — Free SCAT6 Mastery Course (2 CPD points)
+              Free SCAT6 Mastery Course
               <ArrowRight className="w-4 h-4 flex-shrink-0" />
             </a>
             <a
               href="/preview"
               className="w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 border border-accent/20 text-accent hover:bg-accent/5 transition-colors"
             >
-              Explore Full Concussion Management Training (14 CPD points)
+              Full Concussion Management Training
             </a>
           </div>
         </div>

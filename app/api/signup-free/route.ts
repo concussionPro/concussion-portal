@@ -103,15 +103,15 @@ export async function POST(request: NextRequest) {
               </div>
               <div class="content">
                 <h2 style="margin-top: 0;">Hi ${escapeHtml(userName)},</h2>
-                <p>Your FREE 2-hour SCAT6/SCOAT6 Mastery course is ready. Get 100% confident for your next concussion assessment.</p>
+                <p>Your free SCAT6/SCOAT6 Mastery course is ready. Here's what it covers.</p>
 
                 <div class="highlight">
-                  <strong>What you'll master in 2 hours:</strong><br>
-                  ✓ Step-by-step SCAT6 & SCOAT6 administration<br>
-                  ✓ Red flag recognition that avoids medicolegal risk<br>
-                  ✓ When to use which tool (most GPs get this wrong)<br>
-                  ✓ Clinical toolkit: referral templates, RTP forms<br>
-                  ✓ 2 AHPRA-aligned CPD points + certificate
+                  <strong>Course overview (~2 hours):</strong><br>
+                  &bull; Step-by-step SCAT6 &amp; SCOAT6 administration<br>
+                  &bull; Red flag recognition and escalation criteria<br>
+                  &bull; When to use SCAT6 vs SCOAT6 (acute vs office follow-up)<br>
+                  &bull; Clinical toolkit: referral templates, RTP forms<br>
+                  &bull; 2 AHPRA-aligned CPD points + certificate
                 </div>
 
                 <center>

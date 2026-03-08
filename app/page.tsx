@@ -57,7 +57,7 @@ export default function HomePage() {
                 onClick={() => trackShopClick('hero-cta')}
                 className="btn-primary px-7 py-3.5 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"
               >
-                Enroll Now — $1,190
+                Enroll Now — ${new Date() < CONFIG.EARLY_BIRD_DEADLINE ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
                 <ArrowRight className="w-4 h-4" />
               </a>
               <Link
@@ -294,7 +294,7 @@ export default function HomePage() {
                   a: 'Yes — the practical workshop builds on concepts from the online modules. We recommend completing all 8 modules before your workshop date.',
                 },
                 {
-                  q: "What's included in the $1,190 enrollment?",
+                  q: `What's included in the $${new Date() < CONFIG.EARLY_BIRD_DEADLINE ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} enrollment?`,
                   a: 'Everything: 8 online modules (lifetime access), full-day practical workshop at your chosen location, all materials and workbook, and your 14 AHPRA-aligned CPD points certificate upon completion.',
                 },
               ].map((faq, i) => (

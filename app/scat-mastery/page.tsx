@@ -155,21 +155,9 @@ export default function SCATMasteryPage() {
               </ul>
             </div>
 
-            {/* Social proof strip */}
-            <div className="mt-8 flex items-center gap-4 text-sm text-slate-500">
-              <div className="flex -space-x-2">
-                {['PT', 'OT', 'SP', 'GP'].map((initials) => (
-                  <div
-                    key={initials}
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5b9aa6]/20 to-[#6b9da8]/20 border-2 border-white flex items-center justify-center text-xs font-bold text-[#5b9aa6]"
-                  >
-                    {initials}
-                  </div>
-                ))}
-              </div>
-              <span>
-                Join clinicians already enrolled in ConcussionPro
-              </span>
+            {/* Endorsement */}
+            <div className="mt-8 text-sm text-slate-500">
+              <span>AHPRA aligned · Endorsed by Osteopathy Australia</span>
             </div>
           </div>
 
@@ -183,10 +171,10 @@ export default function SCATMasteryPage() {
                     <Check className="w-8 h-8 text-emerald-600" strokeWidth={2.5} />
                   </div>
                   <h2 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
-                    You're in! 🎉
+                    You&apos;re registered.
                   </h2>
                   <p className="text-slate-500 text-sm mb-6">
-                    Check your email for instant access to the SCAT6 Mastery Course.
+                    Check your email for a login link to access the course.
                   </p>
 
                   <div className="bg-slate-50 rounded-xl p-5 mb-6 border border-slate-200/60 text-left space-y-3">
@@ -205,10 +193,10 @@ export default function SCATMasteryPage() {
                   </div>
 
                   <a
-                    href="/scat-course"
+                    href={`/login?email=${encodeURIComponent(email)}`}
                     className="w-full py-3.5 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200"
                   >
-                    Go to course
+                    Go to login
                     <ChevronRight className="w-4 h-4" />
                   </a>
                 </div>

@@ -14,6 +14,8 @@
  * - Plain-text feel with minimal HTML (higher engagement)
  */
 
+import { CONFIG } from '@/lib/config'
+
 const EMAIL_STYLES = `
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1e293b; background: #f8fafc; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
   .container { max-width: 580px; margin: 0 auto; background: white; }
@@ -178,7 +180,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <strong style="color: #475569;">&mdash; Osteopath, Melbourne</strong>
       </div>
       <center><a href="${upgradeLink}" class="cta-btn">View Pricing and Options</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $497 AUD &middot; Full course from $1,190 AUD</p>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $497 AUD &middot; Full course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -202,7 +204,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
           <td style="padding: 14px 16px;"><strong>Complete Course</strong> <span style="font-size: 11px; background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 600;">RECOMMENDED</span><br><span style="font-size: 13px; color: #64748b;">Online + full-day workshop &middot; 14 CPD points</span></td>
-          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$1,190 AUD</td>
+          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</td>
         </tr>
       </table>
       <p><strong>Every option includes:</strong></p>
