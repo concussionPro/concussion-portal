@@ -3,7 +3,7 @@
 import { DynamicContentRenderer } from './DynamicContentRenderer'
 import { SectionInteractiveElements } from './SectionInteractiveElements'
 import { SectionTypeBadge, estimateReadingTime } from './SectionTypeBadge'
-import { Clock, BookOpen } from 'lucide-react'
+import { Clock } from 'lucide-react'
 
 interface PreviewSection {
   id: string

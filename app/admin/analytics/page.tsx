@@ -69,9 +69,9 @@ const PERIODS: { label: string; value: Period }[] = [
 
 const FUNNEL_STEPS = [
   { label: 'Homepage', path: '/', description: 'All visitors' },
-  { label: 'Pricing / Courses', path: '/pricing', description: 'Showing intent' },
-  { label: 'Checkout', path: '/checkout', description: 'Purchase intent' },
-  { label: 'Enrolment Success', path: '/success', description: 'Conversions' },
+  { label: 'Preview / Explore', path: '/preview', description: 'Exploring content' },
+  { label: 'Pricing', path: '/pricing', description: 'Purchase intent' },
+  { label: 'Enrolment Success', path: '/checkout/success', description: 'Conversions' },
 ]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -89,12 +89,13 @@ function fmtDuration(seconds: number): string {
   return `${m}m ${s}s`
 }
 
-function pct(value: number, prev: number): { delta: number; sign: string; color: string } {
-  if (prev === 0) return { delta: 0, sign: '', color: 'text-gray-400' }
+function pct(value: number, prev: number): { delta: number; sign: string; color: string; isNew: boolean } {
+  if (prev === 0 && value > 0) return { delta: 0, sign: '', color: 'text-[var(--accent)]', isNew: true }
+  if (prev === 0) return { delta: 0, sign: '', color: 'text-gray-400', isNew: false }
   const delta = ((value - prev) / prev) * 100
   const sign = delta >= 0 ? '+' : ''
   const color = delta >= 0 ? 'text-emerald-600' : 'text-rose-500'
-  return { delta: Math.abs(delta), sign, color }
+  return { delta: Math.abs(delta), sign, color, isNew: false }
 }
 
 function normaliseMetrics(data: AnalyticsMetrics | null): MetricRow[] {
@@ -129,7 +130,7 @@ function StatCard({
   format?: 'number' | 'percent' | 'duration'
   loading?: boolean
 }) {
-  const { delta, sign, color } = pct(value, prev)
+  const { delta, sign, color, isNew } = pct(value, prev)
   const displayVal =
     format === 'duration'
       ? fmtDuration(value)
@@ -146,7 +147,12 @@ function StatCard({
         <div className="icon-container w-9 h-9">
           <Icon size={16} className="text-[var(--accent)]" />
         </div>
-        {!loading && delta > 0 && (
+        {!loading && isNew && (
+          <span className="text-xs font-semibold text-[var(--accent)] bg-[rgba(13,115,119,0.08)] px-2 py-0.5 rounded-full">
+            New
+          </span>
+        )}
+        {!loading && !isNew && delta > 0 && (
           <span className={`text-xs font-semibold ${color} tabular-nums`}>
             {sign}{delta.toFixed(1)}%
           </span>
@@ -359,8 +365,15 @@ export default function AnalyticsDashboard() {
   }, [period, loadAll])
 
   const getFunnelCount = (path: string): number => {
-    const row = topPages.find((p) => p.x === path || p.x?.startsWith(path))
-    return row?.y ?? 0
+    // Exact match for root, prefix match for deeper paths
+    if (path === '/') {
+      const row = topPages.find((p) => p.x === '/')
+      return row?.y ?? 0
+    }
+    // Sum all pages matching this prefix (e.g. /checkout/success matches /checkout/success?session_id=...)
+    return topPages
+      .filter((p) => p.x === path || p.x?.startsWith(path + '/') || p.x?.startsWith(path + '?'))
+      .reduce((sum, p) => sum + p.y, 0)
   }
   const funnelTotal = getFunnelCount('/') || stats?.pageviews.value || 0
   const bounceRate = stats ? stats.bounces.value / Math.max(stats.uniques.value, 1) : 0

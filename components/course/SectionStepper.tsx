@@ -53,10 +53,6 @@ export function SectionStepper({
     ? ((currentIndex + 1) / virtualSections.length) * 100
     : 0
 
-  // Count content sections separately from special sections
-  const contentSections = virtualSections.filter(v => v.type === 'content')
-  const specialSections = virtualSections.filter(v => v.type !== 'content')
-
   return (
     <div className="mb-6">
       {/* Progress bar */}

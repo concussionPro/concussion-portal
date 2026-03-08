@@ -68,17 +68,6 @@ export default function PreviewPage() {
     fetchPreviewContent()
   }, [])
 
-  // Find next workshop within 3 weeks
-  const now = new Date()
-  const threeWeeksFromNow = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000)
-
-  const upcomingWorkshops = Object.entries(CONFIG.LOCATIONS)
-    .map(([key, location]) => ({ key, ...location }))
-    .filter(location => location.dateObj && location.dateObj > now && location.dateObj <= threeWeeksFromNow)
-    .sort((a, b) => (a.dateObj?.getTime() ?? 0) - (b.dateObj?.getTime() ?? 0))
-
-  const nextWorkshop = upcomingWorkshops[0] || null
-
   const toggleModule = (moduleId: number) => {
     setExpandedModule(expandedModule === moduleId ? 0 : moduleId)
   }

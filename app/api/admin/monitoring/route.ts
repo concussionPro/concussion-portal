@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 
       try {
         const analyticsBlobs = (await blobList({ prefix: 'analytics/' })).blobs
-        const todayAnalytics = analyticsBlobs.find(b => b.pathname === `analytics/${today}.jsonl`)
+        const todayAnalytics = analyticsBlobs.find(b => b.pathname === `analytics/${today}.ndjson` || b.pathname === `analytics/${today}.jsonl`)
         if (todayAnalytics) {
           const response = await fetch(todayAnalytics.url)
           const text = await response.text()
