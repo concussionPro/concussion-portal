@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Clock } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'Concussion Management Blog | Expert Clinical Insights',
@@ -133,7 +134,7 @@ export default function BlogIndexPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course (14 CPD) — $1,190
+                Full Course (14 CPD) — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
               </Link>
             </div>
           </div>

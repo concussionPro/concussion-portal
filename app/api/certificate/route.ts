@@ -232,7 +232,7 @@ async function sendCertificateEmail(opts: {
 
               <div style="background: linear-gradient(135deg, #059669 0%, #0d9488 100%); padding: 32px 24px; text-align: center;">
                 <h1 style="margin: 0; color: white; font-size: 24px; font-weight: 700;">
-                  Congratulations! 🎓
+                  Certificate of Completion
                 </h1>
               </div>
 

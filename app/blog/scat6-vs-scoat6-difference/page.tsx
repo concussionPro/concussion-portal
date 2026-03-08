@@ -62,7 +62,7 @@ export default function SCAT6vsSCOAT6Page() {
         <div className="bg-gradient-to-br from-red-600 to-orange-600 text-white pt-[80px] pb-16">
           <div className="max-w-4xl mx-auto px-4">
             <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              ⚠️ Critical for AHPRA Compliance
+              Critical for AHPRA Compliance
             </div>
             <h1 className="text-5xl font-bold mb-4">
               SCAT6 vs SCOAT6: Which Tool to Use When?
@@ -219,7 +219,7 @@ export default function SCAT6vsSCOAT6Page() {
 
           <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-8">
             <h3 className="text-2xl font-bold text-green-900 mb-4">
-              🎓 Free Training: Master Both Tools in 2 Hours
+              Free Training: Master Both Tools in 2 Hours
             </h3>
             <p className="text-lg text-slate-700 mb-6">
               Get step-by-step training on when to use which tool, how to administer every section correctly, and medicolegal documentation requirements. <strong>2 AHPRA-aligned CPD points + certificate.</strong>

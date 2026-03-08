@@ -154,7 +154,7 @@ export default function SCATFormsLayout({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-bold">🎓 Free Training: Master SCAT6 & SCOAT6 in 2 Hours</h3>
+                    <h3 className="text-xl font-bold">Free Training: Master SCAT6 & SCOAT6 in 2 Hours</h3>
                   </div>
                   <p className="text-sm text-white/90 mb-3 leading-relaxed">
                     <strong>Learn to use this form correctly.</strong> Step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. <strong>2 AHPRA CPD points + certificate included.</strong>
@@ -188,10 +188,10 @@ export default function SCATFormsLayout({
                     <span className="badge text-xs">14 CPD Points</span>
                   </div>
                   <p className="text-sm text-slate-700 mb-2 leading-relaxed">
-                    <strong>Most clinicians miss subtle signs.</strong> Beyond the form: master VOMS interpretation, vestibular red flags, BESS scoring nuances, and evidence-based RTP decisions. AHPRA-aligned with hands-on practice.
+                    Beyond the form: VOMS interpretation, vestibular assessment, BESS scoring, and evidence-based RTP decision-making. AHPRA-aligned with hands-on practice.
                   </p>
                   <div className="flex items-center gap-2 mb-3 text-xs text-slate-600">
-                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">🔥 Limited workshop spots</span>
+                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">Limited workshop spots</span>
                     <span>•</span>
                     <span>Endorsed by Osteopathy Australia</span>
                   </div>

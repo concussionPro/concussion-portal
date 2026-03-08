@@ -70,11 +70,11 @@ export default function CompleteReferencePage() {
 
               <div className="border-t border-slate-200/50 pt-3 mt-3">
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>📄 5.8 MB PDF</span>
+                  <span>5.8 MB PDF</span>
                   <span>•</span>
-                  <span>📑 Comprehensive protocols & flowcharts</span>
+                  <span>Comprehensive protocols & flowcharts</span>
                   <span>•</span>
-                  <span>🔄 Updated January 2026</span>
+                  <span>Updated January 2026</span>
                 </div>
               </div>
             </div>
@@ -112,7 +112,7 @@ export default function CompleteReferencePage() {
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
                     <div className="flex-1">
                       <h2 className="text-lg sm:text-xl font-bold text-foreground mb-2">
-                        📖 CCM Complete Reference 2026
+                        CCM Complete Reference 2026
                       </h2>
                       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                         All-in-one clinical reference guide covering every aspect of concussion management.
@@ -221,7 +221,7 @@ export default function CompleteReferencePage() {
                 {/* Usage Tips */}
                 <div className="glass rounded-xl p-6 mt-6">
                   <h3 className="text-lg font-bold text-foreground mb-3">
-                    💡 How to Use This Reference
+                    How to Use This Reference
                   </h3>
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
