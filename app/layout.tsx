@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { FooterWrapper } from "@/components/FooterWrapper";
+import { StickyCTA } from "@/components/StickyCTA";
 import { CONFIG } from "@/lib/config";
 import { organizationSchema } from "@/lib/schema-markup";
 import Script from 'next/script';
@@ -91,6 +92,13 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
   },
+  // Google Search Console verification
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
+  },
+  alternates: {
+    canonical: CONFIG.SEO.SITE_URL,
+  },
 };
 
 export default function RootLayout({
@@ -140,6 +148,7 @@ export default function RootLayout({
                 {children}
               </div>
               <FooterWrapper />
+              <StickyCTA />
             </AnalyticsProvider>
           </Suspense>
         </ProgressProvider>

@@ -10,6 +10,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/in-person',
   },
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/in-person',
+  },
 }
 
 export default function InPersonLayout({ children }: { children: React.ReactNode }) {

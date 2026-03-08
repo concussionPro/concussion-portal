@@ -12,6 +12,9 @@ export const metadata: Metadata = {
     type: 'article',
     url: 'https://portal.concussion-education-australia.com/faq/scat-assessment',
   },
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/faq/scat-assessment',
+  },
 }
 
 const faqs = [

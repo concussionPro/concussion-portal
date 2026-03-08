@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/assessment',
   },
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/assessment',
+  },
 }
 
 export default function AssessmentLayout({ children }: { children: React.ReactNode }) {

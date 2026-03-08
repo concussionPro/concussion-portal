@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     type: 'article',
     url: 'https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference',
   },
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference',
+  },
 }
 
 const faqs = [

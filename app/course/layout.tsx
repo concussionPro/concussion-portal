@@ -10,6 +10,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/course',
   },
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/course',
+  },
 }
 
 export default function CourseLayout({ children }: { children: React.ReactNode }) {

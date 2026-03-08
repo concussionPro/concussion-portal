@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/scat-forms/scoat6',
   },
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/scat-forms/scoat6',
+  },
 }
 
 export default function SCOAT6Layout({ children }: { children: React.ReactNode }) {

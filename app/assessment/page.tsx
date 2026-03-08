@@ -230,18 +230,41 @@ export default function AssessmentPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-center gap-3">
-                <a
-                  href={CONFIG.SHOP_URL}
-                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold text-white inline-flex items-center gap-2 shadow-2xl"
-                >
-                  Enroll Now - $1,190
-                  <ArrowRight className="w-5 h-5" />
-                </a>
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <a
+                    href={CONFIG.SHOP_URL}
+                    className="btn-primary px-8 py-3.5 rounded-xl text-base font-bold text-white inline-flex items-center gap-2 shadow-2xl"
+                  >
+                    Enroll — $1,190 Early Bird
+                    <ArrowRight className="w-5 h-5" />
+                  </a>
+                  <span className="text-muted-foreground text-sm">or</span>
+                  <button
+                    onClick={() => router.push('/preview')}
+                    className="px-6 py-3.5 rounded-xl text-sm font-semibold border-2 border-accent/30 text-accent hover:bg-accent/5 transition-all inline-flex items-center gap-2"
+                  >
+                    Preview Course Free
+                  </button>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Includes online modules + in-person training · Code <span className="font-bold text-accent bg-accent/10 px-2 py-1 rounded">SCAT6</span> saves $210
+                  Online only from $497 · Complete course $1,190 early bird (save $210)
                 </p>
               </div>
+            </div>
+
+            {/* Free course CTA — progressive commitment */}
+            <div className="glass rounded-xl p-6 text-center mt-6">
+              <p className="text-sm text-muted-foreground mb-3">
+                Not ready to commit? Start with our free training:
+              </p>
+              <button
+                onClick={() => router.push('/scat-mastery')}
+                className="text-sm font-semibold text-accent hover:underline inline-flex items-center gap-1"
+              >
+                Free SCAT6/SCOAT6 Mastery Course (2 CPD Points)
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="text-center mt-8">

@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     type: 'article',
     url: 'https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download',
   },
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download',
+  },
 }
 
 export default function FreeSCAT6PDFDownloadPage() {

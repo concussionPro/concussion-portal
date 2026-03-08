@@ -10,6 +10,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/resources',
   },
+  alternates: {
+    canonical: 'https://portal.concussion-education-australia.com/resources',
+  },
 }
 
 export default function ResourcesLayout({ children }: { children: React.ReactNode }) {

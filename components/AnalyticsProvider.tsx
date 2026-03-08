@@ -153,10 +153,10 @@ export function AnalyticsProvider({
     (courseId: string, courseName: string): void => {
       trackEvent('enrol_click', { courseId, courseName });
 
-      // Google Ads conversion
+      // Google Ads conversion — hardcoded to avoid missing env var issues
       trackGtagConversion(
-        process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? '',
-        process.env.NEXT_PUBLIC_ENROL_CONVERSION_LABEL ?? '',
+        'AW-17984048021',
+        process.env.NEXT_PUBLIC_ENROL_CONVERSION_LABEL || 'enrol_click',
         undefined,
         undefined
       );
