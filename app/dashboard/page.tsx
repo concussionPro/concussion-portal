@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [accessChecked, setAccessChecked] = useState(false)
   const [userName, setUserName] = useState<string | null>(null)
   const [accessLevel, setAccessLevel] = useState<string>('')
+  const [isReturningUser, setIsReturningUser] = useState(false)
 
   useAnalytics()
 
@@ -45,6 +46,7 @@ export default function DashboardPage() {
     }
 
     checkAccessLevel()
+    setIsReturningUser(localStorage.getItem('hasSeenWelcome') === 'true')
   }, [router])
 
   if (!accessChecked) {
@@ -80,7 +82,9 @@ export default function DashboardPage() {
                 {getGreeting()}{firstName ? `, ${firstName}` : ''}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Pick up where you left off in your concussion management training.
+                {isReturningUser
+                  ? 'Pick up where you left off in your concussion management training.'
+                  : 'Your concussion management training starts now.'}
               </p>
             </div>
 

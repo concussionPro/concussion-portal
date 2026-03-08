@@ -126,91 +126,118 @@ function CheckoutSuccessContent() {
             <CheckCircle2 className="w-10 h-10 text-emerald-600" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            Welcome to ConcussionPro
+            You&apos;re in{sessionData?.customerName ? `, ${sessionData.customerName.split(' ')[0]}` : ''}!
           </h1>
-          {sessionData?.customerName && (
-            <p className="text-lg text-muted-foreground">
-              Thank you, {sessionData.customerName.split(' ')[0]}. Your enrollment is confirmed.
-            </p>
-          )}
+          <p className="text-lg text-muted-foreground">
+            {sessionData?.courseType === 'full-course'
+              ? 'Your concussion management training starts now.'
+              : 'You now have lifetime access to all 8 modules.'}
+          </p>
         </div>
 
-        {/* Order Summary Card */}
-        <div className="glass rounded-2xl p-6 md:p-8 mb-8">
-          <h2 className="font-bold text-lg mb-4">Enrollment Summary</h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between py-2 border-b border-border/30">
-              <span className="text-muted-foreground">Course</span>
-              <span className="font-semibold">{courseName}</span>
+        {/* Early bird savings callout */}
+        {sessionData?.amountPaid && sessionData.amountPaid < 1400 && sessionData.courseType === 'full-course' && (
+          <div className="text-center mb-8 py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-200">
+            <p className="text-sm font-semibold text-emerald-800">
+              Early bird pricing — you saved ${(1400 - sessionData.amountPaid).toLocaleString()} AUD
+            </p>
+          </div>
+        )}
+
+        {/* Workshop countdown for full-course */}
+        {sessionData?.courseType === 'full-course' && sessionData?.location && (() => {
+          const workshopDates: Record<string, string> = { 'byron-bay': '2026-03-28' }
+          const dateStr = workshopDates[sessionData.location]
+          if (!dateStr) return null
+          const daysUntil = Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          if (daysUntil <= 0) return null
+          return (
+            <div className="glass rounded-2xl p-6 md:p-8 mb-6 text-center border border-accent/20">
+              <p className="text-sm font-semibold text-accent uppercase tracking-wider mb-2">Your Workshop</p>
+              <p className="text-2xl font-bold mb-1">{formatLocation(sessionData.location)} — March 28, 2026</p>
+              <p className="text-muted-foreground">
+                <span className="text-xl font-bold text-accent">{daysUntil}</span> days away — complete your online modules before then
+              </p>
             </div>
-            {sessionData?.amountPaid && (
-              <div className="flex justify-between py-2 border-b border-border/30">
-                <span className="text-muted-foreground">Amount Paid</span>
-                <span className="font-semibold">${sessionData.amountPaid.toLocaleString()} AUD</span>
-              </div>
-            )}
-            {sessionData?.customerEmail && (
-              <div className="flex justify-between py-2 border-b border-border/30">
-                <span className="text-muted-foreground">Email</span>
-                <span className="font-semibold">{sessionData.customerEmail}</span>
-              </div>
-            )}
-            {sessionData?.courseType === 'full-course' && sessionData?.location && (
-              <div className="flex justify-between py-2 border-b border-border/30">
-                <span className="text-muted-foreground">Workshop Location</span>
-                <span className="font-semibold">{formatLocation(sessionData.location)}</span>
-              </div>
+          )
+        })()}
+
+        {/* What you get — not a receipt, a value reminder */}
+        <div className="glass rounded-2xl p-6 md:p-8 mb-8">
+          <h2 className="font-bold text-lg mb-4">What you now have access to</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+              <BookOpen className="w-5 h-5 text-accent flex-shrink-0" />
+              <span className="text-sm font-medium">8 clinical modules</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+              <span className="text-sm font-medium flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+                {sessionData?.courseType === 'full-course' ? '14' : '8'} CPD points
+              </span>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+              <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+              <span className="text-sm font-medium">Clinical toolkit</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+              <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+              <span className="text-sm font-medium">130+ references</span>
+            </div>
+            {sessionData?.courseType === 'full-course' && (
+              <>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+                  <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+                  <span className="text-sm font-medium">Full-day workshop</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+                  <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+                  <span className="text-sm font-medium">Lifetime access</span>
+                </div>
+              </>
             )}
           </div>
         </div>
 
         {/* Next Steps */}
         <div className="space-y-4 mb-10">
-          <h2 className="font-bold text-lg">What Happens Next</h2>
+          <h2 className="font-bold text-lg">Get started in 2 minutes</h2>
 
           <div className="flex items-start gap-4 glass rounded-xl p-5">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-              <Mail className="w-5 h-5 text-blue-600" />
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+              <span className="text-accent font-bold">1</span>
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Check Your Email</h3>
+              <h3 className="font-semibold mb-1">Check your inbox</h3>
               <p className="text-sm text-muted-foreground">
-                We&apos;ve sent a secure login link to <strong>{sessionData?.customerEmail || 'your email'}</strong>. Click it to access your course immediately. Check your spam folder if you don&apos;t see it within a few minutes.
+                We&apos;ve sent a login link to <strong>{sessionData?.customerEmail || 'your email'}</strong>. Click it to access your course — no password needed.
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-4 glass rounded-xl p-5">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-teal-600" />
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+              <span className="text-accent font-bold">2</span>
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Start Learning</h3>
+              <h3 className="font-semibold mb-1">Start Module 1</h3>
               <p className="text-sm text-muted-foreground">
-                {sessionData?.courseType === 'full-course'
-                  ? 'Begin your 8 online modules right away. Complete them at your own pace before your in-person workshop date.'
-                  : 'Dive into all 8 online modules at your own pace. You have lifetime access — no deadlines or time limits.'}
+                Jump straight into &ldquo;What is a Concussion?&rdquo; — you&apos;ll earn your first CPD point in under 45 minutes.
               </p>
             </div>
           </div>
 
-          {sessionData?.courseType === 'full-course' && (
-            <div className="flex items-start gap-4 glass rounded-xl p-5">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <span className="text-amber-600 text-lg">📋</span>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">Workshop Details</h3>
-                <p className="text-sm text-muted-foreground">
-                  You&apos;ll receive a separate email with your {formatLocation(sessionData?.location || '')} workshop details, including venue address, schedule, and what to bring. Contact us at{' '}
-                  <a href="mailto:zac@concussion-education-australia.com" className="text-accent hover:underline">
-                    zac@concussion-education-australia.com
-                  </a>
-                  {' '}to change your workshop date.
-                </p>
-              </div>
+          <div className="flex items-start gap-4 glass rounded-xl p-5">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+              <span className="text-accent font-bold">3</span>
             </div>
-          )}
+            <div>
+              <h3 className="font-semibold mb-1">Download your clinical toolkit</h3>
+              <p className="text-sm text-muted-foreground">
+                Grab the referral templates, return-to-play forms, and clearance letters. Use them in your practice this week.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* CTA Buttons */}
@@ -219,24 +246,17 @@ function CheckoutSuccessContent() {
             onClick={() => router.push('/login')}
             className="flex-1 btn-primary px-8 py-4 rounded-xl font-bold text-center flex items-center justify-center gap-2"
           >
-            Go to Login
+            Open Your Course
             <ArrowRight className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => router.push('/')}
-            className="flex-1 px-8 py-4 rounded-xl font-semibold text-center border border-border/50 text-muted-foreground hover:bg-surface/50 transition-colors"
-          >
-            Back to Homepage
           </button>
         </div>
 
-        {/* Support */}
-        <p className="text-center text-xs text-muted-foreground mt-8">
-          Questions? Contact{' '}
-          <a href="mailto:zac@concussion-education-australia.com" className="text-accent hover:underline">
-            zac@concussion-education-australia.com
-          </a>
-        </p>
+        {/* Personal touch */}
+        <div className="mt-10 glass rounded-xl p-5">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">A note from Zac:</strong> Thanks for investing in your concussion management skills. If you have any questions as you work through the modules, just reply to any email from us — I read every message personally.
+          </p>
+        </div>
       </div>
     </div>
   )

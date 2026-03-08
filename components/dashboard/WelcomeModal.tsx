@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 interface UserInfo {
   name?: string
   email?: string
+  accessLevel?: string
+  location?: string
 }
 
 export function WelcomeModal() {
@@ -63,6 +65,8 @@ export function WelcomeModal() {
   if (!isOpen) return null
 
   const firstName = user?.name?.split(' ')[0] || 'there'
+  const isFullCourse = user?.accessLevel === 'full-course'
+  const cpdPoints = isFullCourse ? '14' : '8'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
@@ -77,7 +81,7 @@ export function WelcomeModal() {
         {/* Ambient glow effects */}
         <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full opacity-40" style={{ background: 'radial-gradient(circle, rgba(13,115,119,0.15) 0%, transparent 70%)' }} />
         <div className="pointer-events-none absolute -bottom-32 -left-32 h-64 w-64 rounded-full opacity-40" style={{ background: 'radial-gradient(circle, rgba(13,115,119,0.1) 0%, transparent 70%)' }} />
-        
+
         {/* Top accent stripe */}
         <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #0d7377, #0a9396, #0d7377)' }} />
 
@@ -108,10 +112,12 @@ export function WelcomeModal() {
               <GraduationCap className="h-8 w-8 text-white" strokeWidth={1.8} />
             </div>
             <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-              Welcome, {firstName}
+              You&apos;re all set, {firstName}
             </h2>
             <p className="text-sm text-slate-500 md:text-base">
-              Your concussion management CPD starts here
+              {isFullCourse
+                ? 'Your online modules are ready — complete them before your hands-on workshop.'
+                : 'Your 8 clinical modules are unlocked and ready to go.'}
             </p>
           </div>
 
@@ -120,13 +126,13 @@ export function WelcomeModal() {
             <div className="mb-4 flex items-center justify-center gap-2">
               <Sparkles className="h-4 w-4 text-teal-600" />
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-                Getting Started
+                Earn your first CPD point today
               </h3>
             </div>
             <div className="space-y-2.5">
-              {/* Step 1 — Browse Course Overview */}
+              {/* Step 1 — Start Module 1 */}
               <button
-                onClick={handleViewModules}
+                onClick={handleStartModule}
                 className="group flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all duration-200 hover:scale-[1.01]"
                 style={{
                   background: 'linear-gradient(135deg, rgba(13,115,119,0.06) 0%, rgba(10,147,150,0.04) 100%)',
@@ -144,13 +150,13 @@ export function WelcomeModal() {
                   <span className="text-sm font-bold text-white">1</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">Browse the Course Modules</p>
-                  <p className="text-xs text-slate-500">Preview the 8 clinical modules and learning outcomes</p>
+                  <p className="text-sm font-semibold text-slate-900">Start Module 1: What is a Concussion?</p>
+                  <p className="text-xs text-slate-500">The neurometabolic cascade — you&apos;ll explain it to patients by the end</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>
 
-              {/* Step 2 — Start Module 1 */}
+              {/* Step 2 — Pass the quiz */}
               <button
                 onClick={handleStartModule}
                 className="group flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all duration-200 hover:scale-[1.01]"
@@ -167,15 +173,16 @@ export function WelcomeModal() {
                   <span className="text-sm font-bold" style={{ color: '#0d7377' }}>2</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">Start Module 1</p>
-                  <p className="text-xs text-slate-500">Concussion biomechanics and pathophysiology</p>
+                  <p className="text-sm font-semibold text-slate-900">Pass the Module 1 Quiz</p>
+                  <p className="text-xs text-slate-500">Earn your first AHPRA CPD point — takes under 45 minutes total</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>
 
-              {/* Step 3 — Earn CPD Points */}
-              <div
-                className="flex items-center gap-4 rounded-2xl p-4"
+              {/* Step 3 — Clinical Toolkit */}
+              <button
+                onClick={handleViewModules}
+                className="group flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all duration-200 hover:scale-[1.01]"
                 style={{
                   background: 'rgba(255,255,255,0.6)',
                   border: '1px solid rgba(0,0,0,0.06)',
@@ -189,11 +196,11 @@ export function WelcomeModal() {
                   <span className="text-sm font-bold" style={{ color: '#0d7377' }}>3</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">Complete Quizzes & Earn CPD</p>
-                  <p className="text-xs text-slate-500">Pass module assessments to earn AHPRA CPD points</p>
+                  <p className="text-sm font-semibold text-slate-900">Download the Clinical Toolkit</p>
+                  <p className="text-xs text-slate-500">Referral templates, RTP forms, and clearance letters for your practice</p>
                 </div>
-                <Award className="h-5 w-5 flex-shrink-0 text-slate-300" />
-              </div>
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
+              </button>
             </div>
           </div>
 
@@ -223,7 +230,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <Award className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>14</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{cpdPoints}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">CPD Points</div>
             </div>
@@ -265,7 +272,7 @@ export function WelcomeModal() {
                 boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
               }}
             >
-              View All Modules
+              Browse All Modules
             </button>
           </div>
 
@@ -275,7 +282,7 @@ export function WelcomeModal() {
               onClick={handleSkip}
               className="text-xs text-slate-400 transition-colors hover:text-slate-600"
             >
-              Skip introduction
+              Skip — take me to my dashboard
             </button>
           </div>
         </div>

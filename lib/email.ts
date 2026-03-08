@@ -288,56 +288,54 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
               <h1>Welcome to ConcussionPro</h1>
             </div>
             <div class="content">
-              <h2 style="margin-top: 0;">Hi ${escapeHtml(name)},</h2>
-              <p>Your enrollment is confirmed! You now have lifetime access to:</p>
+              <h2 style="margin-top: 0;">Welcome aboard, ${escapeHtml(name.split(' ')[0])}.</h2>
+              <p>You just made a great decision for your patients and your practice. Here's how to make the most of it.</p>
 
-              <div class="highlight">
-                <strong>✓ 8 comprehensive online modules (8 CPD points)</strong><br>
-                <strong>✓ Clinical Toolkit &amp; downloadable resources</strong><br>
-                <strong>✓ Reference Repository (130+ articles)</strong><br>
-                <strong>✓ AHPRA-aligned CPD certificate</strong>
-              </div>
-
-              <h3>Your Next Steps:</h3>
+              <h3>Start earning CPD points today:</h3>
               <div class="checklist">
                 <div class="checklist-item">
                   <div class="number">1</div>
                   <div>
-                    <strong>Access your dashboard</strong><br>
-                    <span style="color: #64748b; font-size: 14px;">Start with Module 1: What is a Concussion?</span>
+                    <strong>Click below to log in</strong><br>
+                    <span style="color: #64748b; font-size: 14px;">No password — just click the secure link</span>
                   </div>
                 </div>
                 <div class="checklist-item">
                   <div class="number">2</div>
                   <div>
-                    <strong>Complete all 8 modules at your own pace</strong><br>
-                    <span style="color: #64748b; font-size: 14px;">Pass each quiz to earn your CPD points</span>
+                    <strong>Start Module 1: What is a Concussion?</strong><br>
+                    <span style="color: #64748b; font-size: 14px;">Earn your first CPD point in under 45 minutes</span>
                   </div>
                 </div>
                 <div class="checklist-item">
                   <div class="number">3</div>
                   <div>
-                    <strong>Download your clinical toolkit</strong><br>
-                    <span style="color: #64748b; font-size: 14px;">Referral templates, RTP forms, and clearance letters</span>
+                    <strong>Download the Clinical Toolkit</strong><br>
+                    <span style="color: #64748b; font-size: 14px;">Referral templates, RTP forms, and clearance letters you can use this week</span>
                   </div>
                 </div>
               </div>
 
               <center>
                 <a href="${baseUrl}/login" class="button">
-                  Access Your Course →
+                  Open Your Course →
                 </a>
               </center>
 
-              <p style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                <strong>Questions?</strong> Just reply to this email - I read every message personally.
+              <div class="highlight" style="margin-top: 32px;">
+                <strong>Quick tip:</strong> Most clinicians finish Module 1 in their first sitting. By the end of it, you'll understand the neurometabolic cascade well enough to explain it to patients — and that changes how you manage every concussion case.
+              </div>
+
+              <p style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; color: #475569;">
+                I built this course because I was tired of seeing clinicians guess their way through concussion management. You're now one of a growing group of practitioners who are raising the standard of care in Australia.
+              </p>
+              <p style="color: #475569;">
+                If you have any questions as you work through the modules, just reply to this email. I read every message.
               </p>
 
               <p style="color: #64748b;">
-                Looking forward to supporting your concussion management journey!<br>
-                <br>
-                - Zac<br>
-                <em style="font-size: 14px;">Founder, Concussion Education Australia</em>
+                — Zac Lewis<br>
+                <em style="font-size: 14px;">Osteopath (B.Clin.Sci., M.Ost.Med) · Founder, Concussion Education Australia</em>
               </p>
             </div>
             <div class="footer">
