@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
       success: true,
       session: {
         customerName: session.customer_details?.name || '',
+        customerEmail: session.customer_details?.email || '',
         courseType: session.metadata?.courseType || 'online-only',
         location: session.metadata?.location || '',
         amountPaid: (session.amount_total || 0) / 100,

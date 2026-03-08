@@ -46,9 +46,9 @@ export async function GET(request: Request) {
       const email = SCAT_MASTERY_SEQUENCE.find(e => e.day === daysSinceSignup)
       if (!email) continue
 
-      // Generate URLs
+      // Generate URLs — link to login with pre-filled email so user can get magic link
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-      const loginLink = `${baseUrl}/scat-course`
+      const loginLink = `${baseUrl}/login?email=${encodeURIComponent(user.email)}`
       const upgradeLink = `${baseUrl}/pricing`
 
       // Generate unsubscribe URL

@@ -138,8 +138,8 @@ export async function createUser(data: {
 }): Promise<string> {
   const users = await loadUsers()
 
-  // Check if user already exists
-  const existing = await findUserByEmail(data.email)
+  // Check if user already exists (search loaded array directly to avoid double-load)
+  const existing = users.find(u => u.email.toLowerCase() === data.email.toLowerCase())
   if (existing) {
     // Update access level if upgrading
     if ((existing.accessLevel === 'online-only' || existing.accessLevel === 'preview') &&
@@ -201,14 +201,16 @@ export async function unsubscribeUser(email: string): Promise<boolean> {
   return false
 }
 
-// Upgrade user from online-only to full-course
-export async function upgradeUser(email: string): Promise<User | null> {
+// Upgrade user access level
+export async function upgradeUser(email: string, newLevel: 'online-only' | 'full-course' = 'full-course'): Promise<User | null> {
   const users = await loadUsers()
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase())
-  if (user && user.accessLevel === 'online-only') {
-    user.accessLevel = 'full-course'
+  if (!user) return null
+
+  const rank = { 'preview': 0, 'online-only': 1, 'full-course': 2 } as const
+  if (rank[newLevel] > rank[user.accessLevel]) {
+    user.accessLevel = newLevel
     await saveUsers(users)
-    return user
   }
-  return user || null
+  return user
 }

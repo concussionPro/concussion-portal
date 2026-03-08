@@ -29,13 +29,6 @@ export default function SCATCoursePage() {
           return
         }
 
-        // Check if user has preview access
-        if (data.user.accessLevel !== 'preview') {
-          // Paid users should use the main dashboard
-          router.push('/dashboard')
-          return
-        }
-
         setUserEmail(data.user.email)
         setAccessChecked(true)
         setLoading(false)

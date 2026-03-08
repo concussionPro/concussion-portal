@@ -225,7 +225,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
       }
       // Also check URL hash
       const hash = window.location.hash.replace('#', '')
-      if (hash === 'quiz' && hasFullAccess) {
+      if (hash === 'quiz' && (hasFullAccess || isSCATModule)) {
         const quizIdx = virtualSections.findIndex(v => v.type === 'quiz')
         if (quizIdx >= 0) setCurrentSectionIndex(quizIdx)
       } else if (hash && module.sections) {

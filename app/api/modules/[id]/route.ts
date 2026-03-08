@@ -57,8 +57,8 @@ export async function GET(
     // Get appropriate module based on access level
     let module
     if (hasFullAccess) {
-      // Paid users: Get from main course modules
-      module = getModuleById(moduleId)
+      // Paid users: Get from main course modules, then fall through to SCAT
+      module = getModuleById(moduleId) || getSCATModuleById(moduleId)
       if (!module) {
         return NextResponse.json(
           { error: 'Module not found' },

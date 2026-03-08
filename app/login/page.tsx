@@ -8,7 +8,7 @@ import { CONFIG } from '@/lib/config'
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(searchParams.get('email') || '')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)

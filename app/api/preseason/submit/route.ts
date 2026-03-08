@@ -330,6 +330,10 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.KV_REST_API_URL) {
+      return NextResponse.json({ error: 'Preseason service not configured' }, { status: 503 })
+    }
+
     const body: SubmitPayload = await request.json()
 
     if (!body.clinicCode || !body.athlete || !body.symptoms || !body.cognitive) {
