@@ -7,6 +7,12 @@ export const metadata: Metadata = {
   title: 'SCAT6 vs SCOAT6: Which Tool to Use When? | Complete Guide 2026',
   description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool to avoid below standard of care. Updated for Amsterdam 2023 Consensus and AHPRA guidelines.',
   keywords: 'SCAT6 vs SCOAT6, difference between SCAT6 SCOAT6, when to use SCAT6, when to use SCOAT6, concussion assessment tools',
+  openGraph: {
+    title: 'SCAT6 vs SCOAT6: Which Tool to Use When?',
+    description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool to avoid below standard of care.',
+    type: 'article',
+    url: 'https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference',
+  },
 }
 
 const faqs = [
@@ -49,6 +55,10 @@ export default function SCAT6vsSCOAT6Page() {
       <div className="min-h-screen bg-slate-50">
         <div className="bg-gradient-to-br from-red-600 to-orange-600 text-white py-16">
           <div className="max-w-4xl mx-auto px-4">
+            <Link href="/" className="inline-flex items-center gap-2 text-red-100 hover:text-white mb-4 text-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              ConcussionPro Home
+            </Link>
             <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
               ⚠️ Critical for AHPRA Compliance
             </div>
@@ -186,7 +196,7 @@ export default function SCAT6vsSCOAT6Page() {
                 <strong>If the patient is in your clinic on Day 3 or later → use SCOAT6.</strong>
               </p>
               <p className="text-red-600 font-semibold">
-                Never use SCAT6 for office-based follow-up visits. This misses critical vestibular testing and return-to-play protocols required by the Berlin Consensus.
+                Never use SCAT6 for office-based follow-up visits. This misses critical vestibular testing and return-to-play protocols required by the Amsterdam 2023 Consensus.
               </p>
             </div>
           </div>

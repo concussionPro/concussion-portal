@@ -333,6 +333,7 @@ export default function AthleteBaselineForm() {
   const wordTimerRef = useRef<NodeJS.Timeout | null>(null)
   const digitTimerRef = useRef<NodeJS.Timeout | null>(null)
   const monthsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const monthsStartTimeRef = useRef<number>(0)
 
   // Validate clinic code
   useEffect(() => {
@@ -431,11 +432,13 @@ export default function AthleteBaselineForm() {
   const startMonthsTest = useCallback(() => {
     setMonthsPhase('active')
     setMonthsTapped([])
-    setMonthsStartTime(Date.now())
+    const now = Date.now()
+    setMonthsStartTime(now)
+    monthsStartTimeRef.current = now
     setMonthsCorrect(null)
 
     monthsTimerRef.current = setInterval(() => {
-      setMonthsTimeElapsed(Math.floor((Date.now() - Date.now()) / 1000))
+      setMonthsTimeElapsed(Math.floor((Date.now() - monthsStartTimeRef.current) / 1000))
     }, 100)
   }, [])
 
@@ -1645,7 +1648,8 @@ export default function AthleteBaselineForm() {
             <button
               onClick={() => {
                 if (step === 1 && !name) {
-                  return // require name at minimum
+                  alert('Please enter the athlete\'s name to continue.')
+                  return
                 }
                 setStep(prev => prev + 1)
               }}

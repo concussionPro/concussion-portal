@@ -5,8 +5,14 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Free SCAT6 PDF Download - Fillable Form with Auto-Scoring | Australia 2026',
-  description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for 2026 Berlin Consensus protocols. Used by Australian healthcare professionals. No registration required.',
+  description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for Amsterdam 2023 Consensus protocols. Used by Australian healthcare professionals. No registration required.',
   keywords: 'SCAT6 PDF download, free SCAT6 form, fillable SCAT6, SCAT6 PDF Australia, SCAT6 auto-scoring, download SCAT6 2026',
+  openGraph: {
+    title: 'Free SCAT6 PDF Download — Fillable Form with Auto-Scoring',
+    description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for Amsterdam 2023 Consensus. No registration required.',
+    type: 'article',
+    url: 'https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download',
+  },
 }
 
 export default function FreeSCAT6PDFDownloadPage() {
@@ -28,11 +34,15 @@ export default function FreeSCAT6PDFDownloadPage() {
       <div className="min-h-screen bg-slate-50">
         <div className="bg-gradient-to-br from-blue-500 to-cyan-400 text-white py-16">
           <div className="max-w-4xl mx-auto px-4">
+            <Link href="/" className="inline-flex items-center gap-2 text-blue-100 hover:text-white mb-4 text-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              ConcussionPro Home
+            </Link>
             <h1 className="text-5xl font-bold mb-4">
               Free SCAT6 PDF Download
             </h1>
             <p className="text-xl text-blue-100 mb-4">
-              Digitally fillable, auto-scoring SCAT6 forms. Updated for 2026 Berlin Consensus protocols.
+              Digitally fillable, auto-scoring SCAT6 forms. Updated for Amsterdam 2023 Consensus protocols.
             </p>
             <div className="flex gap-4">
               <Link
@@ -79,7 +89,7 @@ export default function FreeSCAT6PDFDownloadPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-1" />
-                  <span><strong>2026 updated:</strong> Aligned with latest Berlin Consensus and AHPRA guidelines</span>
+                  <span><strong>2023 updated:</strong> Aligned with Amsterdam 2023 Consensus and AHPRA guidelines</span>
                 </li>
               </ul>
             </div>

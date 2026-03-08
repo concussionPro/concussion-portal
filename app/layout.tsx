@@ -4,6 +4,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
+import { FooterWrapper } from "@/components/FooterWrapper";
 import { CONFIG } from "@/lib/config";
 import { organizationSchema } from "@/lib/schema-markup";
 import Script from 'next/script';
@@ -138,6 +139,7 @@ export default function RootLayout({
               <div id="main-content">
                 {children}
               </div>
+              <FooterWrapper />
             </AnalyticsProvider>
           </Suspense>
         </ProgressProvider>

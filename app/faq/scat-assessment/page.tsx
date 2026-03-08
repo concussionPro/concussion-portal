@@ -6,6 +6,12 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'SCAT-6 Assessment FAQ | Concussion Education Australia',
   description: 'Complete guide to SCAT-6 assessment: when to use, how it differs from SCAT-5, differences with SCOAT-6, legal requirements in Australia',
+  openGraph: {
+    title: 'SCAT-6 Assessment FAQ',
+    description: 'Complete guide to SCAT-6 assessment for Australian healthcare professionals. When to use, SCAT-5 differences, SCOAT-6 comparison, and legal requirements.',
+    type: 'article',
+    url: 'https://portal.concussion-education-australia.com/faq/scat-assessment',
+  },
 }
 
 const faqs = [

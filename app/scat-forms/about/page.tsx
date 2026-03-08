@@ -134,7 +134,7 @@ export default function SCATFormsAboutPage() {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 text-center">
               <Brain className="w-8 h-8 text-blue-600 mx-auto mb-3" />
               <div className="text-2xl font-bold text-slate-900 mb-1">2026 Updated</div>
-              <p className="text-sm text-slate-600">Berlin Consensus protocols</p>
+              <p className="text-sm text-slate-600">Amsterdam 2023 Consensus</p>
             </div>
           </div>
 
