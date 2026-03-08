@@ -17,6 +17,13 @@ const EXCLUDED_PATHS = [
   '/modules',
   '/admin',
   '/auth',
+  '/scat-course',
+  '/scat-forms',
+  '/clinical-toolkit',
+  '/resources',
+  '/references',
+  '/complete-reference',
+  '/certificate',
 ]
 
 export function StickyCTA() {

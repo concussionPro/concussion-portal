@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { unsubscribeUser } from '@/lib/users'
 
-const UNSUBSCRIBE_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'dev-secret'
+function getUnsubscribeSecret(): string {
+  const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET
+  if (!secret) throw new Error('JWT_SECRET or SESSION_SECRET must be configured')
+  return secret
+}
 
 /** Verify HMAC token for unsubscribe link */
 function verifyUnsubscribeToken(email: string, token: string): boolean {
   const expected = crypto
-    .createHmac('sha256', UNSUBSCRIBE_SECRET)
+    .createHmac('sha256', getUnsubscribeSecret())
     .update(email.toLowerCase())
     .digest('hex')
   return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))
@@ -16,7 +20,7 @@ function verifyUnsubscribeToken(email: string, token: string): boolean {
 /** Generate HMAC token for unsubscribe link */
 export function generateUnsubscribeToken(email: string): string {
   return crypto
-    .createHmac('sha256', UNSUBSCRIBE_SECRET)
+    .createHmac('sha256', getUnsubscribeSecret())
     .update(email.toLowerCase())
     .digest('hex')
 }
@@ -58,7 +62,7 @@ export async function GET(request: NextRequest) {
 
 function unsubscribePage(emailOrError: string, success: boolean): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
