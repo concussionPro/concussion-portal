@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileText, CheckSquare, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { FileText, CheckSquare, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 
@@ -37,31 +37,31 @@ export default function ResourcesPage() {
   const resources = [
     {
       title: 'Concussion Clinical Cheat Sheet',
-      description: 'One-page clinical reference for concussion assessment and management',
+      description: 'One-page reference: red flags, symptom scoring thresholds, and acute management steps',
       format: 'PDF',
       icon: FileText
     },
     {
       title: 'SCAT6 & SCOAT6 Fillable Forms',
-      description: 'Official assessment tools — fillable and printable PDFs',
-      format: 'PDF + ZIP',
+      description: 'Auto-scoring digital assessment forms mapped to official BJSM specifications',
+      format: 'PDF',
       icon: CheckSquare
     },
     {
       title: '"What to Expect After a Concussion"',
-      description: 'Patient education handout with plain-language recovery guidance',
+      description: 'Patient handout covering recovery timeline, activity modifications, and when to seek help',
       format: 'PDF',
       icon: FileText
     },
     {
       title: 'Return-to-Play & Return-to-Learn Ladder',
-      description: 'Graduated RTP and RTL progression stages with criteria',
+      description: 'Graduated progression stages with specific criteria for advancing each step',
       format: 'PDF',
       icon: CheckSquare
     },
     {
       title: 'PCS Clinical Flowchart',
-      description: 'Post-Concussion Syndrome decision tree for persistent symptoms',
+      description: 'Decision tree for persistent post-concussion symptoms: when to refer, which specialist, what to document',
       format: 'PDF',
       icon: FileText
     }
@@ -71,92 +71,18 @@ export default function ResourcesPage() {
     <div className="min-h-screen bg-slate-50">
       <SiteNav />
 
-      {/* Hero */}
       <div className="max-w-4xl mx-auto px-6 py-16 pt-[80px]">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
             Free Clinical Resources
           </h1>
-          <p className="text-xl text-slate-600 leading-relaxed">
-            Professional concussion assessment tools for your clinic
+          <p className="text-lg text-slate-600 leading-relaxed">
+            5 downloadable tools for concussion assessment and management
           </p>
         </div>
 
-        {!submitted ? (
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mb-12">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                Get Instant Access
-              </h2>
-              <p className="text-slate-600">
-                Enter your email to download all 5 professional resources
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-center">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              )}
-              <div className="flex gap-3">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@clinic.com"
-                  required
-                  className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-[#7ba8b0] transition-colors"
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isLoading ? 'Sending...' : 'Download'}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 mt-3 text-center">
-                AHPRA-aligned resources. No spam, unsubscribe anytime.
-              </p>
-            </form>
-          </div>
-        ) : (
-          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl border-2 border-teal-200 p-8 mb-12">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-[#7ba8b0] flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-8 h-8 text-white" strokeWidth={2.5} />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                Check Your Email
-              </h2>
-              <p className="text-slate-700 mb-4">
-                We've sent download links to <span className="font-semibold">{email}</span>
-              </p>
-              <p className="text-sm text-slate-600">
-                Don't see it? Check your spam folder.
-              </p>
-            </div>
-
-            <div className="text-center pt-6 border-t border-teal-200">
-              <p className="text-slate-700 mb-4">
-                Want full access to 8 interactive modules and 14 AHPRA CPD points?
-              </p>
-              <button
-                onClick={() => router.push('/trial')}
-                className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors inline-flex items-center gap-2"
-              >
-                Try Module 1 Free
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Resources Grid */}
-        <div className="mb-12">
-          <h3 className="text-xl font-bold text-slate-900 mb-6">What You'll Get</h3>
+        {/* Resources Grid — shown FIRST so clinicians see value before email gate */}
+        <div className="mb-10">
           <div className="grid md:grid-cols-2 gap-4">
             {resources.map((resource, index) => {
               const Icon = resource.icon
@@ -185,6 +111,82 @@ export default function ResourcesPage() {
           </div>
         </div>
 
+        {/* Email gate — AFTER resources are visible */}
+        {!submitted ? (
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mb-12">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                Download All 5 Resources
+              </h2>
+              <p className="text-slate-600">
+                Enter your email and we'll send the download links directly.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+                  <div className="flex items-center gap-2 justify-center">
+                    <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your.email@clinic.com"
+                  required
+                  className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-[#7ba8b0] transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isLoading ? 'Sending...' : 'Download'}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 mt-3 text-center">
+                No spam, unsubscribe anytime.
+              </p>
+            </form>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl border-2 border-teal-200 p-8 mb-12">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-[#7ba8b0] flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-8 h-8 text-white" strokeWidth={2.5} />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                Check Your Email
+              </h2>
+              <p className="text-slate-700 mb-4">
+                Download links sent to <span className="font-semibold">{email}</span>
+              </p>
+              <p className="text-sm text-slate-600">
+                Check your spam folder if you don't see it within a few minutes.
+              </p>
+            </div>
+
+            <div className="text-center pt-6 border-t border-teal-200">
+              <p className="text-slate-700 mb-4">
+                Want structured training with 14 AHPRA CPD points?
+              </p>
+              <button
+                onClick={() => router.push('/trial')}
+                className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors inline-flex items-center gap-2"
+              >
+                Try Module 1 Free
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* CTA to Trial */}
         {!submitted && (
           <div className="bg-slate-900 rounded-2xl p-8 text-center">
@@ -204,8 +206,6 @@ export default function ResourcesPage() {
           </div>
         )}
       </div>
-
-      {/* Footer rendered by FooterWrapper in root layout */}
     </div>
   )
 }

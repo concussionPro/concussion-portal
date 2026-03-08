@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { CheckCircle2, Mail, BookOpen, ArrowRight, Loader2, AlertTriangle } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 declare global {
   interface Window {
@@ -136,25 +137,24 @@ function CheckoutSuccessContent() {
         </div>
 
         {/* Early bird savings callout */}
-        {sessionData?.amountPaid && sessionData.amountPaid < 1400 && sessionData.courseType === 'full-course' && (
+        {sessionData?.amountPaid && sessionData.amountPaid < CONFIG.COURSE.PRICE_REGULAR && sessionData.courseType === 'full-course' && (
           <div className="text-center mb-8 py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-200">
             <p className="text-sm font-semibold text-emerald-800">
-              Early bird pricing — you saved ${(1400 - sessionData.amountPaid).toLocaleString()} AUD
+              Early bird pricing — you saved ${(CONFIG.COURSE.PRICE_REGULAR - sessionData.amountPaid).toLocaleString()} AUD
             </p>
           </div>
         )}
 
         {/* Workshop countdown for full-course */}
         {sessionData?.courseType === 'full-course' && sessionData?.location && (() => {
-          const workshopDates: Record<string, string> = { 'byron-bay': '2026-03-28' }
-          const dateStr = workshopDates[sessionData.location]
-          if (!dateStr) return null
-          const daysUntil = Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          const location = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === sessionData.location)
+          if (!location?.dateObj) return null
+          const daysUntil = Math.ceil((location.dateObj.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
           if (daysUntil <= 0) return null
           return (
             <div className="glass rounded-2xl p-6 md:p-8 mb-6 text-center border border-accent/20">
               <p className="text-sm font-semibold text-accent uppercase tracking-wider mb-2">Your Workshop</p>
-              <p className="text-2xl font-bold mb-1">{formatLocation(sessionData.location)} — March 28, 2026</p>
+              <p className="text-2xl font-bold mb-1">{location.city} — {location.date}</p>
               <p className="text-muted-foreground">
                 <span className="text-xl font-bold text-accent">{daysUntil}</span> days away — complete your online modules before then
               </p>

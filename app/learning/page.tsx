@@ -15,6 +15,7 @@ export default function LearningSuite() {
   const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, isModuleComplete, getModuleProgress } = useProgress()
   const modules = getModulesMeta()
   const [hasAccess, setHasAccess] = useState(false)
+  const [accessLoading, setAccessLoading] = useState(true)
   useAnalytics() // Track page views
 
   const completedModules = getTotalCompletedModules()
@@ -45,6 +46,8 @@ export default function LearningSuite() {
         }
       } catch (error) {
         console.error('Access check failed:', error)
+      } finally {
+        setAccessLoading(false)
       }
     }
 
@@ -100,8 +103,8 @@ export default function LearningSuite() {
                 const completed = isModuleComplete(module.id)
                 const progress = getModuleProgress(module.id)
                 const hasStarted = progress.startedAt !== null
-                // Modules are locked if user doesn't have paid access
-                const isLocked = !hasAccess
+                // Modules are locked if user doesn't have paid access (hide lock while loading)
+                const isLocked = !accessLoading && !hasAccess
 
                 return (
                   <div
