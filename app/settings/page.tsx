@@ -2,8 +2,9 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { User, Mail, Shield, LogOut, Trash2, CheckCircle2, Crown } from 'lucide-react'
+import { User, Mail, Shield, LogOut, Trash2, CheckCircle2, Crown, Award, Download, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useProgress } from '@/contexts/ProgressContext'
 import { useRouter } from 'next/navigation'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { CONFIG } from '@/lib/config'
@@ -20,6 +21,9 @@ export default function SettingsPage() {
   const router = useRouter()
   const [user, setUser] = useState<SessionUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [certDownloading, setCertDownloading] = useState(false)
+  const [certEmailStatus, setCertEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const { getTotalCompletedModules, isModuleComplete } = useProgress()
   useAnalytics()
 
   useEffect(() => {
@@ -61,6 +65,56 @@ export default function SettingsPage() {
     if (isPaidUser) return 'Online Course'
     if (user?.accessLevel === 'preview') return 'Free Preview'
     return 'Student Account'
+  }
+
+  const completedModules = getTotalCompletedModules()
+  const allModulesComplete = completedModules === 8
+
+  const getCertType = () => {
+    if (isFullCourse) return 'full-course'
+    if (isPaidUser) return 'online-course'
+    return null
+  }
+
+  const handleDownloadCert = async () => {
+    const certType = getCertType()
+    if (!certType) return
+    setCertDownloading(true)
+    try {
+      const res = await fetch(`/api/certificate?type=${certType}`, { credentials: 'include' })
+      if (!res.ok) throw new Error('Download failed')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CPD-Certificate-${certType}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch {
+      setCertEmailStatus('error')
+    } finally {
+      setCertDownloading(false)
+    }
+  }
+
+  const handleEmailCert = async () => {
+    const certType = getCertType()
+    if (!certType) return
+    setCertEmailStatus('sending')
+    try {
+      const res = await fetch('/api/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: certType }),
+        credentials: 'include',
+      })
+      const data = await res.json()
+      setCertEmailStatus(data.success ? 'sent' : 'error')
+    } catch {
+      setCertEmailStatus('error')
+    }
   }
 
   const getEnrolledDate = () => {
@@ -252,6 +306,91 @@ export default function SettingsPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Certificate */}
+                {isPaidUser && (
+                  <div className="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Award className="w-5 h-5 text-[#5b9aa6]" strokeWidth={2} />
+                      <h2 className="text-xl font-bold text-slate-900">CPD Certificate</h2>
+                    </div>
+
+                    {allModulesComplete ? (
+                      <>
+                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-5 mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span className="text-sm font-bold text-emerald-900">
+                              Certificate Available
+                            </span>
+                          </div>
+                          <p className="text-xs text-emerald-700 mb-1">
+                            {isFullCourse
+                              ? `Complete Course — ${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points`
+                              : `Online Course — ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD points`
+                            }
+                          </p>
+                          <p className="text-xs text-emerald-600">
+                            All {completedModules} modules completed with 75%+ quiz scores
+                          </p>
+                        </div>
+
+                        {certEmailStatus === 'sent' && (
+                          <p className="text-xs text-emerald-700 mb-3">
+                            Certificate emailed to <span className="font-semibold">{user?.email}</span>
+                          </p>
+                        )}
+                        {certEmailStatus === 'error' && (
+                          <p className="text-xs text-red-600 mb-3">
+                            Email failed — use the download button instead.
+                          </p>
+                        )}
+
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            onClick={handleDownloadCert}
+                            disabled={certDownloading}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-[#5b9aa6] text-white rounded-lg hover:bg-[#4a8a96] transition-colors disabled:opacity-50"
+                          >
+                            {certDownloading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Download className="w-4 h-4" />
+                            )}
+                            Download PDF
+                          </button>
+                          <button
+                            onClick={handleEmailCert}
+                            disabled={certEmailStatus === 'sending'}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white text-[#5b9aa6] border-2 border-[#5b9aa6] rounded-lg hover:bg-teal-50 transition-colors disabled:opacity-50"
+                          >
+                            {certEmailStatus === 'sending' ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Mail className="w-4 h-4" />
+                            )}
+                            Email to Me
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
+                        <p className="text-sm font-semibold text-slate-700 mb-1">
+                          {completedModules}/8 modules completed
+                        </p>
+                        <p className="text-xs text-slate-500 mb-3">
+                          Complete all 8 modules with 75%+ quiz scores to earn your certificate.
+                        </p>
+                        <div className="w-full bg-slate-200 rounded-full h-2">
+                          <div
+                            className="bg-[#5b9aa6] h-2 rounded-full transition-all"
+                            style={{ width: `${(completedModules / 8) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Account Actions */}
                 <div className="bg-white rounded-2xl border-2 border-red-200 p-6">

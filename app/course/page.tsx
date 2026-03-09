@@ -407,25 +407,52 @@ export default function CoursePage() {
         </div>
       </section>
 
-      {/* Your Instructor */}
+      {/* Your Facilitators */}
       <section className="section-padding">
         <div className="container-md px-6 md:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
-              Your Instructor
+              Your Facilitators
             </h2>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+              Learn from clinicians with real-world concussion management experience
+            </p>
           </div>
-          <div className="glass rounded-2xl p-8 md:p-10 max-w-2xl mx-auto" style={{ borderWidth: '2px', borderImage: 'linear-gradient(135deg, rgba(13,115,119,0.3), rgba(91,154,166,0.1)) 1' }}>
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#64a8b0] to-[#5b9aa6] flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span className="text-2xl font-bold text-white">ZL</span>
+
+          <div className="space-y-5 max-w-3xl mx-auto">
+            {/* Zac Lewis */}
+            <div className="glass rounded-2xl p-6 md:p-8" style={{ borderWidth: '2px', borderImage: 'linear-gradient(135deg, rgba(13,115,119,0.3), rgba(91,154,166,0.1)) 1' }}>
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#64a8b0] to-[#5b9aa6] flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <span className="text-xl font-bold text-white">ZL</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground mb-1 tracking-tight text-center sm:text-left">Zac Lewis</h3>
+                  <p className="text-sm font-semibold text-accent mb-3 text-center sm:text-left">
+                    Registered Osteopath, B.Clin.Sci., M.Ost.Med &middot; PhD Candidate (Neuroscience)
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Zac is a registered Osteopath with over a decade of clinical experience specialising in neurological health, rehabilitation, and concussion management. His career includes work with national and professional ice hockey leagues across New Zealand and Canada, where he developed deep expertise in acute and long-term concussion care. An experienced clinical mentor, Zac has supervised numerous early-career clinicians in applying evidence-based neurological and musculoskeletal care. His current research focuses on developing improved diagnostic and prognostic tools for concussion management.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground mb-1 tracking-tight text-center sm:text-left">Zac Lewis</h3>
-                <p className="text-sm font-semibold text-accent mb-3 text-center sm:text-left">Osteopath, B.Clin.Sci., M.Ost.Med</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Founder of Concussion Education Australia. Zac developed this training to bridge the gap between concussion research and clinical practice — giving allied health professionals the confidence and competence to manage concussion cases from sideline to return-to-play.
-                </p>
+            </div>
+
+            {/* Dr Peter Corredig */}
+            <div className="glass rounded-2xl p-6 md:p-8" style={{ borderWidth: '2px', borderImage: 'linear-gradient(135deg, rgba(13,115,119,0.3), rgba(91,154,166,0.1)) 1' }}>
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#5b9aa6] to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <span className="text-xl font-bold text-white">PC</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground mb-1 tracking-tight text-center sm:text-left">Dr Peter Corredig</h3>
+                  <p className="text-sm font-semibold text-accent mb-3 text-center sm:text-left">
+                    MBBS, FRACGP, Diploma of Child Health &middot; General Practitioner
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Dr Corredig is a GP based in Victoria with a broad clinical interest spanning musculoskeletal health, sports medicine, and children&apos;s health. He has developed a strong interest in concussion assessment and management, particularly in community and grassroots sport settings. Peter has worked closely with local sporting clubs supporting athletes through return-to-play assessments and concussion management protocols, and is an experienced educator who has delivered teaching sessions for GP colleagues and registrars on concussion recognition and clinical decision-making.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
