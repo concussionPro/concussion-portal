@@ -94,6 +94,7 @@ export const modules: Module[] = [
           'EXAMPLES: Fall backward onto occiput causing frontal lobe contrecoup injury, frontal impact causing occipital contrecoup.',
           'IMAGING CORRELATION: Coup and contrecoup injuries may be visible on CT as contusions (bruising), though concussion typically occurs without visible imaging changes.',
           'CLINICAL PEARL: Always assess both impact site and opposite hemisphere for symptoms and signs. Contrecoup injuries can present with focal neurological findings.',
+          '[VIDEO: ny38BOMC1kE | Coup-Contrecoup Injury — Medical Animation]',
         ],
       },
       {
@@ -330,6 +331,7 @@ export const modules: Module[] = [
           'At the cellular level, concussion triggers a complex cascade of neurochemical, ionic, and metabolic changes known as the "neurometabolic cascade." This cascade explains the temporal evolution of symptoms and vulnerability to repeat injury.',
           'TIMELINE: The cascade begins immediately upon injury (milliseconds to seconds) and can persist for 7-45+ days depending on severity, age, and individual factors. Understanding this timeline is critical for return-to-activity decisions.',
           'CLINICAL RELEVANCE: The neurometabolic cascade creates an "energy crisis" and period of vulnerability during which the brain is highly susceptible to further injury (second impact syndrome) and slower to recover from subsequent hits.',
+          '[VIDEO: gLwtJcKh4gQ | 2-Minute Neuroscience: Concussions]',
         ],
       },
       {
@@ -597,6 +599,7 @@ export const modules: Module[] = [
           '   5. ACCOMMODATION PROBLEMS:',
           '   • Difficulty changing focus between near and far',
           '   • Causes blurred vision, focusing difficulties, eye strain',
+          '[VIDEO: LyxcLTSsF_w | Sports Concussion Exam: Pursuits, Saccades, and Convergence (Duke Neurology)]',
           'SYMPTOMS: Blurred or double vision, difficulty reading (words move, losing place), headaches with visual tasks, eye strain, light sensitivity, motion sensitivity, difficulty with screens, impaired depth perception.',
           'ASSESSMENT: Vestibular Ocular Motor Screening (VOMS) test assesses: smooth pursuit, saccades, convergence (near point convergence distance), VOR, visual motion sensitivity. King-Devick test measures rapid number reading (saccades and processing speed).',
           'CLINICAL CORRELATION: Oculomotor dysfunction severity correlates with: overall symptom burden, recovery time, cognitive dysfunction, balance problems. It\'s a key predictor of prolonged recovery.',
@@ -1625,6 +1628,8 @@ export const modules: Module[] = [
           'Convergence: Target approaches nose slowly until patient sees double or experiences symptoms. Early diplopia or eye drift indicates CN III/brainstem coordination issues.',
           'VOR (Vestibulo-Ocular Reflex): Head rotates side-to-side while patient fixates on target × 30 seconds. Visual blur or dizziness indicates vestibular-ocular integration dysfunction.',
           'VMS (Visual Motion Sensitivity): Patient exposed to moving visual stimulus × 30 seconds. Motion-induced symptoms suggest cortical/vestibular processing issues.',
+          '[VIDEO: CJF6kJcFGqE | Sports Concussion Exam: Vestibular/Ocular-Motor Screening — VOMS (Duke Neurology)]',
+          '[VIDEO: 085hiC17OoQ | Sports Concussion Exam: King-Devick Test (Duke Neurology)]',
         ],
       },
       {
@@ -1684,6 +1689,7 @@ export const modules: Module[] = [
           '   • Suggests brainstem, cerebellar, or CNS involvement',
           '   • More persistent and concerning in concussion',
           '💡 CLINICAL PEARL: Vertical or direction-changing nystagmus suggests central pathology requiring urgent evaluation. Peripheral nystagmus is typically fatiguing and improves with visual fixation.',
+          '[VIDEO: _1kVVn2pcHA | Types of Nystagmus Due to BPPV Vertigo — What It Looks Like and Which Maneuver (Fauquier ENT)]',
         ],
       },
       {
@@ -1992,6 +1998,7 @@ export const modules: Module[] = [
           'TEST 4 - HORIZONTAL/VERTICAL VOR: Patient holds target (card with text) at arm\'s length, maintains focus. Rotate head side-to-side (horizontal) at ~2 Hz for 15 seconds while reading text. Text should stay clear. Record symptoms. Repeat with vertical head movement (up-down). Normal = clear text, minimal symptoms. Abnormal = blurred text, ≥2 symptom increase (vestibulo-ocular reflex dysfunction, requires vestibular rehab).',
           'TEST 5 - VISUAL MOTION SENSITIVITY (VMS): Patient seated, full-field visual motion stimulus (checkerboard pattern rotating on screen, or patient rotates in chair while fixating on busy wall). Expose for 30-60 seconds. Record symptoms. Normal = mild discomfort tolerable. Abnormal = ≥2 symptom increase, severe motion sensitivity (cortical visual processing dysfunction, often persistent without treatment).',
           'CLINICAL INTERPRETATION: If ≥1 test abnormal → Vestibular-ocular phenotype present. NPC >6 cm → Vision therapy referral. VOR/VMS positive → Vestibular physiotherapy. Symptoms not returning to baseline within 10 minutes after testing → Suggests more severe vestibular dysfunction requiring earlier specialist referral.',
+          '[VIDEO: CJF6kJcFGqE | VOMS Demonstration: Vestibular/Ocular-Motor Screening (Duke Neurology)]',
         ],
       },
       {
@@ -3158,6 +3165,7 @@ export const modules: Module[] = [
           'SAME-DAY RETURN TO PLAY: NEVER permitted except in professional sports with immediate specialist assessment available. Standard is removal from play, evaluation, staged return over days-weeks.',
           'PREMATURE RETURN RISKS: Increased risk of re-injury (3-5x higher in first 10 days post-concussion), prolonged symptoms if re-injured, potential for catastrophic outcomes (Second Impact Syndrome in youth, though rare).',
           'DOCUMENTATION: Written clearance letter specifying: diagnosis, treatment course, clinical findings supporting clearance, any ongoing restrictions or monitoring needs, return-to-play date.',
+          '[VIDEO: i0YLhfg0nU4 | ImPACT Baseline and Post-Injury Administration]',
         ],
       },
       {
@@ -3543,8 +3551,15 @@ export const modules: Module[] = [
           'GAZE STABILIZATION EXERCISES (VOR x1): Patient holds target at arm\'s length, rotates head side-to-side while maintaining focus on target. Start 30 seconds × 3 sets, 2-3x/day. Progress to faster head movements, standing (vs sitting), adding body movements. Goal: maintain visual stability during head movement.',
           'VOR x2 EXERCISES: Patient holds target, rotates head opposite direction to target movement (head right, target left). More challenging than VOR x1. Requires intact vestibular compensation. 30 seconds × 3 sets, progress to complex patterns.',
           'HABITUATION EXERCISES: Expose patient to motion stimuli that provoke symptoms at controlled doses. Examples: head rolls, 360° turns, bending forward/standing, visual motion (optokinetic stimuli). Start below symptom threshold, gradually increase intensity. Goal: reduce sensitivity through neuroplastic adaptation.',
+          '[VIDEO: -ucb3lRZzy4 | Optokinetic Training for Concussion, Dizziness, and Motion Sensitivity]',
           'BALANCE TRAINING: Progress from static (standing on foam, eyes closed) to dynamic (walking with head turns, obstacle course, sport-specific drills). Single-leg stance, tandem stance, perturbation training. Goal: improve postural stability and reduce fall risk.',
           'VISUAL MOTION SENSITIVITY TREATMENT: Graduated exposure to busy visual environments (supermarkets, scrolling screens, moving traffic). Start with brief exposures (2-5 minutes), gradually increase. Virtual reality may help if available. Goal: desensitization to motion stimuli.',
+          '## BPPV Assessment and Repositioning Maneuvers',
+          'BENIGN PAROXYSMAL POSITIONAL VERTIGO (BPPV): A common vestibular condition post-concussion caused by displaced otoconia (calcium carbonate crystals) in the semicircular canals. Diagnosis and treatment require identifying the affected canal and applying the correct repositioning maneuver.',
+          '[VIDEO: G3xPpkGPEvE | Dix-Hallpike Maneuver — Diagnosing BPPV: What Side and What Type (Fauquier ENT)]',
+          '[VIDEO: F_2GpR4HtkY | Epley Maneuver — Posterior Canal BPPV Treatment (EM:RAP)]',
+          '[VIDEO: 6zsfIa_Z8_k | Barbecue Roll Maneuver — Lateral Canal BPPV Treatment (Physiotutors)]',
+          '[VIDEO: qw1QciZWfP0 | Deep Head Hanging Maneuver — Anterior Canal BPPV Treatment (Fauquier ENT)]',
         ],
       },
       {
@@ -3552,6 +3567,7 @@ export const modules: Module[] = [
         title: 'Vision Therapy: Oculomotor Rehabilitation',
         content: [
           'CONVERGENCE EXERCISES: Pencil push-ups (slow target approach to nose until diplopia, repeat 15x, 2x/day), Brock string (three beads at different distances, focus near-to-far-to-near), stereogram training. Goal: improve NPC from >6 cm to <5 cm.',
+          '[VIDEO: M7Va8XKorT4 | Brock String Visual Training for Athletes]',
           'ACCOMMODATIVE TRAINING: Near-far focus tasks (switch focus between near and distant targets rapidly), Hart charts (letter tracking at different distances), accommodative flipper lenses (+2.00/-2.00 D flips). Goal: improve accommodation speed and stamina.',
           'SACCADIC TRAINING: Rapid eye jumps between two targets (horizontal, vertical, diagonal). Increase distance between targets and speed. Apps and computer programs available. Goal: improve saccadic accuracy and speed.',
           'SMOOTH PURSUIT TRAINING: Track slow-moving targets in all directions. Use therapy balls, finger tracking, computer programs. Increase speed and complexity (circular, figure-8 patterns). Goal: smooth, coordinated eye movements.',

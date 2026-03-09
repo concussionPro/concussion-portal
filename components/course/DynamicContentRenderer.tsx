@@ -16,6 +16,7 @@ import {
   Calendar,
   BookOpen,
   ClipboardList,
+  Play,
 } from 'lucide-react'
 
 // Map content-marker emoji to lucide icons for professional rendering
@@ -228,7 +229,38 @@ const DEFINITION_COLORS = [
   { bg: 'bg-purple-50', border: 'border-purple-500', label: 'text-purple-900' },
 ]
 
+function renderVideoEmbed(videoId: string, title: string, key: string) {
+  // Strip timestamp params from videoId (e.g., "CJF6kJcFGqE&t=221s" → "CJF6kJcFGqE")
+  const cleanId = videoId.split('&')[0]
+  return (
+    <div key={key} className="my-6">
+      <div className="bg-slate-900 rounded-xl overflow-hidden shadow-lg">
+        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+          <iframe
+            className="absolute inset-0 w-full h-full"
+            src={`https://www.youtube-nocookie.com/embed/${cleanId}?rel=0`}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            loading="lazy"
+          />
+        </div>
+        <div className="px-4 py-3 flex items-center gap-2">
+          <Play className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          <p className="text-sm text-slate-300 font-medium truncate">{title}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function renderParagraph(text: string, key: string, definitionColorIndex: number = 0) {
+  // Handle video embeds [VIDEO: youtube_id | Title]
+  const videoMatch = text.match(/^\[VIDEO:\s*([^\]|]+?)\s*\|\s*([^\]]+?)\s*\]$/)
+  if (videoMatch) {
+    return renderVideoEmbed(videoMatch[1], videoMatch[2], key)
+  }
+
   // Handle major sections with intro text
   if (text.startsWith('__SECTION__\n')) {
     return renderMajorSection(text.replace('__SECTION__\n', ''), key)
