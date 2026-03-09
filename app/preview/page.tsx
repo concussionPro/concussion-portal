@@ -39,7 +39,7 @@ interface PreviewModuleData {
   points: number
   description: string
   totalSections: number
-  firstSection: { id: string; title: string; content: string[] } | null
+  previewSections: { id: string; title: string; content: string[] }[]
   sectionTitles: string[]
 }
 
@@ -89,14 +89,14 @@ export default function PreviewPage() {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-teal-100 text-[#5b8d96] px-4 py-2 rounded-full text-sm font-bold mb-4">
             <Eye className="w-4 h-4" />
-            16 Sections Unlocked — Preview Free
+            Full Module 1 Unlocked — Preview Free
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
-            Explore the Full Course Structure
+            Try the Full First Module Free
           </h2>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            See exactly what you&apos;ll learn across all 8 modules. The first two sections of each module
-            are unlocked — from acute assessment to return-to-activity protocols. The full course includes 100+ sections with
+            Experience the complete Module 1 — every section, quiz, and clinical resource — before you commit.
+            See the quality of all 8 modules and 100+ sections with
             interactive quizzes, clinical flowcharts, and downloadable resources.
           </p>
         </div>
@@ -211,9 +211,22 @@ export default function PreviewPage() {
                         <span className="text-sm font-bold text-slate-500 tracking-wider">
                           MODULE {module.id}
                         </span>
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-100 text-[#5b8d96] border border-teal-200 flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          PREVIEW AVAILABLE
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 ${
+                          module.id === 1
+                            ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                            : 'bg-teal-100 text-[#5b8d96] border border-teal-200'
+                        }`}>
+                          {module.id === 1 ? (
+                            <>
+                              <CheckCircle2 className="w-3 h-3" />
+                              FULLY UNLOCKED
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="w-3 h-3" />
+                              PREVIEW AVAILABLE
+                            </>
+                          )}
                         </span>
                       </div>
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
@@ -252,33 +265,37 @@ export default function PreviewPage() {
                   </div>
                 </div>
 
-                {/* Expanded: First Section Content + Lock Overlay */}
+                {/* Expanded: Section Content + Lock Overlay */}
                 {isExpanded && (
                   <div className="border-t border-slate-200 bg-slate-50 p-6 animate-fadeInUp">
                     {loading ? (
                       <div className="flex items-center justify-center py-12">
                         <div className="w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
                       </div>
-                    ) : preview?.firstSection ? (
+                    ) : preview && preview.previewSections.length > 0 ? (
                       <div className="space-y-6">
-                        {/* First section content */}
-                        <PreviewSectionContent
-                          moduleId={module.id}
-                          section={preview.firstSection}
-                        />
+                        {/* All unlocked sections */}
+                        {preview.previewSections.map((section, sIdx) => (
+                          <PreviewSectionContent
+                            key={section.id}
+                            moduleId={module.id}
+                            section={section}
+                            sectionNumber={sIdx + 1}
+                          />
+                        ))}
 
-                        {/* Lock overlay: remaining sections */}
-                        {preview.sectionTitles.length > 1 && (
+                        {/* Lock overlay: remaining locked sections (modules 2-8) */}
+                        {preview.sectionTitles.length > preview.previewSections.length && (
                           <div className="relative">
                             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
                                   <Lock className="w-4 h-4" />
-                                  {preview.sectionTitles.length - 1} more sections in this module
+                                  {preview.sectionTitles.length - preview.previewSections.length} more sections in this module
                                 </div>
                               </div>
                               <div className="p-4 space-y-2">
-                                {preview.sectionTitles.slice(1).map((title, i) => (
+                                {preview.sectionTitles.slice(preview.previewSections.length).map((title, i) => (
                                   <div
                                     key={i}
                                     className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50 opacity-60"
@@ -300,6 +317,24 @@ export default function PreviewPage() {
                                 </button>
                               </div>
                             </div>
+                          </div>
+                        )}
+
+                        {/* Module 1 completion CTA */}
+                        {module.id === 1 && (
+                          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-6 text-center">
+                            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
+                            <h4 className="font-bold text-slate-900 mb-2">You&apos;ve seen the full Module 1</h4>
+                            <p className="text-sm text-slate-600 mb-4">
+                              7 more modules covering SCOAT6, VOMS, BESS, return-to-play, and clinical decision-making await.
+                            </p>
+                            <button
+                              onClick={() => router.push('/pricing')}
+                              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-bold hover:shadow-lg transition-all"
+                            >
+                              <Sparkles className="w-4 h-4" />
+                              Unlock All 8 Modules
+                            </button>
                           </div>
                         )}
                       </div>

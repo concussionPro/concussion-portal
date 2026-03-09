@@ -14,9 +14,10 @@ interface PreviewSection {
 interface PreviewSectionContentProps {
   moduleId: number
   section: PreviewSection
+  sectionNumber?: number
 }
 
-export function PreviewSectionContent({ moduleId, section }: PreviewSectionContentProps) {
+export function PreviewSectionContent({ moduleId, section, sectionNumber = 1 }: PreviewSectionContentProps) {
   const readingTime = estimateReadingTime(section.content)
 
   return (
@@ -25,7 +26,7 @@ export function PreviewSectionContent({ moduleId, section }: PreviewSectionConte
       <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-teal-500 to-blue-500 flex items-center justify-center">
-            <span className="text-xs font-bold text-white">1</span>
+            <span className="text-xs font-bold text-white">{sectionNumber}</span>
           </div>
           <SectionTypeBadge sectionId={section.id} />
           <div className="flex items-center gap-1 text-xs text-slate-400">

@@ -20,6 +20,30 @@ export const metadata: Metadata = {
 
 const blogPosts = [
   {
+    title: '7 Concussion Myths Clinicians Should Stop Believing in 2026',
+    description: 'From loss of consciousness to prolonged rest — evidence-based debunking of the most persistent concussion misconceptions still affecting clinical practice.',
+    date: 'March 9, 2026',
+    href: '/blog/concussion-myths-clinicians-should-stop-believing',
+    gradient: 'from-rose-500 to-pink-500',
+    readTime: '9 min',
+  },
+  {
+    title: 'BESS Balance Testing for Concussion: A Clinician\'s Complete Guide',
+    description: 'Step-by-step guide to administering and scoring the Balance Error Scoring System. Covers all 6 conditions, error types, common pitfalls, and clinical interpretation.',
+    date: 'March 9, 2026',
+    href: '/blog/bess-balance-testing-concussion-guide',
+    gradient: 'from-green-500 to-emerald-500',
+    readTime: '11 min',
+  },
+  {
+    title: 'Pre-Season Baseline Testing for Concussion: What Every Clinician Needs to Know',
+    description: 'Why individual baselines dramatically improve concussion detection. Covers SCAT6, BESS, and VOMS baseline protocols, implementation workflow, and common pitfalls.',
+    date: 'March 9, 2026',
+    href: '/blog/pre-season-baseline-testing-concussion-guide',
+    gradient: 'from-sky-500 to-blue-500',
+    readTime: '10 min',
+  },
+  {
     title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
     description: 'Two years since the Amsterdam Consensus, the evidence is clear: passive rest beyond 48 hours does more harm than good. Active recovery, the SCAT6/SCOAT6 two-tool system, and vestibular-ocular screening define the new standard.',
     date: 'January 5, 2026',
