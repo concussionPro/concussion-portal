@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { CheckCircle2, Mail, BookOpen, ArrowRight, Loader2, AlertTriangle } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -26,7 +26,7 @@ function CheckoutSuccessContent() {
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [conversionFired, setConversionFired] = useState(false)
+  const conversionFiredRef = useRef(false)
 
   useEffect(() => {
     if (!sessionId) {
@@ -43,15 +43,14 @@ function CheckoutSuccessContent() {
           setSessionData(data.session)
 
           // Fire Google Ads conversion (only once)
-          if (!conversionFired && typeof window !== 'undefined' && window.gtag) {
+          if (!conversionFiredRef.current && typeof window !== 'undefined' && window.gtag) {
             window.gtag('event', 'conversion', {
               send_to: 'AW-17984048021/checkout_complete',
               value: data.session.amountPaid,
               currency: 'AUD',
               transaction_id: sessionId,
             })
-            setConversionFired(true)
-            // Google Ads conversion tracked
+            conversionFiredRef.current = true
           }
         } else {
           setError(true)
@@ -60,16 +59,16 @@ function CheckoutSuccessContent() {
       .catch(() => {
         // Even if API fails, the purchase was still successful (Stripe confirmed)
         // Fire a generic conversion
-        if (!conversionFired && typeof window !== 'undefined' && window.gtag) {
+        if (!conversionFiredRef.current && typeof window !== 'undefined' && window.gtag) {
           window.gtag('event', 'conversion', {
             send_to: 'AW-17984048021/checkout_complete',
             currency: 'AUD',
           })
-          setConversionFired(true)
+          conversionFiredRef.current = true
         }
       })
       .finally(() => setLoading(false))
-  }, [sessionId, conversionFired])
+  }, [sessionId])
 
   if (loading) {
     return (

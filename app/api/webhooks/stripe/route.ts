@@ -74,8 +74,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const customerName = session.customer_details?.name || 'Student'
 
   if (!customerEmail) {
-    console.error('No customer email in checkout session')
-    return
+    console.error('No customer email in checkout session:', session.id)
+    // Throw so the webhook returns 500 and Stripe retries
+    throw new Error(`No customer email in checkout session ${session.id}`)
   }
 
   // Extract metadata

@@ -89,7 +89,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Save progress to Blob storage with deterministic path
+    // Save progress to Blob storage with deterministic path per user.
+    // addRandomSuffix: false avoids blob proliferation on every save.
+    // Security: userId is 128-bit random (crypto.randomBytes), so paths are not guessable.
+    // The API endpoint itself requires authentication — blob URLs are a storage detail.
     const filename = `user-progress/${sessionData.userId}.json`
     const blob = await put(filename, progressJson, {
       access: 'public',
