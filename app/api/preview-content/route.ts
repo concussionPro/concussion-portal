@@ -3,12 +3,13 @@ import { getAllModules } from '@/data/modules'
 
 /**
  * Public (no auth) API route.
- * Module 1: first 4 sections unlocked (intro + mechanism overview).
+ * Module 1: first 7 sections unlocked (myths quiz through DAI).
+ * Cuts right before the neurometabolic cascade — the content clinicians
+ * need most — creating a natural cliffhanger to convert.
  * Modules 2-8: first section only.
- * No quiz data, no clinical references for locked sections.
  */
 
-const MODULE_1_PREVIEW_COUNT = 4
+const MODULE_1_PREVIEW_COUNT = 7
 
 export async function GET() {
   const modules = getAllModules()
