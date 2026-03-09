@@ -4,8 +4,16 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProgress } from '@/contexts/ProgressContext'
 import { getModulesMeta } from '@/data/module-meta'
-import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, Loader2 } from 'lucide-react'
+import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
+
+const POOL_CITIES = [
+  { value: 'sydney', label: 'Sydney' },
+  { value: 'melbourne', label: 'Melbourne' },
+  { value: 'byron-bay', label: 'Byron Bay' },
+  { value: 'adelaide', label: 'Adelaide' },
+  { value: 'wa', label: 'Western Australia' },
+]
 
 export function NextActionCard() {
   const router = useRouter()
@@ -22,6 +30,11 @@ export function NextActionCard() {
   const [userEmail, setUserEmail] = useState('')
   const [accessLevel, setAccessLevel] = useState('')
   const certTriggered = useRef(false)
+
+  // Pool CTA state
+  const [selectedCity, setSelectedCity] = useState('')
+  const [poolSubmitting, setPoolSubmitting] = useState(false)
+  const [poolResult, setPoolResult] = useState<{ success: boolean; message: string } | null>(null)
 
   const allComplete = !nextModule
 
@@ -104,97 +117,192 @@ export function NextActionCard() {
     }
   }
 
+  const handlePoolSubmit = async () => {
+    if (!selectedCity) return
+    setPoolSubmitting(true)
+    setPoolResult(null)
+
+    try {
+      const res = await fetch('/api/ready-to-train', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ city: selectedCity }),
+      })
+      const data = await res.json()
+      setPoolResult({
+        success: res.ok,
+        message: data.message || data.error || 'Something went wrong.',
+      })
+    } catch {
+      setPoolResult({ success: false, message: 'Network error. Please try again.' })
+    } finally {
+      setPoolSubmitting(false)
+    }
+  }
+
   /* ── All Complete ───────────────────────────── */
   if (allComplete) {
+    const showPoolCTA = accessLevel === 'online-only'
+
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="glass-premium rounded-2xl p-5 sm:p-7 mb-6 sm:mb-8 border border-accent/20 relative overflow-hidden"
-      >
-        <div className="flex items-start gap-4 sm:gap-5">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent/20">
-            <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-              <span className="text-xs font-bold text-accent uppercase tracking-wider">
-                All Complete
-              </span>
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="glass-premium rounded-2xl p-5 sm:p-7 mb-6 sm:mb-8 border border-accent/20 relative overflow-hidden"
+        >
+          <div className="flex items-start gap-4 sm:gap-5">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent/20">
+              <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2 tracking-tight">
-              You&apos;ve Mastered All 8 Online Modules
-            </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-              Outstanding achievement — you&apos;ve earned all 8 online AHPRA CPD points. Complete the 6-hour in-person practical to earn your full 14 CPD point certificate.
-            </p>
-
-            {/* Certificate Section */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-4 mb-5">
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="w-4 h-4 text-emerald-600" />
-                <span className="text-sm font-bold text-emerald-900">CPD Certificate</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                <span className="text-xs font-bold text-accent uppercase tracking-wider">
+                  All Complete
+                </span>
               </div>
-              {certificateStatus === 'sending' && (
-                <p className="text-xs text-emerald-700 mb-3 flex items-center gap-2">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Generating and emailing your certificate...
-                </p>
-              )}
-              {certificateStatus === 'sent' && (
-                <p className="text-xs text-emerald-700 mb-3">
-                  Certificate emailed to <span className="font-semibold">{userEmail}</span>
-                </p>
-              )}
-              {certificateStatus === 'error' && (
-                <p className="text-xs text-red-600 mb-3">
-                  Certificate email failed — you can still download it below.
-                </p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={handleDownloadCertificate}
-                  disabled={certificateDownloading}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                >
-                  {certificateDownloading ? (
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2 tracking-tight">
+                You&apos;ve Mastered All 8 Online Modules
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                Outstanding achievement — you&apos;ve earned all 8 online AHPRA CPD points. Complete the 6-hour in-person practical to earn your full 14 CPD point certificate.
+              </p>
+
+              {/* Certificate Section */}
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-4 mb-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Award className="w-4 h-4 text-emerald-600" />
+                  <span className="text-sm font-bold text-emerald-900">CPD Certificate</span>
+                </div>
+                {certificateStatus === 'sending' && (
+                  <p className="text-xs text-emerald-700 mb-3 flex items-center gap-2">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Download className="w-3.5 h-3.5" />
-                  )}
-                  Download Certificate
+                    Generating and emailing your certificate...
+                  </p>
+                )}
+                {certificateStatus === 'sent' && (
+                  <p className="text-xs text-emerald-700 mb-3">
+                    Certificate emailed to <span className="font-semibold">{userEmail}</span>
+                  </p>
+                )}
+                {certificateStatus === 'error' && (
+                  <p className="text-xs text-red-600 mb-3">
+                    Certificate email failed — you can still download it below.
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={handleDownloadCertificate}
+                    disabled={certificateDownloading}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                  >
+                    {certificateDownloading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5" />
+                    )}
+                    Download Certificate
+                  </button>
+                  <button
+                    onClick={handleResendCertificate}
+                    disabled={certificateStatus === 'sending'}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-white text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    Email Certificate
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => router.push('/learning')}
+                  className="action-pill"
+                >
+                  <TrendingUp className="w-4 h-4 text-accent" />
+                  Review Modules
                 </button>
                 <button
-                  onClick={handleResendCertificate}
-                  disabled={certificateStatus === 'sending'}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-white text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                  onClick={() => router.push('/in-person')}
+                  className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all"
                 >
-                  <Mail className="w-3.5 h-3.5" />
-                  Email Certificate
+                  Book Workshop
                 </button>
               </div>
             </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => router.push('/learning')}
-                className="action-pill"
-              >
-                <TrendingUp className="w-4 h-4 text-accent" />
-                Review Modules
-              </button>
-              <button
-                onClick={() => router.push('/in-person')}
-                className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all"
-              >
-                Book Workshop
-              </button>
-            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+
+        {/* Pool CTA — only for online-only users */}
+        {showPoolCTA && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-premium rounded-2xl p-5 sm:p-7 mb-6 sm:mb-8 border border-blue-200 relative overflow-hidden"
+          >
+            <div className="flex items-start gap-4 sm:gap-5">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <MapPin className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-1 tracking-tight">
+                  Ready for Hands-On Training?
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  Join the waiting pool for your nearest city. Once 8+ clinicians are ready, we&apos;ll lock in a workshop date and send you booking details.
+                </p>
+
+                {poolResult?.success ? (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <p className="text-sm text-green-800 font-medium">{poolResult.message}</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div className="flex-1 min-w-[180px]">
+                      <label htmlFor="pool-city" className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">
+                        Your City
+                      </label>
+                      <select
+                        id="pool-city"
+                        value={selectedCity}
+                        onChange={(e) => setSelectedCity(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 bg-white text-sm font-medium focus:outline-none focus:border-blue-400 transition-colors"
+                      >
+                        <option value="">Select a city...</option>
+                        {POOL_CITIES.map(c => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      onClick={handlePoolSubmit}
+                      disabled={!selectedCity || poolSubmitting}
+                      className="px-5 py-2.5 rounded-full text-sm font-semibold bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:shadow-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {poolSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Joining...
+                        </>
+                      ) : (
+                        'Join the Waiting Pool'
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {poolResult && !poolResult.success && (
+                  <p className="text-sm text-red-600 mt-2">{poolResult.message}</p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </>
     )
   }
 

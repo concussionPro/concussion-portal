@@ -1,31 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put, list as listBlobs } from '@vercel/blob'
 import { sendEmail } from '@/lib/resend-client'
-import { CONFIG } from '@/lib/config'
+import { verifySessionToken } from '@/lib/jwt-session'
 
-// Rate limiting
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(key: string, limit: number): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(key)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 })
-    return true
-  }
-  if (entry.count >= limit) return false
-  entry.count++
-  return true
-}
-
-interface InterestRegistration {
+interface ReadyToTrainRegistration {
   email: string
   name: string
   city: string
   registeredAt: string
+  completedAt: string
 }
 
-// Derive valid cities from a single source of truth
 const VALID_CITIES = ['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa'] as const
 type ValidCity = (typeof VALID_CITIES)[number]
 
@@ -37,48 +22,66 @@ const CITY_LABELS: Record<ValidCity, string> = {
   wa: 'Western Australia',
 }
 
+// Rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkRateLimit(key: string, maxAttempts: number, windowMs: number): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(key)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs })
+    return true
+  }
+  if (entry.count >= maxAttempts) return false
+  entry.count++
+  return true
+}
+
 /**
- * POST /api/register-interest
+ * POST /api/ready-to-train
  *
- * Registers interest for a workshop location (especially TBA dates).
- * Stores in Vercel Blob, sends confirmation to registrant, notifies Zac.
- *
- * Body: { email, name, city }
+ * Registers a user who has completed all online modules into the
+ * "ready to train" pool for a specific city.
+ * Body: { city }
  */
 export async function POST(request: NextRequest) {
   try {
-    const forwarded = request.headers.get('x-forwarded-for')
-    const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
+    // Verify session
+    const sessionToken = request.cookies.get('session')?.value
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+    }
 
-    const body = await request.json()
-    const { email, name, city } = body
+    const session = verifySessionToken(sessionToken)
+    if (!session) {
+      return NextResponse.json({ error: 'Invalid or expired session.' }, { status: 401 })
+    }
 
-    // Rate limit by IP
-    if (!checkRateLimit(`ip:${ip}`, 10)) {
+    // Must be online-only (full-course users already have workshop access)
+    if (session.accessLevel !== 'online-only') {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again in a few minutes.' },
-        { status: 429 }
+        { error: 'This feature is for online-only users who have completed all modules.' },
+        { status: 403 }
       )
     }
 
-    // Validate inputs
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: 'Valid email is required.' }, { status: 400 })
+    // Rate limit: 5 attempts per 15 minutes per email
+    if (!checkRateLimit(`rtt:${session.email}`, 5, 15 * 60 * 1000)) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
     }
-    if (!name || name.trim().length < 2 || name.trim().length > 100) {
-      return NextResponse.json({ error: 'Name is required (max 100 characters).' }, { status: 400 })
-    }
+
+    const body = await request.json()
+    const { city } = body
+
     if (!city || !(VALID_CITIES as readonly string[]).includes(city)) {
       return NextResponse.json({ error: 'Invalid city.' }, { status: 400 })
     }
 
-    const cleanEmail = email.trim().toLowerCase()
-    const cleanName = name.trim()
     const cityLabel = CITY_LABELS[city as ValidCity]
 
     // Load existing registrations for this city
-    const blobPath = `interest-${city}.json`
-    let registrations: InterestRegistration[] = []
+    const blobPath = `ready-to-train-${city}.json`
+    let registrations: ReadyToTrainRegistration[] = []
 
     try {
       const { blobs } = await listBlobs()
@@ -91,25 +94,25 @@ export async function POST(request: NextRequest) {
         registrations = await res.json()
       }
     } catch (err) {
-      console.warn('Could not load existing registrations:', err)
+      console.warn('Could not load existing ready-to-train registrations:', err)
     }
 
     // Check for duplicate
-    const alreadyRegistered = registrations.some(r => r.email === cleanEmail)
-    if (alreadyRegistered) {
+    if (registrations.some(r => r.email === session.email)) {
       return NextResponse.json({
         success: true,
-        message: "You're already registered. We'll notify you when the date is confirmed.",
+        message: `You're already in the ${cityLabel} pool. We'll notify you when 8+ clinicians are ready.`,
         duplicate: true,
       })
     }
 
     // Add new registration
-    const newRegistration: InterestRegistration = {
-      email: cleanEmail,
-      name: cleanName,
+    const newRegistration: ReadyToTrainRegistration = {
+      email: session.email,
+      name: session.name,
       city,
       registeredAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
     }
     registrations.push(newRegistration)
 
@@ -120,17 +123,16 @@ export async function POST(request: NextRequest) {
         contentType: 'application/json',
       })
     } catch (err) {
-      console.error('Failed to save registration to Blob:', err)
-      // Don't fail the request — emails can still go out
+      console.error('Failed to save ready-to-train registration to Blob:', err)
     }
 
-    // Send confirmation email to registrant
+    // Send confirmation email to user
     await sendEmail({
-      to: cleanEmail,
-      subject: `You're on the list — ${cityLabel} Workshop`,
-      html: buildConfirmationEmail(cleanName, cityLabel),
+      to: session.email,
+      subject: `You're in the ${cityLabel} Training Pool`,
+      html: buildConfirmationEmail(session.name, cityLabel),
       tags: [
-        { name: 'type', value: 'interest-confirmation' },
+        { name: 'type', value: 'ready-to-train-confirmation' },
         { name: 'city', value: city },
       ],
     })
@@ -138,22 +140,23 @@ export async function POST(request: NextRequest) {
     // Notify Zac
     await sendEmail({
       to: 'zac@concussion-education-australia.com',
-      subject: `New Interest: ${cityLabel} Workshop — ${cleanName}`,
-      html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, registrations.length),
+      subject: `🏋️ Ready to Train: ${cityLabel} — ${session.name} (${registrations.length} total)`,
+      html: buildNotificationEmail(session.name, session.email, cityLabel, registrations.length),
       tags: [
-        { name: 'type', value: 'interest-notification' },
+        { name: 'type', value: 'ready-to-train-notification' },
         { name: 'city', value: city },
       ],
     })
 
-    console.log(`Interest registered: ${cleanEmail} for ${cityLabel} (total: ${registrations.length})`)
+    console.log(`✅ Ready-to-train: ${session.email} for ${cityLabel} (total: ${registrations.length})`)
 
     return NextResponse.json({
       success: true,
-      message: `Thanks ${cleanName.split(' ')[0]}! We'll email you as soon as the ${cityLabel} date is confirmed.`,
+      message: `You're in the ${cityLabel} pool! We'll notify you when 8+ clinicians are ready.`,
+      totalInPool: registrations.length,
     })
   } catch (error) {
-    console.error('Register interest error:', error)
+    console.error('Ready-to-train error:', error)
     return NextResponse.json(
       { error: 'Something went wrong. Please try again.' },
       { status: 500 }
@@ -171,7 +174,7 @@ function buildConfirmationEmail(name: string, city: string): string {
       </div>
 
       <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">
-        You're on the ${city} waitlist
+        You're in the ${city} Training Pool
       </h2>
 
       <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
@@ -179,18 +182,22 @@ function buildConfirmationEmail(name: string, city: string): string {
       </p>
 
       <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
-        Thanks for registering your interest in our <strong>${city} hands-on workshop</strong>. We're finalising the date and venue — you'll be the first to know when it's confirmed.
+        Great work completing all 8 online modules! You've been added to the <strong>${city} hands-on training pool</strong>.
       </p>
 
       <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 20px; margin: 24px 0;">
         <p style="font-size: 14px; color: #0f766e; margin: 0; font-weight: 600;">
-          Can't wait? Start with the online course ($${CONFIG.COURSE.PRICE_ONLINE}) and add the workshop later for the difference.
+          Once 8+ clinicians are ready in ${city}, we'll lock in a date and send you booking details.
         </p>
       </div>
 
-      <a href="https://portal.concussion-education-australia.com/pricing"
+      <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
+        In the meantime, keep reviewing your modules to stay sharp for the practical day.
+      </p>
+
+      <a href="https://portal.concussion-education-australia.com/dashboard"
          style="display: inline-block; background: #5b9aa6; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; margin-top: 8px;">
-        View Course Options →
+        Back to Dashboard →
       </a>
 
       <p style="font-size: 13px; color: #94a3b8; margin-top: 32px; line-height: 1.5;">
@@ -202,10 +209,20 @@ function buildConfirmationEmail(name: string, city: string): string {
 }
 
 function buildNotificationEmail(name: string, email: string, city: string, totalCount: number): string {
+  const threshold = totalCount >= 8
+    ? `<div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 16px;">
+        <p style="font-size: 14px; color: #166534; margin: 0; font-weight: 600;">
+          🎉 ${city} has reached ${totalCount} people — ready to schedule a workshop!
+        </p>
+      </div>`
+    : `<p style="font-size: 13px; color: #64748b; margin-top: 16px;">
+        ${8 - totalCount} more needed to reach the 8-person threshold for ${city}.
+      </p>`
+
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
       <h2 style="font-size: 18px; color: #0f172a; margin-bottom: 16px;">
-        New Workshop Interest Registration
+        New Ready-to-Train Registration
       </h2>
 
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -224,10 +241,12 @@ function buildNotificationEmail(name: string, email: string, city: string, total
           <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${city}</td>
         </tr>
         <tr>
-          <td style="padding: 8px 0; color: #64748b;">Total Interested</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${totalCount} people</td>
+          <td style="padding: 8px 0; color: #64748b;">Pool Size</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${totalCount} / 8</td>
         </tr>
       </table>
+
+      ${threshold}
 
       <p style="font-size: 13px; color: #94a3b8; margin-top: 24px;">
         This is an automated notification from ConcussionPro portal.

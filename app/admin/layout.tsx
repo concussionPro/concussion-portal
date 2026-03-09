@@ -1,8 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Loader2, Lock, ShieldAlert } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { Loader2, Lock, ShieldAlert, BarChart3, Mail, Users, ClipboardList, UserPlus } from 'lucide-react'
+
+const NAV_LINKS = [
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin/emails', label: 'Emails', icon: Mail },
+  { href: '/admin/ready-to-train', label: 'Ready to Train', icon: Users },
+  { href: '/admin/preseason', label: 'Preseason', icon: ClipboardList },
+  { href: '/admin/create-user', label: 'Create User', icon: UserPlus },
+]
 
 /**
  * Admin layout — requires ADMIN_API_KEY to access.
@@ -114,5 +123,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  return <>{children}</>
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <AdminNavBar />
+      {children}
+    </div>
+  )
+}
+
+function AdminNavBar() {
+  const pathname = usePathname()
+
+  return (
+    <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center h-14 gap-1 overflow-x-auto">
+          <Link
+            href="/admin"
+            className="text-sm font-bold text-slate-900 mr-4 flex-shrink-0"
+          >
+            Admin
+          </Link>
+          {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
+                  isActive
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </nav>
+  )
 }
