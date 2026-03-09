@@ -1513,6 +1513,7 @@ export const modules: Module[] = [
           '13-15 | Mild | Minor concussion, full recovery likely',
           '9-12 | Moderate | Significant injury, requires monitoring',
           '3-8 | Severe | Coma, critical condition',
+          '[VIDEO: v6qpEQxJQO4 | Glasgow Coma Scale at 40 — The New Approach to GCS Assessment]',
         ],
       },
       {
@@ -2010,6 +2011,7 @@ export const modules: Module[] = [
           'ERROR CRITERIA (count each occurrence): (1) Hands lifted off iliac crests, (2) Opening eyes, (3) Step, stumble, or fall, (4) Moving hip into >30° abduction, (5) Lifting forefoot or heel off surface, (6) Remaining out of test position >5 seconds. MAXIMUM 10 errors per trial (even if more occur).',
           'SCORING: Total errors across all 6 trials (maximum score = 60). NORMATIVE DATA: Healthy adults average 10-15 total errors. Athletes post-concussion average 20-25 errors. Scores >30 suggest significant balance impairment. Track changes over time (should decrease during recovery).',
           'CLINICAL INTERPRETATION: Foam surface removes proprioceptive input → tests vestibular system. Eyes closed removes visual compensation → forces reliance on vestibular and somatosensory systems. Tandem stance on foam = most challenging (highest error count). Persistent elevated BESS scores → Vestibular physiotherapy indicated. Serial testing: retest every 3-7 days to track recovery trajectory (Bell et al., 2011).',
+          '[VIDEO: fA392PbM3-A | Sports Concussion Exam: Balance Error Scoring System — BESS (Duke Neurology)]',
         ],
       },
       {
@@ -2021,6 +2023,7 @@ export const modules: Module[] = [
           'CHECKPOINT 3 - STANDARD CONCUSSION MANAGEMENT (Primary Care): GCS 13-15, brief LOC <1 minute, post-traumatic amnesia <30 minutes, symptoms present but not severe, no red flags. ACTION → Structured concussion assessment (SCAT6, VOMS, BESS), patient/family education, symptom monitoring, graduated return-to-activity protocol, follow-up in 24-48 hours then weekly until symptom resolution.',
           'CHECKPOINT 4 - MULTIDISCIPLINARY REFERRAL TRIGGERS (2-4 weeks): Persistent symptoms beyond 2 weeks with limited progress, vestibular-ocular dysfunction on VOMS requiring specialized rehab, cervicogenic headache or neck dysfunction requiring physiotherapy, visual symptoms (convergence insufficiency, accommodation dysfunction) requiring optometry/vision therapy, mood symptoms (anxiety, depression) requiring psychology, cognitive symptoms affecting work/school requiring neuropsychology assessment, sleep disturbance unresponsive to conservative measures requiring sleep medicine. ACTION → Coordinate multidisciplinary team, case management approach.',
           'CHECKPOINT 5 - RETURN-TO-ACTIVITY CLEARANCE CRITERIA: Symptom-free at rest and with exertion, normal clinical examination (VOMS, BESS, cognitive testing), completed graduated return-to-sport protocol without symptom recurrence, completed return-to-learn protocol (full academic load tolerated), patient/family demonstrate understanding of injury and management, no ongoing red flags or concerns. ACTION → Provide medical clearance, educate on prevention strategies, monitor for late-emerging symptoms, plan long-term follow-up if indicated.',
+          '[VIDEO: rYWIy-Td2Q4 | Concussion Danger Signs — When to Seek Emergency Care (CDC)]',
         ],
       },
       {
@@ -2373,6 +2376,7 @@ export const modules: Module[] = [
           'STAGES OF PATHOLOGY (McKee et al.): Stage I - Isolated foci of p-tau in frontal cortex. Stage II - More widespread p-tau in frontal/temporal lobes, some hippocampal involvement. Stage III - Widespread p-tau, hippocampal atrophy, septal abnormalities. Stage IV - Severe widespread p-tau, marked atrophy, depigmentation of substantia nigra.',
           'CLINICAL PRESENTATION (Proposed—Not Validated): Early symptoms (20s-30s) - mood changes (depression, anxiety, apathy), behavioral changes (impulsivity, aggression, suicidality), cognitive complaints (memory, attention). Late symptoms (40s-60s) - progressive cognitive decline, dementia, parkinsonism, speech/gait problems. However, clinical-pathological correlation is WEAK—many with neuropathological CTE were asymptomatic or had mild symptoms.',
           'DIAGNOSTIC CHALLENGES: (1) No validated in-vivo diagnostic test, (2) Proposed clinical criteria (research only, not clinically validated), (3) Symptoms overlap with many other conditions (depression, ADHD, substance abuse, normal aging, other dementias), (4) Tau PET imaging shows promise but cannot yet distinguish CTE from other tauopathies, (5) Cannot predict who will develop CTE based on exposure history.',
+          '[VIDEO: e1mt2YDiVKc | 2-Minute Neuroscience: Chronic Traumatic Encephalopathy (CTE)]',
         ],
       },
       {
@@ -3143,6 +3147,7 @@ export const modules: Module[] = [
           'STAGE 4 - Non-Contact Training Drills: More complex training drills, progressive resistance training. May start with light weights. Goal: exercise, coordination, cognitive load.',
           'STAGE 5 - Full-Contact Practice: Following medical clearance. Normal training activities including body contact. Goal: restore confidence, assess functional skills.',
           'STAGE 6 - Return to Sport: Normal game play. Unrestricted participation.',
+          '[VIDEO: 0gnbcu9EQNM | Graduated Return to Play After Concussion (CDC HEADS UP)]',
         ],
       },
       {
@@ -3221,6 +3226,7 @@ export const modules: Module[] = [
           'SYMPTOM PROLONGATION: Returning to activities before adequate recovery → symptom exacerbation and prolonged recovery time. "Pushing through" symptoms delays overall recovery.',
           'RE-INJURY RISK: 3-5x increased risk of subsequent concussion in first 10 days post-injury. Brain remains in vulnerable state during neurometabolic cascade. Repeat injury during this period can compound deficits.',
           'SECOND IMPACT SYNDROME (SIS): Rare but catastrophic. Rapid brain swelling following repeat head impact before recovery from initial concussion. Almost exclusively in youth <18 years. Often fatal or causes severe disability. Emphasizes NEVER return to contact sport while symptomatic.',
+          '[VIDEO: Ai5AXF7XKw8 | Second Impact Syndrome (BrainLine / PBS)]',
           'CUMULATIVE EFFECTS: Repetitive concussions with inadequate recovery → longer symptoms each time, lower threshold for future injury, potential long-term consequences (chronic symptoms, cognitive issues, mood problems).',
           'FUNCTIONAL CONSEQUENCES: Academic failure/falling behind in school, job performance issues or termination, relationship strain, mental health decline (depression, anxiety from inability to function), financial stress from missed work.',
         ],
