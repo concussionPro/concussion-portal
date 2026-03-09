@@ -6,6 +6,7 @@ import { useProgress } from '@/contexts/ProgressContext'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { CheckCircle2, Award, AlertCircle, ArrowRight, BookOpen, Clock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
 import { DynamicContentRenderer } from '@/components/course/DynamicContentRenderer'
 import { DownloadableResources } from '@/components/course/DownloadableResources'
 import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
@@ -414,7 +415,16 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
       }
     })
 
-    updateQuizScore(moduleId, correctCount, module.quiz.length)
+    updateQuizScore(moduleId, correctCount, module.quiz.length, quizAnswers)
+
+    // Fire analytics event with quiz details
+    trackEvent(ANALYTICS_EVENTS.QUIZ_SUBMIT, {
+      moduleId,
+      score: correctCount,
+      totalQuestions: module.quiz.length,
+      passed: correctCount / module.quiz.length >= 0.75,
+    })
+
     setIsRetaking(false)
     setQuizSubmitted(true)
   }
@@ -809,7 +819,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
                       {moduleProgress.quizCompleted &&
                        moduleProgress.quizScore !== null &&
                        moduleProgress.quizTotalQuestions !== null &&
-                       (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.75 && ' ✓ Completed'}
+                       (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.75 && ' — Completed'}
                     </p>
                   </div>
                 </div>

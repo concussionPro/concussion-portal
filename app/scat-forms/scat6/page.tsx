@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Save, ChevronDown, ChevronUp } from 'lucide-react'
+import { Download, Save, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { SCAT6FormData, getDefaultSCAT6FormData } from '../shared/types/scat6.types'
 import { getAllCalculatedScores } from '../shared/utils/scat6-calculations'
 import { exportSCAT6ToFilledPDF } from '../shared/utils/scat6-pdf-fill'
@@ -1576,27 +1576,27 @@ export default function SCAT6Page() {
           {/* Completion Status */}
           <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-2xl">
-                ✓
+              <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6" strokeWidth={3} />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-slate-900">SCAT6 Form Complete!</h4>
-                <p className="text-sm text-slate-600">All sections have been implemented</p>
+                <h4 className="text-lg font-bold text-slate-900">SCAT6 Form Complete</h4>
+                <p className="text-sm text-slate-600">All sections included</p>
               </div>
             </div>
             <ul className="text-sm text-slate-600 space-y-1 grid grid-cols-2 gap-x-4">
-              <li>✅ Demographics & Athlete Information</li>
-              <li>✅ Concussion History</li>
-              <li>✅ Step 1: Athlete Background</li>
-              <li>✅ Step 2: Symptom Evaluation (22 symptoms)</li>
-              <li>✅ Step 3: Cognitive Screening (Orientation, Memory, Concentration)</li>
-              <li>✅ Step 4: Balance Examination (mBESS, Tandem Gait, Dual Task)</li>
-              <li>✅ Step 5: Delayed Recall</li>
-              <li>✅ Step 6: Decision & HCP Attestation</li>
+              <li>Demographics & Athlete Information</li>
+              <li>Concussion History</li>
+              <li>Step 1: Athlete Background</li>
+              <li>Step 2: Symptom Evaluation (22 symptoms)</li>
+              <li>Step 3: Cognitive Screening (Orientation, Memory, Concentration)</li>
+              <li>Step 4: Balance Examination (mBESS, Tandem Gait, Dual Task)</li>
+              <li>Step 5: Delayed Recall</li>
+              <li>Step 6: Decision & HCP Attestation</li>
             </ul>
             <div className="mt-4 pt-4 border-t border-green-200">
               <p className="text-xs text-slate-500">
-                📋 All auto-calculations working • 💾 Auto-save enabled • 🎨 Colors match SCAT6 PDF exactly
+                All auto-calculations working. Auto-save enabled. Colors match SCAT6 PDF.
               </p>
             </div>
           </div>

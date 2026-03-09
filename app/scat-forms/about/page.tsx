@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     question: 'How do I learn to use SCAT6 and SCOAT6 properly?',
-    answer: 'Free SCAT6/SCOAT6 training is available at portal.concussion-education-australia.com/scat-mastery covering: step-by-step administration of every section, red flag recognition, when to use which tool, medicolegal documentation requirements, and common mistakes that constitute below standard of care. The course provides 2 AHPRA-aligned CPD points, a clinical toolkit with templates, and a certificate of completion. This training is essential because 40% of Australian GPs report low confidence managing concussion, and using tools incorrectly can result in medicolegal liability.',
+    answer: 'Free SCAT6/SCOAT6 training is available at portal.concussion-education-australia.com/scat-mastery covering: step-by-step administration of every section, red flag recognition, when to use which tool, medicolegal documentation requirements, and common mistakes that constitute below standard of care. The course provides 2 AHPRA-aligned CPD points, a clinical toolkit with templates, and a certificate of completion. Proper SCAT6 administration requires structured training, and using tools incorrectly can result in medicolegal liability.',
   },
   {
     question: 'What are the updated 2026 SCAT6 protocols I need to know?',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Save, ChevronDown, ChevronUp } from 'lucide-react'
+import { Download, Save, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { SCOAT6FormData, getDefaultSCOAT6FormData } from '../shared/types/scoat6.types'
 import { getAllCalculatedScores } from '../shared/utils/scoat6-calculations'
 import { exportSCOAT6ToFilledPDF } from '../shared/utils/scoat6-pdf-fill'
@@ -2870,18 +2870,18 @@ export default function SCOAT6Page() {
           {/* Completion Status */}
           <div className="bg-gradient-to-r from-green-50 to-cyan-50 border-2 border-green-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-2xl">
-                ✓
+              <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6" strokeWidth={3} />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-slate-900">Both Forms 100% Complete!</h4>
-                <p className="text-sm text-slate-600">SCAT6 and SCOAT6 are fully implemented</p>
+                <h4 className="text-lg font-bold text-slate-900">Both Forms Complete</h4>
+                <p className="text-sm text-slate-600">SCAT6 and SCOAT6 fully included</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white rounded-lg p-4 border border-blue-200">
                 <h5 className="text-sm font-bold text-blue-700 mb-2">SCAT6™ (Blue)</h5>
-                <p className="text-xs text-slate-600 mb-2">✅ 100% Complete - All 9 pages</p>
+                <p className="text-xs text-slate-600 mb-2">All 9 pages implemented</p>
                 <ul className="text-xs text-slate-500 space-y-1">
                   <li>• 8 major sections</li>
                   <li>• 22 symptoms with auto-calc</li>
@@ -2892,7 +2892,7 @@ export default function SCOAT6Page() {
               </div>
               <div className="bg-white rounded-lg p-4 border border-purple-200">
                 <h5 className="text-sm font-bold text-purple-700 mb-2">SCOAT6™ (Purple)</h5>
-                <p className="text-xs text-slate-600 mb-2">✅ 100% Complete - All 15 pages</p>
+                <p className="text-xs text-slate-600 mb-2">All 15 pages implemented</p>
                 <ul className="text-xs text-slate-500 space-y-1">
                   <li>• 24 symptoms × 5 dates</li>
                   <li>• Comprehensive physical exam</li>
@@ -2904,7 +2904,7 @@ export default function SCOAT6Page() {
             </div>
             <div className="mt-4 pt-4 border-t border-green-200">
               <p className="text-xs text-slate-500">
-                📋 All auto-calculations working • 💾 Auto-save enabled • 🎨 Colors match PDFs exactly • 🔒 Local only (not deployed)
+                All auto-calculations working. Auto-save enabled. Colors match PDFs. Local only (not deployed).
               </p>
             </div>
           </div>
@@ -2912,16 +2912,16 @@ export default function SCOAT6Page() {
           {/* Form Completion Status */}
           <div className="bg-gradient-to-r from-green-50 to-cyan-50 border-2 border-green-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-2xl">
-                ✓
+              <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6" strokeWidth={3} />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-slate-900">SCOAT6™ Form 100% Complete!</h4>
-                <p className="text-sm text-slate-600">All 15 pages implemented - Production ready</p>
+                <h4 className="text-lg font-bold text-slate-900">SCOAT6 Form Complete</h4>
+                <p className="text-sm text-slate-600">All 15 pages included</p>
               </div>
             </div>
             <div className="bg-white rounded-lg p-4 border border-purple-200">
-              <h5 className="text-sm font-bold text-purple-700 mb-2">✅ Complete Content Coverage:</h5>
+              <h5 className="text-sm font-bold text-purple-700 mb-2">Complete Content Coverage:</h5>
               <ul className="text-xs text-slate-600 space-y-1 grid grid-cols-2 gap-x-4">
                 <li>• Pages 1-3: Demographics, History, Medications</li>
                 <li>• Pages 4-5: Symptom Evaluation (24 symptoms × 5 dates)</li>
@@ -2937,7 +2937,7 @@ export default function SCOAT6Page() {
             </div>
             <div className="mt-4 pt-4 border-t border-green-200">
               <p className="text-xs text-slate-500">
-                📋 350+ fields • 37+ auto-calculations • 🎨 Purple theme (#5E3C99) matches PDF exactly • 💾 Auto-save enabled
+                350+ fields. 37+ auto-calculations. Purple theme matches PDF. Auto-save enabled.
               </p>
             </div>
           </div>

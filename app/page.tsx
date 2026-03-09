@@ -170,7 +170,7 @@ export default function HomePage() {
           <div className="max-w-[860px] mx-auto">
             <div className="text-center mb-10">
               <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
-                What 40-50% of clinicians <span className="text-gradient">miss</span>
+                What many clinicians <span className="text-gradient">overlook</span>
               </h2>
               <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-md mx-auto">
                 Convergence insufficiency, vestibular dysfunction, cervicogenic factors. Learn to identify them all.

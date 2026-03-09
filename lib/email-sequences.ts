@@ -180,7 +180,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <strong style="color: #475569;">&mdash; Osteopath, Melbourne</strong>
       </div>
       <center><a href="${upgradeLink}" class="cta-btn">View Pricing and Options</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $497 AUD &middot; Full course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</p>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} AUD &middot; Full course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -200,7 +200,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
           <td style="padding: 14px 16px;"><strong>Online Course</strong><br><span style="font-size: 13px; color: #64748b;">8 modules &middot; 8 CPD points &middot; Lifetime access</span></td>
-          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$497 AUD</td>
+          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_ONLINE} AUD</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
           <td style="padding: 14px 16px;"><strong>Complete Course</strong> <span style="font-size: 11px; background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 600;">RECOMMENDED</span><br><span style="font-size: 13px; color: #64748b;">Online + full-day workshop &middot; 14 CPD points</span></td>

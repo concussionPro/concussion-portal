@@ -14,6 +14,7 @@ export const CONFIG = {
     ONLINE_CPD_POINTS: 8,
     IN_PERSON_CPD_POINTS: 6,
     CPD_BADGE_TEXT: '14 CPD points - AHPRA Aligned, Endorsed by Osteopathy Australia',
+    PRICE_ONLINE: 497,
     PRICE_REGULAR: 1400,
     PRICE_EARLY_BIRD: 1190,
     SAVINGS: 210,

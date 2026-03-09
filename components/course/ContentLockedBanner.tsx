@@ -57,7 +57,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
           </button>
 
           <p className="text-muted-foreground text-sm mt-4">
-            Online from $497 AUD · Complete course from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD
+            Online from $${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD
           </p>
         </div>
       </div>

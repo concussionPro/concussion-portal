@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useState, useEffect } from 'react'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { CONFIG } from '@/lib/config'
 
 export default function LearningSuite() {
   const router = useRouter()
@@ -76,7 +77,7 @@ export default function LearningSuite() {
                   Clinical Mastery Training
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  8 Online + 6 In-Person CPD Points (14 Total) · Evidence-Based Concussion Management
+                  {CONFIG.COURSE.ONLINE_CPD_POINTS} Online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} In-Person CPD Points ({CONFIG.COURSE.TOTAL_CPD_POINTS} Total) · Evidence-Based Concussion Management
                 </p>
               </div>
 

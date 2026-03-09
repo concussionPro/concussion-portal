@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put, list as listBlobs } from '@vercel/blob'
 import { sendEmail } from '@/lib/resend-client'
+import { CONFIG } from '@/lib/config'
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -181,7 +182,7 @@ function buildConfirmationEmail(name: string, city: string): string {
 
       <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 20px; margin: 24px 0;">
         <p style="font-size: 14px; color: #0f766e; margin: 0; font-weight: 600;">
-          💡 Can't wait? Start with the online course ($497) and add the workshop later for the difference.
+          Can't wait? Start with the online course ($${CONFIG.COURSE.PRICE_ONLINE}) and add the workshop later for the difference.
         </p>
       </div>
 

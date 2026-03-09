@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -188,7 +188,17 @@ export function Sidebar() {
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
               AHPRA Aligned
             </p>
-            <p className="text-[10px] text-muted-foreground">CPD Tracking Active</p>
+            <p className="text-[10px] text-muted-foreground mb-2">CPD Tracking Active</p>
+            <a
+              href="https://concussion-education-australia.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-accent transition-colors"
+            >
+              <img src="/logo.png" alt="" className="w-3.5 h-3.5 rounded-sm" />
+              Main Site
+              <ExternalLink className="w-2.5 h-2.5" />
+            </a>
           </div>
         </div>
       </div>

@@ -342,7 +342,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
 
             <div className="mb-4">
-              <div className="text-2xl font-bold text-[var(--foreground)]">$497</div>
+              <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
             </div>
 
@@ -368,7 +368,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                'Online Only — $497'
+                `Online Only — $${CONFIG.COURSE.PRICE_ONLINE}`
               )}
             </button>
           </div>
@@ -430,7 +430,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <ul className="space-y-1.5">
                 {[
                   'Practice SCAT6 administration on real subjects with expert feedback',
-                  'Master BESS & tandem gait scoring — the sections most clinicians get wrong',
+                  'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
                   'Leave with a clinical toolkit you can use Monday morning',
                 ].map((item, i) => (
                   <li key={i} className="text-[11px] text-[var(--muted-foreground)] leading-relaxed flex items-start gap-1.5">
@@ -519,7 +519,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           <div className="mb-6">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">$497</span>
+              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
             </div>
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access</p>
@@ -550,7 +550,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Online Only — $497
+                Online Only — ${CONFIG.COURSE.PRICE_ONLINE}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -633,7 +633,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <ul className="space-y-2">
               {[
                 'Practice SCAT6 administration on real subjects with expert feedback',
-                'Master BESS & tandem gait scoring — the sections most clinicians get wrong',
+                'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
                 'Leave with a clinical toolkit you can use Monday morning',
               ].map((item, i) => (
                 <li key={i} className="text-sm text-[var(--muted-foreground)] leading-relaxed flex items-start gap-2">

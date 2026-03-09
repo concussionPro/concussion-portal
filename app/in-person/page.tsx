@@ -245,9 +245,9 @@ export default function InPersonTrainingPage() {
             </div>
             <div className="mt-6 pt-6 border-t border-border/30">
               <p className="text-xs text-muted-foreground">
-                ✓ 14 total AHPRA CPD points (8 online + 6 in-person)<br/>
-                ✓ Lifetime access to all online modules and clinical toolkit<br/>
-                ✓ Small group sizes (max 12) for personalized feedback
+                {CONFIG.COURSE.TOTAL_CPD_POINTS} total AHPRA CPD points ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person)<br/>
+                Lifetime access to all online modules and clinical toolkit<br/>
+                Small group sizes (max 12) for personalized feedback
               </p>
             </div>
           </div>

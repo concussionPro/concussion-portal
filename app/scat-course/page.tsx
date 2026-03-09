@@ -239,13 +239,13 @@ export default function SCATCoursePage() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                  ✅ Use These Clinical-Grade Fillable PDFs
+                  Use These Clinical-Grade Fillable PDFs
                 </h2>
                 <p className="text-slate-700 mb-2">
                   These are TESTED, auto-calculating forms verified for clinical use.
                 </p>
                 <p className="text-green-800 font-bold">
-                  ✓ All calculations verified • Safe for clinical use
+                  All calculations verified. Safe for clinical use.
                 </p>
               </div>
             </div>

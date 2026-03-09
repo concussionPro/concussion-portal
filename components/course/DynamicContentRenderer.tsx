@@ -1,7 +1,47 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CheckCircle2, Lightbulb } from 'lucide-react'
+import {
+  CheckCircle2,
+  Lightbulb,
+  Square,
+  ChevronRight,
+  BarChart3,
+  Zap,
+  Brain,
+  RefreshCw,
+  AlertTriangle,
+  Target,
+  Link2,
+  Calendar,
+  BookOpen,
+  ClipboardList,
+} from 'lucide-react'
+
+// Map content-marker emoji to lucide icons for professional rendering
+const EMOJI_ICON_MAP: Record<string, { icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; color: string }> = {
+  '🔹': { icon: ChevronRight, color: 'text-teal-500' },
+  '📊': { icon: BarChart3, color: 'text-blue-500' },
+  '💡': { icon: Lightbulb, color: 'text-amber-500' },
+  '⚡': { icon: Zap, color: 'text-yellow-500' },
+  '🧠': { icon: Brain, color: 'text-purple-500' },
+  '🔄': { icon: RefreshCw, color: 'text-slate-500' },
+  '⚠️': { icon: AlertTriangle, color: 'text-amber-600' },
+  '✅': { icon: CheckCircle2, color: 'text-green-500' },
+  '📋': { icon: ClipboardList, color: 'text-slate-600' },
+  '🎯': { icon: Target, color: 'text-red-500' },
+  '⛓': { icon: Link2, color: 'text-slate-500' },
+  '📅': { icon: Calendar, color: 'text-blue-500' },
+  '📚': { icon: BookOpen, color: 'text-indigo-500' },
+}
+
+function EmojiIcon({ emoji, size = 'md' }: { emoji: string; size?: 'sm' | 'md' | 'lg' }) {
+  const mapping = EMOJI_ICON_MAP[emoji]
+  if (!mapping) return null
+  const Icon = mapping.icon
+  const sizeClass = size === 'lg' ? 'w-7 h-7' : size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
+  return <Icon className={`${sizeClass} ${mapping.color} flex-shrink-0`} strokeWidth={2} />
+}
 
 interface DynamicContentRendererProps {
   content: string[]
@@ -25,7 +65,6 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     const lineAfterNextIsSeparator = i + 2 < content.length && (content[i + 2].includes('──') || content[i + 2].includes('---'))
 
     // Check if this is a major section header (emoji + number + title)
-    // Simple check: starts with emoji (ignoring variation selectors) and has " N. " pattern
     const startsWithTargetEmoji = line.charCodeAt(0) === 0x1F3AF || // 🎯
                                    line.charCodeAt(0) === 0x26D3 ||  // ⛓
                                    line.charCodeAt(0) === 0x1F4C5 || // 📅
@@ -38,11 +77,9 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     const isPathwayHeader = /^[A-C]\.\s+THE\s+/.test(line)
 
     if (isPathwayHeader) {
-      // Group the pathway header with all its content (Mechanism, Target, Intervention, etc.)
       const pathwayLines = [line]
       i++
 
-      // Collect lines until we hit another pathway header or major section
       while (i < content.length) {
         const currentLine = content[i]
         const isNextPathway = /^[A-C]\.\s+THE\s+/.test(currentLine)
@@ -57,7 +94,6 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
 
       processed.push('__PATHWAY__\n' + pathwayLines.join('\n'))
     } else if (isMajorSection) {
-      // Group major section with following intro paragraphs (until bullets/checklist/tables/pathways)
       const sectionLines = [line]
       i++
 
@@ -78,14 +114,11 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
 
       processed.push('__SECTION__\n' + sectionLines.join('\n'))
     } else if (isEmojiTableHeader && nextLineIsTableHeader && lineAfterNextIsSeparator) {
-      // Include emoji header with the table
-      const tableLines = [line, content[i + 1], content[i + 2]] // emoji + header + separator
+      const tableLines = [line, content[i + 1], content[i + 2]]
       i += 3
 
-      // Collect all subsequent data rows (stop only at new emoji HEADINGS with colons)
       while (i < content.length) {
         const currentLine = content[i]
-        // Stop only at new section headings (emoji + colon at end)
         const isNewSection = (currentLine.startsWith('🔹') || currentLine.startsWith('📊') || currentLine.startsWith('💡') || currentLine.startsWith('🔴')) &&
                              currentLine.includes(':') &&
                              !currentLine.includes('|')
@@ -98,7 +131,6 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
 
       processed.push(tableLines.join('\n'))
     } else if (line.includes('|') && i + 1 < content.length && (content[i + 1].includes('──') || content[i + 1].includes('---'))) {
-      // Regular table without emoji header
       const tableLines = [line, content[i + 1]]
       i += 2
 
@@ -122,7 +154,7 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
   }
 
     return processed
-  }, [content]) // Only re-process when content changes
+  }, [content])
 
   // Track consecutive definition blocks for color rotation
   let definitionCounter = 0
@@ -152,7 +184,6 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
       const defMatch = paragraph.match(/^([A-Z][A-Z\s&]+):\s*(.+)/)
       if (defMatch && defMatch[1].length < 50 &&
         !paragraph.startsWith('__SECTION__') && !paragraph.startsWith('__PATHWAY__')) {
-        // Get first sentence (up to first period followed by space or end)
         const fullText = defMatch[2]
         const firstSentence = fullText.match(/^(.+?\.)\s/) ? fullText.match(/^(.+?\.)\s/)![1] : fullText
         if (firstSentence.length > 20 && firstSentence.length < 200) {
@@ -163,7 +194,6 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     return points
   }, [processedContent])
 
-  // Render all content in single column with consistent spacing
   return (
     <div className="space-y-6">
       {rendered}
@@ -221,7 +251,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     const description = parts.slice(1).join(':').trim()
     return (
       <div key={key} className="flex items-start gap-3 bg-amber-50 rounded-lg p-4 border-l-4 border-amber-400">
-        <span className="text-2xl flex-shrink-0">☐</span>
+        <Square className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
         <div className="flex-1">
           <div className="font-semibold text-slate-900 text-[15px]">{title}</div>
           {description && <div className="text-sm text-slate-600 mt-1">{description}</div>}
@@ -237,7 +267,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     const description = parts.slice(1).join(':').trim()
     return (
       <div key={key} className="flex items-start gap-3 bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
-        <span className="text-xl flex-shrink-0 text-green-600">✓</span>
+        <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
         <div className="flex-1">
           <div className="font-semibold text-slate-900 text-[15px]">{title}</div>
           {description && <div className="text-sm text-slate-700 mt-1">{description}</div>}
@@ -350,7 +380,6 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
   }
 
   // SECURITY FIX: Safe text rendering without dangerouslySetInnerHTML
-  // Parse bold text **like this** into React components
   const parseBoldText = (text: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = []
     const regex = /\*\*(.*?)\*\*/g
@@ -358,11 +387,9 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     let match
 
     while ((match = regex.exec(text)) !== null) {
-      // Add text before the match
       if (match.index > lastIndex) {
         parts.push(text.substring(lastIndex, match.index))
       }
-      // Add the bold text
       parts.push(
         <strong key={match.index} className="font-semibold text-slate-900">
           {match[1]}
@@ -371,7 +398,6 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
       lastIndex = regex.lastIndex
     }
 
-    // Add remaining text
     if (lastIndex < text.length) {
       parts.push(text.substring(lastIndex))
     }
@@ -379,7 +405,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     return parts.length > 0 ? parts : [text]
   }
 
-  // Handle emoji indicators
+  // Handle emoji indicators — render with icons instead of raw emoji
   const emojiMatch = text.match(/^(🔹|📊|💡|⚡|🧠|🔄|⚠️|✅)\s*(.*)/)
 
   if (emojiMatch) {
@@ -388,7 +414,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
 
     return (
       <div key={key} className="flex items-start gap-3 bg-white rounded-lg p-4 border border-slate-200">
-        <span className="text-2xl flex-shrink-0">{emoji}</span>
+        <EmojiIcon emoji={emoji} />
         <p className="text-[15px] text-slate-700 leading-relaxed flex-1">
           {parseBoldText(content)}
         </p>
@@ -408,10 +434,9 @@ function renderPathwaySection(text: string, key: string) {
   const lines = text.split('\n').filter(line => line.trim())
   if (lines.length === 0) return null
 
-  const title = lines[0] // "A. THE VESTIBULAR & OCULOMOTOR PATHWAY"
+  const title = lines[0]
   const contentLines = lines.slice(1)
 
-  // Group content by labels (Mechanism:, Target:, etc.)
   const sections: Array<{ label: string; content: string[] }> = []
   let currentLabel = ''
   let currentContent: string[] = []
@@ -435,22 +460,18 @@ function renderPathwaySection(text: string, key: string) {
 
   return (
     <div key={key} className="space-y-4">
-      {/* Pathway title */}
       <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">
         {title}
       </h3>
 
-      {/* Each section as a separate card like STRESS MANAGEMENT example */}
       {sections.map((section, idx) => (
         <div key={idx} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-          {/* Colored header bar with label */}
           <div className="bg-gradient-to-r from-indigo-500 to-blue-600 px-5 py-3">
             <h4 className="text-base font-bold text-white uppercase tracking-wide">
               {section.label}
             </h4>
           </div>
 
-          {/* White content area */}
           <div className="px-5 py-4 bg-slate-50">
             {section.content.map((line, lineIdx) => {
               if (line.trim().startsWith('•')) {
@@ -483,8 +504,7 @@ function renderMajorSection(text: string, key: string) {
   const headerLine = lines[0]
   const contentLines = lines.slice(1)
 
-  // Extract emoji and title from header
-  // Handle emoji with variation selectors
+  // Extract emoji and title from header — render icon instead of emoji
   const emojiMatch = headerLine.match(/^([🎯⛓📅✅💡📚][\uFE0F]?)\s*(.+)/u)
   const emoji = emojiMatch?.[1] || ''
   const title = emojiMatch?.[2] || headerLine
@@ -492,7 +512,7 @@ function renderMajorSection(text: string, key: string) {
   return (
     <div key={key} className="bg-slate-100 rounded-xl p-6 border-2 border-slate-300">
       <div className="flex items-center gap-3 mb-4">
-        {emoji && <span className="text-3xl">{emoji}</span>}
+        {emoji && <EmojiIcon emoji={emoji} size="lg" />}
         <h3 className="text-xl font-bold text-slate-900">{title}</h3>
       </div>
       <div className="bg-white rounded-lg p-4 space-y-3">
@@ -509,34 +529,29 @@ function renderMajorSection(text: string, key: string) {
 function renderTable(text: string, key: string) {
   const lines = text.split('\n').filter(line => line.trim())
 
-  // Check if first line is emoji table title
+  // Check if first line is emoji table title — render icon instead
   const hasEmojiTitle = lines[0] && (lines[0].startsWith('📊') || lines[0].startsWith('📋'))
   const emojiTitle = hasEmojiTitle ? lines[0] : null
+  const titleEmoji = emojiTitle?.match(/^(📊|📋)/)?.[0] || null
 
-  // Find header row (first line with pipes)
   const headerIndex = lines.findIndex(line => line.includes('|'))
   if (headerIndex === -1) return null
 
   const headerLine = lines[headerIndex]
   const headers = headerLine.split('|').map(h => h.trim()).filter(Boolean)
 
-  // Find separator line
   const separatorIndex = lines.findIndex(line => line.includes('──') || line.includes('---'))
   if (separatorIndex === -1) return null
 
-  // Get all rows after separator
   const dataLines = lines.slice(separatorIndex + 1)
 
-  // Process rows - some are categories (no pipes), some are data (with pipes)
   const rows: Array<{ type: 'category' | 'data', content: string[] }> = []
 
   dataLines.forEach(line => {
     if (line.includes('|')) {
-      // Data row
       const cells = line.split('|').map(cell => cell.trim()).filter(Boolean)
       rows.push({ type: 'data', content: cells })
     } else if (line.trim()) {
-      // Category row (no pipes)
       rows.push({ type: 'category', content: [line.trim()] })
     }
   })
@@ -545,7 +560,7 @@ function renderTable(text: string, key: string) {
     <div key={key} className="my-6">
       {emojiTitle && (
         <div className="flex items-start gap-3 bg-white rounded-t-lg p-4 border-x-2 border-t-2 border-slate-200">
-          <span className="text-2xl flex-shrink-0">{emojiTitle.match(/^(📊|📋)/)?.[0]}</span>
+          {titleEmoji && <EmojiIcon emoji={titleEmoji} />}
           <p className="text-sm font-bold text-slate-900 uppercase tracking-wide">
             {emojiTitle.replace(/^(📊|📋)\s*/, '').replace(/:$/, '')}
           </p>
@@ -569,7 +584,6 @@ function renderTable(text: string, key: string) {
           <tbody>
             {rows.map((row, rowIndex) => {
               if (row.type === 'category') {
-                // Category header spanning all columns
                 return (
                   <tr key={rowIndex} className="bg-slate-100">
                     <td
@@ -581,7 +595,6 @@ function renderTable(text: string, key: string) {
                   </tr>
                 )
               } else {
-                // Data row
                 return (
                   <tr
                     key={rowIndex}

@@ -68,7 +68,7 @@ export default function SCAT6vsSCOAT6Page() {
               SCAT6 vs SCOAT6: Which Tool to Use When?
             </h1>
             <p className="text-xl text-red-100 mb-6">
-              40% of Australian GPs use the wrong tool at the wrong time. Here's how to avoid below standard of care.
+              Using the wrong assessment tool at the wrong time risks falling below standard of care. Here's how to choose correctly.
             </p>
           </div>
         </div>

@@ -76,7 +76,7 @@ export function StickyCTA() {
               <span className="font-semibold text-white">Stop guessing on concussion cases.</span>
               <span className="hidden sm:inline"> 14 CPD points</span>
               {daysLeft > 0 && (
-                <span className="text-amber-300 font-semibold"> — early bird: save $210</span>
+                <span className="text-amber-300 font-semibold"> — early bird: save ${CONFIG.COURSE.SAVINGS}</span>
               )}
             </p>
           </div>

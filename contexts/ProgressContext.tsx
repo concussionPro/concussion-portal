@@ -8,6 +8,8 @@ export interface ModuleProgress {
   quizScore: number | null
   quizTotalQuestions: number | null
   quizCompleted: boolean
+  quizAnswers: Record<string, number> | null // Individual quiz answers: { questionId: selectedOptionIndex }
+  quizSubmittedAt: Date | null
   startedAt: Date | null
   completedAt: Date | null
   activeStudyMinutes: number // NEW: actual tracked study time
@@ -16,7 +18,7 @@ export interface ModuleProgress {
 
 interface ProgressContextType {
   progress: Record<number, ModuleProgress>
-  updateQuizScore: (moduleId: number, score: number, totalQuestions: number) => void
+  updateQuizScore: (moduleId: number, score: number, totalQuestions: number, answers?: Record<string, number>) => void
   markModuleComplete: (moduleId: number) => void
   markModuleStarted: (moduleId: number) => void
   trackActiveStudy: (moduleId: number) => void
@@ -41,6 +43,8 @@ function createDefaultModuleProgress(moduleId: number): ModuleProgress {
     quizScore: null,
     quizTotalQuestions: null,
     quizCompleted: false,
+    quizAnswers: null,
+    quizSubmittedAt: null,
     startedAt: null,
     completedAt: null,
     activeStudyMinutes: 0,
@@ -69,9 +73,12 @@ function parseStoredProgress(data: Record<string, any>): Record<number, ModulePr
     if (entry.startedAt) entry.startedAt = new Date(entry.startedAt)
     if (entry.completedAt) entry.completedAt = new Date(entry.completedAt)
     if (entry.lastActiveAt) entry.lastActiveAt = new Date(entry.lastActiveAt)
+    if (entry.quizSubmittedAt) entry.quizSubmittedAt = new Date(entry.quizSubmittedAt)
     // Migrate: add new fields if missing
     if (entry.activeStudyMinutes === undefined) entry.activeStudyMinutes = 0
     if (entry.lastActiveAt === undefined) entry.lastActiveAt = null
+    if (entry.quizAnswers === undefined) entry.quizAnswers = null
+    if (entry.quizSubmittedAt === undefined) entry.quizSubmittedAt = null
     parsed[Number(key)] = entry
   })
   return parsed
@@ -148,7 +155,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
   }, [progress, isInitialized])
 
-  const updateQuizScore = (moduleId: number, score: number, totalQuestions: number) => {
+  const updateQuizScore = (moduleId: number, score: number, totalQuestions: number, answers?: Record<string, number>) => {
     setProgress((prev) => {
       const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
       return {
@@ -158,6 +165,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           quizScore: score,
           quizTotalQuestions: totalQuestions,
           quizCompleted: true,
+          quizAnswers: answers || null,
+          quizSubmittedAt: new Date(),
         },
       }
     })

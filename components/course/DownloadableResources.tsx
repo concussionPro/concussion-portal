@@ -217,7 +217,7 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
 
       <div className="mt-6 pt-6 border-t border-slate-200">
         <p className="text-xs text-slate-500 leading-relaxed">
-          💡 <span className="font-semibold">Pro Tip:</span> Print the laminated card resources and keep them in your clinic for quick reference during patient consultations.
+          <span className="font-semibold">Tip:</span> Print the laminated card resources and keep them in your clinic for quick reference during patient consultations.
         </p>
       </div>
     </div>

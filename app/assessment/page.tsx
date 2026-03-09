@@ -248,7 +248,7 @@ export default function AssessmentPage() {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Online only from $497 · Complete course ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird (save ${CONFIG.COURSE.SAVINGS})
+                  Online only from ${CONFIG.COURSE.PRICE_ONLINE} · Complete course ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird (save ${CONFIG.COURSE.SAVINGS})
                 </p>
               </div>
             </div>
