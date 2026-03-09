@@ -47,7 +47,7 @@ async function setupProducts() {
       nickname: 'Monthly',
     })
 
-    console.log('✅ Individual Professional:')
+    console.log('Created: Individual Professional:')
     console.log(`   Annual: ${individualAnnual.id}`)
     console.log(`   Monthly: ${individualMonthly.id}\n`)
 
@@ -78,7 +78,7 @@ async function setupProducts() {
       nickname: 'Monthly',
     })
 
-    console.log('✅ Premium Professional:')
+    console.log('Created: Premium Professional:')
     console.log(`   Annual: ${premiumAnnual.id}`)
     console.log(`   Monthly: ${premiumMonthly.id}\n`)
 
@@ -101,7 +101,7 @@ async function setupProducts() {
       nickname: 'Annual',
     })
 
-    console.log('✅ Clinic/Team License:')
+    console.log('Created: Clinic/Team License:')
     console.log(`   Annual: ${teamAnnual.id}\n`)
 
     // Product 4: SCAT Mastery Short Course
@@ -122,12 +122,12 @@ async function setupProducts() {
       nickname: 'One-time',
     })
 
-    console.log('✅ SCAT Mastery Short Course:')
+    console.log('Created: SCAT Mastery Short Course:')
     console.log(`   One-time: ${scatPrice.id}\n`)
 
     // Output summary for .env.local
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('📋 Copy these to your .env.local file:')
+    console.log('Copy these to your .env.local file:')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
     console.log(`STRIPE_PRICE_INDIVIDUAL_ANNUAL=${individualAnnual.id}`)
     console.log(`STRIPE_PRICE_INDIVIDUAL_MONTHLY=${individualMonthly.id}`)
@@ -138,7 +138,7 @@ async function setupProducts() {
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
   } catch (error) {
-    console.error('❌ Error creating products:', error)
+    console.error('Error creating products:', error)
     throw error
   }
 }

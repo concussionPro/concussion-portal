@@ -51,7 +51,7 @@ async function saveUsersToLocalFile(users: User[]): Promise<void> {
 export async function loadUsers(): Promise<User[]> {
   // If Blob storage is not configured, use local file
   if (!isBlobConfigured()) {
-    console.log('📝 Using local file storage for users (development mode)')
+    console.log('Using local file storage for users (development mode)')
     return loadUsersFromLocalFile()
   }
 
@@ -81,7 +81,7 @@ export async function loadUsers(): Promise<User[]> {
   } catch (error) {
     console.error('Error loading users from Blob:', error)
     // Fallback to local file if Blob fails
-    console.log('⚠️  Blob storage failed, falling back to local file')
+    console.log('Blob storage failed, falling back to local file')
     return loadUsersFromLocalFile()
   }
 }
@@ -92,7 +92,7 @@ export async function loadUsers(): Promise<User[]> {
 async function saveUsers(users: User[]) {
   // If Blob storage is not configured, use local file
   if (!isBlobConfigured()) {
-    console.log('📝 Saving users to local file (development mode)')
+    console.log('Saving users to local file (development mode)')
     return saveUsersToLocalFile(users)
   }
 
@@ -109,7 +109,7 @@ async function saveUsers(users: User[]) {
   } catch (error) {
     console.error('Error saving users to Blob:', error)
     // Fallback to local file if Blob fails
-    console.log('⚠️  Blob storage failed, falling back to local file')
+    console.log('Blob storage failed, falling back to local file')
     return saveUsersToLocalFile(users)
   }
 }

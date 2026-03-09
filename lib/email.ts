@@ -14,7 +14,7 @@ interface EmailOptions {
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   // In development, just log to console
   if (process.env.NODE_ENV === 'development') {
-    console.log('📧 Email would be sent:', {
+    console.log('Email would be sent:', {
       to: options.to,
       subject: options.subject,
     })
@@ -163,7 +163,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
               </center>
 
               <div class="warning" style="margin-top: 24px;">
-                ⏱️ This link expires in <strong>24 hours</strong> for security.
+                This link expires in <strong>24 hours</strong> for security.
               </div>
 
               <p style="color: #64748b; font-size: 14px; margin-top: 24px;">

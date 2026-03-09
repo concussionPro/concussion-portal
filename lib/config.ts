@@ -18,6 +18,7 @@ export const CONFIG = {
     PRICE_REGULAR: 1400,
     PRICE_EARLY_BIRD: 1190,
     SAVINGS: 210,
+    SCAT_MASTERY_CPD_POINTS: 2,
     PROMO_CODE: 'SCAT6',
   },
 

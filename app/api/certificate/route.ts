@@ -199,7 +199,7 @@ async function sendCertificateEmail(opts: {
 }): Promise<boolean> {
   // Dev mode — log only
   if (!resend || process.env.NODE_ENV === 'development') {
-    console.log('📧 Certificate email would be sent:', {
+    console.log('Certificate email would be sent:', {
       to: opts.to,
       subject: `Your CPD Certificate — ${opts.courseTitle}`,
       certificateId: opts.certificateId,
@@ -295,13 +295,13 @@ async function sendCertificateEmail(opts: {
     })
 
     if (result.data) {
-      console.log('✅ Certificate email sent:', result.data.id)
+      console.log('Certificate email sent:', result.data.id)
       return true
     }
-    console.error('❌ Certificate email error:', result.error)
+    console.error('Certificate email error:', result.error)
     return false
   } catch (error) {
-    console.error('❌ Certificate email error:', error)
+    console.error('Certificate email error:', error)
     return false
   }
 }

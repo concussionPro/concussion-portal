@@ -160,7 +160,7 @@ export default function SCATFormsLayout({
                     <strong>Learn to use this form correctly.</strong> Step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. <strong>2 AHPRA CPD points + certificate included.</strong>
                   </p>
                   <div className="flex items-center gap-2 mb-3 text-xs text-white/75">
-                    <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded font-semibold">✓ 100% FREE</span>
+                    <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded font-semibold">100% FREE</span>
                     <span>•</span>
                     <span>Self-paced online</span>
                     <span>•</span>

@@ -449,7 +449,7 @@ export async function POST(request: Request) {
     `
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('📧 Would send baseline report email to:', clinic.email)
+      console.log('Would send baseline report email to:', clinic.email)
       console.log('PDF size:', pdfBuffer.length, 'bytes')
       return NextResponse.json({ success: true })
     }

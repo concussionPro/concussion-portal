@@ -2440,7 +2440,7 @@ export default function SCOAT6Page() {
                 {!formData.wordListUsed ? (
                   <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
                     <p className="text-sm text-yellow-900">
-                      ⚠️ Please complete the Immediate Memory section first and select a word list.
+                      Please complete the Immediate Memory section first and select a word list.
                     </p>
                   </div>
                 ) : (

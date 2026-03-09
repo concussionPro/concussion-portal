@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const body = await request.text()
 
     if (!process.env.SQUARESPACE_WEBHOOK_SECRET) {
-      console.error('❌ SQUARESPACE_WEBHOOK_SECRET not configured')
+      console.error('SQUARESPACE_WEBHOOK_SECRET not configured')
       return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
     }
 
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         Buffer.from(expectedSignature)
       )
     ) {
-      console.error('❌ Invalid webhook signature')
+      console.error('Invalid webhook signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       const orderTotal = parseFloat(order.grandTotal?.value || 0)
       const orderId = order.id
 
-      console.log(`📦 New order: $${orderTotal} from ${customerEmail}`)
+      console.log(`New order: $${orderTotal} from ${customerEmail}`)
 
       // Determine access level based on price
       let accessLevel: 'online-only' | 'full-course' = 'online-only'
@@ -52,12 +52,12 @@ export async function POST(request: NextRequest) {
       } else if (orderTotal >= 400) {
         accessLevel = 'online-only'
       } else {
-        console.log('⏭️  Order total too low - not a course purchase')
+        console.log('Order total too low - not a course purchase')
         return NextResponse.json({ success: true, message: 'Not a course product' })
       }
 
       if (!customerEmail) {
-        console.error('❌ No customer email in order')
+        console.error('No customer email in order')
         return NextResponse.json({ error: 'No customer email' }, { status: 400 })
       }
 
@@ -65,14 +65,14 @@ export async function POST(request: NextRequest) {
       const existingUser = await findUserByEmail(customerEmail)
 
       if (existingUser) {
-        console.log(`👤 Existing user: ${customerEmail}`)
+        console.log(`Existing user: ${customerEmail}`)
 
         // FIX: Use createUser() to properly persist the upgrade (it handles save internally)
         if (
           (existingUser.accessLevel === 'preview' || existingUser.accessLevel === 'online-only') &&
           accessLevel === 'full-course'
         ) {
-          console.log(`⬆️  Upgrading ${customerEmail} to full course`)
+          console.log(`Upgrading ${customerEmail} to full course`)
           await createUser({
             email: customerEmail,
             name: customerName,
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Create new user
-      console.log(`✨ Creating new user: ${customerEmail} (${accessLevel})`)
+      console.log(`Creating new user: ${customerEmail} (${accessLevel})`)
 
       const userId = await createUser({
         email: customerEmail,
@@ -106,15 +106,15 @@ export async function POST(request: NextRequest) {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
       const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
-      console.log(`✅ User created: ${userId}`)
-      console.log(`📧 Welcome email ${emailSent ? 'sent' : 'queued'}`)
+      console.log(`User created: ${userId}`)
+      console.log(`Welcome email ${emailSent ? 'sent' : 'queued'}`)
 
       return NextResponse.json({ success: true })
     }
 
     return NextResponse.json({ success: true, message: 'Event processed' })
   } catch (error) {
-    console.error('❌ Webhook error:', error)
+    console.error('Webhook error:', error)
     return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
   }
 }

@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     // SECURITY: Always use secure cookies (even in dev with warning)
     const isProduction = process.env.NODE_ENV === 'production'
     if (!isProduction) {
-      console.warn('⚠️  Development mode: Session cookie secure flag disabled. Use HTTPS in production.')
+      console.warn('Development mode: Session cookie secure flag disabled. Use HTTPS in production.')
     }
 
     response.cookies.set('session', sessionToken, {

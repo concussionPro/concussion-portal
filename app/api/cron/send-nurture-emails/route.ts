@@ -74,7 +74,7 @@ export async function GET(request: Request) {
       })
 
       emailsSent++
-      console.log(`📧 Sent Day ${daysSinceSignup} email to ${user.email}`)
+      console.log(`Sent Day ${daysSinceSignup} email to ${user.email}`)
     }
 
     return NextResponse.json({
@@ -83,7 +83,7 @@ export async function GET(request: Request) {
       totalUsers: users.length,
     })
   } catch (error) {
-    console.error('❌ Cron job error:', error)
+    console.error('Cron job error:', error)
     return NextResponse.json({ error: 'Failed to send emails' }, { status: 500 })
   }
 }

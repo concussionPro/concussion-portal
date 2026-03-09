@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Check, AlertCircle, Loader2, Mail, DollarSign, User } from 'lucide-react'
+import { Check, AlertCircle, Loader2, Mail, DollarSign, User, Link2, ClipboardList, Lock } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 export default function AdminCreateUser() {
   const [email, setEmail] = useState('')
@@ -47,7 +48,7 @@ export default function AdminCreateUser() {
       }
 
       setStatus('success')
-      setMessage(`\u2705 User created! ${data.emailSent ? 'Email sent' : 'Copy magic link below'} to ${email}`)
+      setMessage(`User created! ${data.emailSent ? 'Email sent' : 'Copy magic link below'} to ${email}`)
       setMagicLink(data.magicLink || '')
 
       // Clear form after 10 seconds (give time to copy link)
@@ -129,7 +130,7 @@ export default function AdminCreateUser() {
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  <div className="text-2xl font-black text-slate-900">$497</div>
+                  <div className="text-2xl font-black text-slate-900">${CONFIG.COURSE.PRICE_ONLINE}</div>
                   <div className="text-xs text-slate-600 mt-1">Online Only</div>
                 </button>
                 <button
@@ -141,7 +142,7 @@ export default function AdminCreateUser() {
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  <div className="text-2xl font-black text-slate-900">$1,190</div>
+                  <div className="text-2xl font-black text-slate-900">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</div>
                   <div className="text-xs text-slate-600 mt-1">Full Course</div>
                 </button>
               </div>
@@ -157,7 +158,10 @@ export default function AdminCreateUser() {
 
                 {magicLink && (
                   <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                    <p className="text-xs font-bold text-blue-900 mb-2">\ud83d\udd17 Magic Login Link (copy & send manually):</p>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Link2 className="w-3 h-3 text-blue-900" />
+                      <p className="text-xs font-bold text-blue-900">Magic Login Link (copy & send manually):</p>
+                    </div>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -209,13 +213,16 @@ export default function AdminCreateUser() {
 
           {/* Instructions */}
           <div className="mt-8 pt-8 border-t-2 border-slate-200">
-            <h3 className="text-sm font-bold text-slate-900 mb-3">\ud83d\udccb Quick Instructions:</h3>
+            <div className="flex items-center gap-1 mb-3">
+              <ClipboardList className="w-4 h-4 text-slate-900" />
+              <h3 className="text-sm font-bold text-slate-900">Quick Instructions:</h3>
+            </div>
             <ol className="text-sm text-slate-600 space-y-2">
               <li><strong>1.</strong> Receive order notification from Squarespace</li>
               <li><strong>2.</strong> Copy customer email and name</li>
-              <li><strong>3.</strong> Select purchase amount ($497 or $1,190)</li>
+              <li><strong>3.</strong> Select purchase amount (${CONFIG.COURSE.PRICE_ONLINE} or ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()})</li>
               <li><strong>4.</strong> Click "Create User & Send Email"</li>
-              <li><strong>5.</strong> Customer receives login email instantly! \u2705</li>
+              <li><strong>5.</strong> Customer receives login email instantly</li>
             </ol>
           </div>
         </div>
@@ -223,7 +230,7 @@ export default function AdminCreateUser() {
         {/* Security Note */}
         <div className="mt-6 p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
           <p className="text-xs text-amber-900">
-            <strong>\ud83d\udd12 Security Note:</strong> This page should be bookmarked and kept private.
+            <strong>Security Note:</strong> This page should be bookmarked and kept private.
             Consider adding password protection in production.
           </p>
         </div>

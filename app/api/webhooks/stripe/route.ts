@@ -83,7 +83,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const location = session.metadata?.location || ''
   const accessLevel = (session.metadata?.accessLevel || 'online-only') as 'online-only' | 'full-course'
 
-  console.log(`✅ Payment completed: ${customerEmail} — ${courseType}${location ? ` (${location})` : ''} — $${(session.amount_total || 0) / 100} AUD`)
+  console.log(`Payment completed: ${customerEmail} — ${courseType}${location ? ` (${location})` : ''} — $${(session.amount_total || 0) / 100} AUD`)
 
   // Step 1: Create/upgrade user account — MUST succeed or Stripe will retry
   const existingUser = await findUserByEmail(customerEmail)
@@ -145,5 +145,5 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
  */
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   const email = paymentIntent.receipt_email || paymentIntent.metadata?.email || 'unknown'
-  console.log(`❌ Payment failed for ${email}: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`)
+  console.log(`Payment failed for ${email}: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`)
 }

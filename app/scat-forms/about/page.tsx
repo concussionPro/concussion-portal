@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { createFAQSchema, createMedicalWebPageSchema, createHowToSchema } from '@/lib/schema-markup'
 import { ArrowLeft, Download, FileText, Brain } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -230,7 +231,7 @@ export default function SCATFormsAboutPage() {
                 Start Free Training →
               </Link>
               <span className="px-6 py-3 bg-white rounded-lg border-2 border-green-600 text-green-700 font-semibold">
-                ✓ 2 CPD Points · ✓ Certificate · ✓ Clinical Toolkit
+                {CONFIG.COURSE.SCAT_MASTERY_CPD_POINTS} CPD Points · Certificate · Clinical Toolkit
               </span>
             </div>
           </div>

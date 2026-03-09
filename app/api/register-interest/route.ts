@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     // Notify Zac
     await sendEmail({
       to: 'zac@concussion-education-australia.com',
-      subject: `📋 New Interest: ${cityLabel} Workshop — ${cleanName}`,
+      subject: `New Interest: ${cityLabel} Workshop — ${cleanName}`,
       html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, registrations.length),
       tags: [
         { name: 'type', value: 'interest-notification' },
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
       ],
     })
 
-    console.log(`✅ Interest registered: ${cleanEmail} for ${cityLabel} (total: ${registrations.length})`)
+    console.log(`Interest registered: ${cleanEmail} for ${cityLabel} (total: ${registrations.length})`)
 
     return NextResponse.json({
       success: true,

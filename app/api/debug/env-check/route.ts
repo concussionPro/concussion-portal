@@ -14,15 +14,15 @@ export async function GET(request: NextRequest) {
   }
 
   const envCheck = {
-    MAGIC_LINK_SECRET: process.env.MAGIC_LINK_SECRET ? '✓ SET' : '❌ MISSING',
-    SESSION_SECRET: process.env.SESSION_SECRET ? '✓ SET' : '❌ MISSING',
-    RESEND_API_KEY: process.env.RESEND_API_KEY ? '✓ SET' : '❌ MISSING',
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ? '✓ SET' : '❌ MISSING',
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? '✓ SET' : '❌ MISSING',
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? '✓ SET' : '❌ MISSING',
-    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN ? '✓ SET' : '❌ MISSING',
-    CRON_SECRET: process.env.CRON_SECRET ? '✓ SET' : '❌ MISSING',
-    ADMIN_API_KEY: process.env.ADMIN_API_KEY ? '✓ SET' : '❌ MISSING',
+    MAGIC_LINK_SECRET: process.env.MAGIC_LINK_SECRET ? 'SET' : 'MISSING',
+    SESSION_SECRET: process.env.SESSION_SECRET ? 'SET' : 'MISSING',
+    RESEND_API_KEY: process.env.RESEND_API_KEY ? 'SET' : 'MISSING',
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ? 'SET' : 'MISSING',
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'SET' : 'MISSING',
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'MISSING',
+    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN ? 'SET' : 'MISSING',
+    CRON_SECRET: process.env.CRON_SECRET ? 'SET' : 'MISSING',
+    ADMIN_API_KEY: process.env.ADMIN_API_KEY ? 'SET' : 'MISSING',
   }
 
   return NextResponse.json(envCheck)

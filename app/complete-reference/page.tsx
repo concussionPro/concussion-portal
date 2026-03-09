@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { BookMarked, Download, ExternalLink, AlertCircle } from 'lucide-react'
+import { BookMarked, Download, ExternalLink, AlertCircle, Check } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -121,19 +121,19 @@ export default function CompleteReferencePage() {
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-accent flex-shrink-0">✓</span>
+                          <Check className="w-4 h-4 text-accent flex-shrink-0" />
                           <span>Evidence-based protocols</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-accent flex-shrink-0">✓</span>
+                          <Check className="w-4 h-4 text-accent flex-shrink-0" />
                           <span>Clinical decision flowcharts</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-accent flex-shrink-0">✓</span>
+                          <Check className="w-4 h-4 text-accent flex-shrink-0" />
                           <span>Assessment tools & forms</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-accent flex-shrink-0">✓</span>
+                          <Check className="w-4 h-4 text-accent flex-shrink-0" />
                           <span>Treatment algorithms</span>
                         </div>
                       </div>
