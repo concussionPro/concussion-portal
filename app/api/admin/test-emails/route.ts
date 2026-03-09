@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
+export const maxDuration = 60
+
 function timingSafeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false
   return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
@@ -310,8 +312,7 @@ export async function POST(request: NextRequest) {
       results.push({ subject: email.subject, success: false, error: String(err) })
     }
 
-    // Small delay between sends
-    await new Promise(r => setTimeout(r, 300))
+    await new Promise(r => setTimeout(r, 100))
   }
 
   const sent = results.filter(r => r.success).length
