@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { list as listBlobs } from '@vercel/blob'
+import crypto from 'crypto'
+
+function timingSafeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
 
 function isAdminAuthorized(request: NextRequest): boolean {
+  const expected = process.env.ADMIN_API_KEY
+  if (!expected) return false
   const adminKey = request.headers.get('x-admin-key')
-  if (adminKey && adminKey === process.env.ADMIN_API_KEY) return true
+  if (adminKey && timingSafeCompare(adminKey, expected)) return true
   const authHeader = request.headers.get('authorization')
-  if (authHeader?.startsWith('Bearer ') && authHeader.slice(7) === process.env.ADMIN_API_KEY) return true
+  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (bearer && timingSafeCompare(bearer, expected)) return true
   return false
 }
 
