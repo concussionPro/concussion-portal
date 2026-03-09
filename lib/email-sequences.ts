@@ -62,6 +62,193 @@ function emailShell(content: string, unsubscribeUrl?: string): string {
 </html>`
 }
 
+/**
+ * Post-Purchase Onboarding Sequence
+ *
+ * Sent to paid users (online-only or full-course) after purchase.
+ * Goal: Get them to complete their first module within 48 hours (highest correlation with course completion).
+ * Triggered by createdAt on users with accessLevel !== 'preview'.
+ */
+export const POST_PURCHASE_SEQUENCE = [
+  // DAY 0 - Welcome + First Module Push (sent by webhook magic link, this is the Day 1 follow-up)
+  {
+    day: 1,
+    subject: 'Your course is ready — start with Module 1',
+    accessLevels: ['online-only', 'full-course'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Welcome aboard, ${name.split(' ')[0]}!</h2>
+      <p>Your Concussion Management course is ready and waiting. Students who start within the first 48 hours are <strong>3x more likely to complete the full course</strong>.</p>
+      <p>Module 1 takes about 25 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on.</p>
+      <center><a href="${loginLink}" class="cta-btn">Start Module 1 Now</a></center>
+      <div class="callout">
+        <strong>Quick tip:</strong> Each module builds on the previous one. Complete them in order for the best learning experience.
+      </div>
+      <p>If you have any questions as you work through the course, just hit reply — I read every message.</p>
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+    `),
+  },
+  // DAY 3 - Progress Check
+  {
+    day: 3,
+    subject: 'How are you going with the course?',
+    accessLevels: ['online-only', 'full-course'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Hi ${name.split(' ')[0]},</h2>
+      <p>Just checking in — have you had a chance to get started?</p>
+      <p>The first 3 modules cover the clinical foundations:</p>
+      <ol>
+        <li><strong>Module 1:</strong> Concussion neuroscience and pathophysiology</li>
+        <li><strong>Module 2:</strong> SCAT6 sideline assessment</li>
+        <li><strong>Module 3:</strong> SCOAT6 office-based follow-up</li>
+      </ol>
+      <p>Most clinicians complete all 3 in a single sitting (about 90 minutes). By the end you'll be confident with both the sideline and office assessment tools.</p>
+      <center><a href="${loginLink}" class="cta-btn">Continue Your Course</a></center>
+      <p class="ps">P.S. Your course has lifetime access — no pressure, but momentum matters. Clinicians who finish within the first two weeks report the highest confidence gains.</p>
+      <div class="sig">Zac</div>
+    `),
+  },
+  // DAY 7 - Midpoint Motivation
+  {
+    day: 7,
+    subject: 'You\'re halfway to 8 CPD points',
+    accessLevels: ['online-only', 'full-course'] as const,
+    template: (name: string, loginLink: string) => emailShell(`
+      <h2>Hi ${name.split(' ')[0]},</h2>
+      <p>One week in — how's it going? Whether you've completed 1 module or 5, you're making progress.</p>
+      <p>The modules coming up are where clinicians tell me they get the most practical value:</p>
+      <ul>
+        <li><strong>Module 5 — VOMS:</strong> The vestibular/ocular motor screen most clinicians haven't been trained to perform</li>
+        <li><strong>Module 6 — BESS:</strong> Balance assessment with specific scoring criteria</li>
+        <li><strong>Module 7 — Return-to-Play:</strong> The step-by-step protocols schools and clubs need from you</li>
+      </ul>
+      <p>Complete all 8 modules and you'll earn your <strong>8 CPD point certificate</strong> — automatically generated and ready to download.</p>
+      <center><a href="${loginLink}" class="cta-btn">Keep Going</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+]
+
+/**
+ * Abandoned Checkout Recovery Sequence
+ *
+ * Sent to users who started checkout but didn't complete payment.
+ * 3-email sequence at specific intervals after abandonment.
+ */
+export const ABANDONED_CHECKOUT_SEQUENCE = [
+  // Email 1 — 1 hour after abandonment
+  {
+    hoursAfter: 1,
+    subject: 'You left something behind',
+    template: (name: string) => emailShell(`
+      <h2>Hi${name ? ` ${name.split(' ')[0]}` : ''},</h2>
+      <p>Looks like you started enrolling in the Concussion Management course but didn't finish.</p>
+      <p>No worries — your spot is still available. If you ran into a technical issue or had questions, just reply to this email.</p>
+      <center><a href="https://portal.concussion-education-australia.com/pricing" class="cta-btn">Complete Your Enrolment</a></center>
+      <div class="callout">
+        <strong>What you'll get:</strong><br><br>
+        &#8226; 8 online modules with lifetime access<br>
+        &#8226; 8 AHPRA-aligned CPD points (14 with workshop)<br>
+        &#8226; Clinical Toolkit: referral templates, RTP forms, clearance letters<br>
+        &#8226; Endorsed by Osteopathy Australia
+      </div>
+      <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+    `),
+  },
+  // Email 2 — 24 hours after abandonment
+  {
+    hoursAfter: 24,
+    subject: 'Still thinking it over?',
+    template: (name: string) => emailShell(`
+      <h2>Hi${name ? ` ${name.split(' ')[0]}` : ''},</h2>
+      <p>I wanted to follow up in case you had questions about the course.</p>
+      <p>Here's what clinicians ask most often:</p>
+      <p><strong>"Is this relevant for physios/GPs/exercise physiologists?"</strong><br>
+      Yes — the curriculum covers SCAT6, VOMS, BESS, and return-to-play protocols used across all allied health disciplines. It's endorsed by Osteopathy Australia but designed for any clinician managing concussion.</p>
+      <p><strong>"How long does it take?"</strong><br>
+      The 8 online modules take about 6-8 hours total. Most clinicians complete them across 2-3 sittings. You have lifetime access, so there's no rush.</p>
+      <p><strong>"What if I want to add the workshop later?"</strong><br>
+      Start with the online course ($${CONFIG.COURSE.PRICE_ONLINE}) and upgrade to include the hands-on workshop later — you'll only pay the difference.</p>
+      <center><a href="https://portal.concussion-education-australia.com/pricing" class="cta-btn">View Course Options</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+  // Email 3 — 72 hours after abandonment (final)
+  {
+    hoursAfter: 72,
+    subject: 'Last note from me about the course',
+    template: (name: string) => emailShell(`
+      <h2>Hi${name ? ` ${name.split(' ')[0]}` : ''},</h2>
+      <p>This is the last email I'll send about this. I don't want to be pushy — but I also don't want you to miss out if the timing just wasn't right.</p>
+      <p>If cost is a factor: the <strong>online-only option at $${CONFIG.COURSE.PRICE_ONLINE}</strong> gives you the full 8-module course with 8 CPD points. You can always add the workshop later.</p>
+      <p>If you have specific questions, just reply — I'm happy to chat.</p>
+      <center><a href="https://portal.concussion-education-australia.com/pricing" class="cta-btn">Enrol Now</a></center>
+      <p class="ps">P.S. If you decided this course isn't for you, no hard feelings. The free SCAT Mastery course and SCAT6 forms are yours to keep.</p>
+      <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+    `),
+  },
+]
+
+/**
+ * Pre-Workshop Prep Emails
+ *
+ * Sent to full-course students before their workshop date.
+ * Helps reduce no-shows and builds anticipation.
+ */
+export const PRE_WORKSHOP_SEQUENCE = [
+  // 7 days before workshop
+  {
+    daysBefore: 7,
+    subject: 'Your workshop is one week away — here\'s how to prepare',
+    template: (name: string, workshopCity: string, workshopDate: string) => emailShell(`
+      <h2>Hi ${name.split(' ')[0]},</h2>
+      <p>Your hands-on concussion workshop in <strong>${workshopCity}</strong> is one week away (<strong>${workshopDate}</strong>).</p>
+      <p><strong>To get the most from the day, please complete:</strong></p>
+      <ol>
+        <li>All 8 online modules (the workshop builds directly on this content)</li>
+        <li>Review the SCAT6 and SCOAT6 forms — you'll be administering them in person</li>
+      </ol>
+      <div class="callout">
+        <strong>What to bring:</strong><br><br>
+        &#8226; Laptop or tablet (for referencing digital materials)<br>
+        &#8226; Comfortable clothes (you'll be practising physical assessments)<br>
+        &#8226; A pen and your favourite clinical notebook
+      </div>
+      <p>Venue details and parking info will be in your final reminder email the day before.</p>
+      <center><a href="https://portal.concussion-education-australia.com/login" class="cta-btn">Complete Your Online Modules</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+  // 1 day before workshop
+  {
+    daysBefore: 1,
+    subject: 'Tomorrow\'s workshop — everything you need to know',
+    template: (name: string, workshopCity: string, workshopDate: string) => emailShell(`
+      <h2>See you tomorrow, ${name.split(' ')[0]}!</h2>
+      <p>Your concussion workshop in <strong>${workshopCity}</strong> is tomorrow (<strong>${workshopDate}</strong>).</p>
+      <div class="callout">
+        <strong>Workshop details:</strong><br><br>
+        &#8226; <strong>Time:</strong> 9:00 AM — 4:00 PM<br>
+        &#8226; <strong>Location:</strong> ${workshopCity} (check your booking confirmation for venue address)<br>
+        &#8226; <strong>What to bring:</strong> Laptop/tablet, comfortable clothes, pen<br>
+        &#8226; <strong>Lunch:</strong> Provided
+      </div>
+      <p><strong>What we'll cover hands-on:</strong></p>
+      <ul>
+        <li>SCAT6 administration — paired practice with real-time feedback</li>
+        <li>VOMS (Vestibular/Ocular Motor Screening) — the assessment most clinicians haven't been trained on</li>
+        <li>BESS (Balance Error Scoring System) — scoring calibration exercises</li>
+        <li>Clinical case studies — group discussion and decision-making frameworks</li>
+      </ul>
+      <p>You'll earn <strong>6 additional CPD points</strong> (for a total of 14) upon completion.</p>
+      <p>Questions? Reply to this email or text me on the day.</p>
+      <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+    `),
+  },
+]
+
 export const SCAT_MASTERY_SEQUENCE = [
   // DAY 0 - Lead Magnet Delivery
   {

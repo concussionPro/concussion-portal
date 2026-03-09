@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
+import { list as listBlobs } from '@vercel/blob'
 
 function timingSafeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false
@@ -18,8 +19,39 @@ function isAdminAuthorized(request: NextRequest): boolean {
   return false
 }
 
+interface ModuleProgressEntry {
+  completed: boolean
+  quizScore: number | null
+  quizCompleted: boolean
+  completedAt: string | null
+}
+
 /**
- * Admin API: Get all email signups
+ * Load progress for a single user from Blob storage
+ */
+async function loadUserProgress(userId: string): Promise<Record<string, ModuleProgressEntry> | null> {
+  try {
+    const prefix = `user-progress/${userId}`
+    const { blobs } = await listBlobs({ prefix })
+
+    if (blobs.length === 0) return null
+
+    const latestBlob = blobs.sort(
+      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+    )[0]
+
+    const response = await fetch(`${latestBlob.url}?t=${Date.now()}`, { cache: 'no-store' })
+    if (response.ok) {
+      return await response.json()
+    }
+  } catch {
+    // Fall through
+  }
+  return null
+}
+
+/**
+ * Admin API: Get all users with course progress
  * Protected — requires ADMIN_API_KEY
  */
 export async function GET(request: NextRequest) {
@@ -30,14 +62,46 @@ export async function GET(request: NextRequest) {
   try {
     const users = await loadUsers()
 
-    const emailList = users.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      accessLevel: user.accessLevel,
-      createdAt: user.createdAt,
-      lastLogin: user.lastLoginAt || null,
-    }))
+    // Load progress for all users in parallel
+    const progressPromises = users.map(u => loadUserProgress(u.id))
+    const progressResults = await Promise.all(progressPromises)
+
+    const emailList = users.map((user, i) => {
+      const progress = progressResults[i]
+      let completedModules = 0
+      let totalCPDPoints = 0
+      const moduleDetails: Record<number, { completed: boolean; quizScore: number | null }> = {}
+
+      if (progress) {
+        // Count completed paid modules (1-8)
+        for (let m = 1; m <= 8; m++) {
+          const mod = progress[String(m)]
+          if (mod) {
+            moduleDetails[m] = {
+              completed: !!mod.completed,
+              quizScore: mod.quizScore ?? null,
+            }
+            if (mod.completed) {
+              completedModules++
+              totalCPDPoints++
+            }
+          }
+        }
+      }
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        accessLevel: user.accessLevel,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLoginAt || null,
+        workshopLocation: user.workshopLocation || null,
+        completedModules,
+        totalCPDPoints,
+        moduleDetails,
+      }
+    })
 
     emailList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 

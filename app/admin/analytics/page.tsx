@@ -336,7 +336,7 @@ export default function AnalyticsDashboard() {
   const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; totalClinics: number; totalBaselines: number } | null>(null)
 
   // Users/emails data
-  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null }>>([])
+  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; completedModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
   const getAdminKey = useCallback((): string => {
@@ -1220,8 +1220,8 @@ export default function AnalyticsDashboard() {
                         if (usersFilter === 'paid') return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
                         return true
                       })
-                      const csv = ['Email,Name,Access Level,Created,Last Login', ...filtered.map(u =>
-                        `${u.email},${u.name},${u.accessLevel},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
+                      const csv = ['Email,Name,Access Level,Modules Completed,CPD Points,Created,Last Login', ...filtered.map(u =>
+                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
                       )].join('\n')
                       const blob = new Blob([csv], { type: 'text/csv' })
                       const url = URL.createObjectURL(blob)
@@ -1245,6 +1245,7 @@ export default function AnalyticsDashboard() {
                         <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
                         <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Name</th>
                         <th className="text-center py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Access</th>
+                        <th className="text-center py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Progress</th>
                         <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Signed Up</th>
                         <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Last Login</th>
                       </tr>
@@ -1254,7 +1255,10 @@ export default function AnalyticsDashboard() {
                         if (usersFilter === 'preview') return u.accessLevel === 'preview'
                         if (usersFilter === 'paid') return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
                         return true
-                      }).map((u) => (
+                      }).map((u) => {
+                        const completed = u.completedModules || 0
+                        const pctDone = Math.round((completed / 8) * 100)
+                        return (
                         <tr key={u.id} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
                           <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{u.email}</td>
                           <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{u.name}</td>
@@ -1265,10 +1269,28 @@ export default function AnalyticsDashboard() {
                               {u.accessLevel === 'preview' ? 'Free' : u.accessLevel === 'full-course' ? 'Full' : 'Online'}
                             </span>
                           </td>
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center gap-2 justify-center">
+                              <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${
+                                    completed === 8 ? 'bg-emerald-500' : completed > 0 ? 'bg-[var(--accent)]' : 'bg-gray-200'
+                                  }`}
+                                  style={{ width: `${pctDone}%` }}
+                                />
+                              </div>
+                              <span className={`text-xs font-semibold tabular-nums ${
+                                completed === 8 ? 'text-emerald-600' : 'text-[var(--muted-foreground)]'
+                              }`}>
+                                {completed}/8
+                              </span>
+                            </div>
+                          </td>
                           <td className="py-2.5 px-2 text-right text-xs text-[var(--muted-foreground)]">{new Date(u.createdAt).toLocaleDateString('en-AU')}</td>
                           <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-AU') : 'Never'}</td>
                         </tr>
-                      ))}
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>

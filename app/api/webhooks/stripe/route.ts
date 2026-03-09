@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { sendMagicLinkEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/resend-client'
 import { createMagicToken } from '@/lib/magic-link-jwt'
+import { put, list as listBlobs } from '@vercel/blob'
+import { CONFIG } from '@/lib/config'
 import Stripe from 'stripe'
 
 /**
@@ -50,6 +53,10 @@ export async function POST(request: NextRequest) {
 
       case 'payment_intent.payment_failed':
         await handlePaymentFailed(event.data.object as Stripe.PaymentIntent)
+        break
+
+      case 'checkout.session.expired':
+        await handleCheckoutExpired(event.data.object as Stripe.Checkout.Session)
         break
 
       default:
@@ -142,9 +149,119 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 /**
- * Handle failed payment
+ * Handle failed payment — send recovery email
  */
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
-  const email = paymentIntent.receipt_email || paymentIntent.metadata?.email || 'unknown'
-  console.log(`Payment failed for ${email}: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`)
+  const email = paymentIntent.receipt_email || paymentIntent.metadata?.email
+  const errorMsg = paymentIntent.last_payment_error?.message || 'Unknown error'
+  console.log(`Payment failed for ${email || 'unknown'}: ${errorMsg}`)
+
+  if (!email) return
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+
+  await sendEmail({
+    to: email,
+    subject: 'Your payment didn\'t go through — we can help',
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
+        <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
+          Your payment didn't go through
+        </h2>
+        <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+          We noticed your payment for the Concussion Management course didn't complete. This sometimes happens with card limits or temporary bank holds.
+        </p>
+        <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+          You can try again anytime — your spot is still available:
+        </p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${baseUrl}/pricing" style="display: inline-block; background: #0d9488; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+            Try Again →
+          </a>
+        </div>
+        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">
+          If you keep having trouble, reply to this email and I'll help sort it out. You can also try a different card or payment method.
+        </p>
+        <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b;">
+          Zac Lewis<br>
+          Concussion Education Australia<br>
+          <a href="mailto:zac@concussion-education-australia.com" style="color: #0d9488;">zac@concussion-education-australia.com</a>
+        </div>
+      </div>
+    `,
+    tags: [
+      { name: 'type', value: 'payment-failed-recovery' },
+    ],
+  })
+
+  console.log(`Payment failure recovery email sent to ${email}`)
+}
+
+/**
+ * Handle expired checkout session — store for abandoned cart recovery emails
+ */
+async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
+  const email = session.customer_email || session.customer_details?.email
+  if (!email) {
+    console.log('Expired checkout session with no email:', session.id)
+    return
+  }
+
+  const name = session.customer_details?.name || ''
+  const courseType = session.metadata?.courseType || 'unknown'
+  const amount = (session.amount_total || 0) / 100
+
+  console.log(`Checkout expired: ${email} — ${courseType} ($${amount})`)
+
+  // Store abandoned checkout in Blob for recovery cron
+  try {
+    const blobPath = 'abandoned-checkouts.json'
+    let abandonedList: AbandonedCheckout[] = []
+
+    const { blobs } = await listBlobs()
+    const existing = blobs
+      .filter(b => b.pathname === blobPath)
+      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+
+    if (existing.length > 0) {
+      const res = await fetch(`${existing[0].url}?t=${Date.now()}`, { cache: 'no-store' })
+      abandonedList = await res.json()
+    }
+
+    // Don't add if already tracked (same email within last 24h)
+    const recentlyAdded = abandonedList.some(
+      a => a.email === email.toLowerCase() &&
+        Date.now() - new Date(a.abandonedAt).getTime() < 24 * 60 * 60 * 1000
+    )
+    if (recentlyAdded) return
+
+    abandonedList.push({
+      email: email.toLowerCase(),
+      name,
+      courseType,
+      amount,
+      abandonedAt: new Date().toISOString(),
+      emailsSent: 0,
+      recovered: false,
+    })
+
+    await put(blobPath, JSON.stringify(abandonedList, null, 2), {
+      access: 'public',
+      contentType: 'application/json',
+    })
+
+    console.log(`Stored abandoned checkout for ${email}`)
+  } catch (err) {
+    console.error('Failed to store abandoned checkout:', err)
+  }
+}
+
+interface AbandonedCheckout {
+  email: string
+  name: string
+  courseType: string
+  amount: number
+  abandonedAt: string
+  emailsSent: number
+  recovered: boolean
 }

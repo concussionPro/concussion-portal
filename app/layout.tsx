@@ -109,16 +109,17 @@ export default function RootLayout({
   return (
     <html lang="en-AU">
       <head>
-        {/* Google Ads Conversion Tracking (AW-17984048021) */}
+        {/* Google Analytics (GA4) + Google Ads Conversion Tracking */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=AW-17984048021"
+          src="https://www.googletagmanager.com/gtag/js?id=G-E3X47K6ZRF"
           strategy="afterInteractive"
         />
-        <Script id="google-ads-tracking" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+            gtag('config', 'G-E3X47K6ZRF');
             gtag('config', 'AW-17984048021');
           `}
         </Script>
