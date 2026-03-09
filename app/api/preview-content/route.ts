@@ -3,14 +3,19 @@ import { getAllModules } from '@/data/modules'
 
 /**
  * Public (no auth) API route.
- * Returns ALL sections for Module 1 (full preview) + metadata only for modules 2-8.
- * No quiz data, no clinical references for locked modules.
+ * Module 1: first 4 sections unlocked (intro + mechanism overview).
+ * Modules 2-8: first section only.
+ * No quiz data, no clinical references for locked sections.
  */
+
+const MODULE_1_PREVIEW_COUNT = 4
+
 export async function GET() {
   const modules = getAllModules()
 
   const previewData = modules.map((module) => {
-    const isModule1 = module.id === 1
+    const previewCount = module.id === 1 ? MODULE_1_PREVIEW_COUNT : 1
+    const unlocked = module.sections.slice(0, previewCount)
 
     return {
       id: module.id,
@@ -20,16 +25,11 @@ export async function GET() {
       points: module.points,
       description: module.description,
       totalSections: module.sections.length,
-      // Module 1: all sections unlocked. Modules 2-8: first section only.
-      previewSections: isModule1
-        ? module.sections.map((s) => ({
-            id: s.id,
-            title: s.title,
-            content: s.content,
-          }))
-        : module.sections[0]
-          ? [{ id: module.sections[0].id, title: module.sections[0].title, content: module.sections[0].content }]
-          : [],
+      previewSections: unlocked.map((s) => ({
+        id: s.id,
+        title: s.title,
+        content: s.content,
+      })),
       sectionTitles: module.sections.map((s) => s.title),
     }
   })
