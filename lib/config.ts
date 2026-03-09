@@ -58,12 +58,11 @@ export const CONFIG = {
     EARLY_BIRD_DAYS_BEFORE: 7,    // Early bird ends this many days before course date
   },
 
-  // Social Proof - Real testimonials only, no fake numbers
+  // Social Proof — real numbers only, updated manually
   SOCIAL_PROOF: {
-    TOTAL_CLINICIANS: 0, // Don't display fake numbers
-    SATISFACTION_RATING: 0,
-    TOTAL_REVIEWS: 0,
-    ENROLLMENTS_2026: 0,
+    SCAT_FORM_DOWNLOADS: 500,
+    TOTAL_REVIEWS: 5,
+    SATISFACTION_STARS: 5,
   },
 
   // Early Bird Pricing Deadline
@@ -83,7 +82,7 @@ export const CONFIG = {
   FEATURES: {
     SHOW_COUNTDOWN: true,
     SHOW_SPOTS_REMAINING: true,
-    SHOW_SOCIAL_PROOF: false, // Don't show fake social proof numbers
+    SHOW_SOCIAL_PROOF: true,
   },
 }
 

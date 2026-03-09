@@ -6,6 +6,7 @@ import { ProgressProvider } from "@/contexts/ProgressContext";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { FooterWrapper } from "@/components/FooterWrapper";
 import { StickyCTA } from "@/components/StickyCTA";
+import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 import { CONFIG } from "@/lib/config";
 import { organizationSchema } from "@/lib/schema-markup";
 import Script from 'next/script';
@@ -150,6 +151,7 @@ export default function RootLayout({
               </div>
               <FooterWrapper />
               <StickyCTA />
+              <ExitIntentPopup />
             </AnalyticsProvider>
           </Suspense>
         </ProgressProvider>

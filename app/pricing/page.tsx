@@ -9,10 +9,14 @@ import {
   ChevronDown,
   ChevronUp,
   Star,
+  ShieldCheck,
+  Receipt,
+  Building2,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
 import { createFAQSchema } from '@/lib/schema-markup'
+import { CONFIG } from '@/lib/config'
 
 // ─── Main Pricing Content ────────────────────────────────────────────────────
 
@@ -47,6 +51,14 @@ function PricingContent() {
     {
       q: 'Is this course only for osteopaths?',
       a: 'No — the course is designed for any clinician managing concussion, including physiotherapists, GPs, sports medicine doctors, exercise physiologists, and athletic trainers. The curriculum is AHPRA-aligned and endorsed by Osteopathy Australia, but the clinical content is universal.',
+    },
+    {
+      q: 'What if I\'m not satisfied with the course?',
+      a: 'We offer a 30-day satisfaction guarantee. Complete Module 1 — if you don\'t feel this course is right for you, email us for a full refund. No questions asked.',
+    },
+    {
+      q: 'Can my employer pay for this?',
+      a: 'Yes — most practices and employers cover CPD training costs. After purchase, you\'ll receive a tax invoice and AHPRA-aligned CPD certificate that your employer can use for reimbursement. Many clinicians pay nothing out of pocket.',
     },
   ]
 
@@ -90,6 +102,26 @@ function PricingContent() {
             with hands-on expert workshop. Online-only option also available.
           </p>
         </div>
+
+        {/* Social proof strip */}
+        {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mb-10 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="font-semibold text-foreground">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded
+            </span>
+            <span>·</span>
+            <span className="flex items-center gap-1">
+              <span className="flex gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                ))}
+              </span>
+              <span className="font-semibold text-foreground">5.0</span> from {CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS} reviews
+            </span>
+            <span>·</span>
+            <span>30-day money-back guarantee</span>
+          </div>
+        )}
 
         {/* Pricing Cards — delegated to PricingOptions */}
         <PricingOptions variant="full" />
@@ -146,6 +178,39 @@ function PricingContent() {
           <p className="text-sm text-muted-foreground">
             Led by <span className="font-semibold text-foreground">Zac Lewis</span>, Osteopath (B.Clin.Sci., M.Ost.Med) — Founder of Concussion Education Australia
           </p>
+        </div>
+
+        {/* Guarantee + Employer Reimbursement */}
+        <div className="max-w-4xl mx-auto mt-16 md:mt-20 grid md:grid-cols-2 gap-4">
+          {/* Money-back guarantee */}
+          <div className="glass rounded-xl p-6 border border-emerald-200/50">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              </div>
+              <h3 className="font-bold text-foreground">30-Day Satisfaction Guarantee</h3>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Complete Module 1. If you&apos;re not confident this course is right for you,
+              email us within 30 days for a full refund — no questions asked.
+              We&apos;re confident in what we&apos;ve built, and we want you to be too.
+            </p>
+          </div>
+
+          {/* Employer reimbursement */}
+          <div className="glass rounded-xl p-6 border border-blue-200/50">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="font-bold text-foreground">Employer CPD Reimbursement</h3>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Most employers and practices cover CPD training costs. We provide a
+              tax invoice and AHPRA-aligned CPD certificate — everything your
+              employer needs to approve reimbursement. Many clinicians pay $0 out of pocket.
+            </p>
+          </div>
         </div>
 
         {/* FAQ */}

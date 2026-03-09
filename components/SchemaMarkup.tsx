@@ -118,7 +118,7 @@ export function CourseSchema() {
   if (CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS > 0) {
     schema.aggregateRating = {
       '@type': 'AggregateRating',
-      ratingValue: CONFIG.SOCIAL_PROOF.SATISFACTION_RATING,
+      ratingValue: CONFIG.SOCIAL_PROOF.SATISFACTION_STARS,
       reviewCount: CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS,
       bestRating: 5,
       worstRating: 1,

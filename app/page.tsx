@@ -83,6 +83,26 @@ export default function HomePage() {
                 free SCAT forms
               </Link>
             </p>
+
+            {/* Social proof strip */}
+            {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 pt-6 border-t border-[rgba(13,115,119,0.08)]">
+                <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
+                  <span className="font-semibold text-[var(--foreground)]">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded by Australian clinicians
+                </span>
+                <span className="text-xs text-[var(--muted-foreground)]">·</span>
+                <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1">
+                  <span className="flex gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    ))}
+                  </span>
+                  <span className="font-semibold text-[var(--foreground)]">5.0</span> from {CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS} reviews
+                </span>
+                <span className="text-xs text-[var(--muted-foreground)]">·</span>
+                <span className="text-xs text-[var(--muted-foreground)]">Endorsed by <span className="font-semibold text-[var(--foreground)]">Osteopathy Australia</span></span>
+              </div>
+            )}
           </div>
         </section>
 
