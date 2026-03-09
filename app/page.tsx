@@ -52,14 +52,13 @@ export default function HomePage() {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 mb-5">
-              <a
-                href={CONFIG.SHOP_URL}
-                onClick={() => trackShopClick('hero-cta')}
+              <Link
+                href="/pricing"
                 className="btn-primary px-7 py-3.5 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"
               >
-                Enroll Now — ${new Date() < CONFIG.EARLY_BIRD_DEADLINE ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                See Pricing Options
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </Link>
               <Link
                 href="/preview"
                 className="btn-secondary px-7 py-3.5 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"

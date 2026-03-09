@@ -7,6 +7,7 @@ import { CONFIG } from '@/lib/config'
 
 const NAV_ITEMS = [
   { label: 'Free Training', path: '/scat-mastery', accent: true },
+  { label: 'Pricing', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Preseason', path: '/preseason', accent: false },
   { label: 'Preview', path: '/preview', accent: false },
