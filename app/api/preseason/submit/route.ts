@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
+import { put, list as listBlobs } from '@vercel/blob'
 import { jsPDF } from 'jspdf'
 import { sendEmail } from '@/lib/email'
 import { CONFIG } from '@/lib/config'
@@ -403,8 +404,6 @@ export async function POST(request: Request) {
             .score-box { background: #f8fafc; border-radius: 10px; padding: 14px; text-align: center; }
             .score-value { font-size: 24px; font-weight: 800; color: #5b9aa6; }
             .score-label { font-size: 12px; color: #64748b; }
-            .cta-box { background: linear-gradient(135deg, #f0f9ff, #ecfdf5); border: 1px solid #5b9aa6; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center; }
-            .cta-box a { display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #64a8b0, #5b9aa6); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; }
             .footer { padding: 20px 24px; text-align: center; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
           </style>
         </head>
@@ -443,11 +442,11 @@ export async function POST(request: Request) {
 
               <p style="font-size: 13px; color: #475569; margin: 20px 0 8px;">You've captured one dimension of baseline data. The SCAT6 protocol covers symptom evaluation, cognitive screening, neurological exam, balance testing, and more. Are you confident interpreting all 7 domains?</p>
 
-              <div class="cta-box">
-                <p style="margin: 0 0 8px; font-weight: 700; font-size: 15px;">Free: Master the Full SCAT6 Protocol (2 CPD Points)</p>
-                <p style="margin: 0 0 16px; font-size: 13px; color: #475569;">Learn how to properly administer and interpret every SCAT6 section. Fillable forms, clinical toolkit &amp; certificate included. <strong>2 AHPRA CPD points — free.</strong></p>
-                <a href="${baseUrl}/scat-mastery">Get Free Course →</a>
-                <p style="margin: 8px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
+              <div style="background: #f0f9ff; border: 2px solid #5b9aa6; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+                <p style="margin: 0 0 8px; font-weight: 700; font-size: 16px; color: #1e293b;">Free: Master the Full SCAT6 Protocol (2 CPD Points)</p>
+                <p style="margin: 0 0 20px; font-size: 13px; color: #475569; line-height: 1.5;">Learn how to properly administer and interpret every SCAT6 section. Fillable forms, clinical toolkit &amp; certificate included. <strong>2 AHPRA CPD points — free.</strong></p>
+                <a href="${baseUrl}/scat-mastery" style="display: inline-block; padding: 14px 32px; background-color: #5b9aa6; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 15px;">Get Free Course &rarr;</a>
+                <p style="margin: 16px 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #1e6b73; font-weight: 600; text-decoration: underline;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
               </div>
             </div>
             <div class="footer">
@@ -457,6 +456,43 @@ export async function POST(request: Request) {
         </body>
       </html>
     `
+
+    // Persist baseline submission to Blob storage for admin dashboard (skip demo)
+    if (!isDemo) {
+      try {
+        let baselines: Array<{ clinicCode: string; clinicName: string; athleteName: string; submittedAt: string; symptomCount: number; symptomSeverity: number; cognitiveScore: number }> = []
+        const { blobs } = await listBlobs()
+        const existing = blobs
+          .filter(b => b.pathname === 'preseason-baselines.json')
+          .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+
+        if (existing.length > 0) {
+          try {
+            const res = await fetch(`${existing[0].url}?t=${Date.now()}`, { cache: 'no-store' })
+            baselines = await res.json()
+          } catch (err) {
+            console.warn('Could not load existing preseason baselines blob:', err)
+          }
+        }
+
+        baselines.push({
+          clinicCode: body.clinicCode.toUpperCase(),
+          clinicName: clinic.clinicName,
+          athleteName: body.athlete.name || 'Unknown',
+          submittedAt: new Date().toISOString(),
+          symptomCount,
+          symptomSeverity: symptomTotal,
+          cognitiveScore: totalCognitive,
+        })
+
+        await put('preseason-baselines.json', JSON.stringify(baselines, null, 2), {
+          access: 'public',
+          contentType: 'application/json',
+        })
+      } catch (err) {
+        console.error('Failed to persist baseline submission to Blob:', err)
+      }
+    }
 
     // Demo mode — skip email, just return success with score
     if (isDemo) {

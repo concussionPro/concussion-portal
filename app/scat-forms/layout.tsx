@@ -15,8 +15,9 @@ export default function SCATFormsLayout({
   const [isPaidUser, setIsPaidUser] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const isSCAT6 = pathname?.includes('/scat6')
+  const isSCAT6 = pathname?.includes('/scat6') && !pathname?.includes('/child-scat6')
   const isSCOAT6 = pathname?.includes('/scoat6')
+  const isChildSCAT6 = pathname?.includes('/child-scat6')
 
   // Check if user has paid access
   useEffect(() => {
@@ -65,7 +66,7 @@ export default function SCATFormsLayout({
       {/* Navigation */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* SCAT6 Card */}
             <button
               onClick={() => router.push('/scat-forms/scat6')}
@@ -119,11 +120,38 @@ export default function SCATFormsLayout({
                 </div>
               </div>
             </button>
+
+            {/* Child SCAT6 Card */}
+            <button
+              onClick={() => router.push('/scat-forms/child-scat6')}
+              className={`p-6 rounded-lg border-2 transition-all text-left ${
+                isChildSCAT6
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-slate-200 hover:border-green-300 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`p-3 rounded-lg ${isChildSCAT6 ? 'bg-green-600' : 'bg-green-100'}`}>
+                  <FileText className={`w-6 h-6 ${isChildSCAT6 ? 'text-white' : 'text-green-600'}`} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">Child SCAT6</h3>
+                  <p className="text-sm text-slate-600 mb-2">
+                    Sport Concussion Assessment Tool — Children
+                  </p>
+                  <div className="text-xs text-slate-500 space-y-1">
+                    <p>• For Children Aged 5–12 Years</p>
+                    <p>• Acute phase (within 0-72 hours post-injury)</p>
+                    <p>• 12 pages • Child + Parent symptom reports</p>
+                  </div>
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 
         {/* Important Notes for form users */}
-        {(isSCAT6 || isSCOAT6) && (
+        {(isSCAT6 || isSCOAT6 || isChildSCAT6) && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
             <h3 className="text-base font-bold text-slate-900 mb-3">Important Notes</h3>
             <ul className="space-y-2 text-sm text-slate-600">
@@ -144,7 +172,7 @@ export default function SCATFormsLayout({
         )}
 
         {/* Promotional banners — ONLY shown to non-paid users */}
-        {!loading && !isPaidUser && (isSCAT6 || isSCOAT6) && (
+        {!loading && !isPaidUser && (isSCAT6 || isSCOAT6 || isChildSCAT6) && (
           <>
             {/* FREE SCAT Mastery Banner - Lead Magnet */}
             <div className="bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 text-white rounded-xl p-6 mb-6 shadow-lg">

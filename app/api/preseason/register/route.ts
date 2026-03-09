@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
+import { put, list as listBlobs } from '@vercel/blob'
 import { sendEmail } from '@/lib/email'
 import { CONFIG } from '@/lib/config'
 import { createUser } from '@/lib/users'
@@ -71,6 +72,42 @@ export async function POST(request: Request) {
     // Increment rate limit counter (expires after 24h)
     await kv.set(rateKey, count + 1, { ex: 86400 })
 
+    // Persist to Blob storage for admin dashboard
+    try {
+      let clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }> = []
+      const { blobs } = await listBlobs()
+      const existing = blobs
+        .filter(b => b.pathname === 'preseason-clinics.json')
+        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+
+      if (existing.length > 0) {
+        try {
+          const res = await fetch(`${existing[0].url}?t=${Date.now()}`, { cache: 'no-store' })
+          clinics = await res.json()
+        } catch (err) {
+          console.warn('Could not load existing preseason clinics blob:', err)
+        }
+      }
+
+      // Avoid duplicates by code
+      if (!clinics.some(c => c.code === code)) {
+        clinics.push({
+          clinicName,
+          contactName,
+          email: email.toLowerCase(),
+          code,
+          createdAt: new Date().toISOString(),
+        })
+
+        await put('preseason-clinics.json', JSON.stringify(clinics, null, 2), {
+          access: 'public',
+          contentType: 'application/json',
+        })
+      }
+    } catch (err) {
+      console.error('Failed to persist clinic registration to Blob:', err)
+    }
+
     // Add to user list for nurture emails (won't duplicate if already exists)
     try {
       await createUser({
@@ -108,8 +145,6 @@ export async function POST(request: Request) {
               .steps { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 24px 0; }
               .step { display: flex; align-items: flex-start; margin: 12px 0; }
               .step-num { background: #5b9aa6; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0; font-size: 14px; }
-              .cta-box { background: linear-gradient(135deg, #f0f9ff, #ecfdf5); border: 1px solid #5b9aa6; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center; }
-              .cta-box a { display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #64a8b0, #5b9aa6); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; }
               .footer { padding: 24px; text-align: center; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
             </style>
           </head>
@@ -148,11 +183,11 @@ export async function POST(request: Request) {
 
                 <p style="font-size: 14px; color: #475569; margin: 20px 0 8px;">You've captured one dimension of baseline data. The SCAT6 protocol covers symptom evaluation, cognitive screening, neurological exam, balance testing, and more. Are you confident interpreting all 7 domains?</p>
 
-                <div class="cta-box">
-                  <p style="margin: 0 0 8px; font-weight: 700;">Free: Master the Full SCAT6 Protocol (2 CPD Points)</p>
-                  <p style="margin: 0 0 16px; font-size: 14px; color: #475569;">Learn how to properly administer and interpret every SCAT6 &amp; SCOAT6 section. Includes fillable forms, clinical toolkit, and certificate. <strong>2 AHPRA CPD points — completely free.</strong></p>
-                  <a href="${baseUrl}/scat-mastery">Get Free Course →</a>
-                  <p style="margin: 8px 0 0; font-size: 12px; color: #64748b;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #5b9aa6;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
+                <div style="background: #f0f9ff; border: 2px solid #5b9aa6; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+                  <p style="margin: 0 0 8px; font-weight: 700; font-size: 16px; color: #1e293b;">Free: Master the Full SCAT6 Protocol (2 CPD Points)</p>
+                  <p style="margin: 0 0 20px; font-size: 14px; color: #475569; line-height: 1.5;">Learn how to properly administer and interpret every SCAT6 &amp; SCOAT6 section. Includes fillable forms, clinical toolkit, and certificate. <strong>2 AHPRA CPD points — completely free.</strong></p>
+                  <a href="${baseUrl}/scat-mastery" style="display: inline-block; padding: 14px 32px; background-color: #5b9aa6; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 15px;">Get Free Course &rarr;</a>
+                  <p style="margin: 16px 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">Want deeper training? Our <a href="${CONFIG.SHOP_URL}" style="color: #1e6b73; font-weight: 600; text-decoration: underline;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
                 </div>
               </div>
               <div class="footer">

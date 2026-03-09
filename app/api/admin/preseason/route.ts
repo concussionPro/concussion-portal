@@ -28,8 +28,12 @@ interface ClinicRegistration {
 
 interface BaselineSubmission {
   clinicCode: string
+  clinicName?: string
   submittedAt: string
   athleteName?: string
+  symptomCount?: number
+  symptomSeverity?: number
+  cognitiveScore?: number
 }
 
 /**

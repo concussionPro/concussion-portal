@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Download, Save, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { SCAT6FormData, getDefaultSCAT6FormData } from '../shared/types/scat6.types'
 import { getAllCalculatedScores } from '../shared/utils/scat6-calculations'
-import { exportSCAT6ToFilledPDF } from '../shared/utils/scat6-pdf-fill'
+import { exportSCAT6ToFlatPDF } from '../shared/utils/scat6-pdf-flat'
 import { WORD_LISTS, WordListKey } from '../shared/constants/wordLists'
 import { DIGIT_LISTS, DigitListKey } from '../shared/constants/digitLists'
 
@@ -110,7 +110,7 @@ export default function SCAT6Page() {
   const handleExportPDF = async () => {
     try {
       const filename = `SCAT6_${formData.athleteName || 'Assessment'}_${formData.dateOfExamination || 'Draft'}.pdf`
-      await exportSCAT6ToFilledPDF(formData, filename)
+      await exportSCAT6ToFlatPDF(formData, filename)
     } catch (error) {
       console.error('PDF export failed:', error)
       alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

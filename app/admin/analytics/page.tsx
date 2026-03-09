@@ -40,6 +40,10 @@ import {
   Building2,
   Mail,
   Download,
+  Newspaper,
+  DollarSign,
+  ExternalLink,
+  Search,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -102,7 +106,8 @@ interface Insight {
 }
 
 type Period = '24h' | '7d' | '30d' | '90d'
-type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users'
+type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'google-ads'
+
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PERIODS: { label: string; value: Period }[] = [
@@ -155,6 +160,123 @@ function normaliseMetrics(data: any): MetricRow[] {
   if (Array.isArray(data)) return data as MetricRow[]
   if (Array.isArray(data?.data)) return data.data as MetricRow[]
   return []
+}
+
+function generateDailyReport(
+  stats: AnalyticsStats | null,
+  retargetingData: RetargetingData | null,
+  funnelData: FunnelData | null,
+  preseasonData: { totalClinics: number; totalBaselines: number } | null,
+  channelsData: ChannelsData | null,
+  usersData: Array<{ accessLevel: string; createdAt: string }>,
+  period: string,
+): string {
+  const parts: string[] = []
+  const periodLabel = period === '24h' ? 'today' : period === '7d' ? 'this week' : period === '30d' ? 'this month' : 'this quarter'
+
+  // Traffic summary
+  if (stats) {
+    const visitors = stats.uniques.value
+    const views = stats.pageviews.value
+    const prevVisitors = stats.uniques.prev
+    const bounce = Math.round((stats.bounces.value / Math.max(visitors, 1)) * 100)
+    const avgSec = Math.round(stats.totaltime.value / Math.max(visitors, 1))
+    const avgMin = Math.floor(avgSec / 60)
+    const avgS = avgSec % 60
+    const avgLabel = avgMin > 0 ? `${avgMin}m ${avgS}s` : `${avgS}s`
+    const trend = prevVisitors > 0
+      ? visitors > prevVisitors ? `up ${Math.round(((visitors - prevVisitors) / prevVisitors) * 100)}% from the previous period` : visitors < prevVisitors ? `down ${Math.round(((prevVisitors - visitors) / prevVisitors) * 100)}% from the previous period` : 'flat vs the previous period'
+      : visitors > 0 ? '(first period with data)' : ''
+    if (visitors > 0) {
+      parts.push(`${visitors} unique visitors ${periodLabel} across ${views} page views ${trend}. Bounce rate sits at ${bounce}% with an average session of ${avgLabel}.`)
+    } else {
+      parts.push(`No visitor traffic recorded ${periodLabel}.`)
+    }
+  }
+
+  // Retargeting / leads
+  if (retargetingData) {
+    const hotCount = retargetingData.hotLeads.length
+    const preLeadCount = retargetingData.preseasonLeads.length
+    const pricingViewers = retargetingData.summary.pricingViewers
+    const converters = retargetingData.summary.converters
+    const returnRate = Math.round(retargetingData.summary.returningRate * 100)
+
+    if (returnRate > 0) {
+      parts.push(`${returnRate}% of visitors are returning, which shows early engagement.`)
+    }
+
+    if (pricingViewers > 0 && converters === 0) {
+      parts.push(`${pricingViewers} visitor${pricingViewers !== 1 ? 's' : ''} viewed the pricing page but none converted yet — these are your warmest leads.`)
+    } else if (pricingViewers > 0 && converters > 0) {
+      parts.push(`${pricingViewers} pricing page viewers with ${converters} conversion${converters !== 1 ? 's' : ''} (${Math.round(retargetingData.summary.pricingToConversion * 100)}% rate).`)
+    }
+
+    if (preLeadCount > 0) {
+      const registeredCount = retargetingData.preseasonLeads.filter(l => l.hasRegistered).length
+      const submittedCount = retargetingData.preseasonLeads.filter(l => l.hasSubmitted).length
+      parts.push(`${preLeadCount} visitor${preLeadCount !== 1 ? 's' : ''} interacted with the preseason baseline tool (${registeredCount} registered, ${submittedCount} submitted) but none have engaged with the course or pricing yet.`)
+    }
+  }
+
+  // Preseason vs retargeting discrepancy
+  const clinicsRegistered = preseasonData?.totalClinics ?? 0
+  const baselinesSubmitted = preseasonData?.totalBaselines ?? 0
+  const preseasonLeadCount = retargetingData?.preseasonLeads?.length ?? 0
+
+  // Check for data discrepancy between event tracking and stored records
+  const eventRegistrations = retargetingData?.preseasonLeads?.filter(l => l.hasRegistered).length ?? 0
+  const eventSubmissions = retargetingData?.preseasonLeads?.filter(l => l.hasSubmitted).length ?? 0
+  if ((eventRegistrations > 0 || eventSubmissions > 0) && clinicsRegistered === 0 && baselinesSubmitted === 0) {
+    parts.push(`Data discrepancy: analytics tracked ${eventRegistrations} registration${eventRegistrations !== 1 ? 's' : ''} and ${eventSubmissions} baseline submission${eventSubmissions !== 1 ? 's' : ''}, but the preseason database shows 0 clinics and 0 baselines. This likely means the registration events fired but the data didn't persist to storage — check the preseason API endpoints and database connection.`)
+  } else if (preseasonLeadCount > 0 && clinicsRegistered === 0 && eventRegistrations === 0) {
+    parts.push(`${preseasonLeadCount} IP${preseasonLeadCount !== 1 ? 's are' : ' is'} browsing preseason pages but none have started registration — the baseline tool is getting eyeballs but the registration flow isn't converting.`)
+  } else if (clinicsRegistered > 0) {
+    parts.push(`${clinicsRegistered} clinic${clinicsRegistered !== 1 ? 's' : ''} registered with ${baselinesSubmitted} baseline${baselinesSubmitted !== 1 ? 's' : ''} submitted.`)
+  }
+
+  // Channels
+  if (channelsData?.channels?.length) {
+    const sorted = [...channelsData.channels].sort((a, b) => b.sessions - a.sessions)
+    const topChannel = sorted[0]
+    if (topChannel && topChannel.sessions > 0) {
+      const summary = sorted.filter(c => c.sessions > 0).map(c => `${c.channel} (${c.sessions})`).join(', ')
+      parts.push(`Traffic by channel: ${summary}.`)
+    }
+  }
+
+  // Users
+  const newToday = usersData.filter(u => new Date(u.createdAt).toDateString() === new Date().toDateString()).length
+  const paidUsers = usersData.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length
+  const totalUsers = usersData.length
+  if (totalUsers > 0) {
+    const userParts = [`${totalUsers} total user${totalUsers !== 1 ? 's' : ''}`]
+    if (paidUsers > 0) userParts.push(`${paidUsers} paid`)
+    if (newToday > 0) userParts.push(`${newToday} new today`)
+    parts.push(userParts.join(', ') + '.')
+  }
+
+  // Focus recommendation
+  const focusParts: string[] = []
+  if ((retargetingData?.summary.pricingViewers ?? 0) > 0 && (retargetingData?.summary.converters ?? 0) === 0) {
+    focusParts.push('pricing page visitors aren\'t converting — review the offer, add testimonials, or reduce friction')
+  }
+  if ((eventRegistrations > 0 || eventSubmissions > 0) && clinicsRegistered === 0) {
+    focusParts.push('fix the preseason data pipeline — registration events are firing but records aren\'t being stored')
+  } else if (preseasonLeadCount > 0 && clinicsRegistered === 0 && eventRegistrations === 0) {
+    focusParts.push('add stronger CTAs on preseason pages to push visitors into registration')
+  }
+  if (stats && stats.bounces.value / Math.max(stats.uniques.value, 1) > 0.6) {
+    focusParts.push(`${Math.round((stats.bounces.value / Math.max(stats.uniques.value, 1)) * 100)}% bounce rate — improve landing page hooks and above-fold CTAs`)
+  }
+  if (stats && stats.uniques.value === 0) {
+    focusParts.push('no traffic yet — prioritise outreach, social posts, or ad spend')
+  }
+  if (focusParts.length > 0) {
+    parts.push(`Focus: ${focusParts.join('. ')}.`)
+  }
+
+  return parts.join(' ') || `No data available for ${periodLabel}. Check back once traffic starts flowing.`
 }
 
 const EVENT_LABELS: Record<string, string> = {
@@ -333,11 +455,12 @@ export default function AnalyticsDashboard() {
   const [poolData, setPoolData] = useState<{ totalCount: number; cities: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; city: string; registeredAt: string; completedAt: string }> }> } | null>(null)
 
   // Preseason data
-  const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; totalClinics: number; totalBaselines: number } | null>(null)
+  const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; baselines: Array<{ clinicCode: string; clinicName?: string; athleteName?: string; submittedAt: string; symptomCount?: number; symptomSeverity?: number; cognitiveScore?: number }>; totalClinics: number; totalBaselines: number } | null>(null)
 
   // Users/emails data
   const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; completedModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
+
 
   const getAdminKey = useCallback((): string => {
     if (typeof window === 'undefined') return ''
@@ -442,6 +565,8 @@ export default function AnalyticsDashboard() {
     { id: 'pool', label: 'Ready to Train', icon: MapPin },
     { id: 'preseason', label: 'Preseason', icon: Building2 },
     { id: 'users', label: 'Users', icon: Mail },
+    { id: 'report', label: 'Daily Report', icon: Newspaper },
+    { id: 'google-ads', label: 'Google Ads', icon: DollarSign },
   ]
 
   return (
@@ -1158,6 +1283,40 @@ export default function AnalyticsDashboard() {
                     </table>
                   </div>
                 )}
+
+                <div className="border-t border-[rgba(13,115,119,0.08)] pt-6">
+                  <SectionTitle title="Baseline Submissions" subtitle="Athlete baselines submitted through the preseason tool" />
+                  {!preseasonData?.baselines?.length ? (
+                    <EmptyState icon={FileText} message="No baseline submissions yet. Data will appear once athletes complete baselines." />
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                            <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Athlete</th>
+                            <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Clinic</th>
+                            <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Symptoms</th>
+                            <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Severity</th>
+                            <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Cognitive</th>
+                            <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Submitted</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[...preseasonData.baselines].reverse().map((b, i) => (
+                            <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                              <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{b.athleteName || '—'}</td>
+                              <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{b.clinicName || b.clinicCode}</td>
+                              <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{b.symptomCount != null ? `${b.symptomCount}/22` : '—'}</td>
+                              <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{b.symptomSeverity != null ? `${b.symptomSeverity}/132` : '—'}</td>
+                              <td className="py-2.5 px-2 text-right tabular-nums font-semibold text-[var(--foreground)]">{b.cognitiveScore != null ? `${b.cognitiveScore}/50` : '—'}</td>
+                              <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">{new Date(b.submittedAt).toLocaleDateString('en-AU')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1296,6 +1455,209 @@ export default function AnalyticsDashboard() {
                 </div>
               </div>
             )}
+
+            {/* ── Daily Report ──────────────────────────────────────────── */}
+            {activeTab === 'report' && (
+              <div className="space-y-4">
+                <SectionTitle title="Daily Report" subtitle={`Summary for ${period === '24h' ? 'today' : period === '7d' ? 'the last 7 days' : period === '30d' ? 'the last 30 days' : 'the last 90 days'} · ${new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`} />
+                <div className="rounded-xl border-2 border-[rgba(13,115,119,0.12)] bg-[rgba(13,115,119,0.02)] p-6">
+                  <p className="text-sm text-[var(--foreground)] leading-relaxed">
+                    {generateDailyReport(stats, retargetingData, funnelData, preseasonData, channelsData, usersData, period)}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ── Google Ads ───────────────────────────────────────────── */}
+            {activeTab === 'google-ads' && (() => {
+              // Generate recommendations from existing analytics data
+              const recs: Array<{ priority: 'high' | 'medium' | 'low'; category: string; title: string; instruction: string; where: string }> = []
+
+              // Analyse top pages for landing page recommendations
+              const preseasonPages = topPages.filter(p => p.x.includes('preseason'))
+              const pricingPages = topPages.filter(p => p.x.includes('pricing') || p.x.includes('shop') || p.x.includes('enrol'))
+              const scatPages = topPages.filter(p => p.x.includes('scat'))
+              const coursePages = topPages.filter(p => p.x.includes('course') || p.x.includes('module') || p.x.includes('scat-mastery'))
+              const totalViews = stats?.pageviews.value ?? 0
+              const bounce = stats ? stats.bounces.value / Math.max(stats.uniques.value, 1) : 0
+              const pricingViewers = retargetingData?.summary.pricingViewers ?? 0
+              const converters = retargetingData?.summary.converters ?? 0
+              const preseasonLeadCount = retargetingData?.preseasonLeads?.length ?? 0
+
+              // Campaign structure recommendations
+              recs.push({
+                priority: 'high',
+                category: 'Campaign Structure',
+                title: 'Create two separate campaigns',
+                instruction: 'Create Campaign 1: "Course Sales" targeting healthcare professionals searching for concussion CPD. Create Campaign 2: "Preseason Baseline" targeting sports clubs and clinics looking for baseline testing. Separate budgets let you control spend on each goal independently.',
+                where: 'Google Ads > Campaigns > + New Campaign > Search',
+              })
+
+              // Keyword recommendations based on what\'s working on site
+              const courseKeywords = [
+                'concussion CPD course', 'concussion education australia', 'SCAT6 training',
+                'concussion management course', 'AHPRA CPD concussion', 'sports concussion CPD',
+                'concussion assessment training', 'SCAT6 course online',
+              ]
+              const preseasonKeywords = [
+                'preseason baseline testing', 'concussion baseline test', 'SCAT6 baseline',
+                'sports team concussion screening', 'athlete concussion baseline',
+                'pre-season concussion assessment',
+              ]
+
+              recs.push({
+                priority: 'high',
+                category: 'Keywords — Course Campaign',
+                title: 'Add these keywords to your Course Sales campaign',
+                instruction: courseKeywords.map(k => `[${k}]`).join('\n') + '\n\nUse Exact Match [brackets] to start. Add Phrase Match "quotes" versions once you see which keywords convert. Set starting bids at $2-4 AUD — concussion CPD is niche so competition is low.',
+                where: 'Google Ads > Course Sales campaign > Ad Groups > Keywords > +',
+              })
+
+              recs.push({
+                priority: 'high',
+                category: 'Keywords — Preseason Campaign',
+                title: 'Add these keywords to your Preseason campaign',
+                instruction: preseasonKeywords.map(k => `"${k}"`).join('\n') + '\n\nUse Phrase Match "quotes" for preseason — athletes and club admins search more varied terms. Bids at $1-2 AUD since this is a free tool (lead gen, not direct sale).',
+                where: 'Google Ads > Preseason campaign > Ad Groups > Keywords > +',
+              })
+
+              // Negative keywords
+              recs.push({
+                priority: 'medium',
+                category: 'Negative Keywords',
+                title: 'Add negative keywords to avoid wasted spend',
+                instruction: 'Add these as negative keywords across both campaigns:\nfree concussion test online\nconcussion symptoms\ndo I have a concussion\nconcussion treatment\nconcussion recovery time\nconcussion protocol NFL\nchild hit head\n\nThese are informational searches — people looking for answers, not courses or baseline tools.',
+                where: 'Google Ads > All Campaigns > Keywords > Negative Keywords > +',
+              })
+
+              // Ad copy based on site data
+              recs.push({
+                priority: 'high',
+                category: 'Ad Copy — Course',
+                title: 'Set up responsive search ads for the course',
+                instruction: `Headlines (max 30 chars each):\n• Concussion CPD Course\n• SCAT6 & SCOAT6 Training\n• AHPRA CPD Points\n• Online Self-Paced Course\n• Master Concussion Mgmt\n• Evidence-Based Training\n• Start Free — 2 CPD Points\n\nDescriptions (max 90 chars each):\n• Learn SCAT6 administration and interpretation. AHPRA-accredited. Start free today.\n• Concussion education for physios, GPs, and sports medicine professionals. Online, self-paced.\n• Free 2 CPD point module. Full course covers VOMS, BESS, return-to-play protocols.\n\nFinal URL: portal.concussion-education-australia.com/scat-mastery`,
+                where: 'Google Ads > Course Sales > Ad Group > Ads > + Responsive Search Ad',
+              })
+
+              recs.push({
+                priority: 'high',
+                category: 'Ad Copy — Preseason',
+                title: 'Set up responsive search ads for preseason baseline',
+                instruction: 'Headlines:\n• Free Baseline Testing Tool\n• SCAT6 Preseason Baseline\n• Athlete Baseline Screening\n• Self-Administered SCAT6\n• For Clinics & Sports Clubs\n• PDF Report Emailed to You\n\nDescriptions:\n• Register your clinic free. Athletes self-complete SCAT6 baseline remotely. PDF emailed to you.\n• Pre-season concussion baseline tool. No login needed. Share one link with your entire team.\n\nFinal URL: portal.concussion-education-australia.com/preseason',
+                where: 'Google Ads > Preseason > Ad Group > Ads > + Responsive Search Ad',
+              })
+
+              // Landing page / extensions recommendations from analytics
+              if (bounce > 0.5) {
+                recs.push({
+                  priority: 'high',
+                  category: 'Landing Pages',
+                  title: `Bounce rate is ${Math.round(bounce * 100)}% — improve landing page relevance`,
+                  instruction: `Your site bounce rate is ${Math.round(bounce * 100)}%. For Google Ads, send course traffic to /scat-mastery (not the homepage) and preseason traffic to /preseason. In each campaign, set the Final URL to the specific landing page. A high bounce rate raises your CPC because Google sees poor ad-to-page relevance.`,
+                  where: 'Google Ads > Each Ad > Edit > Final URL field',
+                })
+              }
+
+              if (pricingViewers > 0 && converters === 0) {
+                recs.push({
+                  priority: 'high',
+                  category: 'Conversion Tracking',
+                  title: `${pricingViewers} pricing viewers but 0 conversions — set up conversion tracking`,
+                  instruction: 'You have pricing page visitors who aren\'t converting. Before spending on ads, set up Google Ads conversion tracking so you know which keywords and ads drive sales.\n\n1. In Google Ads: Tools > Conversions > + New > Website\n2. Name: "Course Purchase", Category: Purchase, Value: use your course price\n3. Copy the conversion tag\n4. Add it to your thank-you/success page after purchase\n\nWithout this, Google can\'t optimise your campaigns.',
+                  where: 'Google Ads > Tools & Settings > Measurement > Conversions',
+                })
+              }
+
+              // Budget recommendation
+              recs.push({
+                priority: 'medium',
+                category: 'Budget',
+                title: 'Recommended starting budget',
+                instruction: 'Start with $10-20/day for the Course campaign and $5-10/day for Preseason. Run for 2 weeks to gather data before optimising. After 2 weeks, pause keywords with 0 conversions and high spend, and increase budget on keywords that convert.',
+                where: 'Google Ads > Each Campaign > Settings > Budget',
+              })
+
+              // Location targeting
+              recs.push({
+                priority: 'medium',
+                category: 'Location Targeting',
+                title: 'Target Australia only',
+                instruction: 'Set location targeting to Australia. Your course is AHPRA-accredited (Australian Health Practitioner Regulation Agency) so targeting outside AU wastes spend. You can further narrow to specific states if you find certain regions convert better.',
+                where: 'Google Ads > Each Campaign > Settings > Locations',
+              })
+
+              // Ad extensions
+              recs.push({
+                priority: 'medium',
+                category: 'Ad Extensions',
+                title: 'Add sitelink and callout extensions',
+                instruction: 'Sitelinks (add 4):\n• "Free SCAT6 Module" → /scat-mastery\n• "Baseline Testing Tool" → /preseason\n• "Course Pricing" → /pricing\n• "About the Course" → /\n\nCallout extensions:\n• AHPRA Accredited\n• Self-Paced Online\n• Start Free\n• Evidence-Based\n• Certificate Included\n\nThese increase your ad size and CTR at no extra cost.',
+                where: 'Google Ads > Ads & Extensions > Extensions > +',
+              })
+
+              // Audience suggestion based on preseason leads
+              if (preseasonLeadCount > 0) {
+                recs.push({
+                  priority: 'low',
+                  category: 'Audiences',
+                  title: `${preseasonLeadCount} preseason leads — create a remarketing audience`,
+                  instruction: 'People who used your baseline tool are warm leads for the paid course. Create a remarketing audience of /preseason page visitors and layer it onto your Course campaign as "Observation" (not Targeting) with a +20% bid adjustment. This increases your bid for people who already know your brand.',
+                  where: 'Google Ads > Tools > Audience Manager > + Custom Audience',
+                })
+              }
+
+              const priorityOrder = { high: 0, medium: 1, low: 2 }
+              const priorityColor = { high: 'bg-rose-100 text-rose-700', medium: 'bg-amber-100 text-amber-700', low: 'bg-blue-100 text-blue-700' }
+              const priorityIcon = { high: Flame, medium: AlertTriangle, low: Lightbulb }
+
+              return (
+                <div className="space-y-6">
+                  <SectionTitle title="Google Ads Playbook" subtitle={`${recs.length} actionable steps based on your site data · Open Google Ads and follow each step`} />
+
+                  <a
+                    href="https://ads.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
+                  >
+                    <ExternalLink size={14} />
+                    Open Google Ads
+                  </a>
+
+                  <div className="space-y-3">
+                    {recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).map((rec, i) => {
+                      const PIcon = priorityIcon[rec.priority]
+                      return (
+                        <details key={i} className="card group" open={i < 3}>
+                          <summary className="flex items-start gap-3 cursor-pointer list-none p-4 hover:bg-[rgba(13,115,119,0.02)] rounded-xl transition-colors">
+                            <div className="mt-0.5 shrink-0">
+                              <PIcon size={14} className={rec.priority === 'high' ? 'text-rose-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-blue-500'} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorityColor[rec.priority]}`}>
+                                  {rec.priority}
+                                </span>
+                                <span className="text-xs font-semibold text-[var(--muted-foreground)]">{rec.category}</span>
+                              </div>
+                              <p className="text-sm font-semibold text-[var(--foreground)] mt-1">{rec.title}</p>
+                            </div>
+                            <ChevronDown size={14} className="text-[var(--muted-foreground)] mt-1 shrink-0 transition-transform group-open:rotate-180" />
+                          </summary>
+                          <div className="px-4 pb-4 pt-0 ml-7">
+                            <pre className="text-xs text-[var(--foreground)] whitespace-pre-wrap font-sans leading-relaxed bg-[rgba(13,115,119,0.03)] rounded-lg p-4 mb-3">{rec.instruction}</pre>
+                            <div className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
+                              <ArrowRight size={11} />
+                              <span className="font-medium">{rec.where}</span>
+                            </div>
+                          </div>
+                        </details>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
 
         <div className="text-center py-2">
           <p className="text-xs text-[var(--muted-foreground)] opacity-40">

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Download, Save, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { SCOAT6FormData, getDefaultSCOAT6FormData } from '../shared/types/scoat6.types'
 import { getAllCalculatedScores } from '../shared/utils/scoat6-calculations'
-import { exportSCOAT6ToFilledPDF } from '../shared/utils/scoat6-pdf-fill'
+import { exportSCOAT6ToFlatPDF } from '../shared/utils/scoat6-pdf-flat'
 import { WORD_LISTS, WordListKey } from '../shared/constants/wordLists'
 import { DIGIT_LISTS, DigitListKey } from '../shared/constants/digitLists'
 
@@ -110,7 +110,7 @@ export default function SCOAT6Page() {
   const handleExportPDF = async () => {
     try {
       const filename = `SCOAT6_${formData.athleteName || 'Assessment'}_${formData.dateOfExamination || 'Draft'}.pdf`
-      await exportSCOAT6ToFilledPDF(formData, filename)
+      await exportSCOAT6ToFlatPDF(formData, filename)
     } catch (error) {
       console.error('PDF export failed:', error)
       alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

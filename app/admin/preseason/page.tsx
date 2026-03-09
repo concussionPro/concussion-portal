@@ -13,8 +13,12 @@ interface Clinic {
 
 interface Baseline {
   clinicCode: string
+  clinicName?: string
   submittedAt: string
   athleteName?: string
+  symptomCount?: number
+  symptomSeverity?: number
+  cognitiveScore?: number
 }
 
 export default function AdminPreseasonPage() {
@@ -191,6 +195,67 @@ export default function AdminPreseasonPage() {
             <p className="text-slate-600 font-medium">No clinic registrations yet</p>
             <p className="text-slate-400 text-sm mt-1">
               Clinics will appear here once the preseason registration flow is active
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Baselines Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mt-8">
+        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+          <h2 className="text-lg font-bold text-slate-900">
+            Baseline Submissions ({baselines.length})
+          </h2>
+        </div>
+
+        {baselines.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Athlete</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Clinic</th>
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Symptoms</th>
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Severity</th>
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Cognitive</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Submitted</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {[...baselines].reverse().map((b, i) => (
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{b.athleteName || '—'}</td>
+                    <td className="px-6 py-4 text-sm text-slate-700">
+                      {b.clinicName || b.clinicCode}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right tabular-nums text-slate-700">
+                      {b.symptomCount != null ? `${b.symptomCount}/22` : '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right tabular-nums text-slate-700">
+                      {b.symptomSeverity != null ? `${b.symptomSeverity}/132` : '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right tabular-nums font-semibold text-slate-900">
+                      {b.cognitiveScore != null ? `${b.cognitiveScore}/50` : '—'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-600">
+                          {new Date(b.submittedAt).toLocaleDateString('en-AU')}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <ClipboardList className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-600 font-medium">No baseline submissions yet</p>
+            <p className="text-slate-400 text-sm mt-1">
+              Submissions will appear here once athletes complete baselines
             </p>
           </div>
         )}

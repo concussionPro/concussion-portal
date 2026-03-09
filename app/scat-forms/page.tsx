@@ -67,6 +67,27 @@ export default function SCATFormsPage() {
             </div>
             <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors flex-shrink-0" />
           </Link>
+          {/* Child SCAT6 */}
+          <Link
+            href="/scat-forms/child-scat6"
+            className="glass glass-hover rounded-2xl p-6 flex items-center gap-5 group"
+          >
+            <div className="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+              <FileText className="w-7 h-7 text-green-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight">Child SCAT6</h2>
+              <p className="text-sm text-muted-foreground mb-2">
+                Sport Concussion Assessment Tool — for children aged 5–12 years
+              </p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> 15–20 min</span>
+                <span>Child + Parent reports</span>
+                <span>PDF export</span>
+              </div>
+            </div>
+            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors flex-shrink-0" />
+          </Link>
         </div>
 
         {/* Help choosing */}
