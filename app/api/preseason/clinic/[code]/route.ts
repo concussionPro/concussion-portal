@@ -19,6 +19,11 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid clinic code' }, { status: 400 })
     }
 
+    // Demo mode — lets clinicians try the test without registering
+    if (code.toUpperCase() === 'DEMO00') {
+      return NextResponse.json({ clinicName: 'Demo — Try It Yourself' })
+    }
+
     const clinic = await kv.get<ClinicData>(`clinic:${code.toUpperCase()}`)
 
     if (!clinic) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { sendEmail } from '@/lib/email'
 import { CONFIG } from '@/lib/config'
+import { createUser } from '@/lib/users'
 
 function escapeHtml(str: string): string {
   return str
@@ -69,6 +70,17 @@ export async function POST(request: Request) {
 
     // Increment rate limit counter (expires after 24h)
     await kv.set(rateKey, count + 1, { ex: 86400 })
+
+    // Add to user list for nurture emails (won't duplicate if already exists)
+    try {
+      await createUser({
+        email: email.toLowerCase(),
+        name: contactName,
+        accessLevel: 'preview',
+      })
+    } catch (err) {
+      console.error('Failed to add preseason registrant to user list:', err)
+    }
 
     // Build athlete link
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL

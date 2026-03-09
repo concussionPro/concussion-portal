@@ -340,23 +340,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Validate clinic
-    const clinic = await kv.get<ClinicData>(`clinic:${body.clinicCode.toUpperCase()}`)
-    if (!clinic) {
-      return NextResponse.json({ error: 'Invalid clinic code' }, { status: 404 })
+    // Demo mode — clinicians trying the test themselves
+    const isDemo = body.clinicCode.toUpperCase() === 'DEMO00'
+
+    let clinic: ClinicData | null = null
+    if (isDemo) {
+      clinic = { clinicName: 'Demo — Try It Yourself', contactName: 'Demo', email: '', createdAt: new Date().toISOString() }
+    } else {
+      // Validate clinic
+      clinic = await kv.get<ClinicData>(`clinic:${body.clinicCode.toUpperCase()}`)
+      if (!clinic) {
+        return NextResponse.json({ error: 'Invalid clinic code' }, { status: 404 })
+      }
     }
 
-    // Rate limit: 50 submissions per clinic per day
-    const today = new Date().toISOString().slice(0, 10)
-    const submitRateKey = `rate:submit:${body.clinicCode.toUpperCase()}:${today}`
-    const submitCount = await kv.get<number>(submitRateKey) || 0
-    if (submitCount >= 50) {
-      return NextResponse.json(
-        { error: 'Daily submission limit reached. Please try again tomorrow.' },
-        { status: 429 }
-      )
+    // Rate limit: 50 submissions per clinic per day (skip for demo)
+    if (!isDemo) {
+      const today = new Date().toISOString().slice(0, 10)
+      const submitRateKey = `rate:submit:${body.clinicCode.toUpperCase()}:${today}`
+      const submitCount = await kv.get<number>(submitRateKey) || 0
+      if (submitCount >= 50) {
+        return NextResponse.json(
+          { error: 'Daily submission limit reached. Please try again tomorrow.' },
+          { status: 429 }
+        )
+      }
+      await kv.set(submitRateKey, submitCount + 1, { ex: 86400 })
     }
-    await kv.set(submitRateKey, submitCount + 1, { ex: 86400 })
 
     // Generate PDF
     const pdfBuffer = generatePdf(body, clinic.clinicName)
@@ -447,6 +457,11 @@ export async function POST(request: Request) {
         </body>
       </html>
     `
+
+    // Demo mode — skip email, just return success with score
+    if (isDemo) {
+      return NextResponse.json({ success: true })
+    }
 
     if (process.env.NODE_ENV === 'development') {
       console.log('Would send baseline report email to:', clinic.email)

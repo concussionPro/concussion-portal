@@ -374,7 +374,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </div>
 
           {/* Complete Course - Compact */}
-          <div className="card rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+          <div className="card rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)', overflow: 'visible' }}>
             {isEarlyBird && (
               <div className="absolute -top-3.5 right-4">
                 <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-3.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shadow-md shadow-orange-200/50">
@@ -562,7 +562,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
 
         {/* Complete Course */}
-        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)', overflow: 'visible' }}>
           {/* Early Bird badge — top right, outside card flow */}
           {isEarlyBird && (
             <div className="absolute -top-4 right-6">

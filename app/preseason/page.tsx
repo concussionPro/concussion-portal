@@ -49,9 +49,12 @@ export default function PreseasonLandingPage() {
               </button>
             </div>
 
-            <p className="text-sm text-muted-foreground">
-              Takes 30 seconds. Get your unique link instantly.
-            </p>
+            <button
+              onClick={() => router.push('/preseason/b/DEMO00')}
+              className="text-sm text-accent font-semibold hover:underline underline-offset-4 transition-colors"
+            >
+              Try the test yourself first →
+            </button>
           </div>
         </div>
       </section>
