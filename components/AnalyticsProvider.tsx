@@ -138,6 +138,40 @@ function trackGtagConversion(
 // AnalyticsTracker — tracks pageviews on route change
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Google Ads remarketing — fire audience signals on high-intent pages
+// ---------------------------------------------------------------------------
+
+const REMARKETING_PAGES: Record<string, string> = {
+  '/pricing': 'pricing_page_viewer',
+  '/preview': 'course_explorer',
+  '/scat-mastery': 'free_course_viewer',
+  '/course': 'course_page_viewer',
+  '/preseason': 'preseason_visitor',
+  '/preseason/register': 'preseason_registrant',
+  '/checkout/success': 'purchaser',
+};
+
+function fireRemarketingEvent(pathname: string): void {
+  if (typeof window === 'undefined' || !window.gtag) return;
+  // Exact match
+  const event = REMARKETING_PAGES[pathname];
+  if (event) {
+    window.gtag('event', event, {
+      send_to: 'AW-17984048021',
+      page_path: pathname,
+    });
+    return;
+  }
+  // Prefix match for preseason baseline pages
+  if (pathname.startsWith('/preseason/b/')) {
+    window.gtag('event', 'baseline_test_user', {
+      send_to: 'AW-17984048021',
+      page_path: pathname,
+    });
+  }
+}
+
 function AnalyticsTracker(): null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -155,6 +189,9 @@ function AnalyticsTracker(): null {
     previousPathRef.current = currentPath;
 
     sendEvent('pageview', {}, pathname, search);
+
+    // Fire Google Ads remarketing audience event for high-intent pages
+    fireRemarketingEvent(pathname);
   }, [pathname, searchParams]);
 
   return null;

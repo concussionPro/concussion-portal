@@ -32,6 +32,10 @@ import {
   Tablet,
   Hash,
   MousePointer,
+  Lightbulb,
+  AlertTriangle,
+  Flame,
+  TrendingDown,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -84,8 +88,17 @@ interface EventGroup {
   latest: { timestamp: number; data: Record<string, unknown>; path: string }[]
 }
 
+interface Insight {
+  type: 'critical' | 'warning' | 'opportunity' | 'positive'
+  category: string
+  title: string
+  detail: string
+  metric: string
+  action: string
+}
+
 type Period = '24h' | '7d' | '30d' | '90d'
-type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting'
+type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PERIODS: { label: string; value: Period }[] = [
@@ -293,7 +306,7 @@ function DeviceIcon({ device }: { device: string }) {
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState<Period>('7d')
-  const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [activeTab, setActiveTab] = useState<TabType>('insights')
   const [loading, setLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
@@ -310,6 +323,7 @@ export default function AnalyticsDashboard() {
   const [retargetingData, setRetargetingData] = useState<RetargetingData | null>(null)
   const [funnelData, setFunnelData] = useState<FunnelData | null>(null)
   const [eventsData, setEventsData] = useState<EventGroup[]>([])
+  const [insightsData, setInsightsData] = useState<Insight[]>([])
 
   const getAdminKey = useCallback((): string => {
     if (typeof window === 'undefined') return ''
@@ -348,6 +362,7 @@ export default function AnalyticsDashboard() {
         fetchData('retargeting'),    // 7
         fetchData('funnel'),         // 8
         fetchData('events'),         // 9
+        fetchData('insights'),       // 10
       ])
 
       const get = (i: number) => results[i].status === 'fulfilled' ? (results[i] as PromiseFulfilledResult<any>).value : null
@@ -362,6 +377,7 @@ export default function AnalyticsDashboard() {
       if (get(7)) setRetargetingData(get(7) as RetargetingData)
       if (get(8)) setFunnelData(get(8) as FunnelData)
       if (get(9) && Array.isArray(get(9))) setEventsData(get(9) as EventGroup[])
+      if (get(10) && Array.isArray(get(10))) setInsightsData(get(10) as Insight[])
 
       setLastRefresh(new Date())
     } catch (err) {
@@ -378,6 +394,7 @@ export default function AnalyticsDashboard() {
   const maxPages = topPages[0]?.y ?? 1
 
   const TABS: { id: TabType; label: string; icon: React.ElementType }[] = [
+    { id: 'insights', label: 'Insights', icon: Lightbulb },
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'channels', label: 'Channels', icon: Globe },
     { id: 'flow', label: 'Flow', icon: ArrowRight },
@@ -514,6 +531,62 @@ export default function AnalyticsDashboard() {
           </div>
 
           <div className="p-5">
+            {/* ── INSIGHTS ─────────────────────────────────────────── */}
+            {activeTab === 'insights' && (
+              <div className="space-y-4">
+                <SectionTitle title="Marketing Insights" subtitle="Auto-generated recommendations based on your data. Read top to bottom — most urgent first." />
+                {insightsData.length === 0 ? (
+                  <EmptyState icon={Lightbulb} message="Not enough data yet — insights appear after a few days of traffic" />
+                ) : (
+                  <div className="space-y-3">
+                    {insightsData.map((insight, i) => {
+                      const borderColor = insight.type === 'critical' ? 'border-rose-300 bg-rose-50/50'
+                        : insight.type === 'warning' ? 'border-amber-300 bg-amber-50/50'
+                        : insight.type === 'opportunity' ? 'border-blue-300 bg-blue-50/50'
+                        : 'border-emerald-300 bg-emerald-50/50'
+                      const IconComp = insight.type === 'critical' ? Flame
+                        : insight.type === 'warning' ? AlertTriangle
+                        : insight.type === 'opportunity' ? Target
+                        : CheckCircle2
+                      const iconColor = insight.type === 'critical' ? 'text-rose-600'
+                        : insight.type === 'warning' ? 'text-amber-600'
+                        : insight.type === 'opportunity' ? 'text-blue-600'
+                        : 'text-emerald-600'
+                      const typeLabel = insight.type === 'critical' ? 'CRITICAL'
+                        : insight.type === 'warning' ? 'WARNING'
+                        : insight.type === 'opportunity' ? 'OPPORTUNITY'
+                        : 'POSITIVE'
+                      const typeBg = insight.type === 'critical' ? 'bg-rose-100 text-rose-700'
+                        : insight.type === 'warning' ? 'bg-amber-100 text-amber-700'
+                        : insight.type === 'opportunity' ? 'bg-blue-100 text-blue-700'
+                        : 'bg-emerald-100 text-emerald-700'
+
+                      return (
+                        <div key={i} className={`rounded-xl border-2 p-5 ${borderColor}`}>
+                          <div className="flex items-start gap-3">
+                            <IconComp size={20} className={`${iconColor} shrink-0 mt-0.5`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${typeBg}`}>{typeLabel}</span>
+                                <span className="text-xs text-[var(--muted-foreground)] font-medium uppercase">{insight.category}</span>
+                                <span className="text-xs font-bold text-[var(--accent)] tabular-nums ml-auto">{insight.metric}</span>
+                              </div>
+                              <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">{insight.title}</h3>
+                              <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-3">{insight.detail}</p>
+                              <div className="rounded-lg bg-white/80 border border-[rgba(13,115,119,0.1)] p-3">
+                                <p className="text-xs font-semibold text-[var(--accent)] mb-1">What to do:</p>
+                                <p className="text-sm text-[var(--foreground)] leading-relaxed">{insight.action}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ── OVERVIEW ─────────────────────────────────────────── */}
             {activeTab === 'overview' && (
               <div className="space-y-6">
