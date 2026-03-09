@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { AlertCircle, ArrowLeft, ArrowRight, Check, Clock, Brain, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { WORD_LISTS, type WordListKey } from '@/app/scat-forms/shared/constants/wordLists'
 import { DIGIT_LISTS, type DigitListKey } from '@/app/scat-forms/shared/constants/digitLists'
+import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
 
 const SYMPTOMS = [
   'Headache', 'Pressure in head', 'Neck pain', 'Nausea or vomiting', 'Dizziness',
@@ -560,6 +561,12 @@ export default function AthleteBaselineForm() {
 
       if (response.ok) {
         setSubmitted(true)
+        trackEvent(ANALYTICS_EVENTS.PRESEASON_BASELINE_SUBMIT, {
+          clinicCode: code,
+          clinicName,
+          isDemo: code.toUpperCase() === 'DEMO00',
+          cognitiveScore: totalCognitiveScore,
+        })
       } else {
         const data = await response.json()
         setSubmitError(data.error || 'Failed to submit. Please try again.')
@@ -676,7 +683,10 @@ export default function AthleteBaselineForm() {
           </div>
           <h1 className="text-2xl font-bold mb-2">Baseline Complete</h1>
           <p className="text-muted-foreground mb-4">
-            Your baseline report has been sent to <strong>{clinicName}</strong>. No data has been stored.
+            {code.toUpperCase() === 'DEMO00'
+              ? 'This was a demo — no report was sent. Register your clinic to start collecting real baselines.'
+              : <>Your baseline report has been sent to <strong>{clinicName}</strong>. No data has been stored.</>
+            }
           </p>
           <div className="glass rounded-xl p-4 mb-4 border border-accent/20">
             <p className="text-sm font-semibold mb-1">Your Cognitive Score</p>
@@ -1669,9 +1679,19 @@ export default function AthleteBaselineForm() {
           {step < totalSteps && (
             <button
               onClick={() => {
-                if (step === 1 && !name) {
-                  setSubmitError('Please enter the athlete\'s name to continue.')
-                  return
+                if (step === 1) {
+                  if (!name) {
+                    setSubmitError('Please enter the athlete\'s name to continue.')
+                    return
+                  }
+                  if (!sex) {
+                    setSubmitError('Please select sex to continue.')
+                    return
+                  }
+                  if (!sport) {
+                    setSubmitError('Please enter the sport to continue.')
+                    return
+                  }
                 }
                 setSubmitError('')
                 setStep(prev => prev + 1)

@@ -17,11 +17,95 @@ const PUBLIC_DOCS = new Set([
   '/docs/SCOAT6_Fillable.pdf',
 ])
 
-export function middleware(request: NextRequest) {
+// Files that paid users can access directly (served via CDN, not serverless)
+// Large files MUST be served via CDN to bypass Vercel's 4.5 MB serverless body limit
+const PAID_DOCS = new Set([
+  '/docs/CCM_Complete_Reference_2026.pdf',
+  '/docs/SCAT:SCOAT_FIllablePDFs.zip',
+])
+
+// Edge-compatible session verification using Web Crypto API
+async function verifySessionEdge(token: string): Promise<{ accessLevel: string; exp: number } | null> {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 2) return null
+    const [payloadStr, signature] = parts
+    if (!payloadStr || !signature) return null
+
+    const secret = process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET
+    if (!secret) return null
+
+    // Import key for HMAC-SHA256 (Web Crypto API — Edge-compatible)
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+
+    // Compute expected signature
+    const sigBuffer = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      new TextEncoder().encode(payloadStr)
+    )
+
+    // Convert to base64url
+    const sigBytes = new Uint8Array(sigBuffer)
+    let binary = ''
+    for (let i = 0; i < sigBytes.length; i++) {
+      binary += String.fromCharCode(sigBytes[i])
+    }
+    const expectedSig = btoa(binary)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '')
+
+    // Constant-time comparison
+    if (!constantTimeEqual(signature, expectedSig)) return null
+
+    // Decode payload (base64url → JSON)
+    const base64 = payloadStr.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
+    const decoded = atob(padded)
+    const payload = JSON.parse(decoded)
+
+    // Check expiration
+    if (payload.exp < Date.now()) return null
+
+    return payload
+  } catch {
+    return null
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Block direct access to paid PDFs in /docs/ (except SCAT6/SCOAT6 forms)
-  if (pathname.startsWith('/docs/') && pathname.endsWith('.pdf') && !PUBLIC_DOCS.has(pathname)) {
+  // Handle /docs/ file access (PDFs and ZIPs)
+  if (pathname.startsWith('/docs/') && (pathname.endsWith('.pdf') || pathname.endsWith('.zip'))) {
+    // Public docs — always allow
+    if (PUBLIC_DOCS.has(pathname)) {
+      return NextResponse.next()
+    }
+
+    // Paid docs — verify session and access level (served via CDN, bypasses serverless body limit)
+    if (PAID_DOCS.has(pathname) || PAID_DOCS.has(decodeURIComponent(pathname))) {
+      const sessionToken = request.cookies.get('session')?.value
+      if (sessionToken) {
+        const session = await verifySessionEdge(sessionToken)
+        if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
+          return NextResponse.next()
+        }
+      }
+      return NextResponse.json(
+        { error: 'Authentication required. Please log in to access this resource.' },
+        { status: 401 }
+      )
+    }
+
+    // All other docs — block direct access
     return NextResponse.json(
       { error: 'Direct access not allowed. Please download via the Clinical Toolkit.' },
       { status: 403 }
@@ -65,6 +149,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/docs/:path*.pdf',
+    '/docs/:path*.zip',
     '/resources/:path*.pdf',
     '/api/admin/:path*',
   ]

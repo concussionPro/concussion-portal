@@ -45,9 +45,72 @@ export const ANALYTICS_EVENTS = {
   // Search
   SEARCH_QUERY: 'search_query',
 
+  // Preseason
+  PRESEASON_CLINIC_REGISTER: 'preseason_clinic_register',
+  PRESEASON_BASELINE_SUBMIT: 'preseason_baseline_submit',
+
   // Errors
   ERROR: 'error',
 } as const
+
+// ---------------------------------------------------------------------------
+// Visit tracking — persists across sessions via localStorage
+// ---------------------------------------------------------------------------
+
+function getVisitNumber(): number {
+  try {
+    const raw = localStorage.getItem('analytics_visit_number')
+    const current = raw ? parseInt(raw, 10) : 0
+    // Increment on new session (sessionStorage key absent = new session)
+    if (!sessionStorage.getItem('analytics_session_id')) {
+      const next = current + 1
+      localStorage.setItem('analytics_visit_number', String(next))
+      return next
+    }
+    return current || 1
+  } catch {
+    return 1
+  }
+}
+
+function getFirstReferrer(): string | null {
+  try {
+    const existing = localStorage.getItem('analytics_first_referrer')
+    if (existing) return existing
+    const ref = document.referrer || null
+    if (ref) localStorage.setItem('analytics_first_referrer', ref)
+    return ref
+  } catch {
+    return null
+  }
+}
+
+function getUtmParams(): Record<string, string> {
+  try {
+    const params = new URLSearchParams(window.location.search)
+    const utms: Record<string, string> = {}
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid']) {
+      const val = params.get(key)
+      if (val) utms[key] = val
+    }
+    // Persist first-touch UTMs
+    if (Object.keys(utms).length > 0 && !localStorage.getItem('analytics_first_utm')) {
+      localStorage.setItem('analytics_first_utm', JSON.stringify(utms))
+    }
+    return utms
+  } catch {
+    return {}
+  }
+}
+
+function getFirstUtm(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem('analytics_first_utm')
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
 
 // Client-side analytics tracking
 export async function trackEvent(
@@ -62,14 +125,26 @@ export async function trackEvent(
       sessionStorage.setItem('analytics_session_id', sessionId)
     }
 
+    const visitNumber = getVisitNumber()
+    const firstReferrer = getFirstReferrer()
+    const utmParams = getUtmParams()
+    const firstUtm = getFirstUtm()
+
     const event = {
       eventType,
-      eventData,
+      eventData: {
+        ...eventData,
+        visitNumber,
+        ...(firstReferrer ? { firstReferrer } : {}),
+        ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
+        ...(Object.keys(firstUtm).length > 0 ? { firstUtm } : {}),
+      },
       sessionId,
       timestamp: Date.now(),
       userAgent: navigator.userAgent,
       referrer: document.referrer,
       path: window.location.pathname,
+      search: window.location.search || null,
     }
 
     // Send to analytics API

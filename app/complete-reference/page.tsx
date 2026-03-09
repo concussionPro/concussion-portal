@@ -43,8 +43,9 @@ export default function CompleteReferencePage() {
 
   const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
 
-  // Build PDF URL with cache-busting to help browsers render inline
-  const pdfApiUrl = '/api/complete-reference'
+  // Serve directly from CDN (bypasses Vercel's 4.5 MB serverless body limit)
+  // Middleware handles auth for /docs/ paths
+  const pdfUrl = '/docs/CCM_Complete_Reference_2026.pdf'
 
   return (
     <ProtectedRoute>
@@ -140,7 +141,7 @@ export default function CompleteReferencePage() {
                     </div>
                     <div className="flex flex-col gap-3 sm:flex-shrink-0">
                       <a
-                        href={pdfApiUrl}
+                        href={pdfUrl}
                         download="CCM_Complete_Reference_2026.pdf"
                         className="btn-primary px-6 py-3 rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base font-semibold"
                       >
@@ -148,7 +149,7 @@ export default function CompleteReferencePage() {
                         Download PDF
                       </a>
                       <a
-                        href={pdfApiUrl}
+                        href={pdfUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn-secondary px-6 py-3 rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base font-semibold"
@@ -164,7 +165,7 @@ export default function CompleteReferencePage() {
                 <div className="glass rounded-xl p-2">
                   {!pdfLoadError ? (
                     <iframe
-                      src={pdfApiUrl + '#toolbar=1&navpanes=1&scrollbar=1'}
+                      src={pdfUrl + '#toolbar=1&navpanes=1&scrollbar=1'}
                       className="w-full rounded-lg bg-white"
                       style={{ height: 'calc(100vh - 300px)', minHeight: '600px' }}
                       title="Complete Clinical Reference 2026"
@@ -197,7 +198,7 @@ export default function CompleteReferencePage() {
                       </p>
                       <div className="flex gap-3">
                         <a
-                          href={pdfApiUrl}
+                          href={pdfUrl}
                           download="CCM_Complete_Reference_2026.pdf"
                           className="px-5 py-2.5 bg-[#5b9aa6] text-white rounded-lg font-semibold text-sm hover:bg-[#4a8a96] transition-colors flex items-center gap-2"
                         >
@@ -205,7 +206,7 @@ export default function CompleteReferencePage() {
                           Download PDF
                         </a>
                         <a
-                          href={pdfApiUrl}
+                          href={pdfUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-200 transition-colors flex items-center gap-2"

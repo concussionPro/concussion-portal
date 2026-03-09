@@ -178,6 +178,9 @@ export default function ClinicalToolkitPage() {
     ? toolkitResources
     : toolkitResources.filter(r => r.category === selectedCategory)
 
+  // Files served directly from CDN (too large for Vercel's 4.5 MB serverless body limit)
+  const CDN_FILES = new Set(['SCAT6_Fillable.pdf', 'SCOAT6_Fillable.pdf'])
+
   const handleDownload = (resource: ToolkitResource) => {
     // Both online-only and full-course users have access to toolkit
     if (!accessLevel) {
@@ -189,7 +192,13 @@ export default function ClinicalToolkitPage() {
     // Track download
     trackDownload(resource.fileName, resource.category, { resourceId: resource.id, resourceTitle: resource.title })
 
-    // Download file via API endpoint
+    // Large files: serve directly from CDN to bypass serverless body limit
+    if (CDN_FILES.has(resource.fileName)) {
+      window.open(`/docs/${resource.fileName}`, '_blank')
+      return
+    }
+
+    // Other files: via API endpoint (with auth)
     window.open(`/api/download?file=${encodeURIComponent(resource.fileName)}`, '_blank')
   }
 

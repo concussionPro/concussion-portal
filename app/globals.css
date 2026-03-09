@@ -937,6 +937,15 @@ input[type="reset"] {
   overflow: hidden;
 }
 
+/* Cards needing overflow visible (e.g. for absolute-positioned badges)
+   must suppress the shimmer to prevent it leaking outside the card */
+.card-visible {
+  overflow: visible;
+}
+.card-visible::before {
+  display: none;
+}
+
 .card:nth-child(2)::before,
 .stat-tile:nth-child(2)::before { --shimmer-delay: 1.5s; }
 .card:nth-child(3)::before,

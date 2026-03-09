@@ -8,7 +8,7 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 
 export default function RegisterPage() {
   const router = useRouter()
-  useAnalytics()
+  const { trackEvent, ANALYTICS_EVENTS } = useAnalytics()
 
   const [clinicName, setClinicName] = useState('')
   const [contactName, setContactName] = useState('')
@@ -47,6 +47,11 @@ export default function RegisterPage() {
 
       if (response.ok) {
         setSuccess({ code: data.code, athleteLink: data.athleteLink })
+        trackEvent(ANALYTICS_EVENTS.PRESEASON_CLINIC_REGISTER, {
+          clinicName,
+          email: email.toLowerCase(),
+          code: data.code,
+        })
       } else {
         setError(data.error || 'Registration failed. Please try again.')
       }

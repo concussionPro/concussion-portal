@@ -170,16 +170,20 @@ export function AnalyticsProvider({
   children: React.ReactNode;
 }): React.JSX.Element {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  // NOTE: useSearchParams() intentionally NOT used here.
+  // It triggers Suspense, and since this provider wraps the entire app tree,
+  // the Suspense fallback={null} in layout.tsx causes the whole page to flash blank.
+  // Instead, read window.location.search at call-time for event tracking.
 
   const trackEvent = useCallback(
     (eventType: string, eventData: Record<string, unknown> = {}): void => {
-      const search = searchParams.toString()
-        ? `?${searchParams.toString()}`
-        : null;
+      const search =
+        typeof window !== 'undefined' && window.location.search
+          ? window.location.search
+          : null;
       sendEvent(eventType, eventData, pathname, search);
     },
-    [pathname, searchParams]
+    [pathname]
   );
 
   // ---- Convenience helpers ------------------------------------------------

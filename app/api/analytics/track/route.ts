@@ -191,6 +191,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     referrer: payload.referrer ? String(payload.referrer).slice(0, 512) : null,
     path: String(payload.path).slice(0, 512),
     search: payload.search ? String(payload.search).slice(0, 512) : null,
+    ip,
   };
 
   const dateKey = getTodayKey();
