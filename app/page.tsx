@@ -91,15 +91,6 @@ export default function HomePage() {
                   <span className="font-semibold text-[var(--foreground)]">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded by Australian clinicians
                 </span>
                 <span className="text-xs text-[var(--muted-foreground)]">·</span>
-                <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1">
-                  <span className="flex gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    ))}
-                  </span>
-                  <span className="font-semibold text-[var(--foreground)]">5.0</span> from {CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS} reviews
-                </span>
-                <span className="text-xs text-[var(--muted-foreground)]">·</span>
                 <span className="text-xs text-[var(--muted-foreground)]">Endorsed by <span className="font-semibold text-[var(--foreground)]">Osteopathy Australia</span></span>
               </div>
             )}

@@ -61,8 +61,6 @@ export const CONFIG = {
   // Social Proof — real numbers only, updated manually
   SOCIAL_PROOF: {
     SCAT_FORM_DOWNLOADS: 500,
-    TOTAL_REVIEWS: 5,
-    SATISFACTION_STARS: 5,
   },
 
   // Early Bird Pricing Deadline

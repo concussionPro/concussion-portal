@@ -110,14 +110,7 @@ function PricingContent() {
               <span className="font-semibold text-foreground">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded
             </span>
             <span>·</span>
-            <span className="flex items-center gap-1">
-              <span className="flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                ))}
-              </span>
-              <span className="font-semibold text-foreground">5.0</span> from {CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS} reviews
-            </span>
+            <span>Endorsed by <span className="font-semibold text-foreground">Osteopathy Australia</span></span>
             <span>·</span>
             <span>30-day money-back guarantee</span>
           </div>

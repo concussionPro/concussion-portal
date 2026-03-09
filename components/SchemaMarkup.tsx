@@ -114,16 +114,7 @@ export function CourseSchema() {
     },
   }
 
-  // Only include aggregate rating if we have real reviews
-  if (CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS > 0) {
-    schema.aggregateRating = {
-      '@type': 'AggregateRating',
-      ratingValue: CONFIG.SOCIAL_PROOF.SATISFACTION_STARS,
-      reviewCount: CONFIG.SOCIAL_PROOF.TOTAL_REVIEWS,
-      bestRating: 5,
-      worstRating: 1,
-    }
-  }
+  // Aggregate rating omitted — add when sufficient volume exists
 
   if (courseInstances.length > 0) {
     schema.hasCourseInstance = courseInstances
