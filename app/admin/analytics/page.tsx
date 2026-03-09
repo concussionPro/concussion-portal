@@ -1465,6 +1465,47 @@ export default function AnalyticsDashboard() {
                     {generateDailyReport(stats, retargetingData, funnelData, preseasonData, channelsData, usersData, period)}
                   </p>
                 </div>
+
+                {/* Test Emails */}
+                <div className="rounded-xl border border-[rgba(13,115,119,0.08)] bg-white p-5">
+                  <p className="text-sm font-semibold text-[var(--foreground)] mb-1">Email Templates</p>
+                  <p className="text-xs text-[var(--muted-foreground)] mb-3">Send all 18 nurture and admin emails to inspect styling.</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="test-email-to"
+                      type="email"
+                      defaultValue="z.lew87@gmail.com"
+                      placeholder="recipient@example.com"
+                      className="flex-1 px-3 py-2 rounded-lg border border-[rgba(13,115,119,0.15)] text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
+                    />
+                    <button
+                      onClick={async () => {
+                        const input = document.getElementById('test-email-to') as HTMLInputElement
+                        const to = input?.value
+                        if (!to) return
+                        const btn = document.getElementById('test-email-btn') as HTMLButtonElement
+                        btn.disabled = true
+                        btn.textContent = 'Sending...'
+                        try {
+                          const res = await fetch('/api/admin/test-emails', {
+                            method: 'POST',
+                            headers: { 'x-admin-key': getAdminKey(), 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ to }),
+                          })
+                          const data = await res.json()
+                          btn.textContent = data.success ? `Sent ${data.message?.match(/\d+\/\d+/)?.[0] || 'all'}` : 'Failed'
+                        } catch {
+                          btn.textContent = 'Error'
+                        }
+                        setTimeout(() => { btn.disabled = false; btn.textContent = 'Send All Emails' }, 4000)
+                      }}
+                      id="test-email-btn"
+                      className="px-4 py-2 rounded-lg text-sm font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition-opacity whitespace-nowrap"
+                    >
+                      Send All Emails
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
