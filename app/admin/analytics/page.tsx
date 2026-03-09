@@ -36,6 +36,10 @@ import {
   AlertTriangle,
   Flame,
   TrendingDown,
+  MapPin,
+  Building2,
+  Mail,
+  Download,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -98,7 +102,7 @@ interface Insight {
 }
 
 type Period = '24h' | '7d' | '30d' | '90d'
-type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights'
+type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PERIODS: { label: string; value: Period }[] = [
@@ -325,6 +329,16 @@ export default function AnalyticsDashboard() {
   const [eventsData, setEventsData] = useState<EventGroup[]>([])
   const [insightsData, setInsightsData] = useState<Insight[]>([])
 
+  // Ready-to-train pool data
+  const [poolData, setPoolData] = useState<{ totalCount: number; cities: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; city: string; registeredAt: string; completedAt: string }> }> } | null>(null)
+
+  // Preseason data
+  const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; totalClinics: number; totalBaselines: number } | null>(null)
+
+  // Users/emails data
+  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null }>>([])
+  const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
+
   const getAdminKey = useCallback((): string => {
     if (typeof window === 'undefined') return ''
     return sessionStorage.getItem('admin_api_key') ?? ''
@@ -379,6 +393,30 @@ export default function AnalyticsDashboard() {
       if (get(9) && Array.isArray(get(9))) setEventsData(get(9) as EventGroup[])
       if (get(10) && Array.isArray(get(10))) setInsightsData(get(10) as Insight[])
 
+      // Fetch additional admin data (separate endpoints)
+      try {
+        const [poolRes, preseasonRes, usersRes] = await Promise.allSettled([
+          fetch('/api/admin/ready-to-train', { headers: { 'x-admin-key': adminKey }, cache: 'no-store' }),
+          fetch('/api/admin/preseason', { headers: { 'x-admin-key': adminKey }, cache: 'no-store' }),
+          fetch('/api/admin/emails', { headers: { 'x-admin-key': adminKey }, cache: 'no-store' }),
+        ])
+
+        if (poolRes.status === 'fulfilled' && poolRes.value.ok) {
+          const poolJson = await poolRes.value.json()
+          if (poolJson.success) setPoolData(poolJson)
+        }
+        if (preseasonRes.status === 'fulfilled' && preseasonRes.value.ok) {
+          const preseasonJson = await preseasonRes.value.json()
+          if (preseasonJson.success) setPreseasonData(preseasonJson)
+        }
+        if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
+          const usersJson = await usersRes.value.json()
+          if (usersJson.success) setUsersData(usersJson.emails || [])
+        }
+      } catch (err) {
+        console.warn('[Analytics] Admin data load error:', err)
+      }
+
       setLastRefresh(new Date())
     } catch (err) {
       console.error('[Analytics] Load error:', err)
@@ -401,6 +439,9 @@ export default function AnalyticsDashboard() {
     { id: 'funnel', label: 'Funnel', icon: BarChart2 },
     { id: 'events', label: 'Events', icon: Zap },
     { id: 'retargeting', label: 'Retargeting', icon: Target },
+    { id: 'pool', label: 'Ready to Train', icon: MapPin },
+    { id: 'preseason', label: 'Preseason', icon: Building2 },
+    { id: 'users', label: 'Users', icon: Mail },
   ]
 
   return (
@@ -979,6 +1020,260 @@ export default function AnalyticsDashboard() {
             )}
           </div>
         </div>
+
+            {/* ── Ready to Train Pool ──────────────────────────────────────── */}
+            {activeTab === 'pool' && (
+              <div className="space-y-6">
+                {!poolData ? (
+                  <EmptyState icon={MapPin} message="Loading pool data..." />
+                ) : (
+                  <>
+                    {/* Summary cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                      {poolData.cities.map((city) => {
+                        const progress = Math.min((city.count / 8) * 100, 100)
+                        const isReady = city.count >= 8
+                        return (
+                          <div
+                            key={city.city}
+                            className={`glass rounded-xl p-4 ${isReady ? 'border-2 border-emerald-400' : ''}`}
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <MapPin size={14} className={isReady ? 'text-emerald-600' : 'text-[var(--accent)]'} />
+                              <span className="text-xs font-bold text-[var(--foreground)]">{city.label}</span>
+                            </div>
+                            <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">
+                              {city.count}<span className="text-sm font-normal text-[var(--muted-foreground)]"> / 8</span>
+                            </p>
+                            <div className="mt-2 w-full bg-[rgba(13,115,119,0.08)] rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full transition-all ${isReady ? 'bg-emerald-500' : 'bg-[var(--accent)]'}`}
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                              {isReady ? 'Ready to schedule!' : `${8 - city.count} more needed`}
+                            </p>
+                          </div>
+                        )
+                      })}
+                      <div className="glass rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users size={14} className="text-[var(--accent)]" />
+                          <span className="text-xs font-bold text-[var(--foreground)]">Total</span>
+                        </div>
+                        <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{poolData.totalCount}</p>
+                        <p className="text-xs text-[var(--muted-foreground)] mt-3">Across all cities</p>
+                      </div>
+                    </div>
+
+                    {/* Per-city tables */}
+                    {poolData.cities.map((city) => (
+                      <div key={city.city}>
+                        <SectionTitle title={`${city.label} (${city.count})`} subtitle={city.count >= 8 ? 'Threshold reached — ready to schedule workshop' : `${8 - city.count} more clinicians needed`} />
+                        {city.registrations.length === 0 ? (
+                          <EmptyState icon={Users} message={`No registrations for ${city.label}`} />
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                                  <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Name</th>
+                                  <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
+                                  <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Registered</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {city.registrations.map((r, i) => (
+                                  <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                                    <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
+                                    <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
+                                    <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">
+                                      {new Date(r.registeredAt).toLocaleDateString('en-AU')}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {poolData.cities.length === 0 && (
+                      <EmptyState icon={MapPin} message="No ready-to-train registrations yet" />
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── Preseason ─────────────────────────────────────────────── */}
+            {activeTab === 'preseason' && (
+              <div className="space-y-6">
+                {/* Summary */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="glass rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Building2 size={14} className="text-[var(--accent)]" />
+                      <span className="text-xs font-bold text-[var(--foreground)]">Clinics Registered</span>
+                    </div>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{preseasonData?.totalClinics ?? 0}</p>
+                  </div>
+                  <div className="glass rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText size={14} className="text-emerald-600" />
+                      <span className="text-xs font-bold text-[var(--foreground)]">Baselines Submitted</span>
+                    </div>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{preseasonData?.totalBaselines ?? 0}</p>
+                  </div>
+                </div>
+
+                <SectionTitle title="Registered Clinics" subtitle="Clinics that have registered for preseason baseline testing" />
+                {!preseasonData?.clinics?.length ? (
+                  <EmptyState icon={Building2} message="No clinic registrations yet. Data will appear once the preseason registration flow is active." />
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                          <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Clinic</th>
+                          <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Contact</th>
+                          <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
+                          <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Code</th>
+                          <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Registered</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {preseasonData.clinics.map((c, i) => (
+                          <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                            <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{c.clinicName}</td>
+                            <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{c.contactName}</td>
+                            <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{c.email}</td>
+                            <td className="py-2.5 px-2"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.08)] text-xs font-semibold text-[var(--accent)]">{c.code}</span></td>
+                            <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">{new Date(c.createdAt).toLocaleDateString('en-AU')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Users / Emails ──────────────────────────────────────────── */}
+            {activeTab === 'users' && (
+              <div className="space-y-6">
+                {/* Summary */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="glass rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users size={14} className="text-[var(--accent)]" />
+                      <span className="text-xs font-bold text-[var(--foreground)]">Total Users</span>
+                    </div>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.length}</p>
+                  </div>
+                  <div className="glass rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Eye size={14} className="text-emerald-600" />
+                      <span className="text-xs font-bold text-[var(--foreground)]">Free</span>
+                    </div>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(u => u.accessLevel === 'preview').length}</p>
+                  </div>
+                  <div className="glass rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp size={14} className="text-purple-600" />
+                      <span className="text-xs font-bold text-[var(--foreground)]">Paid</span>
+                    </div>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length}</p>
+                  </div>
+                  <div className="glass rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock size={14} className="text-orange-600" />
+                      <span className="text-xs font-bold text-[var(--foreground)]">Today</span>
+                    </div>
+                    <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{usersData.filter(u => new Date(u.createdAt).toDateString() === new Date().toDateString()).length}</p>
+                  </div>
+                </div>
+
+                {/* Filters + Export */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1 p-0.5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.08)]">
+                    {([['all', 'All'], ['preview', 'Free'], ['paid', 'Paid']] as const).map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => setUsersFilter(key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          usersFilter === key
+                            ? 'bg-white shadow-sm text-[var(--accent)] border border-[rgba(13,115,119,0.1)]'
+                            : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                        }`}
+                      >
+                        {label} ({key === 'all' ? usersData.length : key === 'preview' ? usersData.filter(u => u.accessLevel === 'preview').length : usersData.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length})
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const filtered = usersData.filter(u => {
+                        if (usersFilter === 'preview') return u.accessLevel === 'preview'
+                        if (usersFilter === 'paid') return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
+                        return true
+                      })
+                      const csv = ['Email,Name,Access Level,Created,Last Login', ...filtered.map(u =>
+                        `${u.email},${u.name},${u.accessLevel},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
+                      )].join('\n')
+                      const blob = new Blob([csv], { type: 'text/csv' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `users-${new Date().toISOString().split('T')[0]}.csv`
+                      a.click()
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
+                  >
+                    <Download size={12} />
+                    Export CSV
+                  </button>
+                </div>
+
+                {/* Users table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                        <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
+                        <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Name</th>
+                        <th className="text-center py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Access</th>
+                        <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Signed Up</th>
+                        <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Last Login</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usersData.filter(u => {
+                        if (usersFilter === 'preview') return u.accessLevel === 'preview'
+                        if (usersFilter === 'paid') return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
+                        return true
+                      }).map((u) => (
+                        <tr key={u.id} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                          <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{u.email}</td>
+                          <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{u.name}</td>
+                          <td className="py-2.5 px-2 text-center">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                              u.accessLevel === 'preview' ? 'bg-emerald-100 text-emerald-700' : 'bg-purple-100 text-purple-700'
+                            }`}>
+                              {u.accessLevel === 'preview' ? 'Free' : u.accessLevel === 'full-course' ? 'Full' : 'Online'}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2 text-right text-xs text-[var(--muted-foreground)]">{new Date(u.createdAt).toLocaleDateString('en-AU')}</td>
+                          <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-AU') : 'Never'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
         <div className="text-center py-2">
           <p className="text-xs text-[var(--muted-foreground)] opacity-40">
