@@ -157,7 +157,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
               <p>Click the button below to access your ConcussionPro dashboard:</p>
 
               <center>
-                <a href="${loginUrl}" class="button">
+                <a href="${loginUrl}&utm_source=email&utm_medium=email&utm_campaign=magic_link" class="button">
                   Access Your Course →
                 </a>
               </center>
@@ -317,7 +317,7 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
               </div>
 
               <center>
-                <a href="${baseUrl}/login" class="button">
+                <a href="${baseUrl}/login?utm_source=email&utm_medium=email&utm_campaign=welcome" class="button">
                   Open Your Course →
                 </a>
               </center>

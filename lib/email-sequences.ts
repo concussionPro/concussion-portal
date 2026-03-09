@@ -16,6 +16,14 @@
 
 import { CONFIG } from '@/lib/config'
 
+/** Append UTM params to a URL. Handles existing query strings. */
+function utm(url: string, campaign: string, content?: string): string {
+  const sep = url.includes('?') ? '&' : '?'
+  let params = `${sep}utm_source=email&utm_medium=email&utm_campaign=${encodeURIComponent(campaign)}`
+  if (content) params += `&utm_content=${encodeURIComponent(content)}`
+  return url + params
+}
+
 const EMAIL_STYLES = `
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1e293b; background: #f8fafc; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
   .container { max-width: 580px; margin: 0 auto; background: white; }
@@ -54,7 +62,7 @@ function emailShell(content: string, unsubscribeUrl?: string): string {
     </div>
     <div class="footer">
       Concussion Education Australia &middot; Endorsed by Osteopathy Australia<br>
-      <a href="https://portal.concussion-education-australia.com" style="color: #94a3b8;">portal.concussion-education-australia.com</a><br>
+      <a href="https://portal.concussion-education-australia.com?utm_source=email&utm_medium=email&utm_campaign=footer" style="color: #94a3b8;">portal.concussion-education-australia.com</a><br>
       <a href="${unsub}" style="color: #94a3b8; font-size: 11px;">Unsubscribe from this sequence</a>
     </div>
   </div>
@@ -79,7 +87,7 @@ export const POST_PURCHASE_SEQUENCE = [
       <h2>Welcome aboard, ${name.split(' ')[0]}!</h2>
       <p>Your Concussion Management course is ready and waiting. Students who start within the first 48 hours are <strong>3x more likely to complete the full course</strong>.</p>
       <p>Module 1 takes about 25 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on.</p>
-      <center><a href="${loginLink}" class="cta-btn">Start Module 1 Now</a></center>
+      <center><a href="${utm(loginLink, 'post_purchase_day1', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
       <div class="callout">
         <strong>Quick tip:</strong> Each module builds on the previous one. Complete them in order for the best learning experience.
       </div>
@@ -105,7 +113,7 @@ export const POST_PURCHASE_SEQUENCE = [
         <li><strong>Module 3:</strong> SCOAT6 office-based follow-up</li>
       </ol>
       <p>Most clinicians complete all 3 in a single sitting (about 90 minutes). By the end you'll be confident with both the sideline and office assessment tools.</p>
-      <center><a href="${loginLink}" class="cta-btn">Continue Your Course</a></center>
+      <center><a href="${utm(loginLink, 'post_purchase_day3', 'continue_course')}" class="cta-btn">Continue Your Course</a></center>
       <p class="ps">P.S. Your course has lifetime access — no pressure, but momentum matters. Clinicians who finish within the first two weeks report the highest confidence gains.</p>
       <div class="sig">Zac</div>
     `),
@@ -125,7 +133,7 @@ export const POST_PURCHASE_SEQUENCE = [
         <li><strong>Module 7 — Return-to-Play:</strong> The step-by-step protocols schools and clubs need from you</li>
       </ul>
       <p>Complete all 8 modules and you'll earn your <strong>8 CPD point certificate</strong> — automatically generated and ready to download.</p>
-      <center><a href="${loginLink}" class="cta-btn">Keep Going</a></center>
+      <center><a href="${utm(loginLink, 'post_purchase_day7', 'keep_going')}" class="cta-btn">Keep Going</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -146,7 +154,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       <h2>Hi${name ? ` ${name.split(' ')[0]}` : ''},</h2>
       <p>Looks like you started enrolling in the Concussion Management course but didn't finish.</p>
       <p>No worries — your spot is still available. If you ran into a technical issue or had questions, just reply to this email.</p>
-      <center><a href="https://portal.concussion-education-australia.com/pricing" class="cta-btn">Complete Your Enrolment</a></center>
+      <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_1h', 'complete_enrolment')}" class="cta-btn">Complete Your Enrolment</a></center>
       <div class="callout">
         <strong>What you'll get:</strong><br><br>
         &#8226; 8 online modules with lifetime access<br>
@@ -171,7 +179,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       The 8 online modules take about 6-8 hours total. Most clinicians complete them across 2-3 sittings. You have lifetime access, so there's no rush.</p>
       <p><strong>"What if I want to add the workshop later?"</strong><br>
       Start with the online course ($${CONFIG.COURSE.PRICE_ONLINE}) and upgrade to include the hands-on workshop later — you'll only pay the difference.</p>
-      <center><a href="https://portal.concussion-education-australia.com/pricing" class="cta-btn">View Course Options</a></center>
+      <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_24h', 'view_options')}" class="cta-btn">View Course Options</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -184,7 +192,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       <p>This is the last email I'll send about this. I don't want to be pushy — but I also don't want you to miss out if the timing just wasn't right.</p>
       <p>If cost is a factor: the <strong>online-only option at $${CONFIG.COURSE.PRICE_ONLINE}</strong> gives you the full 8-module course with 8 CPD points. You can always add the workshop later.</p>
       <p>If you have specific questions, just reply — I'm happy to chat.</p>
-      <center><a href="https://portal.concussion-education-australia.com/pricing" class="cta-btn">Enrol Now</a></center>
+      <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'enrol_now')}" class="cta-btn">Enrol Now</a></center>
       <p class="ps">P.S. If you decided this course isn't for you, no hard feelings. The free SCAT Mastery course and SCAT6 forms are yours to keep.</p>
       <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
     `),
@@ -217,7 +225,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
         &#8226; A pen and your favourite clinical notebook
       </div>
       <p>Venue details and parking info will be in your final reminder email the day before.</p>
-      <center><a href="https://portal.concussion-education-australia.com/login" class="cta-btn">Complete Your Online Modules</a></center>
+      <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_7d', 'complete_modules')}" class="cta-btn">Complete Your Online Modules</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -257,7 +265,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Hi ${name},</h2>
       <p>Here are your fillable SCAT6 and SCOAT6 assessment forms &mdash; ready to use in your next patient encounter.</p>
-      <center><a href="https://portal.concussion-education-australia.com/scat6-download" class="cta-btn">Download Your SCAT6 Forms</a></center>
+      <center><a href="${utm('https://portal.concussion-education-australia.com/scat6-download', 'scat_mastery_day0', 'download_forms')}" class="cta-btn">Download Your SCAT6 Forms</a></center>
       <div class="callout">
         <strong>What's included:</strong><br><br>
         &#8226; Fillable SCAT6 PDF (sideline / acute assessment, 0&ndash;72hrs)<br>
@@ -297,7 +305,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>Clinical decision flowcharts you can reference in practice</li>
         <li>2 AHPRA-aligned CPD points upon completion</li>
       </ul>
-      <center><a href="${loginLink}" class="cta-btn">Start the Free SCAT Course</a></center>
+      <center><a href="${utm(loginLink, 'scat_mastery_day3', 'start_free_course')}" class="cta-btn">Start the Free SCAT Course</a></center>
       <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">2 hours &middot; Self-paced &middot; Free &middot; Includes CPD certificate</p>
       <div class="sig">Zac</div>
     `),
@@ -318,7 +326,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       </div>
       <p>What would you do? Clear him? Bench him? What documentation protects you if something goes wrong?</p>
       <p>This exact scenario comes up in the free SCAT Mastery course &mdash; and the clinical reasoning behind the right decision is worth the 8 minutes it takes to work through.</p>
-      <center><a href="${loginLink}" class="cta-btn">Work Through This Case</a></center>
+      <center><a href="${utm(loginLink, 'scat_mastery_day7', 'case_study')}" class="cta-btn">Work Through This Case</a></center>
       <p class="ps">P.S. If you've already started the course, keep going &mdash; the later modules on red flags and documentation are where the real confidence comes from.</p>
       <div class="sig">Zac</div>
     `),
@@ -343,7 +351,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <span class="badge">Endorsed by Osteopathy Australia</span><br>
         The full course provides <strong>14 AHPRA-aligned CPD points</strong> (8 online + 6 hands-on workshop).
       </div>
-      <center><a href="${upgradeLink}" class="cta-btn">See Full Course Details</a></center>
+      <center><a href="${utm(upgradeLink, 'scat_mastery_day10', 'full_course_details')}" class="cta-btn">See Full Course Details</a></center>
       <div class="sig">Zac Lewis<br>Founder, Concussion Education Australia</div>
     `),
   },
@@ -366,7 +374,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <em>&ldquo;The VOMS and BESS training was exceptional. I couldn't find this level of practical instruction anywhere else in Australia.&rdquo;</em><br>
         <strong style="color: #475569;">&mdash; Osteopath, Melbourne</strong>
       </div>
-      <center><a href="${upgradeLink}" class="cta-btn">View Pricing and Options</a></center>
+      <center><a href="${utm(upgradeLink, 'scat_mastery_day14', 'view_pricing')}" class="cta-btn">View Pricing and Options</a></center>
       <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} AUD &middot; Full course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</p>
       <div class="sig">Zac</div>
     `),
@@ -402,7 +410,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>Digital certificate of completion</li>
         <li>AHPRA-aligned CPD points, endorsed by Osteopathy Australia</li>
       </ul>
-      <center><a href="${upgradeLink}" class="cta-btn">Choose Your Option</a></center>
+      <center><a href="${utm(upgradeLink, 'scat_mastery_day18', 'choose_option')}" class="cta-btn">Choose Your Option</a></center>
       <p style="font-size: 14px; color: #475569; margin-top: 20px;">Early bird pricing is limited &mdash; lock in the best rate before it expires.</p>
       <div class="sig">
         <p>Questions? Just reply to this email &mdash; I'm always happy to help.</p>
