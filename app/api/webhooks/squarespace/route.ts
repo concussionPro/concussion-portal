@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
         name: customerName,
         accessLevel,
         squarespaceOrderId: orderId,
+        signupSource: 'purchase',
       })
 
       // FIX: Use createMagicToken for magic link emails

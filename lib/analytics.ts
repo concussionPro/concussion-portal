@@ -186,6 +186,61 @@ export function trackShopClick(source: string, additionalData: Record<string, an
   }
 }
 
+// ── Google Ads conversion helpers ─────────────────────────────────────────────
+
+const GA_CONVERSION_ID = 'AW-17984048021'
+
+/**
+ * Track a lead conversion (free course signup, form download, interest registration)
+ * Assign a value so Google's smart bidding can optimise for high-value leads.
+ */
+export function trackLeadConversion(label: string, value: number, email?: string) {
+  if (typeof window === 'undefined' || !window.gtag) return
+  const params: Record<string, unknown> = {
+    send_to: `${GA_CONVERSION_ID}/${label}`,
+    value,
+    currency: 'AUD',
+  }
+  // Enhanced conversions — send hashed email for better attribution
+  if (email) {
+    params.user_data = { email }
+  }
+  window.gtag('event', 'conversion', params)
+}
+
+/**
+ * Track interest registration as a lead
+ */
+export function trackInterestRegistration(city: string, email: string) {
+  trackLeadConversion('interest_registration', 15, email)
+  trackEvent('interest_registration', { city })
+}
+
+/**
+ * Track free course completion (higher value than signup)
+ */
+export function trackFreeCourseCompletion(email: string) {
+  trackLeadConversion('free_course_complete', 40, email)
+  trackEvent('free_course_complete', {})
+}
+
+/**
+ * Track purchase conversion with enhanced conversion data
+ */
+export function trackPurchaseConversion(value: number, transactionId: string, email?: string) {
+  if (typeof window === 'undefined' || !window.gtag) return
+  const params: Record<string, unknown> = {
+    send_to: `${GA_CONVERSION_ID}/checkout_complete`,
+    value,
+    currency: 'AUD',
+    transaction_id: transactionId,
+  }
+  if (email) {
+    params.user_data = { email }
+  }
+  window.gtag('event', 'conversion', params)
+}
+
 // Type declaration for gtag
 declare global {
   interface Window {

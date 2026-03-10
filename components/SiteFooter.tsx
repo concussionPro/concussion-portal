@@ -55,6 +55,7 @@ export function SiteFooter() {
                 </a>
               </li>
               <li><Link href="/login" className="hover:text-white transition-colors">Student Login</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">Terms & Refund Policy</Link></li>
             </ul>
           </div>
         </div>
@@ -64,7 +65,7 @@ export function SiteFooter() {
             &copy; {new Date().getFullYear()} Concussion Education Australia. All rights reserved.
           </p>
           <p className="text-xs">
-            Endorsed by Osteopathy Australia &middot; 14 AHPRA CPD Points
+            Endorsed by Osteopathy Australia &middot; For all AHPRA clinicians &middot; 14 CPD Points
           </p>
         </div>
       </div>

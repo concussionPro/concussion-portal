@@ -19,6 +19,7 @@ import {
   Users,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { trackLeadConversion } from '@/lib/analytics'
 
 declare global {
   interface Window {
@@ -70,13 +71,8 @@ export default function SCAT6DownloadPage() {
       const data = await res.json()
 
       if (data.success) {
-        // Fire gtag conversion
-        if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'generate_lead', {
-            event_category: 'download',
-            event_label: 'scat6_form',
-          })
-        }
+        // Fire gtag lead conversion with value + enhanced data
+        trackLeadConversion('scat6_form_download', 10, email.trim().toLowerCase())
         // Trigger browser download immediately
         triggerDownload()
         setSuccess(true)

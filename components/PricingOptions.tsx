@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Check,
   ArrowRight,
@@ -14,8 +14,11 @@ import {
   ChevronUp,
   BookOpen,
   Award,
+  Clock,
+  Users,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { trackInterestRegistration } from '@/lib/analytics'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -99,6 +102,7 @@ function InterestForm({
       const data = await res.json()
 
       if (data.success) {
+        trackInterestRegistration(city, form.email.trim())
         setForm(f => ({
           ...f,
           loading: false,
@@ -257,11 +261,22 @@ function LocationRow({
 export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const [selectedLocation, setSelectedLocation] = useState<string>('')
   const [openTbaCity, setOpenTbaCity] = useState<string | null>(null)
+  const [preferredCity, setPreferredCity] = useState<string>('')
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
 
   const isCompact = variant === 'compact'
   const isEarlyBird = new Date() < CONFIG.EARLY_BIRD_DEADLINE
+  const isLaunchPricing = CONFIG.LAUNCH_PRICING.ENABLED && new Date() < CONFIG.LAUNCH_PRICING.DEADLINE
+
+  // Fetch enrollment count for social proof
+  useEffect(() => {
+    fetch('/api/enrollment-count')
+      .then(res => res.json())
+      .then(data => { if (data.count > 0) setEnrollmentCount(data.count) })
+      .catch(() => {})
+  }, [])
 
   const handleLocationSelect = (value: string) => {
     const loc = LOCATIONS.find(l => l.value === value)
@@ -296,6 +311,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         body: JSON.stringify({
           courseType,
           location: courseType === 'full-course' ? selectedLocation : undefined,
+          preferredCity: courseType === 'online-only' ? preferredCity || undefined : undefined,
         }),
       })
 
@@ -328,22 +344,33 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         )}
 
         <div className="grid sm:grid-cols-2 gap-4 pt-5">
-          {/* Online Course - Compact */}
-          <div className="card rounded-xl p-5 flex flex-col">
+          {/* Online Course - Compact (Primary) */}
+          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
-                <BookOpen className="w-4 h-4 text-orange-500" strokeWidth={2} />
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+                <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
               </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                Online Only
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+                Recommended
               </span>
             </div>
 
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
 
-            <div className="mb-4">
+            <div className="mb-3">
+              {isLaunchPricing && (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-xs text-[var(--muted-foreground)] line-through">${CONFIG.LAUNCH_PRICING.FUTURE_PRICE}</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Launch</span>
+                </div>
+              )}
               <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
+              {isLaunchPricing && (
+                <p className="text-[10px] text-orange-600 font-semibold mt-1">
+                  Launch price ends {CONFIG.LAUNCH_PRICING.DEADLINE.toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })}
+                </p>
+              )}
             </div>
 
             <ul className="space-y-1.5 mb-4 flex-1">
@@ -360,6 +387,22 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               ))}
             </ul>
 
+            <div className="mb-3">
+              <label className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-1.5 block">
+                Preferred workshop city (optional)
+              </label>
+              <select
+                value={preferredCity}
+                onChange={(e) => setPreferredCity(e.target.value)}
+                className="w-full py-2 px-2.5 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-xs text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
+              >
+                <option value="">Not sure yet</option>
+                {LOCATIONS.map(loc => (
+                  <option key={loc.value} value={loc.value}>{loc.label}</option>
+                ))}
+              </select>
+            </div>
+
             <button
               onClick={() => handleCheckout('online-only')}
               disabled={loading !== null}
@@ -368,27 +411,19 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Online Only — $${CONFIG.COURSE.PRICE_ONLINE}`
+                `Enroll Now — $${CONFIG.COURSE.PRICE_ONLINE}`
               )}
             </button>
           </div>
 
-          {/* Complete Course - Compact */}
-          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
-            {isEarlyBird && (
-              <div className="absolute -top-3.5 right-4">
-                <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-3.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shadow-md shadow-orange-200/50">
-                  Early Bird — Save ${CONFIG.COURSE.SAVINGS}
-                </span>
+          {/* Complete Course - Compact (Upgrade) */}
+          <div className="card rounded-xl p-5 flex flex-col relative">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+                <Award className="w-4 h-4 text-orange-500" strokeWidth={2} />
               </div>
-            )}
-
-            <div className="flex items-center gap-2.5 mb-3 mt-1">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
-                <Award className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                Recommended
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                Add Workshop
               </span>
             </div>
 
@@ -479,15 +514,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // FULL VARIANT
   return (
     <div className="max-w-[900px] mx-auto">
-      {/* Section Header */}
-      <div className="text-center mb-10">
-        <h2 className="text-2xl md:text-[2rem] font-bold text-[var(--foreground)] mb-3 tracking-tight">
-          Enrollment Options
-        </h2>
-        <p className="text-base text-[var(--muted-foreground)] max-w-2xl mx-auto leading-relaxed">
-          Australia&apos;s most comprehensive concussion management training — 14 CPD points with hands-on expert workshop. Online-only option also available.
-        </p>
-      </div>
+      {/* No header — parent page provides its own */}
 
       {/* Global error */}
       {error && (
@@ -500,15 +527,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-2 gap-6 pt-5">
 
-        {/* Online Course */}
-        <div className="card rounded-2xl p-7 md:p-8 flex flex-col">
+        {/* Online Course — Primary */}
+        <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
           {/* Icon + Badge */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
-              <BookOpen className="w-5 h-5 text-orange-500" strokeWidth={2} />
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+              <BookOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
             </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-              Online Only
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+              Recommended
             </span>
           </div>
 
@@ -517,13 +544,30 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             Complete the 8 online modules at your own pace. Theory and clinical frameworks — no hands-on component.
           </p>
 
-          <div className="mb-6">
+          <div className="mb-4">
+            {isLaunchPricing && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.LAUNCH_PRICING.FUTURE_PRICE}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                  Launch Price
+                </span>
+              </div>
+            )}
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
             </div>
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access</p>
           </div>
+
+          {isLaunchPricing && (
+            <div className="mb-4 flex items-center gap-1.5 text-xs text-orange-600">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="font-semibold">
+                Launch price ends {CONFIG.LAUNCH_PRICING.DEADLINE.toLocaleDateString('en-AU', { month: 'long', day: 'numeric' })}
+              </span>
+            </div>
+          )}
 
           <ul className="space-y-3 mb-7 flex-1">
             {[
@@ -541,44 +585,51 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             ))}
           </ul>
 
+          <div className="mb-4">
+            <label className="text-xs font-semibold text-[var(--muted-foreground)] mb-1.5 block">
+              Which city would you attend a future workshop?
+            </label>
+            <select
+              value={preferredCity}
+              onChange={(e) => setPreferredCity(e.target.value)}
+              className="w-full py-2.5 px-3 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
+            >
+              <option value="">Not sure yet</option>
+              {LOCATIONS.map(loc => (
+                <option key={loc.value} value={loc.value}>{loc.label}</option>
+              ))}
+            </select>
+          </div>
+
           <button
             onClick={() => handleCheckout('online-only')}
             disabled={loading !== null}
-            className="w-full py-3.5 px-6 rounded-xl font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {loading === 'online-only' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Online Only — ${CONFIG.COURSE.PRICE_ONLINE}
+                Enroll Now — ${CONFIG.COURSE.PRICE_ONLINE}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
 
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-            Online modules only — does not include hands-on workshop
+            7-day satisfaction guarantee · Secure Stripe checkout
           </p>
         </div>
 
-        {/* Complete Course */}
-        <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
-          {/* Early Bird badge — top right, outside card flow */}
-          {isEarlyBird && (
-            <div className="absolute -top-4 right-6">
-              <div className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shadow-lg shadow-orange-200/50">
-                Early Bird — Save ${CONFIG.COURSE.SAVINGS}
-              </div>
-            </div>
-          )}
-
+        {/* Complete Course — Upgrade */}
+        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative">
           {/* Icon + Badge */}
-          <div className="flex items-center gap-3 mb-5 mt-1">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
-              <Award className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+              <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
             </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-              Recommended
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              Add Workshop
             </span>
           </div>
 
@@ -689,14 +740,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </button>
 
           {!canEnroll && !openTbaCity && (
-            <p className="mt-2 text-[11px] text-center text-[var(--muted-foreground)]">
-              Select a confirmed location above to activate enrollment
+            <p className="mt-3 text-xs text-center text-[var(--muted-foreground)] leading-relaxed">
+              Workshop dates coming soon. Start with the online course now — upgrade to add the workshop when dates are confirmed.
             </p>
           )}
 
-          {isEarlyBird && (
-            <p className="text-[11px] text-orange-600 font-semibold mt-3 text-center">
-              Early bird ends {CONFIG.EARLY_BIRD_DEADLINE.toLocaleDateString('en-AU', { month: 'long', day: 'numeric' })} — after that, ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}. Lock in ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} today.
+          {canEnroll && (
+            <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
+              7-day satisfaction guarantee · Flexible workshop dates
             </p>
           )}
         </div>
@@ -704,7 +755,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
       {/* Trust Signals */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-        {['Secure Stripe Checkout', 'AHPRA Aligned', 'Lifetime Access', 'Certificate Included'].map(item => (
+        {enrollmentCount >= 100 && (
+          <div className="flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
+            {enrollmentCount}+ clinicians enrolled
+          </div>
+        )}
+        {['7-Day Guarantee', 'Secure Stripe Checkout', 'AHPRA Aligned', 'Lifetime Access', 'Certificate Included'].map(item => (
           <div key={item} className="flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
             {item}

@@ -53,8 +53,8 @@ function PricingContent() {
       a: 'No — the course is designed for any clinician managing concussion, including physiotherapists, GPs, sports medicine doctors, exercise physiologists, and athletic trainers. The curriculum is AHPRA-aligned and endorsed by Osteopathy Australia, but the clinical content is universal.',
     },
     {
-      q: 'What if I\'m not satisfied with the course?',
-      a: 'We offer a 30-day satisfaction guarantee. Complete Module 1 — if you don\'t feel this course is right for you, email us for a full refund. No questions asked.',
+      q: 'What is your refund policy?',
+      a: 'We offer a 7-day satisfaction guarantee. If the course isn\'t right for you, email us within 7 days of purchase for a full refund (online content must be less than 25% accessed). Workshop cancellations: full refund 14+ days before your workshop date, 50% refund 7–13 days before. Attendee substitution is always available. See our full terms at /terms.',
     },
     {
       q: 'Can my employer pay for this?',
@@ -98,8 +98,8 @@ function PricingContent() {
             <span className="text-gradient">Confidence</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Australia&apos;s most comprehensive concussion management training — 14 CPD points
-            with hands-on expert workshop. Online-only option also available.
+            The only Australian concussion CPD with hands-on assessment training.
+            Start with 8 online modules — add the workshop when dates are confirmed.
           </p>
         </div>
 
@@ -122,12 +122,12 @@ function PricingContent() {
         {/* Testimonials */}
         <div className="max-w-4xl mx-auto mt-16 md:mt-20">
           <h2 className="text-2xl font-bold text-center mb-8 text-foreground">Trusted by Australian Clinicians</h2>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
               {
                 quote: 'Well organised...content explained in a way that was relative and memorable',
                 name: 'Alex',
-                role: 'Melbourne Osteopath',
+                role: 'Osteopath, Melbourne',
                 initials: 'A',
               },
               {
@@ -137,10 +137,22 @@ function PricingContent() {
                 initials: 'D',
               },
               {
-                quote: 'Great for accurate diagnosis and skill for concussion management',
+                quote: 'Relevant, applicable and easy to absorb. A must for any clinician managing concussion',
                 name: 'Sarah',
-                role: 'Osteopath',
+                role: 'Physiotherapist',
                 initials: 'S',
+              },
+              {
+                quote: 'Incredibly thorough and well structured...hands on component was invaluable',
+                name: 'Amelia',
+                role: 'Physiotherapist',
+                initials: 'A',
+              },
+              {
+                quote: 'Highly recommend for any health professional wanting to improve their concussion management skills',
+                name: 'Bailey',
+                role: 'Exercise Physiologist',
+                initials: 'B',
               },
             ].map((t) => (
               <div key={t.name} className="glass rounded-xl p-5">
@@ -169,7 +181,7 @@ function PricingContent() {
         {/* Instructor */}
         <div className="text-center mt-10">
           <p className="text-sm text-muted-foreground">
-            Led by <span className="font-semibold text-foreground">Zac Lewis</span>, Osteopath (B.Clin.Sci., M.Ost.Med) — Founder of Concussion Education Australia
+            Led by <span className="font-semibold text-foreground">Zac Lewis</span>, Osteopath &amp; Founder, Concussion Education Australia
           </p>
         </div>
 

@@ -7,6 +7,7 @@ import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { FooterWrapper } from "@/components/FooterWrapper";
 import { StickyCTA } from "@/components/StickyCTA";
 import { ExitIntentPopup } from "@/components/ExitIntentPopup";
+import { Analytics } from "@vercel/analytics/next";
 import { CONFIG } from "@/lib/config";
 import { organizationSchema } from "@/lib/schema-markup";
 import Script from 'next/script';
@@ -155,6 +156,7 @@ export default function RootLayout({
             </AnalyticsProvider>
           </Suspense>
         </ProgressProvider>
+        <Analytics />
       </body>
     </html>
   );

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, Lock, BookOpen, Award, Clock, FileText, Download } from 'lucide-react'
+import { CheckCircle, Lock, BookOpen, Award, Clock, FileText, Download, ArrowRight } from 'lucide-react'
+import { trackFreeCourseCompletion } from '@/lib/analytics'
 import { getSCATModulesMeta } from '@/data/module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
 
@@ -51,6 +52,7 @@ export default function SCATCoursePage() {
       // Check if certificate was already sent this session
       const sentKey = `cert-sent-scat-${userEmail}`
       if (typeof window !== 'undefined' && localStorage.getItem(sentKey)) return
+      trackFreeCourseCompletion(userEmail)
       setCertificateStatus('sending')
       fetch('/api/certificate', {
         method: 'POST',
@@ -207,7 +209,7 @@ export default function SCATCoursePage() {
                   {certificateStatus === 'error' && ' We had trouble emailing your certificate, but you can download it below.'}
                   {' '}Save it in your CPD portfolio for at least 5 years for audit purposes.
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3 mb-5">
                   <button
                     onClick={handleDownloadCertificate}
                     disabled={certificateDownloading}
@@ -224,6 +226,21 @@ export default function SCATCoursePage() {
                       {certificateStatus === 'sent' ? 'Resend Email' : 'Email Certificate'}
                     </button>
                   )}
+                </div>
+                <div className="pt-4 border-t border-emerald-200">
+                  <p className="text-sm text-emerald-800 font-semibold mb-2">
+                    Ready for the full 14 CPD points?
+                  </p>
+                  <p className="text-sm text-emerald-700 mb-3">
+                    Unlock 8 advanced modules covering VOMS, BESS, return-to-play protocols, rehabilitation pathways, and more.
+                  </p>
+                  <button
+                    onClick={() => router.push('/pricing')}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors"
+                  >
+                    See Full Course — $497
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>

@@ -181,6 +181,64 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
   })
 }
 
+/**
+ * Send abandoned checkout recovery email
+ */
+export async function sendAbandonedCheckoutEmail(email: string, baseUrl: string): Promise<boolean> {
+  return sendEmail({
+    to: email,
+    subject: 'You left something behind — your course is still waiting',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            .header { background: linear-gradient(135deg, #64a8b0 0%, #5b9aa6 100%); padding: 32px 24px; text-align: center; }
+            .header h1 { margin: 0; color: white; font-size: 24px; font-weight: 700; }
+            .content { padding: 32px 24px; }
+            .button { display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #64a8b0 0%, #5b9aa6 100%); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 24px 0; }
+            .footer { padding: 24px; text-align: center; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>ConcussionPro</h1>
+            </div>
+            <div class="content">
+              <h2 style="margin-top: 0;">Still thinking it over?</h2>
+              <p>We noticed you started enrolling but didn't finish. No worries — your spot is still available.</p>
+              <p>Here's what's waiting for you:</p>
+              <ul style="padding-left: 20px; color: #475569;">
+                <li>8 evidence-based online modules (8 AHPRA CPD points)</li>
+                <li>Lifetime access — learn at your own pace</li>
+                <li>Clinical Toolkit, Reference Repository &amp; certificate</li>
+              </ul>
+              <center>
+                <a href="${baseUrl}/pricing" class="button">Complete Your Enrolment &rarr;</a>
+              </center>
+              <p style="color: #64748b; font-size: 14px; margin-top: 24px;">
+                Have questions? Just reply to this email — Zac reads every message.
+              </p>
+              <p style="color: #64748b;">
+                — Zac Lewis<br>
+                <em style="font-size: 14px;">Osteopath (B.Clin.Sci., M.Ost.Med) · Founder, Concussion Education Australia</em>
+              </p>
+            </div>
+            <div class="footer">
+              <p>Concussion Education Australia</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  })
+}
+
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }

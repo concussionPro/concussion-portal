@@ -16,6 +16,7 @@ export interface User {
   workshopLocation?: string // e.g. 'byron-bay', 'sydney', 'melbourne'
   lastLoginAt?: string
   nurtureUnsubscribed?: boolean
+  signupSource?: 'free-course' | 'preseason' | 'purchase' | 'admin'
 }
 
 const USERS_BLOB_PATH = 'users.json'
@@ -135,6 +136,7 @@ export async function createUser(data: {
   stripeCustomerId?: string
   stripeSubscriptionId?: string
   workshopLocation?: string
+  signupSource?: 'free-course' | 'preseason' | 'purchase' | 'admin'
 }): Promise<string> {
   const users = await loadUsers()
 
@@ -164,6 +166,7 @@ export async function createUser(data: {
     stripeCustomerId: data.stripeCustomerId,
     stripeSubscriptionId: data.stripeSubscriptionId,
     workshopLocation: data.workshopLocation,
+    signupSource: data.signupSource,
   }
 
   users.push(newUser)

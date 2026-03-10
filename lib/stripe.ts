@@ -59,12 +59,14 @@ export type CourseType = typeof VALID_COURSE_TYPES[number]
 export async function createCourseCheckoutSession({
   courseType,
   location,
+  preferredCity,
   customerEmail,
   successUrl,
   cancelUrl,
 }: {
   courseType: CourseType
   location?: string
+  preferredCity?: string
   customerEmail?: string
   successUrl: string
   cancelUrl: string
@@ -110,6 +112,7 @@ export async function createCourseCheckoutSession({
     metadata: {
       courseType,
       location: location || '',
+      preferredCity: preferredCity || '',
       accessLevel: COURSE_ACCESS_MAP[courseType],
       isEarlyBird: isEarlyBird ? 'true' : 'false',
       currency,

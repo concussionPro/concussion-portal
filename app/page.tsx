@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { ArrowRight, Check, Star } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { OrganizationSchema, CourseSchema } from '@/components/SchemaMarkup'
-import { PricingOptions } from '@/components/PricingOptions'
 import { SiteNav } from '@/components/SiteNav'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { trackShopClick } from '@/lib/analytics'
@@ -47,7 +46,7 @@ export default function HomePage() {
 
             {/* Subhead */}
             <p className="text-base md:text-lg text-[var(--muted-foreground)] leading-relaxed mb-8 max-w-[560px]">
-              {CONFIG.COURSE.TOTAL_MODULES} evidence-based modules + full-day practical workshop. {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points. The training Australian clinicians actually need.
+              Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} modules, {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points, and the only course with hands-on SCAT6, VOMS &amp; BESS training.
             </p>
 
             {/* CTAs */}
@@ -56,7 +55,7 @@ export default function HomePage() {
                 href="/pricing"
                 className="btn-primary px-7 py-3.5 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"
               >
-                See Pricing Options
+                Start Online — ${CONFIG.COURSE.PRICE_ONLINE} {new Date() < CONFIG.LAUNCH_PRICING.DEADLINE && '(Launch Price)'}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -105,8 +104,8 @@ export default function HomePage() {
               {[
                 { value: CONFIG.COURSE.TOTAL_CPD_POINTS.toString(), label: 'AHPRA CPD Points', sub: 'Aligned' },
                 { value: '8', label: 'Online Modules', sub: '8 CPD points' },
-                { value: '1 Day', label: 'Practical Workshop', sub: '6 CPD points' },
-                { value: Object.values(CONFIG.LOCATIONS).filter(l => l.status === 'confirmed').length.toString(), label: 'Locations', sub: Object.values(CONFIG.LOCATIONS).filter(l => l.status === 'confirmed').map(l => l.city).join(' + ') || 'Coming soon' },
+                { value: '130+', label: 'References', sub: 'Evidence-based' },
+                { value: '11h', label: 'Course Content', sub: 'Self-paced' },
               ].map((stat) => (
                 <div key={stat.label} className="stat-tile text-center">
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--accent)] mb-1">
@@ -180,10 +179,10 @@ export default function HomePage() {
           <div className="max-w-[860px] mx-auto">
             <div className="text-center mb-10">
               <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
-                What many clinicians <span className="text-gradient">overlook</span>
+                What most CPD courses <span className="text-gradient">don&apos;t teach</span>
               </h2>
               <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-md mx-auto">
-                Convergence insufficiency, vestibular dysfunction, cervicogenic factors. Learn to identify them all.
+                VOMS, BESS scoring, convergence insufficiency, vestibular dysfunction — the assessments that separate confident clinicians from uncertain ones.
               </p>
             </div>
 
@@ -263,74 +262,6 @@ export default function HomePage() {
 
 
         {/* ── Divider ──────────────────────────────────────── */}
-        <div className="max-w-[860px] mx-auto px-5 md:px-8">
-          <div className="divider" />
-        </div>
-
-
-        {/* ── Pricing ──────────────────────────────────────── */}
-        <section className="section-padding relative z-10">
-          <div className="max-w-[860px] mx-auto">
-            <PricingOptions variant="full" />
-          </div>
-        </section>
-
-
-        {/* ── Divider ──────────────────────────────────────── */}
-        <div className="max-w-[860px] mx-auto px-5 md:px-8">
-          <div className="divider" />
-        </div>
-
-
-        {/* ── FAQ ──────────────────────────────────────────── */}
-        <section className="section-padding relative z-10">
-          <div className="max-w-[640px] mx-auto">
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--foreground)] mb-6">
-              Common Questions
-            </h2>
-
-            <div className="space-y-2.5">
-              {[
-                {
-                  q: 'When do I get access to the online modules?',
-                  a: 'Immediately after enrollment. Complete them at your own pace before your chosen in-person workshop date.',
-                },
-                {
-                  q: 'Can I change my workshop date or location?',
-                  a: 'Yes — you have full flexibility to attend any available workshop date. Reschedule at no charge, subject to availability.',
-                },
-                {
-                  q: 'Do I need to complete modules before the workshop?',
-                  a: 'Yes — the practical workshop builds on concepts from the online modules. We recommend completing all 8 modules before your workshop date.',
-                },
-                {
-                  q: `What's included in the $${new Date() < CONFIG.EARLY_BIRD_DEADLINE ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} enrollment?`,
-                  a: 'Everything: 8 online modules (lifetime access), full-day practical workshop at your chosen location, all materials and workbook, and your 14 AHPRA-aligned CPD points certificate upon completion.',
-                },
-              ].map((faq, i) => (
-                <details key={i} className="card rounded-xl group">
-                  <summary className="text-sm font-semibold text-[var(--foreground)] cursor-pointer list-none flex items-center justify-between gap-4 select-none px-5 py-4">
-                    {faq.q}
-                    <span className="text-[var(--accent)] text-lg shrink-0 group-open:rotate-45 transition-transform duration-200">+</span>
-                  </summary>
-                  <p className="text-[13px] text-[var(--muted-foreground)] px-5 pb-4 -mt-1 leading-relaxed pr-10">
-                    {faq.a}
-                  </p>
-                </details>
-              ))}
-            </div>
-
-            <p className="text-[13px] text-[var(--muted-foreground)] mt-6">
-              More questions? Email{' '}
-              <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="text-[var(--accent)] font-medium hover:underline">
-                {CONFIG.CONTACT_EMAIL}
-              </a>
-            </p>
-          </div>
-        </section>
-
-
-        {/* ── Divider ──────────────────────────────────────── */}
         <div className="max-w-[640px] mx-auto px-5 md:px-8">
           <div className="divider" />
         </div>
@@ -343,7 +274,7 @@ export default function HomePage() {
               What clinicians say
             </h2>
 
-            <div className="grid gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
               {[
                 {
                   quote: "Before this training, our approach to concussion cases was uncertain. Now, my team has the confidence and proven skills to diagnose and manage them with clarity and accuracy.",
@@ -354,6 +285,16 @@ export default function HomePage() {
                   quote: "An outstanding blend of evidence-based knowledge and practical skills. The clinically relevant testing covered is directly applicable to concussion diagnosis and management in real-world settings.",
                   name: 'Dean',
                   role: 'University Clinical Educator, QLD',
+                },
+                {
+                  quote: "Relevant, applicable and easy to absorb. A must for any clinician managing concussion.",
+                  name: 'Sarah',
+                  role: 'Physiotherapist',
+                },
+                {
+                  quote: "Practical, well-structured, and backed by the latest evidence. Exactly what clinicians need.",
+                  name: 'A Physio',
+                  role: 'Physiotherapist, VIC',
                 },
               ].map((t) => (
                 <div key={t.name} className="card rounded-2xl p-5 md:p-6">
@@ -392,7 +333,7 @@ export default function HomePage() {
                 Ready to master evidence-based concussion management?
               </h2>
               <p className="text-sm text-white/60 mb-6 max-w-md mx-auto relative z-10">
-                {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access
+                {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
                 <a

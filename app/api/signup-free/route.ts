@@ -66,7 +66,8 @@ export async function POST(request: NextRequest) {
       userId = await createUser({
         email,
         name: userName,
-        accessLevel: 'preview', // Free SCAT Mastery access
+        accessLevel: 'preview',
+        signupSource: 'free-course',
       })
       console.log(`New user created for free course: ${email}`)
     }

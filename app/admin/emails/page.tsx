@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Mail, Calendar, Clock, Download } from 'lucide-react'
+import { Users, Mail, Calendar, Clock, Download, Trash2, MailX } from 'lucide-react'
 
 interface EmailEntry {
   id: string
@@ -10,6 +10,8 @@ interface EmailEntry {
   accessLevel: string
   createdAt: string
   lastLogin: string | null
+  nurtureUnsubscribed: boolean
+  signupSource: string | null
 }
 
 export default function AdminEmailsPage() {
@@ -45,6 +47,29 @@ export default function AdminEmailsPage() {
       alert('Failed to load emails. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleUnsubscribe = async (email: string) => {
+    if (!confirm(`Remove ${email} from the email funnel? (Their access won't be affected)`)) return
+
+    try {
+      const response = await fetch('/api/admin/unsubscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey,
+        },
+        body: JSON.stringify({ email }),
+      })
+      const data = await response.json()
+      if (response.ok && data.success) {
+        setEmails(prev => prev.map(e => e.email === email ? { ...e, nurtureUnsubscribed: true } : e))
+      } else {
+        alert('Failed: ' + (data.error || 'Unknown error'))
+      }
+    } catch {
+      alert('Failed to unsubscribe. Please try again.')
     }
   }
 
@@ -95,11 +120,12 @@ export default function AdminEmailsPage() {
 
   const exportCSV = () => {
     const csv = [
-      ['Email', 'Name', 'Access Level', 'Created At', 'Last Login'],
+      ['Email', 'Name', 'Access Level', 'Source', 'Created At', 'Last Login'],
       ...filteredEmails.map(e => [
         e.email,
         e.name,
         e.accessLevel,
+        e.signupSource || 'unknown',
         new Date(e.createdAt).toLocaleDateString(),
         e.lastLogin ? new Date(e.lastLogin).toLocaleDateString() : 'Never',
       ])
@@ -232,20 +258,26 @@ export default function AdminEmailsPage() {
                     Access Level
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Source
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Signed Up
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Last Login
                   </th>
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Funnel
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {filteredEmails.map((email) => (
-                  <tr key={email.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={email.id} className={`hover:bg-slate-50 transition-colors ${email.nurtureUnsubscribed ? 'opacity-50' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-900">{email.email}</span>
+                        <span className={`text-sm font-medium ${email.nurtureUnsubscribed ? 'text-slate-400 line-through' : 'text-slate-900'}`}>{email.email}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -260,6 +292,21 @@ export default function AdminEmailsPage() {
                         }`}
                       >
                         {email.accessLevel === 'preview' ? 'Free' : 'Paid'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                        email.signupSource === 'preseason' ? 'bg-orange-100 text-orange-700' :
+                        email.signupSource === 'purchase' ? 'bg-blue-100 text-blue-700' :
+                        email.signupSource === 'admin' ? 'bg-slate-100 text-slate-700' :
+                        email.signupSource === 'free-course' ? 'bg-teal-100 text-teal-700' :
+                        'bg-slate-50 text-slate-400'
+                      }`}>
+                        {email.signupSource === 'free-course' ? 'Free Course' :
+                         email.signupSource === 'preseason' ? 'Preseason' :
+                         email.signupSource === 'purchase' ? 'Purchase' :
+                         email.signupSource === 'admin' ? 'Admin' :
+                         'Unknown'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -280,6 +327,22 @@ export default function AdminEmailsPage() {
                         </div>
                       ) : (
                         <span className="text-sm text-slate-400">Never</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {email.nurtureUnsubscribed ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-500">
+                          <MailX className="w-3 h-3" />
+                          Removed
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleUnsubscribe(email.email)}
+                          title="Remove from email funnel"
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       )}
                     </td>
                   </tr>

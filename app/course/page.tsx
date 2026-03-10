@@ -472,20 +472,20 @@ export default function CoursePage() {
             {[
               {
                 quote: 'Well organised...content explained in a way that was relative and memorable',
-                author: 'Alex, Melbourne Osteopath',
+                author: 'Alex, Osteopath, Melbourne',
                 initials: 'A',
                 bgColor: 'from-[#64a8b0] to-[#7ba8b0]',
               },
               {
-                quote: 'Great for accurate diagnosis and skill for concussion management',
-                author: 'Sarah, Osteopath',
+                quote: 'Relevant, applicable and easy to absorb. A must for any clinician managing concussion',
+                author: 'Sarah, Physiotherapist',
                 initials: 'S',
                 bgColor: 'from-[#7ba8b0] to-emerald-500',
               },
               {
-                quote: 'Comprehensive and content rich',
-                author: 'NSW Physiotherapist',
-                initials: 'NP',
+                quote: 'Incredibly thorough and well structured...hands on component was invaluable',
+                author: 'Amelia, Physiotherapist',
+                initials: 'A',
                 bgColor: 'from-[#5b9aa6] to-indigo-500',
               },
             ].map((testimonial, index) => (

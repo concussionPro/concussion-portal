@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       email,
       name,
       accessLevel: accessLevel as 'online-only' | 'full-course' | 'preview',
+      signupSource: 'admin',
     })
 
     const user = await findUserById(userId)

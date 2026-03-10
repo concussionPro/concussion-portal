@@ -359,23 +359,23 @@ export const SCAT_MASTERY_SEQUENCE = [
   // DAY 14 - Authority + Social Proof
   {
     day: 14,
-    subject: 'Why Osteopathy Australia endorses this training',
+    subject: 'Why this training is endorsed for CPD',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${name},</h2>
       <p>You might wonder what sets this course apart from other concussion CPD options in Australia.</p>
       <p>Three things:</p>
       <p><strong>1. It's the only course with hands-on assessment training.</strong><br>
       Most CPD is a 1&ndash;2 hour webinar. Our full-day workshop has you physically administering SCAT6, VOMS, and BESS under supervision.</p>
-      <p><strong>2. Endorsed by Osteopathy Australia — built for all allied health clinicians.</strong><br>
-      Osteopaths, physiotherapists, sports medicine doctors, GPs, and exercise physiologists all use these assessment tools. The curriculum is designed for any clinician managing concussion.</p>
+      <p><strong>2. Built for all allied health clinicians — endorsed by Osteopathy Australia.</strong><br>
+      Physiotherapists, osteopaths, chiropractors, sports medicine doctors, GPs, and exercise physiologists all use these assessment tools. The curriculum is designed for any clinician managing concussion.</p>
       <p><strong>3. You get a complete clinical documentation system.</strong><br>
       Referral templates, return-to-play letters, clearance forms, and a searchable repository of 130+ clinical references.</p>
       <div style="background: #f8fafc; padding: 18px 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0; font-size: 14px;">
         <em>&ldquo;The VOMS and BESS training was exceptional. I couldn't find this level of practical instruction anywhere else in Australia.&rdquo;</em><br>
-        <strong style="color: #475569;">&mdash; Osteopath, Melbourne</strong>
+        <strong style="color: #475569;">&mdash; Physiotherapist</strong>
       </div>
       <center><a href="${utm(upgradeLink, 'scat_mastery_day14', 'view_pricing')}" class="cta-btn">View Pricing and Options</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} AUD &middot; Full course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</p>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} AUD (launch price) &middot; Full course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -411,7 +411,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>AHPRA-aligned CPD points, endorsed by Osteopathy Australia</li>
       </ul>
       <center><a href="${utm(upgradeLink, 'scat_mastery_day18', 'choose_option')}" class="cta-btn">Choose Your Option</a></center>
-      <p style="font-size: 14px; color: #475569; margin-top: 20px;">Early bird pricing is limited &mdash; lock in the best rate before it expires.</p>
+      <p style="font-size: 14px; color: #475569; margin-top: 20px;">Launch pricing is limited &mdash; the price increases to $597 when it ends.</p>
       <div class="sig">
         <p>Questions? Just reply to this email &mdash; I'm always happy to help.</p>
         <p>All the best,<br>Zac Lewis<br>Founder, Concussion Education Australia<br><a href="mailto:zac@concussion-education-australia.com">zac@concussion-education-australia.com</a></p>
@@ -420,3 +420,50 @@ export const SCAT_MASTERY_SEQUENCE = [
     `),
   },
 ]
+
+// ─── Paid User Sequences ─────────────────────────────────────────────────────
+
+/**
+ * Sent to online-only users 7 days after purchase.
+ * Nudges them to consider the workshop upgrade.
+ */
+export const ONLINE_UPGRADE_SEQUENCE = [
+  {
+    day: 7,
+    subject: 'How are you finding the modules so far?',
+    template: (name: string, upgradeLink: string) => emailShell(`
+      <h2>Hi ${name},</h2>
+      <p>You're a week into the course — how's it going?</p>
+      <p>By now you've likely worked through the concussion pathophysiology and diagnostic assessment modules. That's the foundation that most CPD courses stop at.</p>
+      <p>What makes this training different is the practical component. The full-day workshop lets you:</p>
+      <ul>
+        <li>Physically administer a SCAT6 on a real subject with expert feedback</li>
+        <li>Practice VOMS and BESS scoring — the assessments clinicians find hardest to learn from text alone</li>
+        <li>Work through clinical scenarios with other clinicians</li>
+      </ul>
+      <p>Workshop dates are being finalised now. If you'd like to add the hands-on day, you can upgrade at any time.</p>
+      <center><a href="${upgradeLink}" class="cta-btn">See Workshop Options</a></center>
+      <p style="font-size: 13px; color: #64748b; text-align: center;">6 extra CPD points · Small group (max 12) · Upgrade anytime</p>
+      <div class="sig">Zac</div>
+      <p class="ps">P.S. Reply if you have any questions about the modules — I'm always happy to help.</p>
+    `),
+  },
+]
+
+/**
+ * Sent to users who haven't logged in for 14+ days after purchase.
+ * Re-engagement nudge.
+ */
+export const REENGAGEMENT_EMAIL = {
+  subject: 'Your concussion modules are waiting',
+  template: (name: string, loginLink: string) => emailShell(`
+    <h2>Hi ${name},</h2>
+    <p>Just a quick check-in — I noticed you haven't logged into ConcussionPro recently.</p>
+    <p>Your modules are still there, ready when you are. Most clinicians find it easiest to do one module per sitting (about 45–60 minutes each).</p>
+    <div class="callout">
+      <strong>Quick tip:</strong> Modules 3 and 6 are the most clinically actionable — they cover practical assessment protocols and return-to-play frameworks you can use immediately.
+    </div>
+    <center><a href="${loginLink}" class="cta-btn">Continue Your Course</a></center>
+    <div class="sig">Zac</div>
+  `),
+}

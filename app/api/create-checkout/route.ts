@@ -15,7 +15,7 @@ import type { CourseType } from '@/lib/stripe'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { courseType, location, email } = body
+    const { courseType, location, email, preferredCity } = body
 
     // Validate course type
     if (!courseType || !VALID_COURSE_TYPES.includes(courseType)) {
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
     const session = await createCourseCheckoutSession({
       courseType: courseType as CourseType,
       location: courseType === 'full-course' ? location : undefined,
+      preferredCity: courseType === 'online-only' ? preferredCity : undefined,
       customerEmail: email,
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${baseUrl}/pricing?canceled=true`,

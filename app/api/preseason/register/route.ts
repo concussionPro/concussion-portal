@@ -114,6 +114,7 @@ export async function POST(request: Request) {
         email: email.toLowerCase(),
         name: contactName,
         accessLevel: 'preview',
+        signupSource: 'preseason',
       })
     } catch (err) {
       console.error('Failed to add preseason registrant to user list:', err)

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
+import { trackLeadConversion } from '@/lib/analytics'
 
 declare global {
   interface Window {
@@ -62,13 +63,8 @@ export default function SCATMasteryPage() {
       const data = await res.json()
 
       if (data.success) {
-        // Fire gtag conversion
-        if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'generate_lead', {
-            event_category: 'signup',
-            event_label: 'scat_mastery',
-          })
-        }
+        // Fire gtag lead conversion with value + enhanced data
+        trackLeadConversion('scat_mastery_signup', 25, email.trim().toLowerCase())
         setSuccessData(data)
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
@@ -118,7 +114,7 @@ export default function SCATMasteryPage() {
             </h1>
 
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              The complete guide to administering, scoring, and interpreting the SCAT6 and SCOAT6. Built for physiotherapists, osteopaths, and sports medicine clinicians. Free, online, and instantly accessible.
+              The complete guide to administering, scoring, and interpreting the SCAT6 and SCOAT6. Built for physiotherapists, osteopaths, chiropractors, and all AHPRA-registered clinicians. Free, online, and instantly accessible.
             </p>
 
             {/* Trust pills */}
@@ -326,18 +322,45 @@ export default function SCATMasteryPage() {
           </div>
         </div>
 
-        {/* ── Bottom CTA strip ── */}
-        <div className="mt-20 md:mt-24 border-t border-slate-200/60 pt-12 text-center">
-          <p className="text-sm text-slate-500 mb-2">
-            Ready for the full 14 CPD point certification?
-          </p>
-          <a
-            href={CONFIG.SHOP_URL}
-            className="inline-flex items-center gap-2 text-[#5b9aa6] font-semibold text-sm hover:text-[#4a8a96] transition-colors"
-          >
-            View the complete ConcussionPro course
-            <ChevronRight className="w-4 h-4" />
-          </a>
+        {/* ── Upgrade CTA Card ── */}
+        <div className="mt-20 md:mt-24">
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
+            <div className="text-center mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-2">
+                You&apos;ve mastered the SCAT6 — ready for the full 14 CPD points?
+              </h2>
+              <p className="text-sm text-slate-500">
+                The complete course covers everything the free training doesn&apos;t.
+              </p>
+            </div>
+
+            <ul className="space-y-3 max-w-md mx-auto mb-8">
+              {[
+                'VOMS (Vestibular/Ocular Motor Screening) — the assessment most clinicians should be using',
+                'BESS balance testing with hands-on scoring practice',
+                'Return-to-play & return-to-learn protocols for clubs and schools',
+                'Full-day practical workshop with expert feedback',
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm text-slate-700">
+                  <CheckCircle2 className="w-4.5 h-4.5 text-[#5b9aa6] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="text-center">
+              <a
+                href="/pricing"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#4a8a96] hover:to-[#5a8d98] transition-all shadow-lg shadow-teal-200/50"
+              >
+                See Complete Course
+                <ArrowRight className="w-5 h-5" />
+              </a>
+              <p className="text-xs text-slate-400 mt-3">
+                7-day satisfaction guarantee
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -16,6 +16,7 @@ export default function LearningSuite() {
   const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, isModuleComplete, getModuleProgress } = useProgress()
   const modules = getModulesMeta()
   const [hasAccess, setHasAccess] = useState(false)
+  const [accessLevel, setAccessLevel] = useState<string>('')
   const [accessLoading, setAccessLoading] = useState(true)
   useAnalytics() // Track page views
 
@@ -42,6 +43,7 @@ export default function LearningSuite() {
             }
 
             // Both online-only and full-course users have full access
+            setAccessLevel(data.user.accessLevel)
             setHasAccess(data.user.accessLevel === 'online-only' || data.user.accessLevel === 'full-course')
           }
         }
@@ -191,6 +193,29 @@ export default function LearningSuite() {
                 )
               })}
             </div>
+
+            {/* Upgrade banner for online-only users */}
+            {accessLevel === 'online-only' && (
+              <div className="mt-6 glass rounded-xl p-5 border-l-4 border-orange-400">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
+                    <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-foreground mb-1">Add the hands-on workshop</h3>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Upgrade to the complete course for 6 additional CPD points. Practice SCAT6, VOMS &amp; BESS with expert feedback in a full-day workshop.
+                    </p>
+                    <button
+                      onClick={() => router.push('/pricing')}
+                      className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5"
+                    >
+                      View Workshop Options
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>

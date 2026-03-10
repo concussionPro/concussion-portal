@@ -31,15 +31,15 @@ export const CONFIG = {
       date: '',
       dateObj: null as Date | null,
       spotsRemaining: 0,
-      status: 'tba' as const,
+      status: 'tba' as 'tba' | 'confirmed',
     },
     BYRON_BAY: {
       city: 'Byron Bay',
       slug: 'byron-bay',
-      date: 'March 28, 2026',
-      dateObj: new Date('2026-03-28') as Date | null,
-      spotsRemaining: 12,
-      status: 'confirmed' as const,
+      date: '',
+      dateObj: null as Date | null,
+      spotsRemaining: 0,
+      status: 'tba' as 'tba' | 'confirmed',
     },
     MELBOURNE: {
       city: 'Melbourne',
@@ -47,7 +47,7 @@ export const CONFIG = {
       date: '',
       dateObj: null as Date | null,
       spotsRemaining: 0,
-      status: 'tba' as const,
+      status: 'tba' as 'tba' | 'confirmed',
     },
   },
 
@@ -61,6 +61,13 @@ export const CONFIG = {
   // Social Proof — real numbers only, updated manually
   SOCIAL_PROOF: {
     SCAT_FORM_DOWNLOADS: 500,
+  },
+
+  // Launch Pricing (online course urgency)
+  LAUNCH_PRICING: {
+    ENABLED: true,
+    DEADLINE: new Date('2026-03-24T23:59:59'),
+    FUTURE_PRICE: 597,
   },
 
   // Early Bird Pricing Deadline

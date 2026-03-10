@@ -97,6 +97,8 @@ export async function GET(request: NextRequest) {
         createdAt: user.createdAt,
         lastLogin: user.lastLoginAt || null,
         workshopLocation: user.workshopLocation || null,
+        nurtureUnsubscribed: user.nurtureUnsubscribed || false,
+        signupSource: user.signupSource || null,
         completedModules,
         totalCPDPoints,
         moduleDetails,

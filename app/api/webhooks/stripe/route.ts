@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
 import { createUser, findUserByEmail } from '@/lib/users'
-import { sendMagicLinkEmail } from '@/lib/email'
+import { sendMagicLinkEmail, sendAbandonedCheckoutEmail } from '@/lib/email'
 import { sendEmail } from '@/lib/resend-client'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { put, list as listBlobs } from '@vercel/blob'
@@ -51,12 +51,12 @@ export async function POST(request: NextRequest) {
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
         break
 
-      case 'payment_intent.payment_failed':
-        await handlePaymentFailed(event.data.object as Stripe.PaymentIntent)
-        break
-
       case 'checkout.session.expired':
         await handleCheckoutExpired(event.data.object as Stripe.Checkout.Session)
+        break
+
+      case 'payment_intent.payment_failed':
+        await handlePaymentFailed(event.data.object as Stripe.PaymentIntent)
         break
 
       default:
@@ -89,9 +89,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Extract metadata
   const courseType = session.metadata?.courseType || 'online-only'
   const location = session.metadata?.location || ''
+  const preferredCity = session.metadata?.preferredCity || ''
   const accessLevel = (session.metadata?.accessLevel || 'online-only') as 'online-only' | 'full-course'
 
-  console.log(`Payment completed: ${customerEmail} — ${courseType}${location ? ` (${location})` : ''} — $${(session.amount_total || 0) / 100} AUD`)
+  const workshopCity = location || preferredCity
+  console.log(`Payment completed: ${customerEmail} — ${courseType}${workshopCity ? ` (${workshopCity})` : ''} — $${(session.amount_total || 0) / 100} AUD`)
 
   // Step 1: Create/upgrade user account — MUST succeed or Stripe will retry
   const existingUser = await findUserByEmail(customerEmail)
@@ -111,7 +113,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         name: customerName,
         accessLevel: 'full-course',
         stripeCustomerId: session.customer as string || undefined,
-        workshopLocation: location || undefined,
+        workshopLocation: workshopCity || undefined,
+        signupSource: 'purchase',
       })
       console.log(`Upgraded ${customerEmail} to full-course`)
     }
@@ -123,7 +126,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       name: customerName,
       accessLevel,
       stripeCustomerId: session.customer as string || undefined,
-      workshopLocation: location || undefined,
+      workshopLocation: workshopCity || undefined,
+      signupSource: 'purchase',
     })
   }
 
@@ -138,7 +142,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
     if (emailSent) {
-      console.log(`Login link sent to: ${customerEmail} | Course: ${courseType} | Location: ${location || 'N/A'} | Access: ${finalAccess}`)
+      console.log(`Login link sent to: ${customerEmail} | Course: ${courseType} | City: ${workshopCity || 'N/A'} | Access: ${finalAccess}`)
     } else {
       console.error(`Email send FAILED for ${customerEmail} — user account created, they can request a new link from /login`)
     }
@@ -213,7 +217,16 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
   console.log(`Checkout expired: ${email} — ${courseType} ($${amount})`)
 
-  // Store abandoned checkout in Blob for recovery cron
+  // Send immediate abandoned checkout recovery email
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    await sendAbandonedCheckoutEmail(email, baseUrl)
+    console.log(`Sent immediate abandoned checkout email to ${email}`)
+  } catch (error) {
+    console.error(`Failed to send abandoned checkout email to ${email}:`, error)
+  }
+
+  // Store abandoned checkout in Blob for recovery cron drip sequence
   try {
     const blobPath = 'abandoned-checkouts.json'
     let abandonedList: AbandonedCheckout[] = []

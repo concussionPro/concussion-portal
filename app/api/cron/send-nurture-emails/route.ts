@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE } from '@/lib/email-sequences'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { list as listBlobs, put } from '@vercel/blob'
 import { CONFIG } from '@/lib/config'
@@ -176,6 +176,69 @@ export async function GET(request: Request) {
       emailsSent += abandonedEmailsSent
     } catch (err) {
       console.error('Abandoned checkout processing error:', err)
+    }
+
+    // ── Online-only user sequences (upgrade nudge + re-engagement) ──
+    for (const user of users) {
+      if (user.accessLevel !== 'online-only') continue
+      if (user.nurtureUnsubscribed) continue
+
+      const signupDate = new Date(user.createdAt)
+      const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+      const upgradeLink = `${baseUrl}/pricing`
+      const loginLink = `${baseUrl}/login?email=${encodeURIComponent(user.email)}`
+      const unsubToken = generateUnsubscribeToken(user.email)
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+      // Upgrade nudge sequence
+      const upgradeEmail = ONLINE_UPGRADE_SEQUENCE.find(e => e.day === daysSinceSignup)
+      if (upgradeEmail) {
+        const html = upgradeEmail.template(user.name, upgradeLink)
+          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+        await sendEmail({
+          to: user.email,
+          subject: upgradeEmail.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'online-upgrade' },
+            { name: 'day', value: String(daysSinceSignup) },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        })
+        emailsSent++
+        console.log(`Sent upgrade nudge (Day ${daysSinceSignup}) to ${user.email}`)
+      }
+
+      // Re-engagement: 14 days since signup, hasn't logged in for 7+ days
+      if (daysSinceSignup === 14) {
+        const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null
+        const daysSinceLogin = lastLogin
+          ? Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24))
+          : daysSinceSignup
+        if (daysSinceLogin >= 7) {
+          const html = REENGAGEMENT_EMAIL.template(user.name, loginLink)
+            .replace('{{unsubscribe_url}}', unsubscribeUrl)
+          await sendEmail({
+            to: user.email,
+            subject: REENGAGEMENT_EMAIL.subject,
+            html,
+            tags: [
+              { name: 'sequence', value: 'reengagement' },
+              { name: 'day', value: String(daysSinceSignup) },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          })
+          emailsSent++
+          console.log(`Sent re-engagement to ${user.email} (${daysSinceLogin} days since login)`)
+        }
+      }
     }
 
     return NextResponse.json({
