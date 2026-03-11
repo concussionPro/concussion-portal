@@ -125,7 +125,7 @@ function PricingContent() {
           <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
               {
-                quote: 'Well organised...content explained in a way that was relative and memorable',
+                quote: 'Well organised...content explained in a way that was relevant and memorable',
                 name: 'Alex',
                 role: 'Osteopath, Melbourne',
                 initials: 'A',

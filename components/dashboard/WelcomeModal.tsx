@@ -99,7 +99,7 @@ export function WelcomeModal() {
         </button>
 
         {/* Content */}
-        <div className="px-8 pt-8 pb-8 md:px-10 md:pt-10 md:pb-10">
+        <div className="px-5 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8 md:px-10 md:pt-10 md:pb-10">
           {/* Header */}
           <div className="mb-8 text-center">
             <div

@@ -212,8 +212,16 @@ function CheckoutSuccessContent() {
             <div>
               <h3 className="font-semibold mb-1">Check your inbox</h3>
               <p className="text-sm text-muted-foreground">
-                We&apos;ve sent a login link to <strong>{sessionData?.customerEmail || 'your email'}</strong>. Click it to access your course — no password needed.
+                We&apos;ve sent a login link to <strong>{sessionData?.customerEmail || 'your email'}</strong>. Click it to access your course — no password needed. Check your spam folder if you don&apos;t see it within 2 minutes.
               </p>
+              {sessionData?.customerEmail && (
+                <a
+                  href={`/login?email=${encodeURIComponent(sessionData.customerEmail)}`}
+                  className="inline-block mt-2 text-sm text-accent font-medium hover:underline"
+                >
+                  Didn&apos;t get it? Request a new login link →
+                </a>
+              )}
             </div>
           </div>
 

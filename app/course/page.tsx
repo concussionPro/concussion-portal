@@ -471,7 +471,7 @@ export default function CoursePage() {
           <div className="grid md:grid-cols-3 gap-4">
             {[
               {
-                quote: 'Well organised...content explained in a way that was relative and memorable',
+                quote: 'Well organised...content explained in a way that was relevant and memorable',
                 author: 'Alex, Osteopath, Melbourne',
                 initials: 'A',
                 bgColor: 'from-[#64a8b0] to-[#7ba8b0]',
