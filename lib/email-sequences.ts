@@ -376,7 +376,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <strong style="color: #475569;">&mdash; Physiotherapist</strong>
       </div>
       <center><a href="${utm(upgradeLink, 'scat_mastery_day14', 'view_pricing')}" class="cta-btn">View Pricing and Options</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} AUD (launch price) &middot; Full course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</p>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} AUD &middot; Complete course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD (online + hands-on workshop)</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -412,7 +412,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>AHPRA-aligned CPD points, endorsed by Osteopathy Australia</li>
       </ul>
       <center><a href="${utm(upgradeLink, 'scat_mastery_day18', 'choose_option')}" class="cta-btn">Choose Your Option</a></center>
-      <p style="font-size: 14px; color: #475569; margin-top: 20px;">Launch pricing is limited &mdash; the price increases to $597 when it ends.</p>
+      <p style="font-size: 14px; color: #475569; margin-top: 20px;">Questions about which option is right for you? Just reply to this email.</p>
       <div class="sig">
         <p>Questions? Just reply to this email &mdash; I'm always happy to help.</p>
         <p>All the best,<br>Zac Lewis<br>Founder, Concussion Education Australia<br><a href="mailto:zac@concussion-education-australia.com">zac@concussion-education-australia.com</a></p>

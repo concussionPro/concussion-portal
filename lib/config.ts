@@ -63,13 +63,6 @@ export const CONFIG = {
     SCAT_FORM_DOWNLOADS: 500,
   },
 
-  // Launch Pricing (online course urgency)
-  LAUNCH_PRICING: {
-    ENABLED: true,
-    DEADLINE: new Date('2026-03-24T23:59:59'),
-    FUTURE_PRICE: 597,
-  },
-
   // Early Bird Pricing Deadline
   // Computed: 7 days before the nearest confirmed course date
   EARLY_BIRD_DEADLINE: new Date('2026-03-21T23:59:59'),

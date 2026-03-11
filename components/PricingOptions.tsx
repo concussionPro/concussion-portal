@@ -14,7 +14,6 @@ import {
   ChevronUp,
   BookOpen,
   Award,
-  Clock,
   Users,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -266,15 +265,12 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const [error, setError] = useState<string | null>(null)
   const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
   const [isEarlyBird, setIsEarlyBird] = useState(false)
-  const [isLaunchPricing, setIsLaunchPricing] = useState(false)
 
   const isCompact = variant === 'compact'
 
   // Compute time-dependent pricing on client only to avoid hydration mismatch
   useEffect(() => {
-    const now = new Date()
-    setIsEarlyBird(now < CONFIG.EARLY_BIRD_DEADLINE)
-    setIsLaunchPricing(CONFIG.LAUNCH_PRICING.ENABLED && now < CONFIG.LAUNCH_PRICING.DEADLINE)
+    setIsEarlyBird(new Date() < CONFIG.EARLY_BIRD_DEADLINE)
   }, [])
 
   // Fetch enrollment count for social proof
@@ -365,19 +361,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
 
             <div className="mb-3">
-              {isLaunchPricing && (
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-xs text-[var(--muted-foreground)] line-through">${CONFIG.LAUNCH_PRICING.FUTURE_PRICE}</span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Launch</span>
-                </div>
-              )}
               <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
-              {isLaunchPricing && (
-                <p className="text-[10px] text-orange-600 font-semibold mt-1">
-                  Launch price ends {CONFIG.LAUNCH_PRICING.DEADLINE.toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })}
-                </p>
-              )}
             </div>
 
             <ul className="space-y-1.5 mb-4 flex-1">
@@ -385,7 +370,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 '8 online modules (8 CPD points)',
                 'Own pace — no deadlines',
                 'Clinical Toolkit & resources',
-                'Digital certificate',
+                'Upgrade to Complete Course anytime',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <Check className="w-3 h-3 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={3} />
@@ -548,33 +533,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Online Course</h3>
           <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-            Complete the 8 online modules at your own pace. Theory and clinical frameworks — no hands-on component.
+            Start with the 8 online modules at your own pace. Upgrade to the Complete Course to add hands-on SCAT6, VOMS &amp; BESS training (14 CPD points total).
           </p>
 
           <div className="mb-4">
-            {isLaunchPricing && (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.LAUNCH_PRICING.FUTURE_PRICE}</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                  Launch Price
-                </span>
-              </div>
-            )}
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
             </div>
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access</p>
           </div>
-
-          {isLaunchPricing && (
-            <div className="mb-4 flex items-center gap-1.5 text-xs text-orange-600">
-              <Clock className="w-3.5 h-3.5" />
-              <span className="font-semibold">
-                Launch price ends {CONFIG.LAUNCH_PRICING.DEADLINE.toLocaleDateString('en-AU', { month: 'long', day: 'numeric' })}
-              </span>
-            </div>
-          )}
 
           <ul className="space-y-3 mb-7 flex-1">
             {[
@@ -584,6 +552,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Clinical Toolkit & downloadable resources',
               'Reference Repository (130+ articles)',
               'Digital certificate',
+              'Upgrade to Complete Course anytime',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />

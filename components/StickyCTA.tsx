@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { ArrowRight, X } from 'lucide-react'
 import Link from 'next/link'
-import { CONFIG } from '@/lib/config'
 
 // Pages where the sticky CTA should NOT appear
 const EXCLUDED_PATHS = [
@@ -30,14 +29,6 @@ export function StickyCTA() {
   const pathname = usePathname()
   const [dismissed, setDismissed] = useState(false)
   const [visible, setVisible] = useState(false)
-  const [daysLeft, setDaysLeft] = useState(0)
-
-  // Compute days left on client only to avoid hydration mismatch
-  useEffect(() => {
-    const now = new Date()
-    const deadline = CONFIG.EARLY_BIRD_DEADLINE
-    setDaysLeft(Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))))
-  }, [])
 
   // Show after scrolling 400px
   useEffect(() => {
@@ -69,19 +60,9 @@ export function StickyCTA() {
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-t border-white/10 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="hidden sm:block">
-              {daysLeft > 0 && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold whitespace-nowrap">
-                  {daysLeft}d left
-                </span>
-              )}
-            </div>
             <p className="text-sm text-white/80 truncate">
               <span className="font-semibold text-white">Stop guessing on concussion cases.</span>
-              <span className="hidden sm:inline"> 14 CPD points</span>
-              {daysLeft > 0 && (
-                <span className="text-amber-300 font-semibold"> — early bird: save ${CONFIG.COURSE.SAVINGS}</span>
-              )}
+              <span className="hidden sm:inline"> Online + hands-on training · Up to 14 CPD points</span>
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
