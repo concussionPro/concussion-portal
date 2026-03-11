@@ -276,6 +276,10 @@ async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
           { name: 'sequence', value: 'abandoned-checkout' },
           { name: 'email-number', value: String(checkout.emails_sent + 1) },
         ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       })
 
       await sql`

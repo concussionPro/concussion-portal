@@ -361,7 +361,7 @@ export default function ChildSCAT6Page() {
               <p className="text-sm text-slate-600 mb-4">Ask the child: "Do you have any of these problems right now?" Rate each: <strong>Not at all (0), A little bit (1), Somewhat (2), A lot (3)</strong></p>
 
               {/* Header row */}
-              <div className="grid grid-cols-[1fr_repeat(4,56px)] gap-1 mb-2 text-center">
+              <div className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 mb-2 text-center">
                 <div></div>
                 {ratingLabels.map(label => (
                   <div key={label} className="text-xs font-medium text-slate-500">{label}</div>
@@ -369,7 +369,7 @@ export default function ChildSCAT6Page() {
               </div>
 
               {childSymptomLabels.map(({ key, label }) => (
-                <div key={key} className="grid grid-cols-[1fr_repeat(4,56px)] gap-1 items-center py-1 border-b border-slate-100">
+                <div key={key} className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 items-center py-1 border-b border-slate-100">
                   <span className="text-sm text-slate-700">{label}</span>
                   {[0, 1, 2, 3].map(val => (
                     <div key={val} className="flex justify-center">
@@ -417,7 +417,7 @@ export default function ChildSCAT6Page() {
             <div className="space-y-2">
               <p className="text-sm text-slate-600 mb-4">Ask the parent/guardian to rate the child's symptoms: <strong>Not at all (0), A little bit (1), Somewhat (2), A lot (3)</strong></p>
 
-              <div className="grid grid-cols-[1fr_repeat(4,56px)] gap-1 mb-2 text-center">
+              <div className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 mb-2 text-center">
                 <div></div>
                 {ratingLabels.map(label => (
                   <div key={label} className="text-xs font-medium text-slate-500">{label}</div>
@@ -425,7 +425,7 @@ export default function ChildSCAT6Page() {
               </div>
 
               {parentSymptomLabels.map(({ key, label }) => (
-                <div key={key} className="grid grid-cols-[1fr_repeat(4,56px)] gap-1 items-center py-1 border-b border-slate-100">
+                <div key={key} className="grid grid-cols-[1fr_56px_56px_56px_56px] gap-1 items-center py-1 border-b border-slate-100">
                   <span className="text-sm text-slate-700">{label}</span>
                   {[0, 1, 2, 3].map(val => (
                     <div key={val} className="flex justify-center">

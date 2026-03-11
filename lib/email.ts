@@ -171,7 +171,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
               </p>
             </div>
             <div class="footer">
-              <p>Concussion Education Australia</p>
+              <p>Concussion Education Australia &middot; Melbourne, VIC, Australia</p>
               <p>Questions? Reply to this email</p>
             </div>
           </div>
@@ -184,7 +184,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
 /**
  * Send abandoned checkout recovery email
  */
-export async function sendAbandonedCheckoutEmail(email: string, baseUrl: string): Promise<boolean> {
+export async function sendAbandonedCheckoutEmail(email: string, baseUrl: string, unsubscribeUrl?: string): Promise<boolean> {
   return sendEmail({
     to: email,
     subject: 'You left something behind — your course is still waiting',
@@ -230,7 +230,8 @@ export async function sendAbandonedCheckoutEmail(email: string, baseUrl: string)
               </p>
             </div>
             <div class="footer">
-              <p>Concussion Education Australia</p>
+              <p>Concussion Education Australia &middot; Melbourne, VIC, Australia</p>
+              ${unsubscribeUrl ? `<p><a href="${unsubscribeUrl}" style="color: #94a3b8; font-size: 11px;">Unsubscribe</a></p>` : ''}
             </div>
           </div>
         </body>
@@ -390,7 +391,7 @@ export async function sendWelcomeEmail(email: string, name: string, origin?: str
               </p>
             </div>
             <div class="footer">
-              <p><strong>Concussion Education Australia</strong></p>
+              <p><strong>Concussion Education Australia</strong> &middot; Melbourne, VIC, Australia</p>
               <p>zac@concussion-education-australia.com</p>
             </div>
           </div>

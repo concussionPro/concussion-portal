@@ -121,6 +121,25 @@ export async function middleware(request: NextRequest) {
     )
   }
 
+  // Protected frontend routes — require valid session, redirect to /login if missing
+  const protectedPrefixes = ['/learning', '/dashboard', '/settings', '/clinical-toolkit', '/complete-reference', '/assessment']
+  if (protectedPrefixes.some(p => pathname.startsWith(p))) {
+    const sessionToken = request.cookies.get('session')?.value
+    if (!sessionToken) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+    const session = await verifySessionEdge(sessionToken)
+    if (!session) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
   // Admin API routes require x-admin-key header (except monitoring which handles its own)
   if (pathname.startsWith('/api/admin/')) {
     const adminKey = request.headers.get('x-admin-key')
@@ -153,5 +172,11 @@ export const config = {
     '/docs/:path*.zip',
     '/resources/:path*.pdf',
     '/api/admin/:path*',
+    '/learning/:path*',
+    '/dashboard/:path*',
+    '/settings/:path*',
+    '/clinical-toolkit/:path*',
+    '/complete-reference/:path*',
+    '/assessment/:path*',
   ]
 }

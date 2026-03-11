@@ -57,11 +57,8 @@ function CheckoutSuccessContent() {
         }
       })
       .catch(() => {
-        // Even if API fails, the purchase was still successful (Stripe confirmed)
-        if (!conversionFiredRef.current) {
-          trackPurchaseConversion(0, sessionId || '', undefined)
-          conversionFiredRef.current = true
-        }
+        // Don't fire conversion pixel without verified payment data — prevents fake conversions
+        setError(true)
       })
       .finally(() => setLoading(false))
   }, [sessionId])

@@ -62,6 +62,7 @@ function emailShell(content: string, unsubscribeUrl?: string): string {
     </div>
     <div class="footer">
       Concussion Education Australia &middot; Endorsed by Osteopathy Australia<br>
+      Melbourne, VIC, Australia<br>
       <a href="https://portal.concussion-education-australia.com?utm_source=email&utm_medium=email&utm_campaign=footer" style="color: #94a3b8;">portal.concussion-education-australia.com</a><br>
       <a href="${unsub}" style="color: #94a3b8; font-size: 11px;">Unsubscribe from this sequence</a>
     </div>

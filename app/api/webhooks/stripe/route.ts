@@ -4,6 +4,7 @@ import { createUser, findUserByEmail } from '@/lib/users'
 import { sendMagicLinkEmail, sendAbandonedCheckoutEmail } from '@/lib/email'
 import { sendEmail } from '@/lib/resend-client'
 import { createMagicToken } from '@/lib/magic-link-jwt'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import Stripe from 'stripe'
@@ -44,7 +45,26 @@ export async function POST(request: NextRequest) {
     // Verify webhook signature
     const event = constructWebhookEvent(body, signature, webhookSecret)
 
-    console.log(`Stripe webhook received: ${event.type}`)
+    console.log(`Stripe webhook received: ${event.type} (${event.id})`)
+
+    // Idempotency: skip already-processed events
+    try {
+      const { rows: existing } = await sql`
+        SELECT 1 FROM processed_webhook_events WHERE event_id = ${event.id} LIMIT 1
+      `
+      if (existing.length > 0) {
+        console.log(`Skipping duplicate event: ${event.id}`)
+        return NextResponse.json({ received: true, duplicate: true })
+      }
+      await sql`
+        INSERT INTO processed_webhook_events (event_id, event_type, processed_at)
+        VALUES (${event.id}, ${event.type}, now())
+        ON CONFLICT (event_id) DO NOTHING
+      `
+    } catch (idempotencyError) {
+      // If table doesn't exist yet, continue — don't block payments
+      console.warn('Idempotency check failed (table may not exist yet):', idempotencyError)
+    }
 
     switch (event.type) {
       case 'checkout.session.completed':
@@ -57,6 +77,10 @@ export async function POST(request: NextRequest) {
 
       case 'payment_intent.payment_failed':
         await handlePaymentFailed(event.data.object as Stripe.PaymentIntent)
+        break
+
+      case 'charge.refunded':
+        await handleChargeRefunded(event.data.object as Stripe.Charge)
         break
 
       default:
@@ -188,7 +212,7 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
         </p>
         <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b;">
           Zac Lewis<br>
-          Concussion Education Australia<br>
+          Concussion Education Australia &middot; Melbourne, VIC, Australia<br>
           <a href="mailto:zac@concussion-education-australia.com" style="color: #0d9488;">zac@concussion-education-australia.com</a>
         </div>
       </div>
@@ -220,7 +244,9 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   // Send immediate abandoned checkout recovery email
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    await sendAbandonedCheckoutEmail(email, baseUrl)
+    const unsubToken = generateUnsubscribeToken(email)
+    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
+    await sendAbandonedCheckoutEmail(email, baseUrl, unsubscribeUrl)
     console.log(`Sent immediate abandoned checkout email to ${email}`)
   } catch (error) {
     console.error(`Failed to send abandoned checkout email to ${email}:`, error)
@@ -245,5 +271,34 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     console.log(`Stored abandoned checkout for ${email}`)
   } catch (err) {
     console.error('Failed to store abandoned checkout:', err)
+  }
+}
+
+/**
+ * Handle refund — downgrade user access
+ */
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  const email = charge.receipt_email || charge.billing_details?.email
+  if (!email) {
+    console.log('Refund with no email:', charge.id)
+    return
+  }
+
+  console.log(`Refund processed for ${email} — $${(charge.amount_refunded || 0) / 100} AUD`)
+
+  const user = await findUserByEmail(email)
+  if (!user) {
+    console.log(`Refunded user not found: ${email}`)
+    return
+  }
+
+  // Downgrade to preview (free) access
+  try {
+    await sql`
+      UPDATE users SET access_level = 'preview' WHERE email = ${email.toLowerCase()}
+    `
+    console.log(`Downgraded ${email} to preview access after refund`)
+  } catch (err) {
+    console.error(`Failed to downgrade ${email} after refund:`, err)
   }
 }
