@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get base URL
-    const baseUrl = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    // Use server-side env var only — origin header is spoofable
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
     // Create Stripe Checkout Session
     const session = await createCourseCheckoutSession({

@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { FileText, Download, Lock, CheckCircle2, Star } from 'lucide-react'
+import { FileText, Download, Lock, CheckCircle2, Star, ClipboardCheck, Heart, FileEdit, BookOpen, GitBranch, Archive } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CONFIG } from '@/lib/config'
@@ -138,6 +138,14 @@ const categoryLabels = {
   flowcharts: 'Clinical Flowcharts'
 }
 
+const categoryIcons: Record<string, { icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; color: string }> = {
+  assessment: { icon: ClipboardCheck, color: 'text-blue-600' },
+  treatment: { icon: Heart, color: 'text-rose-500' },
+  templates: { icon: FileEdit, color: 'text-amber-600' },
+  education: { icon: BookOpen, color: 'text-emerald-600' },
+  flowcharts: { icon: GitBranch, color: 'text-violet-600' },
+}
+
 export default function ClinicalToolkitPage() {
   const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -202,6 +210,16 @@ export default function ClinicalToolkitPage() {
     window.open(`/api/download?file=${encodeURIComponent(resource.fileName)}`, '_blank')
   }
 
+  const handleDownloadAll = () => {
+    if (!accessLevel) {
+      trackShopClick('toolkit-download-all', {})
+      router.push('/pricing')
+      return
+    }
+    trackDownload('ClinicalToolkit_Complete.zip', 'all', { resourceId: 'download-all' })
+    window.open('/docs/ClinicalToolkit_Complete.zip', '_blank')
+  }
+
   return (
     <ProtectedRoute>
       <div className="flex min-h-screen bg-slate-50">
@@ -211,19 +229,43 @@ export default function ClinicalToolkitPage() {
 
             {/* Header */}
             <div className="mb-8">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#64a8b0] to-[#7ba8b0] flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-white" strokeWidth={2} />
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#64a8b0] to-[#7ba8b0] flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-white" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+                      Clinical Toolkit
+                    </h1>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Professional resources for concussion assessment and management
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                    Clinical Toolkit
-                  </h1>
-                  <p className="text-sm text-slate-600 mt-1">
-                    Professional resources for concussion assessment and management
-                  </p>
-                </div>
+
+                {/* Download All Button */}
+                {accessLevel && (
+                  <button
+                    onClick={handleDownloadAll}
+                    className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-[#5b9aa6] text-white rounded-lg text-sm font-semibold hover:bg-[#4a8a96] transition-colors shadow-sm"
+                  >
+                    <Archive className="w-4 h-4" />
+                    Download All (ZIP)
+                  </button>
+                )}
               </div>
+
+              {/* Mobile Download All */}
+              {accessLevel && (
+                <button
+                  onClick={handleDownloadAll}
+                  className="sm:hidden w-full flex items-center justify-center gap-2 px-5 py-2.5 mb-4 bg-[#5b9aa6] text-white rounded-lg text-sm font-semibold hover:bg-[#4a8a96] transition-colors shadow-sm"
+                >
+                  <Archive className="w-4 h-4" />
+                  Download All (ZIP)
+                </button>
+              )}
 
               {/* Unauthenticated users - prompt to enroll */}
               {!accessLevel && (
@@ -319,6 +361,9 @@ export default function ClinicalToolkitPage() {
                 // All resources are locked for unauthenticated users
                 // Both online-only and full-course users get full access
                 const isLocked = !accessLevel
+                const catInfo = categoryIcons[resource.category]
+                const CategoryIcon = catInfo?.icon || FileText
+                const categoryColor = catInfo?.color || 'text-[#5b9aa6]'
 
                 return (
                   <div
@@ -339,10 +384,8 @@ export default function ClinicalToolkitPage() {
                       }`}>
                         {isLocked ? (
                           <Lock className="w-6 h-6 text-slate-400" strokeWidth={2} />
-                        ) : resource.isFree ? (
-                          <CheckCircle2 className="w-6 h-6 text-[#6b9da8]" strokeWidth={2} />
                         ) : (
-                          <FileText className="w-6 h-6 text-[#5b9aa6]" strokeWidth={2} />
+                          <CategoryIcon className={`w-6 h-6 ${categoryColor}`} strokeWidth={2} />
                         )}
                       </div>
 

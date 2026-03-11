@@ -112,7 +112,7 @@ function PricingContent() {
             <span>·</span>
             <span>Endorsed by <span className="font-semibold text-foreground">Osteopathy Australia</span></span>
             <span>·</span>
-            <span>30-day money-back guarantee</span>
+            <span>7-day money-back guarantee</span>
           </div>
         )}
 
@@ -193,11 +193,11 @@ function PricingContent() {
               <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
               </div>
-              <h3 className="font-bold text-foreground">30-Day Satisfaction Guarantee</h3>
+              <h3 className="font-bold text-foreground">7-Day Satisfaction Guarantee</h3>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Complete Module 1. If you&apos;re not confident this course is right for you,
-              email us within 30 days for a full refund — no questions asked.
+              email us within 7 days for a full refund — no questions asked.
               We&apos;re confident in what we&apos;ve built, and we want you to be too.
             </p>
           </div>

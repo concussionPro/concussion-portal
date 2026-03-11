@@ -1,5 +1,4 @@
 // Production monitoring and error logging system
-import { put } from '@vercel/blob'
 
 export interface ErrorLog {
   timestamp: number
@@ -21,21 +20,17 @@ export interface HealthCheckResult {
   timestamp: number
 }
 
-// Log critical errors to Blob storage for monitoring
+// Log errors to console (production logs visible in Vercel dashboard)
 export async function logError(error: ErrorLog): Promise<void> {
   try {
-    const date = new Date().toISOString().split('T')[0]
-    const filename = `logs/errors-${date}.jsonl`
-
-    const errorLine = JSON.stringify(error) + '\n'
-
-    await put(filename, errorLine, {
-      access: 'public',
-      contentType: 'application/x-ndjson',
+    const prefix = error.severity === 'critical' ? '[CRITICAL]' : error.severity === 'error' ? '[ERROR]' : '[WARN]'
+    console.error(`${prefix} ${error.error}`, {
+      ...(error.context || {}),
+      ...(error.endpoint ? { endpoint: error.endpoint } : {}),
+      ...(error.userId ? { userId: error.userId } : {}),
     })
   } catch (e) {
-    // Fallback to console if Blob fails
-    console.error('Failed to log error to Blob:', e)
+    console.error('Failed to log error:', e)
     console.error('Original error:', error)
   }
 }

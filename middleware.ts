@@ -22,6 +22,7 @@ const PUBLIC_DOCS = new Set([
 const PAID_DOCS = new Set([
   '/docs/CCM_Complete_Reference_2026.pdf',
   '/docs/SCAT:SCOAT_FIllablePDFs.zip',
+  '/docs/ClinicalToolkit_Complete.zip',
 ])
 
 // Edge-compatible session verification using Web Crypto API

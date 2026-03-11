@@ -4,7 +4,7 @@ import { createUser, findUserByEmail } from '@/lib/users'
 import { sendMagicLinkEmail, sendAbandonedCheckoutEmail } from '@/lib/email'
 import { sendEmail } from '@/lib/resend-client'
 import { createMagicToken } from '@/lib/magic-link-jwt'
-import { put, list as listBlobs } from '@vercel/blob'
+import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import Stripe from 'stripe'
 
@@ -226,55 +226,24 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     console.error(`Failed to send abandoned checkout email to ${email}:`, error)
   }
 
-  // Store abandoned checkout in Blob for recovery cron drip sequence
+  // Store abandoned checkout in Postgres for recovery cron drip sequence
   try {
-    const blobPath = 'abandoned-checkouts.json'
-    let abandonedList: AbandonedCheckout[] = []
-
-    const { blobs } = await listBlobs()
-    const existing = blobs
-      .filter(b => b.pathname === blobPath)
-      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-
-    if (existing.length > 0) {
-      const res = await fetch(`${existing[0].url}?t=${Date.now()}`, { cache: 'no-store' })
-      abandonedList = await res.json()
-    }
-
     // Don't add if already tracked (same email within last 24h)
-    const recentlyAdded = abandonedList.some(
-      a => a.email === email.toLowerCase() &&
-        Date.now() - new Date(a.abandonedAt).getTime() < 24 * 60 * 60 * 1000
-    )
-    if (recentlyAdded) return
+    const { rows: recent } = await sql`
+      SELECT id FROM abandoned_checkouts
+      WHERE email = ${email.toLowerCase()}
+        AND abandoned_at > now() - interval '24 hours'
+      LIMIT 1
+    `
+    if (recent.length > 0) return
 
-    abandonedList.push({
-      email: email.toLowerCase(),
-      name,
-      courseType,
-      amount,
-      abandonedAt: new Date().toISOString(),
-      emailsSent: 0,
-      recovered: false,
-    })
-
-    await put(blobPath, JSON.stringify(abandonedList, null, 2), {
-      access: 'public',
-      contentType: 'application/json',
-    })
+    await sql`
+      INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered)
+      VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), 0, false)
+    `
 
     console.log(`Stored abandoned checkout for ${email}`)
   } catch (err) {
     console.error('Failed to store abandoned checkout:', err)
   }
-}
-
-interface AbandonedCheckout {
-  email: string
-  name: string
-  courseType: string
-  amount: number
-  abandonedAt: string
-  emailsSent: number
-  recovered: boolean
 }

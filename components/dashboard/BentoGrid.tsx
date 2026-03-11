@@ -122,7 +122,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       <Card onClick={() => router.push('/learning')}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
-            <Award className="w-4.5 h-4.5 text-accent" strokeWidth={1.8} />
+            <Award className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
           </div>
           <p className="stat-label mb-0">Online CPD Points</p>
         </div>
@@ -141,7 +141,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       <Card>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-400/5 flex items-center justify-center">
-            <Clock className="w-4.5 h-4.5 text-blue-600/70" strokeWidth={1.8} />
+            <Clock className="w-[18px] h-[18px] text-blue-600/70" strokeWidth={1.8} />
           </div>
           <p className="stat-label mb-0">Study Time</p>
         </div>
@@ -162,7 +162,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       <Card onClick={() => router.push('/learning')}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
-            <BookOpen className="w-4.5 h-4.5 text-accent" strokeWidth={1.8} />
+            <BookOpen className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
           </div>
           <p className="stat-label mb-0">Learning Suite</p>
         </div>
@@ -176,7 +176,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       <Card onClick={() => router.push('/clinical-toolkit')}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 flex items-center justify-center">
-            <FileText className="w-4.5 h-4.5 text-emerald-600/70" strokeWidth={1.8} />
+            <FileText className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
           </div>
           <p className="stat-label mb-0">Clinical Toolkit</p>
         </div>
@@ -190,7 +190,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       <Card onClick={() => router.push('/scat-forms')}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-400/5 flex items-center justify-center">
-            <Activity className="w-4.5 h-4.5 text-violet-600/70" strokeWidth={1.8} />
+            <Activity className="w-[18px] h-[18px] text-violet-600/70" strokeWidth={1.8} />
           </div>
           <p className="stat-label mb-0">SCAT Forms</p>
         </div>
@@ -220,7 +220,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       <Card onClick={() => router.push('/in-person')}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
-            <GraduationCap className="w-4.5 h-4.5 text-rose-600/70" strokeWidth={1.8} />
+            <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
           </div>
           <p className="stat-label mb-0">In-Person Workshop</p>
           {accessLevel === 'full-course' && (

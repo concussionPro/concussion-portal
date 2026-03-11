@@ -1,8 +1,5 @@
-// User storage system using Vercel Blob with local file fallback
-import { put, head } from '@vercel/blob'
+import { sql } from '@/lib/db'
 import crypto from 'crypto'
-import fs from 'fs/promises'
-import path from 'path'
 
 export interface User {
   id: string
@@ -19,115 +16,45 @@ export interface User {
   signupSource?: 'free-course' | 'preseason' | 'purchase' | 'admin'
 }
 
-const USERS_BLOB_PATH = 'users.json'
-const LOCAL_USERS_PATH = path.join(process.cwd(), 'data', 'users.local.json')
-
-// Check if Vercel Blob is configured
-function isBlobConfigured(): boolean {
-  return !!process.env.BLOB_READ_WRITE_TOKEN
-}
-
-// Load users from local file (development fallback)
-async function loadUsersFromLocalFile(): Promise<User[]> {
-  try {
-    const data = await fs.readFile(LOCAL_USERS_PATH, 'utf-8')
-    return JSON.parse(data)
-  } catch (error) {
-    console.error('Error loading users from local file:', error)
-    return []
+/** Map a snake_case DB row to a camelCase User object */
+function rowToUser(row: any): User {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    accessLevel: row.access_level,
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+    squarespaceOrderId: row.squarespace_order_id || undefined,
+    stripeCustomerId: row.stripe_customer_id || undefined,
+    stripeSubscriptionId: row.stripe_subscription_id || undefined,
+    workshopLocation: row.workshop_location || undefined,
+    lastLoginAt: row.last_login_at
+      ? (row.last_login_at instanceof Date ? row.last_login_at.toISOString() : row.last_login_at)
+      : undefined,
+    nurtureUnsubscribed: row.nurture_unsubscribed || undefined,
+    signupSource: row.signup_source || undefined,
   }
 }
 
-// Save users to local file (development fallback)
-async function saveUsersToLocalFile(users: User[]): Promise<void> {
-  try {
-    await fs.writeFile(LOCAL_USERS_PATH, JSON.stringify(users, null, 2), 'utf-8')
-  } catch (error) {
-    console.error('Error saving users to local file:', error)
-    throw error
-  }
-}
-
-// Load all users from Blob storage or local file
+// Load all users
 export async function loadUsers(): Promise<User[]> {
-  // If Blob storage is not configured, use local file
-  if (!isBlobConfigured()) {
-    console.log('Using local file storage for users (development mode)')
-    return loadUsersFromLocalFile()
-  }
-
-  try {
-    // List all blobs and find users.json files (there may be multiple versions)
-    const { list: listBlobs } = await import('@vercel/blob')
-    const { blobs } = await listBlobs()
-
-    // Find all users.json files and get the most recent one
-    const userBlobs = blobs.filter(b => b.pathname === 'users.json')
-
-    if (userBlobs.length === 0) {
-      return []
-    }
-
-    // Sort by upload date descending and get the latest
-    const latestBlob = userBlobs.sort((a, b) =>
-      new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-    )[0]
-
-    // Fetch the blob content with cache busting
-    const response = await fetch(`${latestBlob.url}?t=${Date.now()}`, {
-      cache: 'no-store'
-    })
-    const users = await response.json()
-    return users
-  } catch (error) {
-    console.error('Error loading users from Blob:', error)
-    // Fallback to local file if Blob fails
-    console.log('Blob storage failed, falling back to local file')
-    return loadUsersFromLocalFile()
-  }
-}
-
-// Save users to Blob storage or local file
-// NOTE: Vercel Blob only supports 'public' access. URLs are hard to guess but technically public.
-// For production, consider migrating to a database with proper access control.
-async function saveUsers(users: User[]) {
-  // If Blob storage is not configured, use local file
-  if (!isBlobConfigured()) {
-    console.log('Saving users to local file (development mode)')
-    return saveUsersToLocalFile(users)
-  }
-
-  try {
-    // KNOWN LIMITATION: Vercel Blob only supports 'public' access.
-    // URLs contain random tokens and are not discoverable, but anyone
-    // with the URL can read the data. For production with real user
-    // volume, migrate to Vercel Postgres or similar with proper ACL.
-    await put(USERS_BLOB_PATH, JSON.stringify(users, null, 2), {
-      access: 'public',
-      addRandomSuffix: true,
-      contentType: 'application/json',
-    })
-  } catch (error) {
-    console.error('Error saving users to Blob:', error)
-    // Fallback to local file if Blob fails
-    console.log('Blob storage failed, falling back to local file')
-    return saveUsersToLocalFile(users)
-  }
+  const { rows } = await sql`SELECT * FROM users ORDER BY created_at DESC`
+  return rows.map(rowToUser)
 }
 
 // Find user by email
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const users = await loadUsers()
-  return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null
+  const { rows } = await sql`SELECT * FROM users WHERE LOWER(email) = LOWER(${email}) LIMIT 1`
+  return rows.length > 0 ? rowToUser(rows[0]) : null
 }
 
 // Find user by ID
 export async function findUserById(id: string): Promise<User | null> {
-  const users = await loadUsers()
-  return users.find(u => u.id === id) || null
+  const { rows } = await sql`SELECT * FROM users WHERE id = ${id} LIMIT 1`
+  return rows.length > 0 ? rowToUser(rows[0]) : null
 }
 
-// Create new user
+// Create new user (or upgrade existing)
 export async function createUser(data: {
   email: string
   name: string
@@ -138,82 +65,83 @@ export async function createUser(data: {
   workshopLocation?: string
   signupSource?: 'free-course' | 'preseason' | 'purchase' | 'admin'
 }): Promise<string> {
-  const users = await loadUsers()
+  // Check if user already exists
+  const existing = await findUserByEmail(data.email)
 
-  // Check if user already exists (search loaded array directly to avoid double-load)
-  const existing = users.find(u => u.email.toLowerCase() === data.email.toLowerCase())
   if (existing) {
-    // Update access level if upgrading
-    if ((existing.accessLevel === 'online-only' || existing.accessLevel === 'preview') &&
-        (data.accessLevel === 'full-course' || data.accessLevel === 'online-only')) {
-      existing.accessLevel = data.accessLevel
-      if (data.stripeCustomerId) existing.stripeCustomerId = data.stripeCustomerId
-      if (data.stripeSubscriptionId) existing.stripeSubscriptionId = data.stripeSubscriptionId
-      if (data.workshopLocation) existing.workshopLocation = data.workshopLocation
-      await saveUsers(users)
+    // Update access level if upgrading (never downgrade)
+    if (
+      (existing.accessLevel === 'online-only' || existing.accessLevel === 'preview') &&
+      (data.accessLevel === 'full-course' || data.accessLevel === 'online-only')
+    ) {
+      await sql`
+        UPDATE users SET
+          access_level = ${data.accessLevel},
+          stripe_customer_id = COALESCE(${data.stripeCustomerId || null}, stripe_customer_id),
+          stripe_subscription_id = COALESCE(${data.stripeSubscriptionId || null}, stripe_subscription_id),
+          workshop_location = COALESCE(${data.workshopLocation || null}, workshop_location)
+        WHERE id = ${existing.id}
+      `
     }
     return existing.id
   }
 
   // Create new user
-  const newUser: User = {
-    id: crypto.randomBytes(16).toString('hex'),
-    email: data.email,
-    name: data.name,
-    accessLevel: data.accessLevel,
-    createdAt: new Date().toISOString(),
-    squarespaceOrderId: data.squarespaceOrderId,
-    stripeCustomerId: data.stripeCustomerId,
-    stripeSubscriptionId: data.stripeSubscriptionId,
-    workshopLocation: data.workshopLocation,
-    signupSource: data.signupSource,
-  }
-
-  users.push(newUser)
-  await saveUsers(users)
-  return newUser.id
+  const id = crypto.randomBytes(16).toString('hex')
+  await sql`
+    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, signup_source)
+    VALUES (
+      ${id},
+      ${data.email},
+      ${data.name},
+      ${data.accessLevel},
+      ${new Date().toISOString()},
+      ${data.squarespaceOrderId || null},
+      ${data.stripeCustomerId || null},
+      ${data.stripeSubscriptionId || null},
+      ${data.workshopLocation || null},
+      ${data.signupSource || null}
+    )
+  `
+  return id
 }
 
 // Count full-course enrollments for a specific workshop location
 export async function getEnrollmentCount(location: string): Promise<number> {
-  const users = await loadUsers()
-  return users.filter(
-    u => u.accessLevel === 'full-course' && u.workshopLocation === location
-  ).length
+  const { rows } = await sql`
+    SELECT COUNT(*)::int AS count FROM users
+    WHERE access_level = 'full-course' AND workshop_location = ${location}
+  `
+  return rows[0]?.count || 0
 }
 
 // Update user's last login
 export async function updateLastLogin(userId: string) {
-  const users = await loadUsers()
-  const user = users.find(u => u.id === userId)
-  if (user) {
-    user.lastLoginAt = new Date().toISOString()
-    await saveUsers(users)
-  }
+  await sql`UPDATE users SET last_login_at = now() WHERE id = ${userId}`
 }
 
 // Unsubscribe user from nurture emails
 export async function unsubscribeUser(email: string): Promise<boolean> {
-  const users = await loadUsers()
-  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase())
-  if (user) {
-    user.nurtureUnsubscribed = true
-    await saveUsers(users)
-    return true
-  }
-  return false
+  const { rowCount } = await sql`
+    UPDATE users SET nurture_unsubscribed = true WHERE LOWER(email) = LOWER(${email})
+  `
+  return (rowCount ?? 0) > 0
 }
 
-// Upgrade user access level
-export async function upgradeUser(email: string, newLevel: 'online-only' | 'full-course' = 'full-course'): Promise<User | null> {
-  const users = await loadUsers()
-  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase())
+// Update user profile (name, nurtureUnsubscribed)
+export async function updateUserProfile(
+  userId: string,
+  updates: { name?: string; nurtureUnsubscribed?: boolean }
+): Promise<User | null> {
+  const user = await findUserById(userId)
   if (!user) return null
 
-  const rank = { 'preview': 0, 'online-only': 1, 'full-course': 2 } as const
-  if (rank[newLevel] > rank[user.accessLevel]) {
-    user.accessLevel = newLevel
-    await saveUsers(users)
-  }
-  return user
+  const newName = updates.name !== undefined ? updates.name : user.name
+  const newUnsub = updates.nurtureUnsubscribed !== undefined ? updates.nurtureUnsubscribed : (user.nurtureUnsubscribed || false)
+
+  await sql`
+    UPDATE users SET name = ${newName}, nurture_unsubscribed = ${newUnsub} WHERE id = ${userId}
+  `
+
+  return { ...user, name: newName, nurtureUnsubscribed: newUnsub }
 }

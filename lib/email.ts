@@ -63,7 +63,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
  */
 export async function sendMagicLinkEmail(email: string, token: string, origin?: string): Promise<boolean> {
   // Use provided origin or try to get from window (client-side) or use production URL
-  const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_BASE_URL || 'https://portal.concussion-education-australia.com')
+  const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com')
   const loginUrl = `${baseUrl}/auth/verify?email=${encodeURIComponent(email)}&token=${token}`
 
   return sendEmail({
@@ -247,7 +247,7 @@ function escapeHtml(str: string): string {
  * Send welcome email after successful enrollment
  */
 export async function sendWelcomeEmail(email: string, name: string, origin?: string): Promise<boolean> {
-  const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_BASE_URL || 'https://portal.concussion-education-australia.com')
+  const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com')
 
   return sendEmail({
     to: email,

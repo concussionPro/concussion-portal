@@ -23,8 +23,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if access level has changed (e.g., user upgraded after paying)
+    // Always fetch full user from DB for up-to-date data
     const user = await findUserById(sessionData.userId)
+
     if (user && user.accessLevel !== sessionData.accessLevel) {
       // Access level changed — issue a refreshed session cookie
       const newToken = createJWTSession(
@@ -37,6 +38,8 @@ export async function GET(request: NextRequest) {
           email: user.email,
           name: user.name,
           accessLevel: user.accessLevel,
+          createdAt: user.createdAt,
+          nurtureUnsubscribed: user.nurtureUnsubscribed || false,
         },
       })
       response.cookies.set('session', newToken, {
@@ -49,14 +52,16 @@ export async function GET(request: NextRequest) {
       return response
     }
 
-    // Return user data from JWT
+    // Return user data — include DB fields when available
     return NextResponse.json({
       success: true,
       user: {
-        id: sessionData.userId,
-        email: sessionData.email,
-        name: sessionData.name,
-        accessLevel: sessionData.accessLevel,
+        id: user?.id || sessionData.userId,
+        email: user?.email || sessionData.email,
+        name: user?.name || sessionData.name,
+        accessLevel: user?.accessLevel || sessionData.accessLevel,
+        createdAt: user?.createdAt || null,
+        nurtureUnsubscribed: user?.nurtureUnsubscribed || false,
       },
     })
   } catch (error) {

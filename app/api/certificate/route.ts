@@ -8,6 +8,7 @@ import {
   getFullCourseCertificateData,
 } from '@/lib/certificate'
 import { resend } from '@/lib/resend-client'
+import { sql } from '@/lib/db'
 
 const SCAT_MODULE_IDS = [101, 102, 103, 104, 105]
 const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -152,23 +153,12 @@ export async function POST(request: NextRequest) {
 
 async function loadUserProgress(userId: string): Promise<Record<string, any> | null> {
   try {
-    const { list } = await import('@vercel/blob')
-    const prefix = `user-progress/${userId}`
-    const { blobs } = await list({ prefix })
-
-    if (blobs.length === 0) return null
-
-    // Get the most recently uploaded blob
-    const latestBlob = blobs.sort(
-      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-    )[0]
-
-    const response = await fetch(latestBlob.url, { cache: 'no-store' })
-    if (response.ok) {
-      return await response.json()
+    const { rows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${userId}`
+    if (rows.length > 0 && rows[0].progress) {
+      return rows[0].progress as Record<string, any>
     }
-  } catch {
-    // Fall through
+  } catch (error) {
+    console.error('Failed to load user progress:', error)
   }
   return null
 }

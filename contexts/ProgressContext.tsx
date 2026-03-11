@@ -16,8 +16,12 @@ export interface ModuleProgress {
   lastActiveAt: Date | null  // NEW: last time user was actively studying
 }
 
+export type SyncState = 'idle' | 'syncing' | 'synced' | 'error' | 'offline'
+
 interface ProgressContextType {
   progress: Record<number, ModuleProgress>
+  syncState: SyncState
+  restoredFromServer: boolean
   updateQuizScore: (moduleId: number, score: number, totalQuestions: number, answers?: Record<string, number>) => void
   markModuleComplete: (moduleId: number) => void
   markModuleStarted: (moduleId: number) => void
@@ -87,13 +91,17 @@ function parseStoredProgress(data: Record<string, any>): Record<number, ModulePr
 export function ProgressProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<Record<number, ModuleProgress>>(getDefaultProgress())
   const [isInitialized, setIsInitialized] = useState(false)
+  const [syncState, setSyncState] = useState<SyncState>('idle')
+  const [restoredFromServer, setRestoredFromServer] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const syncClearRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load progress from backend on mount
   useEffect(() => {
     async function loadProgress() {
       if (typeof window !== 'undefined') {
         try {
+          setSyncState('syncing')
           const response = await fetch('/api/progress', { credentials: 'include' })
           if (response.ok) {
             const data = await response.json()
@@ -102,12 +110,28 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
               const merged = { ...getDefaultProgress(), ...parsed }
               setProgress(merged)
               localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+
+              // Check if server had data that localStorage didn't
+              const localStored = localStorage.getItem(STORAGE_KEY)
+              const hadLocalData = localStored && Object.values(parseStoredProgress(JSON.parse(localStored))).some(p => p.completed || p.startedAt)
+              if (!hadLocalData) {
+                const serverHasData = Object.values(parsed).some(p => p.completed || p.startedAt)
+                if (serverHasData) {
+                  setRestoredFromServer(true)
+                }
+              }
+
+              setSyncState('synced')
               setIsInitialized(true)
+              // Auto-clear synced after 3s
+              syncClearRef.current = setTimeout(() => setSyncState('idle'), 3000)
               return
             }
           }
+          setSyncState('idle')
         } catch (error) {
           console.error('Failed to load progress from backend:', error)
+          setSyncState(navigator.onLine ? 'error' : 'offline')
         }
 
         // Fallback to localStorage
@@ -126,6 +150,18 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
 
     loadProgress()
+
+    // Listen for online/offline events
+    const handleOnline = () => setSyncState(prev => prev === 'offline' ? 'idle' : prev)
+    const handleOffline = () => setSyncState('offline')
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+      if (syncClearRef.current) clearTimeout(syncClearRef.current)
+    }
   }, [])
 
   // Debounced save to backend + localStorage
@@ -139,14 +175,23 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        await fetch('/api/progress', {
+        setSyncState('syncing')
+        const response = await fetch('/api/progress', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ progress }),
           credentials: 'include',
         })
+        if (response.ok) {
+          setSyncState('synced')
+          if (syncClearRef.current) clearTimeout(syncClearRef.current)
+          syncClearRef.current = setTimeout(() => setSyncState('idle'), 3000)
+        } else {
+          setSyncState('error')
+        }
       } catch (error) {
         console.error('Failed to save progress to backend:', error)
+        setSyncState(navigator.onLine ? 'error' : 'offline')
       }
     }, 2000) // 2-second debounce
 
@@ -304,6 +349,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     <ProgressContext.Provider
       value={{
         progress,
+        syncState,
+        restoredFromServer,
         updateQuizScore,
         markModuleComplete,
         markModuleStarted,

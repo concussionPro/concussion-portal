@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
-import { list as listBlobs } from '@vercel/blob'
+import { sql } from '@/lib/db'
 
 function timingSafeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false
@@ -19,37 +19,6 @@ function isAdminAuthorized(request: NextRequest): boolean {
   return false
 }
 
-interface ModuleProgressEntry {
-  completed: boolean
-  quizScore: number | null
-  quizCompleted: boolean
-  completedAt: string | null
-}
-
-/**
- * Load progress for a single user from Blob storage
- */
-async function loadUserProgress(userId: string): Promise<Record<string, ModuleProgressEntry> | null> {
-  try {
-    const prefix = `user-progress/${userId}`
-    const { blobs } = await listBlobs({ prefix })
-
-    if (blobs.length === 0) return null
-
-    const latestBlob = blobs.sort(
-      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-    )[0]
-
-    const response = await fetch(`${latestBlob.url}?t=${Date.now()}`, { cache: 'no-store' })
-    if (response.ok) {
-      return await response.json()
-    }
-  } catch {
-    // Fall through
-  }
-  return null
-}
-
 /**
  * Admin API: Get all users with course progress
  * Protected — requires ADMIN_API_KEY
@@ -62,12 +31,15 @@ export async function GET(request: NextRequest) {
   try {
     const users = await loadUsers()
 
-    // Load progress for all users in parallel
-    const progressPromises = users.map(u => loadUserProgress(u.id))
-    const progressResults = await Promise.all(progressPromises)
+    // Load all progress from Postgres in one query
+    const { rows: progressRows } = await sql`SELECT user_id, progress FROM user_progress`
+    const progressMap = new Map<string, any>()
+    for (const row of progressRows) {
+      progressMap.set(row.user_id, row.progress)
+    }
 
-    const emailList = users.map((user, i) => {
-      const progress = progressResults[i]
+    const emailList = users.map((user) => {
+      const progress = progressMap.get(user.id)
       let completedModules = 0
       let totalCPDPoints = 0
       const moduleDetails: Record<number, { completed: boolean; quizScore: number | null }> = {}

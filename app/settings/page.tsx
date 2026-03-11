@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { User, Mail, Shield, LogOut, Trash2, CheckCircle2, Crown, Award, Download, Loader2 } from 'lucide-react'
+import { User, Mail, Shield, LogOut, CheckCircle2, Crown, Award, Download, Loader2, Pencil, X, Check } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useRouter } from 'next/navigation'
@@ -13,8 +13,8 @@ interface SessionUser {
   email: string
   accessLevel: string
   name?: string
-  enrolledAt?: string
   createdAt?: string
+  nurtureUnsubscribed?: boolean
 }
 
 export default function SettingsPage() {
@@ -23,6 +23,15 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [certDownloading, setCertDownloading] = useState(false)
   const [certEmailStatus, setCertEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
+  // Name editing state
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState('')
+  const [nameSaving, setNameSaving] = useState(false)
+
+  // Marketing toggle state
+  const [marketingSaving, setMarketingSaving] = useState(false)
+
   const { getTotalCompletedModules, isModuleComplete } = useProgress()
   useAnalytics()
 
@@ -36,6 +45,7 @@ export default function SettingsPage() {
           const data = await response.json()
           if (data.success && data.user) {
             setUser(data.user)
+            setNameValue(data.user.name || '')
           }
         }
       } catch (error) {
@@ -117,8 +127,50 @@ export default function SettingsPage() {
     }
   }
 
+  const handleSaveName = async () => {
+    if (!nameValue.trim() || nameSaving) return
+    setNameSaving(true)
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameValue.trim() }),
+        credentials: 'include',
+      })
+      if (res.ok) {
+        setUser(prev => prev ? { ...prev, name: nameValue.trim() } : prev)
+        setEditingName(false)
+      }
+    } catch {
+      // keep editing state
+    } finally {
+      setNameSaving(false)
+    }
+  }
+
+  const handleToggleMarketing = async () => {
+    if (!user || marketingSaving) return
+    const newValue = !user.nurtureUnsubscribed
+    setMarketingSaving(true)
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nurtureUnsubscribed: newValue }),
+        credentials: 'include',
+      })
+      if (res.ok) {
+        setUser(prev => prev ? { ...prev, nurtureUnsubscribed: newValue } : prev)
+      }
+    } catch {
+      // ignore
+    } finally {
+      setMarketingSaving(false)
+    }
+  }
+
   const getEnrolledDate = () => {
-    const dateStr = user?.enrolledAt || user?.createdAt
+    const dateStr = user?.createdAt
     if (!dateStr) return null
     try {
       return new Date(dateStr).toLocaleDateString('en-AU', {
@@ -168,6 +220,52 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-4">
+                    {/* Name (editable) */}
+                    <div>
+                      <label className="text-sm font-semibold text-slate-700 block mb-2">
+                        Name
+                      </label>
+                      {editingName ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={nameValue}
+                            onChange={(e) => setNameValue(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+                            className="flex-1 px-4 py-3 bg-white rounded-lg border-2 border-[#5b9aa6] text-slate-900 outline-none"
+                            autoFocus
+                            maxLength={100}
+                          />
+                          <button
+                            onClick={handleSaveName}
+                            disabled={nameSaving || !nameValue.trim()}
+                            className="p-2.5 bg-[#5b9aa6] text-white rounded-lg hover:bg-[#4a8a96] transition-colors disabled:opacity-50"
+                          >
+                            {nameSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                          </button>
+                          <button
+                            onClick={() => { setEditingName(false); setNameValue(user?.name || '') }}
+                            className="p-2.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 px-4 py-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-600">
+                            {user?.name || 'Not set'}
+                          </div>
+                          <button
+                            onClick={() => setEditingName(true)}
+                            className="p-2.5 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                            title="Edit name"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <div>
                       <label className="text-sm font-semibold text-slate-700 block mb-2">
                         Email Address
@@ -197,6 +295,33 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Marketing emails toggle */}
+                    <div>
+                      <label className="text-sm font-semibold text-slate-700 block mb-2">
+                        Marketing Emails
+                      </label>
+                      <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-sm text-slate-600">
+                          {user?.nurtureUnsubscribed ? 'Unsubscribed from marketing emails' : 'Receiving course updates and tips'}
+                        </span>
+                        <button
+                          onClick={handleToggleMarketing}
+                          disabled={marketingSaving}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                            !user?.nurtureUnsubscribed ? 'bg-[#5b9aa6]' : 'bg-slate-300'
+                          } ${marketingSaving ? 'opacity-50' : ''}`}
+                          role="switch"
+                          aria-checked={!user?.nurtureUnsubscribed}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${
+                              !user?.nurtureUnsubscribed ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -272,24 +397,6 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
-
-                  {/* Only show upgrade CTA for non-paid users */}
-                  {!isPaidUser && (
-                    <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                      <p className="text-sm text-amber-900 font-semibold mb-2">
-                        Unlock Full Access
-                      </p>
-                      <p className="text-xs text-amber-700 mb-3">
-                        Enroll in the complete course to access all modules, workshops, and premium resources.
-                      </p>
-                      <button
-                        onClick={() => router.push('/pricing')}
-                        className="inline-block px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
-                      >
-                        Enroll Now — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
-                      </button>
-                    </div>
-                  )}
 
                   {/* Show confirmation message for paid users */}
                   {isPaidUser && (
@@ -393,10 +500,10 @@ export default function SettingsPage() {
                 )}
 
                 {/* Account Actions */}
-                <div className="bg-white rounded-2xl border-2 border-red-200 p-6">
+                <div className="bg-white rounded-2xl border-2 border-slate-200 p-6">
                   <div className="flex items-center gap-3 mb-6">
-                    <Trash2 className="w-5 h-5 text-red-600" strokeWidth={2} />
-                    <h2 className="text-xl font-bold text-red-900">Account Actions</h2>
+                    <LogOut className="w-5 h-5 text-slate-500" strokeWidth={2} />
+                    <h2 className="text-xl font-bold text-slate-900">Account Actions</h2>
                   </div>
 
                   <button

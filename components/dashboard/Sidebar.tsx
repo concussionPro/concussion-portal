@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -31,12 +31,13 @@ const navItems: Array<{
 ]
 
 export function Sidebar() {
-  const { getTotalCompletedModules } = useProgress()
+  const { getTotalCompletedModules, syncState, restoredFromServer } = useProgress()
   const pathname = usePathname()
   const router = useRouter()
   const completedModules = getTotalCompletedModules()
   const [user, setUser] = useState<UserInfo | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showRestoredBanner, setShowRestoredBanner] = useState(false)
 
   useEffect(() => {
     async function loadUser() {
@@ -59,6 +60,19 @@ export function Sidebar() {
     }
     loadUser()
   }, [])
+
+  // Show restored-from-cloud banner once per session
+  useEffect(() => {
+    if (restoredFromServer && typeof window !== 'undefined') {
+      const shown = sessionStorage.getItem('progress-restored-shown')
+      if (!shown) {
+        setShowRestoredBanner(true)
+        sessionStorage.setItem('progress-restored-shown', '1')
+        const timer = setTimeout(() => setShowRestoredBanner(false), 5000)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [restoredFromServer])
 
   const handleLogout = async () => {
     try {
@@ -119,6 +133,14 @@ export function Sidebar() {
           </p>
         </Link>
 
+        {/* Restored from cloud banner */}
+        {showRestoredBanner && (
+          <div className="mb-4 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            <Cloud className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+            <span className="text-[11px] text-emerald-700 font-medium">Progress restored from cloud</span>
+          </div>
+        )}
+
         {/* CPD Progress Ring */}
         <div className="mb-8">
           <ProgressRing progress={completedModules} total={8} />
@@ -174,6 +196,10 @@ export function Sidebar() {
                   <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
                 </div>
               </div>
+
+              {/* Sync status */}
+              <SyncStatusLine syncState={syncState} />
+
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-accent hover:bg-accent/5 transition-all"
@@ -203,5 +229,26 @@ export function Sidebar() {
         </div>
       </div>
     </>
+  )
+}
+
+function SyncStatusLine({ syncState }: { syncState: string }) {
+  if (syncState === 'idle') return null
+
+  const config = {
+    syncing: { icon: Loader2, text: 'Syncing...', color: 'text-blue-500', spin: true },
+    synced: { icon: CheckCircle2, text: 'Saved to cloud', color: 'text-emerald-500', spin: false },
+    error: { icon: AlertCircle, text: 'Sync error', color: 'text-amber-500', spin: false },
+    offline: { icon: WifiOff, text: 'Offline', color: 'text-slate-400', spin: false },
+  }[syncState]
+
+  if (!config) return null
+  const Icon = config.icon
+
+  return (
+    <div className="flex items-center gap-1.5 px-2 py-1.5 mb-2">
+      <Icon className={cn('w-3 h-3', config.color, config.spin && 'animate-spin')} />
+      <span className={cn('text-[10px] font-medium', config.color)}>{config.text}</span>
+    </div>
   )
 }

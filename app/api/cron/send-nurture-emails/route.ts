@@ -17,18 +17,8 @@ import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
 import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
-import { list as listBlobs, put } from '@vercel/blob'
+import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
-
-interface AbandonedCheckout {
-  email: string
-  name: string
-  courseType: string
-  amount: number
-  abandonedAt: string
-  emailsSent: number
-  recovered: boolean
-}
 
 export async function GET(request: Request) {
   try {
@@ -68,7 +58,7 @@ export async function GET(request: Request) {
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
-      const html = email.template(user.name, daysSinceSignup <= 2 ? loginLink : upgradeLink)
+      const html = email.template(user.name, daysSinceSignup <= 7 ? loginLink : upgradeLink)
         .replace('{{unsubscribe_url}}', unsubscribeUrl)
 
       await sendEmail({
@@ -253,36 +243,30 @@ export async function GET(request: Request) {
 }
 
 /**
- * Process abandoned checkout recovery emails
+ * Process abandoned checkout recovery emails via Postgres
  */
 async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
-  const blobPath = 'abandoned-checkouts.json'
-  let abandonedList: AbandonedCheckout[] = []
   let emailsSent = 0
 
-  const { blobs } = await listBlobs()
-  const existing = blobs
-    .filter(b => b.pathname === blobPath)
-    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+  const { rows } = await sql`
+    SELECT * FROM abandoned_checkouts
+    WHERE recovered = false AND emails_sent < ${ABANDONED_CHECKOUT_SEQUENCE.length}
+    ORDER BY abandoned_at ASC
+  `
 
-  if (existing.length === 0) return 0
-
-  const res = await fetch(`${existing[0].url}?t=${Date.now()}`, { cache: 'no-store' })
-  abandonedList = await res.json()
+  if (rows.length === 0) return 0
 
   const now = Date.now()
-  let updated = false
 
-  for (const checkout of abandonedList) {
-    if (checkout.recovered) continue
-    if (checkout.emailsSent >= ABANDONED_CHECKOUT_SEQUENCE.length) continue
-
-    const hoursSinceAbandoned = (now - new Date(checkout.abandonedAt).getTime()) / (1000 * 60 * 60)
-    const nextEmail = ABANDONED_CHECKOUT_SEQUENCE[checkout.emailsSent]
+  for (const checkout of rows) {
+    const hoursSinceAbandoned = (now - new Date(checkout.abandoned_at).getTime()) / (1000 * 60 * 60)
+    const nextEmail = ABANDONED_CHECKOUT_SEQUENCE[checkout.emails_sent]
 
     if (hoursSinceAbandoned >= nextEmail.hoursAfter) {
+      const unsubToken = generateUnsubscribeToken(checkout.email)
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(checkout.email)}&token=${unsubToken}`
       const html = nextEmail.template(checkout.name)
-        .replace('{{unsubscribe_url}}', '#')
+        .replace('{{unsubscribe_url}}', unsubscribeUrl)
 
       await sendEmail({
         to: checkout.email,
@@ -290,29 +274,25 @@ async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
         html,
         tags: [
           { name: 'sequence', value: 'abandoned-checkout' },
-          { name: 'email-number', value: String(checkout.emailsSent + 1) },
+          { name: 'email-number', value: String(checkout.emails_sent + 1) },
         ],
       })
 
-      checkout.emailsSent++
-      updated = true
+      await sql`
+        UPDATE abandoned_checkouts SET emails_sent = emails_sent + 1 WHERE id = ${checkout.id}
+      `
+
       emailsSent++
-      console.log(`[Abandoned] Email ${checkout.emailsSent} → ${checkout.email}`)
+      console.log(`[Abandoned] Email ${checkout.emails_sent + 1} → ${checkout.email}`)
     }
   }
 
   // Clean up old entries (> 7 days and fully sent)
-  const cleaned = abandonedList.filter(c => {
-    const age = now - new Date(c.abandonedAt).getTime()
-    return age < 7 * 24 * 60 * 60 * 1000 || c.emailsSent < ABANDONED_CHECKOUT_SEQUENCE.length
-  })
-
-  if (updated || cleaned.length !== abandonedList.length) {
-    await put(blobPath, JSON.stringify(cleaned, null, 2), {
-      access: 'public',
-      contentType: 'application/json',
-    })
-  }
+  await sql`
+    DELETE FROM abandoned_checkouts
+    WHERE abandoned_at < now() - interval '7 days'
+      AND emails_sent >= ${ABANDONED_CHECKOUT_SEQUENCE.length}
+  `
 
   return emailsSent
 }

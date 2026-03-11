@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
-import { put, list } from '@vercel/blob'
+import { sql } from '@/lib/db'
 
-// GET - Load user progress from Blob storage
+// GET - Load user progress
 export async function GET(request: NextRequest) {
   try {
     const sessionToken = request.cookies.get('session')?.value
@@ -22,26 +22,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Find the user's progress blob using the SDK
-    const prefix = `user-progress/${sessionData.userId}`
-    const { blobs } = await list({ prefix })
+    const { rows } = await sql`
+      SELECT progress FROM user_progress WHERE user_id = ${sessionData.userId}
+    `
 
-    if (blobs.length === 0) {
-      return NextResponse.json({ success: true, progress: null })
-    }
+    const progress = rows.length > 0 ? rows[0].progress : null
 
-    // Get the most recently uploaded blob
-    const latestBlob = blobs.sort(
-      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-    )[0]
-
-    const response = await fetch(latestBlob.url, { cache: 'no-store' })
-    if (response.ok) {
-      const progress = await response.json()
-      return NextResponse.json({ success: true, progress })
-    }
-
-    return NextResponse.json({ success: true, progress: null })
+    return NextResponse.json({ success: true, progress })
   } catch (error) {
     console.error('Error loading progress:', error)
     return NextResponse.json(
@@ -51,7 +38,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Save user progress to Blob storage
+// POST - Save user progress
 export async function POST(request: NextRequest) {
   try {
     const sessionToken = request.cookies.get('session')?.value
@@ -89,16 +76,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Save progress to Blob storage with deterministic path per user.
-    // addRandomSuffix: false avoids blob proliferation on every save.
-    // Security: userId is 128-bit random (crypto.randomBytes), so paths are not guessable.
-    // The API endpoint itself requires authentication — blob URLs are a storage detail.
-    const filename = `user-progress/${sessionData.userId}.json`
-    const blob = await put(filename, progressJson, {
-      access: 'public',
-      addRandomSuffix: false,
-      contentType: 'application/json',
-    })
+    await sql`
+      INSERT INTO user_progress (user_id, progress, updated_at)
+      VALUES (${sessionData.userId}, ${progressJson}::jsonb, now())
+      ON CONFLICT (user_id) DO UPDATE SET progress = ${progressJson}::jsonb, updated_at = now()
+    `
 
     return NextResponse.json({
       success: true,
