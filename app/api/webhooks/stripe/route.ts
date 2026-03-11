@@ -47,20 +47,18 @@ export async function POST(request: NextRequest) {
 
     console.log(`Stripe webhook received: ${event.type} (${event.id})`)
 
-    // Idempotency: skip already-processed events
+    // Idempotency: atomic INSERT — if event already exists, skip processing
     try {
-      const { rows: existing } = await sql`
-        SELECT 1 FROM processed_webhook_events WHERE event_id = ${event.id} LIMIT 1
-      `
-      if (existing.length > 0) {
-        console.log(`Skipping duplicate event: ${event.id}`)
-        return NextResponse.json({ received: true, duplicate: true })
-      }
-      await sql`
+      const { rows } = await sql`
         INSERT INTO processed_webhook_events (event_id, event_type, processed_at)
         VALUES (${event.id}, ${event.type}, now())
         ON CONFLICT (event_id) DO NOTHING
+        RETURNING event_id
       `
+      if (rows.length === 0) {
+        console.log(`Skipping duplicate event: ${event.id}`)
+        return NextResponse.json({ received: true, duplicate: true })
+      }
     } catch (idempotencyError) {
       // If table doesn't exist yet, continue — don't block payments
       console.warn('Idempotency check failed (table may not exist yet):', idempotencyError)
@@ -189,6 +187,8 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   if (!email) return
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+  const unsubToken = generateUnsubscribeToken(email)
+  const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
 
   await sendEmail({
     to: email,
@@ -217,8 +217,15 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
           Concussion Education Australia &middot; Melbourne, VIC, Australia<br>
           <a href="mailto:zac@concussion-education-australia.com" style="color: #0d9488;">zac@concussion-education-australia.com</a>
         </div>
+        <p style="margin-top: 16px; font-size: 12px; color: #94a3b8; text-align: center;">
+          <a href="${unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe</a>
+        </p>
       </div>
     `,
+    headers: {
+      'List-Unsubscribe': `<${unsubscribeUrl}>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+    },
     tags: [
       { name: 'type', value: 'payment-failed-recovery' },
     ],
@@ -243,6 +250,22 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
   console.log(`Checkout expired: ${email} — ${courseType} ($${amount})`)
 
+  // Check if already tracked (same email within last 24h) — dedup before email AND db insert
+  try {
+    const { rows: recent } = await sql`
+      SELECT id FROM abandoned_checkouts
+      WHERE email = ${email.toLowerCase()}
+        AND abandoned_at > now() - interval '24 hours'
+      LIMIT 1
+    `
+    if (recent.length > 0) {
+      console.log(`Skipping duplicate abandoned checkout for ${email} (within 24h)`)
+      return
+    }
+  } catch (err) {
+    console.error('Failed to check abandoned checkout dedup:', err)
+  }
+
   // Send immediate abandoned checkout recovery email
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
@@ -256,20 +279,10 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
   // Store abandoned checkout in Postgres for recovery cron drip sequence
   try {
-    // Don't add if already tracked (same email within last 24h)
-    const { rows: recent } = await sql`
-      SELECT id FROM abandoned_checkouts
-      WHERE email = ${email.toLowerCase()}
-        AND abandoned_at > now() - interval '24 hours'
-      LIMIT 1
-    `
-    if (recent.length > 0) return
-
     await sql`
       INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered)
       VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), 0, false)
     `
-
     console.log(`Stored abandoned checkout for ${email}`)
   } catch (err) {
     console.error('Failed to store abandoned checkout:', err)

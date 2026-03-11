@@ -20,6 +20,8 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 
+export const maxDuration = 120
+
 export async function GET(request: Request) {
   try {
     // Guard: CRON_SECRET must be set

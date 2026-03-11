@@ -1,23 +1,23 @@
 // Health check endpoint for monitoring
 import { NextResponse } from 'next/server'
-import { list } from '@vercel/blob'
+import { sql } from '@/lib/db'
 import { verifySessionToken } from '@/lib/jwt-session'
 
 export const runtime = 'nodejs'
 
 export async function GET() {
   const checks = {
-    blobStorage: false,
+    database: false,
     authentication: false,
     environment: false,
   }
 
   let status: 'healthy' | 'degraded' | 'down' = 'healthy'
 
-  // Check Blob storage
+  // Check Postgres database
   try {
-    await list({ limit: 1 })
-    checks.blobStorage = true
+    await sql`SELECT 1`
+    checks.database = true
   } catch {
     status = 'degraded'
   }
@@ -33,7 +33,6 @@ export async function GET() {
   // Check environment variables
   checks.environment = !!(
     process.env.MAGIC_LINK_SECRET &&
-    process.env.BLOB_READ_WRITE_TOKEN &&
     process.env.RESEND_API_KEY
   )
 

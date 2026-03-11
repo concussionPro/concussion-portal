@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { retrieveCheckoutSession } from '@/lib/stripe'
 
-// Rate limit: max 5 requests per session ID per 15 minutes
+// Rate limit: max 20 requests per session ID per 15 minutes
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
 function checkRateLimit(key: string): boolean {
@@ -11,7 +11,7 @@ function checkRateLimit(key: string): boolean {
     rateLimitMap.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 })
     return true
   }
-  if (entry.count >= 5) return false
+  if (entry.count >= 20) return false
   entry.count++
   return true
 }

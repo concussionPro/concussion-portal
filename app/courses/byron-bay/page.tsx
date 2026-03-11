@@ -43,28 +43,37 @@ export default function ByronBayPage() {
               Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-              <div className="flex items-center gap-2 text-slate-700">
-                <Calendar className="w-5 h-5 text-accent" aria-hidden="true" />
-                <span className="font-semibold">{location.date}</span>
+            {location.status === 'confirmed' ? (
+              <>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Calendar className="w-5 h-5 text-accent" aria-hidden="true" />
+                    <span className="font-semibold">{location.date}</span>
+                  </div>
+                  <SpotsRemaining location="BYRON_BAY" />
+                </div>
+
+                <CountdownTimer className="justify-center mb-8" />
+
+                <a
+                  href={CONFIG.SHOP_URL}
+                  className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                  aria-label={`Enrol in Byron Bay session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
+                >
+                  Enrol Now - ${CONFIG.COURSE.PRICE_EARLY_BIRD}
+                  <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                </a>
+
+                <p className="text-sm text-muted-foreground mt-4">
+                  Early bird pricing — save ${CONFIG.COURSE.SAVINGS} (limited time)
+                </p>
+              </>
+            ) : (
+              <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
+                <Calendar className="w-4 h-4" aria-hidden="true" />
+                Dates Coming Soon — Register Interest Below
               </div>
-              <SpotsRemaining location="BYRON_BAY" />
-            </div>
-
-            <CountdownTimer className="justify-center mb-8" />
-
-            <a
-              href={CONFIG.SHOP_URL}
-              className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-              aria-label={`Enrol in Byron Bay session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
-            >
-              Enrol Now - ${CONFIG.COURSE.PRICE_EARLY_BIRD}
-              <ArrowRight className="w-5 h-5" aria-hidden="true" />
-            </a>
-
-            <p className="text-sm text-muted-foreground mt-4">
-              Early bird pricing — save ${CONFIG.COURSE.SAVINGS} (limited time)
-            </p>
+            )}
           </div>
 
           {/* What's Included */}
@@ -99,7 +108,7 @@ export default function ByronBayPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold">Training Date</h3>
-                  <p className="text-sm text-muted-foreground">{location.date}</p>
+                  <p className="text-sm text-muted-foreground">{location.date || 'Coming soon'}</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
@@ -129,16 +138,26 @@ export default function ByronBayPage() {
               Secure Your Spot in {location.city}
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Join Byron Bay clinicians mastering evidence-based concussion management. Limited to {location.spotsRemaining} spots for optimal hands-on practice.
+              Join Byron Bay clinicians mastering evidence-based concussion management.{location.status === 'confirmed' ? ` Limited to ${location.spotsRemaining} spots for optimal hands-on practice.` : ' Register your interest to be notified when dates are confirmed.'}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a
-                href={CONFIG.SHOP_URL}
-                className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-              >
-                Enrol Now
-                <ArrowRight className="w-5 h-5" aria-hidden="true" />
-              </a>
+              {location.status === 'confirmed' ? (
+                <a
+                  href={CONFIG.SHOP_URL}
+                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                >
+                  Enrol Now
+                  <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                </a>
+              ) : (
+                <a
+                  href="/pricing"
+                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                >
+                  Register Interest
+                  <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                </a>
+              )}
               <button
                 onClick={() => router.push('/preview')}
                 className="glass px-8 py-4 rounded-xl text-base font-semibold hover:bg-slate-100 transition-colors inline-flex items-center gap-2 border border-slate-200 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"

@@ -103,7 +103,7 @@ export default function SettingsPage() {
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch {
-      setCertEmailStatus('error')
+      setCertDownloading(false)
     } finally {
       setCertDownloading(false)
     }

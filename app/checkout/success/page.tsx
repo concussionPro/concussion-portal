@@ -74,21 +74,31 @@ function CheckoutSuccessContent() {
     )
   }
 
-  if (error && !sessionId) {
+  if (error || (!loading && !sessionData)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="max-w-md w-full text-center">
           <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Session Not Found</h1>
+          <h1 className="text-2xl font-bold mb-2">{sessionId ? 'Unable to Load Details' : 'Session Not Found'}</h1>
           <p className="text-muted-foreground mb-6">
-            This page requires a valid checkout session. If you just completed a purchase, check your email for a login link.
+            {sessionId
+              ? 'We couldn\'t load your checkout details, but your payment was processed. Check your email for a login link to access your course.'
+              : 'This page requires a valid checkout session. If you just completed a purchase, check your email for a login link.'}
           </p>
-          <button
-            onClick={() => router.push('/')}
-            className="btn-primary px-8 py-3 rounded-xl font-semibold"
-          >
-            Go to Homepage
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push('/login')}
+              className="btn-primary px-8 py-3 rounded-xl font-semibold"
+            >
+              Go to Login
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Go to Homepage
+            </button>
+          </div>
         </div>
       </div>
     )
