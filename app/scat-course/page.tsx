@@ -6,6 +6,7 @@ import { CheckCircle, Lock, BookOpen, Award, Clock, FileText, Download, ArrowRig
 import { trackFreeCourseCompletion } from '@/lib/analytics'
 import { getSCATModulesMeta } from '@/data/module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
+import { CONFIG } from '@/lib/config'
 
 export default function SCATCoursePage() {
   const router = useRouter()
@@ -229,16 +230,16 @@ export default function SCATCoursePage() {
                 </div>
                 <div className="pt-4 border-t border-emerald-200">
                   <p className="text-sm text-emerald-800 font-semibold mb-2">
-                    Ready for the full 14 CPD points?
+                    Want to go deeper?
                   </p>
                   <p className="text-sm text-emerald-700 mb-3">
-                    Unlock 8 advanced modules covering VOMS, BESS, return-to-play protocols, rehabilitation pathways, and more.
+                    Unlock 8 advanced modules covering VOMS, BESS, return-to-play protocols, rehabilitation pathways, and more — from ${CONFIG.COURSE.PRICE_ONLINE} AUD.
                   </p>
                   <button
                     onClick={() => router.push('/pricing')}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors"
                   >
-                    See Full Course — $497
+                    See Pricing &amp; Options
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
