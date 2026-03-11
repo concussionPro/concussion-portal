@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Check, Star } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -9,8 +10,13 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { trackShopClick } from '@/lib/analytics'
 
 export default function HomePage() {
+  const [isLaunchPricing, setIsLaunchPricing] = useState(false)
 
   useAnalytics()
+
+  useEffect(() => {
+    setIsLaunchPricing(new Date() < CONFIG.LAUNCH_PRICING.DEADLINE)
+  }, [])
 
   return (
     <>
@@ -55,7 +61,7 @@ export default function HomePage() {
                 href="/pricing"
                 className="btn-primary px-7 py-3.5 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"
               >
-                Start Online — ${CONFIG.COURSE.PRICE_ONLINE} {new Date() < CONFIG.LAUNCH_PRICING.DEADLINE && '(Launch Price)'}
+                Start Online — ${CONFIG.COURSE.PRICE_ONLINE} {isLaunchPricing && '(Launch Price)'}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link

@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState<string | null>(null)
   const [accessLevel, setAccessLevel] = useState<string>('')
   const [isReturningUser, setIsReturningUser] = useState(false)
+  const [greeting, setGreeting] = useState('Welcome')
 
   useAnalytics()
 
@@ -47,6 +48,9 @@ export default function DashboardPage() {
 
     checkAccessLevel()
     setIsReturningUser(localStorage.getItem('hasSeenWelcome') === 'true')
+
+    const hour = new Date().getHours()
+    setGreeting(hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening')
   }, [router])
 
   if (!accessChecked) {
@@ -58,13 +62,6 @@ export default function DashboardPage() {
         </div>
       </div>
     )
-  }
-
-  const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return 'Good morning'
-    if (hour < 17) return 'Good afternoon'
-    return 'Good evening'
   }
 
   const firstName = userName ? userName.split(' ')[0] : null
@@ -79,7 +76,7 @@ export default function DashboardPage() {
             {/* Premium Greeting */}
             <div className="mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
-                {getGreeting()}{firstName ? `, ${firstName}` : ''}
+                {greeting}{firstName ? `, ${firstName}` : ''}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {isReturningUser

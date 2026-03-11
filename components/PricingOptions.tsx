@@ -265,10 +265,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
+  const [isEarlyBird, setIsEarlyBird] = useState(false)
+  const [isLaunchPricing, setIsLaunchPricing] = useState(false)
 
   const isCompact = variant === 'compact'
-  const isEarlyBird = new Date() < CONFIG.EARLY_BIRD_DEADLINE
-  const isLaunchPricing = CONFIG.LAUNCH_PRICING.ENABLED && new Date() < CONFIG.LAUNCH_PRICING.DEADLINE
+
+  // Compute time-dependent pricing on client only to avoid hydration mismatch
+  useEffect(() => {
+    const now = new Date()
+    setIsEarlyBird(now < CONFIG.EARLY_BIRD_DEADLINE)
+    setIsLaunchPricing(CONFIG.LAUNCH_PRICING.ENABLED && now < CONFIG.LAUNCH_PRICING.DEADLINE)
+  }, [])
 
   // Fetch enrollment count for social proof
   useEffect(() => {

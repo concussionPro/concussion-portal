@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
+
+export const maxDuration = 60
 import { createUser, findUserByEmail } from '@/lib/users'
 import { sendMagicLinkEmail, sendAbandonedCheckoutEmail } from '@/lib/email'
 import { sendEmail } from '@/lib/resend-client'

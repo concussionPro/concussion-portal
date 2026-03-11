@@ -30,6 +30,14 @@ export function StickyCTA() {
   const pathname = usePathname()
   const [dismissed, setDismissed] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [daysLeft, setDaysLeft] = useState(0)
+
+  // Compute days left on client only to avoid hydration mismatch
+  useEffect(() => {
+    const now = new Date()
+    const deadline = CONFIG.EARLY_BIRD_DEADLINE
+    setDaysLeft(Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))))
+  }, [])
 
   // Show after scrolling 400px
   useEffect(() => {
@@ -50,10 +58,6 @@ export function StickyCTA() {
   // Don't show on excluded paths
   const isExcluded = EXCLUDED_PATHS.some(p => pathname.startsWith(p))
   if (isExcluded || dismissed || !visible) return null
-
-  const deadline = CONFIG.EARLY_BIRD_DEADLINE
-  const now = new Date()
-  const daysLeft = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
 
   const handleDismiss = () => {
     setDismissed(true)

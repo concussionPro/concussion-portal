@@ -32,8 +32,13 @@ export async function POST(request: NextRequest) {
     const forwarded = request.headers.get('x-forwarded-for')
     const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
 
-    const body = await request.json()
-    const { email, name } = body
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    }
+    const { email, name } = body as { email?: string; name?: string }
 
     // Validate email
     if (!email || !email.includes('@')) {

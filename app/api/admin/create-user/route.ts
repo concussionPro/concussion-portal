@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
       accessLevel,
       emailSent,
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Admin create user error:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to create user' },
+      { error: 'Failed to create user' },
       { status: 500 }
     )
   }
