@@ -41,8 +41,8 @@ function PricingContent() {
       a: 'No problem — you can reschedule to any future workshop date or location at no extra cost. There\'s no expiry. Once enrolled, you have lifetime access to the online modules and full flexibility on when you attend the hands-on day.',
     },
     {
-      q: "What happens if I register interest for a TBA location?",
-      a: "You'll be emailed as soon as the date and venue are confirmed — typically 4–6 weeks before the event. You'll also get early access to book before spots open publicly.",
+      q: "How are workshop dates confirmed?",
+      a: "We run workshops once a city reaches enough registrations — this ensures a great hands-on learning environment. Q1 2026 workshops ran across all three cities. For the next round (Jul–Sep 2026), we'll confirm your date and venue 6 weeks in advance. Registered participants choose their preferred date first.",
     },
     {
       q: 'How much time does the course take?',

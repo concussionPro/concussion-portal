@@ -137,7 +137,7 @@ function InterestForm({
       className={`mt-2 p-3 bg-[rgba(13,115,119,0.03)] border border-[rgba(13,115,119,0.08)] rounded-lg space-y-2.5 ${compact ? 'text-xs' : 'text-sm'}`}
     >
       <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
-        Register Interest — {cityLabel}
+        Priority Registration — {cityLabel}
       </p>
 
       {form.error && (
@@ -182,7 +182,7 @@ function InterestForm({
         ) : (
           <>
             <Mail className="w-3.5 h-3.5" />
-            Notify Me When Confirmed
+            Reserve My Spot
           </>
         )}
       </button>
@@ -230,8 +230,8 @@ function LocationRow({
           {isConfirmed ? (
             <span className="text-[var(--muted-foreground)] text-xs shrink-0">· {loc.date}</span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--muted)] text-[var(--muted-foreground)] text-[10px] font-semibold uppercase tracking-wide shrink-0">
-              Coming Soon
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold shrink-0 border border-amber-200/50">
+              {CONFIG.WORKSHOP.NEXT_ROUND}
             </span>
           )}
         </div>
@@ -671,11 +671,20 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </ul>
           </div>
 
+          {/* Q1 social proof */}
+          {CONFIG.WORKSHOP.Q1_COMPLETED && (
+            <div className="mb-4 px-3 py-2.5 rounded-lg bg-emerald-50 border border-emerald-200/60">
+              <p className="text-xs text-emerald-800 font-medium">
+                Q1 2026 workshops delivered in Sydney, Melbourne &amp; Byron Bay. Next round: {CONFIG.WORKSHOP.NEXT_ROUND}.
+              </p>
+            </div>
+          )}
+
           {/* Location Selector */}
           <div className="mb-4">
             <label className="text-sm font-semibold mb-2 flex items-center gap-1.5 text-[var(--foreground)]">
               <MapPin className="w-3.5 h-3.5 text-[var(--accent)]" />
-              Select Workshop Location
+              Choose Your Workshop City
             </label>
             <div className="space-y-2">
               {LOCATIONS.map(loc => (
@@ -692,7 +701,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
             {openTbaCity && !canEnroll && (
               <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
-                Select an available location to enrol now, or register your interest for upcoming dates.
+                Dates confirmed once enough registrations are received. Registered clinicians choose their preferred date first.
               </p>
             )}
           </div>
@@ -717,7 +726,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           {!canEnroll && !openTbaCity && (
             <p className="mt-3 text-xs text-center text-[var(--muted-foreground)] leading-relaxed">
-              Workshop dates coming soon. Start with the online course now — upgrade to add the workshop when dates are confirmed.
+              Start with the online course now — upgrade to add the workshop when your city&apos;s date is confirmed.
             </p>
           )}
 

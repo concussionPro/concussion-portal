@@ -84,10 +84,18 @@ export async function GET(request: NextRequest) {
       total: emailList.length,
       emails: emailList,
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Admin emails API error:', error)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    const isConnectionError = msg.includes('POSTGRES_URL') || msg.includes('connection') || msg.includes('ECONNREFUSED')
+    const isTableError = msg.includes('does not exist') || msg.includes('relation')
+    const hint = isConnectionError
+      ? 'POSTGRES_URL env var may be missing. Run: vercel env pull .env.local'
+      : isTableError
+        ? 'Database tables may not exist. Run: npx tsx scripts/migrate-blob-to-postgres.ts'
+        : 'Check server logs for details'
     return NextResponse.json(
-      { error: 'Failed to load emails' },
+      { error: `Failed to load emails: ${hint}` },
       { status: 500 }
     )
   }

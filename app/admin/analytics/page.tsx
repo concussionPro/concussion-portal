@@ -459,6 +459,7 @@ export default function AnalyticsDashboard() {
 
   // Users/emails data
   const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; completedModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
+  const [usersError, setUsersError] = useState<string | null>(null)
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
 
@@ -534,7 +535,15 @@ export default function AnalyticsDashboard() {
         }
         if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
           const usersJson = await usersRes.value.json()
-          if (usersJson.success) setUsersData(usersJson.emails || [])
+          if (usersJson.success) {
+            setUsersData(usersJson.emails || [])
+            setUsersError(null)
+          } else {
+            setUsersError(usersJson.error || 'Failed to load users')
+          }
+        } else {
+          const statusCode = usersRes.status === 'fulfilled' ? usersRes.value.status : 'network error'
+          setUsersError(`Database connection failed (${statusCode}). Check POSTGRES_URL env var.`)
         }
       } catch (err) {
         console.warn('[Analytics] Admin data load error:', err)
@@ -1323,6 +1332,15 @@ export default function AnalyticsDashboard() {
             {/* ── Users / Emails ──────────────────────────────────────────── */}
             {activeTab === 'users' && (
               <div className="space-y-6">
+                {usersError && (
+                  <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+                    <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-red-800">Users data unavailable</p>
+                      <p className="text-xs text-red-600 mt-1">{usersError}</p>
+                    </div>
+                  </div>
+                )}
                 {/* Summary */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="glass rounded-xl p-4">
