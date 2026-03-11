@@ -108,7 +108,7 @@ export default function SydneyPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold">Training Date</h3>
-                  <p className="text-sm text-muted-foreground">{location.date || 'Coming soon'}</p>
+                  <p className="text-sm text-muted-foreground">{location.date || CONFIG.WORKSHOP.NEXT_ROUND}</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">

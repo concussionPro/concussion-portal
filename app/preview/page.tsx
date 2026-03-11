@@ -383,7 +383,7 @@ export default function PreviewPage() {
                   { label: '14 CPD Points', desc: '8 online + 6 workshop' },
                   { label: 'Lifetime Access', desc: 'All modules, updates included' },
                   { label: 'Clinical Toolkit', desc: 'Flowcharts, templates, forms' },
-                  { label: 'Flexible Dates', desc: `${CONFIG.LOCATIONS.BYRON_BAY.date || 'Dates TBA'} · More coming` },
+                  { label: 'Flexible Dates', desc: `Next workshops ${CONFIG.WORKSHOP.NEXT_ROUND}` },
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 border border-white/10">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />

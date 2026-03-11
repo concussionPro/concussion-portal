@@ -199,11 +199,11 @@ export default function InPersonTrainingPage() {
                     <MapPin className="w-5 h-5 text-accent" />
                     <div>
                       <h4 className="font-bold">{location.city}</h4>
-                      <p className="text-sm text-muted-foreground">{location.date || 'Date TBA'}</p>
+                      <p className="text-sm text-muted-foreground">{location.date || CONFIG.WORKSHOP.NEXT_ROUND}</p>
                     </div>
                   </div>
                   <span className={`text-xs font-semibold px-3 py-1 rounded-full ${location.status === 'confirmed' ? 'text-accent bg-accent/10' : 'text-muted-foreground bg-muted'}`}>
-                    {location.status === 'confirmed' ? 'Available' : 'Coming Soon'}
+                    {location.status === 'confirmed' ? 'Available' : 'Scheduling Now'}
                   </span>
                 </div>
               ))}
@@ -233,7 +233,7 @@ export default function InPersonTrainingPage() {
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
               >
                 <Award className="w-5 h-5" />
-                Secure Your Spot — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
+                See Pricing & Options
                 <ArrowRight className="w-5 h-5" />
               </button>
               <button

@@ -178,12 +178,9 @@ export function trackShopClick(source: string, additionalData: Record<string, an
     ...additionalData,
   })
 
-  // Fire Google Ads conversion event
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'conversion', {
-      send_to: `AW-17984048021/${process.env.NEXT_PUBLIC_ENROL_CONVERSION_LABEL || 'enrol_click'}`,
-    })
-  }
+  // NOTE: Do NOT fire Google Ads conversion here — this is just a click, not a purchase.
+  // The real conversion fires in trackPurchaseConversion() on the success page.
+  // Firing here corrupts Smart Bidding data by counting clicks as conversions.
 }
 
 // ── Google Ads conversion helpers ─────────────────────────────────────────────

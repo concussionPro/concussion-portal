@@ -106,11 +106,10 @@ export function CourseSchema() {
     timeRequired: 'P2W',
     offers: {
       '@type': 'Offer',
-      price: CONFIG.COURSE.PRICE_EARLY_BIRD,
+      price: CONFIG.COURSE.PRICE_ONLINE,
       priceCurrency: 'AUD',
       availability: 'https://schema.org/InStock',
       url: `${CONFIG.APP_URL}${CONFIG.SHOP_URL}`,
-      priceValidUntil: earlyBirdDate,
     },
   }
 
