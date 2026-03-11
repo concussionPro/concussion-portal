@@ -57,7 +57,7 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: an
               href={CONFIG.SHOP_URL}
               className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 mb-4"
             >
-              View Course Details & Enroll
+              View Course Details & Enrol
               <ArrowRight className="w-5 h-5" />
             </a>
 

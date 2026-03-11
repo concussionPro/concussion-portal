@@ -236,7 +236,7 @@ export default function AssessmentPage() {
                     href={CONFIG.SHOP_URL}
                     className="btn-primary px-8 py-3.5 rounded-xl text-base font-bold text-white inline-flex items-center gap-2 shadow-2xl"
                   >
-                    Enroll — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} Early Bird
+                    Enrol — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} Early Bird
                     <ArrowRight className="w-5 h-5" />
                   </a>
                   <span className="text-muted-foreground text-sm">or</span>

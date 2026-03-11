@@ -341,7 +341,7 @@ export default function HomePage() {
                   onClick={() => trackShopClick('footer-cta')}
                   className="bg-white text-[var(--foreground)] px-7 py-3.5 rounded-xl text-[15px] font-semibold inline-flex items-center gap-2 hover:bg-white/90 transition-colors shadow-lg"
                 >
-                  Enroll Now
+                  Enrol Now
                   <ArrowRight className="w-4 h-4" />
                 </a>
                 <Link

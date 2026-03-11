@@ -66,7 +66,7 @@ export function SiteNav() {
               href={CONFIG.SHOP_URL}
               className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
             >
-              Enroll
+              Enrol
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </div>
@@ -110,7 +110,7 @@ export function SiteNav() {
               href={CONFIG.SHOP_URL}
               className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
             >
-              Enroll Now
+              Enrol Now
             </a>
           </div>
         </div>

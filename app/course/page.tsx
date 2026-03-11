@@ -153,7 +153,7 @@ export default function CoursePage() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
               Investment in clinical excellence
             </h2>
-            <p className="text-base text-muted-foreground">Choose your enrollment tier</p>
+            <p className="text-base text-muted-foreground">Choose your enrolment tier</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
@@ -348,7 +348,7 @@ export default function CoursePage() {
         <div className="container-sm px-6 md:px-8">
           <div className="glass rounded-2xl p-8 md:p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-5 tracking-tight">
-              Ready to enroll?
+              Ready to enrol?
             </h2>
 
             {selectedLocation && selectedDate && selectedShopUrl ? (
@@ -372,7 +372,7 @@ export default function CoursePage() {
                   onClick={() => router.push('/pricing')}
                   className="btn-primary px-10 py-5 rounded-xl text-lg inline-flex items-center gap-2"
                 >
-                  Complete enrollment
+                  Complete enrolment
                   <ArrowRight className="w-5 h-5" />
                 </button>
 

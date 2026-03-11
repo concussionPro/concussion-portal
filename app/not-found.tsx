@@ -66,7 +66,7 @@ export default function NotFound() {
               onClick={() => router.push('/pricing')}
               className="text-sm text-accent hover:underline"
             >
-              Enroll Now
+              Enrol Now
             </button>
             <span className="text-muted-foreground">·</span>
             <button

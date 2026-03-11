@@ -58,9 +58,9 @@ export default function SydneyPage() {
                 <a
                   href={CONFIG.SHOP_URL}
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                  aria-label={`Enroll in Sydney session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
+                  aria-label={`Enrol in Sydney session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
                 >
-                  Enroll Now - ${CONFIG.COURSE.PRICE_EARLY_BIRD}
+                  Enrol Now - ${CONFIG.COURSE.PRICE_EARLY_BIRD}
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
 
@@ -146,7 +146,7 @@ export default function SydneyPage() {
                   href={CONFIG.SHOP_URL}
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                 >
-                  Enroll Now
+                  Enrol Now
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
               ) : (

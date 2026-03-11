@@ -119,7 +119,7 @@ function CheckoutSuccessContent() {
             <CheckCircle2 className="w-10 h-10 text-emerald-600" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            Enrollment confirmed{sessionData?.customerName ? `, ${sessionData.customerName.split(' ')[0]}` : ''}.
+            Enrolment confirmed{sessionData?.customerName ? `, ${sessionData.customerName.split(' ')[0]}` : ''}.
           </h1>
           <p className="text-lg text-muted-foreground">
             {sessionData?.courseType === 'full-course'

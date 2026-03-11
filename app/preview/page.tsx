@@ -300,7 +300,7 @@ export default function PreviewPage() {
                                   className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
                                 >
                                   <Sparkles className="w-4 h-4" />
-                                  Enroll to unlock all {preview.totalSections} sections
+                                  Enrol to unlock all {preview.totalSections} sections
                                 </button>
                               </div>
                             </div>
@@ -316,7 +316,7 @@ export default function PreviewPage() {
                           className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
                         >
                           <Lock className="w-4 h-4" />
-                          Enroll to access
+                          Enrol to access
                         </button>
                       </div>
                     )}
@@ -332,7 +332,7 @@ export default function PreviewPage() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-bold mb-4">
               <Sparkles className="w-4 h-4" />
-              Flexible Enrollment
+              Flexible Enrolment
             </div>
             <h2 className="text-3xl font-bold text-slate-900 mb-3">
               Choose Your Learning Path

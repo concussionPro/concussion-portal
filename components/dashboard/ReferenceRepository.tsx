@@ -1287,7 +1287,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
             <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl p-4 border-2 border-teal-200">
               <Award className="w-8 h-8 text-teal-600 mx-auto mb-2" />
               <p className="text-xs text-teal-900 font-semibold">
-                Premium Resource - Enroll to Unlock
+                Premium Resource - Enrol to Unlock
               </p>
             </div>
           </div>
@@ -1327,7 +1327,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
                   onClick={() => trackShopClick('references-online-only-upgrade', { accessLevel: 'online-only' })}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                 >
-                  Upgrade Now - Add Workshop for $693
+                  Upgrade Now - Add Workshop for ${(CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE).toLocaleString()}
                 </a>
                 <a
                   href="/in-person"

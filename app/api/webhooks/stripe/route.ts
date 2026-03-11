@@ -128,19 +128,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     userId = existingUser.id
 
     // Only upgrade access level, never downgrade
-    if (
-      (existingUser.accessLevel === 'preview' || existingUser.accessLevel === 'online-only') &&
-      accessLevel === 'full-course'
-    ) {
+    // preview → online-only or full-course, online-only → full-course
+    const shouldUpgrade =
+      (existingUser.accessLevel === 'preview' && (accessLevel === 'online-only' || accessLevel === 'full-course')) ||
+      (existingUser.accessLevel === 'online-only' && accessLevel === 'full-course')
+
+    if (shouldUpgrade) {
       await createUser({
         email: customerEmail,
         name: customerName,
-        accessLevel: 'full-course',
+        accessLevel,
         stripeCustomerId: session.customer as string || undefined,
         workshopLocation: workshopCity || undefined,
         signupSource: 'purchase',
       })
-      console.log(`Upgraded ${customerEmail} to full-course`)
+      console.log(`Upgraded ${customerEmail} to ${accessLevel}`)
     }
   } else {
     console.log(`Creating new user: ${customerEmail} (${accessLevel})`)

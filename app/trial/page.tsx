@@ -67,7 +67,7 @@ export default function TrialPage() {
                 'Interactive learning elements and quick knowledge checks',
                 'Downloadable clinical resources and cheat sheets',
                 'Final quiz to test your knowledge',
-                'Earn 1 CPD point upon completion'
+                'Earn 2 CPD points upon completion'
               ].map((item, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-[#6b9da8] flex-shrink-0 mt-0.5" strokeWidth={2.5} />

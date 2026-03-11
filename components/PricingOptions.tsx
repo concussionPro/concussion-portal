@@ -411,7 +411,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Enroll Now — $${CONFIG.COURSE.PRICE_ONLINE}`
+                `Enrol Now — $${CONFIG.COURSE.PRICE_ONLINE}`
               )}
             </button>
           </div>
@@ -499,10 +499,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : canEnroll ? (
                 <>
-                  Enroll — {selectedLocationObj?.label}
+                  Enrol — {selectedLocationObj?.label}
                 </>
               ) : (
-                'Select a Location to Enroll'
+                'Select a Location to Enrol'
               )}
             </button>
           </div>
@@ -610,7 +610,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Enroll Now — ${CONFIG.COURSE.PRICE_ONLINE}
+                Enrol Now — ${CONFIG.COURSE.PRICE_ONLINE}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -716,7 +716,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
             {openTbaCity && !canEnroll && (
               <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
-                Select an available location to enroll now, or register your interest for upcoming dates.
+                Select an available location to enrol now, or register your interest for upcoming dates.
               </p>
             )}
           </div>
@@ -732,8 +732,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             ) : (
               <>
                 {canEnroll
-                  ? `Enroll — ${selectedLocationObj?.label}, ${selectedLocationObj?.date}`
-                  : 'Select a Location to Enroll'}
+                  ? `Enrol — ${selectedLocationObj?.label}, ${selectedLocationObj?.date}`
+                  : 'Select a Location to Enrol'}
                 {canEnroll && <ArrowRight className="w-4 h-4" />}
               </>
             )}

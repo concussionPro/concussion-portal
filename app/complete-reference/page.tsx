@@ -102,7 +102,7 @@ export default function CompleteReferencePage() {
                   rel="noopener noreferrer"
                   className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-lg"
                 >
-                  Enroll Now
+                  Enrol Now
                   <ExternalLink className="w-4 h-4" />
                 </a>
               </div>

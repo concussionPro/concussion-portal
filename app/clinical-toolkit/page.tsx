@@ -276,13 +276,13 @@ export default function ClinicalToolkitPage() {
                       Unlock Full Toolkit Access
                     </p>
                     <p className="text-sm text-amber-700 mt-1">
-                      Enroll to access all clinical resources, templates, flowcharts, and assessment tools.
+                      Enrol to access all clinical resources, templates, flowcharts, and assessment tools.
                     </p>
                     <button
                       onClick={() => router.push('/pricing')}
                       className="inline-block mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
                     >
-                      Enroll Now
+                      Enrol Now
                     </button>
                   </div>
                 </div>
