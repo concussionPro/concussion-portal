@@ -314,7 +314,7 @@ export default function AthleteBaselineForm() {
   const [monthsCorrect, setMonthsCorrect] = useState<boolean | null>(null)
 
   // Cognitive sub-step tracking
-  const [cognitiveSubStep, setCognitiveSubStep] = useState<'orientation' | 'memory' | 'digits' | 'months'>('orientation')
+  const [cognitiveSubStep, setCognitiveSubStep] = useState<'orientation' | 'memory' | 'digits' | 'months'>('memory')
 
   // Step 4: Oculomotor Screening
   const [oculomotorSubStep, setOculomotorSubStep] = useState(0) // 0=instructions, 1=exercise1, 2=report1, 3=exercise2, ...
@@ -472,22 +472,10 @@ export default function AthleteBaselineForm() {
 
   const immediateMemoryScore = (() => {
     const targetWords = new Set<string>(WORD_LISTS[wordListKey])
-    let total = 0
-    for (let t = 0; t < 3; t++) {
-      const selections = trialSelections[t]
-      if (!selections) continue
-      for (const [word, selected] of Object.entries(selections)) {
-        if (selected && targetWords.has(word)) total++
-      }
-    }
-    return total
+    const selections = trialSelections[0]
+    if (!selections) return 0
+    return Object.entries(selections).filter(([word, selected]) => selected && targetWords.has(word)).length
   })()
-
-  const trialScores = trialSelections.map(sel => {
-    if (!sel) return 0
-    const targetWords = new Set<string>(WORD_LISTS[wordListKey])
-    return Object.entries(sel).filter(([word, selected]) => selected && targetWords.has(word)).length
-  })
 
   const digitsBackwardScore = (() => {
     // Score = number of length levels with at least 1 correct (max 4)
@@ -547,8 +535,7 @@ export default function AthleteBaselineForm() {
             },
             immediateMemory: {
               listUsed: wordListKey,
-              trial1: trialScores[0], trial2: trialScores[1], trial3: trialScores[2],
-              total: immediateMemoryScore,
+              score: immediateMemoryScore,
             },
             concentration: {
               digitsScore: digitsBackwardScore,
@@ -628,15 +615,10 @@ export default function AthleteBaselineForm() {
     }
   }
 
-  // Handle trial completion (move to next trial or finish)
+  // Handle trial completion — single trial, then done
   const completeTrialRecall = () => {
-    if (currentTrial < 2) {
-      setCurrentTrial(prev => prev + 1)
-      setMemoryPhase('intro')
-    } else {
-      setMemoryPhase('done')
-      setMemoryTimestamp(Date.now())
-    }
+    setMemoryPhase('done')
+    setMemoryTimestamp(Date.now())
   }
 
   // Loading state
@@ -692,7 +674,7 @@ export default function AthleteBaselineForm() {
           </p>
           <div className="glass rounded-xl p-4 mb-4 border border-accent/20">
             <p className="text-sm font-semibold mb-1">Your Cognitive Score</p>
-            <p className="text-3xl font-bold text-accent">{totalCognitiveScore}/50</p>
+            <p className="text-3xl font-bold text-accent">{totalCognitiveScore}/30</p>
           </div>
           <p className="text-xs text-muted-foreground mb-6">
             This score is one piece of a comprehensive baseline. The full SCAT6 covers 7 additional domains.
@@ -1003,7 +985,7 @@ export default function AthleteBaselineForm() {
           <div className="glass rounded-2xl p-6 animate-fade-in">
             {/* Sub-step navigation */}
             <div className="flex gap-1 mb-4">
-              {(['orientation', 'memory', 'digits', 'months'] as const).map((sub, i) => (
+              {(['memory', 'orientation', 'digits', 'months'] as const).map((sub, i) => (
                 <button
                   key={sub}
                   onClick={() => setCognitiveSubStep(sub)}
@@ -1011,7 +993,7 @@ export default function AthleteBaselineForm() {
                     cognitiveSubStep === sub ? 'bg-accent text-white' : 'bg-slate-100 text-slate-500'
                   }`}
                 >
-                  {['Orientation', 'Memory', 'Digits', 'Months'][i]}
+                  {['Memory', 'Orientation', 'Digits', 'Months'][i]}
                 </button>
               ))}
             </div>
@@ -1090,9 +1072,9 @@ export default function AthleteBaselineForm() {
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                  <button onClick={() => setCognitiveSubStep('memory')}
+                  <button onClick={() => setCognitiveSubStep('digits')}
                     className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1">
-                    Next: Memory Test <ChevronRight className="w-4 h-4" />
+                    Next: Digits Backward <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -1103,17 +1085,17 @@ export default function AthleteBaselineForm() {
               <div>
                 <h2 className="text-lg font-bold mb-2">Immediate Memory</h2>
                 <p className="text-xs text-muted-foreground mb-4">
-                  You'll be shown 10 words, one at a time. After all words are shown, select the ones you remember. This repeats 3 times.
+                  You'll be shown 10 words, one at a time. After all words are shown, select the ones you remember.
                 </p>
 
                 {memoryPhase === 'intro' && (
                   <div className="text-center py-6">
                     <p className="text-sm text-muted-foreground mb-4">
-                      Trial {currentTrial + 1} of 3 — Words will appear for 1.5 seconds each
+                      Words will appear for 1.5 seconds each
                     </p>
                     <button onClick={startWordFlash}
                       className="btn-primary px-8 py-3 rounded-xl text-base font-semibold">
-                      {currentTrial === 0 ? 'Start Memory Test' : 'Start Next Trial'}
+                      Start Memory Test
                     </button>
                   </div>
                 )}
@@ -1133,7 +1115,7 @@ export default function AthleteBaselineForm() {
                 {memoryPhase === 'recalling' && (
                   <div>
                     <p className="text-sm font-semibold mb-3">
-                      Trial {currentTrial + 1}: Select the words you remember
+                      Select the words you remember
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       {recallPool.map(({ word }) => (
@@ -1167,7 +1149,7 @@ export default function AthleteBaselineForm() {
                       </div>
                       <button onClick={completeTrialRecall}
                         className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold">
-                        {currentTrial < 2 ? 'Next Trial' : 'Finish Memory Test'}
+                        Done
                       </button>
                     </div>
                   </div>
@@ -1179,15 +1161,15 @@ export default function AthleteBaselineForm() {
                       <Check className="w-6 h-6 text-green-600" />
                     </div>
                     <p className="text-sm font-semibold mb-1">Memory Test Complete</p>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Trial 1: {trialScores[0]}/10 · Trial 2: {trialScores[1]}/10 · Trial 3: {trialScores[2]}/10
+                    <p className="text-lg font-bold text-accent">{immediateMemoryScore}/10</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      You'll be asked to recall these words again at the end of the test.
                     </p>
-                    <p className="text-lg font-bold text-accent">Total: {immediateMemoryScore}/30</p>
 
                     <div className="mt-4">
-                      <button onClick={() => setCognitiveSubStep('digits')}
+                      <button onClick={() => setCognitiveSubStep('orientation')}
                         className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1">
-                        Next: Digits Backward <ChevronRight className="w-4 h-4" />
+                        Next: Orientation <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -1611,11 +1593,7 @@ export default function AthleteBaselineForm() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Immediate Memory</span>
-                    <span className="font-bold">{immediateMemoryScore}/30</span>
-                  </div>
-                  <div className="flex justify-between text-sm pl-4 text-muted-foreground">
-                    <span>Trial 1 / 2 / 3</span>
-                    <span>{trialScores[0]} / {trialScores[1]} / {trialScores[2]}</span>
+                    <span className="font-bold">{immediateMemoryScore}/10</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Concentration</span>
@@ -1638,7 +1616,7 @@ export default function AthleteBaselineForm() {
 
               <div className="glass rounded-xl p-4 bg-gradient-to-br from-accent/5 to-transparent border border-accent/20 text-center">
                 <p className="text-sm font-semibold mb-1">Total Cognitive Score</p>
-                <p className="text-4xl font-bold text-accent">{totalCognitiveScore}/50</p>
+                <p className="text-4xl font-bold text-accent">{totalCognitiveScore}/30</p>
               </div>
 
               {/* Oculomotor Screening Summary */}
