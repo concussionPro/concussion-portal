@@ -307,6 +307,7 @@ export default function AthleteBaselineForm() {
   const [currentDigitIndex, setCurrentDigitIndex] = useState(0)
   const [digitInput, setDigitInput] = useState('')
   const [digitResults, setDigitResults] = useState<boolean[]>([])
+  const [digitAnswerLog, setDigitAnswerLog] = useState<{ shown: string; expected: string; typed: string; correct: boolean }[]>([])
 
   // Months in Reverse — shuffled so athlete can't read them in order
   const [shuffledMonths] = useState(() => shuffle([...MONTHS]))
@@ -572,16 +573,23 @@ export default function AthleteBaselineForm() {
 
   // Handle digit submission
   const handleDigitSubmit = () => {
-    const digits = DIGIT_LISTS[digitListKey]
-    const currentSequence = digits[currentDigitIndex]
-    // Compare only the digits, ignoring any separators
-    const correctDigits = currentSequence.split('-').reverse().join('')
+    const allDigits = DIGIT_LISTS[digitListKey]
+    const currentSequence = allDigits[currentDigitIndex]
+    // Extract just the digit characters from both sides
+    const shownDigits = currentSequence.replace(/-/g, '')
+    const expectedReverse = shownDigits.split('').reverse().join('')
     const userDigits = digitInput.trim().replace(/[^0-9]/g, '')
-    const isCorrect = userDigits === correctDigits
+    const isCorrect = userDigits === expectedReverse
 
     setDigitResults(prev => [...prev, isCorrect])
+    setDigitAnswerLog(prev => [...prev, {
+      shown: currentSequence.replace(/-/g, ' '),
+      expected: expectedReverse,
+      typed: userDigits || '(empty)',
+      correct: isCorrect,
+    }])
 
-    if (currentDigitIndex < digits.length - 1) {
+    if (currentDigitIndex < allDigits.length - 1) {
       setCurrentDigitIndex(prev => prev + 1)
       setDigitPhase('showing')
       digitTimerRef.current = setTimeout(() => {
@@ -1225,6 +1233,8 @@ export default function AthleteBaselineForm() {
                     <p className="text-xs text-muted-foreground mb-3">e.g. if shown 4-9-3, type 394</p>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={digitInput}
                       onChange={e => setDigitInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleDigitSubmit() }}
@@ -1240,14 +1250,26 @@ export default function AthleteBaselineForm() {
                 )}
 
                 {digitPhase === 'done' && (
-                  <div className="text-center py-4">
-                    <div className="icon-container w-12 h-12 mx-auto mb-3 bg-green-100">
-                      <Check className="w-6 h-6 text-green-600" />
+                  <div className="py-4">
+                    <div className="text-center">
+                      <div className="icon-container w-12 h-12 mx-auto mb-3 bg-green-100">
+                        <Check className="w-6 h-6 text-green-600" />
+                      </div>
+                      <p className="text-sm font-semibold mb-1">Digits Backward Complete</p>
+                      <p className="text-lg font-bold text-accent">Score: {digitsBackwardScore}/4</p>
                     </div>
-                    <p className="text-sm font-semibold mb-1">Digits Backward Complete</p>
-                    <p className="text-lg font-bold text-accent">Score: {digitsBackwardScore}/4</p>
 
-                    <div className="mt-4">
+                    {/* Answer breakdown */}
+                    <div className="mt-3 space-y-1">
+                      {digitAnswerLog.map((entry, i) => (
+                        <div key={i} className={`flex items-center justify-between text-xs px-3 py-1.5 rounded-lg ${entry.correct ? 'bg-green-50' : 'bg-red-50'}`}>
+                          <span className="text-muted-foreground">Shown: {entry.shown}</span>
+                          <span>You: <strong>{entry.typed}</strong> {entry.correct ? '✓' : `✗ (was ${entry.expected})`}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 text-center">
                       <button onClick={() => setCognitiveSubStep('months')}
                         className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1">
                         Next: Months in Reverse <ChevronRight className="w-4 h-4" />
