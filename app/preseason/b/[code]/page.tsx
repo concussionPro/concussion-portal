@@ -291,6 +291,8 @@ export default function AthleteBaselineForm() {
   // Immediate Memory
   const [wordListKey] = useState<WordListKey>(() => pickRandom(['A', 'B', 'C'] as WordListKey[]))
   const recallPool = useMemo(() => buildRecallPool(wordListKey), [wordListKey])
+  // Separately shuffled pool for delayed recall to prevent position-based pattern recognition
+  const delayedRecallPool = useMemo(() => shuffle([...recallPool]), [recallPool])
   const [memoryPhase, setMemoryPhase] = useState<'intro' | 'showing' | 'recalling' | 'done'>('intro')
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [currentTrial, setCurrentTrial] = useState(0)
@@ -759,7 +761,8 @@ export default function AthleteBaselineForm() {
         {/* STEP 1: Athlete Background */}
         {step === 1 && (
           <div className="glass rounded-2xl p-6 animate-fade-in">
-            <h2 className="text-lg font-bold mb-4">Athlete Information</h2>
+            <h2 className="text-lg font-bold mb-1">Athlete Information</h2>
+            <p className="text-xs text-muted-foreground mb-4">All fields marked * are required for a complete baseline.</p>
 
             {submitError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2">
@@ -777,7 +780,7 @@ export default function AthleteBaselineForm() {
                     placeholder="Athlete name" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Date of Birth</label>
+                  <label className="block text-xs font-semibold mb-1">Date of Birth *</label>
                   <input type="date" value={dob} onChange={e => setDob(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none" />
                 </div>
@@ -785,12 +788,12 @@ export default function AthleteBaselineForm() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold mb-1">ID / Jersey #</label>
+                  <label className="block text-xs font-semibold mb-1">ID / Jersey #*</label>
                   <input type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Sex</label>
+                  <label className="block text-xs font-semibold mb-1">Sex *</label>
                   <select value={sex} onChange={e => setSex(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none">
                     <option value="">Select</option>
@@ -800,7 +803,7 @@ export default function AthleteBaselineForm() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Dominant Hand</label>
+                  <label className="block text-xs font-semibold mb-1">Dominant Hand *</label>
                   <select value={dominantHand} onChange={e => setDominantHand(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none">
                     <option value="">Select</option>
@@ -813,13 +816,13 @@ export default function AthleteBaselineForm() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Sport</label>
+                  <label className="block text-xs font-semibold mb-1">Sport *</label>
                   <input type="text" value={sport} onChange={e => setSport(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
                     placeholder="e.g. AFL, Rugby" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Team / Club</label>
+                  <label className="block text-xs font-semibold mb-1">Team / Club *</label>
                   <input type="text" value={team} onChange={e => setTeam(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none" />
                 </div>
@@ -827,18 +830,18 @@ export default function AthleteBaselineForm() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Position</label>
+                  <label className="block text-xs font-semibold mb-1">Position *</label>
                   <input type="text" value={position} onChange={e => setPosition(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Years of Education</label>
+                  <label className="block text-xs font-semibold mb-1">Years of Education *</label>
                   <input type="number" value={yearsOfEducation} onChange={e => setYearsOfEducation(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
                     min="0" max="30" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Primary Language</label>
+                  <label className="block text-xs font-semibold mb-1">Primary Language *</label>
                   <input type="text" value={primaryLanguage} onChange={e => setPrimaryLanguage(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none" />
                 </div>
@@ -850,18 +853,18 @@ export default function AthleteBaselineForm() {
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold mb-1"># Previous Concussions</label>
+                  <label className="block text-xs font-semibold mb-1"># Previous Concussions *</label>
                   <input type="number" value={previousConcussions} onChange={e => setPreviousConcussions(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
                     min="0" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Most Recent Date</label>
+                  <label className="block text-xs font-semibold mb-1">Most Recent Date *</label>
                   <input type="date" value={mostRecentConcussionDate} onChange={e => setMostRecentConcussionDate(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Longest Recovery</label>
+                  <label className="block text-xs font-semibold mb-1">Longest Recovery *</label>
                   <input type="text" value={longestRecovery} onChange={e => setLongestRecovery(e.target.value)}
                     className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
                     placeholder="e.g. 2 weeks" />
@@ -889,7 +892,7 @@ export default function AthleteBaselineForm() {
             </div>
 
             <div className="mt-3">
-              <label className="block text-xs font-semibold mb-1">Current Medications</label>
+              <label className="block text-xs font-semibold mb-1">Current Medications *</label>
               <textarea value={currentMedications} onChange={e => setCurrentMedications(e.target.value)}
                 className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
                 rows={2} placeholder="List any current medications..." />
@@ -955,7 +958,20 @@ export default function AthleteBaselineForm() {
                   <input type="range" min="0" max="100" value={feelNormalPercent}
                     onChange={e => setFeelNormalPercent(e.target.value)}
                     className="flex-1 accent-accent" />
-                  <span className="text-sm font-bold w-12 text-right">{feelNormalPercent}%</span>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={feelNormalPercent}
+                      onChange={e => {
+                        const v = Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
+                        setFeelNormalPercent(String(v))
+                      }}
+                      className="w-14 glass px-2 py-1 rounded-lg text-sm font-bold text-center border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
+                    />
+                    <span className="text-sm font-bold">%</span>
+                  </div>
                 </div>
               </div>
 
@@ -1143,9 +1159,12 @@ export default function AthleteBaselineForm() {
                       ))}
                     </div>
                     <div className="mt-4 flex justify-between items-center">
-                      <p className="text-xs text-muted-foreground">
-                        Selected: {Object.values(trialSelections[currentTrial] || {}).filter(Boolean).length}
-                      </p>
+                      <div className="glass rounded-lg px-3 py-1.5 border border-accent/20">
+                        <span className="text-sm font-bold text-accent">
+                          {Object.values(trialSelections[currentTrial] || {}).filter(Boolean).length}
+                        </span>
+                        <span className="text-sm text-muted-foreground">/10 selected</span>
+                      </div>
                       <button onClick={completeTrialRecall}
                         className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold">
                         {currentTrial < 2 ? 'Next Trial' : 'Finish Memory Test'}
@@ -1374,7 +1393,12 @@ export default function AthleteBaselineForm() {
                 const result = oculomotorResults[exercise.key]
                 return (
                   <div>
-                    <h2 className="text-lg font-bold mb-1">Symptom Report</h2>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-lg font-bold">Symptom Report</h2>
+                      <span className="text-xs font-semibold text-accent bg-accent/10 px-2.5 py-1 rounded-full">
+                        Exercise {exerciseIndex + 1}/4
+                      </span>
+                    </div>
                     <p className="text-sm text-muted-foreground mb-4">
                       After <strong>{exercise.label}</strong>, did you experience any of the following?
                     </p>
@@ -1457,40 +1481,47 @@ export default function AthleteBaselineForm() {
             })()}
 
             {/* Sub-step 9: Summary */}
-            {oculomotorSubStep === 9 && (
-              <div>
-                <h2 className="text-lg font-bold mb-4">Oculomotor Summary</h2>
-                <div className="space-y-3">
-                  {OCULOMOTOR_EXERCISES.map(ex => {
-                    const result = oculomotorResults[ex.key]
-                    const hasSymptoms = result.symptoms.length > 0 && !result.symptoms.includes('None')
-                    return (
-                      <div key={ex.key} className="glass rounded-xl p-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-sm font-semibold">{ex.label}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {hasSymptoms ? result.symptoms.join(', ') : 'No symptoms'}
-                            </p>
+            {oculomotorSubStep === 9 && (() => {
+              const symptomatic = OCULOMOTOR_EXERCISES.filter(ex => {
+                const r = oculomotorResults[ex.key]
+                return r.symptoms.length > 0 && !r.symptoms.includes('None')
+              }).length
+              return (
+                <div>
+                  <h2 className="text-lg font-bold mb-2">Oculomotor Summary</h2>
+                  <p className="text-xs text-muted-foreground mb-4">Results from all 4 eye movement exercises</p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {OCULOMOTOR_EXERCISES.map(ex => {
+                      const result = oculomotorResults[ex.key]
+                      const hasSymptoms = result.symptoms.length > 0 && !result.symptoms.includes('None')
+                      return (
+                        <div key={ex.key} className={`glass rounded-xl p-3 border ${hasSymptoms ? 'border-amber-200 bg-amber-50/50' : 'border-green-200 bg-green-50/50'}`}>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${hasSymptoms ? 'bg-amber-100' : 'bg-green-100'}`}>
+                              {hasSymptoms
+                                ? <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                                : <Check className="w-3.5 h-3.5 text-green-600" />
+                              }
+                            </div>
+                            <p className="text-xs font-bold leading-tight">{ex.label}</p>
                           </div>
-                          {hasSymptoms && (
-                            <span className="text-sm font-bold text-accent">{result.severity}/10</span>
-                          )}
+                          <p className="text-[11px] text-muted-foreground">
+                            {hasSymptoms ? `${result.symptoms.join(', ')} — ${result.severity}/10` : 'No symptoms'}
+                          </p>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
+
+                  <div className={`glass rounded-xl p-3 mt-4 text-center border ${symptomatic > 0 ? 'border-amber-200' : 'border-green-200'}`}>
+                    <p className="text-sm font-semibold">
+                      <span className={symptomatic > 0 ? 'text-amber-600' : 'text-green-600'}>{symptomatic}/4</span> exercises provoked symptoms
+                    </p>
+                  </div>
                 </div>
-                <div className="glass rounded-xl p-3 mt-3 text-center border border-accent/20">
-                  <p className="text-sm">
-                    <strong>{OCULOMOTOR_EXERCISES.filter(ex => {
-                      const r = oculomotorResults[ex.key]
-                      return r.symptoms.length > 0 && !r.symptoms.includes('None')
-                    }).length}/4</strong> exercises provoked symptoms
-                  </p>
-                </div>
-              </div>
-            )}
+              )
+            })()}
           </div>
         )}
 
@@ -1526,7 +1557,7 @@ export default function AthleteBaselineForm() {
                   Select the words you recall from the memory test earlier.
                 </p>
                 <div className="grid grid-cols-3 gap-2">
-                  {recallPool.map(({ word }) => (
+                  {delayedRecallPool.map(({ word }) => (
                     <button
                       key={word}
                       onClick={() => {
@@ -1542,9 +1573,14 @@ export default function AthleteBaselineForm() {
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground mt-3 text-center">
-                  Selected: {Object.values(delayedRecallSelections).filter(Boolean).length}
-                </p>
+                <div className="mt-3 text-center">
+                  <div className="inline-block glass rounded-lg px-3 py-1.5 border border-accent/20">
+                    <span className="text-sm font-bold text-accent">
+                      {Object.values(delayedRecallSelections).filter(Boolean).length}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/10 selected</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>

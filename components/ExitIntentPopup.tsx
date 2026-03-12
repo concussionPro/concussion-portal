@@ -17,7 +17,7 @@ import { X, ArrowRight, Shield, Award } from 'lucide-react'
 const EXCLUDED_PREFIXES = [
   '/dashboard', '/login', '/admin', '/checkout',
   '/courses', '/course', '/learning', '/settings', '/scat-mastery',
-  '/pricing',
+  '/pricing', '/preseason/b',
 ]
 
 export function ExitIntentPopup() {
