@@ -107,6 +107,10 @@ function OculomotorExercise({
   const [started, setStarted] = useState(false)
   const isHorizontal = exercise.direction === 'horizontal'
 
+  // Stable ref for onComplete so the effect doesn't restart on every render
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
+
   useEffect(() => {
     if (!started) return
 
@@ -119,13 +123,12 @@ function OculomotorExercise({
         setCycleCount(Math.floor(count / 2))
         if (count >= 10) { // 5 full cycles = 10 toggles
           clearInterval(interval)
-          onComplete()
+          onCompleteRef.current()
         }
       }, 500)
       return () => clearInterval(interval)
     } else {
       // Pursuit: smooth motion, 3 full passes (~18s)
-      // Half-cycle = 3s, full pass = 6s, 3 passes = 18s
       const totalDuration = 18000
       const halfCycleDuration = 3000
       const startTime = performance.now()
@@ -135,10 +138,9 @@ function OculomotorExercise({
         const elapsed = now - startTime
         if (elapsed >= totalDuration) {
           setDotPosition(0.5)
-          onComplete()
+          onCompleteRef.current()
           return
         }
-        // Calculate position: oscillate between 0 and 1
         const cycleTime = elapsed % (halfCycleDuration * 2)
         const pos = cycleTime < halfCycleDuration
           ? cycleTime / halfCycleDuration
@@ -151,7 +153,7 @@ function OculomotorExercise({
       rafRef.current = raf
       return () => cancelAnimationFrame(raf)
     }
-  }, [started, exercise.type, exercise.direction, onComplete, rafRef])
+  }, [started, exercise.type, exercise.direction, rafRef])
 
   const handleStart = () => {
     setStarted(true)
