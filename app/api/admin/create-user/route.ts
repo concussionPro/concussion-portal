@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import { createUser, findUserById } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/email'
+import { CONFIG } from '@/lib/config'
 
 function timingSafeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const accessLevel = amount >= 1000 ? 'full-course' : 'online-only'
+    const accessLevel = amount >= CONFIG.COURSE.PRICE_EARLY_BIRD ? 'full-course' : 'online-only'
 
     const userId = await createUser({
       email,

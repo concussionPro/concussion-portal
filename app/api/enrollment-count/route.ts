@@ -31,6 +31,7 @@ export async function GET() {
     return NextResponse.json({ count: cachedCount })
   } catch (error) {
     console.error('Enrollment count error:', error)
-    return NextResponse.json({ count: 0 })
+    // Return cached count if available, otherwise 0 (don't expose error to client)
+    return NextResponse.json({ count: cachedCount ?? 0 })
   }
 }

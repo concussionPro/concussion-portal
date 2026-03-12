@@ -68,7 +68,7 @@ export const CONFIG = {
 
   // Early Bird Pricing Deadline
   // Computed: 7 days before the nearest confirmed course date
-  EARLY_BIRD_DEADLINE: new Date('2026-03-21T23:59:59'),
+  EARLY_BIRD_DEADLINE: new Date('2026-07-15T23:59:59'),
 
   // SEO Metadata
   SEO: {

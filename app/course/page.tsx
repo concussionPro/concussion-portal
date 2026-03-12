@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Award,
@@ -19,12 +18,12 @@ import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 
 const locations = Object.values(CONFIG.LOCATIONS)
-  .filter(loc => loc.status === 'confirmed' && loc.date)
   .map(loc => ({
     city: loc.city,
-    date: loc.date,
-    availability: 'Available',
-    shopUrl: '/pricing'
+    date: loc.status === 'confirmed' && loc.date ? loc.date : CONFIG.WORKSHOP.NEXT_ROUND,
+    availability: loc.status === 'confirmed' ? 'Available' : 'Scheduling Now',
+    shopUrl: '/pricing',
+    status: loc.status,
   }))
 
 const included = [
@@ -38,10 +37,6 @@ const included = [
 
 export default function CoursePage() {
   const router = useRouter()
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [selectedShopUrl, setSelectedShopUrl] = useState<string | null>(null)
-  const [pricingTier, setPricingTier] = useState<'early' | 'standard'>('early')
 
   return (
     <div className="min-h-screen bg-background">
@@ -146,95 +141,22 @@ export default function CoursePage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing CTA */}
       <section className="section-padding">
-        <div className="container-md px-6 md:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
-              Investment in clinical excellence
-            </h2>
-            <p className="text-base text-muted-foreground">Choose your enrolment tier</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            {/* Early Bird */}
-            <div
-              onClick={() => setPricingTier('early')}
-              className={`glass glass-hover rounded-2xl p-7 cursor-pointer transition-all ${
-                pricingTier === 'early'
-                  ? 'ring-2 ring-accent shadow-lg'
-                  : 'ring-1 ring-transparent'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Early Bird</h3>
-                {pricingTier === 'early' && (
-                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-6">
-                <div className="text-4xl font-bold text-gradient mb-2">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Book 4+ weeks in advance</div>
-              </div>
-
-              <ul className="space-y-3">
-                {[
-                  'Full access to 8 online modules',
-                  '1-day practical training',
-                  '14 AHPRA CPD points',
-                  'All clinical resources',
-                  'Lifetime platform access',
-                ].map((feature) => (
-                  <li key={feature} className="flex items-center gap-3 text-sm">
-                    <Check className="w-4 h-4 text-accent flex-shrink-0" strokeWidth={2.5} />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Standard */}
-            <div
-              onClick={() => setPricingTier('standard')}
-              className={`glass glass-hover rounded-2xl p-7 cursor-pointer transition-all ${
-                pricingTier === 'standard'
-                  ? 'ring-2 ring-accent shadow-lg'
-                  : 'ring-1 ring-transparent'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Standard</h3>
-                {pricingTier === 'standard' && (
-                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-6">
-                <div className="text-4xl font-bold text-foreground mb-2">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Book less than 4 weeks advance</div>
-              </div>
-
-              <ul className="space-y-3">
-                {[
-                  'Full access to 8 online modules',
-                  '1-day practical training',
-                  '14 AHPRA CPD points',
-                  'All clinical resources',
-                  'Lifetime platform access',
-                ].map((feature) => (
-                  <li key={feature} className="flex items-center gap-3 text-sm">
-                    <Check className="w-4 h-4 text-accent flex-shrink-0" strokeWidth={2.5} />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+        <div className="container-md px-6 md:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
+            Investment in clinical excellence
+          </h2>
+          <p className="text-base text-muted-foreground mb-6">
+            Online course from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course with workshop from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD
+          </p>
+          <button
+            onClick={() => router.push('/pricing')}
+            className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"
+          >
+            View Pricing & Enrol
+            <ArrowRight className="w-5 h-5" />
+          </button>
         </div>
       </section>
 
@@ -254,16 +176,7 @@ export default function CoursePage() {
             {locations.map((location) => (
               <div
                 key={location.city}
-                onClick={() => {
-                  setSelectedLocation(location.city)
-                  setSelectedDate(location.date)
-                  setSelectedShopUrl(location.shopUrl)
-                }}
-                className={`glass glass-hover rounded-2xl p-6 cursor-pointer transition-all ${
-                  selectedLocation === location.city
-                    ? 'ring-2 ring-accent shadow-lg'
-                    : 'ring-1 ring-transparent'
-                }`}
+                className="glass rounded-2xl p-6"
               >
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
@@ -281,22 +194,17 @@ export default function CoursePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`badge ${
-                        location.availability === 'Limited spots'
-                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                          : ''
-                      }`}
-                    >
-                      {location.availability}
-                    </span>
-                    {selectedLocation === location.city && (
-                      <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-                        <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                      </div>
-                    )}
-                  </div>
+                  <span
+                    className={`badge ${
+                      location.availability === 'Scheduling Now'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : location.availability === 'Limited spots'
+                        ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                        : ''
+                    }`}
+                  >
+                    {location.availability}
+                  </span>
                 </div>
               </div>
             ))}
@@ -351,58 +259,28 @@ export default function CoursePage() {
               Ready to enrol?
             </h2>
 
-            {selectedLocation && selectedDate && selectedShopUrl ? (
-              <>
-                <div className="glass rounded-xl p-5 mb-6 max-w-md mx-auto">
-                  <div className="text-sm text-muted-foreground mb-2">Your selection</div>
-                  <div className="text-xl font-semibold text-foreground mb-1">
-                    {selectedLocation} — {selectedDate}
-                  </div>
-                  <div className="text-3xl font-bold text-gradient mt-3">
-                    ${pricingTier === 'early' ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
-                  </div>
-                  {pricingTier === 'early' && (
-                    <p className="text-xs text-[#6b9da8] font-medium mt-2">
-                      Save ${CONFIG.COURSE.SAVINGS} with early bird pricing
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => router.push('/pricing')}
-                  className="btn-primary px-10 py-5 rounded-xl text-lg inline-flex items-center gap-2"
-                >
-                  Complete enrolment
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-
-                <p className="text-xs text-muted-foreground mt-4">
-                  Secure checkout · Multiple payment options available
-                </p>
-                <div className="flex items-center justify-center gap-3 mt-3 text-xs text-muted-foreground">
-                  <span>Afterpay</span>
-                  <span>·</span>
-                  <span>Klarna</span>
-                  <span>·</span>
-                  <span>Cards</span>
-                  <span>·</span>
-                  <span>Apple Pay</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-lg text-muted-foreground mb-8">
-                  Select a location and pricing tier above
-                </p>
-                <button
-                  onClick={() => window.scrollTo({ top: 600, behavior: 'smooth' })}
-                  className="btn-secondary px-8 py-4 rounded-xl text-base inline-flex items-center gap-2"
-                >
-                  Choose options
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </>
-            )}
+            <p className="text-lg text-muted-foreground mb-8">
+              Start with the online course today, or choose a complete package with hands-on workshop.
+            </p>
+            <button
+              onClick={() => router.push('/pricing')}
+              className="btn-primary px-10 py-5 rounded-xl text-lg inline-flex items-center gap-2"
+            >
+              See Pricing & Enrol
+              <ArrowRight className="w-5 h-5" />
+            </button>
+            <p className="text-xs text-muted-foreground mt-4">
+              Secure checkout · Multiple payment options available
+            </p>
+            <div className="flex items-center justify-center gap-3 mt-3 text-xs text-muted-foreground">
+              <span>Afterpay</span>
+              <span>·</span>
+              <span>Klarna</span>
+              <span>·</span>
+              <span>Cards</span>
+              <span>·</span>
+              <span>Apple Pay</span>
+            </div>
           </div>
         </div>
       </section>

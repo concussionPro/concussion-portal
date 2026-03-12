@@ -31,6 +31,15 @@ export async function GET(request: NextRequest) {
 
     const courseType = request.nextUrl.searchParams.get('type') || 'scat-mastery'
 
+    // Verify user has the required access level for this certificate type
+    const user = await findUserById(sessionData.userId)
+    if (courseType === 'online-course' && (!user || user.accessLevel === 'preview')) {
+      return NextResponse.json({ error: 'Online course access required' }, { status: 403 })
+    }
+    if (courseType === 'full-course' && (!user || user.accessLevel !== 'full-course')) {
+      return NextResponse.json({ error: 'Full course access required' }, { status: 403 })
+    }
+
     // Load user progress to verify completion
     const progress = await loadUserProgress(sessionData.userId)
     if (!progress) {
@@ -50,9 +59,9 @@ export async function GET(request: NextRequest) {
     // Get the latest completion date across all modules
     const completionDate = getLatestCompletionDate(progress, moduleIds)
 
-    // Get user details
-    const user = await findUserById(sessionData.userId)
-    const participantName = user?.name || sessionData.name || 'Participant'
+    // Use user already loaded from access check (or load if scat-mastery which skips it)
+    const resolvedUser = user || await findUserById(sessionData.userId)
+    const participantName = resolvedUser?.name || sessionData.name || 'Participant'
 
     // Generate certificate
     const certData = courseType === 'full-course'
@@ -96,6 +105,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const courseType = body.type || 'scat-mastery'
 
+    // Verify user has the required access level for this certificate type
+    const userCheck = await findUserById(sessionData.userId)
+    if (courseType === 'online-course' && (!userCheck || userCheck.accessLevel === 'preview')) {
+      return NextResponse.json({ error: 'Online course access required' }, { status: 403 })
+    }
+    if (courseType === 'full-course' && (!userCheck || userCheck.accessLevel !== 'full-course')) {
+      return NextResponse.json({ error: 'Full course access required' }, { status: 403 })
+    }
+
     // Load user progress to verify completion
     const progress = await loadUserProgress(sessionData.userId)
     if (!progress) {
@@ -114,8 +132,8 @@ export async function POST(request: NextRequest) {
 
     const completionDate = getLatestCompletionDate(progress, moduleIds)
 
-    const user = await findUserById(sessionData.userId)
-    const participantName = user?.name || sessionData.name || 'Participant'
+    const resolvedUser = userCheck || await findUserById(sessionData.userId)
+    const participantName = resolvedUser?.name || sessionData.name || 'Participant'
 
     const certData = courseType === 'full-course'
       ? getFullCourseCertificateData(participantName, sessionData.email, completionDate)

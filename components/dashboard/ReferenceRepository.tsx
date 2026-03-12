@@ -1327,7 +1327,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
                   onClick={() => trackShopClick('references-online-only-upgrade', { accessLevel: 'online-only' })}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                 >
-                  Upgrade Now - Add Workshop for ${(CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE).toLocaleString()}
+                  Upgrade Now - Add Workshop from ${(CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE).toLocaleString()}
                 </a>
                 <a
                   href="/in-person"

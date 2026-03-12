@@ -39,7 +39,7 @@ export default function TermsPage() {
         {/* Complete Course */}
         <section className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4">
-            Complete Course ($1,190–$1,400 AUD)
+            Complete Course (${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}–${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} AUD)
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             The complete course includes online modules and a hands-on workshop. Each component has its own refund terms:

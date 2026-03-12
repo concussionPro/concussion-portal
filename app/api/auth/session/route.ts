@@ -26,7 +26,17 @@ export async function GET(request: NextRequest) {
     // Always fetch full user from DB for up-to-date data
     const user = await findUserById(sessionData.userId)
 
-    if (user && user.accessLevel !== sessionData.accessLevel) {
+    if (!user) {
+      // User was deleted from DB — invalidate session
+      const response = NextResponse.json(
+        { error: 'User not found' },
+        { status: 401 }
+      )
+      response.cookies.delete('session')
+      return response
+    }
+
+    if (user.accessLevel !== sessionData.accessLevel) {
       // Access level changed — issue a refreshed session cookie
       const newToken = createJWTSession(
         user.id, user.email, user.name, user.accessLevel, true
@@ -52,16 +62,16 @@ export async function GET(request: NextRequest) {
       return response
     }
 
-    // Return user data — include DB fields when available
+    // Return user data from DB
     return NextResponse.json({
       success: true,
       user: {
-        id: user?.id || sessionData.userId,
-        email: user?.email || sessionData.email,
-        name: user?.name || sessionData.name,
-        accessLevel: user?.accessLevel || sessionData.accessLevel,
-        createdAt: user?.createdAt || null,
-        nurtureUnsubscribed: user?.nurtureUnsubscribed || false,
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        accessLevel: user.accessLevel,
+        createdAt: user.createdAt,
+        nurtureUnsubscribed: user.nurtureUnsubscribed || false,
       },
     })
   } catch (error) {
