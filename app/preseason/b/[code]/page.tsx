@@ -48,6 +48,7 @@ const INITIAL_OCULOMOTOR_RESULTS: OculomotorResults = {
 }
 
 const MEDICAL_CONDITIONS = [
+  { key: 'hospitalizedHeadInjury', label: 'Hospitalized or medical imaging for a head injury' },
   { key: 'headacheDisorder', label: 'Headache disorder (e.g. migraine)' },
   { key: 'learningDisability', label: 'Learning disability / Dyslexia' },
   { key: 'adhd', label: 'ADHD' },
@@ -270,6 +271,7 @@ export default function AthleteBaselineForm() {
   const [previousConcussions, setPreviousConcussions] = useState('0')
   const [mostRecentConcussionDate, setMostRecentConcussionDate] = useState('')
   const [longestRecovery, setLongestRecovery] = useState('')
+  const [previousConcussionSymptoms, setPreviousConcussionSymptoms] = useState('')
   const [diagnosedMigraines, setDiagnosedMigraines] = useState(false)
   const [medicalHistory, setMedicalHistory] = useState<Record<string, boolean>>({})
   const [currentMedications, setCurrentMedications] = useState('')
@@ -306,7 +308,8 @@ export default function AthleteBaselineForm() {
   const [digitInput, setDigitInput] = useState('')
   const [digitResults, setDigitResults] = useState<boolean[]>([])
 
-  // Months in Reverse
+  // Months in Reverse — shuffled so athlete can't read them in order
+  const [shuffledMonths] = useState(() => shuffle([...MONTHS]))
   const [monthsPhase, setMonthsPhase] = useState<'intro' | 'active' | 'done'>('intro')
   const [monthsTapped, setMonthsTapped] = useState<string[]>([])
   const [monthsStartTime, setMonthsStartTime] = useState(0)
@@ -517,8 +520,8 @@ export default function AthleteBaselineForm() {
           athlete: {
             name, dob, idNumber, sex, dominantHand, sport, team, position,
             yearsOfEducation, primaryLanguage, previousConcussions,
-            mostRecentConcussionDate, longestRecovery, diagnosedMigraines,
-            medicalHistory: selectedConditions,
+            mostRecentConcussionDate, previousConcussionSymptoms, longestRecovery,
+            diagnosedMigraines, medicalHistory: selectedConditions,
             currentMedications,
           },
           symptoms: {
@@ -852,6 +855,15 @@ export default function AthleteBaselineForm() {
                     placeholder="e.g. 2 weeks" />
                 </div>
               </div>
+
+              {parseInt(previousConcussions) > 0 && (
+                <div>
+                  <label className="block text-xs font-semibold mb-1">Primary symptoms from most recent concussion *</label>
+                  <input type="text" value={previousConcussionSymptoms} onChange={e => setPreviousConcussionSymptoms(e.target.value)}
+                    className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
+                    placeholder="e.g. headache, dizziness, memory issues" />
+                </div>
+              )}
 
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={diagnosedMigraines} onChange={e => setDiagnosedMigraines(e.target.checked)}
@@ -1266,14 +1278,14 @@ export default function AthleteBaselineForm() {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-semibold">
-                        Tap: <span className="text-accent">{MONTHS_REVERSED[monthsTapped.length]}</span>
+                        {monthsTapped.length}/12 — tap in reverse order
                       </p>
                       <p className="text-sm font-mono text-muted-foreground">
                         {((Date.now() - monthsStartTime) / 1000).toFixed(0)}s
                       </p>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {MONTHS.map(month => {
+                    <div className="grid grid-cols-4 gap-2">
+                      {shuffledMonths.map(month => {
                         const tapped = monthsTapped.includes(month)
                         return (
                           <button
