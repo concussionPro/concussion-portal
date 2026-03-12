@@ -574,9 +574,10 @@ export default function AthleteBaselineForm() {
   const handleDigitSubmit = () => {
     const digits = DIGIT_LISTS[digitListKey]
     const currentSequence = digits[currentDigitIndex]
-    const correctReverse = currentSequence.split('-').reverse().join('-')
-    const userAnswer = digitInput.trim().replace(/\s+/g, '-').replace(/,/g, '-')
-    const isCorrect = userAnswer === correctReverse
+    // Compare only the digits, ignoring any separators
+    const correctDigits = currentSequence.split('-').reverse().join('')
+    const userDigits = digitInput.trim().replace(/[^0-9]/g, '')
+    const isCorrect = userDigits === correctDigits
 
     setDigitResults(prev => [...prev, isCorrect])
 
@@ -1221,7 +1222,7 @@ export default function AthleteBaselineForm() {
                 {digitPhase === 'input' && (
                   <div className="text-center py-4">
                     <p className="text-sm font-semibold mb-3">Type the digits in REVERSE order</p>
-                    <p className="text-xs text-muted-foreground mb-3">Separate with dashes (e.g. 3-9-4)</p>
+                    <p className="text-xs text-muted-foreground mb-3">e.g. if shown 4-9-3, type 394</p>
                     <input
                       type="text"
                       value={digitInput}
