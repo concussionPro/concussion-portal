@@ -511,17 +511,24 @@ function Skeleton({ className = '' }: { className?: string }) {
 }
 
 function StatCard({
-  label, value, prev, icon: Icon, format = 'number', loading = false,
+  label, value, prev, icon: Icon, format = 'number', loading = false, onClick,
 }: {
   label: string; value: number; prev: number; icon: React.ElementType
-  format?: 'number' | 'percent' | 'duration'; loading?: boolean
+  format?: 'number' | 'percent' | 'duration'; loading?: boolean; onClick?: () => void
 }) {
   const { delta, sign, color, isNew } = pct(value, prev)
   const displayVal = format === 'duration' ? fmtDuration(value)
     : format === 'percent' ? fmtPct(value) : fmtNum(value)
 
   return (
-    <div className="card stat-tile group" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+    <div
+      className={`card stat-tile group ${onClick ? 'cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all' : ''}`}
+      style={{ '--shimmer-delay': '0s' } as React.CSSProperties}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick() } : undefined}
+    >
       <div className="flex items-start justify-between mb-3">
         <div className="icon-container w-9 h-9">
           <Icon size={16} className="text-[var(--accent)]" />
@@ -827,37 +834,37 @@ export default function AnalyticsDashboard() {
       <div className="container-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* ── Stat cards ────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} />
-          <StatCard label="Page Views" value={stats?.pageviews.value ?? 0} prev={stats?.pageviews.prev ?? 0} icon={Eye} loading={loading && !stats} />
-          <StatCard label="Bounce Rate" value={bounceRate} prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0} icon={TrendingUp} format="percent" loading={loading && !stats} />
-          <StatCard label="Avg. Session" value={avgDuration} prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0} icon={Clock} format="duration" loading={loading && !stats} />
+          <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} onClick={() => setActiveTab('overview')} />
+          <StatCard label="Page Views" value={stats?.pageviews.value ?? 0} prev={stats?.pageviews.prev ?? 0} icon={Eye} loading={loading && !stats} onClick={() => setActiveTab('overview')} />
+          <StatCard label="Bounce Rate" value={bounceRate} prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0} icon={TrendingUp} format="percent" loading={loading && !stats} onClick={() => setActiveTab('channels')} />
+          <StatCard label="Avg. Session" value={avgDuration} prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0} icon={Clock} format="duration" loading={loading && !stats} onClick={() => setActiveTab('flow')} />
         </div>
 
         {/* ── Retargeting summary cards ──────────────────────────────────── */}
         {retargetingData && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('retargeting')} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><Target size={16} className="text-[var(--accent)]" /></div>
               </div>
               <p className="stat-value">{fmtNum(retargetingData.summary.pricingViewers)}</p>
               <p className="stat-label mt-1">Pricing Viewers</p>
             </div>
-            <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('funnel')} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><MousePointer size={16} className="text-[var(--accent)]" /></div>
               </div>
               <p className="stat-value">{fmtPct(retargetingData.summary.pricingToConversion)}</p>
               <p className="stat-label mt-1">Pricing → Convert</p>
             </div>
-            <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('retargeting')} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><Users size={16} className="text-[var(--accent)]" /></div>
               </div>
               <p className="stat-value">{fmtPct(retargetingData.summary.returningRate)}</p>
               <p className="stat-label mt-1">Return Visitors</p>
             </div>
-            <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+            <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('users')} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
                 <div className="icon-container w-9 h-9"><CheckCircle2 size={16} className="text-emerald-600" /></div>
               </div>
