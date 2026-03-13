@@ -116,12 +116,8 @@ function PricingContent() {
           </div>
         )}
 
-        {/* Pricing Cards — delegated to PricingOptions */}
-        <PricingOptions variant="full" />
-
-        {/* Testimonials */}
-        <div className="max-w-4xl mx-auto mt-16 md:mt-20">
-          <h2 className="text-2xl font-bold text-center mb-8 text-foreground">Trusted by Australian Clinicians</h2>
+        {/* Testimonials — above pricing for social proof before purchase decision */}
+        <div className="max-w-4xl mx-auto mb-12">
           <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
               {
@@ -177,6 +173,9 @@ function PricingContent() {
             ))}
           </div>
         </div>
+
+        {/* Pricing Cards — delegated to PricingOptions */}
+        <PricingOptions variant="full" />
 
         {/* Instructor */}
         <div className="text-center mt-10">

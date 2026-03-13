@@ -240,13 +240,22 @@ export default function PreseasonLandingPage() {
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Register your clinic in 30 seconds and start collecting baselines from your sports club athletes today.
             </p>
-            <button
-              onClick={() => router.push('/preseason/register')}
-              className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"
-            >
-              Register Your Clinic
-              <ArrowRight className="w-5 h-5" />
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={() => router.push('/preseason/register')}
+                className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 w-full sm:w-auto"
+              >
+                Register Your Clinic
+                <ArrowRight className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => router.push('/pricing')}
+                className="px-8 py-4 rounded-xl text-base font-semibold text-accent border-2 border-accent/20 hover:bg-accent/5 transition-all inline-flex items-center gap-2 w-full sm:w-auto"
+              >
+                View Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD pts)
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </section>
