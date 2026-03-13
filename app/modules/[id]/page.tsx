@@ -146,6 +146,7 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
     markModuleComplete,
     markModuleStarted,
     trackActiveStudy,
+    flushSave,
     getModuleProgress,
     canMarkModuleComplete,
     isModuleComplete,
@@ -429,11 +430,12 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
     setQuizSubmitted(true)
   }
 
-  const handleCompleteModule = () => {
+  const handleCompleteModule = async () => {
     if (!module) return
 
     if (canMarkModuleComplete(moduleId)) {
       markModuleComplete(moduleId)
+      await flushSave()
       router.push('/learning')
     }
   }

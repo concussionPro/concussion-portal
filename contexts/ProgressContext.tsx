@@ -26,6 +26,7 @@ interface ProgressContextType {
   markModuleComplete: (moduleId: number) => void
   markModuleStarted: (moduleId: number) => void
   trackActiveStudy: (moduleId: number) => void
+  flushSave: () => Promise<void>
   getTotalCompletedModules: () => number
   getTotalCPDPoints: () => number
   getTotalStudyTime: () => number
@@ -95,6 +96,13 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const [restoredFromServer, setRestoredFromServer] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const syncClearRef = useRef<NodeJS.Timeout | null>(null)
+  const progressRef = useRef(progress)
+  const hasPendingSaveRef = useRef(false)
+
+  // Keep ref in sync for beforeunload handler
+  useEffect(() => {
+    progressRef.current = progress
+  }, [progress])
 
   // Load progress from backend on mount
   useEffect(() => {
@@ -157,9 +165,19 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
+    // Flush pending saves when user leaves the page
+    const handleBeforeUnload = () => {
+      if (hasPendingSaveRef.current) {
+        const body = JSON.stringify({ progress: progressRef.current })
+        navigator.sendBeacon('/api/progress', new Blob([body], { type: 'application/json' }))
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
       if (syncClearRef.current) clearTimeout(syncClearRef.current)
     }
   }, [])
@@ -173,6 +191,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
     // Debounce backend save (avoid excessive API calls during active tracking)
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    hasPendingSaveRef.current = true
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setSyncState('syncing')
@@ -182,6 +201,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({ progress }),
           credentials: 'include',
         })
+        hasPendingSaveRef.current = false
         if (response.ok) {
           setSyncState('synced')
           if (syncClearRef.current) clearTimeout(syncClearRef.current)
@@ -345,6 +365,28 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Immediately flush any pending save to the backend (call before navigation)
+  const flushSave = async () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = null
+    }
+    try {
+      const response = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progress: progressRef.current }),
+        credentials: 'include',
+      })
+      hasPendingSaveRef.current = false
+      if (!response.ok) {
+        console.error('Failed to flush progress save:', response.status)
+      }
+    } catch (error) {
+      console.error('Failed to flush progress save:', error)
+    }
+  }
+
   return (
     <ProgressContext.Provider
       value={{
@@ -355,6 +397,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         markModuleComplete,
         markModuleStarted,
         trackActiveStudy,
+        flushSave,
         getTotalCompletedModules,
         getTotalCPDPoints,
         getTotalStudyTime,

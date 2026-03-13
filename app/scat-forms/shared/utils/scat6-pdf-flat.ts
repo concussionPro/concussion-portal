@@ -438,6 +438,11 @@ export async function exportSCAT6ToFlatPDF(
     drawText(p9, decColX[1], decRowY.concentration, dd.concentration2?.toString() || '', { font, size: fsm })
     drawText(p9, decColX[2], decRowY.concentration, dd.concentration3?.toString() || '', { font, size: fsm })
 
+    // Delayed Recall
+    drawText(p9, decColX[0], decRowY.delRecall, dd.delayedRecall1?.toString() || '', { font, size: fsm })
+    drawText(p9, decColX[1], decRowY.delRecall, dd.delayedRecall2?.toString() || '', { font, size: fsm })
+    drawText(p9, decColX[2], decRowY.delRecall, dd.delayedRecall3?.toString() || '', { font, size: fsm })
+
     // mBESS Total
     drawText(p9, decColX[0], decRowY.mBess, dd.mBessTotal1?.toString() || '', { font, size: fsm })
     drawText(p9, decColX[1], decRowY.mBess, dd.mBessTotal2?.toString() || '', { font, size: fsm })
