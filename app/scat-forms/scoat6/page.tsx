@@ -7,6 +7,7 @@ import { getAllCalculatedScores } from '../shared/utils/scoat6-calculations'
 import { exportSCOAT6ToFlatPDF } from '../shared/utils/scoat6-pdf-flat'
 import { WORD_LISTS, WordListKey } from '../shared/constants/wordLists'
 import { DIGIT_LISTS, DigitListKey } from '../shared/constants/digitLists'
+import { EmailGateModal } from '@/components/scat-forms/EmailGateModal'
 
 const SectionHeader = ({
   id,
@@ -45,6 +46,16 @@ export default function SCOAT6Page() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['demographics', 'currentInjury', 'symptoms'])
   )
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showEmailGate, setShowEmailGate] = useState(false)
+
+  // Check auth status on mount
+  useEffect(() => {
+    fetch('/api/auth/session', { credentials: 'include' })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.success && data?.user) setIsAuthenticated(true) })
+      .catch(() => {})
+  }, [])
 
   // Auto-save to localStorage every 3 seconds with timestamp
   useEffect(() => {
@@ -107,13 +118,21 @@ export default function SCOAT6Page() {
     })
   }
 
-  const handleExportPDF = async () => {
+  const doExportPDF = async () => {
     try {
       const filename = `SCOAT6_${formData.athleteName || 'Assessment'}_${formData.dateOfExamination || 'Draft'}.pdf`
       await exportSCOAT6ToFlatPDF(formData, filename)
     } catch (error) {
       console.error('PDF export failed:', error)
       alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  const handleExportPDF = async () => {
+    if (isAuthenticated) {
+      await doExportPDF()
+    } else {
+      setShowEmailGate(true)
     }
   }
 
@@ -128,6 +147,18 @@ export default function SCOAT6Page() {
 
   return (
     <div className="space-y-6 pb-20">
+      {/* Email Gate Modal */}
+      <EmailGateModal
+        isOpen={showEmailGate}
+        onClose={() => setShowEmailGate(false)}
+        onSuccess={() => {
+          setIsAuthenticated(true)
+          setShowEmailGate(false)
+          doExportPDF()
+        }}
+        accentColor="purple"
+      />
+
       {/* Header with Actions */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center justify-between sticky top-0 z-10">
         <div>

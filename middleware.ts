@@ -11,8 +11,11 @@ function constantTimeEqual(a: string, b: string): boolean {
   return result === 0
 }
 
-// PDFs in /docs/ that are freely accessible (clinical assessment tools)
-const PUBLIC_DOCS = new Set([
+// No public docs — all require at least an email capture
+const PUBLIC_DOCS = new Set<string>([])
+
+// Docs accessible to any authenticated user (including preview/free accounts)
+const AUTH_DOCS = new Set([
   '/docs/SCAT6_Fillable.pdf',
   '/docs/SCOAT6_Fillable.pdf',
 ])
@@ -89,6 +92,21 @@ export async function middleware(request: NextRequest) {
     // Public docs — always allow
     if (PUBLIC_DOCS.has(pathname)) {
       return NextResponse.next()
+    }
+
+    // Auth docs — any logged-in user can access (including preview/free accounts)
+    if (AUTH_DOCS.has(pathname)) {
+      const sessionToken = request.cookies.get('session')?.value
+      if (sessionToken) {
+        const session = await verifySessionEdge(sessionToken)
+        if (session) {
+          return NextResponse.next()
+        }
+      }
+      return NextResponse.json(
+        { error: 'Please log in to download this file.' },
+        { status: 401 }
+      )
     }
 
     // Paid docs — verify session and access level (served via CDN, bypasses serverless body limit)
