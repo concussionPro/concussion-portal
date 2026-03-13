@@ -549,7 +549,28 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
             </div>
-            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · 8 CPD points</p>
+          </div>
+
+          {/* Mobile-only CTA — visible above the fold on phones */}
+          <div className="md:hidden mb-5">
+            <button
+              onClick={() => handleCheckout('online-only')}
+              disabled={loading !== null}
+              className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              {loading === 'online-only' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Enrol Now — ${CONFIG.COURSE.PRICE_ONLINE}
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+            <p className="text-[11px] text-[var(--muted-foreground)] mt-2 text-center">
+              7-day satisfaction guarantee · Secure Stripe checkout
+            </p>
           </div>
 
           <ul className="space-y-3 mb-7 flex-1">
