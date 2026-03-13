@@ -1563,26 +1563,8 @@ export default function AnalyticsDashboard() {
                 },
               ]
 
-              // Broken URLs detected in ads
-              const brokenUrls = [
-                { current: '/course/enrol', correct: '/pricing', campaign: 'C2', ads: '2A ads (2 ads)' },
-                { current: '/preseason/baseline', correct: '/preseason', campaign: 'C1', ads: '1A ads (2 ads)' },
-                { current: '/sports/concussion', correct: '/preseason', campaign: 'C1', ads: '1B ad (1 ad)' },
-              ]
-
               // Optimization recommendations
-              const recs: Array<{ priority: 'critical' | 'high' | 'medium' | 'low'; category: string; title: string; instruction: string; where: string }> = []
-
-              // CRITICAL: Broken landing page URLs
-              recs.push({
-                priority: 'critical',
-                category: 'Broken URLs',
-                title: `${brokenUrls.length} ads point to pages that don't exist (404)`,
-                instruction: brokenUrls.map(u =>
-                  `${u.campaign} / ${u.ads}:\n  Current: ${u.current} ← 404 NOT FOUND\n  Fix to:  ${u.correct}`
-                ).join('\n\n') + '\n\nThis is the #1 reason for 0% conversion — visitors land on a 404 error page and immediately bounce. Fix these Final URLs in Google Ads immediately.',
-                where: 'Google Ads > Ads > Edit each ad > Final URL field',
-              })
+              const recs: Array<{ priority: 'high' | 'medium' | 'low'; category: string; title: string; instruction: string; where: string }> = []
 
               // Ad quality issues
               recs.push({
@@ -1653,9 +1635,9 @@ export default function AnalyticsDashboard() {
                 })
               }
 
-              const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
-              const priorityColor = { critical: 'bg-red-100 text-red-700', high: 'bg-rose-100 text-rose-700', medium: 'bg-amber-100 text-amber-700', low: 'bg-blue-100 text-blue-700' }
-              const priorityIcon = { critical: AlertCircle, high: Flame, medium: AlertTriangle, low: Lightbulb }
+              const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
+              const priorityColor: Record<string, string> = { high: 'bg-rose-100 text-rose-700', medium: 'bg-amber-100 text-amber-700', low: 'bg-blue-100 text-blue-700' }
+              const priorityIcon: Record<string, typeof Flame> = { high: Flame, medium: AlertTriangle, low: Lightbulb }
 
               return (
                 <div className="space-y-6">
@@ -1692,27 +1674,6 @@ export default function AnalyticsDashboard() {
                     </div>
                   </div>
 
-                  {/* Broken URLs Alert */}
-                  <div className="card rounded-xl p-5 border-2 border-red-200 bg-red-50/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <AlertCircle size={16} className="text-red-600" />
-                      <h3 className="text-sm font-bold text-red-800">CRITICAL: {brokenUrls.length} Ads Have Broken Landing Pages</h3>
-                    </div>
-                    <p className="text-xs text-red-700 mb-3">These ads send visitors to 404 pages. Fix the Final URL in Google Ads:</p>
-                    <div className="space-y-2">
-                      {brokenUrls.map((u, i) => (
-                        <div key={i} className="flex items-start gap-2 text-xs">
-                          <span className="font-semibold text-red-700 shrink-0">{u.campaign}:</span>
-                          <span className="text-red-600">
-                            <code className="line-through opacity-60">{u.current}</code>
-                            {' → '}
-                            <code className="font-bold text-emerald-700">{u.correct}</code>
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Optimization Recommendations */}
                   <div className="space-y-3">
                     {recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).map((rec, i) => {
@@ -1721,7 +1682,7 @@ export default function AnalyticsDashboard() {
                         <details key={i} className="card group" open={i < 2}>
                           <summary className="flex items-start gap-3 cursor-pointer list-none p-4 hover:bg-[rgba(13,115,119,0.02)] rounded-xl transition-colors">
                             <div className="mt-0.5 shrink-0">
-                              <PIcon size={14} className={rec.priority === 'critical' ? 'text-red-600' : rec.priority === 'high' ? 'text-rose-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-blue-500'} />
+                              <PIcon size={14} className={rec.priority === 'high' ? 'text-rose-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-blue-500'} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
