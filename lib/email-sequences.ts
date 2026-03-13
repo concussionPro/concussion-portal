@@ -1,17 +1,16 @@
 /**
  * Email Nurture Sequences
  *
- * 18-day automated sequence: Free SCAT forms -> Free SCAT course -> Paid CPD course
+ * 6-email sequence over 6 weeks: Free SCAT forms -> Free course -> Paid CPD course
  *
  * Strategy:
- * - Lead magnet delivery first (65% open, 20-28% CTR)
- * - Value before ask: 3 value emails before any paid mention
- * - Progressive commitment: download -> free course -> paid course
+ * - Max 1 email per week (clinicians are busy)
+ * - Value before ask: 3 value emails before paid mention
+ * - Progressive commitment: forms -> free course -> paid course
  * - Single CTA per email, action-verb buttons
- * - 3-5 day spacing for B2B/healthcare
- * - Osteopathy Australia endorsement as authority signal
  * - No emoji in subject lines (higher open for professionals)
  * - Plain-text feel with minimal HTML (higher engagement)
+ * - Stop after 6 emails. No more sales emails after that.
  */
 
 import { CONFIG } from '@/lib/config'
@@ -259,7 +258,8 @@ export const PRE_WORKSHOP_SEQUENCE = [
 ]
 
 export const SCAT_MASTERY_SEQUENCE = [
-  // DAY 0 - Lead Magnet Delivery
+  // DAY 0 - Lead Magnet Delivery (forms + course access)
+  // NOTE: Day 0 welcome email is sent by signup-free API. Cron skips day 0.
   {
     day: 0,
     subject: 'Your SCAT6 and SCOAT6 forms are ready',
@@ -275,49 +275,40 @@ export const SCAT_MASTERY_SEQUENCE = [
         All forms are based on the 2023 Amsterdam Consensus Statement.
       </div>
       <p><strong>Quick clinical tip:</strong> One of the most common mistakes is using SCAT6 for office follow-ups when SCOAT6 is the correct tool after 72 hours.</p>
-      <p>I'll follow up in a few days with a free resource that walks you through administering each form step by step.</p>
       <div class="sig">
         Zac Lewis<br>
         Founder, Concussion Education Australia<br>
         <a href="mailto:zac@concussion-education-australia.com">zac@concussion-education-australia.com</a>
       </div>
-      <p class="ps">P.S. Hit reply if you have questions about any of the forms &mdash; I read every message.</p>
     `),
   },
 
-  // DAY 3 - Clinical Value: When to use SCAT6 vs SCOAT6
+  // WEEK 1 (Day 3) - Complete free course nudge
   {
     day: 3,
-    subject: 'SCAT6 or SCOAT6 — which one and when',
+    subject: 'Did you finish SCAT Mastery?',
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${name},</h2>
-      <p>Have you had a chance to use the SCAT6 forms yet?</p>
-      <p>Here's the clinical distinction that trips up most practitioners:</p>
-      <div class="callout-warn">
-        <strong>SCAT6</strong> is validated for sideline and acute assessment within 72 hours of injury.<br><br>
-        <strong>SCOAT6</strong> is the correct tool for office-based follow-up from Day 3 onwards.<br><br>
-        Using the wrong tool at the wrong time falls below the expected standard of care under the 2023 Consensus guidelines.
-      </div>
-      <p>Knowing <em>which</em> form to use is just the starting point. Knowing <em>how</em> to interpret the results is what separates a confident clinician from one second-guessing themselves.</p>
-      <p>That's exactly what our <strong>free 2-hour SCAT Mastery course</strong> covers:</p>
+      <h2>Hi ${name.split(' ')[0]},</h2>
+      <p>Just checking in &mdash; have you had a chance to work through the free SCAT Mastery course?</p>
+      <p>It takes about 2 hours and covers:</p>
       <ul>
         <li>Step-by-step SCAT6 and SCOAT6 administration</li>
-        <li>Red flag recognition and when to escalate</li>
-        <li>Clinical decision flowcharts you can reference in practice</li>
+        <li>When to use SCAT6 vs SCOAT6 (the distinction most clinicians get wrong)</li>
+        <li>Red flag recognition and escalation criteria</li>
         <li>2 AHPRA-aligned CPD points upon completion</li>
       </ul>
-      <center><a href="${utm(loginLink, 'scat_mastery_day3', 'start_free_course')}" class="cta-btn">Start the Free SCAT Course</a></center>
+      <center><a href="${utm(loginLink, 'scat_mastery_day3', 'continue_course')}" class="cta-btn">Continue the Course</a></center>
       <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">2 hours &middot; Self-paced &middot; Free &middot; Includes CPD certificate</p>
       <div class="sig">Zac</div>
     `),
   },
 
-  // DAY 7 - Free Course Nudge + Case Teaser
+  // WEEK 2 (Day 7) - Clinical case study for credibility
   {
     day: 7,
     subject: 'Would you clear this patient to play Saturday?',
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${name},</h2>
+      <h2>Hi ${name.split(' ')[0]},</h2>
       <p>Quick scenario:</p>
       <div style="background: #f8fafc; padding: 18px 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 16px 0; font-size: 14px;">
         <strong>16-year-old male rugby player</strong><br>
@@ -326,98 +317,94 @@ export const SCAT_MASTERY_SEQUENCE = [
         <strong>Coach:</strong> &ldquo;Finals are Saturday. He passed the sideline check.&rdquo;
       </div>
       <p>What would you do? Clear him? Bench him? What documentation protects you if something goes wrong?</p>
-      <p>This exact scenario comes up in the free SCAT Mastery course &mdash; and the clinical reasoning behind the right decision is worth the 8 minutes it takes to work through.</p>
+      <p>This exact scenario comes up in the SCAT Mastery course &mdash; and the clinical reasoning behind the right decision is worth the 8 minutes it takes to work through.</p>
       <center><a href="${utm(loginLink, 'scat_mastery_day7', 'case_study')}" class="cta-btn">Work Through This Case</a></center>
-      <p class="ps">P.S. If you've already started the course, keep going &mdash; the later modules on red flags and documentation are where the real confidence comes from.</p>
       <div class="sig">Zac</div>
     `),
   },
 
-  // DAY 10 - Bridge: What free users are missing
-  {
-    day: 10,
-    subject: "What the free course doesn't cover",
-    template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${name},</h2>
-      <p>The free SCAT Mastery course gives you a solid foundation. But there's a reason we built the full Comprehensive Concussion Management course &mdash; and why <strong>Osteopathy Australia</strong> endorsed it for CPD.</p>
-      <p><strong>Here's what the free course doesn't cover:</strong></p>
-      <ol>
-        <li><strong>VOMS (Vestibular/Ocular Motor Screening)</strong> &mdash; the assessment most clinicians don't know how to perform but should be using in every follow-up</li>
-        <li><strong>BESS (Balance Error Scoring System)</strong> &mdash; hands-on balance assessment with specific scoring criteria</li>
-        <li><strong>Return-to-play and return-to-learn protocols</strong> &mdash; the step-by-step frameworks schools and clubs need from you</li>
-        <li><strong>Paediatric management</strong> &mdash; children recover differently, and the protocols are distinct from adults</li>
-        <li><strong>Medicolegal documentation</strong> &mdash; pre-built referral templates, clearance letters, and RTP forms that protect your practice</li>
-      </ol>
-      <div class="callout">
-        <span class="badge">Endorsed by Osteopathy Australia</span><br>
-        The full course provides <strong>14 AHPRA-aligned CPD points</strong> (8 online + 6 hands-on workshop).
-      </div>
-      <center><a href="${utm(upgradeLink, 'scat_mastery_day10', 'full_course_details')}" class="cta-btn">See Full Course Details</a></center>
-      <div class="sig">Zac Lewis<br>Founder, Concussion Education Australia</div>
-    `),
-  },
-
-  // DAY 14 - Authority + Social Proof
+  // WEEK 3 (Day 14) - Introduce full course: 14 CPD points breakdown
   {
     day: 14,
-    subject: 'Why this training is endorsed for CPD',
+    subject: '14 CPD points — here\'s the full breakdown',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${name},</h2>
-      <p>You might wonder what sets this course apart from other concussion CPD options in Australia.</p>
-      <p>Three things:</p>
-      <p><strong>1. It's the only course with hands-on assessment training.</strong><br>
-      Most CPD is a 1&ndash;2 hour webinar. Our full-day workshop has you physically administering SCAT6, VOMS, and BESS under supervision.</p>
-      <p><strong>2. Built for all allied health clinicians — endorsed by Osteopathy Australia.</strong><br>
-      Physiotherapists, osteopaths, chiropractors, sports medicine doctors, GPs, and exercise physiologists all use these assessment tools. The curriculum is designed for any clinician managing concussion.</p>
-      <p><strong>3. You get a complete clinical documentation system.</strong><br>
-      Referral templates, return-to-play letters, clearance forms, and a searchable repository of 130+ clinical references.</p>
-      <div style="background: #f8fafc; padding: 18px 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0; font-size: 14px;">
-        <em>&ldquo;The VOMS and BESS training was exceptional. I couldn't find this level of practical instruction anywhere else in Australia.&rdquo;</em><br>
-        <strong style="color: #475569;">&mdash; Physiotherapist</strong>
+      <h2>Hi ${name.split(' ')[0]},</h2>
+      <p>The free SCAT Mastery course earns you 2 CPD points. If you're looking for more, here's what the full Concussion Management course covers:</p>
+      <p><strong>8 online modules (8 CPD points):</strong></p>
+      <ol>
+        <li>Concussion pathophysiology</li>
+        <li>SCAT6 sideline assessment</li>
+        <li>SCOAT6 office-based follow-up</li>
+        <li>VOMS &mdash; the vestibular/ocular motor screen most clinicians haven't been trained on</li>
+        <li>BESS &mdash; balance assessment with specific scoring criteria</li>
+        <li>Paediatric concussion management</li>
+        <li>Return-to-play and return-to-learn protocols</li>
+        <li>Clinical documentation and medicolegal considerations</li>
+      </ol>
+      <p><strong>+ Full-day hands-on workshop (6 CPD points):</strong></p>
+      <ul>
+        <li>Administer SCAT6, VOMS, and BESS on real subjects with expert feedback</li>
+        <li>Clinical case discussions with other practitioners</li>
+        <li>Small group &mdash; max 12 participants</li>
+      </ul>
+      <div class="callout">
+        <span class="badge">Endorsed by Osteopathy Australia</span><br>
+        Designed for physios, osteopaths, chiropractors, GPs, exercise physiologists, and sports medicine doctors.
       </div>
-      <center><a href="${utm(upgradeLink, 'scat_mastery_day14', 'view_pricing')}" class="cta-btn">View Pricing and Options</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} AUD &middot; Complete course from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD (online + hands-on workshop)</p>
+      <center><a href="${utm(upgradeLink, 'scat_mastery_day14', 'see_course')}" class="cta-btn">See Full Course</a></center>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} &middot; Online + workshop from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</p>
       <div class="sig">Zac</div>
     `),
   },
 
-  // DAY 18 - Final CTA
+  // WEEK 5 (Day 28) - Early bird reminder + social proof
   {
-    day: 18,
-    subject: 'Your concussion CPD options — final summary',
+    day: 28,
+    subject: 'Early bird pricing closes soon',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${name},</h2>
-      <p>This is the last email in this series. I hope the free SCAT forms and course content have been useful.</p>
-      <p>If you're considering the full course, here's a clear summary:</p>
+      <h2>Hi ${name.split(' ')[0]},</h2>
+      <p>Quick note &mdash; early bird pricing for the Concussion Management course closes <strong>${CONFIG.EARLY_BIRD_DEADLINE.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>.</p>
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
         <tr style="border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
           <td style="padding: 12px 16px; font-weight: 700;">Option</td>
-          <td style="padding: 12px 16px; font-weight: 700; text-align: right;">Price</td>
+          <td style="padding: 12px 16px; font-weight: 700; text-align: right;">Early Bird</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
           <td style="padding: 14px 16px;"><strong>Online Course</strong><br><span style="font-size: 13px; color: #64748b;">8 modules &middot; 8 CPD points &middot; Lifetime access</span></td>
-          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_ONLINE} AUD</td>
+          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_ONLINE}</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
-          <td style="padding: 14px 16px;"><strong>Complete Course</strong> <span style="font-size: 11px; background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 600;">RECOMMENDED</span><br><span style="font-size: 13px; color: #64748b;">Online + full-day workshop &middot; 14 CPD points</span></td>
-          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD</td>
+          <td style="padding: 14px 16px;"><strong>Complete Course</strong><br><span style="font-size: 13px; color: #64748b;">Online + workshop &middot; 14 CPD points</span></td>
+          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</td>
         </tr>
       </table>
-      <p><strong>Every option includes:</strong></p>
+      <p>Both options include lifetime access, the clinical toolkit (referral templates, RTP forms, clearance letters), and an AHPRA-aligned CPD certificate.</p>
+      <center><a href="${utm(upgradeLink, 'scat_mastery_day28', 'view_pricing')}" class="cta-btn">View Pricing</a></center>
+      <p class="ps">P.S. You can start with the online course and upgrade to include the workshop later &mdash; you'll only pay the difference.</p>
+      <div class="sig">Zac</div>
+    `),
+  },
+
+  // WEEK 7 (Day 42) - Final email, then stop
+  {
+    day: 42,
+    subject: 'Your concussion CPD options — final summary',
+    template: (name: string, upgradeLink: string) => emailShell(`
+      <h2>Hi ${name.split(' ')[0]},</h2>
+      <p>This is the last email in this series. I hope the SCAT forms and free course have been useful in your practice.</p>
+      <p>If you're still considering the full course, here's the summary:</p>
       <ul>
-        <li>Lifetime access to all online modules</li>
-        <li>Clinical Toolkit (referral templates, RTP forms, clearance letters)</li>
-        <li>Reference Repository (130+ curated articles)</li>
-        <li>Digital certificate of completion</li>
-        <li>AHPRA-aligned CPD points, endorsed by Osteopathy Australia</li>
+        <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD points, lifetime access</li>
+        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}):</strong> Online + full-day workshop, 14 CPD points</li>
       </ul>
-      <center><a href="${utm(upgradeLink, 'scat_mastery_day18', 'choose_option')}" class="cta-btn">Choose Your Option</a></center>
-      <p style="font-size: 14px; color: #475569; margin-top: 20px;">Questions about which option is right for you? Just reply to this email.</p>
+      <p>Both include the clinical toolkit, reference repository, and digital certificate.</p>
+      <center><a href="${utm(upgradeLink, 'scat_mastery_day42', 'choose_option')}" class="cta-btn">Choose Your Option</a></center>
+      <p style="font-size: 14px; color: #475569; margin-top: 20px;">Questions? Just reply &mdash; I read every message.</p>
       <div class="sig">
-        <p>Questions? Just reply to this email &mdash; I'm always happy to help.</p>
-        <p>All the best,<br>Zac Lewis<br>Founder, Concussion Education Australia<br><a href="mailto:zac@concussion-education-australia.com">zac@concussion-education-australia.com</a></p>
+        Zac Lewis<br>
+        Founder, Concussion Education Australia
       </div>
-      <p class="ps">P.S. You'll stay on our newsletter for clinical updates and new case studies. No more sales emails after this one.</p>
+      <p class="ps">P.S. No more sales emails from me after this. You'll only hear from us for clinical updates or resources you've requested.</p>
     `),
   },
 ]

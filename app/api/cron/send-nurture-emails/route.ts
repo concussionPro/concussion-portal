@@ -60,6 +60,7 @@ export async function GET(request: Request) {
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
+      // Days 0-7: link to free course login. Days 14+: link to pricing/upgrade.
       const html = email.template(user.name, daysSinceSignup <= 7 ? loginLink : upgradeLink)
         .replace('{{unsubscribe_url}}', unsubscribeUrl)
 

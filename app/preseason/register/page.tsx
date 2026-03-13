@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Building2, User, Mail, AlertCircle, Check, Copy, ArrowRight, ExternalLink } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { trackLeadConversion } from '@/lib/analytics'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -52,6 +53,12 @@ export default function RegisterPage() {
           email: email.toLowerCase(),
           code: data.code,
         })
+        // Fire Google Ads conversion for preseason registration
+        trackLeadConversion(
+          process.env.NEXT_PUBLIC_INTEREST_CONVERSION_LABEL || 'preseason_register',
+          75,
+          email.toLowerCase()
+        )
       } else {
         setError(data.error || 'Registration failed. Please try again.')
       }
