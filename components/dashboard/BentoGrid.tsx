@@ -11,6 +11,7 @@ import {
   Activity,
   Library,
   GraduationCap,
+  Lock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -78,17 +79,32 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
     progress,
   } = useProgress()
 
+  const isPreview = accessLevel === 'preview'
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
   const studyTime = getTotalStudyTime()
-  const maxModules = 8
-  const maxCPD = 8
 
-  const inProgressCount = Object.values(progress).filter(
-    (p) => p.moduleId >= 1 && p.moduleId <= 8 && !!p.startedAt && !p.completed,
+  // For preview users, show SCAT progress
+  const scatCompleted = Object.values(progress).filter(
+    (p) => p.moduleId >= 101 && p.moduleId <= 105 && p.completed,
+  ).length
+  const scatCPD = scatCompleted * 0.5 // 0.5 CPD per SCAT module (except 105 which is 0)
+  const scatInProgress = Object.values(progress).filter(
+    (p) => p.moduleId >= 101 && p.moduleId <= 105 && !!p.startedAt && !p.completed,
   ).length
 
-  const pctComplete = Math.round((completedModules / maxModules) * 100)
+  const displayModules = isPreview ? scatCompleted : completedModules
+  const displayMaxModules = isPreview ? 5 : 8
+  const displayCPD = isPreview ? scatCPD : cpdPoints
+  const displayMaxCPD = isPreview ? 2 : 8
+
+  const inProgressCount = isPreview
+    ? scatInProgress
+    : Object.values(progress).filter(
+        (p) => p.moduleId >= 1 && p.moduleId <= 8 && !!p.startedAt && !p.completed,
+      ).length
+
+  const pctComplete = Math.round((displayModules / displayMaxModules) * 100)
 
   return (
     <div className="bento-premium">
@@ -96,14 +112,14 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       <Card onClick={() => router.push('/learning')} span2>
         <div className="flex items-start gap-4">
           <div className="relative flex-shrink-0">
-            <MicroRing value={completedModules} max={maxModules} size={56} />
+            <MicroRing value={displayModules} max={displayMaxModules} size={56} />
             <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
               {pctComplete}%
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="stat-label">Course Progress</p>
-            <p className="stat-value">{completedModules} <span className="text-base font-medium text-muted-foreground">/ {maxModules} modules</span></p>
+            <p className="stat-label">{isPreview ? 'SCAT Course Progress' : 'Course Progress'}</p>
+            <p className="stat-value">{displayModules} <span className="text-base font-medium text-muted-foreground">/ {displayMaxModules} modules</span></p>
             <div className="mt-3">
               <div className="progress-track">
                 <div className="progress-fill" style={{ width: `${pctComplete}%` }} />
@@ -124,16 +140,16 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
             <Award className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
           </div>
-          <p className="stat-label mb-0">Online CPD Points</p>
+          <p className="stat-label mb-0">{isPreview ? 'Free CPD Points' : 'Online CPD Points'}</p>
         </div>
         <p className="stat-value-accent">
-          {cpdPoints}<span className="text-base text-muted-foreground font-medium"> / {maxCPD}</span>
+          {displayCPD}<span className="text-base text-muted-foreground font-medium"> / {displayMaxCPD}</span>
         </p>
         <div className="mt-3 progress-track">
-          <div className="progress-fill" style={{ width: `${maxCPD > 0 ? (cpdPoints / maxCPD) * 100 : 0}%` }} />
+          <div className="progress-fill" style={{ width: `${displayMaxCPD > 0 ? (displayCPD / displayMaxCPD) * 100 : 0}%` }} />
         </div>
-        {completedModules === maxModules && (
-          <p className="text-xs text-accent font-semibold mt-2">All online points earned</p>
+        {displayModules === displayMaxModules && displayMaxModules > 0 && (
+          <p className="text-xs text-accent font-semibold mt-2">All {isPreview ? 'free' : 'online'} points earned</p>
         )}
       </Card>
 
@@ -166,19 +182,34 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
           </div>
           <p className="stat-label mb-0">Learning Suite</p>
         </div>
-        <p className="text-sm text-foreground font-semibold mb-1">8 Clinical Modules</p>
+        <p className="text-sm text-foreground font-semibold mb-1">{isPreview ? '5 Free SCAT Modules' : '8 Clinical Modules'}</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Evidence-based concussion management training with AHPRA-aligned CPD tracking.
+          {isPreview
+            ? 'SCAT6 & SCOAT6 mastery training — earn 2 free CPD points.'
+            : 'Evidence-based concussion management training with AHPRA-aligned CPD tracking.'}
         </p>
       </Card>
 
       {/* ── 5. Clinical Toolkit ─────────────────────── */}
-      <Card onClick={() => router.push('/clinical-toolkit')}>
+      <Card onClick={() => router.push(isPreview ? '/pricing' : '/clinical-toolkit')} className={isPreview ? 'opacity-60' : undefined}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 flex items-center justify-center">
-            <FileText className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
+          <div className={cn(
+            'w-9 h-9 rounded-xl flex items-center justify-center',
+            isPreview
+              ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
+              : 'bg-gradient-to-br from-emerald-500/10 to-emerald-400/5'
+          )}>
+            {isPreview
+              ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+              : <FileText className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
+            }
           </div>
           <p className="stat-label mb-0">Clinical Toolkit</p>
+          {isPreview && (
+            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+              Paid
+            </span>
+          )}
         </div>
         <p className="text-sm text-foreground font-semibold mb-1">Printable Resources</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
@@ -201,13 +232,28 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       </Card>
 
       {/* ── 7. Reference Repository (wide) ──────────── */}
-      <Card onClick={() => router.push('/references')} span2>
+      <Card onClick={() => router.push(isPreview ? '/pricing' : '/references')} span2 className={isPreview ? 'opacity-60' : undefined}>
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-400/5 flex items-center justify-center flex-shrink-0">
-            <Library className="w-5 h-5 text-amber-600/70" strokeWidth={1.8} />
+          <div className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
+            isPreview
+              ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
+              : 'bg-gradient-to-br from-amber-500/10 to-amber-400/5'
+          )}>
+            {isPreview
+              ? <Lock className="w-5 h-5 text-slate-400" strokeWidth={1.8} />
+              : <Library className="w-5 h-5 text-amber-600/70" strokeWidth={1.8} />
+            }
           </div>
           <div className="flex-1 min-w-0">
-            <p className="stat-label">Reference Repository</p>
+            <div className="flex items-center gap-2">
+              <p className="stat-label">Reference Repository</p>
+              {isPreview && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+                  Paid
+                </span>
+              )}
+            </div>
             <p className="text-sm text-foreground font-semibold mb-1">130+ Peer-Reviewed Sources</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable library of concussion research — journal articles, meta-analyses, and clinical guidelines.
@@ -217,15 +263,28 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       </Card>
 
       {/* ── 8. In-Person Workshop ───────────────────── */}
-      <Card onClick={() => router.push('/in-person')}>
+      <Card onClick={() => router.push(isPreview ? '/pricing' : '/in-person')} className={isPreview ? 'opacity-60' : undefined}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
-            <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
+          <div className={cn(
+            'w-9 h-9 rounded-xl flex items-center justify-center',
+            isPreview
+              ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
+              : 'bg-gradient-to-br from-rose-500/10 to-rose-400/5'
+          )}>
+            {isPreview
+              ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+              : <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
+            }
           </div>
           <p className="stat-label mb-0">In-Person Workshop</p>
           {accessLevel === 'full-course' && (
             <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
               Included
+            </span>
+          )}
+          {isPreview && (
+            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+              Paid
             </span>
           )}
         </div>

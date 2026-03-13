@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2 } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -13,6 +13,7 @@ interface UserInfo {
   email: string
   name: string
   enrolledAt: string
+  accessLevel: string
 }
 
 const navItems: Array<{
@@ -20,21 +21,25 @@ const navItems: Array<{
   label: string
   href: string
   soon?: boolean
+  paidOnly?: boolean
 }> = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
-  { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit' },
+  { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit', paidOnly: true },
   { icon: Activity, label: 'SCAT Forms', href: '/scat-forms' },
-  { icon: Library, label: 'Reference Repository', href: '/references' },
-  { icon: BookMarked, label: 'Complete Reference', href: '/complete-reference' },
+  { icon: Library, label: 'Reference Repository', href: '/references', paidOnly: true },
+  { icon: BookMarked, label: 'Complete Reference', href: '/complete-reference', paidOnly: true },
   { icon: Settings, label: 'Settings', href: '/settings' },
 ]
 
 export function Sidebar() {
-  const { getTotalCompletedModules, syncState, restoredFromServer } = useProgress()
+  const { getTotalCompletedModules, syncState, restoredFromServer, progress } = useProgress()
   const pathname = usePathname()
   const router = useRouter()
   const completedModules = getTotalCompletedModules()
+  const scatCompletedModules = Object.values(progress).filter(
+    (p) => p.moduleId >= 101 && p.moduleId <= 105 && p.completed
+  ).length
   const [user, setUser] = useState<UserInfo | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showRestoredBanner, setShowRestoredBanner] = useState(false)
@@ -51,6 +56,7 @@ export function Sidebar() {
               email: data.user.email || '',
               name: data.user.name || data.user.email?.split('@')[0] || 'Student',
               enrolledAt: new Date().toISOString(),
+              accessLevel: data.user.accessLevel || 'preview',
             })
           }
         }
@@ -143,7 +149,10 @@ export function Sidebar() {
 
         {/* CPD Progress Ring */}
         <div className="mb-8">
-          <ProgressRing progress={completedModules} total={8} />
+          <ProgressRing
+            progress={user?.accessLevel === 'preview' ? scatCompletedModules : completedModules}
+            total={user?.accessLevel === 'preview' ? 5 : 8}
+          />
         </div>
 
         {/* Navigation */}
@@ -151,6 +160,22 @@ export function Sidebar() {
           {navItems.map((item) => {
             const isActive =
               pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+            const isLocked = item.paidOnly && user?.accessLevel === 'preview'
+
+            if (isLocked) {
+              return (
+                <Link
+                  key={item.label}
+                  href="/pricing"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg opacity-40 cursor-pointer text-muted-foreground hover:opacity-60 transition-all relative group"
+                >
+                  <item.icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                  <span className="text-sm font-medium">{item.label}</span>
+                  <Lock className="w-3 h-3 ml-auto text-muted-foreground/60" />
+                </Link>
+              )
+            }
 
             return item.soon ? (
               <div

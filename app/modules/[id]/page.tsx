@@ -94,6 +94,11 @@ export default function ModulePage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
+            // Preview users trying to access paid modules (1-8): redirect to learning suite
+            if (data.user.accessLevel === 'preview' && moduleId >= 1 && moduleId <= 8) {
+              router.push('/learning')
+              return
+            }
             setIsAuthenticated(true)
             setCheckingAuth(false)
             return
@@ -108,7 +113,7 @@ export default function ModulePage() {
       }
     }
     checkAuth()
-  }, [])
+  }, [moduleId, router])
 
   // Show loading while checking auth
   if (checkingAuth) {

@@ -27,11 +27,6 @@ export default function DashboardPage() {
         if (response.ok) {
           const data = await response.json()
 
-          if (data.user && data.user.accessLevel === 'preview') {
-            router.push('/scat-course')
-            return
-          }
-
           if (data.user) {
             const name = data.user.name || data.user.email?.split('@')[0] || null
             setUserName(name)
