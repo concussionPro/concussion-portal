@@ -44,6 +44,8 @@ export async function GET(request: NextRequest) {
       let totalCPDPoints = 0
       const moduleDetails: Record<number, { completed: boolean; quizScore: number | null }> = {}
 
+      let completedScatModules = 0
+
       if (progress) {
         // Count completed paid modules (1-8)
         for (let m = 1; m <= 8; m++) {
@@ -59,6 +61,13 @@ export async function GET(request: NextRequest) {
             }
           }
         }
+        // Count completed SCAT free modules (101-105)
+        for (let m = 101; m <= 105; m++) {
+          const mod = progress[String(m)]
+          if (mod?.completed) {
+            completedScatModules++
+          }
+        }
       }
 
       return {
@@ -72,6 +81,7 @@ export async function GET(request: NextRequest) {
         nurtureUnsubscribed: user.nurtureUnsubscribed || false,
         signupSource: user.signupSource || null,
         completedModules,
+        completedScatModules,
         totalCPDPoints,
         moduleDetails,
       }

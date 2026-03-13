@@ -458,7 +458,7 @@ export default function AnalyticsDashboard() {
   const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; baselines: Array<{ clinicCode: string; clinicName?: string; athleteName?: string; submittedAt: string; symptomCount?: number; symptomSeverity?: number; cognitiveScore?: number }>; totalClinics: number; totalBaselines: number } | null>(null)
 
   // Users/emails data
-  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; completedModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
+  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
   const [usersError, setUsersError] = useState<string | null>(null)
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
@@ -1398,7 +1398,7 @@ export default function AnalyticsDashboard() {
                         return true
                       })
                       const csv = ['Email,Name,Access Level,Modules Completed,CPD Points,Created,Last Login', ...filtered.map(u =>
-                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
+                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/5,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
                       )].join('\n')
                       const blob = new Blob([csv], { type: 'text/csv' })
                       const url = URL.createObjectURL(blob)
@@ -1434,7 +1434,11 @@ export default function AnalyticsDashboard() {
                         return true
                       }).map((u) => {
                         const completed = u.completedModules || 0
-                        const pctDone = Math.round((completed / 8) * 100)
+                        const scatCompleted = u.completedScatModules || 0
+                        const isFree = u.accessLevel === 'preview'
+                        const progressCount = isFree ? scatCompleted : completed
+                        const progressTotal = isFree ? 5 : 8
+                        const pctDone = Math.round((progressCount / progressTotal) * 100)
                         return (
                         <tr key={u.id} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
                           <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{u.email}</td>
@@ -1451,15 +1455,15 @@ export default function AnalyticsDashboard() {
                               <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full transition-all ${
-                                    completed === 8 ? 'bg-emerald-500' : completed > 0 ? 'bg-[var(--accent)]' : 'bg-gray-200'
+                                    progressCount === progressTotal ? 'bg-emerald-500' : progressCount > 0 ? 'bg-[var(--accent)]' : 'bg-gray-200'
                                   }`}
                                   style={{ width: `${pctDone}%` }}
                                 />
                               </div>
                               <span className={`text-xs font-semibold tabular-nums ${
-                                completed === 8 ? 'text-emerald-600' : 'text-[var(--muted-foreground)]'
+                                progressCount === progressTotal ? 'text-emerald-600' : 'text-[var(--muted-foreground)]'
                               }`}>
-                                {completed}/8
+                                {progressCount}/{progressTotal}
                               </span>
                             </div>
                           </td>
