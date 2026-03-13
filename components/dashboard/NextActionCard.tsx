@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProgress } from '@/contexts/ProgressContext'
-import { getModulesMeta } from '@/data/module-meta'
-import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2 } from 'lucide-react'
+import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
+import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const POOL_CITIES = [
@@ -18,17 +18,24 @@ const POOL_CITIES = [
 export function NextActionCard() {
   const router = useRouter()
   const { getTotalCompletedModules, isModuleComplete } = useProgress()
-  const modules = getModulesMeta()
-  const completedModules = getTotalCompletedModules()
+  const [accessLevel, setAccessLevel] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+
+  const isPreview = accessLevel === 'preview'
+  const paidModules = getModulesMeta()
+  const scatModules = getSCATModulesMeta()
+  const modules = isPreview ? scatModules : paidModules
+  const completedModules = isPreview
+    ? scatModules.filter(m => isModuleComplete(m.id)).length
+    : getTotalCompletedModules()
+  const totalModules = isPreview ? 5 : 8
 
   const nextModule = modules.find((m) => !isModuleComplete(m.id))
-  const progressPercentage = Math.round((completedModules / 8) * 100)
+  const progressPercentage = Math.round((completedModules / totalModules) * 100)
 
   // Certificate state
   const [certificateStatus, setCertificateStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [certificateDownloading, setCertificateDownloading] = useState(false)
-  const [userEmail, setUserEmail] = useState('')
-  const [accessLevel, setAccessLevel] = useState('')
   const certTriggered = useRef(false)
 
   // Pool CTA state
@@ -55,7 +62,7 @@ export function NextActionCard() {
   useEffect(() => {
     if (allComplete && accessLevel && !certTriggered.current) {
       certTriggered.current = true
-      const certType = accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
       const sentKey = `cert-sent-${certType}-${userEmail}`
       if (typeof window !== 'undefined' && localStorage.getItem(sentKey)) return
       setCertificateStatus('sending')
@@ -81,7 +88,7 @@ export function NextActionCard() {
   const handleDownloadCertificate = async () => {
     setCertificateDownloading(true)
     try {
-      const certType = accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
       const res = await fetch(`/api/certificate?type=${certType}`, { credentials: 'include' })
       if (!res.ok) throw new Error('Download failed')
       const blob = await res.blob()
@@ -103,7 +110,7 @@ export function NextActionCard() {
   const handleResendCertificate = async () => {
     setCertificateStatus('sending')
     try {
-      const certType = accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
       const res = await fetch('/api/certificate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -144,6 +151,7 @@ export function NextActionCard() {
   /* ── All Complete ───────────────────────────── */
   if (allComplete) {
     const showPoolCTA = accessLevel === 'online-only'
+    const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
 
     return (
       <>
@@ -165,17 +173,23 @@ export function NextActionCard() {
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2 tracking-tight">
-                You&apos;ve Mastered All 8 Online Modules
+                {isPreview
+                  ? "You've Mastered All 5 SCAT Modules"
+                  : "You've Mastered All 8 Online Modules"}
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                Outstanding achievement — you&apos;ve earned all 8 online AHPRA CPD points. Complete the 6-hour in-person practical to earn your full 14 CPD point certificate.
+                {isPreview
+                  ? "Outstanding achievement — you've earned 2 free AHPRA CPD points. Upgrade to unlock 8 advanced modules, the Clinical Toolkit, and earn 14 total CPD points."
+                  : "Outstanding achievement — you've earned all 8 online AHPRA CPD points. Complete the 6-hour in-person practical to earn your full 14 CPD point certificate."}
               </p>
 
               {/* Certificate Section */}
               <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-4 mb-5">
                 <div className="flex items-center gap-2 mb-2">
                   <Award className="w-4 h-4 text-emerald-600" />
-                  <span className="text-sm font-bold text-emerald-900">CPD Certificate</span>
+                  <span className="text-sm font-bold text-emerald-900">
+                    {isPreview ? 'Free CPD Certificate (2 points)' : 'CPD Certificate'}
+                  </span>
                 </div>
                 {certificateStatus === 'sending' && (
                   <p className="text-xs text-emerald-700 mb-3 flex items-center gap-2">
@@ -225,12 +239,22 @@ export function NextActionCard() {
                   <TrendingUp className="w-4 h-4 text-accent" />
                   Review Modules
                 </button>
-                <button
-                  onClick={() => router.push('/in-person')}
-                  className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all"
-                >
-                  Book Workshop
-                </button>
+                {isPreview ? (
+                  <button
+                    onClick={() => router.push('/pricing')}
+                    className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all flex items-center gap-2"
+                  >
+                    Upgrade — Unlock 14 CPD Points
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => router.push('/in-person')}
+                    className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all"
+                  >
+                    Book Workshop
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -320,7 +344,9 @@ export function NextActionCard() {
       <div className="relative z-10 flex items-start gap-4 sm:gap-5">
         {/* Module number badge */}
         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent/15">
-          <span className="text-xl sm:text-2xl font-bold text-white">{nextModule.id}</span>
+          <span className="text-xl sm:text-2xl font-bold text-white">
+            {isPreview ? nextModule.id - 100 : nextModule.id}
+          </span>
         </div>
 
         <div className="flex-1 min-w-0">
@@ -362,7 +388,9 @@ export function NextActionCard() {
             onClick={() => router.push(`/modules/${nextModule.id}`)}
             className="px-6 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 hover:bg-accent-dark transition-all flex items-center gap-2 group/btn"
           >
-            {completedModules === 0 ? 'Begin Module 1' : `Continue Module ${nextModule.id}`}
+            {completedModules === 0
+              ? `Begin Module ${isPreview ? nextModule.id - 100 : nextModule.id}`
+              : `Continue Module ${isPreview ? nextModule.id - 100 : nextModule.id}`}
             <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
           </button>
         </div>
@@ -374,9 +402,9 @@ export function NextActionCard() {
           <div className="progress-fill" style={{ width: `${progressPercentage}%` }} />
         </div>
         <div className="flex items-center justify-between text-xs mt-2">
-          <span className="font-medium text-muted-foreground">Course Progress</span>
+          <span className="font-medium text-muted-foreground">{isPreview ? 'SCAT Course Progress' : 'Course Progress'}</span>
           <span className="font-semibold text-accent">
-            {completedModules} / 8 modules ({progressPercentage}%)
+            {completedModules} / {totalModules} modules ({progressPercentage}%)
           </span>
         </div>
       </div>
