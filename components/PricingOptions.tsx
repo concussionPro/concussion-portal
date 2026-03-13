@@ -406,6 +406,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 `Enrol Now — $${CONFIG.COURSE.PRICE_ONLINE}`
               )}
             </button>
+            <div className="mt-3 text-center">
+              <a
+                href="/scat-mastery"
+                className="text-[11px] font-semibold text-[var(--accent)] hover:underline underline-offset-4"
+              >
+                Or start free — 2 CPD points →
+              </a>
+            </div>
           </div>
 
           {/* Complete Course - Compact (Upgrade) */}
@@ -595,6 +603,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
             7-day satisfaction guarantee · Secure Stripe checkout
           </p>
+
+          <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)] text-center">
+            <p className="text-xs text-[var(--muted-foreground)] mb-2">Not ready to commit?</p>
+            <a
+              href="/scat-mastery"
+              className="text-sm font-semibold text-[var(--accent)] hover:underline underline-offset-4"
+            >
+              Start free — 2 CPD points, no card needed →
+            </a>
+          </div>
         </div>
 
         {/* Complete Course — Upgrade */}
@@ -740,7 +758,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
       {/* Trust Signals */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-        {enrollmentCount >= 100 && (
+        {enrollmentCount >= 10 && (
           <div className="flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
             {enrollmentCount}+ clinicians enrolled

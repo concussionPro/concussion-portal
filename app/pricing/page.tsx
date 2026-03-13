@@ -103,6 +103,19 @@ function PricingContent() {
           </p>
         </div>
 
+        {/* Early bird callout */}
+        {new Date() < CONFIG.EARLY_BIRD_DEADLINE && (
+          <div className="max-w-xl mx-auto mb-8 glass rounded-xl p-4 border border-orange-200/50 text-center">
+            <p className="text-sm font-semibold text-foreground">
+              Early bird pricing ends{' '}
+              <span className="text-orange-600">
+                {CONFIG.EARLY_BIRD_DEADLINE.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+              {' '}— save ${CONFIG.COURSE.SAVINGS} on the Complete Course
+            </p>
+          </div>
+        )}
+
         {/* Social proof strip */}
         {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mb-10 text-xs text-muted-foreground">
