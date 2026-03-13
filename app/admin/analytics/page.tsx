@@ -1533,149 +1533,133 @@ export default function AnalyticsDashboard() {
 
             {/* ── Google Ads ───────────────────────────────────────────── */}
             {activeTab === 'google-ads' && (() => {
-              // Generate recommendations from existing analytics data
-              const recs: Array<{ priority: 'high' | 'medium' | 'low'; category: string; title: string; instruction: string; where: string }> = []
-
-              // Analyse top pages for landing page recommendations
-              const preseasonPages = topPages.filter(p => p.x.includes('preseason'))
-              const pricingPages = topPages.filter(p => p.x.includes('pricing') || p.x.includes('shop') || p.x.includes('enrol'))
-              const scatPages = topPages.filter(p => p.x.includes('scat'))
-              const coursePages = topPages.filter(p => p.x.includes('course') || p.x.includes('module') || p.x.includes('scat-mastery'))
-              const totalViews = stats?.pageviews.value ?? 0
               const bounce = stats ? stats.bounces.value / Math.max(stats.uniques.value, 1) : 0
               const pricingViewers = retargetingData?.summary.pricingViewers ?? 0
               const converters = retargetingData?.summary.converters ?? 0
               const preseasonLeadCount = retargetingData?.preseasonLeads?.length ?? 0
 
-              // Campaign structure recommendations
-              recs.push({
-                priority: 'high',
-                category: 'Campaign Structure',
-                title: 'Create two separate campaigns',
-                instruction: 'Create Campaign 1: "Course Sales" targeting healthcare professionals searching for concussion CPD. Create Campaign 2: "Preseason Baseline" targeting sports clubs and clinics looking for baseline testing. Separate budgets let you control spend on each goal independently.',
-                where: 'Google Ads > Campaigns > + New Campaign > Search',
-              })
-
-              // Keyword recommendations based on what\'s working on site
-              const courseKeywords = [
-                'concussion CPD course', 'concussion education australia', 'SCAT6 training',
-                'concussion management course', 'AHPRA CPD concussion', 'sports concussion CPD',
-                'concussion assessment training', 'SCAT6 course online',
+              // Active campaign data — matches live Google Ads account
+              const campaigns = [
+                {
+                  name: 'C1 - Preseason Sports Clinic',
+                  adGroups: ['1A - Preseason Baseline Testing', '1B - Sports Clinic Owner Intent'],
+                  status: 'active',
+                  goal: 'Lead gen (free baseline tool)',
+                  landingPage: '/preseason',
+                },
+                {
+                  name: 'C2 - Course Purchase Intent',
+                  adGroups: ['2A - Concussion Course Direct', '2B - SCAT6 Purchase Intent', '2C - CPD Deadline Intent'],
+                  status: 'active',
+                  goal: 'Course sales ($497)',
+                  landingPage: '/pricing',
+                },
+                {
+                  name: 'C3 - SCAT6 Free Lead Capture',
+                  adGroups: ['3 - SCAT6 Free Lead Capture'],
+                  status: 'active',
+                  goal: 'Free course signup → nurture → upsell',
+                  landingPage: '/scat-mastery',
+                },
               ]
-              const preseasonKeywords = [
-                'preseason baseline testing', 'concussion baseline test', 'SCAT6 baseline',
-                'sports team concussion screening', 'athlete concussion baseline',
-                'pre-season concussion assessment',
+
+              // Broken URLs detected in ads
+              const brokenUrls = [
+                { current: '/course/enrol', correct: '/pricing', campaign: 'C2', ads: '2A ads (2 ads)' },
+                { current: '/preseason/baseline', correct: '/preseason', campaign: 'C1', ads: '1A ads (2 ads)' },
+                { current: '/sports/concussion', correct: '/preseason', campaign: 'C1', ads: '1B ad (1 ad)' },
               ]
 
+              // Optimization recommendations
+              const recs: Array<{ priority: 'critical' | 'high' | 'medium' | 'low'; category: string; title: string; instruction: string; where: string }> = []
+
+              // CRITICAL: Broken landing page URLs
+              recs.push({
+                priority: 'critical',
+                category: 'Broken URLs',
+                title: `${brokenUrls.length} ads point to pages that don't exist (404)`,
+                instruction: brokenUrls.map(u =>
+                  `${u.campaign} / ${u.ads}:\n  Current: ${u.current} ← 404 NOT FOUND\n  Fix to:  ${u.correct}`
+                ).join('\n\n') + '\n\nThis is the #1 reason for 0% conversion — visitors land on a 404 error page and immediately bounce. Fix these Final URLs in Google Ads immediately.',
+                where: 'Google Ads > Ads > Edit each ad > Final URL field',
+              })
+
+              // Ad quality issues
               recs.push({
                 priority: 'high',
-                category: 'Keywords — Course Campaign',
-                title: 'Add these keywords to your Course Sales campaign',
-                instruction: courseKeywords.map(k => `[${k}]`).join('\n') + '\n\nUse Exact Match [brackets] to start. Add Phrase Match "quotes" versions once you see which keywords convert. Set starting bids at $2-4 AUD — concussion CPD is niche so competition is low.',
-                where: 'Google Ads > Course Sales campaign > Ad Groups > Keywords > +',
+                category: 'Ad Quality',
+                title: '5 of 10 ads rated "Poor" quality — pause or rewrite',
+                instruction: 'Poor quality ads get fewer impressions and higher CPC. Pause these ads and create new variants:\n\nPoor ads to pause:\n• C1/1A: "Free SCAT6 Baseline Tool | Athletes Complete on Device"\n• C1/1B: "Concussion Baseline Clinics | Athletes Self-Test"\n• C2/2B: "SCAT6 With Confidence | SCAT6 and SCOAT6 Online Course"\n• C3/3: "Free SCAT6 and SCOAT6 Forms | Auto-Scoring Fillable PDFs"\n• C3/3: "Free SCAT6 Clinical Training | 2 AHPRA CPD Points"\n\nFor each, create a new ad with:\n- More specific headlines (mention price, CPD points, "Australia")\n- Stronger CTAs in descriptions\n- Landing URL matching the actual page',
+                where: 'Google Ads > Ads > Select poor ads > Pause, then create new ads',
               })
 
+              // C1 Preseason getting 0 impressions
               recs.push({
                 priority: 'high',
-                category: 'Keywords — Preseason Campaign',
-                title: 'Add these keywords to your Preseason campaign',
-                instruction: preseasonKeywords.map(k => `"${k}"`).join('\n') + '\n\nUse Phrase Match "quotes" for preseason — athletes and club admins search more varied terms. Bids at $1-2 AUD since this is a free tool (lead gen, not direct sale).',
-                where: 'Google Ads > Preseason campaign > Ad Groups > Keywords > +',
+                category: 'C1 Preseason',
+                title: 'C1 Preseason campaign has 0 impressions — check keywords and bids',
+                instruction: 'The Preseason campaign has served 0 impressions. Likely causes:\n\n1. Keywords too narrow — check Search Terms report for actual queries\n2. Bids too low — increase to $3-5 AUD for preseason keywords\n3. Budget depleted by other campaigns — ensure C1 has its own budget\n4. Ad disapprovals — check the Ads page for policy warnings\n\nPreseason is timely (March = footy pre-season). If this campaign can\'t show ads, you\'re missing your best window.',
+                where: 'Google Ads > C1 campaign > Keywords > Check status column',
               })
 
-              // Negative keywords
-              recs.push({
-                priority: 'medium',
-                category: 'Negative Keywords',
-                title: 'Add negative keywords to avoid wasted spend',
-                instruction: 'Add these as negative keywords across both campaigns:\nfree concussion test online\nconcussion symptoms\ndo I have a concussion\nconcussion treatment\nconcussion recovery time\nconcussion protocol NFL\nchild hit head\n\nThese are informational searches — people looking for answers, not courses or baseline tools.',
-                where: 'Google Ads > All Campaigns > Keywords > Negative Keywords > +',
-              })
-
-              // Ad copy based on site data
-              recs.push({
-                priority: 'high',
-                category: 'Ad Copy — Course',
-                title: 'Set up responsive search ads for the course',
-                instruction: `Headlines (max 30 chars each):\n• Concussion CPD Course\n• SCAT6 & SCOAT6 Training\n• AHPRA CPD Points\n• Online Self-Paced Course\n• Master Concussion Mgmt\n• Evidence-Based Training\n• Start Free — 2 CPD Points\n\nDescriptions (max 90 chars each):\n• Learn SCAT6 administration and interpretation. AHPRA-accredited. Start free today.\n• Concussion education for physios, GPs, and sports medicine professionals. Online, self-paced.\n• Free 2 CPD point module. Full course covers VOMS, BESS, return-to-play protocols.\n\nFinal URL: portal.concussion-education-australia.com/scat-mastery`,
-                where: 'Google Ads > Course Sales > Ad Group > Ads > + Responsive Search Ad',
-              })
-
-              recs.push({
-                priority: 'high',
-                category: 'Ad Copy — Preseason',
-                title: 'Set up responsive search ads for preseason baseline',
-                instruction: 'Headlines:\n• Free Baseline Testing Tool\n• SCAT6 Preseason Baseline\n• Athlete Baseline Screening\n• Self-Administered SCAT6\n• For Clinics & Sports Clubs\n• PDF Report Emailed to You\n\nDescriptions:\n• Register your clinic free. Athletes self-complete SCAT6 baseline remotely. PDF emailed to you.\n• Pre-season concussion baseline tool. No login needed. Share one link with your entire team.\n\nFinal URL: portal.concussion-education-australia.com/preseason',
-                where: 'Google Ads > Preseason > Ad Group > Ads > + Responsive Search Ad',
-              })
-
-              // Landing page / extensions recommendations from analytics
-              if (bounce > 0.5) {
-                recs.push({
-                  priority: 'high',
-                  category: 'Landing Pages',
-                  title: `Bounce rate is ${Math.round(bounce * 100)}% — improve landing page relevance`,
-                  instruction: `Your site bounce rate is ${Math.round(bounce * 100)}%. For Google Ads, send course traffic to /scat-mastery (not the homepage) and preseason traffic to /preseason. In each campaign, set the Final URL to the specific landing page. A high bounce rate raises your CPC because Google sees poor ad-to-page relevance.`,
-                  where: 'Google Ads > Each Ad > Edit > Final URL field',
-                })
-              }
-
+              // Conversion tracking status
               if (pricingViewers > 0 && converters === 0) {
                 recs.push({
                   priority: 'high',
-                  category: 'Conversion Tracking',
-                  title: `${pricingViewers} pricing viewers but 0 conversions — set up conversion tracking`,
-                  instruction: 'You have pricing page visitors who aren\'t converting. Before spending on ads, set up Google Ads conversion tracking so you know which keywords and ads drive sales.\n\n1. In Google Ads: Tools > Conversions > + New > Website\n2. Name: "Course Purchase", Category: Purchase, Value: use your course price\n3. Copy the conversion tag\n4. Add it to your thank-you/success page after purchase\n\nWithout this, Google can\'t optimise your campaigns.',
+                  category: 'Conversions',
+                  title: `Conversion tracking wired but 0 conversions from ${pricingViewers} pricing viewers`,
+                  instruction: 'Conversion tracking is set up in the portal (gtag fires on enrol/purchase). Verify it\'s working:\n\n1. Go to Google Ads > Tools > Conversions\n2. Check each conversion action shows "Recording conversions" (not "No recent conversions")\n3. If unverified: use Google Tag Assistant (tagassistant.google.com) to test\n4. Visit your pricing page and click Enrol — check if the conversion fires in Tag Assistant\n\nWithout verified conversions, Google can\'t optimise toward purchases.',
                   where: 'Google Ads > Tools & Settings > Measurement > Conversions',
                 })
               }
 
-              // Budget recommendation
+              // Best performing ad
               recs.push({
                 priority: 'medium',
-                category: 'Budget',
-                title: 'Recommended starting budget',
-                instruction: 'Start with $10-20/day for the Course campaign and $5-10/day for Preseason. Run for 2 weeks to gather data before optimising. After 2 weeks, pause keywords with 0 conversions and high spend, and increase budget on keywords that convert.',
-                where: 'Google Ads > Each Campaign > Settings > Budget',
+                category: 'Top Performer',
+                title: 'C2/2A "Concussion Course Online" is your best ad — scale it',
+                instruction: 'This ad has 14 impressions, 1 click (7.1% CTR), "Average" quality. It\'s your only ad driving traffic.\n\nTo scale:\n1. Create 2 new ad variants in the same ad group with different headline combinations\n2. Keep the same Final URL (fix it to /pricing first)\n3. Let Google rotate and find the best variant\n4. After 100 clicks, pause the lowest-CTR variant',
+                where: 'Google Ads > C2 > 2A ad group > Ads > + New ad',
               })
 
-              // Location targeting
+              // Landing page alignment
+              if (bounce > 0.4) {
+                recs.push({
+                  priority: 'medium',
+                  category: 'Landing Pages',
+                  title: `${Math.round(bounce * 100)}% bounce rate — align ad copy to landing page`,
+                  instruction: 'High bounce = visitors don\'t find what the ad promised. Correct landing pages:\n\n• Course ads → /pricing (shows pricing cards, testimonials, FAQs)\n• SCAT6 free ads → /scat-mastery (free course signup)\n• Preseason ads → /preseason (register clinic, how it works)\n• CPD deadline ads → /pricing (emphasise CPD points)\n\nNever send ad traffic to the homepage. Each ad should land on the page that answers the user\'s search query.',
+                  where: 'Google Ads > Each Ad > Edit > Final URL',
+                })
+              }
+
+              // Weekly optimization checklist
               recs.push({
                 priority: 'medium',
-                category: 'Location Targeting',
-                title: 'Target Australia only',
-                instruction: 'Set location targeting to Australia. Your course is AHPRA-accredited (Australian Health Practitioner Regulation Agency) so targeting outside AU wastes spend. You can further narrow to specific states if you find certain regions convert better.',
-                where: 'Google Ads > Each Campaign > Settings > Locations',
+                category: 'Weekly Checklist',
+                title: 'Weekly optimization routine (5 min)',
+                instruction: 'Every Monday, check these in Google Ads:\n\n1. Search Terms report — add irrelevant terms as negatives\n2. Ad performance — pause ads with CTR < 2% after 200 impressions\n3. Keyword bids — increase bids on keywords with conversions, decrease on high-spend/no-conversion\n4. Budget pacing — are campaigns spending their daily budget? If under-spending, bids may be too low\n5. Quality Score — aim for 6+ on all keywords\n\nDon\'t optimise daily — Google needs 3-7 days of data per change.',
+                where: 'Google Ads > Overview > check each campaign',
               })
 
-              // Ad extensions
-              recs.push({
-                priority: 'medium',
-                category: 'Ad Extensions',
-                title: 'Add sitelink and callout extensions',
-                instruction: 'Sitelinks (add 4):\n• "Free SCAT6 Module" → /scat-mastery\n• "Baseline Testing Tool" → /preseason\n• "Course Pricing" → /pricing\n• "About the Course" → /\n\nCallout extensions:\n• AHPRA Accredited\n• Self-Paced Online\n• Start Free\n• Evidence-Based\n• Certificate Included\n\nThese increase your ad size and CTR at no extra cost.',
-                where: 'Google Ads > Ads & Extensions > Extensions > +',
-              })
-
-              // Audience suggestion based on preseason leads
+              // Audience suggestion
               if (preseasonLeadCount > 0) {
                 recs.push({
                   priority: 'low',
                   category: 'Audiences',
-                  title: `${preseasonLeadCount} preseason leads — create a remarketing audience`,
-                  instruction: 'People who used your baseline tool are warm leads for the paid course. Create a remarketing audience of /preseason page visitors and layer it onto your Course campaign as "Observation" (not Targeting) with a +20% bid adjustment. This increases your bid for people who already know your brand.',
-                  where: 'Google Ads > Tools > Audience Manager > + Custom Audience',
+                  title: `${preseasonLeadCount} preseason leads — retarget them for the paid course`,
+                  instruction: 'People who used your baseline tool are warm leads. Create a remarketing audience:\n\n1. Google Ads > Tools > Audience Manager > + Custom Segment\n2. "People who visited /preseason or /scat-mastery"\n3. Add this audience to C2 (Course Purchase) as "Observation" with +25% bid adjustment\n\nThis increases your bid when someone who already knows your brand searches for concussion CPD.',
+                  where: 'Google Ads > Tools > Audience Manager',
                 })
               }
 
-              const priorityOrder = { high: 0, medium: 1, low: 2 }
-              const priorityColor = { high: 'bg-rose-100 text-rose-700', medium: 'bg-amber-100 text-amber-700', low: 'bg-blue-100 text-blue-700' }
-              const priorityIcon = { high: Flame, medium: AlertTriangle, low: Lightbulb }
+              const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
+              const priorityColor = { critical: 'bg-red-100 text-red-700', high: 'bg-rose-100 text-rose-700', medium: 'bg-amber-100 text-amber-700', low: 'bg-blue-100 text-blue-700' }
+              const priorityIcon = { critical: AlertCircle, high: Flame, medium: AlertTriangle, low: Lightbulb }
 
               return (
                 <div className="space-y-6">
-                  <SectionTitle title="Google Ads Playbook" subtitle={`${recs.length} actionable steps based on your site data · Open Google Ads and follow each step`} />
+                  <SectionTitle title="Google Ads — Live Campaign Review" subtitle="Issues and optimizations based on your active ads" />
 
                   <a
                     href="https://ads.google.com"
@@ -1687,14 +1671,57 @@ export default function AnalyticsDashboard() {
                     Open Google Ads
                   </a>
 
+                  {/* Active Campaigns Overview */}
+                  <div className="card rounded-xl p-5">
+                    <h3 className="text-sm font-bold text-[var(--foreground)] mb-3">Active Campaigns</h3>
+                    <div className="space-y-3">
+                      {campaigns.map((c) => (
+                        <div key={c.name} className="flex items-start gap-3 text-sm">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-[var(--foreground)]">{c.name}</div>
+                            <div className="text-xs text-[var(--muted-foreground)]">
+                              {c.goal} · Landing: <code className="bg-[rgba(13,115,119,0.06)] px-1 rounded">{c.landingPage}</code>
+                            </div>
+                            <div className="text-xs text-[var(--muted-foreground)] mt-0.5">
+                              Ad groups: {c.adGroups.join(', ')}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Broken URLs Alert */}
+                  <div className="card rounded-xl p-5 border-2 border-red-200 bg-red-50/50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <AlertCircle size={16} className="text-red-600" />
+                      <h3 className="text-sm font-bold text-red-800">CRITICAL: {brokenUrls.length} Ads Have Broken Landing Pages</h3>
+                    </div>
+                    <p className="text-xs text-red-700 mb-3">These ads send visitors to 404 pages. Fix the Final URL in Google Ads:</p>
+                    <div className="space-y-2">
+                      {brokenUrls.map((u, i) => (
+                        <div key={i} className="flex items-start gap-2 text-xs">
+                          <span className="font-semibold text-red-700 shrink-0">{u.campaign}:</span>
+                          <span className="text-red-600">
+                            <code className="line-through opacity-60">{u.current}</code>
+                            {' → '}
+                            <code className="font-bold text-emerald-700">{u.correct}</code>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Optimization Recommendations */}
                   <div className="space-y-3">
                     {recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).map((rec, i) => {
                       const PIcon = priorityIcon[rec.priority]
                       return (
-                        <details key={i} className="card group" open={i < 3}>
+                        <details key={i} className="card group" open={i < 2}>
                           <summary className="flex items-start gap-3 cursor-pointer list-none p-4 hover:bg-[rgba(13,115,119,0.02)] rounded-xl transition-colors">
                             <div className="mt-0.5 shrink-0">
-                              <PIcon size={14} className={rec.priority === 'high' ? 'text-rose-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-blue-500'} />
+                              <PIcon size={14} className={rec.priority === 'critical' ? 'text-red-600' : rec.priority === 'high' ? 'text-rose-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-blue-500'} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
