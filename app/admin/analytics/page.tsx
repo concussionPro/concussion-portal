@@ -168,7 +168,7 @@ function generateDailyReport(
   funnelData: FunnelData | null,
   preseasonData: { totalClinics: number; totalBaselines: number } | null,
   channelsData: ChannelsData | null,
-  usersData: Array<{ accessLevel: string; createdAt: string }>,
+  usersData: Array<{ accessLevel: string; createdAt: string; signupSource?: string | null }>,
   period: string,
 ): string {
   const parts: string[] = []
@@ -246,14 +246,38 @@ function generateDailyReport(
   }
 
   // Users
-  const newToday = usersData.filter(u => new Date(u.createdAt).toDateString() === new Date().toDateString()).length
+  const now = new Date()
+  const periodDays = period === '24h' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : 90
+  const periodStart = new Date(now.getTime() - periodDays * 86400000)
+  const newSignups = usersData.filter(u => new Date(u.createdAt) >= periodStart)
+  const newToday = usersData.filter(u => new Date(u.createdAt).toDateString() === now.toDateString()).length
+  const freeUsers = usersData.filter(u => u.accessLevel === 'preview').length
   const paidUsers = usersData.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length
   const totalUsers = usersData.length
   if (totalUsers > 0) {
-    const userParts = [`${totalUsers} total user${totalUsers !== 1 ? 's' : ''}`]
-    if (paidUsers > 0) userParts.push(`${paidUsers} paid`)
-    if (newToday > 0) userParts.push(`${newToday} new today`)
+    const userParts = [`${totalUsers} total user${totalUsers !== 1 ? 's' : ''} (${freeUsers} free, ${paidUsers} paid)`]
+    if (newSignups.length > 0) userParts.push(`${newSignups.length} new signup${newSignups.length !== 1 ? 's' : ''} ${periodLabel}`)
+    if (newToday > 0) userParts.push(`${newToday} today`)
     parts.push(userParts.join(', ') + '.')
+
+    // Signup source breakdown for new signups
+    if (newSignups.length > 0) {
+      const sourceCounts: Record<string, number> = {}
+      for (const u of newSignups) {
+        const src = u.signupSource || 'unknown'
+        sourceCounts[src] = (sourceCounts[src] || 0) + 1
+      }
+      const sourceBreakdown = Object.entries(sourceCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([src, count]) => `${src}: ${count}`)
+        .join(', ')
+      parts.push(`Signup sources ${periodLabel}: ${sourceBreakdown}.`)
+    }
+
+    if (totalUsers > 5 && paidUsers > 0) {
+      const convRate = Math.round((paidUsers / totalUsers) * 100)
+      parts.push(`Free-to-paid conversion: ${convRate}%.`)
+    }
   }
 
   // Focus recommendation
@@ -277,6 +301,186 @@ function generateDailyReport(
   }
 
   return parts.join(' ') || `No data available for ${periodLabel}. Check back once traffic starts flowing.`
+}
+
+function buildUserInsights(
+  users: Array<{ accessLevel: string; createdAt: string; lastLogin: string | null; signupSource?: string | null; completedScatModules?: number }>,
+): Insight[] {
+  const insights: Insight[] = []
+  if (users.length === 0) return insights
+
+  const now = Date.now()
+  const DAY = 86400000
+
+  // --- Signup source breakdown ---
+  const sourceCounts: Record<string, number> = {}
+  for (const u of users) {
+    const src = u.signupSource || '(unknown)'
+    sourceCounts[src] = (sourceCounts[src] || 0) + 1
+  }
+  const sourceEntries = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])
+  if (sourceEntries.length > 0) {
+    const dominant = sourceEntries[0]
+    const dominantPct = (dominant[1] / users.length) * 100
+    const zeroSources = ['free-course', 'preseason', 'purchase'].filter(
+      s => !sourceCounts[s] || sourceCounts[s] === 0
+    )
+    const breakdown = sourceEntries.map(([s, c]) => `${s}: ${c}`).join(', ')
+
+    if (zeroSources.length > 0) {
+      insights.push({
+        type: 'warning',
+        category: 'users',
+        title: `No signups from: ${zeroSources.join(', ')}`,
+        detail: `Current breakdown: ${breakdown}. ${zeroSources.length > 1 ? 'Multiple channels' : `The ${zeroSources[0]} channel`} showing zero signups.`,
+        metric: `${sourceEntries.length} sources`,
+        action: `Investigate why ${zeroSources.join(' and ')} ${zeroSources.length > 1 ? 'are' : 'is'} not converting. Check the signup flow and CTAs for these paths.`,
+      })
+    } else if (dominantPct > 80) {
+      insights.push({
+        type: 'opportunity',
+        category: 'users',
+        title: `${dominant[0]} drives ${dominantPct.toFixed(0)}% of signups`,
+        detail: `Signup sources: ${breakdown}. Heavy reliance on a single channel.`,
+        metric: `${dominantPct.toFixed(0)}% from ${dominant[0]}`,
+        action: 'Diversify acquisition — invest in underperforming signup channels to reduce single-source risk.',
+      })
+    }
+  }
+
+  // --- Free-to-paid conversion rate ---
+  const freeUsers = users.filter(u => u.accessLevel === 'preview')
+  const paidUsers = users.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course')
+  if (users.length > 5) {
+    const convRate = users.length > 0 ? paidUsers.length / users.length : 0
+    if (convRate < 0.05) {
+      insights.push({
+        type: 'critical',
+        category: 'users',
+        title: `Free-to-paid conversion at ${(convRate * 100).toFixed(1)}%`,
+        detail: `${paidUsers.length} paid out of ${users.length} total users. ${freeUsers.length} free users haven't upgraded.`,
+        metric: `${(convRate * 100).toFixed(1)}% conversion`,
+        action: 'Review the upgrade path. Add nudges in the free course completion flow. Consider limited-time pricing or email nurture sequences targeting free users.',
+      })
+    } else if (convRate > 0.15) {
+      insights.push({
+        type: 'positive',
+        category: 'users',
+        title: `Strong ${(convRate * 100).toFixed(1)}% free-to-paid conversion`,
+        detail: `${paidUsers.length} paid out of ${users.length} total users. Your free-to-paid funnel is working well.`,
+        metric: `${(convRate * 100).toFixed(1)}% conversion`,
+        action: 'Focus on driving more top-of-funnel signups — the conversion engine is healthy.',
+      })
+    } else {
+      insights.push({
+        type: 'opportunity',
+        category: 'users',
+        title: `${(convRate * 100).toFixed(1)}% free-to-paid conversion`,
+        detail: `${paidUsers.length} paid, ${freeUsers.length} free users. Room to improve upsell.`,
+        metric: `${(convRate * 100).toFixed(1)}% conversion`,
+        action: 'Test stronger upgrade CTAs after SCAT module completion. Highlight paid-only content and CPD points.',
+      })
+    }
+  }
+
+  // --- User engagement (free users SCAT module completion) ---
+  if (freeUsers.length > 3) {
+    const zeroModules = freeUsers.filter(u => !u.completedScatModules || u.completedScatModules === 0).length
+    const someModules = freeUsers.filter(u => (u.completedScatModules || 0) > 0 && (u.completedScatModules || 0) < 5).length
+    const allModules = freeUsers.filter(u => (u.completedScatModules || 0) >= 5).length
+    const zeroPct = (zeroModules / freeUsers.length) * 100
+
+    if (zeroPct > 60) {
+      insights.push({
+        type: 'warning',
+        category: 'users',
+        title: `${zeroPct.toFixed(0)}% of free users completed 0 modules`,
+        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 5 SCAT modules.`,
+        metric: `${zeroPct.toFixed(0)}% inactive`,
+        action: 'Send a reminder email to users who signed up but never started. Add onboarding nudges. Check if the first module is too intimidating.',
+      })
+    } else if (allModules > 0) {
+      insights.push({
+        type: 'positive',
+        category: 'users',
+        title: `${allModules} free user${allModules !== 1 ? 's' : ''} completed all SCAT modules`,
+        detail: `Of ${freeUsers.length} free users: ${zeroModules} at 0, ${someModules} in progress, ${allModules} completed all 5. These completers are prime upgrade targets.`,
+        metric: `${allModules} completers`,
+        action: 'Target users who completed all free modules with a personalised upgrade email highlighting paid content they\'re missing.',
+      })
+    }
+  }
+
+  // --- Recent signups trend (this week vs last week) ---
+  const thisWeek = users.filter(u => now - new Date(u.createdAt).getTime() < 7 * DAY).length
+  const lastWeek = users.filter(u => {
+    const age = now - new Date(u.createdAt).getTime()
+    return age >= 7 * DAY && age < 14 * DAY
+  }).length
+
+  if (thisWeek > 0 || lastWeek > 0) {
+    if (lastWeek > 0) {
+      const growth = ((thisWeek - lastWeek) / lastWeek) * 100
+      if (growth > 30) {
+        insights.push({
+          type: 'positive',
+          category: 'users',
+          title: `Signups up ${growth.toFixed(0)}% week-on-week`,
+          detail: `${thisWeek} signups this week vs ${lastWeek} last week. Growth momentum is building.`,
+          metric: `+${growth.toFixed(0)}% WoW`,
+          action: 'Identify what changed — new ad, blog post, or referral? Double down on what\'s working.',
+        })
+      } else if (growth < -30 && lastWeek > 2) {
+        insights.push({
+          type: 'warning',
+          category: 'users',
+          title: `Signups down ${Math.abs(growth).toFixed(0)}% week-on-week`,
+          detail: `${thisWeek} signups this week vs ${lastWeek} last week. Acquisition is slowing.`,
+          metric: `${growth.toFixed(0)}% WoW`,
+          action: 'Check if ad campaigns are still running. Review traffic sources. Consider a new outreach push or content piece.',
+        })
+      }
+    } else if (thisWeek > 0) {
+      insights.push({
+        type: 'positive',
+        category: 'users',
+        title: `${thisWeek} new signup${thisWeek !== 1 ? 's' : ''} this week`,
+        detail: `First week with signup data. ${thisWeek} user${thisWeek !== 1 ? 's' : ''} registered.`,
+        metric: `${thisWeek} new`,
+        action: 'Keep momentum going — track which channels drove these signups.',
+      })
+    }
+  }
+
+  // --- Active users (logged in within last 7 days) ---
+  if (users.length > 5) {
+    const activeUsers = users.filter(u => u.lastLogin && (now - new Date(u.lastLogin).getTime()) < 7 * DAY).length
+    const activeRate = activeUsers / users.length
+
+    if (activeRate < 0.2) {
+      insights.push({
+        type: 'warning',
+        category: 'users',
+        title: `Only ${(activeRate * 100).toFixed(0)}% of users active in the last 7 days`,
+        detail: `${activeUsers} of ${users.length} users logged in this week. Most accounts are dormant.`,
+        metric: `${(activeRate * 100).toFixed(0)}% active`,
+        action: 'Send re-engagement emails to dormant users. Highlight new content or upcoming CPD deadlines. Consider push notifications.',
+      })
+    } else if (activeRate > 0.5) {
+      insights.push({
+        type: 'positive',
+        category: 'users',
+        title: `${(activeRate * 100).toFixed(0)}% of users active this week`,
+        detail: `${activeUsers} of ${users.length} users logged in within the last 7 days. Strong engagement.`,
+        metric: `${(activeRate * 100).toFixed(0)}% active`,
+        action: 'High engagement — ensure these active users see upgrade CTAs and referral prompts.',
+      })
+    }
+  }
+
+  const priority: Record<string, number> = { critical: 0, warning: 1, opportunity: 2, positive: 3 }
+  insights.sort((a, b) => priority[a.type] - priority[b.type])
+  return insights
 }
 
 const EVENT_LABELS: Record<string, string> = {
@@ -458,7 +662,7 @@ export default function AnalyticsDashboard() {
   const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; baselines: Array<{ clinicCode: string; clinicName?: string; athleteName?: string; submittedAt: string; symptomCount?: number; symptomSeverity?: number; cognitiveScore?: number }>; totalClinics: number; totalBaselines: number } | null>(null)
 
   // Users/emails data
-  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
+  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; signupSource?: string | null; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
   const [usersError, setUsersError] = useState<string | null>(null)
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
@@ -707,14 +911,20 @@ export default function AnalyticsDashboard() {
 
           <div className="p-5">
             {/* ── INSIGHTS ─────────────────────────────────────────── */}
-            {activeTab === 'insights' && (
+            {activeTab === 'insights' && (() => {
+              const userInsights = buildUserInsights(usersData)
+              const allInsights = [...insightsData, ...userInsights]
+              const priority: Record<string, number> = { critical: 0, warning: 1, opportunity: 2, positive: 3 }
+              allInsights.sort((a, b) => priority[a.type] - priority[b.type])
+
+              return (
               <div className="space-y-4">
-                <SectionTitle title="Marketing Insights" subtitle="Auto-generated recommendations based on your data. Read top to bottom — most urgent first." />
-                {insightsData.length === 0 ? (
+                <SectionTitle title="Marketing Insights" subtitle="Auto-generated recommendations based on your traffic and user data. Read top to bottom — most urgent first." />
+                {allInsights.length === 0 ? (
                   <EmptyState icon={Lightbulb} message="Not enough data yet — insights appear after a few days of traffic" />
                 ) : (
                   <div className="space-y-3">
-                    {insightsData.map((insight, i) => {
+                    {allInsights.map((insight, i) => {
                       const borderColor = insight.type === 'critical' ? 'border-rose-300 bg-rose-50/50'
                         : insight.type === 'warning' ? 'border-amber-300 bg-amber-50/50'
                         : insight.type === 'opportunity' ? 'border-blue-300 bg-blue-50/50'
@@ -760,7 +970,8 @@ export default function AnalyticsDashboard() {
                   </div>
                 )}
               </div>
-            )}
+              )
+            })()}
 
             {/* ── OVERVIEW ─────────────────────────────────────────── */}
             {activeTab === 'overview' && (
@@ -1533,115 +1744,116 @@ export default function AnalyticsDashboard() {
 
             {/* ── Google Ads ───────────────────────────────────────────── */}
             {activeTab === 'google-ads' && (() => {
-              const bounce = stats ? stats.bounces.value / Math.max(stats.uniques.value, 1) : 0
-              const pricingViewers = retargetingData?.summary.pricingViewers ?? 0
-              const converters = retargetingData?.summary.converters ?? 0
-              const preseasonLeadCount = retargetingData?.preseasonLeads?.length ?? 0
+              // Live Paid Search data from channelsData
+              const paidSearch = channelsData?.channels?.find(c => c.channel === 'Paid Search')
+              const paidSessions = paidSearch?.sessions ?? 0
+              const paidPageviews = paidSearch?.pageviews ?? 0
+              const paidBounce = paidSearch?.bounceRate ?? 0
+              const paidAvgDuration = paidSearch?.avgDuration ?? 0
+              const paidConversions = paidSearch?.conversions ?? 0
+              const paidIntentRate = paidSearch?.intentRate ?? 0
+              const paidPricingViews = paidSearch?.pricingViews ?? 0
 
-              // Active campaign data — matches live Google Ads account
-              const campaigns = [
+              // Filter UTM data for google/cpc sources
+              const googleCampaigns = channelsData?.utmCampaigns ?? []
+              const googleSources = (channelsData?.utmSources ?? []).filter(
+                s => s.name.toLowerCase().includes('google') || s.name.toLowerCase().includes('cpc')
+              )
+
+              // Configurable active campaigns
+              const ACTIVE_CAMPAIGNS = [
                 {
                   name: 'C1 - Preseason Sports Clinic',
                   adGroups: ['1A - Preseason Baseline Testing', '1B - Sports Clinic Owner Intent'],
-                  status: 'active',
                   goal: 'Lead gen (free baseline tool)',
                   landingPage: '/preseason',
                 },
                 {
                   name: 'C2 - Course Purchase Intent',
                   adGroups: ['2A - Concussion Course Direct', '2B - SCAT6 Purchase Intent', '2C - CPD Deadline Intent'],
-                  status: 'active',
                   goal: 'Course sales ($497)',
                   landingPage: '/pricing',
                 },
                 {
                   name: 'C3 - SCAT6 Free Lead Capture',
                   adGroups: ['3 - SCAT6 Free Lead Capture'],
-                  status: 'active',
                   goal: 'Free course signup → nurture → upsell',
                   landingPage: '/scat-mastery',
                 },
               ]
 
-              // Optimization recommendations
-              const recs: Array<{ priority: 'high' | 'medium' | 'low'; category: string; title: string; instruction: string; where: string }> = []
+              // Dynamic recommendations based on actual data
+              const recs: Array<{ priority: 'high' | 'medium' | 'low'; title: string; detail: string; action: string }> = []
 
-              // Ad quality issues
-              recs.push({
-                priority: 'high',
-                category: 'Ad Quality',
-                title: '5 of 10 ads rated "Poor" quality — pause or rewrite',
-                instruction: 'Poor quality ads get fewer impressions and higher CPC. Pause these ads and create new variants:\n\nPoor ads to pause:\n• C1/1A: "Free SCAT6 Baseline Tool | Athletes Complete on Device"\n• C1/1B: "Concussion Baseline Clinics | Athletes Self-Test"\n• C2/2B: "SCAT6 With Confidence | SCAT6 and SCOAT6 Online Course"\n• C3/3: "Free SCAT6 and SCOAT6 Forms | Auto-Scoring Fillable PDFs"\n• C3/3: "Free SCAT6 Clinical Training | 2 AHPRA CPD Points"\n\nFor each, create a new ad with:\n- More specific headlines (mention price, CPD points, "Australia")\n- Stronger CTAs in descriptions\n- Landing URL matching the actual page',
-                where: 'Google Ads > Ads > Select poor ads > Pause, then create new ads',
-              })
-
-              // C1 Preseason getting 0 impressions
-              recs.push({
-                priority: 'high',
-                category: 'C1 Preseason',
-                title: 'C1 Preseason campaign has 0 impressions — check keywords and bids',
-                instruction: 'The Preseason campaign has served 0 impressions. Likely causes:\n\n1. Keywords too narrow — check Search Terms report for actual queries\n2. Bids too low — increase to $3-5 AUD for preseason keywords\n3. Budget depleted by other campaigns — ensure C1 has its own budget\n4. Ad disapprovals — check the Ads page for policy warnings\n\nPreseason is timely (March = footy pre-season). If this campaign can\'t show ads, you\'re missing your best window.',
-                where: 'Google Ads > C1 campaign > Keywords > Check status column',
-              })
-
-              // Conversion tracking status
-              if (pricingViewers > 0 && converters === 0) {
+              if (paidSessions === 0) {
                 recs.push({
                   priority: 'high',
-                  category: 'Conversions',
-                  title: `Conversion tracking wired but 0 conversions from ${pricingViewers} pricing viewers`,
-                  instruction: 'Conversion tracking is set up in the portal (gtag fires on enrol/purchase). Verify it\'s working:\n\n1. Go to Google Ads > Tools > Conversions\n2. Check each conversion action shows "Recording conversions" (not "No recent conversions")\n3. If unverified: use Google Tag Assistant (tagassistant.google.com) to test\n4. Visit your pricing page and click Enrol — check if the conversion fires in Tag Assistant\n\nWithout verified conversions, Google can\'t optimise toward purchases.',
-                  where: 'Google Ads > Tools & Settings > Measurement > Conversions',
+                  title: 'No Google Ads traffic detected',
+                  detail: 'Zero paid search sessions this period. Campaigns may be paused, budgets exhausted, or tracking broken.',
+                  action: 'Check campaign status in Google Ads. Verify UTM parameters are set on all ad URLs. Ensure budget is allocated.',
                 })
               }
 
-              // Best performing ad
-              recs.push({
-                priority: 'medium',
-                category: 'Top Performer',
-                title: 'C2/2A "Concussion Course Online" is your best ad — scale it',
-                instruction: 'This ad has 14 impressions, 1 click (7.1% CTR), "Average" quality. It\'s your only ad driving traffic.\n\nTo scale:\n1. Create 2 new ad variants in the same ad group with different headline combinations\n2. Keep the same Final URL (fix it to /pricing first)\n3. Let Google rotate and find the best variant\n4. After 100 clicks, pause the lowest-CTR variant',
-                where: 'Google Ads > C2 > 2A ad group > Ads > + New ad',
-              })
-
-              // Landing page alignment
-              if (bounce > 0.4) {
+              if (paidSessions > 0 && paidBounce > 0.5) {
                 recs.push({
-                  priority: 'medium',
-                  category: 'Landing Pages',
-                  title: `${Math.round(bounce * 100)}% bounce rate — align ad copy to landing page`,
-                  instruction: 'High bounce = visitors don\'t find what the ad promised. Correct landing pages:\n\n• Course ads → /pricing (shows pricing cards, testimonials, FAQs)\n• SCAT6 free ads → /scat-mastery (free course signup)\n• Preseason ads → /preseason (register clinic, how it works)\n• CPD deadline ads → /pricing (emphasise CPD points)\n\nNever send ad traffic to the homepage. Each ad should land on the page that answers the user\'s search query.',
-                  where: 'Google Ads > Each Ad > Edit > Final URL',
+                  priority: 'high',
+                  title: `Ad traffic bouncing at ${fmtPct(paidBounce)}`,
+                  detail: `${fmtPct(paidBounce)} of paid visitors leave after one page. Ad copy may not match landing page content.`,
+                  action: 'Review landing page alignment. Ensure ad keywords match page content. Check mobile page speed. Consider negative keywords for irrelevant queries.',
                 })
               }
 
-              // Weekly optimization checklist
-              recs.push({
-                priority: 'medium',
-                category: 'Weekly Checklist',
-                title: 'Weekly optimization routine (5 min)',
-                instruction: 'Every Monday, check these in Google Ads:\n\n1. Search Terms report — add irrelevant terms as negatives\n2. Ad performance — pause ads with CTR < 2% after 200 impressions\n3. Keyword bids — increase bids on keywords with conversions, decrease on high-spend/no-conversion\n4. Budget pacing — are campaigns spending their daily budget? If under-spending, bids may be too low\n5. Quality Score — aim for 6+ on all keywords\n\nDon\'t optimise daily — Google needs 3-7 days of data per change.',
-                where: 'Google Ads > Overview > check each campaign',
-              })
-
-              // Audience suggestion
-              if (preseasonLeadCount > 0) {
+              if (paidSessions > 0 && paidIntentRate > 0.15) {
                 recs.push({
                   priority: 'low',
-                  category: 'Audiences',
-                  title: `${preseasonLeadCount} preseason leads — retarget them for the paid course`,
-                  instruction: 'People who used your baseline tool are warm leads. Create a remarketing audience:\n\n1. Google Ads > Tools > Audience Manager > + Custom Segment\n2. "People who visited /preseason or /scat-mastery"\n3. Add this audience to C2 (Course Purchase) as "Observation" with +25% bid adjustment\n\nThis increases your bid when someone who already knows your brand searches for concussion CPD.',
-                  where: 'Google Ads > Tools > Audience Manager',
+                  title: `Ads driving quality traffic — ${fmtPct(paidIntentRate)} intent rate`,
+                  detail: `${fmtPct(paidIntentRate)} of paid visitors view pricing. Your ads are attracting qualified buyers.`,
+                  action: 'Consider increasing ad budget on high-performing campaigns. This intent rate justifies higher bids.',
                 })
               }
+
+              if (paidConversions > 0) {
+                recs.push({
+                  priority: 'low',
+                  title: `${paidConversions} conversion${paidConversions !== 1 ? 's' : ''} from paid search`,
+                  detail: `Paid search generated ${paidConversions} conversion${paidConversions !== 1 ? 's' : ''} this period. Tracking is working.`,
+                  action: 'Optimise for ROAS — increase bids on converting keywords, pause high-spend zero-conversion keywords.',
+                })
+              }
+
+              if (paidPricingViews > 0 && paidConversions === 0) {
+                recs.push({
+                  priority: 'medium',
+                  title: `${paidPricingViews} pricing viewer${paidPricingViews !== 1 ? 's' : ''} from ads but 0 conversions`,
+                  detail: 'Paid traffic is reaching the pricing page but not converting. The offer or pricing may need adjustment.',
+                  action: 'Review pricing page for objections. Add testimonials, money-back guarantee, or payment plans. Check checkout flow on mobile.',
+                })
+              }
+
+              if (paidSessions > 0 && paidIntentRate < 0.05) {
+                recs.push({
+                  priority: 'medium',
+                  title: `Low intent from ads — only ${fmtPct(paidIntentRate)} view pricing`,
+                  detail: `Most paid visitors never reach the pricing page. Landing pages may not be driving purchase intent.`,
+                  action: 'Add clear CTAs to pricing on landing pages. Ensure ad keywords target purchase-intent queries rather than informational ones.',
+                })
+              }
+
+              // Weekly checklist
+              const weeklyChecklist = [
+                'Review Search Terms report — add irrelevant terms as negatives',
+                'Pause ads with CTR < 2% after 200+ impressions',
+                'Increase bids on converting keywords, decrease on high-spend/no-conversion',
+                'Check budget pacing — under-spending may mean bids are too low',
+                'Aim for Quality Score 6+ on all keywords',
+              ]
 
               const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
               const priorityColor: Record<string, string> = { high: 'bg-rose-100 text-rose-700', medium: 'bg-amber-100 text-amber-700', low: 'bg-blue-100 text-blue-700' }
-              const priorityIcon: Record<string, typeof Flame> = { high: Flame, medium: AlertTriangle, low: Lightbulb }
 
               return (
                 <div className="space-y-6">
-                  <SectionTitle title="Google Ads — Live Campaign Review" subtitle="Issues and optimizations based on your active ads" />
+                  <SectionTitle title="Google Ads — Paid Search Performance" subtitle="Live metrics from your paid search traffic this period" />
 
                   <a
                     href="https://ads.google.com"
@@ -1653,11 +1865,128 @@ export default function AnalyticsDashboard() {
                     Open Google Ads
                   </a>
 
+                  {/* Section A: Paid Search Performance Summary */}
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="icon-container w-9 h-9"><Search size={16} className="text-[var(--accent)]" /></div>
+                      </div>
+                      <p className="stat-value">{fmtNum(paidSessions)}</p>
+                      <p className="stat-label mt-1">Paid Sessions</p>
+                    </div>
+                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="icon-container w-9 h-9"><Eye size={16} className="text-[var(--accent)]" /></div>
+                      </div>
+                      <p className="stat-value">{fmtNum(paidPageviews)}</p>
+                      <p className="stat-label mt-1">Pageviews</p>
+                    </div>
+                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="icon-container w-9 h-9"><TrendingDown size={16} className={paidBounce > 0.5 ? 'text-rose-500' : 'text-[var(--accent)]'} /></div>
+                      </div>
+                      <p className="stat-value">{fmtPct(paidBounce)}</p>
+                      <p className="stat-label mt-1">Bounce Rate</p>
+                    </div>
+                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="icon-container w-9 h-9"><Clock size={16} className="text-[var(--accent)]" /></div>
+                      </div>
+                      <p className="stat-value">{fmtDuration(paidAvgDuration)}</p>
+                      <p className="stat-label mt-1">Avg Duration</p>
+                    </div>
+                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="icon-container w-9 h-9"><Target size={16} className={paidIntentRate > 0.1 ? 'text-emerald-600' : 'text-[var(--accent)]'} /></div>
+                      </div>
+                      <p className="stat-value">{fmtPct(paidIntentRate)}</p>
+                      <p className="stat-label mt-1">Intent Rate</p>
+                    </div>
+                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="icon-container w-9 h-9"><CheckCircle2 size={16} className={paidConversions > 0 ? 'text-emerald-600' : 'text-[var(--accent)]'} /></div>
+                      </div>
+                      <p className="stat-value">{paidConversions}</p>
+                      <p className="stat-label mt-1">Conversions</p>
+                    </div>
+                  </div>
+
+                  {/* Section B: Campaign & Source Breakdown */}
+                  {googleCampaigns.length > 0 && (
+                    <div>
+                      <SectionTitle title="Campaign Performance" subtitle="UTM campaigns with sessions, conversions, and pricing views" />
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                              <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Campaign</th>
+                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Sessions</th>
+                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Bounce</th>
+                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Pricing</th>
+                              <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Conv.</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {googleCampaigns.map((c) => (
+                              <tr key={c.name} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                                <td className="py-2.5 pr-4 font-semibold text-[var(--foreground)] truncate max-w-[200px]" title={c.name}>{c.name}</td>
+                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--accent)] font-semibold">{fmtNum(c.sessions)}</td>
+                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{fmtPct(c.bounceRate)}</td>
+                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{c.pricingViews}</td>
+                                <td className="py-2.5 pl-2 text-right tabular-nums font-semibold text-emerald-600">{c.conversions}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {googleSources.length > 0 && (
+                    <div>
+                      <SectionTitle title="Google / CPC Sources" subtitle="Traffic from Google Ads UTM sources" />
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                              <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Source</th>
+                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Sessions</th>
+                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Pricing</th>
+                              <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Conv.</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {googleSources.map((s) => (
+                              <tr key={s.name} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                                <td className="py-2.5 pr-4 font-semibold text-[var(--foreground)]">{s.name}</td>
+                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--accent)]">{fmtNum(s.sessions)}</td>
+                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{s.pricingViews}</td>
+                                <td className="py-2.5 pl-2 text-right tabular-nums font-semibold text-emerald-600">{s.conversions}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {paidSessions === 0 && googleCampaigns.length === 0 && (
+                    <div className="rounded-xl border-2 border-amber-200 bg-amber-50/50 p-5">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-bold text-amber-800">No paid search data this period</p>
+                          <p className="text-sm text-amber-700 mt-1">Either campaigns are paused, UTM tracking is missing, or no ads have served. Check Google Ads account status and ensure all ad URLs include UTM parameters.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Active Campaigns Overview */}
                   <div className="card rounded-xl p-5">
                     <h3 className="text-sm font-bold text-[var(--foreground)] mb-3">Active Campaigns</h3>
                     <div className="space-y-3">
-                      {campaigns.map((c) => (
+                      {ACTIVE_CAMPAIGNS.map((c) => (
                         <div key={c.name} className="flex items-start gap-3 text-sm">
                           <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                           <div className="flex-1 min-w-0">
@@ -1674,37 +2003,51 @@ export default function AnalyticsDashboard() {
                     </div>
                   </div>
 
-                  {/* Optimization Recommendations */}
-                  <div className="space-y-3">
-                    {recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).map((rec, i) => {
-                      const PIcon = priorityIcon[rec.priority]
-                      return (
-                        <details key={i} className="card group" open={i < 2}>
-                          <summary className="flex items-start gap-3 cursor-pointer list-none p-4 hover:bg-[rgba(13,115,119,0.02)] rounded-xl transition-colors">
-                            <div className="mt-0.5 shrink-0">
-                              <PIcon size={14} className={rec.priority === 'high' ? 'text-rose-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-blue-500'} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorityColor[rec.priority]}`}>
-                                  {rec.priority}
-                                </span>
-                                <span className="text-xs font-semibold text-[var(--muted-foreground)]">{rec.category}</span>
+                  {/* Section C: Dynamic Recommendations */}
+                  {recs.length > 0 && (
+                    <div>
+                      <SectionTitle title="Recommendations" subtitle="Data-driven suggestions based on your paid search performance" />
+                      <div className="space-y-3">
+                        {recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).map((rec, i) => (
+                          <div key={i} className={`rounded-xl border-2 p-5 ${
+                            rec.priority === 'high' ? 'border-rose-300 bg-rose-50/50'
+                              : rec.priority === 'medium' ? 'border-amber-300 bg-amber-50/50'
+                              : 'border-emerald-300 bg-emerald-50/50'
+                          }`}>
+                            <div className="flex items-start gap-3">
+                              <div className="shrink-0 mt-0.5">
+                                {rec.priority === 'high' ? <Flame size={18} className="text-rose-600" /> : rec.priority === 'medium' ? <AlertTriangle size={18} className="text-amber-600" /> : <CheckCircle2 size={18} className="text-emerald-600" />}
                               </div>
-                              <p className="text-sm font-semibold text-[var(--foreground)] mt-1">{rec.title}</p>
-                            </div>
-                            <ChevronDown size={14} className="text-[var(--muted-foreground)] mt-1 shrink-0 transition-transform group-open:rotate-180" />
-                          </summary>
-                          <div className="px-4 pb-4 pt-0 ml-7">
-                            <pre className="text-xs text-[var(--foreground)] whitespace-pre-wrap font-sans leading-relaxed bg-[rgba(13,115,119,0.03)] rounded-lg p-4 mb-3">{rec.instruction}</pre>
-                            <div className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
-                              <ArrowRight size={11} />
-                              <span className="font-medium">{rec.where}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${priorityColor[rec.priority]}`}>{rec.priority.toUpperCase()}</span>
+                                </div>
+                                <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">{rec.title}</h3>
+                                <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-3">{rec.detail}</p>
+                                <div className="rounded-lg bg-white/80 border border-[rgba(13,115,119,0.1)] p-3">
+                                  <p className="text-xs font-semibold text-[var(--accent)] mb-1">What to do:</p>
+                                  <p className="text-sm text-[var(--foreground)] leading-relaxed">{rec.action}</p>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </details>
-                      )
-                    })}
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section D: Weekly Optimization Checklist */}
+                  <div className="card rounded-xl p-5">
+                    <h3 className="text-sm font-bold text-[var(--foreground)] mb-3">Weekly Optimization Checklist</h3>
+                    <p className="text-xs text-[var(--muted-foreground)] mb-3">Run through every Monday — don't optimise daily, Google needs 3-7 days per change.</p>
+                    <div className="space-y-2">
+                      {weeklyChecklist.map((item, i) => (
+                        <label key={i} className="flex items-start gap-2.5 text-sm cursor-pointer group">
+                          <input type="checkbox" className="mt-0.5 accent-[var(--accent)]" />
+                          <span className="text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors">{item}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )
