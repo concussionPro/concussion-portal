@@ -381,7 +381,7 @@ export default function PreviewPage() {
               <div className="space-y-3">
                 {[
                   { label: '14 CPD Points', desc: '8 online + 6 workshop' },
-                  { label: 'Lifetime Access', desc: 'All modules, updates included' },
+                  { label: 'Lifetime Access', desc: 'Content updated regularly' },
                   { label: 'Clinical Toolkit', desc: 'Flowcharts, templates, forms' },
                   { label: 'Flexible Dates', desc: `Next workshops ${CONFIG.WORKSHOP.NEXT_ROUND}` },
                 ].map(item => (

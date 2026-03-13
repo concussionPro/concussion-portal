@@ -38,11 +38,11 @@ function PricingContent() {
     },
     {
       q: 'What if I can\'t make my workshop date?',
-      a: 'No problem — you can reschedule to any future workshop date or location at no extra cost. There\'s no expiry. Once enrolled, you have lifetime access to the online modules and full flexibility on when you attend the hands-on day.',
+      a: 'No problem — you can reschedule to any future workshop date or location at no extra cost. There\'s no expiry. Once enrolled, you have lifetime access to the online portal — content is updated and added to regularly as concussion guidelines evolve, so your knowledge stays current. Full flexibility on when you attend the hands-on day.',
     },
     {
       q: "How are workshop dates confirmed?",
-      a: "We run workshops once a city reaches enough registrations — this ensures a great hands-on learning environment. Q1 2026 workshops ran across all three cities. For the next round (Jul–Sep 2026), we'll confirm your date and venue 6 weeks in advance. Registered participants choose their preferred date first.",
+      a: "We run workshops once a city reaches enough registrations — this ensures a great hands-on learning environment. Q1 2026 workshops ran across all three cities. For the next round (Jun–Aug 2026), we'll confirm your date and venue 6 weeks in advance. Registered participants choose their preferred date first.",
     },
     {
       q: 'How much time does the course take?',

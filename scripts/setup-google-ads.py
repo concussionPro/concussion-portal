@@ -662,7 +662,7 @@ CAMPAIGNS = [
                             "Hands-On SCAT6 · VOMS · BESS Day",
                             "6 More CPD Points | 14 Total",
                             "Theory + Practice = Full Competence",
-                            "Jul-Sep 2026 | Syd · Melb · Byron",
+                            "Jun-Aug 2026 | Syd · Melb · Byron",
                         ],
                         "long_headline": "You've Done the Theory. Now Practice SCAT6, VOMS and BESS With Expert Feedback — 6 More CPD Points, 14 Total.",
                         "descriptions": [
@@ -681,7 +681,7 @@ CAMPAIGNS = [
                             "Sydney · Melbourne · Byron Bay",
                             "6 CPD Points | Hands-On Training",
                         ],
-                        "long_headline": "Limited to 12 Clinicians. Hands-On SCAT6, VOMS & BESS Training With Expert Feedback. Jul-Sep 2026 — Sydney, Melbourne, Byron Bay.",
+                        "long_headline": "Limited to 12 Clinicians. Hands-On SCAT6, VOMS & BESS Training With Expert Feedback. Jun-Aug 2026 — Sydney, Melbourne, Byron Bay.",
                         "descriptions": [
                             "Small group, supervised practice. SCAT6, Child SCAT6, VOMS, BESS, cervicogenic assessment — all hands-on with live feedback and case simulations. 6 CPD points.",
                             "Complete your concussion training. 8 online modules done — add the practical day for 14 AHPRA CPD hours total. Locations: Sydney, Melbourne, Byron Bay.",
@@ -702,7 +702,7 @@ SITELINKS = [
     {"text": "Course Modules & Preview", "url": f"{PORTAL_URL}/preview",
      "desc1": "See all 8 clinical modules", "desc2": "Evidence-based concussion protocols"},
     {"text": "Hands-On Workshop", "url": f"{PORTAL_URL}/in-person",
-     "desc1": "6 CPD pts · Syd · Melb · Byron Bay", "desc2": "Max 12 per group — Jul-Sep 2026"},
+     "desc1": "6 CPD pts · Syd · Melb · Byron Bay", "desc2": "Max 12 per group — Jun-Aug 2026"},
     {"text": "Pricing & Enrol", "url": f"{PORTAL_URL}/pricing",
      "desc1": "Online $497 · Full bundle $1,190", "desc2": "14 AHPRA CPD points total"},
     {"text": "SCAT6 & SCOAT6 Forms", "url": f"{PORTAL_URL}/scat-forms",

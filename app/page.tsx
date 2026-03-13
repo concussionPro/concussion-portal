@@ -204,7 +204,7 @@ export default function HomePage() {
                   {[
                     '8 comprehensive modules with interactive quizzes',
                     'Evidence-based protocols and clinical frameworks',
-                    'Lifetime access to course materials',
+                    'Lifetime access — content updated and added to regularly',
                     'Downloadable resources and flowcharts',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2.5 text-[13px] text-[var(--muted-foreground)]">

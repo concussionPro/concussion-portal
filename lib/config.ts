@@ -56,7 +56,7 @@ export const CONFIG = {
     CAPACITY_PER_COURSE: 12,
     EARLY_BIRD_SEAT_THRESHOLD: 6, // 50% — early bird ends when this many seats sold
     EARLY_BIRD_DAYS_BEFORE: 7,    // Early bird ends this many days before course date
-    NEXT_ROUND: 'Jul–Sep 2026',   // Approximate window for next TBA workshops
+    NEXT_ROUND: 'Jun–Aug 2026',   // Approximate window for next TBA workshops
     Q1_COMPLETED: true,           // Q1 2026 workshops ran — used for social proof
   },
 
@@ -68,7 +68,7 @@ export const CONFIG = {
 
   // Early Bird Pricing Deadline
   // Computed: 7 days before the nearest confirmed course date
-  EARLY_BIRD_DEADLINE: new Date('2026-07-15T23:59:59'),
+  EARLY_BIRD_DEADLINE: new Date('2026-06-15T23:59:59'),
 
   // SEO Metadata
   SEO: {

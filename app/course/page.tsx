@@ -32,7 +32,7 @@ const included = [
   { icon: Award, title: '14 CPD Points', desc: 'AHPRA aligned' },
   { icon: FileText, title: 'Clinical Resources', desc: 'Templates & frameworks' },
   { icon: Users, title: 'Expert Support', desc: 'Direct instructor access' },
-  { icon: Brain, title: 'Lifetime Access', desc: 'Ongoing material updates' },
+  { icon: Brain, title: 'Lifetime Access', desc: 'Content updated regularly' },
 ]
 
 export default function CoursePage() {
@@ -227,8 +227,9 @@ export default function CoursePage() {
                   Total Flexibility — No Expiry
                 </h3>
                 <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-4">
-                  Life gets busy. Once enrolled, you get lifetime access to all online modules and can
-                  reschedule your workshop to any future date or location at no extra cost. Start the
+                  Life gets busy. Once enrolled, you get lifetime access to all online modules — content is
+                  updated and added to regularly as guidelines evolve, so your knowledge stays current.
+                  Reschedule your workshop to any future date or location at no extra cost. Start the
                   online content immediately and attend the hands-on day when it suits you.
                 </p>
                 <div className="flex flex-wrap gap-2 md:gap-3 justify-start">

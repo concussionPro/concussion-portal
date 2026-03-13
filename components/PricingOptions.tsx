@@ -362,7 +362,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
             <div className="mb-3">
               <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · Content updated regularly · 8 CPD pts</p>
             </div>
 
             <ul className="space-y-1.5 mb-4 flex-1">
@@ -549,7 +549,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
             </div>
-            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · 8 CPD points</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
           </div>
 
           {/* Mobile-only CTA — visible above the fold on phones */}
@@ -577,7 +577,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             {[
               '8 online modules (8 CPD points)',
               'Complete at your own pace — no deadlines',
-              'Lifetime access to all modules',
+              'Lifetime access — content updated regularly',
               'Clinical Toolkit & downloadable resources',
               'Reference Repository (130+ articles)',
               'Digital certificate',
