@@ -187,6 +187,14 @@ export function trackShopClick(source: string, additionalData: Record<string, an
 
 const GA_CONVERSION_ID = 'AW-17984048021'
 
+// Google Ads conversion labels — safe to hardcode (public, baked into client JS)
+const CONVERSION_LABELS = {
+  PURCHASE: 'xgAlCJmUyIccEJWXu_9C',
+  ENROL_CLICK: 'TVzUCLHT0IccEJWXu_9C',
+  FREE_COMPLETE: 'fcoOCLTT0IccEJWXu_9C',
+  INTEREST: '74x1CLfT0IccEJWXu_9C',
+}
+
 /** SHA-256 hash a string (for enhanced conversions — Google requires hashed PII) */
 async function sha256(str: string): Promise<string> {
   const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str.trim().toLowerCase()))
@@ -215,7 +223,7 @@ export async function trackLeadConversion(label: string, value: number, email?: 
  * Track interest registration as a lead
  */
 export function trackInterestRegistration(city: string, email: string) {
-  trackLeadConversion(process.env.NEXT_PUBLIC_INTEREST_CONVERSION_LABEL || 'interest_registration', 15, email)
+  trackLeadConversion(CONVERSION_LABELS.INTEREST, 15, email)
   trackEvent('interest_registration', { city })
 }
 
@@ -223,7 +231,7 @@ export function trackInterestRegistration(city: string, email: string) {
  * Track free course completion (higher value than signup)
  */
 export function trackFreeCourseCompletion(email: string) {
-  trackLeadConversion(process.env.NEXT_PUBLIC_FREE_COMPLETE_CONVERSION_LABEL || 'free_course_complete', 40, email)
+  trackLeadConversion(CONVERSION_LABELS.FREE_COMPLETE, 40, email)
   trackEvent('free_course_complete', {})
 }
 
@@ -233,7 +241,7 @@ export function trackFreeCourseCompletion(email: string) {
 export async function trackPurchaseConversion(value: number, transactionId: string, email?: string) {
   if (typeof window === 'undefined' || !window.gtag) return
   const params: Record<string, unknown> = {
-    send_to: `${GA_CONVERSION_ID}/${process.env.NEXT_PUBLIC_PURCHASE_CONVERSION_LABEL || 'purchase'}`,
+    send_to: `${GA_CONVERSION_ID}/${CONVERSION_LABELS.PURCHASE}`,
     value,
     currency: 'AUD',
     transaction_id: transactionId,

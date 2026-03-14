@@ -55,7 +55,7 @@ export default function RegisterPage() {
         })
         // Fire Google Ads conversion for preseason registration
         trackLeadConversion(
-          process.env.NEXT_PUBLIC_INTEREST_CONVERSION_LABEL || 'preseason_register',
+          '74x1CLfT0IccEJWXu_9C',
           75,
           email.toLowerCase()
         )

@@ -72,7 +72,7 @@ export default function SCAT6DownloadPage() {
 
       if (data.success) {
         // Fire gtag lead conversion with value + enhanced data
-        trackLeadConversion(process.env.NEXT_PUBLIC_ENROL_CONVERSION_LABEL || 'scat6_form_download', 10, email.trim().toLowerCase())
+        trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 10, email.trim().toLowerCase())
         // Trigger browser download immediately
         triggerDownload()
         setSuccess(true)

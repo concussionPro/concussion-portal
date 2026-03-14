@@ -232,7 +232,7 @@ export function AnalyticsProvider({
       // Google Ads conversion — hardcoded to avoid missing env var issues
       trackGtagConversion(
         'AW-17984048021',
-        process.env.NEXT_PUBLIC_ENROL_CONVERSION_LABEL || 'enrol_click',
+        'TVzUCLHT0IccEJWXu_9C',
         undefined,
         undefined
       );

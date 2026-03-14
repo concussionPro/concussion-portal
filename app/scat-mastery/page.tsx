@@ -64,7 +64,7 @@ export default function SCATMasteryPage() {
 
       if (data.success) {
         // Fire gtag lead conversion with value + enhanced data
-        trackLeadConversion(process.env.NEXT_PUBLIC_ENROL_CONVERSION_LABEL || 'scat_mastery_signup', 25, email.trim().toLowerCase())
+        trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 25, email.trim().toLowerCase())
         setSuccessData(data)
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
