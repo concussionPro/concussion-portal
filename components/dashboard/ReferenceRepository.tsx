@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BookOpen, Lock, Search, ExternalLink, FileText, Award, Star } from 'lucide-react'
+import { BookOpen, Lock, Search, ExternalLink, FileText, Award, Star, Sparkles } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { trackShopClick, trackEvent, trackSearch } from '@/lib/analytics'
 
@@ -14,6 +14,7 @@ interface Reference {
   doi?: string
   url?: string
   category: string
+  isNew?: boolean // Added in March 2026 update
 }
 
 const references: Reference[] = [
@@ -1219,6 +1220,88 @@ const references: Reference[] = [
     doi: '10.2217/cnc.15.8',
     category: 'Return to Activity'
   },
+
+  // ─── NEW & EVOLVING EVIDENCE (March 2026 update) ───────────────────────────
+  {
+    id: 'broglio2024_bridge',
+    authors: 'Broglio, S. P., Register-Mihalik, J. K., Guskiewicz, K. M., Leddy, J. J., Merriman, A., & Valovich McLeod, T. C.',
+    year: '2024',
+    title: 'National Athletic Trainers\' Association Bridge Statement: Management of Sport-Related Concussion',
+    journal: 'Journal of Athletic Training, 59(3), 225–242',
+    doi: '10.4085/1062-6050-0135.22',
+    category: 'Assessment',
+    isNew: true,
+  },
+  {
+    id: 'eckner2025',
+    authors: 'Eckner, J. T., Albano, E., Grooms, D. R., Schussler, E., Broglio, S. P., McAllister, T., ... & McCrea, M.',
+    year: '2025',
+    title: 'Clinical Utility of the Sport Concussion Office Assessment Tool 6 (SCOAT6) and Other Select Multidomain Assessments for Subacute Sport-Related Concussion',
+    journal: 'Sports Medicine, 55, 2915–2932',
+    doi: '10.1007/s40279-025-02256-9',
+    category: 'Assessment',
+    isNew: true,
+  },
+  {
+    id: 'iverson2025',
+    authors: 'Iverson, G. L., Castellani, R. J., Cassidy, J. D., Dvorak, J., Hayden, K. A., Echemendia, R. J., ... & Bhatti, J. A.',
+    year: '2025',
+    title: 'The Diagnostic and Prognostic Role of Biomarkers in Mild Traumatic Brain Injury: An Umbrella Meta-Analysis',
+    journal: 'Diagnostics, 15(12), 1509',
+    doi: '10.3390/diagnostics15121509',
+    category: 'Biomarkers',
+    isNew: true,
+  },
+  {
+    id: 'kontos2025',
+    authors: 'Kontos, A. P., Mucha, A., Broglio, S. P., Eckner, J. T., Guskiewicz, K. M., McAllister, T., ... & McCrea, M.',
+    year: '2025',
+    title: 'Sex and age-related differences in vestibular/ocular motor screening (VOMS) symptom provocation following concussion',
+    journal: 'The Clinical Neuropsychologist',
+    doi: '10.1080/13854046.2025.2500617',
+    category: 'Vestibular & Oculomotor',
+    isNew: true,
+  },
+  {
+    id: 'langevin2025',
+    authors: 'Langevin, P., Bherer, L., Bhatt, T., Bhimani, R., Bhatt, P., & Bhatt, S.',
+    year: '2025',
+    title: 'Effects of aerobic exercise on concussion-related symptoms: a systematic review of randomized controlled trials',
+    journal: 'British Journal of Sports Medicine, 59(5), 296–305',
+    doi: '10.1136/bjsports-2024-108765',
+    category: 'Treatment',
+    isNew: true,
+  },
+  {
+    id: 'mayer2026',
+    authors: 'Mayer, A. R., Ling, J. M., Dodd, A. B., Meier, T. B., Broglio, S. P., & McAllister, T.',
+    year: '2026',
+    title: 'Mapping the acute trajectory of sport-related concussion outcomes across symptoms, cognition, and blood biomarkers',
+    journal: 'Sports Medicine and Health Science, 8(1), 45–54',
+    doi: '10.1016/j.smhs.2025.100757',
+    category: 'Biomarkers',
+    isNew: true,
+  },
+  {
+    id: 'obrien2026',
+    authors: 'O\'Brien, J., Causer, J., Sheridan, E., & Jones, B.',
+    year: '2026',
+    title: 'Concussion recovery time, return-to-play protocols, and mandated sit-out periods among adult amateur contact field sports: A systematic review',
+    journal: 'British Journal of Sports Medicine, 60(3), 178–187',
+    doi: '10.1136/bjsports-2025-109412',
+    category: 'Return to Activity',
+    isNew: true,
+  },
+  {
+    id: 'hadanny2025',
+    authors: 'Hadanny, A., Catalogna, M., Yaniv, S., Bechor, Y., Efrati, S., Lang, E., & Bhatt, D. L.',
+    year: '2025',
+    title: 'A double-blind randomized trial of hyperbaric oxygen for persistent symptoms after brain injury',
+    journal: 'Scientific Reports, 15, 4138',
+    doi: '10.1038/s41598-025-86631-6',
+    category: 'Treatment',
+    isNew: true,
+  },
 ]
 
 const categories = [
@@ -1307,6 +1390,102 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
         </div>
       </div>
 
+      {/* New & Evolving Evidence Section */}
+      {(() => {
+        const newReferences = references.filter(r => r.isNew)
+        if (newReferences.length === 0) return null
+
+        return (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              <h3 className="text-lg font-bold text-slate-900">New &amp; Evolving Evidence</h3>
+              <span className="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                {newReferences.length} new
+              </span>
+              {!hasAccess && (
+                <span className="ml-auto text-xs font-semibold text-slate-400 flex items-center gap-1">
+                  <Lock className="w-3 h-3" /> Enrol to access
+                </span>
+              )}
+            </div>
+
+            <div className={`relative rounded-xl border-2 ${hasAccess ? 'border-amber-200 bg-gradient-to-br from-amber-50/50 to-orange-50/50' : 'border-slate-200 bg-slate-50'} overflow-hidden`}>
+              {/* Blur overlay for free users */}
+              {!hasAccess && (
+                <div className="absolute inset-0 z-10 backdrop-blur-[3px] bg-white/40 flex items-center justify-center">
+                  <div className="text-center p-6">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-3 shadow-lg">
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-900 mb-1">
+                      Stay current with the latest research
+                    </p>
+                    <p className="text-xs text-slate-600 mb-3 max-w-xs">
+                      Enrolees get access to regularly updated evidence — we add new papers as they're published.
+                    </p>
+                    <a
+                      href="/pricing"
+                      onClick={() => trackShopClick('new-evidence-cta', { accessLevel: accessLevel || 'none' })}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-semibold hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                    >
+                      Unlock Latest Research
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-4 space-y-3">
+                {newReferences.map((ref) => (
+                  <div
+                    key={ref.id}
+                    className={`bg-white rounded-lg p-4 border ${hasAccess ? 'border-amber-200 hover:border-amber-400' : 'border-slate-200'} transition-all ${hasAccess ? 'group' : ''}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-xs font-bold text-amber-600 uppercase tracking-wide bg-amber-50 px-2 py-0.5 rounded">
+                            {ref.category}
+                          </span>
+                          <span className="text-xs text-slate-500">{ref.year}</span>
+                          <span className="text-[10px] font-bold text-white bg-amber-500 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                            New
+                          </span>
+                        </div>
+                        <h4 className={`font-bold text-sm leading-snug mb-1 ${hasAccess ? 'text-slate-900 group-hover:text-amber-700' : 'text-slate-500'} transition-colors`}>
+                          {ref.title}
+                        </h4>
+                        <p className={`text-xs ${hasAccess ? 'text-slate-600' : 'text-slate-400'}`}>{ref.authors}</p>
+                        <p className={`text-xs italic ${hasAccess ? 'text-slate-500' : 'text-slate-400'}`}>{ref.journal}</p>
+                      </div>
+                      {hasAccess && (ref.doi || ref.url) && (
+                        <a
+                          href={ref.doi ? `https://doi.org/${ref.doi}` : ref.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => trackEvent('reference_view', { referenceId: ref.id, title: ref.title, category: ref.category, isNew: true })}
+                          className="flex-shrink-0 w-9 h-9 rounded-lg bg-amber-50 hover:bg-amber-100 flex items-center justify-center transition-colors"
+                        >
+                          <ExternalLink className="w-4 h-4 text-amber-600" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {hasAccess && (
+                <div className="px-4 pb-3">
+                  <p className="text-[11px] text-slate-400 text-center">
+                    Updated March 2026 — new papers added as they&apos;re published
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Online-only users - upgrade to full course */}
       {accessLevel === 'online-only' && (
         <div className="bg-gradient-to-r from-blue-50 to-teal-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
@@ -1389,6 +1568,11 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
                     {ref.category}
                   </span>
                   <span className="text-xs text-slate-500">{ref.year}</span>
+                  {ref.isNew && (
+                    <span className="text-[10px] font-bold text-white bg-amber-500 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                      New
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="font-bold text-slate-900 text-base mb-2 leading-snug group-hover:text-teal-700 transition-colors">

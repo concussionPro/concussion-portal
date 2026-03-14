@@ -16,7 +16,7 @@ export default function SpotsRemaining({ location, className = '' }: SpotsRemain
     const locationData = CONFIG.LOCATIONS[location]
     if (!locationData || locationData.status !== 'confirmed') return
 
-    // Fetch live enrollment count
+    // Fetch live enrollment count for confirmed cities
     fetch(`/api/early-bird-status?location=${locationData.slug}`)
       .then(res => res.json())
       .then(data => {
@@ -25,8 +25,8 @@ export default function SpotsRemaining({ location, className = '' }: SpotsRemain
         }
       })
       .catch(() => {
-        // Fallback to static config
-        setSpotsLeft(locationData.spotsRemaining as number)
+        // Fallback to capacity
+        setSpotsLeft(CONFIG.WORKSHOP.CAPACITY_PER_COURSE)
       })
   }, [location])
 

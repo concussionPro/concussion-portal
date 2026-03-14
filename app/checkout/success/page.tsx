@@ -147,18 +147,33 @@ function CheckoutSuccessContent() {
           </div>
         )}
 
-        {/* Workshop countdown for full-course */}
+        {/* Workshop info for full-course */}
         {sessionData?.courseType === 'full-course' && sessionData?.location && (() => {
           const location = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === sessionData.location)
-          if (!location?.dateObj) return null
-          const daysUntil = Math.ceil((location.dateObj.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-          if (daysUntil <= 0) return null
+          if (!location) return null
+
+          // Confirmed city with date — show countdown
+          if (location.dateObj) {
+            const daysUntil = Math.ceil((location.dateObj.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            if (daysUntil <= 0) return null
+            return (
+              <div className="glass rounded-2xl p-6 md:p-8 mb-6 text-center border border-accent/20">
+                <p className="text-sm font-semibold text-accent uppercase tracking-wider mb-2">Your Workshop</p>
+                <p className="text-2xl font-bold mb-1">{location.city} — {location.date}</p>
+                <p className="text-muted-foreground">
+                  <span className="text-xl font-bold text-accent">{daysUntil}</span> days away — complete your online modules before then
+                </p>
+              </div>
+            )
+          }
+
+          // Collecting city — show reservation messaging
           return (
             <div className="glass rounded-2xl p-6 md:p-8 mb-6 text-center border border-accent/20">
-              <p className="text-sm font-semibold text-accent uppercase tracking-wider mb-2">Your Workshop</p>
-              <p className="text-2xl font-bold mb-1">{location.city} — {location.date}</p>
-              <p className="text-muted-foreground">
-                <span className="text-xl font-bold text-accent">{daysUntil}</span> days away — complete your online modules before then
+              <p className="text-sm font-semibold text-accent uppercase tracking-wider mb-2">Your Workshop — {location.city}</p>
+              <p className="text-lg font-bold mb-2">Your spot is reserved</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                We confirm dates once {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants are locked in per city. You&apos;ll be notified at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop.
               </p>
             </div>
           )

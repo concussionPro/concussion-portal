@@ -55,6 +55,19 @@ export default function TermsPage() {
           <h3 className="text-base font-semibold text-foreground mb-2">Workshop component</h3>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5">
             <li>
+              <strong className="text-foreground">Threshold-based scheduling:</strong> Workshop dates are confirmed
+              once {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants per city are locked in. You will receive at
+              least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice before your workshop date.
+            </li>
+            <li>
+              <strong className="text-foreground">If your city does not reach the threshold:</strong> You may request
+              a full refund of the workshop component, or transfer your registration to another city at no charge.
+              Contact{' '}
+              <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="text-accent hover:underline">
+                {CONFIG.CONTACT_EMAIL}
+              </a>.
+            </li>
+            <li>
               <strong className="text-foreground">14+ days before workshop:</strong> Full refund of the workshop component.
             </li>
             <li>

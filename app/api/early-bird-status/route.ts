@@ -2,9 +2,10 @@
  * Early Bird Status API
  *
  * Returns whether early bird pricing is active for a given location.
- * Early bird ends when EITHER condition is met:
- *   1. 7 days before the course date
- *   2. 50% of seats are sold (6 out of 12)
+ * - Collecting cities: always early bird
+ * - Confirmed cities: ends when EITHER condition is met:
+ *     1. 7 days before the course date
+ *     2. 50% of seats are sold (6 out of 12)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -19,15 +20,27 @@ export async function GET(request: NextRequest) {
     loc => loc.slug === location
   )
 
-  // Default: use the static deadline from config
-  if (!locationConfig || locationConfig.status !== 'confirmed' || !locationConfig.dateObj) {
-    const now = new Date()
-    const isActive = now < CONFIG.EARLY_BIRD_DEADLINE
-    const deadline = CONFIG.EARLY_BIRD_DEADLINE.toISOString()
+  // Collecting or unknown location → always early bird
+  if (!locationConfig || locationConfig.status === 'collecting') {
     return NextResponse.json({
-      isActive,
-      deadline,
-      reason: isActive ? 'before_deadline' : 'past_deadline',
+      isActive: true,
+      reason: 'collecting_phase',
+    })
+  }
+
+  // Completed → no early bird
+  if (locationConfig.status === 'completed') {
+    return NextResponse.json({
+      isActive: false,
+      reason: 'completed',
+    })
+  }
+
+  // Confirmed with date → apply date-proximity + seat-count logic
+  if (!locationConfig.dateObj) {
+    return NextResponse.json({
+      isActive: true,
+      reason: 'no_date_set',
     })
   }
 

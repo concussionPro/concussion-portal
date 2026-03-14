@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
         workshopLocation: user.workshopLocation || null,
         nurtureUnsubscribed: user.nurtureUnsubscribed || false,
         signupSource: user.signupSource || null,
+        isTest: user.isTest || false,
         completedModules,
         completedScatModules,
         totalCPDPoints,

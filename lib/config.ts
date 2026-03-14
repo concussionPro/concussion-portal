@@ -23,40 +23,41 @@ export const CONFIG = {
   },
 
   // Training Locations & Dates
-  // status: 'confirmed' = bookable with date, 'tba' = interest registration only
+  // status: 'collecting' = accepting purchases, tracking toward threshold
+  //         'confirmed'  = admin set date + venue after threshold hit
+  //         'completed'  = workshop has happened
   LOCATIONS: {
     SYDNEY: {
       city: 'Sydney',
       slug: 'sydney',
       date: '',
       dateObj: null as Date | null,
-      spotsRemaining: 0,
-      status: 'tba' as 'tba' | 'confirmed',
+      status: 'collecting' as 'collecting' | 'confirmed' | 'completed',
     },
     BYRON_BAY: {
       city: 'Byron Bay',
       slug: 'byron-bay',
       date: '',
       dateObj: null as Date | null,
-      spotsRemaining: 0,
-      status: 'tba' as 'tba' | 'confirmed',
+      status: 'collecting' as 'collecting' | 'confirmed' | 'completed',
     },
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',
       date: '',
       dateObj: null as Date | null,
-      spotsRemaining: 0,
-      status: 'tba' as 'tba' | 'confirmed',
+      status: 'collecting' as 'collecting' | 'confirmed' | 'completed',
     },
   },
 
-  // Workshop Capacity
+  // Workshop Capacity & Threshold
   WORKSHOP: {
     CAPACITY_PER_COURSE: 12,
-    EARLY_BIRD_SEAT_THRESHOLD: 6, // 50% — early bird ends when this many seats sold
+    CONFIRMATION_THRESHOLD: 8,    // paid registrants needed to confirm a date
+    LEAD_TIME_WEEKS: 6,           // weeks of notice after threshold hit
+    EARLY_BIRD_SEAT_THRESHOLD: 6, // 50% — early bird ends when this many seats sold (for confirmed cities)
     EARLY_BIRD_DAYS_BEFORE: 7,    // Early bird ends this many days before course date
-    NEXT_ROUND: 'Jun–Aug 2026',   // Approximate window for next TBA workshops
+    NEXT_ROUND: 'Jun–Aug 2026',   // Approximate window for next workshops
     Q1_COMPLETED: true,           // Q1 2026 workshops ran — used for social proof
   },
 
@@ -65,10 +66,6 @@ export const CONFIG = {
     SCAT_FORM_DOWNLOADS: 500,
     WORKSHOP_REGISTRATIONS: 15,   // Total people registered for next round
   },
-
-  // Early Bird Pricing Deadline
-  // Computed: 7 days before the nearest confirmed course date
-  EARLY_BIRD_DEADLINE: new Date('2026-06-15T23:59:59'),
 
   // SEO Metadata
   SEO: {
@@ -90,3 +87,4 @@ export const CONFIG = {
 export type LocationKey = keyof typeof CONFIG.LOCATIONS
 export type Location = LocationKey
 export type LocationConfig = typeof CONFIG.LOCATIONS[LocationKey]
+export type LocationStatus = 'collecting' | 'confirmed' | 'completed'

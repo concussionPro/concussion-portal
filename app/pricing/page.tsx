@@ -103,14 +103,11 @@ function PricingContent() {
           </p>
         </div>
 
-        {/* Early bird callout */}
-        {new Date() < CONFIG.EARLY_BIRD_DEADLINE && (
+        {/* Early bird callout — active while cities are still collecting */}
+        {Object.values(CONFIG.LOCATIONS).some(loc => loc.status === 'collecting') && (
           <div className="max-w-xl mx-auto mb-8 glass rounded-xl p-4 border border-orange-200/50 text-center">
             <p className="text-sm font-semibold text-foreground">
-              Early bird pricing ends{' '}
-              <span className="text-orange-600">
-                {CONFIG.EARLY_BIRD_DEADLINE.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </span>
+              <span className="text-orange-600">Early bird pricing</span>
               {' '}— save ${CONFIG.COURSE.SAVINGS} on the Complete Course
             </p>
           </div>

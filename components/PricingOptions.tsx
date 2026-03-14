@@ -7,36 +7,22 @@ import {
   MapPin,
   Loader2,
   AlertCircle,
-  Mail,
-  User,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   BookOpen,
   Award,
   Users,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-import { trackInterestRegistration } from '@/lib/analytics'
+import { trackEvent } from '@/lib/analytics'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type LocationStatus = 'confirmed' | 'tba'
+type LocationStatus = 'collecting' | 'confirmed' | 'completed'
 
 interface LocationOption {
   value: string
   label: string
   date: string
-  spots: number
   status: LocationStatus
-}
-
-interface InterestFormState {
-  name: string
-  email: string
-  loading: boolean
-  error: string | null
-  success: string | null
 }
 
 export interface PricingOptionsProps {
@@ -50,143 +36,47 @@ const LOCATIONS: LocationOption[] = [
     value: CONFIG.LOCATIONS.SYDNEY.slug,
     label: CONFIG.LOCATIONS.SYDNEY.city,
     date: CONFIG.LOCATIONS.SYDNEY.date,
-    spots: CONFIG.LOCATIONS.SYDNEY.spotsRemaining,
     status: CONFIG.LOCATIONS.SYDNEY.status,
   },
   {
     value: CONFIG.LOCATIONS.BYRON_BAY.slug,
     label: CONFIG.LOCATIONS.BYRON_BAY.city,
     date: CONFIG.LOCATIONS.BYRON_BAY.date,
-    spots: CONFIG.LOCATIONS.BYRON_BAY.spotsRemaining,
     status: CONFIG.LOCATIONS.BYRON_BAY.status,
   },
   {
     value: CONFIG.LOCATIONS.MELBOURNE.slug,
     label: CONFIG.LOCATIONS.MELBOURNE.city,
     date: CONFIG.LOCATIONS.MELBOURNE.date,
-    spots: CONFIG.LOCATIONS.MELBOURNE.spotsRemaining,
     status: CONFIG.LOCATIONS.MELBOURNE.status,
   },
 ]
 
-// ─── Inline Interest Form ─────────────────────────────────────────────────────
+// ─── Threshold Progress Bar ──────────────────────────────────────────────────
 
-function InterestForm({
-  city,
-  cityLabel,
-  compact = false,
-}: {
-  city: string
-  cityLabel: string
-  compact?: boolean
-}) {
-  const [form, setForm] = useState<InterestFormState>({
-    name: '',
-    email: '',
-    loading: false,
-    error: null,
-    success: null,
-  })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setForm(f => ({ ...f, loading: true, error: null }))
-
-    try {
-      const res = await fetch('/api/register-interest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email.trim(), name: form.name.trim(), city }),
-      })
-      const data = await res.json()
-
-      if (data.success) {
-        trackInterestRegistration(city, form.email.trim())
-        setForm(f => ({
-          ...f,
-          loading: false,
-          success: data.message || "You're on the list!",
-        }))
-      } else {
-        setForm(f => ({
-          ...f,
-          loading: false,
-          error: data.error || 'Something went wrong. Please try again.',
-        }))
-      }
-    } catch {
-      setForm(f => ({ ...f, loading: false, error: 'Network error. Please try again.' }))
-    }
-  }
-
-  if (form.success) {
-    return (
-      <div className="mt-2 p-3 bg-[var(--accent-muted)] border border-[rgba(13,115,119,0.12)] rounded-lg flex items-start gap-2.5">
-        <CheckCircle2 className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-xs font-semibold text-[var(--foreground)]">You&apos;re on the list!</p>
-          <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{form.success}</p>
-        </div>
-      </div>
-    )
-  }
+function ThresholdProgress({ count, threshold }: { count: number; threshold: number }) {
+  const remaining = Math.max(0, threshold - count)
+  const pct = Math.min(100, (count / threshold) * 100)
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={`mt-2 p-3 bg-[rgba(13,115,119,0.03)] border border-[rgba(13,115,119,0.08)] rounded-lg space-y-2.5 ${compact ? 'text-xs' : 'text-sm'}`}
-    >
-      <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
-        Priority Registration — {cityLabel}
-      </p>
-
-      {form.error && (
-        <div className="flex items-start gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-          {form.error}
+    <div className="mt-1.5">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 bg-[rgba(13,115,119,0.08)] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
         </div>
-      )}
-
-      <div className="relative">
-        <User className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--muted-foreground)] pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Your name"
-          value={form.name}
-          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-          required
-          minLength={2}
-          className="w-full pl-7 pr-2.5 py-2 text-xs rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40 placeholder:text-[var(--muted-foreground)]/50"
-        />
+        <span className="text-[10px] font-semibold text-[var(--muted-foreground)] tabular-nums shrink-0">
+          {count}/{threshold}
+        </span>
       </div>
-
-      <div className="relative">
-        <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--muted-foreground)] pointer-events-none" />
-        <input
-          type="email"
-          placeholder="Your email address"
-          value={form.email}
-          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-          required
-          className="w-full pl-7 pr-2.5 py-2 text-xs rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40 placeholder:text-[var(--muted-foreground)]/50"
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={form.loading}
-        className="btn-primary w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {form.loading ? (
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        ) : (
-          <>
-            <Mail className="w-3.5 h-3.5" />
-            Reserve My Spot
-          </>
-        )}
-      </button>
-    </form>
+      <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
+        {remaining > 0
+          ? `${count} spot${count !== 1 ? 's' : ''} claimed — ${remaining} more to confirm date`
+          : 'Threshold reached — date being confirmed'}
+      </p>
+    </div>
   )
 }
 
@@ -195,15 +85,17 @@ function InterestForm({
 function LocationRow({
   loc,
   isSelected,
-  showInterestForm,
   onSelect,
   compact,
+  enrollmentCount,
+  threshold,
 }: {
   loc: LocationOption
   isSelected: boolean
-  showInterestForm: boolean
   onSelect: (value: string) => void
   compact: boolean
+  enrollmentCount: number
+  threshold: number
 }) {
   const isConfirmed = loc.status === 'confirmed'
 
@@ -216,10 +108,8 @@ function LocationRow({
         className={`w-full flex items-center justify-between rounded-lg border text-sm transition-all text-left ${
           compact ? 'px-3 py-2' : 'px-4 py-3'
         } ${
-          isSelected && isConfirmed
+          isSelected
             ? 'border-[var(--accent)] bg-[rgba(13,115,119,0.06)] ring-1 ring-[var(--accent)]/20'
-            : isSelected && !isConfirmed
-            ? 'border-[var(--accent)]/30 bg-[rgba(13,115,119,0.04)]'
             : 'border-[rgba(13,115,119,0.08)] hover:border-[rgba(13,115,119,0.15)] bg-[rgba(255,255,255,0.6)]'
         }`}
       >
@@ -230,26 +120,27 @@ function LocationRow({
           {isConfirmed ? (
             <span className="text-[var(--muted-foreground)] text-xs shrink-0">· {loc.date}</span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold shrink-0 border border-amber-200/50">
-              {CONFIG.WORKSHOP.NEXT_ROUND}
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold shrink-0 border border-emerald-200/50">
+              Early Bird
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0 ml-2">
-          {isConfirmed && loc.spots > 0 && (
-            <span className="text-xs text-[var(--muted-foreground)]">{loc.spots} left</span>
-          )}
-          {!isConfirmed && (
-            showInterestForm
-              ? <ChevronUp className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-              : <ChevronDown className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-          )}
+          <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-colors ${
+            isSelected
+              ? 'border-[var(--accent)] bg-[var(--accent)]'
+              : 'border-[rgba(13,115,119,0.2)]'
+          }`}>
+            {isSelected && (
+              <Check className="w-2 h-2 text-white" strokeWidth={3} />
+            )}
+          </div>
         </div>
       </button>
 
-      {!isConfirmed && showInterestForm && (
-        <InterestForm city={loc.value} cityLabel={loc.label} compact={compact} />
+      {isSelected && loc.status === 'collecting' && (
+        <ThresholdProgress count={enrollmentCount} threshold={threshold} />
       )}
     </div>
   )
@@ -259,21 +150,28 @@ function LocationRow({
 
 export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const [selectedLocation, setSelectedLocation] = useState<string>('')
-  const [openTbaCity, setOpenTbaCity] = useState<string | null>(null)
   const [preferredCity, setPreferredCity] = useState<string>('')
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
   const [isEarlyBird, setIsEarlyBird] = useState(false)
+  const [cityCounts, setCityCounts] = useState<Record<string, number>>({})
+  const [threshold, setThreshold] = useState(CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD)
 
   const isCompact = variant === 'compact'
 
-  // Compute time-dependent pricing on client only to avoid hydration mismatch
+  // Early bird: true for collecting cities (always early bird during collection)
   useEffect(() => {
-    setIsEarlyBird(new Date() < CONFIG.EARLY_BIRD_DEADLINE)
-  }, [])
+    const selectedLoc = LOCATIONS.find(l => l.value === selectedLocation)
+    if (selectedLoc?.status === 'collecting') {
+      setIsEarlyBird(true)
+    } else {
+      // For confirmed, let the server decide via checkout
+      setIsEarlyBird(true) // Default to showing early bird price
+    }
+  }, [selectedLocation])
 
-  // Fetch enrollment count for social proof
+  // Fetch total enrollment count for social proof
   useEffect(() => {
     fetch('/api/enrollment-count')
       .then(res => res.json())
@@ -281,31 +179,32 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       .catch(() => {})
   }, [])
 
-  const handleLocationSelect = (value: string) => {
-    const loc = LOCATIONS.find(l => l.value === value)
-    if (!loc) return
+  // Fetch per-city enrollment counts for threshold display
+  useEffect(() => {
+    fetch('/api/enrollment-counts')
+      .then(res => res.json())
+      .then(data => {
+        if (data.counts) setCityCounts(data.counts)
+        if (data.threshold) setThreshold(data.threshold)
+      })
+      .catch(() => {})
+  }, [])
 
-    if (loc.status === 'confirmed') {
-      setSelectedLocation(value)
-      setOpenTbaCity(null)
-      setError(null)
-    } else {
-      setOpenTbaCity(prev => (prev === value ? null : value))
-      setSelectedLocation('')
-    }
+  const handleLocationSelect = (value: string) => {
+    setSelectedLocation(value)
+    setError(null)
   }
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
-    if (courseType === 'full-course') {
-      const loc = LOCATIONS.find(l => l.value === selectedLocation)
-      if (!selectedLocation || !loc || loc.status !== 'confirmed') {
-        setError('Please select a confirmed workshop location to enroll.')
-        return
-      }
+    if (courseType === 'full-course' && !selectedLocation) {
+      setError('Please select a workshop location to enrol.')
+      return
     }
 
     setLoading(courseType)
     setError(null)
+
+    trackEvent('checkout_start', { courseType, source: 'pricing_page' })
 
     try {
       const res = await fetch('/api/create-checkout', {
@@ -333,7 +232,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   }
 
   const selectedLocationObj = LOCATIONS.find(l => l.value === selectedLocation)
-  const canEnroll = !!selectedLocationObj && selectedLocationObj.status === 'confirmed'
+  const canEnroll = !!selectedLocationObj
+
+  // Button text
+  const getEnrolButtonText = () => {
+    if (!canEnroll) return 'Select a Location to Enrol'
+    if (selectedLocationObj.status === 'confirmed' && selectedLocationObj.date) {
+      return `Enrol — ${selectedLocationObj.label}, ${selectedLocationObj.date}`
+    }
+    return `Reserve Your Spot — ${selectedLocationObj.label}`
+  }
 
   // COMPACT VARIANT
   if (isCompact) {
@@ -482,12 +390,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <LocationRow
                   key={loc.value}
                   loc={loc}
-                  isSelected={selectedLocation === loc.value || openTbaCity === loc.value}
-                  showInterestForm={openTbaCity === loc.value}
+                  isSelected={selectedLocation === loc.value}
                   onSelect={handleLocationSelect}
                   compact={true}
+                  enrollmentCount={cityCounts[loc.value] || 0}
+                  threshold={threshold}
                 />
               ))}
+              <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
+                Dates confirmed once {threshold} registrants per city are locked in. You&apos;ll be notified {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop.
+              </p>
             </div>
 
             <button
@@ -497,12 +409,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             >
               {loading === 'full-course' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : canEnroll ? (
-                <>
-                  Enrol — {selectedLocationObj?.label}
-                </>
               ) : (
-                'Select a Location to Enrol'
+                getEnrolButtonText()
               )}
             </button>
           </div>
@@ -514,8 +422,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // FULL VARIANT
   return (
     <div className="max-w-[900px] mx-auto">
-      {/* No header — parent page provides its own */}
-
       {/* Global error */}
       {error && (
         <div className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -552,7 +458,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
           </div>
 
-          {/* Mobile-only CTA — visible above the fold on phones */}
+          {/* Mobile-only CTA */}
           <div className="md:hidden mb-5">
             <button
               onClick={() => handleCheckout('online-only')}
@@ -730,19 +636,18 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <LocationRow
                   key={loc.value}
                   loc={loc}
-                  isSelected={selectedLocation === loc.value || openTbaCity === loc.value}
-                  showInterestForm={openTbaCity === loc.value}
+                  isSelected={selectedLocation === loc.value}
                   onSelect={handleLocationSelect}
                   compact={false}
+                  enrollmentCount={cityCounts[loc.value] || 0}
+                  threshold={threshold}
                 />
               ))}
             </div>
 
-            {openTbaCity && !canEnroll && (
-              <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
-                Dates confirmed once enough registrations are received. Registered clinicians choose their preferred date first.
-              </p>
-            )}
+            <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
+              Dates are confirmed once {threshold} registrants per city are locked in. You&apos;ll be notified {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop.
+            </p>
           </div>
 
           {/* Enroll Button */}
@@ -755,19 +660,11 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                {canEnroll
-                  ? `Enrol — ${selectedLocationObj?.label}, ${selectedLocationObj?.date}`
-                  : 'Select a Location to Enrol'}
+                {getEnrolButtonText()}
                 {canEnroll && <ArrowRight className="w-4 h-4" />}
               </>
             )}
           </button>
-
-          {!canEnroll && !openTbaCity && (
-            <p className="mt-3 text-xs text-center text-[var(--muted-foreground)] leading-relaxed">
-              Start with the online course now — upgrade to add the workshop when your city&apos;s date is confirmed.
-            </p>
-          )}
 
           {canEnroll && (
             <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">

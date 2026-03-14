@@ -262,19 +262,20 @@ export const SCAT_MASTERY_SEQUENCE = [
   // NOTE: Day 0 welcome email is sent by signup-free API. Cron skips day 0.
   {
     day: 0,
-    subject: 'Your SCAT6 and SCOAT6 forms are ready',
+    subject: 'Start Module 1 now — your SCAT6 training is ready',
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Hi ${name},</h2>
-      <p>Here are your fillable SCAT6 and SCOAT6 assessment forms &mdash; ready to use in your next patient encounter.</p>
-      <center><a href="${utm('https://portal.concussion-education-australia.com/scat6-download', 'scat_mastery_day0', 'download_forms')}" class="cta-btn">Download Your SCAT6 Forms</a></center>
+      <p>Your free SCAT Mastery course is ready. Module 1 takes about 20 minutes and covers the foundations of SCAT6 administration &mdash; the framework everything else builds on.</p>
+      <center><a href="${utm('https://portal.concussion-education-australia.com/modules/101', 'scat_mastery_day0', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
       <div class="callout">
-        <strong>What's included:</strong><br><br>
-        &#8226; Fillable SCAT6 PDF (sideline / acute assessment, 0&ndash;72hrs)<br>
-        &#8226; Fillable SCOAT6 PDF (office follow-up, Day 3&ndash;30)<br>
-        &#8226; Child SCAT6 for paediatric patients<br><br>
-        All forms are based on the 2023 Amsterdam Consensus Statement.
+        <strong>What you'll learn in the free course:</strong><br><br>
+        &#8226; Step-by-step SCAT6 and SCOAT6 administration<br>
+        &#8226; When to use SCAT6 vs SCOAT6 (the distinction most clinicians get wrong)<br>
+        &#8226; Red flag recognition and escalation criteria<br>
+        &#8226; 2 AHPRA-aligned CPD points upon completion<br><br>
+        5 modules &middot; ~2 hours total &middot; Self-paced &middot; Free
       </div>
-      <p><strong>Quick clinical tip:</strong> One of the most common mistakes is using SCAT6 for office follow-ups when SCOAT6 is the correct tool after 72 hours.</p>
+      <p>Your fillable SCAT6 and SCOAT6 forms are also waiting for you in the <a href="${utm('https://portal.concussion-education-australia.com/scat6-download', 'scat_mastery_day0', 'download_forms')}">downloads section</a>.</p>
       <div class="sig">
         Zac Lewis<br>
         Founder, Concussion Education Australia<br>
@@ -363,7 +364,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     subject: 'Early bird pricing closes soon',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${name.split(' ')[0]},</h2>
-      <p>Quick note &mdash; early bird pricing for the Concussion Management course closes <strong>${CONFIG.EARLY_BIRD_DEADLINE.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>.</p>
+      <p>Quick note &mdash; early bird pricing is currently active for all workshop cities while dates are being confirmed by demand.</p>
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
         <tr style="border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
           <td style="padding: 12px 16px; font-weight: 700;">Option</td>
@@ -408,6 +409,171 @@ export const SCAT_MASTERY_SEQUENCE = [
     `),
   },
 ]
+
+// ─── Workshop Threshold Sequences ────────────────────────────────────────────
+
+/**
+ * Workshop Reservation Email — Day 1 after full-course purchase
+ * Replaces generic Day 1 onboarding for full-course users.
+ */
+export const WORKSHOP_RESERVATION_EMAIL = {
+  day: 1,
+  subject: 'Your spot is reserved — here\'s what happens next',
+  template: (name: string, loginLink: string, city: string, count: number, threshold: number) => emailShell(`
+    <h2>Welcome aboard, ${name.split(' ')[0]}!</h2>
+    <p>Your spot in <strong>${city}</strong> is reserved. Here's how this works:</p>
+    <div class="callout">
+      <strong>How workshop dates are confirmed:</strong><br><br>
+      We confirm a date once <strong>${threshold} clinicians</strong> are registered per city. ${city} currently has <strong>${count} of ${threshold}</strong> spots filled.<br><br>
+      Once the threshold is met, you'll receive at least <strong>6 weeks' notice</strong> before your workshop date.
+    </div>
+    <p>In the meantime, start your online modules — they're the foundation for the hands-on day:</p>
+    <center><a href="${utm(loginLink, 'workshop_reservation_day1', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
+    <p><strong>Quick tip:</strong> Students who complete Module 1 in the first 48 hours are 3x more likely to finish the full course.</p>
+    <p>Questions? Just reply — I read every message.</p>
+    <div class="sig">
+      Zac Lewis<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
+/**
+ * Workshop Momentum Emails — Days 7, 14, 21, 28, 58 after full-course purchase
+ * Sent while city is still collecting. Stops after Day 58.
+ */
+export const WORKSHOP_MOMENTUM_EMAILS = [
+  {
+    day: 7,
+    subject: (city: string, count: number, remaining: number) =>
+      `${city}: ${count} registered — ${remaining} more to confirm your date`,
+    template: (name: string, city: string, count: number, threshold: number) => {
+      const remaining = threshold - count
+      return emailShell(`
+        <h2>Hi ${name.split(' ')[0]},</h2>
+        <p>Quick update on your workshop city:</p>
+        <div class="callout">
+          <strong>${city}:</strong> ${count} of ${threshold} spots filled — ${remaining > 0 ? `${remaining} more to confirm a date` : 'threshold reached!'}<br>
+        </div>
+        <p>Know a colleague who manages concussions? Share the course with them — the more clinicians who register, the sooner your date is confirmed.</p>
+        <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d7', 'share')}" class="cta-secondary">Share with a Colleague</a></center>
+        <p>In the meantime, keep working through your modules — they're the foundation for the hands-on day.</p>
+        <div class="sig">Zac</div>
+      `)
+    },
+  },
+  {
+    day: 14,
+    subject: (city: string, count: number, remaining: number) =>
+      `${city}: ${count} registered — ${remaining} more to confirm your date`,
+    template: (name: string, city: string, count: number, threshold: number) => {
+      const remaining = threshold - count
+      return emailShell(`
+        <h2>Hi ${name.split(' ')[0]},</h2>
+        <p>Your workshop city update:</p>
+        <div class="callout">
+          <strong>${city}:</strong> ${count} of ${threshold} spots filled — ${remaining > 0 ? `${remaining} more needed` : 'threshold reached!'}<br>
+        </div>
+        <p>Have you started the online modules? Clinicians who complete them before the workshop report the highest confidence gains in their practice.</p>
+        <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_momentum_d14', 'continue')}" class="cta-btn">Continue Your Modules</a></center>
+        <div class="sig">Zac</div>
+      `)
+    },
+  },
+  {
+    day: 21,
+    subject: (city: string, count: number, remaining: number) =>
+      `${city}: ${count} registered — ${remaining} more to confirm your date`,
+    template: (name: string, city: string, count: number, threshold: number) => {
+      const remaining = threshold - count
+      return emailShell(`
+        <h2>Hi ${name.split(' ')[0]},</h2>
+        <p>${city} progress: <strong>${count} of ${threshold}</strong> spots filled${remaining > 0 ? ` — ${remaining} more to go` : ''}.</p>
+        <p>If you know anyone who'd benefit from hands-on concussion training, send them our way:</p>
+        <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d21', 'share')}" class="cta-secondary">Share the Course</a></center>
+        <div class="sig">Zac</div>
+      `)
+    },
+  },
+  {
+    day: 28,
+    subject: (city: string, count: number, remaining: number) =>
+      `${city}: ${count} registered — ${remaining} more to confirm your date`,
+    template: (name: string, city: string, count: number, threshold: number) => {
+      const remaining = threshold - count
+      return emailShell(`
+        <h2>Hi ${name.split(' ')[0]},</h2>
+        <p>Month check-in: <strong>${city}</strong> has <strong>${count} of ${threshold}</strong> registrants${remaining > 0 ? ` — ${remaining} more to lock in a date` : ' — date confirmation coming soon'}.</p>
+        <p>Every new registrant brings your workshop closer. Share with colleagues who manage concussions:</p>
+        <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d28', 'share')}" class="cta-secondary">Share with a Colleague</a></center>
+        <div class="sig">Zac</div>
+      `)
+    },
+  },
+  {
+    day: 58,
+    subject: (city: string, count: number, remaining: number) =>
+      `Final check-in — ${city} needs ${remaining} more to lock in a date`,
+    template: (name: string, city: string, count: number, threshold: number) => {
+      const remaining = threshold - count
+      return emailShell(`
+        <h2>Hi ${name.split(' ')[0]},</h2>
+        <p>This is my last update on workshop numbers. ${city} has <strong>${count} of ${threshold}</strong> registrants${remaining > 0 ? ` — ${remaining} more needed to confirm a date` : ''}.</p>
+        <p>If you have colleagues who'd benefit from this training, now's the time to let them know. Early bird pricing is still active for ${city}.</p>
+        <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d58', 'share')}" class="cta-secondary">Share the Course</a></center>
+        <p class="ps">P.S. No more momentum emails from me after this one. You'll hear from us when your city's date is confirmed.</p>
+        <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+      `)
+    },
+  },
+]
+
+/**
+ * Workshop Confirmed Email — sent once when city hits threshold and admin sets date
+ */
+export const WORKSHOP_CONFIRMED_EMAIL = {
+  subject: 'Your workshop date is confirmed!',
+  template: (name: string, city: string, date: string) => emailShell(`
+    <h2>Great news, ${name.split(' ')[0]}!</h2>
+    <p>Your workshop date has been confirmed:</p>
+    <div class="callout">
+      <strong>${city}</strong><br>
+      <strong>Date:</strong> ${date}<br>
+      <strong>Time:</strong> 9:00 AM — 4:00 PM<br><br>
+      Venue details will follow in a separate email.
+    </div>
+    <p>Make sure you've completed your online modules before the workshop — they're the foundation for everything we'll practise hands-on.</p>
+    <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_confirmed', 'complete_modules')}" class="cta-btn">Complete Your Modules</a></center>
+    <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+  `),
+}
+
+/**
+ * Workshop Logistics Email — 6 weeks before confirmed date
+ */
+export const WORKSHOP_LOGISTICS_EMAIL = {
+  daysBefore: 42,
+  subject: 'Your workshop is 6 weeks away — what to know',
+  template: (name: string, city: string, date: string, venue?: string) => emailShell(`
+    <h2>Hi ${name.split(' ')[0]},</h2>
+    <p>Your concussion workshop in <strong>${city}</strong> is 6 weeks away (<strong>${date}</strong>).</p>
+    <div class="callout">
+      <strong>Workshop details:</strong><br><br>
+      &#8226; <strong>Date:</strong> ${date}<br>
+      &#8226; <strong>Time:</strong> 9:00 AM — 4:00 PM<br>
+      ${venue ? `&#8226; <strong>Venue:</strong> ${venue}<br>` : '&#8226; <strong>Venue:</strong> Details to follow<br>'}
+      &#8226; <strong>What to bring:</strong> Laptop/tablet, comfortable clothes, pen<br>
+      &#8226; <strong>Lunch:</strong> Provided
+    </div>
+    <p><strong>Before the workshop, please complete:</strong></p>
+    <ol>
+      <li>All 8 online modules (the workshop builds directly on this content)</li>
+      <li>Review the SCAT6 and SCOAT6 forms — you'll be administering them in person</li>
+    </ol>
+    <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_logistics_6w', 'complete_modules')}" class="cta-btn">Complete Your Online Modules</a></center>
+    <div class="sig">Zac</div>
+  `),
+}
 
 // ─── Paid User Sequences ─────────────────────────────────────────────────────
 

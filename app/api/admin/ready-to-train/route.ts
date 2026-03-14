@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { list as listBlobs } from '@vercel/blob'
 import crypto from 'crypto'
+import { getEnrollmentsByLocation, getEnrollmentCount } from '@/lib/users'
+import { CONFIG } from '@/lib/config'
 
 const CITY_LABELS: Record<string, string> = {
   sydney: 'Sydney',
@@ -75,10 +77,32 @@ export async function GET(request: NextRequest) {
     // Sort by count descending
     cities.sort((a, b) => b.count - a.count)
 
+    // Paid threshold data — per-city full-course enrollments from Postgres
+    const paidThreshold: Array<{
+      city: string; label: string; count: number; threshold: number;
+      registrants: Array<{ name: string; email: string; createdAt: string }>
+    }> = []
+    let paidTotal = 0
+
+    for (const loc of Object.values(CONFIG.LOCATIONS)) {
+      const count = await getEnrollmentCount(loc.slug)
+      const registrants = await getEnrollmentsByLocation(loc.slug)
+      paidThreshold.push({
+        city: loc.slug,
+        label: loc.city,
+        count,
+        threshold: CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD,
+        registrants,
+      })
+      paidTotal += count
+    }
+
     return NextResponse.json({
       success: true,
       totalCount,
       cities,
+      paidThreshold,
+      paidTotal,
     })
   } catch (error) {
     console.error('Admin ready-to-train API error:', error)

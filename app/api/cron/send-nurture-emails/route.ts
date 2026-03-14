@@ -15,7 +15,8 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL } from '@/lib/email-sequences'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL } from '@/lib/email-sequences'
+import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
@@ -90,14 +91,44 @@ export async function GET(request: Request) {
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
 
+      const loginLink = `${baseUrl}/login?email=${encodeURIComponent(user.email)}`
+      const unsubToken = generateUnsubscribeToken(user.email)
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+      // Day 1 for full-course users: send workshop reservation email instead of generic onboarding
+      if (daysSinceSignup === 1 && user.accessLevel === 'full-course' && user.workshopLocation) {
+        const locationConfig = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === user.workshopLocation)
+        if (locationConfig && locationConfig.status === 'collecting') {
+          const count = await getEnrollmentCount(user.workshopLocation)
+          const html = WORKSHOP_RESERVATION_EMAIL.template(
+            user.name, loginLink, locationConfig.city, count, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD
+          ).replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+          await sendEmail({
+            to: user.email,
+            subject: WORKSHOP_RESERVATION_EMAIL.subject,
+            html,
+            tags: [
+              { name: 'sequence', value: 'workshop-reservation' },
+              { name: 'day', value: '1' },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          })
+
+          emailsSent++
+          console.log(`[Workshop Reservation] Day 1 → ${user.email} (${locationConfig.city})`)
+          continue // Skip generic Day 1 onboarding for this user
+        }
+      }
+
+      // Generic post-purchase onboarding (online-only users, or confirmed city full-course)
       const email = POST_PURCHASE_SEQUENCE.find(
         e => e.day === daysSinceSignup && e.accessLevels.includes(user.accessLevel as 'online-only' | 'full-course')
       )
       if (!email) continue
-
-      const loginLink = `${baseUrl}/login?email=${encodeURIComponent(user.email)}`
-      const unsubToken = generateUnsubscribeToken(user.email)
-      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
       const html = email.template(user.name, loginLink)
         .replace('{{unsubscribe_url}}', unsubscribeUrl)
@@ -136,11 +167,36 @@ export async function GET(request: Request) {
         (locationEntry.dateObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
       )
 
-      const prepEmail = PRE_WORKSHOP_SEQUENCE.find(e => e.daysBefore === daysUntilWorkshop)
-      if (!prepEmail) continue
-
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+      // Check for logistics email (6 weeks = 42 days before)
+      if (daysUntilWorkshop === WORKSHOP_LOGISTICS_EMAIL.daysBefore) {
+        const html = WORKSHOP_LOGISTICS_EMAIL.template(user.name, locationEntry.city, locationEntry.date)
+          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+        await sendEmail({
+          to: user.email,
+          subject: WORKSHOP_LOGISTICS_EMAIL.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'workshop-logistics' },
+            { name: 'days-before', value: String(daysUntilWorkshop) },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        })
+
+        emailsSent++
+        console.log(`[Workshop Logistics] ${daysUntilWorkshop}d before → ${user.email}`)
+        continue
+      }
+
+      // Existing pre-workshop prep emails (7 days, 1 day before)
+      const prepEmail = PRE_WORKSHOP_SEQUENCE.find(e => e.daysBefore === daysUntilWorkshop)
+      if (!prepEmail) continue
 
       const html = prepEmail.template(user.name, locationEntry.city, locationEntry.date)
         .replace('{{unsubscribe_url}}', unsubscribeUrl)
@@ -163,7 +219,74 @@ export async function GET(request: Request) {
       console.log(`[Workshop Prep] ${daysUntilWorkshop}d before → ${user.email}`)
     }
 
-    // ── 4. Abandoned Checkout Recovery Emails ──
+    // ── 4. Workshop Momentum Emails (full-course users in collecting cities) ──
+    for (const user of users) {
+      if (user.accessLevel !== 'full-course') continue
+      if (user.nurtureUnsubscribed) continue
+      if (!user.workshopLocation) continue
+
+      const locationConfig = Object.values(CONFIG.LOCATIONS).find(
+        loc => loc.slug === user.workshopLocation
+      )
+      // Only send for collecting cities
+      if (!locationConfig || locationConfig.status !== 'collecting') continue
+
+      const signupDate = new Date(user.createdAt)
+      const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
+
+      const momentumEmail = WORKSHOP_MOMENTUM_EMAILS.find(e => e.day === daysSinceSignup)
+      if (!momentumEmail) continue
+
+      // Dedup via email_audit_log
+      const auditKey = `workshop-momentum-d${daysSinceSignup}`
+      try {
+        const { rows: existing } = await sql`
+          SELECT id FROM email_audit_log
+          WHERE email = ${user.email.toLowerCase()} AND email_type = ${auditKey}
+          LIMIT 1
+        `
+        if (existing.length > 0) continue
+      } catch {
+        // Table may not exist — continue
+      }
+
+      const count = await getEnrollmentCount(user.workshopLocation)
+      const remaining = Math.max(0, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD - count)
+
+      const unsubToken = generateUnsubscribeToken(user.email)
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+      const subject = momentumEmail.subject(locationConfig.city, count, remaining)
+      const html = momentumEmail.template(user.name, locationConfig.city, count, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD)
+        .replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+      await sendEmail({
+        to: user.email,
+        subject,
+        html,
+        tags: [
+          { name: 'sequence', value: 'workshop-momentum' },
+          { name: 'day', value: String(daysSinceSignup) },
+        ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
+      })
+
+      // Log to audit
+      try {
+        await sql`
+          INSERT INTO email_audit_log (email, email_type, sent_at)
+          VALUES (${user.email.toLowerCase()}, ${auditKey}, now())
+        `
+      } catch {}
+
+      emailsSent++
+      console.log(`[Workshop Momentum] Day ${daysSinceSignup} → ${user.email} (${locationConfig.city}: ${count}/${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD})`)
+    }
+
+    // ── 5. Abandoned Checkout Recovery Emails ──
     try {
       const abandonedEmailsSent = await processAbandonedCheckouts(baseUrl)
       emailsSent += abandonedEmailsSent

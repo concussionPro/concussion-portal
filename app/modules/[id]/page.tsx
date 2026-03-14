@@ -6,7 +6,7 @@ import { useProgress } from '@/contexts/ProgressContext'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { CheckCircle2, Award, AlertCircle, ArrowRight, BookOpen, Clock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
+import { trackEvent, ANALYTICS_EVENTS, trackFreeCourseCompletion } from '@/lib/analytics'
 import { DynamicContentRenderer } from '@/components/course/DynamicContentRenderer'
 import { DownloadableResources } from '@/components/course/DownloadableResources'
 import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
@@ -85,6 +85,7 @@ export default function ModulePage() {
   const moduleId = parseInt(params.id as string)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [userEmail, setUserEmail] = useState<string>('')
 
   // Check authentication first
   useEffect(() => {
@@ -100,6 +101,7 @@ export default function ModulePage() {
               return
             }
             setIsAuthenticated(true)
+            if (data.user.email) setUserEmail(data.user.email)
             setCheckingAuth(false)
             return
           }
@@ -140,10 +142,10 @@ export default function ModulePage() {
   }
 
   // Authenticated - render module content
-  return <ModulePageContent moduleId={moduleId} router={router} />
+  return <ModulePageContent moduleId={moduleId} router={router} userEmail={userEmail} />
 }
 
-function ModulePageContent({ moduleId, router }: { moduleId: number; router: any }) {
+function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; router: any; userEmail: string }) {
   // Fetch module content from secure API
   const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade } = useModuleData(moduleId)
   const {
@@ -440,6 +442,18 @@ function ModulePageContent({ moduleId, router }: { moduleId: number; router: any
 
     if (canMarkModuleComplete(moduleId)) {
       markModuleComplete(moduleId)
+
+      // Check if all 5 SCAT modules (101-105) are now complete
+      if (moduleId >= 101 && moduleId <= 105) {
+        const scatModuleIds = [101, 102, 103, 104, 105]
+        const allScatComplete = scatModuleIds.every(
+          id => id === moduleId || isModuleComplete(id)
+        )
+        if (allScatComplete && userEmail) {
+          trackFreeCourseCompletion(userEmail)
+        }
+      }
+
       await flushSave()
       router.push('/learning')
     }

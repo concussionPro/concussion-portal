@@ -11,6 +11,10 @@ interface TimeRemaining {
   seconds: number
 }
 
+/**
+ * CountdownTimer — shows countdown to the nearest confirmed workshop date.
+ * Hidden when all cities are in 'collecting' status (no dates to count down to).
+ */
 export default function CountdownTimer({ className = '' }: { className?: string }) {
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -18,9 +22,19 @@ export default function CountdownTimer({ className = '' }: { className?: string 
   useEffect(() => {
     setMounted(true)
 
+    // Find the nearest confirmed workshop date
+    const confirmedDates = Object.values(CONFIG.LOCATIONS)
+      .filter(loc => loc.status === 'confirmed' && loc.dateObj)
+      .map(loc => loc.dateObj!.getTime())
+      .sort((a, b) => a - b)
+
+    // No confirmed dates → nothing to count down to
+    if (confirmedDates.length === 0) return
+
+    const deadline = confirmedDates[0]
+
     const calculateTimeRemaining = (): TimeRemaining | null => {
       const now = new Date().getTime()
-      const deadline = CONFIG.EARLY_BIRD_DEADLINE.getTime()
       const difference = deadline - now
 
       if (difference <= 0) {

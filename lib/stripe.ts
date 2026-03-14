@@ -125,7 +125,7 @@ export async function createCourseCheckoutSession({
     custom_text: {
       submit: {
         message: courseType === 'full-course'
-          ? `Your workshop location: ${formatLocation(location || '')}. You'll receive a login link by email after purchase.`
+          ? getCheckoutSubmitMessage(location)
           : "You'll receive a login link by email after purchase to start learning immediately.",
       },
     },
@@ -136,41 +136,58 @@ export async function createCourseCheckoutSession({
 
 /**
  * Check if early bird pricing is active for a location.
- * Ends when EITHER condition is met:
- *   1. Within 7 days of course date
- *   2. 50% of seats sold (6/12)
- * Falls back to static deadline for non-location purchases.
+ *
+ * - Collecting cities: always early bird (incentivize early registrants)
+ * - Confirmed cities: ends when EITHER condition is met:
+ *     1. Within 7 days of course date
+ *     2. 50% of seats sold (6/12)
  */
 async function isEarlyBirdActiveForLocation(location?: string): Promise<boolean> {
-  const now = new Date()
-
   // Find location config
   const locationConfig = location
     ? Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === location)
     : null
 
-  if (!locationConfig || locationConfig.status !== 'confirmed' || !locationConfig.dateObj) {
-    return now < CONFIG.EARLY_BIRD_DEADLINE
+  // Collecting or unknown location → always early bird
+  if (!locationConfig || locationConfig.status === 'collecting') {
+    return true
   }
 
-  // Check date: 7 days before course
-  const dateDeadline = new Date(
-    locationConfig.dateObj.getTime() - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000
-  )
-  dateDeadline.setHours(23, 59, 59, 999)
-  if (now >= dateDeadline) return false
+  // Confirmed with a date → apply date-proximity + seat-count logic
+  if (locationConfig.status === 'confirmed' && locationConfig.dateObj) {
+    const now = new Date()
+    const dateDeadline = new Date(
+      locationConfig.dateObj.getTime() - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000
+    )
+    dateDeadline.setHours(23, 59, 59, 999)
+    if (now >= dateDeadline) return false
 
-  // Check seats: 50% sold
-  const { getEnrollmentCount } = await import('@/lib/users')
-  const enrolled = await getEnrollmentCount(locationConfig.slug)
-  if (enrolled >= CONFIG.WORKSHOP.EARLY_BIRD_SEAT_THRESHOLD) return false
+    const { getEnrollmentCount } = await import('@/lib/users')
+    const enrolled = await getEnrollmentCount(locationConfig.slug)
+    if (enrolled >= CONFIG.WORKSHOP.EARLY_BIRD_SEAT_THRESHOLD) return false
 
-  return true
+    return true
+  }
+
+  // Completed → no early bird
+  return false
 }
 
-/** @deprecated Use isEarlyBirdActiveForLocation instead */
-function isEarlyBirdActive(): boolean {
-  return new Date() < CONFIG.EARLY_BIRD_DEADLINE
+/**
+ * Get submit message for full-course checkout based on city status
+ */
+function getCheckoutSubmitMessage(location?: string): string {
+  const locationConfig = location
+    ? Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === location)
+    : null
+
+  const cityName = formatLocation(location || '')
+
+  if (locationConfig?.status === 'confirmed' && locationConfig.dateObj) {
+    return `Your workshop: ${cityName}, ${locationConfig.date}. You'll receive a login link by email after purchase.`
+  }
+
+  return `Your workshop location: ${cityName}. Your date will be confirmed once ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians are registered. You'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice.`
 }
 
 /**

@@ -168,7 +168,7 @@ function generateDailyReport(
   funnelData: FunnelData | null,
   preseasonData: { totalClinics: number; totalBaselines: number } | null,
   channelsData: ChannelsData | null,
-  usersData: Array<{ accessLevel: string; createdAt: string; signupSource?: string | null }>,
+  usersData: Array<{ accessLevel: string; createdAt: string; signupSource?: string | null; isTest?: boolean }>,
   period: string,
 ): string {
   const parts: string[] = []
@@ -245,15 +245,16 @@ function generateDailyReport(
     }
   }
 
-  // Users
+  // Users (exclude test users from metrics)
+  const realUsers = usersData.filter(u => !u.isTest)
   const now = new Date()
   const periodDays = period === '24h' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : 90
   const periodStart = new Date(now.getTime() - periodDays * 86400000)
-  const newSignups = usersData.filter(u => new Date(u.createdAt) >= periodStart)
-  const newToday = usersData.filter(u => new Date(u.createdAt).toDateString() === now.toDateString()).length
-  const freeUsers = usersData.filter(u => u.accessLevel === 'preview').length
-  const paidUsers = usersData.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length
-  const totalUsers = usersData.length
+  const newSignups = realUsers.filter(u => new Date(u.createdAt) >= periodStart)
+  const newToday = realUsers.filter(u => new Date(u.createdAt).toDateString() === now.toDateString()).length
+  const freeUsers = realUsers.filter(u => u.accessLevel === 'preview').length
+  const paidUsers = realUsers.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course').length
+  const totalUsers = realUsers.length
   if (totalUsers > 0) {
     const userParts = [`${totalUsers} total user${totalUsers !== 1 ? 's' : ''} (${freeUsers} free, ${paidUsers} paid)`]
     if (newSignups.length > 0) userParts.push(`${newSignups.length} new signup${newSignups.length !== 1 ? 's' : ''} ${periodLabel}`)
@@ -304,7 +305,7 @@ function generateDailyReport(
 }
 
 function buildUserInsights(
-  users: Array<{ accessLevel: string; createdAt: string; lastLogin: string | null; signupSource?: string | null; completedScatModules?: number }>,
+  users: Array<{ accessLevel: string; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedScatModules?: number }>,
 ): Insight[] {
   const insights: Insight[] = []
   if (users.length === 0) return insights
@@ -663,13 +664,18 @@ export default function AnalyticsDashboard() {
   const [insightsData, setInsightsData] = useState<Insight[]>([])
 
   // Ready-to-train pool data
-  const [poolData, setPoolData] = useState<{ totalCount: number; cities: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; city: string; registeredAt: string; completedAt: string }> }> } | null>(null)
+  const [poolData, setPoolData] = useState<{
+    totalCount: number
+    cities: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; city: string; registeredAt: string; completedAt: string }> }>
+    paidThreshold?: Array<{ city: string; label: string; count: number; threshold: number; registrants: Array<{ name: string; email: string; createdAt: string }> }>
+    paidTotal?: number
+  } | null>(null)
 
   // Preseason data
   const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; baselines: Array<{ clinicCode: string; clinicName?: string; athleteName?: string; submittedAt: string; symptomCount?: number; symptomSeverity?: number; cognitiveScore?: number }>; totalClinics: number; totalBaselines: number } | null>(null)
 
   // Users/emails data
-  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; signupSource?: string | null; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
+  const [usersData, setUsersData] = useState<Array<{ id: string; email: string; name: string; accessLevel: string; createdAt: string; lastLogin: string | null; signupSource?: string | null; isTest?: boolean; completedModules?: number; completedScatModules?: number; totalCPDPoints?: number; moduleDetails?: Record<number, { completed: boolean; quizScore: number | null }> }>>([])
   const [usersError, setUsersError] = useState<string | null>(null)
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
@@ -919,7 +925,7 @@ export default function AnalyticsDashboard() {
           <div className="p-5">
             {/* ── INSIGHTS ─────────────────────────────────────────── */}
             {activeTab === 'insights' && (() => {
-              const userInsights = buildUserInsights(usersData)
+              const userInsights = buildUserInsights(usersData.filter(u => !u.isTest))
               const allInsights = [...insightsData, ...userInsights]
               const priority: Record<string, number> = { critical: 0, warning: 1, opportunity: 2, positive: 3 }
               allInsights.sort((a, b) => priority[a.type] - priority[b.type])
@@ -1380,9 +1386,86 @@ export default function AnalyticsDashboard() {
                   <EmptyState icon={MapPin} message="Loading pool data..." />
                 ) : (
                   <>
-                    {/* Summary cards */}
+                    {/* Paid Threshold Cards */}
+                    {poolData.paidThreshold && poolData.paidThreshold.length > 0 && (
+                      <>
+                        <SectionTitle title="Workshop Threshold (Paid)" subtitle="Full-course registrants per city — 8 needed to confirm a date" />
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {poolData.paidThreshold.map((city: { city: string; label: string; count: number; threshold: number }) => {
+                            const progress = Math.min((city.count / city.threshold) * 100, 100)
+                            const isReady = city.count >= city.threshold
+                            return (
+                              <div
+                                key={city.city}
+                                className={`glass rounded-xl p-4 ${isReady ? 'border-2 border-emerald-400' : ''}`}
+                              >
+                                <div className="flex items-center gap-2 mb-2">
+                                  <MapPin size={14} className={isReady ? 'text-emerald-600' : 'text-[var(--accent)]'} />
+                                  <span className="text-xs font-bold text-[var(--foreground)]">{city.label}</span>
+                                  {isReady && <CheckCircle2 size={14} className="text-emerald-600" />}
+                                </div>
+                                <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">
+                                  {city.count}<span className="text-sm font-normal text-[var(--muted-foreground)]"> / {city.threshold}</span>
+                                </p>
+                                <div className="mt-2 w-full bg-[rgba(13,115,119,0.08)] rounded-full h-1.5">
+                                  <div
+                                    className={`h-1.5 rounded-full transition-all ${isReady ? 'bg-emerald-500' : 'bg-[var(--accent)]'}`}
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                </div>
+                                <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                                  {isReady ? 'Threshold reached — confirm date!' : `${city.threshold - city.count} more to confirm`}
+                                </p>
+                              </div>
+                            )
+                          })}
+                          <div className="glass rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Users size={14} className="text-[var(--accent)]" />
+                              <span className="text-xs font-bold text-[var(--foreground)]">Total Paid</span>
+                            </div>
+                            <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{poolData.paidTotal ?? 0}</p>
+                            <p className="text-xs text-[var(--muted-foreground)] mt-3">Full-course across all cities</p>
+                          </div>
+                        </div>
+
+                        {/* Per-city paid registrant tables */}
+                        {poolData.paidThreshold.map((city: { city: string; label: string; count: number; registrants: Array<{ name: string; email: string; createdAt: string }> }) => (
+                          city.registrants.length > 0 && (
+                            <div key={`paid-${city.city}`}>
+                              <SectionTitle title={`${city.label} — Paid Registrants (${city.count})`} subtitle="Full-course purchasers" />
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead>
+                                    <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                                      <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Name</th>
+                                      <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
+                                      <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Purchased</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {city.registrants.map((r: { name: string; email: string; createdAt: string }, i: number) => (
+                                      <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                                        <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
+                                        <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
+                                        <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">
+                                          {new Date(r.createdAt).toLocaleDateString('en-AU')}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </>
+                    )}
+
+                    {/* Interest-based pool (legacy) */}
+                    <SectionTitle title="Interest Pool (Unpaid)" subtitle="Clinicians who registered interest — potential conversions" />
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                      {poolData.cities.map((city) => {
+                      {poolData.cities.map((city: { city: string; label: string; count: number }) => {
                         const progress = Math.min((city.count / 8) * 100, 100)
                         const isReady = city.count >= 8
                         return (
@@ -1419,10 +1502,10 @@ export default function AnalyticsDashboard() {
                       </div>
                     </div>
 
-                    {/* Per-city tables */}
-                    {poolData.cities.map((city) => (
+                    {/* Per-city interest tables */}
+                    {poolData.cities.map((city: { city: string; label: string; count: number; registrations: Array<{ name: string; email: string; registeredAt: string }> }) => (
                       <div key={city.city}>
-                        <SectionTitle title={`${city.label} (${city.count})`} subtitle={city.count >= 8 ? 'Threshold reached — ready to schedule workshop' : `${8 - city.count} more clinicians needed`} />
+                        <SectionTitle title={`${city.label} — Interest (${city.count})`} subtitle={city.count >= 8 ? 'Threshold reached' : `${8 - city.count} more clinicians needed`} />
                         {city.registrations.length === 0 ? (
                           <EmptyState icon={Users} message={`No registrations for ${city.label}`} />
                         ) : (
@@ -1436,7 +1519,7 @@ export default function AnalyticsDashboard() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {city.registrations.map((r, i) => (
+                                {city.registrations.map((r: { name: string; email: string; registeredAt: string }, i: number) => (
                                   <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
                                     <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
                                     <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
@@ -1667,6 +1750,9 @@ export default function AnalyticsDashboard() {
                             }`}>
                               {u.accessLevel === 'preview' ? 'Free' : u.accessLevel === 'full-course' ? 'Full' : 'Online'}
                             </span>
+                            {u.isTest && (
+                              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 text-gray-600">TEST</span>
+                            )}
                           </td>
                           <td className="py-2.5 px-2">
                             <div className="flex items-center gap-2 justify-center">

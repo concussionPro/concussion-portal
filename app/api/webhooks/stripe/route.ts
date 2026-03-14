@@ -10,6 +10,73 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import Stripe from 'stripe'
+import fs from 'fs'
+import path from 'path'
+
+// ---------------------------------------------------------------------------
+// Server-side analytics event logging (same NDJSON format as /api/analytics/track)
+// ---------------------------------------------------------------------------
+
+let blobPut: typeof import('@vercel/blob').put | null = null
+const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN
+
+if (useBlob) {
+  try {
+    const blob = require('@vercel/blob')
+    blobPut = blob.put
+  } catch {}
+}
+
+async function logAnalyticsEvent(eventType: string, eventData: Record<string, unknown>) {
+  const now = new Date()
+  const dateKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`
+  const event = {
+    eventType,
+    eventData,
+    sessionId: `server_${Date.now()}`,
+    timestamp: Date.now(),
+    userAgent: 'stripe-webhook',
+    referrer: null,
+    path: '/api/webhooks/stripe',
+    search: null,
+    ip: 'server',
+  }
+  const line = JSON.stringify(event) + '\n'
+
+  if (useBlob && blobPut) {
+    try {
+      const blobPath = `analytics/${dateKey}.ndjson`
+      // Read existing, append
+      let blobList: typeof import('@vercel/blob').list | null = null
+      try { blobList = require('@vercel/blob').list } catch {}
+      let existing = ''
+      if (blobList) {
+        const { blobs } = await blobList({ prefix: blobPath })
+        const match = blobs.find((b: any) => b.pathname === blobPath)
+        if (match) {
+          const res = await fetch(match.url, { cache: 'no-store' })
+          if (res.ok) existing = await res.text()
+        }
+      }
+      await blobPut(blobPath, existing + line, {
+        access: 'public',
+        addRandomSuffix: false,
+        contentType: 'application/x-ndjson',
+      })
+    } catch (err) {
+      console.error('[webhook] Failed to write analytics blob:', err)
+    }
+  } else {
+    // Local filesystem fallback (dev)
+    try {
+      const dir = path.join(process.cwd(), '.data', 'analytics')
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+      fs.appendFileSync(path.join(dir, `${dateKey}.ndjson`), line)
+    } catch (err) {
+      console.error('[webhook] Failed to write local analytics:', err)
+    }
+  }
+}
 
 /**
  * Stripe Webhook Handler
@@ -157,7 +224,63 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     })
   }
 
-  // Step 2: Send magic link email — best effort, user can request new link from /login
+  // Step 2: Check workshop threshold — send admin alert when threshold hit
+  if (accessLevel === 'full-course' && workshopCity) {
+    try {
+      const { getEnrollmentCount } = await import('@/lib/users')
+      const count = await getEnrollmentCount(workshopCity)
+      if (count === CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD) {
+        const cityLabel = workshopCity === 'byron-bay' ? 'Byron Bay' : workshopCity.charAt(0).toUpperCase() + workshopCity.slice(1)
+        const adminEmail = CONFIG.CONTACT_EMAIL
+        await sendEmail({
+          to: adminEmail,
+          subject: `${cityLabel} has reached ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants — time to confirm the date`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
+              <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
+                Workshop threshold reached: ${cityLabel}
+              </h2>
+              <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+                <strong>${cityLabel}</strong> now has <strong>${count} paid registrants</strong> for the Complete Course workshop.
+              </p>
+              <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+                Next steps:
+              </p>
+              <ol style="font-size: 15px; color: #475569; line-height: 1.8;">
+                <li>Choose a date (at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks from now)</li>
+                <li>Book the venue</li>
+                <li>Update <code>lib/config.ts</code> — set status to <code>'confirmed'</code>, add <code>date</code> and <code>dateObj</code></li>
+                <li>Deploy</li>
+              </ol>
+              <p style="font-size: 14px; color: #64748b; margin-top: 20px;">
+                The pre-workshop email sequence will kick in automatically once the date is set.
+              </p>
+            </div>
+          `,
+          tags: [{ name: 'type', value: 'workshop-threshold-alert' }],
+        })
+        console.log(`[Threshold] ${cityLabel} hit ${count} registrants — admin alert sent`)
+      }
+    } catch (err) {
+      console.error('Threshold check failed:', err)
+    }
+  }
+
+  // Step 3: Log purchase to analytics
+  try {
+    await logAnalyticsEvent('purchase_complete', {
+      email: customerEmail,
+      courseType,
+      amount: (session.amount_total || 0) / 100,
+      currency: 'AUD',
+      transactionId: session.id,
+      accessLevel,
+    })
+  } catch (err) {
+    console.error('Failed to log purchase analytics:', err)
+  }
+
+  // Step 4: Send magic link email — best effort, user can request new link from /login
   try {
     const finalAccess = existingUser
       ? (accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel)

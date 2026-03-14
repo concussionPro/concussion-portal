@@ -14,6 +14,7 @@ export interface User {
   lastLoginAt?: string
   nurtureUnsubscribed?: boolean
   signupSource?: 'free-course' | 'preseason' | 'purchase' | 'admin'
+  isTest?: boolean
 }
 
 /** Map a snake_case DB row to a camelCase User object */
@@ -33,6 +34,7 @@ function rowToUser(row: any): User {
       : undefined,
     nurtureUnsubscribed: row.nurture_unsubscribed || undefined,
     signupSource: row.signup_source || undefined,
+    isTest: row.is_test || undefined,
   }
 }
 
@@ -113,6 +115,20 @@ export async function getEnrollmentCount(location: string): Promise<number> {
     WHERE access_level = 'full-course' AND workshop_location = ${location}
   `
   return rows[0]?.count || 0
+}
+
+// Get full-course enrollments grouped by location (for admin dashboard)
+export async function getEnrollmentsByLocation(location: string): Promise<Array<{ name: string; email: string; createdAt: string }>> {
+  const { rows } = await sql`
+    SELECT name, email, created_at FROM users
+    WHERE access_level = 'full-course' AND workshop_location = ${location}
+    ORDER BY created_at DESC
+  `
+  return rows.map(r => ({
+    name: r.name,
+    email: r.email,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+  }))
 }
 
 // Update user's last login

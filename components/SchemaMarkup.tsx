@@ -88,10 +88,6 @@ export function CourseSchema() {
     })
   }
 
-  const earlyBirdDate = CONFIG.EARLY_BIRD_DEADLINE
-    ? CONFIG.EARLY_BIRD_DEADLINE.toISOString().split('T')[0]
-    : new Date().toISOString().split('T')[0]
-
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Course',
@@ -135,10 +131,6 @@ export function EventSchema({ location }: { location: 'MELBOURNE' | 'SYDNEY' | '
     return null
   }
 
-  const earlyBirdDate = CONFIG.EARLY_BIRD_DEADLINE
-    ? CONFIG.EARLY_BIRD_DEADLINE.toISOString().split('T')[0]
-    : new Date().toISOString().split('T')[0]
-
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'EducationEvent',
@@ -166,12 +158,9 @@ export function EventSchema({ location }: { location: 'MELBOURNE' | 'SYDNEY' | '
       '@type': 'Offer',
       price: CONFIG.COURSE.PRICE_EARLY_BIRD,
       priceCurrency: 'AUD',
-      availability: CONFIG.FEATURES.SHOW_SPOTS_REMAINING && locationData.spotsRemaining > 0
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/LimitedAvailability',
+      availability: 'https://schema.org/InStock',
       url: `${CONFIG.APP_URL}${CONFIG.SHOP_URL}`,
       validFrom: new Date().toISOString(),
-      priceValidUntil: earlyBirdDate,
     },
   }
 
