@@ -47,6 +47,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https: https://www.googletagmanager.com https://www.google-analytics.com https://googleads.g.doubleclick.net",
               "font-src 'self' data:",
               "connect-src 'self' https://vercel.live https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://region1.google-analytics.com",
+              "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com blob:",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'"

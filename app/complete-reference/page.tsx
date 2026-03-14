@@ -13,6 +13,12 @@ export default function CompleteReferencePage() {
   const [accessLevel, setAccessLevel] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [pdfLoadError, setPdfLoadError] = useState(false)
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
+  const [pdfLoading, setPdfLoading] = useState(false)
+
+  // Serve directly from CDN (bypasses Vercel's 4.5 MB serverless body limit)
+  // Middleware handles auth for /docs/ paths
+  const pdfUrl = '/docs/CCM_Complete_Reference_2026.pdf'
 
   useEffect(() => {
     async function checkAccess() {
@@ -41,11 +47,34 @@ export default function CompleteReferencePage() {
     checkAccess()
   }, [router])
 
-  const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
+  // Fetch PDF as blob to avoid iframe/CDN issues with large files
+  useEffect(() => {
+    const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
+    if (!hasAccess || pdfBlobUrl) return
 
-  // Serve directly from CDN (bypasses Vercel's 4.5 MB serverless body limit)
-  // Middleware handles auth for /docs/ paths
-  const pdfUrl = '/docs/CCM_Complete_Reference_2026.pdf'
+    setPdfLoading(true)
+    fetch(pdfUrl, { credentials: 'include' })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.blob()
+      })
+      .then(blob => {
+        const url = URL.createObjectURL(blob)
+        setPdfBlobUrl(url)
+      })
+      .catch(err => {
+        console.error('PDF fetch failed:', err)
+        setPdfLoadError(true)
+      })
+      .finally(() => setPdfLoading(false))
+
+    return () => {
+      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessLevel])
+
+  const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
 
   return (
     <ProtectedRoute>
@@ -163,29 +192,17 @@ export default function CompleteReferencePage() {
 
                 {/* PDF Viewer with error handling */}
                 <div className="glass rounded-xl p-2">
-                  {!pdfLoadError ? (
+                  {pdfLoading ? (
+                    <div className="w-full rounded-lg bg-white flex flex-col items-center justify-center py-16" style={{ minHeight: '600px' }}>
+                      <div className="inline-block w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4" />
+                      <p className="text-sm text-muted-foreground">Loading PDF...</p>
+                    </div>
+                  ) : pdfBlobUrl && !pdfLoadError ? (
                     <iframe
-                      src={pdfUrl + '#toolbar=1&navpanes=1&scrollbar=1'}
+                      src={pdfBlobUrl + '#toolbar=1&navpanes=1&scrollbar=1'}
                       className="w-full rounded-lg bg-white"
                       style={{ height: 'calc(100vh - 300px)', minHeight: '600px' }}
                       title="Complete Clinical Reference 2026"
-                      onError={() => setPdfLoadError(true)}
-                      onLoad={(e) => {
-                        // Check if the iframe loaded successfully by trying to detect error responses
-                        try {
-                          const iframe = e.target as HTMLIFrameElement
-                          // If the content type is not PDF, it may have loaded an error JSON
-                          // We can't access cross-origin content, but we can detect load failures
-                          if (iframe.contentDocument) {
-                            const body = iframe.contentDocument.body
-                            if (body && body.textContent && body.textContent.includes('"error"')) {
-                              setPdfLoadError(true)
-                            }
-                          }
-                        } catch {
-                          // Cross-origin or security error — PDF loaded fine from API
-                        }
-                      }}
                     />
                   ) : (
                     <div className="w-full rounded-lg bg-white flex flex-col items-center justify-center py-16 px-4" style={{ minHeight: '400px' }}>
