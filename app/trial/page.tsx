@@ -159,7 +159,7 @@ export default function TrialPage() {
               <div className="text-sm text-slate-400">CPD Points</div>
             </div>
             <div className="bg-slate-800 rounded-xl p-4">
-              <div className="text-3xl font-bold text-teal-400 mb-1">~11</div>
+              <div className="text-3xl font-bold text-teal-400 mb-1">~8</div>
               <div className="text-sm text-slate-400">Online Hours</div>
             </div>
           </div>

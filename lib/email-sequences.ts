@@ -86,7 +86,7 @@ export const POST_PURCHASE_SEQUENCE = [
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Welcome aboard, ${name.split(' ')[0]}!</h2>
       <p>Your Concussion Management course is ready and waiting. Students who start within the first 48 hours are <strong>3x more likely to complete the full course</strong>.</p>
-      <p>Module 1 takes about 60 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on.</p>
+      <p>Module 1 takes about 75 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day1', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
       <div class="callout">
         <strong>Quick tip:</strong> Each module builds on the previous one. Complete them in order for the best learning experience.
@@ -176,7 +176,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       <p><strong>"Is this relevant for physios/GPs/exercise physiologists?"</strong><br>
       Yes — the curriculum covers SCAT6, VOMS, BESS, and return-to-play protocols used across all allied health disciplines. It's endorsed by Osteopathy Australia but designed for any clinician managing concussion.</p>
       <p><strong>"How long does it take?"</strong><br>
-      The 8 online modules take approximately 11 hours total. Most clinicians complete them across a few sittings. You have lifetime access, so there's no rush.</p>
+      The 8 online modules take approximately 8 hours total. Most clinicians complete them across a few sittings. You have lifetime access, so there's no rush.</p>
       <p><strong>"What if I want to add the workshop later?"</strong><br>
       Start with the online course ($${CONFIG.COURSE.PRICE_ONLINE}) and upgrade to include the hands-on workshop later — you'll only pay the difference.</p>
       <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_24h', 'view_options')}" class="cta-btn">View Course Options</a></center>

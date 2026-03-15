@@ -29,7 +29,7 @@ export const modules: Module[] = [
     id: 1,
     title: 'What is a Concussion?',
     subtitle: 'The Science & Mechanisms',
-    duration: '60 min',
+    duration: '75 min',
     points: 1,
     description: 'Comprehensive understanding of concussion biomechanics, pathophysiology, neuroanatomy, biochemistry, imaging, and biomarkers.',
     sections: [
@@ -992,7 +992,7 @@ export const modules: Module[] = [
     id: 2,
     title: 'Concussion Diagnosis & Initial Assessment',
     subtitle: 'Theory & Clinical Tools',
-    duration: '90 min',
+    duration: '60 min',
     points: 1,
     description: 'Master diagnostic criteria and assessment tools: SCAT6, VOMS, BESS, cranial nerve screening, and cervical evaluation across age groups.',
     sections: [
@@ -1629,10 +1629,10 @@ export const modules: Module[] = [
   {
     id: 3,
     title: 'Practical Assessment & Acute Concussion Management',
-    subtitle: 'Hands-On Clinical Skills',
-    duration: '120 min',
+    subtitle: 'Clinical Reasoning & Acute Protocols',
+    duration: '60 min',
     points: 1,
-    description: 'Master practical procedures for cervical assessment, cranial nerve examination, VOMS, BESS, clinical decision-making, and acute management protocols.',
+    description: 'Clinical reasoning for cervical assessment, cranial nerve examination, VOMS, BESS interpretation, clinical decision-making, and acute management protocols. Hands-on skills practised at the workshop.',
     sections: [
       {
         id: 'learning-objectives',
@@ -2089,7 +2089,7 @@ export const modules: Module[] = [
     id: 4,
     title: 'Persistent Post-Concussive Symptoms & Long-Term Management',
     subtitle: 'Persistent Symptoms & CTE',
-    duration: '90 min',
+    duration: '60 min',
     points: 1,
     description: 'Understanding persistent post-concussive symptoms, chronic traumatic encephalopathy, long-term outcomes, and management of complex cases beyond 4 weeks.',
     sections: [
@@ -2588,7 +2588,7 @@ export const modules: Module[] = [
     id: 5,
     title: 'Multidisciplinary Approach to Concussion Management',
     subtitle: 'Team-Based Care',
-    duration: '75 min',
+    duration: '60 min',
     points: 1,
     description: 'Understand the roles of healthcare professionals in comprehensive concussion care, referral pathways, team communication, and coordinated management strategies.',
     sections: [
@@ -3521,7 +3521,7 @@ export const modules: Module[] = [
     id: 7,
     title: 'Rehabilitation Pathways by Phenotype',
     subtitle: 'Targeted Treatment Strategies',
-    duration: '90 min',
+    duration: '60 min',
     points: 1,
     description: 'Apply phenotype-specific rehabilitation protocols for vestibular, oculomotor, cervicogenic, cognitive-fatigue, post-traumatic migraine, and anxiety/mood presentations.',
     sections: [
@@ -3980,7 +3980,7 @@ export const modules: Module[] = [
     id: 8,
     title: 'Legal, Ethical, Communication & Documentation',
     subtitle: 'Professional Practice Standards',
-    duration: '60 min',
+    duration: '45 min',
     points: 1,
     description: 'Navigate legal responsibilities, ethical obligations, effective communication strategies, and comprehensive documentation requirements in concussion management.',
     sections: [
