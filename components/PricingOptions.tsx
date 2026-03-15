@@ -485,7 +485,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Complete at your own pace — no deadlines',
               'Lifetime access — content updated regularly',
               'Clinical Toolkit & downloadable resources',
-              'Reference Repository (130+ articles)',
+              'Reference Repository (150+ articles)',
               'Digital certificate',
               'Upgrade to Complete Course anytime',
             ].map((feature, i) => (
@@ -588,7 +588,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Full-day in-person workshop (6 CPD points)',
               'Hands-on SCAT6, VOMS, BESS training',
               'Clinical Toolkit & all resources',
-              'Reference Repository (130+ articles)',
+              'Reference Repository (150+ articles)',
               'Choose your preferred location',
               'Flexible workshop date selection',
             ].map((feature, i) => (

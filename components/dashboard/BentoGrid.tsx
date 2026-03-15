@@ -88,7 +88,10 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
   const scatCompleted = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 105 && p.completed,
   ).length
-  const scatCPD = scatCompleted * 0.5 // 0.5 CPD per SCAT module (except 105 which is 0)
+  // Modules 101-104 are 0.5 CPD each, Module 105 is 0 CPD
+  const scatCPD = Object.values(progress).filter(
+    (p) => p.moduleId >= 101 && p.moduleId <= 104 && p.completed,
+  ).length * 0.5
   const scatInProgress = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 105 && !!p.startedAt && !p.completed,
   ).length
@@ -254,7 +257,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
                 </span>
               )}
             </div>
-            <p className="text-sm text-foreground font-semibold mb-1">130+ Peer-Reviewed Sources</p>
+            <p className="text-sm text-foreground font-semibold mb-1">150+ Peer-Reviewed Sources</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable library of concussion research — journal articles, meta-analyses, and clinical guidelines.
             </p>

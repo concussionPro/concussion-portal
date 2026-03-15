@@ -103,7 +103,7 @@ export default function HomePage() {
               {[
                 { value: CONFIG.COURSE.TOTAL_CPD_POINTS.toString(), label: 'AHPRA CPD Points', sub: 'Aligned' },
                 { value: '8', label: 'Online Modules', sub: '8 CPD points' },
-                { value: '130+', label: 'References', sub: 'Evidence-based' },
+                { value: '150+', label: 'References', sub: 'Evidence-based' },
                 { value: '11h', label: 'Course Content', sub: 'Self-paced' },
               ].map((stat) => (
                 <div key={stat.label} className="stat-tile text-center">

@@ -370,7 +370,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">Reference Repository</div>
-                        <div className="text-xs text-slate-600 mt-1">130+ academic references</div>
+                        <div className="text-xs text-slate-600 mt-1">150+ academic references</div>
                       </div>
                       {isPaidUser ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">

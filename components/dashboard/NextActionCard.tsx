@@ -375,7 +375,7 @@ export function NextActionCard() {
             </span>
             <span className="action-pill text-xs py-1 px-3">
               <Award className="w-3.5 h-3.5 text-accent" />
-              1 CPD Point
+              {nextModule.points} CPD {nextModule.points === 1 ? 'Point' : 'Points'}
             </span>
             <span className="action-pill text-xs py-1 px-3">
               <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />

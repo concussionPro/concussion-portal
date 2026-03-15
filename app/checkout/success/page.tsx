@@ -199,7 +199,7 @@ function CheckoutSuccessContent() {
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
               <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-              <span className="text-sm font-medium">130+ references</span>
+              <span className="text-sm font-medium">150+ references</span>
             </div>
             {sessionData?.courseType === 'full-course' && (
               <>
@@ -247,7 +247,7 @@ function CheckoutSuccessContent() {
             <div>
               <h3 className="font-semibold mb-1">Start Module 1</h3>
               <p className="text-sm text-muted-foreground">
-                Begin with &ldquo;What is a Concussion?&rdquo; — covers concussion pathophysiology and the neurometabolic cascade. About 45 minutes.
+                Begin with &ldquo;What is a Concussion?&rdquo; — covers concussion pathophysiology and the neurometabolic cascade. About 60 minutes.
               </p>
             </div>
           </div>

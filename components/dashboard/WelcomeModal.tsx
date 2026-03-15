@@ -53,7 +53,8 @@ export function WelcomeModal() {
   const handleStartModule = () => {
     localStorage.setItem('hasSeenWelcome', 'true')
     setIsOpen(false)
-    router.push('/modules/1')
+    const isPreviewUser = user?.accessLevel === 'preview'
+    router.push(isPreviewUser ? '/modules/101' : '/modules/1')
   }
 
   const handleViewModules = () => {
@@ -65,8 +66,9 @@ export function WelcomeModal() {
   if (!isOpen) return null
 
   const firstName = user?.name?.split(' ')[0] || 'there'
+  const isPreviewUser = user?.accessLevel === 'preview'
   const isFullCourse = user?.accessLevel === 'full-course'
-  const cpdPoints = isFullCourse ? '14' : '8'
+  const cpdPoints = isFullCourse ? '14' : isPreviewUser ? '2' : '8'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
@@ -115,7 +117,9 @@ export function WelcomeModal() {
               You&apos;re all set, {firstName}
             </h2>
             <p className="text-sm text-slate-500 md:text-base">
-              {isFullCourse
+              {isPreviewUser
+                ? 'Your free SCAT Mastery course is ready — 5 modules, 2 CPD points.'
+                : isFullCourse
                 ? 'Your online modules are ready — complete them before your hands-on workshop.'
                 : 'Your 8 clinical modules are unlocked and ready to go.'}
             </p>
@@ -149,8 +153,8 @@ export function WelcomeModal() {
                   <span className="text-sm font-bold text-white">1</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">Start Module 1: What is a Concussion?</p>
-                  <p className="text-xs text-slate-500">Concussion pathophysiology and the neurometabolic cascade</p>
+                  <p className="text-sm font-semibold text-slate-900">{isPreviewUser ? 'Start Module 1: Quick Guide & Medico-Legal' : 'Start Module 1: What is a Concussion?'}</p>
+                  <p className="text-xs text-slate-500">{isPreviewUser ? 'SCAT6 vs SCOAT6 — which tool, when, and why' : 'Concussion pathophysiology and the neurometabolic cascade'}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>
@@ -173,7 +177,7 @@ export function WelcomeModal() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900">Pass the Module 1 Quiz</p>
-                  <p className="text-xs text-slate-500">Earn your first AHPRA CPD point — takes under 45 minutes total</p>
+                  <p className="text-xs text-slate-500">Earn your first AHPRA CPD point — takes about 60 minutes total</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>
@@ -215,7 +219,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <BookOpen className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>8</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '5' : '8'}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Modules</div>
             </div>
@@ -243,7 +247,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <Clock className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>~6</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~2' : '~11'}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Hours Total</div>
             </div>

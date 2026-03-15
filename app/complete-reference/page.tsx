@@ -126,9 +126,7 @@ export default function CompleteReferencePage() {
                   The Complete Clinical Reference is available to enrolled students.
                 </p>
                 <a
-                  href="https://concussion-education-australia.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/pricing"
                   className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-lg"
                 >
                   Enrol Now

@@ -18,7 +18,7 @@ export default function TermsPage() {
         {/* Online Course */}
         <section className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4">
-            Online Course ($497 AUD)
+            Online Course (${CONFIG.COURSE.PRICE_ONLINE} AUD)
           </h2>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5">
             <li>

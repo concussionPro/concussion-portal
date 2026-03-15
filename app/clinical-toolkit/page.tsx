@@ -54,7 +54,7 @@ const toolkitResources: ToolkitResource[] = [
     fileSize: '47 KB',
     category: 'education',
     isFree: false,
-    fileName: 'Concussion Myth-Buster Sheet .pdf'
+    fileName: 'Concussion Myth-Buster Sheet.pdf'
   },
   {
     id: 'pcs-flowchart',
@@ -117,7 +117,7 @@ const toolkitResources: ToolkitResource[] = [
     fileSize: '83 KB',
     category: 'education',
     isFree: false,
-    fileName: '"What to Expect After a Concussion" .pdf'
+    fileName: '"What to Expect After a Concussion".pdf'
   },
   {
     id: 'rehab-flow',

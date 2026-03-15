@@ -86,7 +86,7 @@ export const POST_PURCHASE_SEQUENCE = [
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Welcome aboard, ${name.split(' ')[0]}!</h2>
       <p>Your Concussion Management course is ready and waiting. Students who start within the first 48 hours are <strong>3x more likely to complete the full course</strong>.</p>
-      <p>Module 1 takes about 25 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on.</p>
+      <p>Module 1 takes about 60 minutes and covers the foundational neuroscience of concussion — the framework everything else builds on.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day1', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
       <div class="callout">
         <strong>Quick tip:</strong> Each module builds on the previous one. Complete them in order for the best learning experience.
@@ -109,10 +109,10 @@ export const POST_PURCHASE_SEQUENCE = [
       <p>The first 3 modules cover the clinical foundations:</p>
       <ol>
         <li><strong>Module 1:</strong> Concussion neuroscience and pathophysiology</li>
-        <li><strong>Module 2:</strong> SCAT6 sideline assessment</li>
-        <li><strong>Module 3:</strong> SCOAT6 office-based follow-up</li>
+        <li><strong>Module 2:</strong> Concussion diagnosis and initial assessment</li>
+        <li><strong>Module 3:</strong> Practical assessment and acute concussion management</li>
       </ol>
-      <p>Most clinicians complete all 3 in a single sitting (about 90 minutes). By the end you'll be confident with both the sideline and office assessment tools.</p>
+      <p>Each module takes about 60–90 minutes. By the end of Module 3, you'll have a solid clinical framework for concussion recognition, diagnosis, and acute management.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day3', 'continue_course')}" class="cta-btn">Continue Your Course</a></center>
       <p class="ps">P.S. Your course has lifetime access — no pressure, but momentum matters. Clinicians who finish within the first two weeks report the highest confidence gains.</p>
       <div class="sig">Zac</div>
@@ -128,9 +128,9 @@ export const POST_PURCHASE_SEQUENCE = [
       <p>One week in — how's it going? Whether you've completed 1 module or 5, you're making progress.</p>
       <p>The modules coming up are where clinicians tell me they get the most practical value:</p>
       <ul>
-        <li><strong>Module 5 — VOMS:</strong> The vestibular/ocular motor screen most clinicians haven't been trained to perform</li>
-        <li><strong>Module 6 — BESS:</strong> Balance assessment with specific scoring criteria</li>
-        <li><strong>Module 7 — Return-to-Play:</strong> The step-by-step protocols schools and clubs need from you</li>
+        <li><strong>Module 5 — Multidisciplinary Management:</strong> Team-based concussion care and the practical approaches most clinicians haven't been trained on</li>
+        <li><strong>Module 6 — Return to Play, Work & School:</strong> Staged progression protocols and clearance criteria</li>
+        <li><strong>Module 7 — Rehabilitation by Phenotype:</strong> Targeted treatment strategies for each concussion subtype</li>
       </ul>
       <p>Complete all 8 modules and you'll earn your <strong>8 CPD point certificate</strong> — automatically generated and ready to download.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day7', 'keep_going')}" class="cta-btn">Keep Going</a></center>
@@ -333,14 +333,14 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p>The free SCAT Mastery course earns you 2 CPD points. If you're looking for more, here's what the full Concussion Management course covers:</p>
       <p><strong>8 online modules (8 CPD points):</strong></p>
       <ol>
-        <li>Concussion pathophysiology</li>
-        <li>SCAT6 sideline assessment</li>
-        <li>SCOAT6 office-based follow-up</li>
-        <li>VOMS &mdash; the vestibular/ocular motor screen most clinicians haven't been trained on</li>
-        <li>BESS &mdash; balance assessment with specific scoring criteria</li>
-        <li>Paediatric concussion management</li>
-        <li>Return-to-play and return-to-learn protocols</li>
-        <li>Clinical documentation and medicolegal considerations</li>
+        <li>Concussion pathophysiology &mdash; the neurometabolic cascade and mechanisms</li>
+        <li>Diagnosis &amp; initial assessment &mdash; SCAT6 and clinical tools</li>
+        <li>Practical assessment &amp; acute management &mdash; hands-on clinical skills</li>
+        <li>Persistent post-concussive symptoms &amp; long-term management</li>
+        <li>Multidisciplinary concussion management &mdash; team-based care</li>
+        <li>Return to play, work, and school &mdash; staged progression protocols</li>
+        <li>Rehabilitation pathways by phenotype &mdash; targeted treatment strategies</li>
+        <li>Legal, ethical, communication &amp; documentation</li>
       </ol>
       <p><strong>+ Full-day hands-on workshop (6 CPD points):</strong></p>
       <ul>
@@ -586,7 +586,7 @@ export const ONLINE_UPGRADE_SEQUENCE = [
     day: 7,
     subject: 'How are you finding the modules so far?',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Hi ${name},</h2>
+      <h2>Hi ${name.split(' ')[0]},</h2>
       <p>You're a week into the course — how's it going?</p>
       <p>By now you've likely worked through the concussion pathophysiology and diagnostic assessment modules. That's the foundation that most CPD courses stop at.</p>
       <p>What makes this training different is the practical component. The full-day workshop lets you:</p>
@@ -611,11 +611,11 @@ export const ONLINE_UPGRADE_SEQUENCE = [
 export const REENGAGEMENT_EMAIL = {
   subject: 'Your concussion modules are waiting',
   template: (name: string, loginLink: string) => emailShell(`
-    <h2>Hi ${name},</h2>
+    <h2>Hi ${name.split(' ')[0]},</h2>
     <p>Just a quick check-in — I noticed you haven't logged into ConcussionPro recently.</p>
     <p>Your modules are still there, ready when you are. Most clinicians find it easiest to do one module per sitting (about 45–60 minutes each).</p>
     <div class="callout">
-      <strong>Quick tip:</strong> Modules 3 and 6 are the most clinically actionable — they cover practical assessment protocols and return-to-play frameworks you can use immediately.
+      <strong>Quick tip:</strong> Modules 3 and 6 are the most clinically actionable — they cover practical assessment skills and return-to-play/work/school protocols you can use immediately.
     </div>
     <center><a href="${loginLink}" class="cta-btn">Continue Your Course</a></center>
     <div class="sig">Zac</div>

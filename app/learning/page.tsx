@@ -30,7 +30,10 @@ export default function LearningSuite() {
   const scatCompleted = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 105 && p.completed,
   ).length
-  const scatCPD = scatCompleted * 0.5
+  // Modules 101-104 are 0.5 CPD each, Module 105 is 0 CPD
+  const scatCPD = Object.values(progress).filter(
+    (p) => p.moduleId >= 101 && p.moduleId <= 104 && p.completed,
+  ).length * 0.5
 
   useEffect(() => {
     async function checkAccess() {
@@ -167,11 +170,6 @@ export default function LearningSuite() {
                             <Award className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" strokeWidth={2} />
                             <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">{module.points} CPD pt</span>
                           </div>
-                          {hasStarted && !completed && (
-                            <div className="text-xs text-[#5b9aa6] bg-blue-50 px-2 py-1 rounded">
-                              In Progress
-                            </div>
-                          )}
                         </div>
                         <button
                           className={cn(
