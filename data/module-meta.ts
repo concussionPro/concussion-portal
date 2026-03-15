@@ -25,7 +25,7 @@ const paidModules: ModuleMeta[] = [
     id: 1,
     title: 'What is a Concussion?',
     subtitle: 'The Science & Mechanisms',
-    duration: '90 min',
+    duration: '60 min',
     points: 1,
     description: 'Comprehensive understanding of concussion biomechanics, pathophysiology, neuroanatomy, biochemistry, imaging, biomarkers, and clinical implications.',
   },

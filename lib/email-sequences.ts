@@ -176,7 +176,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       <p><strong>"Is this relevant for physios/GPs/exercise physiologists?"</strong><br>
       Yes — the curriculum covers SCAT6, VOMS, BESS, and return-to-play protocols used across all allied health disciplines. It's endorsed by Osteopathy Australia but designed for any clinician managing concussion.</p>
       <p><strong>"How long does it take?"</strong><br>
-      The 8 online modules take about 6-8 hours total. Most clinicians complete them across 2-3 sittings. You have lifetime access, so there's no rush.</p>
+      The 8 online modules take approximately 11 hours total. Most clinicians complete them across a few sittings. You have lifetime access, so there's no rush.</p>
       <p><strong>"What if I want to add the workshop later?"</strong><br>
       Start with the online course ($${CONFIG.COURSE.PRICE_ONLINE}) and upgrade to include the hands-on workshop later — you'll only pay the difference.</p>
       <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_24h', 'view_options')}" class="cta-btn">View Course Options</a></center>
@@ -238,7 +238,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
       <p>Your concussion workshop in <strong>${workshopCity}</strong> is tomorrow (<strong>${workshopDate}</strong>).</p>
       <div class="callout">
         <strong>Workshop details:</strong><br><br>
-        &#8226; <strong>Time:</strong> 9:00 AM — 4:00 PM<br>
+        &#8226; <strong>Time:</strong> 9:00 AM — 5:00 PM<br>
         &#8226; <strong>Location:</strong> ${workshopCity} (check your booking confirmation for venue address)<br>
         &#8226; <strong>What to bring:</strong> Laptop/tablet, comfortable clothes, pen<br>
         &#8226; <strong>Lunch:</strong> Provided
@@ -539,7 +539,7 @@ export const WORKSHOP_CONFIRMED_EMAIL = {
     <div class="callout">
       <strong>${city}</strong><br>
       <strong>Date:</strong> ${date}<br>
-      <strong>Time:</strong> 9:00 AM — 4:00 PM<br><br>
+      <strong>Time:</strong> 9:00 AM — 5:00 PM<br><br>
       Venue details will follow in a separate email.
     </div>
     <p>Make sure you've completed your online modules before the workshop — they're the foundation for everything we'll practise hands-on.</p>
@@ -560,7 +560,7 @@ export const WORKSHOP_LOGISTICS_EMAIL = {
     <div class="callout">
       <strong>Workshop details:</strong><br><br>
       &#8226; <strong>Date:</strong> ${date}<br>
-      &#8226; <strong>Time:</strong> 9:00 AM — 4:00 PM<br>
+      &#8226; <strong>Time:</strong> 9:00 AM — 5:00 PM<br>
       ${venue ? `&#8226; <strong>Venue:</strong> ${venue}<br>` : '&#8226; <strong>Venue:</strong> Details to follow<br>'}
       &#8226; <strong>What to bring:</strong> Laptop/tablet, comfortable clothes, pen<br>
       &#8226; <strong>Lunch:</strong> Provided
