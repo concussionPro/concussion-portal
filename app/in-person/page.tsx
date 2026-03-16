@@ -1,13 +1,43 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Clock, MapPin, Users, Award, CheckCircle2, ArrowRight } from 'lucide-react'
+import { Clock, MapPin, Users, Award, CheckCircle2, ArrowRight, Loader2, Mail } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
 
 export default function InPersonTrainingPage() {
   const router = useRouter()
+  const [interestEmail, setInterestEmail] = useState('')
+  const [interestName, setInterestName] = useState('')
+  const [interestCity, setInterestCity] = useState('sydney')
+  const [interestLoading, setInterestLoading] = useState(false)
+  const [interestSuccess, setInterestSuccess] = useState<string | null>(null)
+  const [interestError, setInterestError] = useState<string | null>(null)
+
+  const handleInterest = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setInterestLoading(true)
+    setInterestError(null)
+    try {
+      const res = await fetch('/api/register-interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: interestEmail, name: interestName, city: interestCity }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setInterestSuccess(data.message)
+      } else {
+        setInterestError(data.error || 'Something went wrong.')
+      }
+    } catch {
+      setInterestError('Network error. Please try again.')
+    } finally {
+      setInterestLoading(false)
+    }
+  }
 
   return (
     <>
@@ -211,6 +241,58 @@ export default function InPersonTrainingPage() {
             <p className="text-sm text-muted-foreground mt-4">
               Venue details will be emailed to enrolled participants 2 weeks prior to workshop date.
             </p>
+
+            {/* City interest email capture */}
+            <div className="mt-6 pt-6 border-t border-border/30">
+              {interestSuccess ? (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <p className="text-sm text-emerald-800 font-medium">{interestSuccess}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Mail className="w-4 h-4 text-accent" />
+                    <h4 className="text-sm font-bold text-foreground">Get notified when your city confirms</h4>
+                  </div>
+                  <form onSubmit={handleInterest} className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Your name"
+                      value={interestName}
+                      onChange={(e) => setInterestName(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    />
+                    <input
+                      type="email"
+                      required
+                      placeholder="you@clinic.com.au"
+                      value={interestEmail}
+                      onChange={(e) => setInterestEmail(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    />
+                    <select
+                      value={interestCity}
+                      onChange={(e) => setInterestCity(e.target.value)}
+                      className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    >
+                      <option value="sydney">Sydney</option>
+                      <option value="melbourne">Melbourne</option>
+                      <option value="byron-bay">Byron Bay</option>
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={interestLoading}
+                      className="btn-primary px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      {interestLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Notify Me'}
+                    </button>
+                  </form>
+                  {interestError && <p className="text-xs text-red-600 mt-2">{interestError}</p>}
+                </>
+              )}
+            </div>
           </div>
 
           {/* CTA */}

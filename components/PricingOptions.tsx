@@ -184,18 +184,23 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Enrol — $${CONFIG.COURSE.PRICE_ONLINE}`
+                `Enrol Now — $${CONFIG.COURSE.PRICE_ONLINE}`
               )}
             </button>
-            <div className="mt-3 text-center">
-              <a
-                href="/scat-mastery"
-                className="text-[11px] font-semibold text-[var(--accent)] hover:underline underline-offset-4"
-              >
-                Try free — 2 CPD points →
-              </a>
-            </div>
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
+              &ldquo;Relevant, applicable and easy to absorb&rdquo; — Sarah, Physio
+            </p>
           </div>
+        </div>
+
+        {/* Trust Signals */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-[var(--muted-foreground)]">
+          {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'AHPRA Aligned'].map(item => (
+            <div key={item} className="flex items-center gap-1">
+              <Check className="w-3 h-3 text-[var(--accent)]" strokeWidth={2.5} />
+              {item}
+            </div>
+          ))}
         </div>
       </div>
     )
@@ -306,14 +311,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             &ldquo;Hands on component was invaluable&rdquo; — Amelia, Physiotherapist
           </p>
 
-          <div className="mt-3 pt-3 border-t border-[rgba(13,115,119,0.08)] text-center">
-            <a
-              href="/scat-mastery"
-              className="text-sm font-semibold text-[var(--accent)] hover:underline underline-offset-4"
-            >
-              Try free — 2 CPD points, no card needed →
-            </a>
-          </div>
         </div>
 
         {/* Online Course */}
@@ -377,14 +374,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             &ldquo;Well organised...content explained in a way that was relevant and memorable&rdquo; — Alex, Osteopath
           </p>
 
-          <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)] text-center">
-            <a
-              href="/scat-mastery"
-              className="text-sm font-semibold text-[var(--accent)] hover:underline underline-offset-4"
-            >
-              Try free — 2 CPD points, no card needed →
-            </a>
-          </div>
         </div>
       </div>
 

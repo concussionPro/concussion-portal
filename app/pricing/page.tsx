@@ -2,14 +2,16 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import {
-  Loader2,
   AlertCircle,
   ChevronDown,
   ChevronUp,
   Star,
   ShieldCheck,
   Building2,
+  Clock,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
@@ -24,12 +26,50 @@ interface FaqItem {
   link?: { text: string; href: string }
 }
 
+// ─── Canceled Banner (isolated Suspense for useSearchParams) ─────────────────
+
+function CanceledBannerInner() {
+  const searchParams = useSearchParams()
+  const canceled = searchParams.get('canceled')
+  if (!canceled) return null
+  return (
+    <div className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-amber-800">
+        Checkout was canceled — no charge was made. You can try again whenever you&apos;re ready.
+      </p>
+    </div>
+  )
+}
+
+function CanceledBanner() {
+  return (
+    <Suspense fallback={null}>
+      <CanceledBannerInner />
+    </Suspense>
+  )
+}
+
+// ─── Countdown Hook ──────────────────────────────────────────────────────────
+
+function useCountdown(deadline: string) {
+  const [days, setDays] = useState<number | null>(null)
+  useEffect(() => {
+    const target = new Date(deadline + 'T23:59:59').getTime()
+    const calc = () => {
+      const diff = target - Date.now()
+      setDays(diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0)
+    }
+    calc()
+    const id = setInterval(calc, 60000) // update every minute
+    return () => clearInterval(id)
+  }, [deadline])
+  return days
+}
+
 // ─── Main Pricing Content ────────────────────────────────────────────────────
 
 function PricingContent() {
-  const searchParams = useSearchParams()
-  const canceled = searchParams.get('canceled')
-
   // FAQ accordion
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
@@ -57,6 +97,10 @@ function PricingContent() {
 
   // Only show progress bars when at least one city has registrations
   const hasAnyRegistrations = Object.values(cityCounts).some(c => c > 0)
+
+  // Early bird countdown
+  const daysLeft = useCountdown(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)
+  const isEarlyBird = daysLeft !== null && daysLeft > 0
 
   // Early bird deadline formatted from config
   const earlyBirdDate = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00')
@@ -106,10 +150,10 @@ function PricingContent() {
 
   const testimonials = [
     {
-      quote: 'Relevant, applicable and easy to absorb. A must for any clinician managing concussion',
-      name: 'Sarah',
-      role: 'Physiotherapist',
-      initials: 'S',
+      quote: 'Before this training, our approach to concussion cases was uncertain. Now, my team has the confidence and proven skills to diagnose and manage them with clarity.',
+      name: 'Andy',
+      role: 'Clinic Owner, NSW',
+      initials: 'A',
     },
     {
       quote: "An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.",
@@ -118,22 +162,22 @@ function PricingContent() {
       initials: 'D',
     },
     {
-      quote: 'Highly recommend for any health professional wanting to improve their concussion management skills',
-      name: 'Bailey',
-      role: 'Exercise Physiologist',
-      initials: 'B',
+      quote: 'Incredibly thorough and well structured. The hands-on component was invaluable — I left feeling genuinely confident in my concussion assessments.',
+      name: 'Amelia',
+      role: 'Physiotherapist',
+      initials: 'A',
     },
     {
-      quote: 'Well organised...content explained in a way that was relevant and memorable',
+      quote: 'Well organised — content explained in a way that was relevant and memorable. Changed how I approach concussion in clinic.',
       name: 'Alex',
       role: 'Osteopath, Melbourne',
       initials: 'A',
     },
     {
-      quote: 'Incredibly thorough and well structured...hands on component was invaluable',
-      name: 'Amelia',
+      quote: 'A must for any health professional managing concussion. Relevant, applicable and easy to absorb.',
+      name: 'Sarah',
       role: 'Physiotherapist',
-      initials: 'A',
+      initials: 'S',
     },
   ]
 
@@ -169,15 +213,8 @@ function PricingContent() {
 
       <div className="max-w-6xl mx-auto px-6 pt-[80px] pb-12 md:pb-20">
 
-        {/* Canceled notice */}
-        {canceled && (
-          <div className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800">
-              Checkout was canceled — no charge was made. You can try again whenever you&apos;re ready.
-            </p>
-          </div>
-        )}
+        {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
+        <CanceledBanner />
 
         {/* Page Header */}
         <div className="text-center mb-8">
@@ -186,14 +223,27 @@ function PricingContent() {
             <span className="text-gradient">Concussion CPD</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Master SCAT6, VOMS &amp; BESS with expert-led training. Early bird pricing ends {earlyBirdDate}.
+            Master SCAT6, VOMS &amp; BESS with expert-led training.{' '}
+            {isEarlyBird
+              ? `Early bird pricing ends ${earlyBirdDate}.`
+              : 'Enrol today — lifetime access included.'}
           </p>
+
+          {/* Countdown timer */}
+          {isEarlyBird && daysLeft !== null && (
+            <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-orange-50 border border-orange-200">
+              <Clock className="w-4 h-4 text-orange-600" />
+              <span className="text-sm font-semibold text-orange-700">
+                {daysLeft} day{daysLeft !== 1 ? 's' : ''} left at early bird pricing — save ${CONFIG.COURSE.SAVINGS}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Credential bar: OA endorsement + trust signals */}
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-8 py-4 px-6 glass rounded-xl border border-accent/10">
           <div className="flex items-center gap-2">
-            <img src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" className="h-8 w-auto" />
+            <Image src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" width={36} height={32} className="h-8 w-auto" priority />
             <span className="text-sm font-semibold text-foreground">Endorsed by Osteopathy Australia</span>
           </div>
           <span className="hidden sm:inline text-slate-300">|</span>
@@ -210,6 +260,14 @@ function PricingContent() {
 
         {/* Pricing Cards */}
         <PricingOptions variant="full" />
+
+        {/* Single "Try free" link — consolidated from card footers */}
+        <p className="text-center mt-4 text-sm text-muted-foreground">
+          Not ready to enrol?{' '}
+          <Link href="/scat-mastery" className="text-accent font-semibold hover:underline underline-offset-2">
+            Try our free SCAT6 Mastery course (2 CPD points)
+          </Link>
+        </p>
 
         {/* Workshop city progress bars — urgency lever, positioned near pricing decision */}
         {hasAnyRegistrations && (
@@ -284,9 +342,10 @@ function PricingContent() {
                   ['CPD certificate (online)', '8 pts', '8 pts'],
                   ['Lifetime access', true, true],
                   ['Full-day hands-on workshop', true, false],
+                  ['Expert coaching & 1:1 feedback', true, false],
+                  ['Supervised clinical practice', true, false],
                   ['Workshop CPD certificate', '6 pts', false],
                   ['Total CPD points', '14', '8'],
-                  ['SCAT6 live practice', true, false],
                   ['Afterpay / Klarna available', true, true],
                 ] as [string, boolean | string, boolean | string][]).map(([feature, complete, online], i) => (
                   <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
@@ -387,11 +446,20 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Final CTA */}
+        {/* Final CTA — with urgency */}
         <div className="mt-16 md:mt-20">
           <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-foreground mb-2">Ready to start?</h3>
-            <p className="text-sm text-muted-foreground">Join clinicians building concussion confidence. Enrol today.</p>
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              {isEarlyBird
+                ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left — lock in early bird pricing`
+                : 'Enrol today — lifetime access included'}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {enrollmentCount >= 10
+                ? `Join ${enrollmentCount}+ clinicians building concussion confidence.`
+                : 'Join clinicians building concussion confidence.'}
+              {' '}7-day money-back guarantee.
+            </p>
           </div>
           <PricingOptions variant="compact" />
         </div>
@@ -404,15 +472,5 @@ function PricingContent() {
 // ─── Page Export ─────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-accent animate-spin" />
-        </div>
-      }
-    >
-      <PricingContent />
-    </Suspense>
-  )
+  return <PricingContent />
 }

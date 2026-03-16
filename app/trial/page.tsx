@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Play, CheckCircle2, ArrowRight, Award, Clock } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 
@@ -162,6 +163,15 @@ export default function TrialPage() {
               <div className="text-3xl font-bold text-teal-400 mb-1">~10</div>
               <div className="text-sm text-slate-400">Online Hours</div>
             </div>
+          </div>
+          <div className="mt-6">
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-900 rounded-xl text-sm font-bold hover:bg-white/90 transition-colors shadow-lg"
+            >
+              See Full Course &amp; Pricing
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </div>

@@ -111,20 +111,25 @@ export default function RootLayout({
   return (
     <html lang="en-AU">
       <head>
-        {/* Google Analytics (GA4: ConcussionPro Portal) + Google Ads Conversion Tracking */}
+        {/* Preconnect to Google Tag Manager for faster gtag.js loading */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        {/*
+          gtag function definition — MUST be immediate (not afterInteractive)
+          so window.gtag exists before hydration. Events queue in dataLayer
+          and are flushed once gtag.js loads. This fixes remarketing pixel
+          capture rate (was 14% because events fired before gtag existed).
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LRDRZBWJ2E');gtag('config','AW-17984048021');`,
+          }}
+        />
+        {/* Load gtag.js asynchronously after first paint */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-LRDRZBWJ2E"
           strategy="afterInteractive"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-LRDRZBWJ2E');
-            gtag('config', 'AW-17984048021');
-          `}
-        </Script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

@@ -28,6 +28,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { PricingOptions } from '@/components/PricingOptions'
 import { PreviewSectionContent } from '@/components/course/PreviewSectionContent'
+import { EmailCaptureInline } from '@/components/EmailCaptureInline'
 
 const moduleIcons = [Brain, FileText, Activity, Clock, Users, Target, BookOpen, Scale]
 
@@ -277,6 +278,11 @@ export default function PreviewPage() {
               </div>
             )
           })}
+        </div>
+
+        {/* Email capture — after content preview, before knowledge check */}
+        <div className="mt-10 mb-10 max-w-2xl mx-auto">
+          <EmailCaptureInline />
         </div>
 
         {/* Quick Knowledge Check — after content preview so users see value first */}

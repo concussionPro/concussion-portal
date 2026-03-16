@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight, Check, Star } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { OrganizationSchema, CourseSchema } from '@/components/SchemaMarkup'
@@ -54,7 +55,7 @@ export default function HomePage() {
                 href="/pricing"
                 className="btn-primary px-8 py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2 shadow-lg"
               >
-                Start Your CPD Course
+                Compare Plans
                 <ArrowRight className="w-4.5 h-4.5" />
               </Link>
               <Link
@@ -66,7 +67,7 @@ export default function HomePage() {
             </div>
 
             <p className="text-sm text-muted-foreground mt-2">
-              From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay) · 7-day guarantee
+              From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay) · 7-day guarantee
             </p>
             <p className="text-sm text-slate-500 mt-1">
               Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -97,7 +98,7 @@ export default function HomePage() {
                 </span>
                 <span className="text-xs text-[var(--muted-foreground)]">·</span>
                 <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
-                  <img src="/osteopathy-australia-endorsed.png" alt="" className="h-5 w-auto" aria-hidden="true" />
+                  <Image src="/osteopathy-australia-endorsed.png" alt="" width={22} height={20} className="h-5 w-auto" aria-hidden="true" />
                   <span>Endorsed by <span className="font-semibold text-[var(--foreground)]">Osteopathy Australia</span></span>
                 </span>
               </div>
@@ -128,9 +129,10 @@ export default function HomePage() {
                 </div>
               ))}
               <div className="stat-tile flex items-center justify-center p-3">
-                <img
+                <Image
                   src="/osteopathy-australia-endorsed.png"
                   alt="Osteopathy Australia Endorsed Course"
+                  width={108} height={96}
                   className="h-20 md:h-24 w-auto"
                 />
               </div>
@@ -348,7 +350,7 @@ export default function HomePage() {
                 Ready to master evidence-based concussion management?
               </h2>
               <p className="text-sm text-white/60 mb-6 max-w-md mx-auto relative z-10">
-                Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE}
+                Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE} · Early bird pricing available
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
                 <a
