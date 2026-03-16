@@ -1,22 +1,19 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
-  Sparkles,
   Loader2,
   AlertCircle,
   ChevronDown,
   ChevronUp,
   Star,
   ShieldCheck,
-  Receipt,
   Building2,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
 import { createFAQSchema } from '@/lib/schema-markup'
-import { CONFIG } from '@/lib/config'
 
 // ─── Main Pricing Content ────────────────────────────────────────────────────
 
@@ -29,6 +26,15 @@ function PricingContent() {
 
   // Testimonial show-more toggle (mobile)
   const [showAllTestimonials, setShowAllTestimonials] = useState(false)
+
+  // Enrollment count for credential bar social proof
+  const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
+  useEffect(() => {
+    fetch('/api/enrollment-count')
+      .then(res => res.json())
+      .then(data => { if (data.count > 0) setEnrollmentCount(data.count) })
+      .catch(() => {})
+  }, [])
 
   const faqs = [
     {
@@ -88,60 +94,106 @@ function PricingContent() {
           </div>
         )}
 
-        {/* Page Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-5 border border-accent/20">
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span className="text-sm font-semibold text-accent">
-              AHPRA Aligned · Up to 14 CPD Points · Endorsed by Osteopathy Australia
-            </span>
-          </div>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
+        {/* Page Header — tight, conversion-focused */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
             Invest in Your Clinical{' '}
             <span className="text-gradient">Confidence</span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            The only Australian concussion CPD with hands-on assessment training.
-            Start with 8 online modules — add the workshop when dates are confirmed.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Australia&apos;s only concussion CPD with hands-on assessment training. Choose your path below.
           </p>
         </div>
 
-        {/* Early bird callout — active while cities are still collecting */}
-        {Object.values(CONFIG.LOCATIONS).some(loc => loc.status === 'collecting') && (
-          <div className="max-w-xl mx-auto mb-8 glass rounded-xl p-4 border border-orange-200/50 text-center">
-            <p className="text-sm font-semibold text-foreground">
-              <span className="text-orange-600">Early bird pricing</span>
-              {' '}— save ${CONFIG.COURSE.SAVINGS} on the Complete Course.
-              {' '}Ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}.
-            </p>
+        {/* Credential bar: OA endorsement + trust signals */}
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-8 py-4 px-6 glass rounded-xl border border-accent/10">
+          <div className="flex items-center gap-2">
+            <img src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" className="h-8 w-auto" />
+            <span className="text-sm font-semibold text-foreground">Endorsed by Osteopathy Australia</span>
           </div>
-        )}
+          <span className="hidden sm:inline text-slate-300">|</span>
+          <span className="text-sm text-muted-foreground">AHPRA Aligned · Up to 14 CPD Points</span>
+          <span className="hidden sm:inline text-slate-300">|</span>
+          <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
+          {enrollmentCount >= 10 && (
+            <>
+              <span className="hidden sm:inline text-slate-300">|</span>
+              <span className="text-sm font-semibold text-foreground">{enrollmentCount}+ clinicians enrolled</span>
+            </>
+          )}
+        </div>
 
-        {/* Social proof strip */}
-        {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mb-10 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="font-semibold text-foreground">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-1.5">
-              <img src="/osteopathy-australia-endorsed.png" alt="" className="h-5 w-auto" aria-hidden="true" />
-              Endorsed by <span className="font-semibold text-foreground">Osteopathy Australia</span>
-            </span>
-            <span>·</span>
-            <span>7-day money-back guarantee</span>
+        {/* Pricing Cards — delegated to PricingOptions */}
+        <PricingOptions variant="full" />
+
+        {/* Why hands-on matters — standalone section */}
+        <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
+          <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Why hands-on matters</p>
+          <ul className="space-y-2">
+            {[
+              'Practice SCAT6 administration on real subjects with expert feedback',
+              'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
+              'Leave with a clinical toolkit you can use Monday morning',
+            ].map((item, i) => (
+              <li key={i} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
+                <span className="text-accent mt-0.5">•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Compare Plans */}
+        <div className="mt-12 max-w-3xl mx-auto">
+          <h3 className="text-xl font-bold text-center text-foreground mb-6">Compare Plans</h3>
+          <div className="overflow-x-auto -mx-4 px-4">
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="min-w-[600px] w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Feature</th>
+                  <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6]">Complete</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-700">Online</th>
+                </tr>
+              </thead>
+              <tbody>
+                {([
+                  ['8 online modules', true, true],
+                  ['Clinical Toolkit downloads', true, true],
+                  ['CPD certificate (online)', '8 pts', '8 pts'],
+                  ['Lifetime access', true, true],
+                  ['Full-day hands-on workshop', true, false],
+                  ['Workshop CPD certificate', '6 pts', false],
+                  ['Total CPD points', '14', '8'],
+                  ['SCAT6 live practice', true, false],
+                  ['Afterpay / Klarna available', true, true],
+                ] as [string, boolean | string, boolean | string][]).map(([feature, complete, online], i) => (
+                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                    <td className="py-3 px-4 text-slate-700">{feature}</td>
+                    <td className="py-3 px-4 text-center font-medium">
+                      {complete === true ? '\u2713' : complete === false ? '\u2014' : complete}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {online === true ? '\u2713' : online === false ? '\u2014' : online}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+          </div>
+        </div>
 
-        {/* Testimonials — above pricing for social proof before purchase decision */}
-        <div className="max-w-4xl mx-auto mb-12">
+        {/* Testimonials — 3 visible, show-more for remaining */}
+        <div className="max-w-4xl mx-auto mt-12">
+          <h3 className="text-xl font-bold text-center text-foreground mb-6">What Clinicians Are Saying</h3>
           {(() => {
             const testimonials = [
               {
-                quote: 'Well organised...content explained in a way that was relevant and memorable',
-                name: 'Alex',
-                role: 'Osteopath, Melbourne',
-                initials: 'A',
+                quote: 'Relevant, applicable and easy to absorb. A must for any clinician managing concussion',
+                name: 'Sarah',
+                role: 'Physiotherapist',
+                initials: 'S',
               },
               {
                 quote: "An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.",
@@ -150,10 +202,16 @@ function PricingContent() {
                 initials: 'D',
               },
               {
-                quote: 'Relevant, applicable and easy to absorb. A must for any clinician managing concussion',
-                name: 'Sarah',
-                role: 'Physiotherapist',
-                initials: 'S',
+                quote: 'Highly recommend for any health professional wanting to improve their concussion management skills',
+                name: 'Bailey',
+                role: 'Exercise Physiologist',
+                initials: 'B',
+              },
+              {
+                quote: 'Well organised...content explained in a way that was relevant and memorable',
+                name: 'Alex',
+                role: 'Osteopath, Melbourne',
+                initials: 'A',
               },
               {
                 quote: 'Incredibly thorough and well structured...hands on component was invaluable',
@@ -161,20 +219,14 @@ function PricingContent() {
                 role: 'Physiotherapist',
                 initials: 'A',
               },
-              {
-                quote: 'Highly recommend for any health professional wanting to improve their concussion management skills',
-                name: 'Bailey',
-                role: 'Exercise Physiologist',
-                initials: 'B',
-              },
             ]
             return (
               <>
-                <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid md:grid-cols-3 gap-4">
                   {testimonials.map((t, idx) => (
                     <div
                       key={t.name}
-                      className={`glass rounded-xl p-5${idx >= 3 && !showAllTestimonials ? ' hidden md:block' : ''}`}
+                      className={`glass rounded-xl p-5${idx >= 3 && !showAllTestimonials ? ' hidden' : ''}`}
                     >
                       <div className="flex gap-0.5 mb-3">
                         {[...Array(5)].map((_, i) => (
@@ -196,8 +248,8 @@ function PricingContent() {
                     </div>
                   ))}
                 </div>
-                {!showAllTestimonials && testimonials.length > 3 && (
-                  <div className="text-center mt-4 md:hidden">
+                {!showAllTestimonials && (
+                  <div className="text-center mt-4">
                     <button
                       onClick={() => setShowAllTestimonials(true)}
                       className="text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
@@ -209,57 +261,6 @@ function PricingContent() {
               </>
             )
           })()}
-        </div>
-
-        {/* Pricing Cards — delegated to PricingOptions */}
-        <PricingOptions variant="full" />
-
-        {/* Compare Plans */}
-        <div className="mt-12 max-w-3xl mx-auto">
-          <h3 className="text-xl font-bold text-center text-foreground mb-6">Compare Plans</h3>
-          <div className="overflow-x-auto -mx-4 px-4">
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <table className="min-w-[600px] w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Feature</th>
-                  <th className="text-center py-3 px-4 font-semibold text-slate-700">Online</th>
-                  <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6]">Complete</th>
-                </tr>
-              </thead>
-              <tbody>
-                {([
-                  ['8 online modules', true, true],
-                  ['Clinical Toolkit downloads', true, true],
-                  ['CPD certificate (online)', '8 pts', '8 pts'],
-                  ['Lifetime access', true, true],
-                  ['Full-day hands-on workshop', false, true],
-                  ['Workshop CPD certificate', false, '6 pts'],
-                  ['Total CPD points', '8', '14'],
-                  ['SCAT6 live practice', false, true],
-                  ['Afterpay / Klarna available', true, true],
-                ] as [string, boolean | string, boolean | string][]).map(([feature, online, complete], i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                    <td className="py-3 px-4 text-slate-700">{feature}</td>
-                    <td className="py-3 px-4 text-center">
-                      {online === true ? '\u2713' : online === false ? '\u2014' : online}
-                    </td>
-                    <td className="py-3 px-4 text-center font-medium">
-                      {complete === true ? '\u2713' : complete === false ? '\u2014' : complete}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          </div>
-        </div>
-
-        {/* Instructor */}
-        <div className="text-center mt-10">
-          <p className="text-sm text-muted-foreground">
-            Led by <span className="font-semibold text-foreground">Zac Lewis</span>, Osteopath &amp; Founder, Concussion Education Australia
-          </p>
         </div>
 
         {/* Guarantee + Employer Reimbursement */}
@@ -322,6 +323,15 @@ function PricingContent() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Final CTA */}
+        <div className="mt-16 md:mt-20">
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-bold text-foreground mb-2">Ready to start?</h3>
+            <p className="text-sm text-muted-foreground">Join clinicians building concussion confidence. Enrol today.</p>
+          </div>
+          <PricingOptions variant="compact" />
         </div>
 
       </div>

@@ -126,77 +126,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         )}
 
         <div className="grid sm:grid-cols-2 gap-4 pt-5">
-          {/* Online Course - Compact */}
-          <div className="card rounded-xl p-5 flex flex-col relative">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
-                <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                Start Here
-              </span>
-            </div>
-
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
-
-            <div className="mb-3">
-              <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
-              <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay</p>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · Content updated regularly · 8 CPD pts</p>
-            </div>
-
-            <ul className="space-y-1.5 mb-4 flex-1">
-              {[
-                '8 online modules (8 CPD points)',
-                'Own pace — no deadlines',
-                'Clinical Toolkit & resources',
-                'Upgrade to Complete Course anytime',
-              ].map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs">
-                  <Check className="w-3 h-3 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={3} />
-                  <span className="text-[var(--muted-foreground)]">{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mb-3">
-              <label className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-1.5 block">
-                Preferred workshop city (optional)
-              </label>
-              <select
-                value={preferredCity}
-                onChange={(e) => setPreferredCity(e.target.value)}
-                className="w-full py-2 px-2.5 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-xs text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
-              >
-                <option value="">Not sure yet</option>
-                {LOCATIONS.map(loc => (
-                  <option key={loc.value} value={loc.value}>{loc.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              onClick={() => handleCheckout('online-only')}
-              disabled={loading !== null}
-              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading === 'online-only' ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                `Enrol Now — $${CONFIG.COURSE.PRICE_ONLINE}`
-              )}
-            </button>
-            <div className="mt-3 text-center">
-              <a
-                href="/scat-mastery"
-                className="text-[11px] font-semibold text-[var(--accent)] hover:underline underline-offset-4"
-              >
-                Or start free — 2 CPD points →
-              </a>
-            </div>
-          </div>
-
-          {/* Complete Course - Compact (Recommended) */}
+          {/* Complete Course - Compact (Recommended) — shown first */}
           <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
@@ -234,8 +164,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 '8 online modules (8 CPD points)',
                 'Full-day workshop (6 CPD points)',
                 'Hands-on SCAT6, VOMS, BESS',
-                'Clinical Toolkit & resources',
-                'Certificate included',
+                'Clinical Toolkit & all resources',
+                'Choose your preferred location',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
@@ -244,27 +174,26 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               ))}
             </ul>
 
-            {/* Why hands-on matters */}
-            <div className="mb-4 p-3 rounded-lg bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
-              <p className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wide mb-2">Why hands-on matters</p>
-              <ul className="space-y-1.5">
-                {[
-                  'Practice SCAT6 administration on real subjects with expert feedback',
-                  'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
-                  'Leave with a clinical toolkit you can use Monday morning',
-                ].map((item, i) => (
-                  <li key={i} className="text-[11px] text-[var(--muted-foreground)] leading-relaxed flex items-start gap-1.5">
-                    <span className="text-[var(--accent)] mt-0.5">•</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <button
+              onClick={() => handleCheckout('full-course')}
+              disabled={loading !== null}
+              className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {loading === 'full-course' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                `Enrol Now — $${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}`
+              )}
+            </button>
 
-            {/* Workshop preference */}
-            <div className="mb-3">
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
+              &ldquo;Hands on component was invaluable&rdquo; — Amelia
+            </p>
+
+            {/* Workshop preference — below CTA */}
+            <div className="mt-3 pt-3 border-t border-[rgba(13,115,119,0.08)]">
               <label className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-1.5 block">
-                Preferred workshop city (AU/NZ only)
+                Preferred workshop city (optional)
               </label>
               <select
                 value={selectedLocation}
@@ -276,22 +205,61 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   <option key={loc.value} value={loc.value}>{loc.label}</option>
                 ))}
               </select>
-              <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
-                Complete online modules first. Nominate your workshop date from your dashboard.
-              </p>
+            </div>
+          </div>
+
+          {/* Online Course - Compact */}
+          <div className="card rounded-xl p-5 flex flex-col relative">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+                <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                Online Only
+              </span>
             </div>
 
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
+
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
+              <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
+            </div>
+
+            <ul className="space-y-1.5 mb-4 flex-1">
+              {[
+                '8 online modules (8 CPD points)',
+                'Own pace — no deadlines',
+                'Clinical Toolkit & resources',
+                'Upgrade to Complete Course anytime',
+              ].map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs">
+                  <Check className="w-3 h-3 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={3} />
+                  <span className="text-[var(--muted-foreground)]">{f}</span>
+                </li>
+              ))}
+            </ul>
+
             <button
-              onClick={() => handleCheckout('full-course')}
+              onClick={() => handleCheckout('online-only')}
               disabled={loading !== null}
-              className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading === 'full-course' ? (
+              {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Enrol — $${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}`
+                `Enrol — $${CONFIG.COURSE.PRICE_ONLINE}`
               )}
             </button>
+            <div className="mt-3 text-center">
+              <a
+                href="/scat-mastery"
+                className="text-[11px] font-semibold text-[var(--accent)] hover:underline underline-offset-4"
+              >
+                Try free — 2 CPD points →
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -309,118 +277,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Cards */}
+      {/* Pricing Cards — Complete Course first for price anchoring */}
       <div className="grid md:grid-cols-2 gap-6 pt-5">
-
-        {/* Online Course */}
-        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative">
-          {/* Icon + Badge */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
-              <BookOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
-            </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-              Start Here
-            </span>
-          </div>
-
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Online Course</h3>
-          <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-            Start with the 8 online modules at your own pace. Upgrade to the Complete Course to add hands-on SCAT6, VOMS &amp; BESS training (14 CPD points total).
-          </p>
-
-          <div className="mb-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
-              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
-            </div>
-            <p className="text-sm text-slate-500 mt-1">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay</p>
-            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
-          </div>
-
-          {/* Mobile-only CTA */}
-          <div className="md:hidden mb-5">
-            <button
-              onClick={() => handleCheckout('online-only')}
-              disabled={loading !== null}
-              className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              {loading === 'online-only' ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  Enrol Now — ${CONFIG.COURSE.PRICE_ONLINE}
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-            <p className="text-[11px] text-[var(--muted-foreground)] mt-2 text-center">
-              Afterpay / Klarna available · 7-day guarantee · Secure checkout
-            </p>
-          </div>
-
-          <ul className="space-y-3 mb-7 flex-1">
-            {[
-              '8 online modules (8 CPD points)',
-              'Complete at your own pace — no deadlines',
-              'Lifetime access — content updated regularly',
-              'Clinical Toolkit & downloadable resources',
-              'Reference Repository (140+ articles)',
-              'Digital certificate',
-              'Upgrade to Complete Course anytime',
-            ].map((feature, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm">
-                <Check className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                <span className="text-[var(--muted-foreground)]">{feature}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mb-4">
-            <label className="text-xs font-semibold text-[var(--muted-foreground)] mb-1.5 block">
-              Which city would you attend a future workshop?
-            </label>
-            <select
-              value={preferredCity}
-              onChange={(e) => setPreferredCity(e.target.value)}
-              className="w-full py-2.5 px-3 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
-            >
-              <option value="">Not sure yet</option>
-              {LOCATIONS.map(loc => (
-                <option key={loc.value} value={loc.value}>{loc.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={() => handleCheckout('online-only')}
-            disabled={loading !== null}
-            className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-          >
-            {loading === 'online-only' ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                Enrol Now — ${CONFIG.COURSE.PRICE_ONLINE}
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-
-          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-            Afterpay / Klarna available · 7-day guarantee · Secure checkout
-          </p>
-
-          <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)] text-center">
-            <p className="text-xs text-[var(--muted-foreground)] mb-2">Not ready to commit?</p>
-            <a
-              href="/scat-mastery"
-              className="text-sm font-semibold text-[var(--accent)] hover:underline underline-offset-4"
-            >
-              Start free — 2 CPD points, no card needed →
-            </a>
-          </div>
-        </div>
 
         {/* Complete Course — Recommended */}
         <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
@@ -436,7 +294,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Complete Course</h3>
           <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-            Full training: 8 online modules plus a full-day hands-on workshop. Everything you need for clinical confidence.
+            Online modules plus a full-day hands-on workshop. Everything for clinical confidence in concussion management.
           </p>
 
           <div className="mb-6">
@@ -471,11 +329,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             {[
               '8 online modules (8 CPD points)',
               'Full-day in-person workshop (6 CPD points)',
-              'Hands-on SCAT6, VOMS, BESS training',
+              'Hands-on SCAT6, VOMS & BESS training',
               'Clinical Toolkit & all resources',
-              'Reference Repository (140+ articles)',
               'Choose your preferred location',
-              'Flexible workshop date selection',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
@@ -483,23 +339,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </li>
             ))}
           </ul>
-
-          {/* Why hands-on matters */}
-          <div className="mb-6 p-4 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
-            <p className="text-xs font-bold text-[var(--accent)] uppercase tracking-wide mb-2.5">Why hands-on matters</p>
-            <ul className="space-y-2">
-              {[
-                'Practice SCAT6 administration on real subjects with expert feedback',
-                'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
-                'Leave with a clinical toolkit you can use Monday morning',
-              ].map((item, i) => (
-                <li key={i} className="text-sm text-[var(--muted-foreground)] leading-relaxed flex items-start gap-2">
-                  <span className="text-[var(--accent)] mt-0.5">•</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
 
           {/* Q1 social proof */}
           {CONFIG.WORKSHOP.Q1_COMPLETED && (
@@ -510,28 +349,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           )}
 
-          {/* Workshop Preference */}
-          <div className="mb-4">
-            <label className="text-sm font-semibold mb-2 flex items-center gap-1.5 text-[var(--foreground)]">
-              <MapPin className="w-3.5 h-3.5 text-[var(--accent)]" />
-              Preferred Workshop City
-            </label>
-            <select
-              value={selectedLocation}
-              onChange={(e) => handleLocationSelect(e.target.value)}
-              className="w-full py-2.5 px-3 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
-            >
-              <option value="">Select city</option>
-              {LOCATIONS.map(loc => (
-                <option key={loc.value} value={loc.value}>{loc.label}</option>
-              ))}
-            </select>
-            <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
-              Complete online modules first. Nominate your workshop date from your dashboard after finishing the course.
-            </p>
-          </div>
-
-          {/* Enroll Button */}
+          {/* Enroll Button — above workshop selector to reduce friction */}
           <button
             onClick={() => handleCheckout('full-course')}
             disabled={loading !== null}
@@ -541,15 +359,119 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Enrol — ${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Enrol Now — ${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
 
-          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-            Afterpay / Klarna available · 7-day guarantee · Flexible workshop dates
+          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
+            &ldquo;Hands on component was invaluable&rdquo; — Amelia, Physiotherapist
           </p>
+
+          {/* Workshop Preference — below CTA, optional context */}
+          <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)]">
+            <label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5 text-[var(--muted-foreground)]">
+              <MapPin className="w-3 h-3 text-[var(--accent)]" />
+              Preferred Workshop City (optional)
+            </label>
+            <select
+              value={selectedLocation}
+              onChange={(e) => handleLocationSelect(e.target.value)}
+              className="w-full py-2 px-3 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
+            >
+              <option value="">Select city</option>
+              {LOCATIONS.map(loc => (
+                <option key={loc.value} value={loc.value}>{loc.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Online Course */}
+        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative">
+          {/* Icon + Badge */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+              <BookOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
+            </div>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              Online Only
+            </span>
+          </div>
+
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Online Course</h3>
+          <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
+            8 online modules at your own pace. Upgrade to the Complete Course anytime to add hands-on training.
+          </p>
+
+          <div className="mb-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
+              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
+          </div>
+
+          <ul className="space-y-3 mb-7 flex-1">
+            {[
+              '8 online modules (8 CPD points)',
+              'Complete at your own pace — no deadlines',
+              'Lifetime access — content updated regularly',
+              'Clinical Toolkit & downloadable resources',
+              'Upgrade to Complete Course anytime',
+            ].map((feature, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <Check className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-[var(--muted-foreground)]">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            onClick={() => handleCheckout('online-only')}
+            disabled={loading !== null}
+            className="w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
+          >
+            {loading === 'online-only' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                Enrol — ${CONFIG.COURSE.PRICE_ONLINE}
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+
+          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
+            &ldquo;Well organised...content explained in a way that was relevant and memorable&rdquo; — Alex, Osteopath
+          </p>
+
+          {/* Workshop interest + free tier — below CTA */}
+          <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)] space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-[var(--muted-foreground)] mb-1.5 block">
+                Interested in a future workshop?
+              </label>
+              <select
+                value={preferredCity}
+                onChange={(e) => setPreferredCity(e.target.value)}
+                className="w-full py-2 px-3 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
+              >
+                <option value="">Not sure yet</option>
+                {LOCATIONS.map(loc => (
+                  <option key={loc.value} value={loc.value}>{loc.label}</option>
+                ))}
+              </select>
+            </div>
+            <a
+              href="/scat-mastery"
+              className="block text-center text-sm font-semibold text-[var(--accent)] hover:underline underline-offset-4"
+            >
+              Try free — 2 CPD points, no card needed →
+            </a>
+          </div>
         </div>
       </div>
 
