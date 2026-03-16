@@ -24,15 +24,25 @@ function PricingContent() {
   // FAQ accordion
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
-  // Testimonial show-more toggle (mobile)
-  const [showAllTestimonials, setShowAllTestimonials] = useState(false)
-
   // Enrollment count for credential bar social proof
   const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
   useEffect(() => {
     fetch('/api/enrollment-count')
       .then(res => res.json())
       .then(data => { if (data.count > 0) setEnrollmentCount(data.count) })
+      .catch(() => {})
+  }, [])
+
+  // Per-city enrollment counts for workshop progress bars
+  const [cityCounts, setCityCounts] = useState<Record<string, number>>({})
+  const [cityThreshold, setCityThreshold] = useState<number>(8)
+  useEffect(() => {
+    fetch('/api/enrollment-counts')
+      .then(res => res.json())
+      .then(data => {
+        if (data.counts) setCityCounts(data.counts)
+        if (data.threshold) setCityThreshold(data.threshold)
+      })
       .catch(() => {})
   }, [])
 
@@ -97,11 +107,11 @@ function PricingContent() {
         {/* Page Header — tight, conversion-focused */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Invest in Your Clinical{' '}
-            <span className="text-gradient">Confidence</span>
+            Australia&apos;s Only Hands-On{' '}
+            <span className="text-gradient">Concussion CPD</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Australia&apos;s only concussion CPD with hands-on assessment training. Choose your path below.
+            Master SCAT6, VOMS &amp; BESS with expert-led training. Early bird pricing ends 30 June 2026.
           </p>
         </div>
 
@@ -126,10 +136,10 @@ function PricingContent() {
         {/* Pricing Cards — delegated to PricingOptions */}
         <PricingOptions variant="full" />
 
-        {/* Why hands-on matters — standalone section */}
+        {/* Why hands-on matters + Workshop progress */}
         <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
           <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Why hands-on matters</p>
-          <ul className="space-y-2">
+          <ul className="space-y-2 mb-5">
             {[
               'Practice SCAT6 administration on real subjects with expert feedback',
               'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
@@ -141,6 +151,42 @@ function PricingContent() {
               </li>
             ))}
           </ul>
+
+          {/* Workshop city progress bars */}
+          {Object.keys(cityCounts).length > 0 && (
+            <div className="border-t border-[rgba(13,115,119,0.12)] pt-4">
+              <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Next Workshop Round — Jun–Aug 2026</p>
+              <div className="grid sm:grid-cols-3 gap-3">
+                {[
+                  { slug: 'sydney', label: 'Sydney' },
+                  { slug: 'melbourne', label: 'Melbourne' },
+                  { slug: 'byron-bay', label: 'Byron Bay' },
+                ].map(city => {
+                  const count = cityCounts[city.slug] || 0
+                  const pct = Math.min(Math.round((count / cityThreshold) * 100), 100)
+                  return (
+                    <div key={city.slug} className="bg-white/60 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold text-foreground">{city.label}</span>
+                        <span className="text-[10px] text-muted-foreground">{count}/{cityThreshold} registered</span>
+                      </div>
+                      <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-accent rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      {count >= cityThreshold ? (
+                        <p className="text-[10px] text-emerald-600 font-medium mt-1">Threshold reached — date confirming soon</p>
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground mt-1">{cityThreshold - count} more to confirm date</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Compare Plans */}
@@ -184,11 +230,11 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Testimonials — 3 visible, show-more for remaining */}
+        {/* Testimonials — all 5 visible */}
         <div className="max-w-4xl mx-auto mt-12">
           <h3 className="text-xl font-bold text-center text-foreground mb-6">What Clinicians Are Saying</h3>
-          {(() => {
-            const testimonials = [
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
               {
                 quote: 'Relevant, applicable and easy to absorb. A must for any clinician managing concussion',
                 name: 'Sarah',
@@ -219,48 +265,28 @@ function PricingContent() {
                 role: 'Physiotherapist',
                 initials: 'A',
               },
-            ]
-            return (
-              <>
-                <div className="grid md:grid-cols-3 gap-4">
-                  {testimonials.map((t, idx) => (
-                    <div
-                      key={t.name}
-                      className={`glass rounded-xl p-5${idx >= 3 && !showAllTestimonials ? ' hidden' : ''}`}
-                    >
-                      <div className="flex gap-0.5 mb-3">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">
-                        &ldquo;{t.quote}&rdquo;
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
-                          {t.initials}
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-foreground">{t.name}</div>
-                          <div className="text-xs text-muted-foreground">{t.role}</div>
-                        </div>
-                      </div>
-                    </div>
+            ].map((t) => (
+              <div key={t.name} className="glass rounded-xl p-5">
+                <div className="flex gap-0.5 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                {!showAllTestimonials && (
-                  <div className="text-center mt-4">
-                    <button
-                      onClick={() => setShowAllTestimonials(true)}
-                      className="text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
-                    >
-                      See more reviews ({testimonials.length - 3} more)
-                    </button>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
+                    {t.initials}
                   </div>
-                )}
-              </>
-            )
-          })()}
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{t.name}</div>
+                    <div className="text-xs text-muted-foreground">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Guarantee + Employer Reimbursement */}

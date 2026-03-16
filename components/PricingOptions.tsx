@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import {
   Check,
   ArrowRight,
-  MapPin,
   Loader2,
   AlertCircle,
   BookOpen,
@@ -147,13 +146,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Save ${CONFIG.COURSE.SAVINGS}</span>
                   </div>
                   <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</div>
-                  <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100} with Afterpay</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
                   <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </>
               ) : (
                 <>
                   <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</div>
-                  <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100} with Afterpay</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
                 </>
               )}
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>
@@ -190,22 +189,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               &ldquo;Hands on component was invaluable&rdquo; — Amelia
             </p>
 
-            {/* Workshop preference — below CTA */}
-            <div className="mt-3 pt-3 border-t border-[rgba(13,115,119,0.08)]">
-              <label className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-1.5 block">
-                Preferred workshop city (optional)
-              </label>
-              <select
-                value={selectedLocation}
-                onChange={(e) => handleLocationSelect(e.target.value)}
-                className="w-full py-2 px-2.5 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-xs text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
-              >
-                <option value="">Select city</option>
-                {LOCATIONS.map(loc => (
-                  <option key={loc.value} value={loc.value}>{loc.label}</option>
-                ))}
-              </select>
-            </div>
           </div>
 
           {/* Online Course - Compact */}
@@ -223,7 +206,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
             <div className="mb-3">
               <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
-              <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
             </div>
 
@@ -309,8 +292,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
                   <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+                  <span className="text-xs text-slate-400">≈ $770 USD</span>
                 </div>
-                <p className="text-sm text-slate-500 mt-1">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100} with Afterpay</p>
+                <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
                 <p className="text-xs text-orange-600 font-medium mt-1">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
               </>
             ) : (
@@ -318,8 +302,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
                   <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+                  <span className="text-xs text-slate-400">≈ $910 USD</span>
                 </div>
-                <p className="text-sm text-slate-500 mt-1">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100} with Afterpay</p>
+                <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
               </>
             )}
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · 14 AHPRA CPD points</p>
@@ -369,23 +354,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             &ldquo;Hands on component was invaluable&rdquo; — Amelia, Physiotherapist
           </p>
 
-          {/* Workshop Preference — below CTA, optional context */}
-          <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)]">
-            <label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5 text-[var(--muted-foreground)]">
-              <MapPin className="w-3 h-3 text-[var(--accent)]" />
-              Preferred Workshop City (optional)
-            </label>
-            <select
-              value={selectedLocation}
-              onChange={(e) => handleLocationSelect(e.target.value)}
-              className="w-full py-2 px-3 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
-            >
-              <option value="">Select city</option>
-              {LOCATIONS.map(loc => (
-                <option key={loc.value} value={loc.value}>{loc.label}</option>
-              ))}
-            </select>
-          </div>
         </div>
 
         {/* Online Course */}
@@ -409,8 +377,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+              <span className="text-xs text-slate-400">≈ $320 USD</span>
             </div>
-            <p className="text-sm text-slate-500 mt-1">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay</p>
+            <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
           </div>
 
@@ -448,26 +417,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             &ldquo;Well organised...content explained in a way that was relevant and memorable&rdquo; — Alex, Osteopath
           </p>
 
-          {/* Workshop interest + free tier — below CTA */}
-          <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)] space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-[var(--muted-foreground)] mb-1.5 block">
-                Interested in a future workshop?
-              </label>
-              <select
-                value={preferredCity}
-                onChange={(e) => setPreferredCity(e.target.value)}
-                className="w-full py-2 px-3 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
-              >
-                <option value="">Not sure yet</option>
-                {LOCATIONS.map(loc => (
-                  <option key={loc.value} value={loc.value}>{loc.label}</option>
-                ))}
-              </select>
-            </div>
+          <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)] text-center">
             <a
               href="/scat-mastery"
-              className="block text-center text-sm font-semibold text-[var(--accent)] hover:underline underline-offset-4"
+              className="text-sm font-semibold text-[var(--accent)] hover:underline underline-offset-4"
             >
               Try free — 2 CPD points, no card needed →
             </a>
