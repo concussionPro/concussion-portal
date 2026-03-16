@@ -111,9 +111,9 @@ export default function RootLayout({
   return (
     <html lang="en-AU">
       <head>
-        {/* Google Analytics (GA4) + Google Ads Conversion Tracking */}
+        {/* Google Analytics (GA4: ConcussionPro Portal) + Google Ads Conversion Tracking */}
         <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || 'G-LRDRZBWJ2E'}`}
+          src="https://www.googletagmanager.com/gtag/js?id=G-LRDRZBWJ2E"
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -121,7 +121,7 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || 'G-LRDRZBWJ2E'}');
+            gtag('config', 'G-LRDRZBWJ2E');
             gtag('config', 'AW-17984048021');
           `}
         </Script>

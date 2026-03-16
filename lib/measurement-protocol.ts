@@ -13,7 +13,7 @@
  * Stream ID: 13917185031
  */
 
-const GA4_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || 'G-LRDRZBWJ2E'
+const GA4_MEASUREMENT_ID = 'G-LRDRZBWJ2E'
 
 export async function trackServerPurchase(
   transactionId: string,
