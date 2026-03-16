@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Try Module 1 Free | Concussion Science Fundamentals | ConcussionPro',
-  description: 'Try the first module of ConcussionPro free. Learn concussion science fundamentals including neurometabolic cascade, biomechanics, and risk factors. No credit card required. 45 minutes, 1 CPD point.',
+  description: 'Try the first module of ConcussionPro free. Learn concussion science fundamentals including neurometabolic cascade, biomechanics, and risk factors. No credit card required.',
   keywords: 'free concussion course, try concussion module, concussion science, neurometabolic cascade concussion, concussion risk factors, free CPD concussion',
   openGraph: {
     title: 'Try Module 1 Free — Concussion Science Fundamentals',

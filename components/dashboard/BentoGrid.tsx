@@ -1,21 +1,26 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   BookOpen,
   Award,
   Clock,
-  TrendingUp,
   ArrowUpRight,
   FileText,
   Activity,
   Library,
   GraduationCap,
   Lock,
+  MapPin,
+  Check,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
+import { useSession } from '@/contexts/SessionContext'
 import { useRouter } from 'next/navigation'
+import { CONFIG } from '@/lib/config'
 
 /* ──────────────── Micro Progress Ring ──────────────── */
 function MicroRing({ value, max, size = 40 }: { value: number; max: number; size?: number }) {
@@ -70,8 +75,13 @@ function Card({ children, className, onClick, span2 }: CardProps) {
 }
 
 /* ──────────────── Main Bento Grid ──────────────── */
-export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
+export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWorkshopNominated }: {
+  accessLevel?: string
+  workshopLocation?: string | null
+  onWorkshopNominated?: (location: string) => void
+}) {
   const router = useRouter()
+  const { user } = useSession()
   const {
     getTotalCompletedModules,
     getTotalCPDPoints,
@@ -79,6 +89,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
     progress,
   } = useProgress()
 
+  const accessLevel = user?.accessLevel || accessLevelProp || ''
   const isPreview = accessLevel === 'preview'
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
@@ -86,18 +97,18 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
 
   // For preview users, show SCAT progress
   const scatCompleted = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 105 && p.completed,
+    (p) => p.moduleId >= 101 && p.moduleId <= 106 && p.completed,
   ).length
-  // Modules 101-104 are 0.5 CPD each, Module 105 is 0 CPD
+  // Modules 101-104 are 0.5 CPD each, Modules 105-106 are 0 CPD
   const scatCPD = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 104 && p.completed,
   ).length * 0.5
   const scatInProgress = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 105 && !!p.startedAt && !p.completed,
+    (p) => p.moduleId >= 101 && p.moduleId <= 106 && !!p.startedAt && !p.completed,
   ).length
 
   const displayModules = isPreview ? scatCompleted : completedModules
-  const displayMaxModules = isPreview ? 5 : 8
+  const displayMaxModules = isPreview ? 6 : 8
   const displayCPD = isPreview ? scatCPD : cpdPoints
   const displayMaxCPD = isPreview ? 2 : 8
 
@@ -185,7 +196,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
           </div>
           <p className="stat-label mb-0">Learning Suite</p>
         </div>
-        <p className="text-sm text-foreground font-semibold mb-1">{isPreview ? '5 Free SCAT Modules' : '8 Clinical Modules'}</p>
+        <p className="text-sm text-foreground font-semibold mb-1">{isPreview ? '6 Free SCAT Modules' : '8 Clinical Modules'}</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
           {isPreview
             ? 'SCAT6 & SCOAT6 mastery training — earn 2 free CPD points.'
@@ -194,7 +205,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       </Card>
 
       {/* ── 5. Clinical Toolkit ─────────────────────── */}
-      <Card onClick={() => router.push(isPreview ? '/pricing' : '/clinical-toolkit')} className={isPreview ? 'opacity-60' : undefined}>
+      <Card onClick={() => router.push(isPreview ? '/pricing' : '/clinical-toolkit')}>
         <div className="flex items-center gap-3 mb-3">
           <div className={cn(
             'w-9 h-9 rounded-xl flex items-center justify-center',
@@ -235,7 +246,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       </Card>
 
       {/* ── 7. Reference Repository (wide) ──────────── */}
-      <Card onClick={() => router.push(isPreview ? '/pricing' : '/references')} span2 className={isPreview ? 'opacity-60' : undefined}>
+      <Card onClick={() => router.push(isPreview ? '/pricing' : '/references')} span2>
         <div className="flex items-start gap-4">
           <div className={cn(
             'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
@@ -257,7 +268,7 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
                 </span>
               )}
             </div>
-            <p className="text-sm text-foreground font-semibold mb-1">150+ Peer-Reviewed Sources</p>
+            <p className="text-sm text-foreground font-semibold mb-1">140+ Peer-Reviewed Sources</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable library of concussion research — journal articles, meta-analyses, and clinical guidelines.
             </p>
@@ -266,36 +277,171 @@ export function BentoGrid({ accessLevel }: { accessLevel?: string }) {
       </Card>
 
       {/* ── 8. In-Person Workshop ───────────────────── */}
-      <Card onClick={() => router.push(isPreview ? '/pricing' : '/in-person')} className={isPreview ? 'opacity-60' : undefined}>
+      <WorkshopCard
+        accessLevel={accessLevel}
+        isPreview={isPreview}
+        allModulesComplete={completedModules >= 8}
+        workshopLocation={workshopLocation}
+        onWorkshopNominated={onWorkshopNominated}
+        onNavigate={(path) => router.push(path)}
+      />
+    </div>
+  )
+}
+
+/* ──────────────── Workshop Card ──────────────── */
+function WorkshopCard({
+  accessLevel,
+  isPreview,
+  allModulesComplete,
+  workshopLocation,
+  onWorkshopNominated,
+  onNavigate,
+}: {
+  accessLevel?: string
+  isPreview: boolean
+  allModulesComplete: boolean
+  workshopLocation?: string | null
+  onWorkshopNominated?: (location: string) => void
+  onNavigate: (path: string) => void
+}) {
+  const isFullCourse = accessLevel === 'full-course'
+  const showNomination = isFullCourse && allModulesComplete && !workshopLocation
+  const hasNominated = isFullCourse && !!workshopLocation
+
+  const [selectedCity, setSelectedCity] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  const cityLabel = (slug: string) => {
+    const match = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === slug)
+    return match ? match.city : slug
+  }
+
+  const handleNominate = async () => {
+    if (!selectedCity) return
+    setSaving(true)
+    setFeedback(null)
+    try {
+      const res = await fetch('/api/workshop/nominate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ location: selectedCity }),
+      })
+      if (res.ok) {
+        setFeedback({ type: 'success', message: `Nominated for ${cityLabel(selectedCity)}! We'll email you ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop date.` })
+        setTimeout(() => onWorkshopNominated?.(selectedCity), 1500)
+      } else {
+        setFeedback({ type: 'error', message: 'Failed to save. Please try again.' })
+      }
+    } catch {
+      setFeedback({ type: 'error', message: 'Network error. Please check your connection.' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Full-course user who completed online — show nomination
+  if (showNomination) {
+    return (
+      <Card>
         <div className="flex items-center gap-3 mb-3">
-          <div className={cn(
-            'w-9 h-9 rounded-xl flex items-center justify-center',
-            isPreview
-              ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
-              : 'bg-gradient-to-br from-rose-500/10 to-rose-400/5'
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
+            <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
+          </div>
+          <p className="stat-label mb-0">Workshop Ready</p>
+          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+            Nominate
+          </span>
+        </div>
+        <p className="text-sm text-foreground font-semibold mb-2">Choose Your Workshop City</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Online modules complete. Nominate your city — once {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians register, we confirm a date.
+        </p>
+        <select
+          value={selectedCity}
+          onChange={(e) => setSelectedCity(e.target.value)}
+          className="w-full py-2 px-2.5 rounded-lg border border-border/50 bg-background text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-accent/20"
+        >
+          <option value="">Select city...</option>
+          {Object.values(CONFIG.LOCATIONS).map(loc => (
+            <option key={loc.slug} value={loc.slug}>{loc.city}</option>
+          ))}
+        </select>
+        <button
+          onClick={handleNominate}
+          disabled={!selectedCity || saving || feedback?.type === 'success'}
+          className="w-full py-2 rounded-lg text-xs font-semibold bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+        >
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
+          {saving ? 'Saving...' : 'Nominate City'}
+        </button>
+        {feedback && (
+          <p className={cn(
+            'text-[11px] mt-2 font-medium',
+            feedback.type === 'success' ? 'text-emerald-600' : 'text-red-600'
           )}>
-            {isPreview
-              ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
-              : <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
-            }
+            {feedback.message}
+          </p>
+        )}
+      </Card>
+    )
+  }
+
+  // Full-course user who has nominated
+  if (hasNominated) {
+    return (
+      <Card onClick={() => onNavigate('/in-person')}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
+            <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
           </div>
           <p className="stat-label mb-0">In-Person Workshop</p>
-          {accessLevel === 'full-course' && (
-            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-              Included
-            </span>
-          )}
-          {isPreview && (
-            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
-              Paid
-            </span>
-          )}
+          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+            <Check className="w-2.5 h-2.5 inline mr-0.5" />{cityLabel(workshopLocation!)}
+          </span>
         </div>
         <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Points</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Hands-on training with standardised assessments, sideline protocols, and case studies.
+          Nominated for {cityLabel(workshopLocation!)}. You&apos;ll be notified {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop date.
         </p>
       </Card>
-    </div>
+    )
+  }
+
+  // Default: preview/online-only/full-course pre-completion
+  return (
+    <Card onClick={() => onNavigate(isPreview ? '/pricing' : '/in-person')}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className={cn(
+          'w-9 h-9 rounded-xl flex items-center justify-center',
+          isPreview
+            ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
+            : 'bg-gradient-to-br from-rose-500/10 to-rose-400/5'
+        )}>
+          {isPreview
+            ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+            : <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
+          }
+        </div>
+        <p className="stat-label mb-0">In-Person Workshop</p>
+        {isFullCourse && (
+          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+            Included
+          </span>
+        )}
+        {isPreview && (
+          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+            Paid
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Points</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        {isFullCourse && !allModulesComplete
+          ? 'Complete your online modules to nominate your workshop city.'
+          : 'Hands-on training with standardised assessments, sideline protocols, and case studies.'}
+      </p>
+    </Card>
   )
 }

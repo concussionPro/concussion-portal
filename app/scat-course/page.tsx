@@ -169,7 +169,7 @@ export default function SCATCoursePage() {
                 <Clock className="w-5 h-5" />
                 <span className="text-sm font-semibold">Time Investment</span>
               </div>
-              <div className="text-2xl font-bold">~2 Hours</div>
+              <div className="text-2xl font-bold">~3 Hours</div>
               <div className="text-sm text-blue-100 mt-1">Self-paced learning</div>
             </div>
           </div>

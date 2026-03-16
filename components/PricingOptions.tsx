@@ -52,100 +52,6 @@ const LOCATIONS: LocationOption[] = [
   },
 ]
 
-// ─── Threshold Progress Bar ──────────────────────────────────────────────────
-
-function ThresholdProgress({ count, threshold }: { count: number; threshold: number }) {
-  const remaining = Math.max(0, threshold - count)
-  const pct = Math.min(100, (count / threshold) * 100)
-
-  return (
-    <div className="mt-1.5">
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 bg-[rgba(13,115,119,0.08)] rounded-full overflow-hidden">
-          <div
-            className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <span className="text-[10px] font-semibold text-[var(--muted-foreground)] tabular-nums shrink-0">
-          {count}/{threshold}
-        </span>
-      </div>
-      <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
-        {remaining > 0
-          ? `${count} spot${count !== 1 ? 's' : ''} claimed — ${remaining} more to confirm date`
-          : 'Threshold reached — date being confirmed'}
-      </p>
-    </div>
-  )
-}
-
-// ─── Location Row ─────────────────────────────────────────────────────────────
-
-function LocationRow({
-  loc,
-  isSelected,
-  onSelect,
-  compact,
-  enrollmentCount,
-  threshold,
-}: {
-  loc: LocationOption
-  isSelected: boolean
-  onSelect: (value: string) => void
-  compact: boolean
-  enrollmentCount: number
-  threshold: number
-}) {
-  const isConfirmed = loc.status === 'confirmed'
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => onSelect(loc.value)}
-        aria-pressed={isSelected}
-        className={`w-full flex items-center justify-between rounded-lg border text-sm transition-all text-left ${
-          compact ? 'px-3 py-2' : 'px-4 py-3'
-        } ${
-          isSelected
-            ? 'border-[var(--accent)] bg-[rgba(13,115,119,0.06)] ring-1 ring-[var(--accent)]/20'
-            : 'border-[rgba(13,115,119,0.08)] hover:border-[rgba(13,115,119,0.15)] bg-[rgba(255,255,255,0.6)]'
-        }`}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <span className={`font-semibold text-[var(--foreground)] ${compact ? 'text-xs' : 'text-sm'}`}>
-            {loc.label}
-          </span>
-          {isConfirmed ? (
-            <span className="text-[var(--muted-foreground)] text-xs shrink-0">· {loc.date}</span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold shrink-0 border border-emerald-200/50">
-              Early Bird
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0 ml-2">
-          <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-colors ${
-            isSelected
-              ? 'border-[var(--accent)] bg-[var(--accent)]'
-              : 'border-[rgba(13,115,119,0.2)]'
-          }`}>
-            {isSelected && (
-              <Check className="w-2 h-2 text-white" strokeWidth={3} />
-            )}
-          </div>
-        </div>
-      </button>
-
-      {isSelected && loc.status === 'collecting' && (
-        <ThresholdProgress count={enrollmentCount} threshold={threshold} />
-      )}
-    </div>
-  )
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
@@ -154,21 +60,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
-  const [isEarlyBird, setIsEarlyBird] = useState(false)
-  const [cityCounts, setCityCounts] = useState<Record<string, number>>({})
-  const [threshold, setThreshold] = useState(CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD)
+  const [isEarlyBird, setIsEarlyBird] = useState(true)
 
   const isCompact = variant === 'compact'
 
-  // Early bird: true for collecting cities (always early bird during collection)
+  // Early bird: let the server decide at checkout; default to showing early bird price
   useEffect(() => {
     const selectedLoc = LOCATIONS.find(l => l.value === selectedLocation)
-    if (selectedLoc?.status === 'collecting') {
-      setIsEarlyBird(true)
-    } else {
-      // For confirmed, let the server decide via checkout
-      setIsEarlyBird(true) // Default to showing early bird price
-    }
+    setIsEarlyBird(!selectedLoc || selectedLoc.status !== 'completed')
   }, [selectedLocation])
 
   // Fetch total enrollment count for social proof
@@ -179,28 +78,12 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       .catch(() => {})
   }, [])
 
-  // Fetch per-city enrollment counts for threshold display
-  useEffect(() => {
-    fetch('/api/enrollment-counts')
-      .then(res => res.json())
-      .then(data => {
-        if (data.counts) setCityCounts(data.counts)
-        if (data.threshold) setThreshold(data.threshold)
-      })
-      .catch(() => {})
-  }, [])
-
   const handleLocationSelect = (value: string) => {
     setSelectedLocation(value)
     setError(null)
   }
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
-    if (courseType === 'full-course' && !selectedLocation) {
-      setError('Please select a workshop location to enrol.')
-      return
-    }
-
     setLoading(courseType)
     setError(null)
 
@@ -212,7 +95,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           courseType,
-          location: courseType === 'full-course' ? selectedLocation : undefined,
+          location: courseType === 'full-course' && selectedLocation ? selectedLocation : undefined,
           preferredCity: courseType === 'online-only' ? preferredCity || undefined : undefined,
         }),
       })
@@ -231,18 +114,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
     }
   }
 
-  const selectedLocationObj = LOCATIONS.find(l => l.value === selectedLocation)
-  const canEnroll = !!selectedLocationObj
-
-  // Button text
-  const getEnrolButtonText = () => {
-    if (!canEnroll) return 'Select a Location to Enrol'
-    if (selectedLocationObj.status === 'confirmed' && selectedLocationObj.date) {
-      return `Enrol — ${selectedLocationObj.label}, ${selectedLocationObj.date}`
-    }
-    return `Reserve Your Spot — ${selectedLocationObj.label}`
-  }
-
   // COMPACT VARIANT
   if (isCompact) {
     return (
@@ -255,14 +126,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         )}
 
         <div className="grid sm:grid-cols-2 gap-4 pt-5">
-          {/* Online Course - Compact (Primary) */}
-          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+          {/* Online Course - Compact */}
+          <div className="card rounded-xl p-5 flex flex-col relative">
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
                 <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
               </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                Recommended
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                Start Here
               </span>
             </div>
 
@@ -270,6 +141,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
             <div className="mb-3">
               <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
+              <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay</p>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · Content updated regularly · 8 CPD pts</p>
             </div>
 
@@ -324,14 +196,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           </div>
 
-          {/* Complete Course - Compact (Upgrade) */}
-          <div className="card rounded-xl p-5 flex flex-col relative">
+          {/* Complete Course - Compact (Recommended) */}
+          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
                 <Award className="w-4 h-4 text-orange-500" strokeWidth={2} />
               </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                Add Workshop
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+                Recommended
               </span>
             </div>
 
@@ -345,9 +217,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Save ${CONFIG.COURSE.SAVINGS}</span>
                   </div>
                   <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</div>
+                  <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100} with Afterpay</p>
+                  <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </>
               ) : (
-                <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</div>
+                <>
+                  <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</div>
+                  <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100} with Afterpay</p>
+                </>
               )}
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>
             </div>
@@ -384,33 +261,35 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </ul>
             </div>
 
-            {/* Compact location selector */}
-            <div className="mb-3 space-y-1.5">
-              {LOCATIONS.map(loc => (
-                <LocationRow
-                  key={loc.value}
-                  loc={loc}
-                  isSelected={selectedLocation === loc.value}
-                  onSelect={handleLocationSelect}
-                  compact={true}
-                  enrollmentCount={cityCounts[loc.value] || 0}
-                  threshold={threshold}
-                />
-              ))}
+            {/* Workshop preference */}
+            <div className="mb-3">
+              <label className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-1.5 block">
+                Preferred workshop city (AU/NZ only)
+              </label>
+              <select
+                value={selectedLocation}
+                onChange={(e) => handleLocationSelect(e.target.value)}
+                className="w-full py-2 px-2.5 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-xs text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
+              >
+                <option value="">Select city</option>
+                {LOCATIONS.map(loc => (
+                  <option key={loc.value} value={loc.value}>{loc.label}</option>
+                ))}
+              </select>
               <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
-                Dates confirmed once {threshold} registrants per city are locked in. You&apos;ll be notified {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop.
+                Complete online modules first. Nominate your workshop date from your dashboard.
               </p>
             </div>
 
             <button
               onClick={() => handleCheckout('full-course')}
-              disabled={!canEnroll || loading !== null}
+              disabled={loading !== null}
               className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading === 'full-course' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                getEnrolButtonText()
+                `Enrol — $${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}`
               )}
             </button>
           </div>
@@ -433,15 +312,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-2 gap-6 pt-5">
 
-        {/* Online Course — Primary */}
-        <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+        {/* Online Course */}
+        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative">
           {/* Icon + Badge */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
               <BookOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
             </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-              Recommended
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              Start Here
             </span>
           </div>
 
@@ -455,6 +334,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
             </div>
+            <p className="text-sm text-slate-500 mt-1">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay</p>
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
           </div>
 
@@ -475,7 +355,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               )}
             </button>
             <p className="text-[11px] text-[var(--muted-foreground)] mt-2 text-center">
-              7-day satisfaction guarantee · Secure Stripe checkout
+              Afterpay / Klarna available · 7-day guarantee · Secure checkout
             </p>
           </div>
 
@@ -485,7 +365,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Complete at your own pace — no deadlines',
               'Lifetime access — content updated regularly',
               'Clinical Toolkit & downloadable resources',
-              'Reference Repository (150+ articles)',
+              'Reference Repository (140+ articles)',
               'Digital certificate',
               'Upgrade to Complete Course anytime',
             ].map((feature, i) => (
@@ -528,7 +408,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </button>
 
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-            7-day satisfaction guarantee · Secure Stripe checkout
+            Afterpay / Klarna available · 7-day guarantee · Secure checkout
           </p>
 
           <div className="mt-4 pt-4 border-t border-[rgba(13,115,119,0.08)] text-center">
@@ -542,15 +422,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </div>
         </div>
 
-        {/* Complete Course — Upgrade */}
-        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative">
+        {/* Complete Course — Recommended */}
+        <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
           {/* Icon + Badge */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
               <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
             </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-              Add Workshop
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+              Recommended
             </span>
           </div>
 
@@ -572,12 +452,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
                   <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
                 </div>
+                <p className="text-sm text-slate-500 mt-1">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100} with Afterpay</p>
+                <p className="text-xs text-orange-600 font-medium mt-1">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
               </>
             ) : (
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
-              </div>
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                  <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+                </div>
+                <p className="text-sm text-slate-500 mt-1">or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100} with Afterpay</p>
+              </>
             )}
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · 14 AHPRA CPD points</p>
           </div>
@@ -588,7 +473,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Full-day in-person workshop (6 CPD points)',
               'Hands-on SCAT6, VOMS, BESS training',
               'Clinical Toolkit & all resources',
-              'Reference Repository (150+ articles)',
+              'Reference Repository (140+ articles)',
               'Choose your preferred location',
               'Flexible workshop date selection',
             ].map((feature, i) => (
@@ -625,52 +510,46 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           )}
 
-          {/* Location Selector */}
+          {/* Workshop Preference */}
           <div className="mb-4">
             <label className="text-sm font-semibold mb-2 flex items-center gap-1.5 text-[var(--foreground)]">
               <MapPin className="w-3.5 h-3.5 text-[var(--accent)]" />
-              Choose Your Workshop City
+              Preferred Workshop City
             </label>
-            <div className="space-y-2">
+            <select
+              value={selectedLocation}
+              onChange={(e) => handleLocationSelect(e.target.value)}
+              className="w-full py-2.5 px-3 rounded-lg border border-[rgba(13,115,119,0.1)] bg-[rgba(255,255,255,0.8)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/40"
+            >
+              <option value="">Select city</option>
               {LOCATIONS.map(loc => (
-                <LocationRow
-                  key={loc.value}
-                  loc={loc}
-                  isSelected={selectedLocation === loc.value}
-                  onSelect={handleLocationSelect}
-                  compact={false}
-                  enrollmentCount={cityCounts[loc.value] || 0}
-                  threshold={threshold}
-                />
+                <option key={loc.value} value={loc.value}>{loc.label}</option>
               ))}
-            </div>
-
+            </select>
             <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
-              Dates are confirmed once {threshold} registrants per city are locked in. You&apos;ll be notified {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop.
+              Complete online modules first. Nominate your workshop date from your dashboard after finishing the course.
             </p>
           </div>
 
           {/* Enroll Button */}
           <button
             onClick={() => handleCheckout('full-course')}
-            disabled={!canEnroll || loading !== null}
+            disabled={loading !== null}
             className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
           >
             {loading === 'full-course' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                {getEnrolButtonText()}
-                {canEnroll && <ArrowRight className="w-4 h-4" />}
+                Enrol — ${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
 
-          {canEnroll && (
-            <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-              7-day satisfaction guarantee · Flexible workshop dates
-            </p>
-          )}
+          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
+            Afterpay / Klarna available · 7-day guarantee · Flexible workshop dates
+          </p>
         </div>
       </div>
 
@@ -682,7 +561,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             {enrollmentCount}+ clinicians enrolled
           </div>
         )}
-        {['7-Day Guarantee', 'Secure Stripe Checkout', 'AHPRA Aligned', 'Lifetime Access', 'Certificate Included'].map(item => (
+        {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'AHPRA Aligned', 'Lifetime Access', 'Certificate Included'].map(item => (
           <div key={item} className="flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
             {item}

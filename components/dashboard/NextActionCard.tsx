@@ -3,24 +3,24 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProgress } from '@/contexts/ProgressContext'
+import { useSession } from '@/contexts/SessionContext'
 import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
 import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { CONFIG } from '@/lib/config'
 
-const POOL_CITIES = [
-  { value: 'sydney', label: 'Sydney' },
-  { value: 'melbourne', label: 'Melbourne' },
-  { value: 'byron-bay', label: 'Byron Bay' },
-  { value: 'adelaide', label: 'Adelaide' },
-  { value: 'wa', label: 'Western Australia' },
-]
+const POOL_CITIES = Object.values(CONFIG.LOCATIONS).map(loc => ({
+  value: loc.slug,
+  label: loc.city,
+}))
 
 export function NextActionCard() {
   const router = useRouter()
   const { getTotalCompletedModules, isModuleComplete } = useProgress()
-  const [accessLevel, setAccessLevel] = useState('')
-  const [userEmail, setUserEmail] = useState('')
+  const { user } = useSession()
 
+  const accessLevel = user?.accessLevel || ''
+  const userEmail = user?.email || ''
   const isPreview = accessLevel === 'preview'
   const paidModules = getModulesMeta()
   const scatModules = getSCATModulesMeta()
@@ -28,7 +28,7 @@ export function NextActionCard() {
   const completedModules = isPreview
     ? scatModules.filter(m => isModuleComplete(m.id)).length
     : getTotalCompletedModules()
-  const totalModules = isPreview ? 5 : 8
+  const totalModules = isPreview ? 6 : 8
 
   const nextModule = modules.find((m) => !isModuleComplete(m.id))
   const progressPercentage = Math.round((completedModules / totalModules) * 100)
@@ -45,22 +45,10 @@ export function NextActionCard() {
 
   const allComplete = !nextModule
 
-  // Fetch session on mount to get email + accessLevel
-  useEffect(() => {
-    fetch('/api/auth/session', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setUserEmail(data.user.email || '')
-          setAccessLevel(data.user.accessLevel || '')
-        }
-      })
-      .catch(() => {})
-  }, [])
 
   // Auto-trigger certificate email when all modules complete
   useEffect(() => {
-    if (allComplete && accessLevel && !certTriggered.current) {
+    if (allComplete && accessLevel && userEmail && !certTriggered.current) {
       certTriggered.current = true
       const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
       const sentKey = `cert-sent-${certType}-${userEmail}`
@@ -174,12 +162,14 @@ export function NextActionCard() {
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2 tracking-tight">
                 {isPreview
-                  ? "You've Mastered All 5 SCAT Modules"
+                  ? "You've Mastered All 6 SCAT Modules"
                   : "You've Mastered All 8 Online Modules"}
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">
                 {isPreview
                   ? "Outstanding achievement — you've earned 2 free AHPRA CPD points. Upgrade to unlock 8 advanced modules, the Clinical Toolkit, and earn 14 total CPD points."
+                  : accessLevel === 'online-only'
+                  ? "Outstanding achievement — you've earned all 8 online AHPRA CPD points. Download your certificate below."
                   : "Outstanding achievement — you've earned all 8 online AHPRA CPD points. Complete the 6-hour in-person practical to earn your full 14 CPD point certificate."}
               </p>
 
@@ -231,6 +221,18 @@ export function NextActionCard() {
                 </div>
               </div>
 
+              {isPreview && (
+                <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
+                  <p className="text-sm text-purple-800 font-medium mb-2">Ready for more? Earn 8+ additional CPD points with the full course.</p>
+                  <button
+                    onClick={() => router.push('/pricing')}
+                    className="text-sm text-purple-600 hover:text-purple-800 font-semibold"
+                  >
+                    View Full Course &rarr;
+                  </button>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => router.push('/learning')}
@@ -247,14 +249,14 @@ export function NextActionCard() {
                     Upgrade — Unlock 14 CPD Points
                     <ArrowRight className="w-4 h-4" />
                   </button>
-                ) : (
+                ) : accessLevel !== 'online-only' ? (
                   <button
                     onClick={() => router.push('/in-person')}
                     className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all"
                   >
                     Book Workshop
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           </div>

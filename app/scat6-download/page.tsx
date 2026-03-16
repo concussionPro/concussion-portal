@@ -220,7 +220,7 @@ export default function SCAT6DownloadPage() {
                         Want to master SCAT6 administration?
                       </p>
                       <p className="text-xs text-slate-600 mb-3 leading-snug">
-                        Try our free 2-hour course — 2 AHPRA CPD points, instant access, no credit card.
+                        Try our free ~3-hour course — 2 AHPRA CPD points, instant access, no credit card.
                       </p>
                       <a
                         href="/scat-mastery"
@@ -349,7 +349,7 @@ export default function SCAT6DownloadPage() {
                       Want to master SCAT6 administration?
                     </p>
                     <p className="text-xs text-slate-600 mb-2 leading-snug">
-                      Try our free 2-hour course — 2 AHPRA CPD points, instant access.
+                      Try our free ~3-hour course — 2 AHPRA CPD points, instant access.
                     </p>
                     <a
                       href="/scat-mastery"

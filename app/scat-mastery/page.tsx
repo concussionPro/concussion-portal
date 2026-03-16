@@ -109,7 +109,7 @@ export default function SCATMasteryPage() {
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 mb-5 leading-tight">
               Master SCAT6 Assessment —{' '}
               <span className="bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] bg-clip-text text-transparent">
-                Free 2-Hour Course
+                Free ~3 Hour Course
               </span>
             </h1>
 

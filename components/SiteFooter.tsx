@@ -34,7 +34,7 @@ export function SiteFooter() {
               <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
               <li><Link href="/scat-forms" className="hover:text-white transition-colors">SCAT6 / SCOAT6 Forms</Link></li>
               <li><Link href="/assessment" className="hover:text-white transition-colors">Free Knowledge Test</Link></li>
-              <li><Link href="/scat-mastery" className="hover:text-white transition-colors">Free SCAT Mastery Course</Link></li>
+              <li><Link href="/scat-mastery" className="hover:text-white transition-colors">Free SCAT6 Mastery Course</Link></li>
             </ul>
           </div>
 
@@ -49,23 +49,24 @@ export function SiteFooter() {
               </li>
               <li><Link href="/faq/scat-assessment" className="hover:text-white transition-colors">FAQ</Link></li>
               <li>
-                <a href="https://concussion-education-australia.com/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">
+                <a href="https://concussion-education-australia.com/#facilitators" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">
                   Instructor Bios
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </li>
               <li><Link href="/login" className="hover:text-white transition-colors">Student Login</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms & Refund Policy</Link></li>
+              <li><Link href="/terms#privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-slate-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
-            &copy; {new Date().getFullYear()} Concussion Education Australia. All rights reserved.
+            &copy; {new Date().getFullYear()} Concussion Education Australia. ABN 15 657 685 613. All rights reserved.
           </p>
           <p className="text-xs">
-            Endorsed by Osteopathy Australia &middot; For all AHPRA clinicians &middot; 14 CPD Points
+            Endorsed by Osteopathy Australia &middot; For all AHPRA clinicians &middot; Up to 14 CPD Points
           </p>
         </div>
       </div>

@@ -1,26 +1,47 @@
 'use client'
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
-import { CheckCircle2, Clock, Award, Lock, ArrowRight } from 'lucide-react'
+import { CheckCircle2, Clock, Award, Lock, ArrowRight, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
 import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { CONFIG } from '@/lib/config'
+import { SessionProvider, useSession } from '@/contexts/SessionContext'
 
 export default function LearningSuite() {
+  return (
+    <SessionProvider>
+      <LearningSuiteInner />
+    </SessionProvider>
+  )
+}
+
+function LearningSuiteInner() {
   const router = useRouter()
   const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, isModuleComplete, getModuleProgress, progress } = useProgress()
-  const paidModules = getModulesMeta()
-  const scatModules = getSCATModulesMeta()
-  const [hasAccess, setHasAccess] = useState(false)
-  const [accessLevel, setAccessLevel] = useState<string>('')
-  const [accessLoading, setAccessLoading] = useState(true)
+  const { user, isLoading: accessLoading } = useSession()
+  const [showFramingCard, setShowFramingCard] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem('framing-card-dismissed') !== 'true'
+  })
   useAnalytics() // Track page views
 
+  if (accessLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="w-6 h-6 animate-spin text-accent" />
+      </div>
+    )
+  }
+
+  const paidModules = getModulesMeta()
+  const scatModules = getSCATModulesMeta()
+
+  const accessLevel = user?.accessLevel || ''
   const isPreview = accessLevel === 'preview'
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
@@ -28,36 +49,12 @@ export default function LearningSuite() {
 
   // SCAT progress for preview users
   const scatCompleted = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 105 && p.completed,
+    (p) => p.moduleId >= 101 && p.moduleId <= 106 && p.completed,
   ).length
-  // Modules 101-104 are 0.5 CPD each, Module 105 is 0 CPD
+  // Modules 101-104 are 0.5 CPD each, Modules 105-106 are 0 CPD
   const scatCPD = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 104 && p.completed,
   ).length * 0.5
-
-  useEffect(() => {
-    async function checkAccess() {
-      try {
-        const response = await fetch('/api/auth/session', {
-          credentials: 'include',
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.user && data.user.accessLevel) {
-            setAccessLevel(data.user.accessLevel)
-            setHasAccess(data.user.accessLevel === 'online-only' || data.user.accessLevel === 'full-course')
-          }
-        }
-      } catch (error) {
-        console.error('Access check failed:', error)
-      } finally {
-        setAccessLoading(false)
-      }
-    }
-
-    checkAccess()
-  }, [router])
 
   const handleModuleClick = (moduleId: number) => {
     router.push(`/modules/${moduleId}`)
@@ -95,7 +92,7 @@ export default function LearningSuite() {
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Modules Complete</div>
                   <div className="text-xl font-bold text-gradient">
-                    {isPreview ? `${scatCompleted} / 5` : `${completedModules} / 8`}
+                    {isPreview ? `${scatCompleted} / 6` : `${completedModules} / 8`}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
@@ -106,10 +103,76 @@ export default function LearningSuite() {
                 </div>
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Study Time</div>
-                  <div className="text-xl font-bold text-gradient">{studyTime.toFixed(1)}h</div>
+                  <div className="text-xl font-bold text-gradient">{studyTime > 0 ? `${studyTime.toFixed(1)}h` : '\u2014'}</div>
                 </div>
               </div>
+
+              {/* Overall Progress Bar */}
+              {(() => {
+                const totalModules = isPreview ? 6 : 8
+                const done = isPreview ? scatCompleted : completedModules
+                const pct = Math.round((done / totalModules) * 100)
+                return (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-medium text-muted-foreground">Overall Progress</span>
+                      <span className="text-xs font-bold text-foreground">{pct}%</span>
+                    </div>
+                    <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-teal-500 to-blue-500 transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
+
+            {/* Course Framing Card — shown to users who haven't started Module 1 */}
+            {!isPreview && showFramingCard && !getModuleProgress(1).startedAt && (
+              <div className="glass rounded-xl p-5 mb-5 border-l-4 border-teal-500 relative">
+                <button
+                  onClick={(e) => { e.stopPropagation(); localStorage.setItem('framing-card-dismissed', 'true'); setShowFramingCard(false) }}
+                  className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-lg leading-none"
+                  aria-label="Dismiss"
+                >
+                  &times;
+                </button>
+                <h3 className="text-sm font-bold text-foreground mb-1">How This Course Works</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  8 online modules build your clinical reasoning foundation. The full-day practical workshop (full-course access) is where you apply assessment skills hands-on.
+                </p>
+              </div>
+            )}
+
+            {/* Resume Banner — shown when user has a module in progress */}
+            {!isPreview && (() => {
+              const inProgressModule = modules.find(m => {
+                const p = getModuleProgress(m.id)
+                return p.startedAt !== null && !isModuleComplete(m.id)
+              })
+              if (inProgressModule) {
+                return (
+                  <button
+                    onClick={() => handleModuleClick(inProgressModule.id)}
+                    className="w-full glass glass-hover rounded-xl p-4 mb-5 flex items-center gap-4 group text-left border-l-4 border-amber-400"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                      <ArrowRight className="w-5 h-5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium text-amber-600 mb-0.5">Continue where you left off</div>
+                      <div className="text-sm font-bold text-foreground truncate">Module {inProgressModule.id}: {inProgressModule.title}</div>
+                    </div>
+                    <span className="btn-primary px-3 sm:px-4 py-2 rounded-lg text-xs font-bold">
+                      Continue
+                    </span>
+                  </button>
+                )
+              }
+              return null
+            })()}
 
             {/* Module Cards — accessible modules */}
             <div className="space-y-3 mt-5">
@@ -122,7 +185,10 @@ export default function LearningSuite() {
                   <div
                     key={module.id}
                     className="glass glass-hover rounded-xl cursor-pointer group"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleModuleClick(module.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleModuleClick(module.id) } }}
                   >
                     <div className="p-5 sm:p-6">
                       {/* Module Header */}
@@ -206,40 +272,54 @@ export default function LearningSuite() {
                   {paidModules.map((module) => (
                     <div
                       key={module.id}
-                      className="glass rounded-xl opacity-50 cursor-pointer hover:opacity-60 transition-opacity"
-                      onClick={() => router.push('/pricing')}
+                      className="glass rounded-xl relative overflow-hidden"
                     >
-                      <div className="p-5 sm:p-6">
-                        <div className="flex items-start gap-3 sm:gap-5">
-                          <div className="text-2xl sm:text-3xl font-bold text-slate-200 tracking-tight min-w-[40px] sm:min-w-[50px] flex-shrink-0">
-                            {module.id.toString().padStart(2, '0')}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+                      <div className="p-5 sm:p-6 opacity-40 pointer-events-none select-none">
+                        {/* Module Header — greyed, non-interactive */}
+                        <div className="flex items-start justify-between mb-4 gap-2">
+                          <div className="flex items-start gap-3 sm:gap-5 flex-1 min-w-0">
+                            <div className="text-2xl sm:text-3xl font-bold text-slate-200 tracking-tight min-w-[40px] sm:min-w-[50px] flex-shrink-0">
+                              {module.id.toString().padStart(2, '0')}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h2 className="text-lg sm:text-xl font-bold text-slate-500 tracking-tight">
                                 {module.title}
                               </h2>
-                              <Lock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                              <p className="text-sm text-slate-400 font-medium mb-2">
+                                {module.subtitle}
+                              </p>
+                              <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+                                {module.description}
+                              </p>
                             </div>
-                            <p className="text-sm text-slate-600 font-medium mb-2">
-                              {module.subtitle}
-                            </p>
-                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-                              {module.description}
-                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full">
+                            <Lock className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            Locked
                           </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-6 pt-3 mt-4 border-t border-slate-200/50">
+
+                        {/* Module Meta */}
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-6 pt-3 border-t border-slate-200/50">
                           <div className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" strokeWidth={2} />
-                            <span className="text-xs text-muted-foreground font-medium">{module.duration}</span>
+                            <Clock className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" strokeWidth={2} />
+                            <span className="text-xs text-slate-400 font-medium">{module.duration}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <Award className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" strokeWidth={2} />
-                            <span className="text-xs text-muted-foreground font-medium">{module.points} CPD pt</span>
+                            <Award className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" strokeWidth={2} />
+                            <span className="text-xs text-slate-400 font-medium">{module.points} CPD pt</span>
                           </div>
                         </div>
                       </div>
+
+                      {/* Unlock button — sits above the greyed content */}
+                      <button
+                        onClick={() => router.push('/pricing')}
+                        className="absolute bottom-5 right-5 sm:bottom-6 sm:right-6 px-4 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-1.5 z-10"
+                      >
+                        <Lock className="w-3 h-3" />
+                        Unlock
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -253,7 +333,7 @@ export default function LearningSuite() {
                     <div className="flex-1">
                       <h3 className="text-base font-bold text-foreground mb-1">Upgrade to the Full Course</h3>
                       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                        Unlock 8 advanced modules, the Clinical Toolkit, Reference Repository, and earn <strong className="text-foreground">14 AHPRA CPD points</strong> — from ${CONFIG.COURSE.PRICE_ONLINE} AUD.
+                        Unlock 8 advanced modules, the Clinical Toolkit, and Reference Repository. Online Course: <strong className="text-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points</strong> for ${CONFIG.COURSE.PRICE_ONLINE}. Complete Course (online + workshop): <strong className="text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points</strong> for ${CONFIG.COURSE.PRICE_EARLY_BIRD}.
                       </p>
                       <button
                         onClick={() => router.push('/pricing')}
@@ -278,7 +358,7 @@ export default function LearningSuite() {
                   <div className="flex-1">
                     <h3 className="text-sm font-bold text-foreground mb-1">Add the hands-on workshop</h3>
                     <p className="text-xs text-muted-foreground mb-3">
-                      Upgrade to the complete course for 6 additional CPD points. Practice SCAT6, VOMS &amp; BESS with expert feedback in a full-day workshop.
+                      Upgrade to the complete course for 6 additional CPD points. Practice SCAT6, VOMS & BESS with expert feedback in a full-day workshop.
                     </p>
                     <button
                       onClick={() => router.push('/pricing')}

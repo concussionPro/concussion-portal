@@ -57,10 +57,6 @@ const MEDICAL_CONDITIONS = [
   { key: 'previousBrainSurgery', label: 'Previous brain surgery' },
 ]
 
-function pickRandom<T extends string>(keys: T[]): T {
-  return keys[Math.floor(Math.random() * keys.length)]
-}
-
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -255,6 +251,16 @@ export default function AthleteBaselineForm() {
   const [clinicError, setClinicError] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  // Word/digit list rotation: persists per-athlete per-clinic via localStorage
+  // so the same athlete always gets the NEXT list on their next test
+  const [listIndex] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0
+    const key = `preseason-list-index-${code}`
+    const lastIndex = localStorage.getItem(key)
+    if (lastIndex === null) return 0 // First test: List A
+    return (parseInt(lastIndex, 10) + 1) % 3 // Rotate: A→B→C→A...
+  })
+
   // Form step
   const [step, setStep] = useState(1)
   const totalSteps = 6 // 5 steps + summary
@@ -292,8 +298,8 @@ export default function AthleteBaselineForm() {
   const [orientYear, setOrientYear] = useState('')
   const [orientTime, setOrientTime] = useState('')
 
-  // Immediate Memory
-  const [wordListKey] = useState<WordListKey>(() => pickRandom(['A', 'B', 'C'] as WordListKey[]))
+  // Immediate Memory — rotate lists A→B→C across tests (repeats every 3)
+  const wordListKey: WordListKey = (['A', 'B', 'C'] as const)[listIndex]
   const recallPool = useMemo(() => buildRecallPool(wordListKey), [wordListKey])
   // Separately shuffled pool for delayed recall to prevent position-based pattern recognition
   const delayedRecallPool = useMemo(() => shuffle([...recallPool]), [recallPool])
@@ -304,7 +310,8 @@ export default function AthleteBaselineForm() {
   const [memoryTimestamp, setMemoryTimestamp] = useState(0) // for delayed recall timer
 
   // Digits Backward
-  const [digitListKey] = useState<DigitListKey>(() => pickRandom(['A', 'B', 'C'] as DigitListKey[]))
+  // Digits also rotate in sync with word lists
+  const digitListKey: DigitListKey = (['A', 'B', 'C'] as const)[listIndex]
   const [digitPhase, setDigitPhase] = useState<'intro' | 'showing' | 'input' | 'done'>('intro')
   const [currentDigitIndex, setCurrentDigitIndex] = useState(0)
   const [digitInput, setDigitInput] = useState('')
@@ -447,7 +454,7 @@ export default function AthleteBaselineForm() {
     setMonthsCorrect(null)
 
     monthsTimerRef.current = setInterval(() => {
-      setMonthsTimeElapsed(Math.floor((Date.now() - monthsStartTimeRef.current) / 1000))
+      setMonthsTimeElapsed(parseFloat(((Date.now() - monthsStartTimeRef.current) / 1000).toFixed(1)))
     }, 100)
   }, [])
 
@@ -546,6 +553,7 @@ export default function AthleteBaselineForm() {
             concentration: {
               digitsScore: digitsBackwardScore,
               monthsScore: monthsReverseScore,
+              monthsTimeSeconds: monthsCorrect ? monthsTimeElapsed : null,
               total: concentrationScore,
             },
             delayedRecall: { score: delayedRecallScore },
@@ -555,6 +563,8 @@ export default function AthleteBaselineForm() {
       })
 
       if (response.ok) {
+        // Save current list index so next test rotates to the next list
+        localStorage.setItem(`preseason-list-index-${code}`, String(listIndex))
         setSubmitted(true)
         trackEvent(ANALYTICS_EVENTS.PRESEASON_BASELINE_SUBMIT, {
           clinicCode: code,
@@ -620,10 +630,10 @@ export default function AthleteBaselineForm() {
     setMonthsTapped(newTapped)
 
     if (newTapped.length === 12) {
-      // All months tapped correctly
+      // All months tapped correctly — time is the metric, not pass/fail
       const elapsed = (Date.now() - monthsStartTime) / 1000
-      setMonthsTimeElapsed(Math.round(elapsed))
-      setMonthsCorrect(elapsed <= 30)
+      setMonthsTimeElapsed(parseFloat(elapsed.toFixed(1)))
+      setMonthsCorrect(true)
       setMonthsPhase('done')
       if (monthsTimerRef.current) clearInterval(monthsTimerRef.current)
     }
@@ -1287,7 +1297,7 @@ export default function AthleteBaselineForm() {
               <div>
                 <h2 className="text-lg font-bold mb-2">Concentration — Months in Reverse</h2>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Tap the months in reverse order: December → January. You have 30 seconds.
+                  Tap the months in reverse order: December → January. Time to complete is recorded.
                 </p>
 
                 {monthsPhase === 'intro' && (
@@ -1301,12 +1311,12 @@ export default function AthleteBaselineForm() {
 
                 {monthsPhase === 'active' && (
                   <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold">
-                        {monthsTapped.length}/12 — tap in reverse order
+                    <div className="text-center mb-4">
+                      <p className="text-4xl font-mono font-bold text-accent tabular-nums">
+                        {monthsTimeElapsed.toFixed(1)}s
                       </p>
-                      <p className="text-sm font-mono text-muted-foreground">
-                        {((Date.now() - monthsStartTime) / 1000).toFixed(0)}s
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {monthsTapped.length}/12 — tap in reverse order
                       </p>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
@@ -1328,9 +1338,6 @@ export default function AthleteBaselineForm() {
                         )
                       })}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-3 text-center">
-                      {monthsTapped.length}/12 months selected
-                    </p>
                   </div>
                 )}
 
@@ -1339,15 +1346,15 @@ export default function AthleteBaselineForm() {
                     <div className={`icon-container w-12 h-12 mx-auto mb-3 ${monthsCorrect ? 'bg-green-100' : 'bg-red-100'}`}>
                       {monthsCorrect ? <Check className="w-6 h-6 text-green-600" /> : <AlertCircle className="w-6 h-6 text-red-600" />}
                     </div>
-                    <p className="text-sm font-semibold mb-1">
-                      {monthsCorrect
-                        ? `Correct! Completed in ${monthsTimeElapsed}s`
-                        : monthsTapped.length < 12
-                          ? 'Incorrect order'
-                          : `Completed in ${monthsTimeElapsed}s (over 30s limit)`
-                      }
-                    </p>
-                    <p className="text-lg font-bold text-accent">Score: {monthsReverseScore}/1</p>
+                    {monthsCorrect ? (
+                      <>
+                        <p className="text-3xl font-mono font-bold text-accent mb-1">{monthsTimeElapsed.toFixed(1)}s</p>
+                        <p className="text-sm text-muted-foreground">All 12 months in correct order</p>
+                      </>
+                    ) : (
+                      <p className="text-sm font-semibold text-red-600">Incorrect order — tapped {monthsTapped.length}/12</p>
+                    )}
+                    <p className="text-lg font-bold text-accent mt-2">Score: {monthsReverseScore}/1</p>
                   </div>
                 )}
               </div>
@@ -1642,7 +1649,7 @@ export default function AthleteBaselineForm() {
                   </div>
                   <div className="flex justify-between text-sm pl-4 text-muted-foreground">
                     <span>Months in Reverse</span>
-                    <span>{monthsReverseScore}/1</span>
+                    <span>{monthsReverseScore}/1{monthsCorrect && monthsTimeElapsed > 0 ? ` (${monthsTimeElapsed.toFixed(1)}s)` : ''}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Delayed Recall</span>

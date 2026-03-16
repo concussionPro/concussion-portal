@@ -3,8 +3,7 @@ import { constructWebhookEvent } from '@/lib/stripe'
 
 export const maxDuration = 60
 import { createUser, findUserByEmail } from '@/lib/users'
-import { sendMagicLinkEmail, sendAbandonedCheckoutEmail } from '@/lib/email'
-import { sendEmail } from '@/lib/resend-client'
+import { sendMagicLinkEmail, sendEmail } from '@/lib/resend-client'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
@@ -59,7 +58,7 @@ async function logAnalyticsEvent(eventType: string, eventData: Record<string, un
         }
       }
       await blobPut(blobPath, existing + line, {
-        access: 'public',
+        access: 'private' as any, // Security: analytics data must not be publicly accessible
         addRandomSuffix: false,
         contentType: 'application/x-ndjson',
       })
@@ -205,7 +204,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         email: customerEmail,
         name: customerName,
         accessLevel,
-        stripeCustomerId: session.customer as string || undefined,
+        stripeCustomerId: (typeof session.customer === 'string' ? session.customer : undefined),
         workshopLocation: workshopCity || undefined,
         signupSource: 'purchase',
       })
@@ -218,10 +217,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       email: customerEmail,
       name: customerName,
       accessLevel,
-      stripeCustomerId: session.customer as string || undefined,
+      stripeCustomerId: (typeof session.customer === 'string' ? session.customer : undefined),
       workshopLocation: workshopCity || undefined,
       signupSource: 'purchase',
     })
+  }
+
+  // Mark any abandoned checkouts for this email as recovered
+  try {
+    await sql`UPDATE abandoned_checkouts SET recovered = true WHERE email = ${customerEmail.toLowerCase()} AND recovered = false`
+  } catch (err) {
+    console.error('Failed to mark abandoned checkouts as recovered:', err)
   }
 
   // Step 2: Check workshop threshold — send admin alert when threshold hit
@@ -266,18 +272,28 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
   }
 
-  // Step 3: Log purchase to analytics
+  // Step 3: Log purchase to analytics + fire Google Ads conversion server-side
+  const purchaseAmount = (session.amount_total || 0) / 100
   try {
     await logAnalyticsEvent('purchase_complete', {
       email: customerEmail,
       courseType,
-      amount: (session.amount_total || 0) / 100,
+      amount: purchaseAmount,
       currency: 'AUD',
       transactionId: session.id,
       accessLevel,
     })
   } catch (err) {
     console.error('Failed to log purchase analytics:', err)
+  }
+
+  // Fire Google Ads conversion via GA4 Measurement Protocol (server-side backup)
+  // The checkout success page also fires client-side — GA4 deduplicates by transaction_id
+  try {
+    const { trackServerPurchase } = await import('@/lib/measurement-protocol')
+    await trackServerPurchase(session.id, purchaseAmount, 'AUD', customerEmail)
+  } catch (err) {
+    console.error('Failed to fire server-side purchase conversion:', err)
   }
 
   // Step 4: Send magic link email — best effort, user can request new link from /login
@@ -315,48 +331,52 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   const unsubToken = generateUnsubscribeToken(email)
   const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
 
-  await sendEmail({
-    to: email,
-    subject: 'Your payment didn\'t go through — we can help',
-    html: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
-        <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
-          Your payment didn't go through
-        </h2>
-        <p style="font-size: 15px; color: #475569; line-height: 1.6;">
-          We noticed your payment for the Concussion Management course didn't complete. This sometimes happens with card limits or temporary bank holds.
-        </p>
-        <p style="font-size: 15px; color: #475569; line-height: 1.6;">
-          You can try again anytime — your spot is still available:
-        </p>
-        <div style="text-align: center; margin: 24px 0;">
-          <a href="${baseUrl}/pricing" style="display: inline-block; background: #0d9488; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
-            Try Again →
-          </a>
+  try {
+    await sendEmail({
+      to: email,
+      subject: 'Your payment didn\'t go through — we can help',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
+          <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
+            Your payment didn't go through
+          </h2>
+          <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+            We noticed your payment for the Concussion Management course didn't complete. This sometimes happens with card limits or temporary bank holds.
+          </p>
+          <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+            You can try again anytime — your spot is still available:
+          </p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${baseUrl}/pricing" style="display: inline-block; background: #0d9488; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+              Try Again →
+            </a>
+          </div>
+          <p style="font-size: 14px; color: #64748b; line-height: 1.6;">
+            If you keep having trouble, reply to this email and I'll help sort it out. You can also try a different card or payment method.
+          </p>
+          <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b;">
+            Zac Lewis<br>
+            Concussion Education Australia &middot; Melbourne, VIC, Australia<br>
+            <a href="mailto:zac@concussion-education-australia.com" style="color: #0d9488;">zac@concussion-education-australia.com</a>
+          </div>
+          <p style="margin-top: 16px; font-size: 12px; color: #94a3b8; text-align: center;">
+            <a href="${unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe</a>
+          </p>
         </div>
-        <p style="font-size: 14px; color: #64748b; line-height: 1.6;">
-          If you keep having trouble, reply to this email and I'll help sort it out. You can also try a different card or payment method.
-        </p>
-        <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b;">
-          Zac Lewis<br>
-          Concussion Education Australia &middot; Melbourne, VIC, Australia<br>
-          <a href="mailto:zac@concussion-education-australia.com" style="color: #0d9488;">zac@concussion-education-australia.com</a>
-        </div>
-        <p style="margin-top: 16px; font-size: 12px; color: #94a3b8; text-align: center;">
-          <a href="${unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe</a>
-        </p>
-      </div>
-    `,
-    headers: {
-      'List-Unsubscribe': `<${unsubscribeUrl}>`,
-      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-    },
-    tags: [
-      { name: 'type', value: 'payment-failed-recovery' },
-    ],
-  })
+      `,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+      tags: [
+        { name: 'type', value: 'payment-failed-recovery' },
+      ],
+    })
 
-  console.log(`Payment failure recovery email sent to ${email}`)
+    console.log(`Payment failure recovery email sent to ${email}`)
+  } catch (emailError) {
+    console.error(`[Payment Failed] Failed to send recovery email to ${email}:`, emailError)
+  }
 }
 
 /**
@@ -391,24 +411,16 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     console.error('Failed to check abandoned checkout dedup:', err)
   }
 
-  // Send immediate abandoned checkout recovery email
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const unsubToken = generateUnsubscribeToken(email)
-    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
-    await sendAbandonedCheckoutEmail(email, baseUrl, unsubscribeUrl)
-    console.log(`Sent immediate abandoned checkout email to ${email}`)
-  } catch (error) {
-    console.error(`Failed to send abandoned checkout email to ${email}:`, error)
-  }
-
-  // Store abandoned checkout in Postgres for recovery cron drip sequence
+  // Store abandoned checkout in Postgres for recovery cron drip sequence.
+  // The drip sequence (ABANDONED_CHECKOUT_SEQUENCE) handles all recovery emails
+  // at 1h, 24h, and 72h intervals. No immediate email is sent here to avoid
+  // duplicating the first drip email.
   try {
     await sql`
       INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered)
       VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), 0, false)
     `
-    console.log(`Stored abandoned checkout for ${email}`)
+    console.log(`Stored abandoned checkout for ${email} — drip sequence will handle recovery emails`)
   } catch (err) {
     console.error('Failed to store abandoned checkout:', err)
   }
@@ -425,6 +437,12 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   }
 
   console.log(`Refund processed for ${email} — $${(charge.amount_refunded || 0) / 100} AUD`)
+
+  // Only downgrade on full refund — partial refunds keep access
+  if (charge.amount_refunded < charge.amount) {
+    console.log(`Partial refund for ${email} — no access change`)
+    return
+  }
 
   const user = await findUserByEmail(email)
   if (!user) {

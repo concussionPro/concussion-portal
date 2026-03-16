@@ -27,6 +27,9 @@ function PricingContent() {
   // FAQ accordion
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
+  // Testimonial show-more toggle (mobile)
+  const [showAllTestimonials, setShowAllTestimonials] = useState(false)
+
   const faqs = [
     {
       q: 'Can I upgrade from online-only to the full course later?',
@@ -46,7 +49,7 @@ function PricingContent() {
     },
     {
       q: 'How much time does the course take?',
-      a: 'The online modules take approximately 8 hours total, completed at your own pace with no deadline. The hands-on workshop is a single full day. Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
+      a: 'The online modules take approximately 10 hours total, completed at your own pace with no deadline. The hands-on workshop is a single full day (6 hours). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
     },
     {
       q: 'Is this course only for osteopaths?',
@@ -90,7 +93,7 @@ function PricingContent() {
           <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-5 border border-accent/20">
             <Sparkles className="w-4 h-4 text-accent" />
             <span className="text-sm font-semibold text-accent">
-              AHPRA Aligned · 14 CPD Points · Endorsed by Osteopathy Australia
+              AHPRA Aligned · Up to 14 CPD Points · Endorsed by Osteopathy Australia
             </span>
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
@@ -108,7 +111,8 @@ function PricingContent() {
           <div className="max-w-xl mx-auto mb-8 glass rounded-xl p-4 border border-orange-200/50 text-center">
             <p className="text-sm font-semibold text-foreground">
               <span className="text-orange-600">Early bird pricing</span>
-              {' '}— save ${CONFIG.COURSE.SAVINGS} on the Complete Course
+              {' '}— save ${CONFIG.COURSE.SAVINGS} on the Complete Course.
+              {' '}Ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}.
             </p>
           </div>
         )}
@@ -120,7 +124,10 @@ function PricingContent() {
               <span className="font-semibold text-foreground">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded
             </span>
             <span>·</span>
-            <span>Endorsed by <span className="font-semibold text-foreground">Osteopathy Australia</span></span>
+            <span className="flex items-center gap-1.5">
+              <img src="/osteopathy-australia-endorsed.png" alt="" className="h-5 w-auto" aria-hidden="true" />
+              Endorsed by <span className="font-semibold text-foreground">Osteopathy Australia</span>
+            </span>
             <span>·</span>
             <span>7-day money-back guarantee</span>
           </div>
@@ -128,8 +135,8 @@ function PricingContent() {
 
         {/* Testimonials — above pricing for social proof before purchase decision */}
         <div className="max-w-4xl mx-auto mb-12">
-          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[
+          {(() => {
+            const testimonials = [
               {
                 quote: 'Well organised...content explained in a way that was relevant and memorable',
                 name: 'Alex',
@@ -160,32 +167,93 @@ function PricingContent() {
                 role: 'Exercise Physiologist',
                 initials: 'B',
               },
-            ].map((t) => (
-              <div key={t.name} className="glass rounded-xl p-5">
-                <div className="flex gap-0.5 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            ]
+            return (
+              <>
+                <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {testimonials.map((t, idx) => (
+                    <div
+                      key={t.name}
+                      className={`glass rounded-xl p-5${idx >= 3 && !showAllTestimonials ? ' hidden md:block' : ''}`}
+                    >
+                      <div className="flex gap-0.5 mb-3">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">
+                        &ldquo;{t.quote}&rdquo;
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
+                          {t.initials}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-foreground">{t.name}</div>
+                          <div className="text-xs text-muted-foreground">{t.role}</div>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
-                    {t.initials}
+                {!showAllTestimonials && testimonials.length > 3 && (
+                  <div className="text-center mt-4 md:hidden">
+                    <button
+                      onClick={() => setShowAllTestimonials(true)}
+                      className="text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
+                    >
+                      See more reviews ({testimonials.length - 3} more)
+                    </button>
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                )}
+              </>
+            )
+          })()}
         </div>
 
         {/* Pricing Cards — delegated to PricingOptions */}
         <PricingOptions variant="full" />
+
+        {/* Compare Plans */}
+        <div className="mt-12 max-w-3xl mx-auto">
+          <h3 className="text-xl font-bold text-center text-foreground mb-6">Compare Plans</h3>
+          <div className="overflow-x-auto -mx-4 px-4">
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="min-w-[600px] w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Feature</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-700">Online</th>
+                  <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6]">Complete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {([
+                  ['8 online modules', true, true],
+                  ['Clinical Toolkit downloads', true, true],
+                  ['CPD certificate (online)', '8 pts', '8 pts'],
+                  ['Lifetime access', true, true],
+                  ['Full-day hands-on workshop', false, true],
+                  ['Workshop CPD certificate', false, '6 pts'],
+                  ['Total CPD points', '8', '14'],
+                  ['SCAT6 live practice', false, true],
+                  ['Afterpay / Klarna available', true, true],
+                ] as [string, boolean | string, boolean | string][]).map(([feature, online, complete], i) => (
+                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                    <td className="py-3 px-4 text-slate-700">{feature}</td>
+                    <td className="py-3 px-4 text-center">
+                      {online === true ? '\u2713' : online === false ? '\u2014' : online}
+                    </td>
+                    <td className="py-3 px-4 text-center font-medium">
+                      {complete === true ? '\u2713' : complete === false ? '\u2014' : complete}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          </div>
+        </div>
 
         {/* Instructor */}
         <div className="text-center mt-10">

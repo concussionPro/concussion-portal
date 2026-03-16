@@ -23,6 +23,7 @@ interface ProgressContextType {
   syncState: SyncState
   restoredFromServer: boolean
   updateQuizScore: (moduleId: number, score: number, totalQuestions: number, answers?: Record<string, number>) => void
+  saveQuizAnswers: (moduleId: number, answers: Record<string, number>) => void
   markModuleComplete: (moduleId: number) => void
   markModuleStarted: (moduleId: number) => void
   trackActiveStudy: (moduleId: number) => void
@@ -63,8 +64,8 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
   for (let i = 1; i <= 8; i++) {
     defaults[i] = createDefaultModuleProgress(i)
   }
-  // SCAT free modules 101-105
-  for (let i = 101; i <= 105; i++) {
+  // SCAT free modules 101-106
+  for (let i = 101; i <= 106; i++) {
     defaults[i] = createDefaultModuleProgress(i)
   }
   return defaults
@@ -115,13 +116,15 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
             const data = await response.json()
             if (data.success && data.progress) {
               const parsed = parseStoredProgress(data.progress)
+              // Check BEFORE overwriting localStorage
+              const localStored = localStorage.getItem(STORAGE_KEY)
+              const hadLocalData = localStored && Object.values(parseStoredProgress(JSON.parse(localStored))).some(p => p.completed || p.startedAt)
+
+              // NOW write server data
               const merged = { ...getDefaultProgress(), ...parsed }
               setProgress(merged)
               localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
 
-              // Check if server had data that localStorage didn't
-              const localStored = localStorage.getItem(STORAGE_KEY)
-              const hadLocalData = localStored && Object.values(parseStoredProgress(JSON.parse(localStored))).some(p => p.completed || p.startedAt)
               if (!hadLocalData) {
                 const serverHasData = Object.values(parsed).some(p => p.completed || p.startedAt)
                 if (serverHasData) {
@@ -232,6 +235,20 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           quizCompleted: true,
           quizAnswers: answers || null,
           quizSubmittedAt: new Date(),
+        },
+      }
+    })
+  }
+
+  // Save in-progress quiz answers without marking quiz as complete
+  const saveQuizAnswers = (moduleId: number, answers: Record<string, number>) => {
+    setProgress((prev) => {
+      const currentModule = prev[moduleId] || createDefaultModuleProgress(moduleId)
+      return {
+        ...prev,
+        [moduleId]: {
+          ...currentModule,
+          quizAnswers: Object.keys(answers).length > 0 ? answers : null,
         },
       }
     })
@@ -362,6 +379,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     setProgress(getDefaultProgress())
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY)
+      // Clear server-side progress
+      fetch('/api/progress', { method: 'DELETE', credentials: 'include' }).catch(() => {})
     }
   }
 
@@ -394,6 +413,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         syncState,
         restoredFromServer,
         updateQuizScore,
+        saveQuizAnswers,
         markModuleComplete,
         markModuleStarted,
         trackActiveStudy,

@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { FileText, Clock, ArrowRight } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { EmailCaptureInline } from '@/components/EmailCaptureInline'
 
 export const metadata: Metadata = {
   title: 'Free SCAT6 & SCOAT6 Digital Forms | Concussion Education Australia',
@@ -88,6 +89,11 @@ export default function SCATFormsPage() {
             </div>
             <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors flex-shrink-0" />
           </Link>
+        </div>
+
+        {/* Inline email capture — free SCAT6 Mastery Course */}
+        <div className="mt-8">
+          <EmailCaptureInline />
         </div>
 
         {/* Help choosing */}

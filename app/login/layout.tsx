@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Login',
-  description: 'Sign in to your ConcussionPro account to access your course modules, certificates, and clinical resources.',
+  title: 'Login | ConcussionPro',
+  description: 'Log in to your ConcussionPro account to access your concussion management CPD course.',
   robots: { index: false, follow: false },
 }
 

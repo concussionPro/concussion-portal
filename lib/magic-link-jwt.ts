@@ -16,6 +16,7 @@ function getSecret(): string {
 const SECRET = getSecret()
 
 interface TokenPayload {
+  type: 'magic-link'
   userId: string
   email: string
   name: string
@@ -26,6 +27,7 @@ interface TokenPayload {
 // Create a signed token
 export function createMagicToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview'): string {
   const payload: TokenPayload = {
+    type: 'magic-link',
     userId,
     email,
     name,
@@ -71,6 +73,11 @@ function verifyToken(token: string): TokenPayload | null {
     const payload: TokenPayload = JSON.parse(
       Buffer.from(payloadStr, 'base64url').toString()
     )
+
+    // Reject tokens that aren't magic-link tokens (e.g. session tokens)
+    if (payload.type !== 'magic-link') {
+      return null
+    }
 
     // Check expiration
     if (payload.exp < Date.now()) {

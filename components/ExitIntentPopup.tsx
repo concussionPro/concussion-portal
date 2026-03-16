@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { X, ArrowRight, Shield, Award } from 'lucide-react'
 
 /**
- * Exit-intent popup — captures email by offering free SCAT Mastery course.
+ * Exit-intent popup — captures email by offering free SCAT6 Mastery course.
  *
  * Triggers when mouse moves toward top of viewport (desktop) or after
  * 45 seconds of inactivity (mobile fallback).
@@ -38,6 +38,17 @@ export function ExitIntentPopup() {
     sessionStorage.setItem('exit_popup_shown', '1')
     setShow(true)
   }, [isExcluded])
+
+  // ESC key handler to close popup
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShow(false)
+    }
+    if (show) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [show])
 
   useEffect(() => {
     if (isExcluded) return
@@ -109,7 +120,7 @@ export function ExitIntentPopup() {
   if (!show || isExcluded) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Free SCAT6 training offer">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -139,7 +150,7 @@ export function ExitIntentPopup() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">You&apos;re in!</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Check your email for a login link to start the free SCAT Mastery course.
+                Check your email for a login link to start the free SCAT6 Mastery course.
               </p>
               <button
                 onClick={() => setShow(false)}
@@ -156,7 +167,7 @@ export function ExitIntentPopup() {
                   Before you go — free SCAT6 training
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Get instant access to our 2-hour SCAT Mastery course with
+                  Get instant access to our ~3-hour SCAT6 Mastery course with
                   fillable SCAT6 &amp; SCOAT6 forms. Earn 2 AHPRA CPD points — completely free.
                 </p>
               </div>
@@ -191,7 +202,7 @@ export function ExitIntentPopup() {
                 </button>
               </form>
 
-              <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-400">
+              <div className="flex items-center justify-center gap-4 mt-4 text-xs text-slate-500">
                 <span className="flex items-center gap-1">
                   <Shield className="w-3 h-3" /> No spam
                 </span>
@@ -200,7 +211,7 @@ export function ExitIntentPopup() {
 
               <button
                 onClick={() => setShow(false)}
-                className="block w-full text-center text-xs text-gray-400 hover:text-gray-600 mt-3"
+                className="block w-full text-center text-xs text-slate-500 hover:text-slate-700 mt-3 transition-colors"
               >
                 No thanks
               </button>

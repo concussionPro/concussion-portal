@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { put, list as listBlobs } from '@vercel/blob'
 import { jsPDF } from 'jspdf'
-import { sendEmail } from '@/lib/email'
+import { sendEmailWithAttachment } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 
 function escapeHtml(str: string): string {
@@ -371,17 +371,10 @@ export async function POST(request: Request) {
 
     // Generate PDF
     const pdfBuffer = generatePdf(body, clinic.clinicName)
-    const pdfBase64 = pdfBuffer.toString('base64')
 
     const athleteName = escapeHtml(body.athlete.name || 'Unknown Athlete')
     const date = new Date().toLocaleDateString('en-AU')
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
-
-    // Send email with PDF attachment via Resend API directly (need attachment support)
-    const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey && process.env.NODE_ENV !== 'development') {
-      return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
-    }
 
     const totalCognitive = body.cognitive.orientation.score + body.cognitive.immediateMemory.total +
       body.cognitive.concentration.total + body.cognitive.delayedRecall.score
@@ -499,36 +492,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true })
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Would send baseline report email to:', clinic.email)
-      console.log('PDF size:', pdfBuffer.length, 'bytes')
-      return NextResponse.json({ success: true })
-    }
-
-    // Send via Resend with attachment
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'ConcussionPro <noreply@concussion-education-australia.com>',
-        to: [clinic.email],
-        subject: `SCAT6 Baseline Report — ${athleteName} (${date})`,
-        html: emailHtml,
-        attachments: [
-          {
-            filename: `SCAT6-Baseline-${athleteName.replace(/\s+/g, '-')}-${date.replace(/\//g, '-')}.pdf`,
-            content: pdfBase64,
-          },
-        ],
-      }),
+    // Send via Resend SDK with attachment
+    const emailSent = await sendEmailWithAttachment({
+      to: clinic.email,
+      subject: `SCAT6 Baseline Report — ${athleteName} (${date})`,
+      html: emailHtml,
+      attachments: [
+        {
+          filename: `SCAT6-Baseline-${athleteName.replace(/\s+/g, '-')}-${date.replace(/\//g, '-')}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
     })
 
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Resend API error:', error)
+    if (!emailSent) {
       return NextResponse.json({ error: 'Failed to send report' }, { status: 500 })
     }
 

@@ -23,6 +23,7 @@ const EXCLUDED_PATHS = [
   '/references',
   '/complete-reference',
   '/certificate',
+  '/preseason/b',
 ]
 
 export function StickyCTA() {

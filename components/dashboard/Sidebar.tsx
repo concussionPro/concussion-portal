@@ -4,17 +4,11 @@ import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Libr
 import { cn } from '@/lib/utils'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
+import { useSession } from '@/contexts/SessionContext'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
-interface UserInfo {
-  id: string
-  email: string
-  name: string
-  enrolledAt: string
-  accessLevel: string
-}
 
 const navItems: Array<{
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
@@ -38,34 +32,18 @@ export function Sidebar() {
   const router = useRouter()
   const completedModules = getTotalCompletedModules()
   const scatCompletedModules = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 105 && p.completed
+    (p) => p.moduleId >= 101 && p.moduleId <= 106 && p.completed
   ).length
-  const [user, setUser] = useState<UserInfo | null>(null)
+  const { user: sessionUser } = useSession()
+  const user = sessionUser ? {
+    id: sessionUser.id || '1',
+    email: sessionUser.email || '',
+    name: sessionUser.name || sessionUser.email?.split('@')[0] || 'Student',
+    accessLevel: sessionUser.accessLevel || 'preview',
+    enrolledAt: sessionUser.createdAt || '',
+  } : null
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showRestoredBanner, setShowRestoredBanner] = useState(false)
-
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const response = await fetch('/api/auth/session', { credentials: 'include' })
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.user) {
-            setUser({
-              id: data.user.id || '1',
-              email: data.user.email || '',
-              name: data.user.name || data.user.email?.split('@')[0] || 'Student',
-              enrolledAt: new Date().toISOString(),
-              accessLevel: data.user.accessLevel || 'preview',
-            })
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load user:', error)
-      }
-    }
-    loadUser()
-  }, [])
 
   // Show restored-from-cloud banner once per session
   useEffect(() => {
@@ -125,7 +103,7 @@ export function Sidebar() {
         )}
       >
         {/* Logo */}
-        <Link href="/" className="mb-8 group cursor-pointer">
+        <Link href="/learning" className="mb-8 group cursor-pointer">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center group-hover:scale-105 transition-transform shadow-md shadow-accent/15">
               <Brain className="w-5 h-5 text-white" strokeWidth={2} />
@@ -151,7 +129,7 @@ export function Sidebar() {
         <div className="mb-8">
           <ProgressRing
             progress={user?.accessLevel === 'preview' ? scatCompletedModules : completedModules}
-            total={user?.accessLevel === 'preview' ? 5 : 8}
+            total={user?.accessLevel === 'preview' ? 6 : 8}
           />
         </div>
 
@@ -202,7 +180,7 @@ export function Sidebar() {
               >
                 {isActive && <div className="nav-active-indicator" />}
                 <item.icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2 : 1.5} />
-                <span className="text-sm">{item.label}</span>
+                <span className="text-sm font-medium">{item.label}</span>
               </Link>
             )
           })}

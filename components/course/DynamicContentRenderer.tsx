@@ -17,6 +17,18 @@ import {
   BookOpen,
   ClipboardList,
   Play,
+  Shield,
+  Eye,
+  Bone,
+  Activity,
+  GraduationCap,
+  Circle,
+  Microscope,
+  Battery,
+  Dna,
+  Recycle,
+  Hash,
+  Info,
 } from 'lucide-react'
 
 // Map content-marker emoji to lucide icons for professional rendering
@@ -34,6 +46,25 @@ const EMOJI_ICON_MAP: Record<string, { icon: React.ComponentType<{ className?: s
   '⛓': { icon: Link2, color: 'text-slate-500' },
   '📅': { icon: Calendar, color: 'text-blue-500' },
   '📚': { icon: BookOpen, color: 'text-indigo-500' },
+  // Phase & mechanism emojis used in module content
+  '💥': { icon: Zap, color: 'text-orange-500' },
+  '↔️': { icon: RefreshCw, color: 'text-blue-500' },
+  '🔋': { icon: Battery, color: 'text-green-600' },
+  '🧬': { icon: Dna, color: 'text-violet-500' },
+  '🔬': { icon: Microscope, color: 'text-indigo-500' },
+  '🛡️': { icon: Shield, color: 'text-blue-600' },
+  '♻️': { icon: Recycle, color: 'text-emerald-500' },
+  '🖼️': { icon: Info, color: 'text-slate-500' },
+  '👁️': { icon: Eye, color: 'text-blue-500' },
+  '🦴': { icon: Bone, color: 'text-slate-600' },
+  '🏃': { icon: Activity, color: 'text-teal-600' },
+  '🎓': { icon: GraduationCap, color: 'text-amber-600' },
+  '🚀': { icon: Zap, color: 'text-teal-500' },
+  // Phase color dots for phased management framework
+  '🔴': { icon: Circle, color: 'text-red-500' },
+  '🟡': { icon: Circle, color: 'text-yellow-500' },
+  '🟢': { icon: Circle, color: 'text-green-500' },
+  '⚪': { icon: Circle, color: 'text-slate-400' },
 }
 
 function EmojiIcon({ emoji, size = 'md' }: { emoji: string; size?: 'sm' | 'md' | 'lg' }) {
@@ -66,12 +97,12 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     const lineAfterNextIsSeparator = i + 2 < content.length && (content[i + 2].includes('──') || content[i + 2].includes('---'))
 
     // Check if this is a major section header (emoji + number + title)
-    const startsWithTargetEmoji = line.charCodeAt(0) === 0x1F3AF || // 🎯
-                                   line.charCodeAt(0) === 0x26D3 ||  // ⛓
-                                   line.charCodeAt(0) === 0x1F4C5 || // 📅
-                                   line.charCodeAt(0) === 0x2705 ||  // ✅
-                                   line.charCodeAt(0) === 0x1F4A1 || // 💡
-                                   line.charCodeAt(0) === 0x1F4DA    // 📚
+    const startsWithTargetEmoji = line.codePointAt(0) === 0x1F3AF || // 🎯
+                                   line.codePointAt(0) === 0x26D3 ||  // ⛓
+                                   line.codePointAt(0) === 0x1F4C5 || // 📅
+                                   line.codePointAt(0) === 0x2705 ||  // ✅
+                                   line.codePointAt(0) === 0x1F4A1 || // 💡
+                                   line.codePointAt(0) === 0x1F4DA    // 📚
     const isMajorSection = startsWithTargetEmoji && / \d+\. /.test(line)
 
     // Check if this is a pathway section (A., B., C. followed by content with Mechanism:, Target:, etc.)
@@ -157,24 +188,31 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     return processed
   }, [content])
 
-  // Track consecutive definition blocks for color rotation
-  let definitionCounter = 0
-  const rendered = processedContent.map((paragraph, index) => {
-    const isDefinition = !paragraph.startsWith('__SECTION__') &&
-      !paragraph.startsWith('__PATHWAY__') &&
-      !(paragraph.includes('|') && (paragraph.includes('───') || paragraph.includes('---'))) &&
-      !paragraph.trim().startsWith('☐') &&
-      !paragraph.trim().startsWith('✓') &&
-      !paragraph.trim().startsWith('•') &&
-      !paragraph.trim().startsWith('-') &&
-      !paragraph.trim().startsWith('*') &&
-      !paragraph.startsWith('##') &&
-      !paragraph.trim().endsWith(':') &&
-      !/^(🔹|📊|💡|⚡|🧠|🔄|⚠️|✅)\s/.test(paragraph) &&
-      /^[A-Z][A-Z\s&]+:\s*.+/.test(paragraph) &&
-      (paragraph.match(/^[A-Z][A-Z\s&]+/)?.[0]?.length ?? 999) < 50
+  // Precompute definition color indices to avoid mutation inside .map() (breaks in React StrictMode)
+  const isDefinitionCheck = (paragraph: string) =>
+    !paragraph.startsWith('__SECTION__') &&
+    !paragraph.startsWith('__PATHWAY__') &&
+    !(paragraph.includes('|') && (paragraph.includes('───') || paragraph.includes('---'))) &&
+    !paragraph.trim().startsWith('☐') &&
+    !paragraph.trim().startsWith('✓') &&
+    !paragraph.trim().startsWith('•') &&
+    !paragraph.trim().startsWith('-') &&
+    !paragraph.trim().startsWith('* ') &&
+    !paragraph.startsWith('##') &&
+    !paragraph.trim().endsWith(':') &&
+    !/^[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/u.test(paragraph) &&
+    /^[A-Z][A-Z0-9\s&\-/]+:\s*.+/.test(paragraph) &&
+    (paragraph.match(/^[A-Z][A-Z0-9\s&\-/]+/)?.[0]?.length ?? 999) < 50
 
-    const colorIndex = isDefinition ? definitionCounter++ : 0
+  const definitionColorMap: number[] = []
+  let counter = 0
+  for (const p of processedContent) {
+    const isDef = isDefinitionCheck(p)
+    definitionColorMap.push(isDef ? counter++ : 0)
+  }
+
+  const rendered = processedContent.map((paragraph, index) => {
+    const colorIndex = definitionColorMap[index]
     return renderParagraph(paragraph, `content-${index}`, colorIndex)
   })
 
@@ -182,7 +220,7 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
   const takeaways = useMemo(() => {
     const points: string[] = []
     for (const paragraph of processedContent) {
-      const defMatch = paragraph.match(/^([A-Z][A-Z\s&]+):\s*(.+)/)
+      const defMatch = paragraph.match(/^([A-Z][A-Z0-9\s&\-/]+):\s*(.+)/)
       if (defMatch && defMatch[1].length < 50 &&
         !paragraph.startsWith('__SECTION__') && !paragraph.startsWith('__PATHWAY__')) {
         const fullText = defMatch[2]
@@ -254,11 +292,101 @@ function renderVideoEmbed(videoId: string, title: string, key: string) {
   )
 }
 
+// Parse **bold** markdown within text — used across all content renderers
+function parseBoldText(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = []
+  const regex = /\*\*(.*?)\*\*/g
+  let lastIndex = 0
+  let match
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index))
+    }
+    parts.push(
+      <strong key={match.index} className="font-semibold text-slate-900">
+        {match[1]}
+      </strong>
+    )
+    lastIndex = regex.lastIndex
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex))
+  }
+
+  return parts.length > 0 ? parts : [text]
+}
+
 function renderParagraph(text: string, key: string, definitionColorIndex: number = 0) {
+
   // Handle video embeds [VIDEO: youtube_id | Title]
   const videoMatch = text.match(/^\[VIDEO:\s*([^\]|]+?)\s*\|\s*([^\]]+?)\s*\]$/)
   if (videoMatch) {
     return renderVideoEmbed(videoMatch[1], videoMatch[2], key)
+  }
+
+  // Handle callout boxes [CALLOUT: type | content]
+  const calloutMatch = text.match(/^\[CALLOUT:\s*(warning|evidence|clinical|key)\s*\|\s*(.+)\]$/)
+  if (calloutMatch) {
+    const calloutType = calloutMatch[1] as 'warning' | 'evidence' | 'clinical' | 'key'
+    const calloutContent = calloutMatch[2]
+    const calloutConfig = {
+      warning: { icon: AlertTriangle, bg: 'bg-amber-50', border: 'border-amber-500', label: 'text-amber-900', iconColor: 'text-amber-600', title: 'Warning' },
+      evidence: { icon: BookOpen, bg: 'bg-blue-50', border: 'border-blue-500', label: 'text-blue-900', iconColor: 'text-blue-600', title: 'Evidence' },
+      clinical: { icon: Lightbulb, bg: 'bg-purple-50', border: 'border-purple-500', label: 'text-purple-900', iconColor: 'text-purple-600', title: 'Clinical Pearl' },
+      key: { icon: Target, bg: 'bg-teal-50', border: 'border-teal-500', label: 'text-teal-900', iconColor: 'text-teal-600', title: 'Key Point' },
+    }
+    const cfg = calloutConfig[calloutType]
+    const CalloutIcon = cfg.icon
+    return (
+      <div key={key} className={`${cfg.bg} rounded-xl p-5 border-l-4 ${cfg.border} my-4`}>
+        <div className="flex items-start gap-3">
+          <CalloutIcon className={`w-5 h-5 ${cfg.iconColor} flex-shrink-0 mt-0.5`} strokeWidth={2} />
+          <div className="flex-1">
+            <p className={`text-xs font-bold uppercase tracking-wide mb-1.5 ${cfg.label}`}>{cfg.title}</p>
+            <p className="text-sm text-slate-700 leading-relaxed">{parseBoldText(calloutContent)}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Handle quote/guideline blocks [QUOTE: Attribution | Content]
+  const quoteMatch = text.match(/^\[QUOTE:\s*([^|]+?)\s*\|\s*(.+)\]$/)
+  if (quoteMatch) {
+    return (
+      <blockquote key={key} className="border-l-4 border-slate-400 bg-slate-50 rounded-r-xl p-5 my-4">
+        <p className="text-sm text-slate-700 leading-relaxed italic">{parseBoldText(quoteMatch[2])}</p>
+        <p className="text-xs font-bold text-slate-500 mt-2">— {quoteMatch[1]}</p>
+      </blockquote>
+    )
+  }
+
+  // Handle highlight blocks [HIGHLIGHT: content]
+  const highlightMatch = text.match(/^\[HIGHLIGHT:\s*(.+)\]$/)
+  if (highlightMatch) {
+    return (
+      <div key={key} className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-6 my-4 text-center border border-teal-200">
+        <p className="text-base font-semibold text-slate-800 leading-relaxed">{parseBoldText(highlightMatch[1])}</p>
+      </div>
+    )
+  }
+
+  // Handle sub-section headers (### Title)
+  const subHeaderMatch = text.match(/^###\s+(.+)$/)
+  if (subHeaderMatch) {
+    return (
+      <div key={key} className="flex items-center gap-2 mt-6 mb-3">
+        <div className="w-1 h-5 bg-teal-500 rounded-full" />
+        <h5 className="text-base font-bold text-slate-900">{subHeaderMatch[1]}</h5>
+      </div>
+    )
+  }
+
+  // Handle horizontal rules (---)
+  if (/^-{3,}$/.test(text.trim())) {
+    return <hr key={key} className="border-t border-slate-200 my-8" />
   }
 
   // Handle major sections with intro text
@@ -331,7 +459,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
           return (
             <div key={i} className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
-              <span className="text-[15px] text-slate-700 leading-relaxed">{cleanItem}</span>
+              <span className="text-[15px] text-slate-700 leading-relaxed">{parseBoldText(cleanItem)}</span>
             </div>
           )
         })}
@@ -340,7 +468,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
   }
 
   // Handle regular bullet points
-  if (text.trim().startsWith('•') || text.trim().startsWith('-') || text.trim().startsWith('*')) {
+  if (text.trim().startsWith('•') || text.trim().startsWith('-') || text.trim().startsWith('* ') || text.trim() === '*') {
     const items = text.split(/\n/).filter(line => line.trim())
     return (
       <ul key={key} className="space-y-2">
@@ -348,7 +476,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
           <li key={i} className="flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
             <span className="text-[15px] text-slate-700 leading-relaxed">
-              {item.replace(/^[•\-\*]\s*/, '')}
+              {parseBoldText(item.replace(/^[•\-\*]\s*/, ''))}
             </span>
           </li>
         ))}
@@ -356,8 +484,48 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     )
   }
 
-  // Handle definition-style content (LABEL: description)
-  const definitionMatch = text.match(/^([A-Z][A-Z\s&]+):\s*(.+)/)
+  // Handle case study blocks (CASE X - LABEL: description)
+  const caseMatch = text.match(/^CASE\s*(\d*)\s*[-–—]?\s*([^:]*?):\s*(.+)/)
+  if (caseMatch) {
+    const [, num, label, content] = caseMatch
+    const caseTitle = num ? `Case ${num}` : 'Case Study'
+    const subtitle = label.trim()
+    return (
+      <div key={key} className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-5 border-l-4 border-amber-500 my-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex-shrink-0">
+            {num || '?'}
+          </span>
+          <span className="font-bold text-amber-900 text-sm uppercase tracking-wide">
+            {caseTitle}{subtitle ? ` — ${subtitle}` : ''}
+          </span>
+        </div>
+        <div className="text-[15px] text-slate-700 leading-relaxed">
+          {content}
+        </div>
+      </div>
+    )
+  }
+
+  // Handle labeled paragraphs with parenthetical details (LABEL (detail): description)
+  const labeledParenMatch = text.match(/^([A-Z][A-Z\s&-]+\([^)]+\)):\s*(.+)/)
+  if (labeledParenMatch && labeledParenMatch[1].length < 60) {
+    const [, label, content] = labeledParenMatch
+    const colors = DEFINITION_COLORS[definitionColorIndex % DEFINITION_COLORS.length]
+    return (
+      <div key={key} className={`${colors.bg} rounded-lg p-4 border-l-4 ${colors.border} my-3`}>
+        <div className={`font-bold ${colors.label} text-sm uppercase tracking-wide mb-2`}>
+          {label}
+        </div>
+        <div className="text-[15px] text-slate-700 leading-relaxed">
+          {content}
+        </div>
+      </div>
+    )
+  }
+
+  // Handle definition-style content (LABEL: description) — includes hyphens, digits, slashes
+  const definitionMatch = text.match(/^([A-Z][A-Z0-9\s&\-/]+):\s*(.+)/)
   if (definitionMatch && definitionMatch[1].length < 50) {
     const [, label, content] = definitionMatch
     const colors = DEFINITION_COLORS[definitionColorIndex % DEFINITION_COLORS.length]
@@ -411,47 +579,45 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     )
   }
 
-  // SECURITY FIX: Safe text rendering without dangerouslySetInnerHTML
-  const parseBoldText = (text: string): React.ReactNode[] => {
-    const parts: React.ReactNode[] = []
-    const regex = /\*\*(.*?)\*\*/g
-    let lastIndex = 0
-    let match
-
-    while ((match = regex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(text.substring(lastIndex, match.index))
-      }
-      parts.push(
-        <strong key={match.index} className="font-semibold text-slate-900">
-          {match[1]}
-        </strong>
-      )
-      lastIndex = regex.lastIndex
-    }
-
-    if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex))
-    }
-
-    return parts.length > 0 ? parts : [text]
+  // Handle numbered emoji sub-headers (1️⃣ TITLE, 2️⃣ TITLE, etc.)
+  const numberedEmojiMatch = text.match(/^([1-9]️⃣)\s+(.+)/)
+  if (numberedEmojiMatch) {
+    const num = numberedEmojiMatch[1].charAt(0)
+    const title = numberedEmojiMatch[2]
+    return (
+      <div key={key} className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg px-5 py-3 border-l-4 border-teal-500 mt-4 mb-1">
+        <div className="flex items-center gap-3">
+          <span className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-500 text-white flex items-center justify-center font-bold text-sm">
+            {num}
+          </span>
+          <h4 className="text-base font-bold text-slate-900">
+            {title}
+          </h4>
+        </div>
+      </div>
+    )
   }
 
   // Handle emoji indicators — render with icons instead of raw emoji
-  const emojiMatch = text.match(/^(🔹|📊|💡|⚡|🧠|🔄|⚠️|✅)\s*(.*)/)
+  // Match any emoji prefix that exists in our icon map, plus common emoji patterns
+  const emojiPrefixMatch = text.match(/^([\p{Emoji_Presentation}\p{Emoji}\uFE0F]+)\s*(.*)/u)
 
-  if (emojiMatch) {
-    const emoji = emojiMatch[1]
-    const content = emojiMatch[2]
+  if (emojiPrefixMatch) {
+    const rawEmoji = emojiPrefixMatch[1]
+    const content = emojiPrefixMatch[2]
+    // Try exact match first, then try without variant selector
+    const emoji = EMOJI_ICON_MAP[rawEmoji] ? rawEmoji : Object.keys(EMOJI_ICON_MAP).find(k => rawEmoji.startsWith(k))
 
-    return (
-      <div key={key} className="flex items-start gap-3 bg-white rounded-lg p-4 border border-slate-200">
-        <EmojiIcon emoji={emoji} />
-        <p className="text-[15px] text-slate-700 leading-relaxed flex-1">
-          {parseBoldText(content)}
-        </p>
-      </div>
-    )
+    if (emoji && EMOJI_ICON_MAP[emoji]) {
+      return (
+        <div key={key} className="flex items-start gap-3 bg-white rounded-lg p-4 border border-slate-200">
+          <EmojiIcon emoji={emoji} />
+          <p className="text-[15px] text-slate-700 leading-relaxed flex-1">
+            {parseBoldText(content)}
+          </p>
+        </div>
+      )
+    }
   }
 
   // Standard paragraph with safe bold rendering
@@ -511,14 +677,14 @@ function renderPathwaySection(text: string, key: string) {
                   <div key={lineIdx} className="flex items-start gap-2 mt-2 first:mt-0">
                     <span className="text-indigo-500 mt-1 font-bold">•</span>
                     <span className="text-[15px] text-slate-700 leading-relaxed flex-1">
-                      {line.replace(/^•\s*/, '')}
+                      {parseBoldText(line.replace(/^•\s*/, ''))}
                     </span>
                   </div>
                 )
               }
               return (
                 <p key={lineIdx} className="text-[15px] text-slate-700 leading-relaxed mt-2 first:mt-0">
-                  {line}
+                  {parseBoldText(line)}
                 </p>
               )
             })}

@@ -9,7 +9,7 @@ export default function TermsPage() {
 
       <div className="max-w-3xl mx-auto px-6 pt-[80px] pb-16">
         <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">
-          Terms &amp; Refund Policy
+          Terms, Refund Policy &amp; Privacy
         </h1>
         <p className="text-sm text-muted-foreground mb-10">
           Last updated: March 2026
@@ -86,10 +86,10 @@ export default function TermsPage() {
         {/* Free Course */}
         <section className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4">
-            Free SCAT Mastery Course
+            Free SCAT6 Mastery Course
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            The SCAT Mastery course is provided at no cost. No payment is collected and no refund is applicable.
+            The SCAT6 Mastery course is provided at no cost. No payment is collected and no refund is applicable.
           </p>
         </section>
 
@@ -112,6 +112,45 @@ export default function TermsPage() {
               accc.gov.au
             </a>.
           </p>
+        </section>
+
+        {/* Privacy Policy */}
+        <section id="privacy" className="mb-10">
+          <h2 className="text-xl font-bold text-foreground mb-4">
+            Privacy Policy
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            Concussion Education Australia collects and handles personal information in accordance with the Australian Privacy Principles (APPs) under the Privacy Act 1988.
+          </p>
+          <h3 className="text-base font-semibold text-foreground mb-2">Information we collect</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5 mb-6">
+            <li>Name and email address (provided at registration)</li>
+            <li>Course progress and quiz scores (to issue CPD certificates)</li>
+            <li>Payment information (processed securely by Stripe — we do not store card details)</li>
+            <li>Workshop preferences and location selection</li>
+          </ul>
+          <h3 className="text-base font-semibold text-foreground mb-2">How we use your information</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5 mb-6">
+            <li>To provide access to courses and issue CPD certificates</li>
+            <li>To send course-related emails (progress updates, workshop logistics)</li>
+            <li>To improve our educational content and platform</li>
+            <li>We do <strong className="text-foreground">not</strong> sell or share your personal information with third parties for marketing purposes</li>
+          </ul>
+          <h3 className="text-base font-semibold text-foreground mb-2">Analytics</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+            We use Google Analytics to understand how our platform is used. This data is anonymised and used solely to improve the learning experience.
+          </p>
+          <h3 className="text-base font-semibold text-foreground mb-2">Your rights</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5 mb-6">
+            <li>You can request access to, correction of, or deletion of your personal information at any time</li>
+            <li>You can unsubscribe from marketing emails via the link in any email, or from your account settings</li>
+            <li>
+              To make a privacy request, email{' '}
+              <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="text-accent hover:underline">
+                {CONFIG.CONTACT_EMAIL}
+              </a>
+            </li>
+          </ul>
         </section>
 
         {/* Contact */}

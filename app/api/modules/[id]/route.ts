@@ -55,7 +55,9 @@ export async function GET(
       sessionData.accessLevel === 'full-course'
 
     // Get appropriate module based on access level
+    const isSCATModule = moduleId >= 101 && moduleId <= 106
     let module
+
     if (hasFullAccess) {
       // Paid users: Get from main course modules, then fall through to SCAT
       module = getModuleById(moduleId) || getSCATModuleById(moduleId)
@@ -66,11 +68,22 @@ export async function GET(
         )
       }
     } else {
-      // Preview/free users: Get from SCAT modules
+      // Preview/free users: SCAT modules are the free course
       const scatModule = getSCATModuleById(moduleId)
 
-      if (!scatModule) {
-        // They're trying to access a paid module
+      if (scatModule) {
+        module = scatModule
+      } else if (moduleId === 1) {
+        // Preview users can access Module 1 with truncated content
+        module = getModuleById(moduleId)
+        if (!module) {
+          return NextResponse.json(
+            { error: 'Module not found' },
+            { status: 404 }
+          )
+        }
+      } else {
+        // They're trying to access a paid module (2-8)
         return NextResponse.json(
           {
             error: 'This module requires full course access',
@@ -84,14 +97,15 @@ export async function GET(
           { status: 403 }
         )
       }
-      module = scatModule
     }
 
     // For preview users accessing PAID modules (1-8): truncate content
-    // SCAT modules (101-105) are the free course — preview users get FULL access
+    // SCAT modules (101-106) are the free course — preview users get FULL access
     let responseModule = module
-    const isSCATModule = moduleId >= 101 && moduleId <= 105
+    let allSectionTitles: string[] | undefined
     if (sessionData.accessLevel === 'preview' && !isSCATModule) {
+      // Preserve all section titles for the locked banner before truncating
+      allSectionTitles = module.sections.map((s: any) => s.title)
       responseModule = {
         ...module,
         sections: module.sections.slice(0, 2),
@@ -109,6 +123,7 @@ export async function GET(
       success: true,
       module: safeModule,
       accessLevel: sessionData.accessLevel,
+      ...(allSectionTitles ? { allSectionTitles } : {}),
     })
 
   } catch (error) {

@@ -61,8 +61,8 @@ export async function GET(request: NextRequest) {
             }
           }
         }
-        // Count completed SCAT free modules (101-105)
-        for (let m = 101; m <= 105; m++) {
+        // Count completed SCAT free modules (101-106)
+        for (let m = 101; m <= 106; m++) {
           const mod = progress[String(m)]
           if (mod?.completed) {
             completedScatModules++

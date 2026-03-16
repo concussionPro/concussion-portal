@@ -157,7 +157,7 @@ export default function FreeSCAT6PDFDownloadPage() {
 
           <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-8 mb-12">
             <h3 className="text-2xl font-bold text-green-900 mb-4">
-              Free Training: Master SCAT6 & SCOAT6 in 2 Hours
+              Free Training: Master SCAT6 & SCOAT6 in ~3 Hours
             </h3>
             <p className="text-lg text-slate-700 mb-4">
               Downloading the form is step 1. Knowing how to use it correctly is step 2.

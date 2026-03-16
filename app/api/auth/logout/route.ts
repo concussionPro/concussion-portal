@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
       } catch {
-        // Invalid URL — allow through (same-origin requests may omit origin)
+        // Invalid URL — reject to prevent CSRF bypass
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
     }
 

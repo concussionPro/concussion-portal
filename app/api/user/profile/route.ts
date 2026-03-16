@@ -15,13 +15,16 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const updates: { name?: string; nurtureUnsubscribed?: boolean } = {}
+    const updates: { name?: string; nurtureUnsubscribed?: boolean; progressEmailsOptedOut?: boolean } = {}
 
     if (typeof body.name === 'string' && body.name.trim()) {
       updates.name = body.name.trim().slice(0, 100)
     }
     if (typeof body.nurtureUnsubscribed === 'boolean') {
       updates.nurtureUnsubscribed = body.nurtureUnsubscribed
+    }
+    if (typeof body.progressEmailsOptedOut === 'boolean') {
+      updates.progressEmailsOptedOut = body.progressEmailsOptedOut
     }
 
     if (Object.keys(updates).length === 0) {
@@ -42,13 +45,13 @@ export async function PATCH(request: NextRequest) {
         sessionData.email,
         updates.name,
         sessionData.accessLevel,
-        true
+        false
       )
       response.cookies.set('session', newToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60,
+        maxAge: 7 * 24 * 60 * 60,
         path: '/',
       })
     }

@@ -38,6 +38,38 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// DELETE - Clear user progress
+export async function DELETE(request: NextRequest) {
+  try {
+    const sessionToken = request.cookies.get('session')?.value
+
+    if (!sessionToken) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      )
+    }
+
+    const sessionData = verifySessionToken(sessionToken)
+    if (!sessionData) {
+      return NextResponse.json(
+        { error: 'Invalid session' },
+        { status: 401 }
+      )
+    }
+
+    await sql`DELETE FROM user_progress WHERE user_id = ${sessionData.userId}`
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Failed to delete progress:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete progress' },
+      { status: 500 }
+    )
+  }
+}
+
 // POST - Save user progress
 export async function POST(request: NextRequest) {
   try {

@@ -368,12 +368,12 @@ export default function ClinicalToolkitPage() {
                 return (
                   <div
                     key={resource.id}
-                    className={`bg-white rounded-2xl border-2 p-6 transition-all ${
+                    className={`bg-white rounded-2xl border-2 p-6 transition-all cursor-pointer ${
                       isLocked
-                        ? 'border-slate-200 opacity-60'
-                        : 'border-slate-200 hover:border-blue-300 hover:shadow-lg cursor-pointer'
+                        ? 'border-slate-200 opacity-60 hover:opacity-80'
+                        : 'border-slate-200 hover:border-blue-300 hover:shadow-lg'
                     }`}
-                    onClick={() => !isLocked && handleDownload(resource)}
+                    onClick={() => handleDownload(resource)}
                   >
                     {/* Icon and Badge */}
                     <div className="flex items-start justify-between mb-4">

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
@@ -15,7 +16,6 @@ const NAV_ITEMS = [
 ]
 
 export function SiteNav() {
-  const router = useRouter()
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -27,8 +27,8 @@ export function SiteNav() {
     >
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className="flex items-center justify-between h-[60px]">
-          <button
-            onClick={() => router.push('/')}
+          <Link
+            href="/"
             className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-accent rounded"
             aria-label="ConcussionPro home"
           >
@@ -43,14 +43,14 @@ export function SiteNav() {
             <span className="text-sm font-semibold tracking-tight text-[var(--foreground)]">
               ConcussionPro
             </span>
-          </button>
+          </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map(item => (
-              <button
+              <Link
                 key={item.path}
-                onClick={() => router.push(item.path)}
+                href={item.path}
                 className={`text-[13px] font-medium px-3 py-2 rounded-md transition-colors ${
                   pathname === item.path
                     ? 'text-[var(--accent)] bg-[rgba(13,115,119,0.06)]'
@@ -60,15 +60,15 @@ export function SiteNav() {
                 }`}
               >
                 {item.label}
-              </button>
+              </Link>
             ))}
-            <a
+            <Link
               href={CONFIG.SHOP_URL}
               className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
             >
               Enrol
               <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+            </Link>
           </div>
 
           {/* Mobile burger */}
@@ -92,9 +92,10 @@ export function SiteNav() {
         <div className="md:hidden border-t border-[rgba(13,115,119,0.06)] bg-[rgba(248,250,251,0.95)] backdrop-blur-xl px-5 pb-4 pt-2">
           <div className="flex flex-col gap-1">
             {NAV_ITEMS.map(item => (
-              <button
+              <Link
                 key={item.path}
-                onClick={() => { router.push(item.path); setMobileMenuOpen(false) }}
+                href={item.path}
+                onClick={() => setMobileMenuOpen(false)}
                 className={`text-left text-sm py-2.5 px-3 rounded-md transition-colors ${
                   pathname === item.path
                     ? 'text-[var(--accent)] font-semibold bg-[rgba(13,115,119,0.06)]'
@@ -104,14 +105,14 @@ export function SiteNav() {
                 } hover:bg-[rgba(13,115,119,0.04)]`}
               >
                 {item.label}
-              </button>
+              </Link>
             ))}
-            <a
+            <Link
               href={CONFIG.SHOP_URL}
               className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
             >
               Enrol Now
-            </a>
+            </Link>
           </div>
         </div>
       )}

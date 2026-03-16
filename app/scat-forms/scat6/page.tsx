@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Save, ChevronDown, ChevronUp, Check } from 'lucide-react'
+import Link from 'next/link'
+import { Download, Save, ChevronDown, ChevronUp, Check, ArrowLeft } from 'lucide-react'
 import { SCAT6FormData, getDefaultSCAT6FormData } from '../shared/types/scat6.types'
 import { getAllCalculatedScores } from '../shared/utils/scat6-calculations'
 import { exportSCAT6ToFlatPDF } from '../shared/utils/scat6-pdf-flat'
@@ -147,6 +148,14 @@ export default function SCAT6Page() {
 
   return (
     <div className="space-y-6 pb-20">
+      {/* Back Navigation */}
+      <div className="mb-4">
+        <Link href="/scat-forms" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+          Back to SCAT Forms
+        </Link>
+      </div>
+
       {/* Email Gate Modal */}
       <EmailGateModal
         isOpen={showEmailGate}
@@ -264,16 +273,16 @@ export default function SCAT6Page() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Sex:</label>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
                   {(['Male', 'Female', 'Prefer Not To Say', 'Other'] as const).map(option => (
-                    <label key={option} className="flex items-center gap-2 cursor-pointer">
+                    <label key={option} className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         name="sex"
                         value={option}
                         checked={formData.sex === option}
                         onChange={(e) => setFormData(prev => ({ ...prev, sex: e.target.value as any }))}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm text-slate-700">{option}</span>
                     </label>
@@ -283,16 +292,16 @@ export default function SCAT6Page() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Dominant Hand:</label>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                   {(['Left', 'Right', 'Ambidextrous'] as const).map(option => (
-                    <label key={option} className="flex items-center gap-2 cursor-pointer">
+                    <label key={option} className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         name="dominantHand"
                         value={option}
                         checked={formData.dominantHand === option}
                         onChange={(e) => setFormData(prev => ({ ...prev, dominantHand: e.target.value as any }))}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm text-slate-700">{option}</span>
                     </label>
@@ -431,24 +440,24 @@ export default function SCAT6Page() {
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center justify-between bg-white p-3 rounded-lg">
                     <span className="text-sm text-slate-700">{label}</span>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2">
+                    <div className="flex gap-2 sm:gap-4">
+                      <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                         <input
                           type="radio"
                           name={key}
                           checked={formData[key as keyof SCAT6FormData] === true}
                           onChange={() => setFormData(prev => ({ ...prev, [key]: true }))}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-5 h-5 text-blue-600"
                         />
                         <span className="text-sm">Yes</span>
                       </label>
-                      <label className="flex items-center gap-2">
+                      <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                         <input
                           type="radio"
                           name={key}
                           checked={formData[key as keyof SCAT6FormData] === false}
                           onChange={() => setFormData(prev => ({ ...prev, [key]: false }))}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-5 h-5 text-blue-600"
                         />
                         <span className="text-sm">No</span>
                       </label>
@@ -522,11 +531,11 @@ export default function SCAT6Page() {
                   { key: 'nervousAnxious', label: 'Nervous or anxious' },
                   { key: 'troubleFallingAsleep', label: 'Trouble falling asleep (if applicable)' },
                 ].map(({ key, label }) => (
-                  <div key={key} className="bg-white rounded-lg p-3 flex items-center justify-between border border-slate-200">
-                    <span className="text-sm font-medium text-slate-700 w-1/3">{label}</span>
-                    <div className="flex gap-2">
+                  <div key={key} className="bg-white rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between border border-slate-200 gap-2">
+                    <span className="text-sm font-medium text-slate-700 sm:w-1/3">{label}</span>
+                    <div className="flex gap-1 sm:gap-2">
                       {[0, 1, 2, 3, 4, 5, 6].map(value => (
-                        <label key={value} className="flex flex-col items-center cursor-pointer">
+                        <label key={value} className="min-h-[44px] min-w-[44px] sm:min-w-0 flex flex-col items-center justify-center cursor-pointer rounded-lg hover:bg-slate-50">
                           <input
                             type="radio"
                             name={key}
@@ -577,22 +586,22 @@ export default function SCAT6Page() {
 
                 <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
                   <span className="text-sm text-slate-700">Do your symptoms get worse with physical activity?</span>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
+                  <div className="flex gap-2 sm:gap-4">
+                    <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         checked={formData.symptomsWorseWithPhysical === true}
                         onChange={() => setFormData(prev => ({ ...prev, symptomsWorseWithPhysical: true }))}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm">Yes</span>
                     </label>
-                    <label className="flex items-center gap-2">
+                    <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         checked={formData.symptomsWorseWithPhysical === false}
                         onChange={() => setFormData(prev => ({ ...prev, symptomsWorseWithPhysical: false }))}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm">No</span>
                     </label>
@@ -601,22 +610,22 @@ export default function SCAT6Page() {
 
                 <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
                   <span className="text-sm text-slate-700">Do your symptoms get worse with mental activity?</span>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
+                  <div className="flex gap-2 sm:gap-4">
+                    <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         checked={formData.symptomsWorseWithMental === true}
                         onChange={() => setFormData(prev => ({ ...prev, symptomsWorseWithMental: true }))}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm">Yes</span>
                     </label>
-                    <label className="flex items-center gap-2">
+                    <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         checked={formData.symptomsWorseWithMental === false}
                         onChange={() => setFormData(prev => ({ ...prev, symptomsWorseWithMental: false }))}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm">No</span>
                     </label>
@@ -654,22 +663,22 @@ export default function SCAT6Page() {
                   ].map(({ key, question }) => (
                     <div key={key} className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
                       <span className="text-sm text-slate-700">{question}</span>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-2">
+                      <div className="flex gap-2 sm:gap-4">
+                        <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                           <input
                             type="radio"
                             checked={formData[key as keyof SCAT6FormData] === false}
                             onChange={() => setFormData(prev => ({ ...prev, [key]: false }))}
-                            className="w-4 h-4 text-blue-600"
+                            className="w-5 h-5 text-blue-600"
                           />
                           <span className="text-sm">0</span>
                         </label>
-                        <label className="flex items-center gap-2">
+                        <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                           <input
                             type="radio"
                             checked={formData[key as keyof SCAT6FormData] === true}
                             onChange={() => setFormData(prev => ({ ...prev, [key]: true }))}
-                            className="w-4 h-4 text-blue-600"
+                            className="w-5 h-5 text-blue-600"
                           />
                           <span className="text-sm">1</span>
                         </label>
@@ -694,15 +703,15 @@ export default function SCAT6Page() {
                 {/* Word List Selection */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-slate-700 mb-2">Word list used:</label>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3">
                     {(['A', 'B', 'C'] as const).map(list => (
-                      <label key={list} className="flex items-center gap-2">
+                      <label key={list} className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                         <input
                           type="radio"
                           name="wordList"
                           checked={formData.wordListUsed === list}
                           onChange={() => setFormData(prev => ({ ...prev, wordListUsed: list }))}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-5 h-5 text-blue-600"
                         />
                         <span className="text-sm font-medium">List {list}</span>
                       </label>
@@ -801,15 +810,15 @@ export default function SCAT6Page() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-slate-700 mb-2">Digit list used:</label>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3">
                     {(['A', 'B', 'C'] as const).map(list => (
-                      <label key={list} className="flex items-center gap-2">
+                      <label key={list} className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                         <input
                           type="radio"
                           name="digitList"
                           checked={formData.digitListUsed === list}
                           onChange={() => setFormData(prev => ({ ...prev, digitListUsed: list }))}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-5 h-5 text-blue-600"
                         />
                         <span className="text-sm font-medium">List {list}</span>
                       </label>
@@ -821,15 +830,15 @@ export default function SCAT6Page() {
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Digits Score (0-4): How many correct string lengths completed?
                   </label>
-                  <div className="flex gap-3">
+                  <div className="flex gap-1 sm:gap-3">
                     {[0, 1, 2, 3, 4].map(score => (
-                      <label key={score} className="flex items-center gap-2">
+                      <label key={score} className="min-h-[44px] min-w-[44px] flex items-center justify-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                         <input
                           type="radio"
                           name="digitsScore"
                           checked={formData.digitsBackward === score}
                           onChange={() => setFormData(prev => ({ ...prev, digitsBackward: score }))}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-5 h-5 text-blue-600"
                         />
                         <span className="text-sm font-medium">{score}</span>
                       </label>
@@ -937,18 +946,18 @@ export default function SCAT6Page() {
                   Test the <strong>non-dominant</strong> foot. Each stance is held for 20 seconds. Record errors out of 10 for each stance.
                 </p>
 
-                <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Foot Tested:</label>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                       {(['Left', 'Right'] as const).map(option => (
-                        <label key={option} className="flex items-center gap-2">
+                        <label key={option} className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                           <input
                             type="radio"
                             name="footTested"
                             checked={formData.footTested === option}
                             onChange={() => setFormData(prev => ({ ...prev, footTested: option }))}
-                            className="w-4 h-4 text-blue-600"
+                            className="w-5 h-5 text-blue-600"
                           />
                           <span className="text-sm">{option}</span>
                         </label>
@@ -982,7 +991,7 @@ export default function SCAT6Page() {
               {/* mBESS Scoring */}
               <div className="bg-white border-2 border-blue-300 rounded-lg p-4">
                 <h5 className="font-bold text-slate-900 mb-4">Modified BESS <span className="text-sm font-normal text-slate-600">(20 seconds each)</span></h5>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Double Leg Stance:</label>
                     <input
@@ -1114,41 +1123,43 @@ export default function SCAT6Page() {
                   Place a 3-metre-long line on the floor with athletic tape. Please complete all 3 trials. Record time in seconds.
                 </p>
 
-                <div className="bg-white border-2 border-slate-300 rounded-lg p-4">
-                  <div className="grid grid-cols-5 gap-4 mb-2 text-sm font-bold text-slate-700">
-                    <div>Trial 1 (sec)</div>
-                    <div>Trial 2 (sec)</div>
-                    <div>Trial 3 (sec)</div>
-                    <div>Average</div>
-                    <div>Fastest</div>
-                  </div>
-                  <div className="grid grid-cols-5 gap-4">
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={formData.tandemGaitTrial1}
-                      onChange={(e) => setFormData(prev => ({ ...prev, tandemGaitTrial1: e.target.value }))}
-                      className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-center font-bold"
-                    />
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={formData.tandemGaitTrial2}
-                      onChange={(e) => setFormData(prev => ({ ...prev, tandemGaitTrial2: e.target.value }))}
-                      className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-center font-bold"
-                    />
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={formData.tandemGaitTrial3}
-                      onChange={(e) => setFormData(prev => ({ ...prev, tandemGaitTrial3: e.target.value }))}
-                      className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-center font-bold"
-                    />
-                    <div className="flex items-center justify-center bg-blue-50 border-2 border-blue-300 rounded-lg px-3 py-3 font-bold text-blue-700">
-                      {calculated.tandemGaitAverage || '-'}
+                <div className="overflow-x-auto">
+                  <div className="bg-white border-2 border-slate-300 rounded-lg p-4 min-w-[600px]">
+                    <div className="grid grid-cols-5 gap-4 mb-2 text-sm font-bold text-slate-700">
+                      <div>Trial 1 (sec)</div>
+                      <div>Trial 2 (sec)</div>
+                      <div>Trial 3 (sec)</div>
+                      <div>Average</div>
+                      <div>Fastest</div>
                     </div>
-                    <div className="flex items-center justify-center bg-blue-600 text-white rounded-lg px-3 py-3 font-bold text-lg">
-                      {calculated.tandemGaitFastest || '-'}
+                    <div className="grid grid-cols-5 gap-4">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={formData.tandemGaitTrial1}
+                        onChange={(e) => setFormData(prev => ({ ...prev, tandemGaitTrial1: e.target.value }))}
+                        className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-center font-bold"
+                      />
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={formData.tandemGaitTrial2}
+                        onChange={(e) => setFormData(prev => ({ ...prev, tandemGaitTrial2: e.target.value }))}
+                        className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-center font-bold"
+                      />
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={formData.tandemGaitTrial3}
+                        onChange={(e) => setFormData(prev => ({ ...prev, tandemGaitTrial3: e.target.value }))}
+                        className="w-full px-3 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-center font-bold"
+                      />
+                      <div className="flex items-center justify-center bg-blue-50 border-2 border-blue-300 rounded-lg px-3 py-3 font-bold text-blue-700">
+                        {calculated.tandemGaitAverage || '-'}
+                      </div>
+                      <div className="flex items-center justify-center bg-blue-600 text-white rounded-lg px-3 py-3 font-bold text-lg">
+                        {calculated.tandemGaitFastest || '-'}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1325,22 +1336,22 @@ export default function SCAT6Page() {
                   <span className="text-sm font-medium text-slate-700">
                     Does the athlete appear to be different from their usual self?
                   </span>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
+                  <div className="flex gap-2 sm:gap-4">
+                    <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         checked={formData.differentFromUsual === true}
                         onChange={() => setFormData(prev => ({ ...prev, differentFromUsual: true }))}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm">Yes</span>
                     </label>
-                    <label className="flex items-center gap-2">
+                    <label className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         checked={formData.differentFromUsual === false}
                         onChange={() => setFormData(prev => ({ ...prev, differentFromUsual: false }))}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-5 h-5 text-blue-600"
                       />
                       <span className="text-sm">No</span>
                     </label>
@@ -1498,15 +1509,15 @@ export default function SCAT6Page() {
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Has a concussion been diagnosed?
                   </label>
-                  <div className="flex gap-4">
+                  <div className="flex gap-2 sm:gap-4">
                     {(['Yes', 'No', 'Deferred'] as const).map(option => (
-                      <label key={option} className="flex items-center gap-2">
+                      <label key={option} className="min-h-[44px] flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-50">
                         <input
                           type="radio"
                           name="concussionDiagnosed"
                           checked={formData.concussionDiagnosed === option}
                           onChange={() => setFormData(prev => ({ ...prev, concussionDiagnosed: option }))}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-5 h-5 text-blue-600"
                         />
                         <span className="text-sm font-medium">{option}</span>
                       </label>
@@ -1611,8 +1622,8 @@ export default function SCAT6Page() {
                 <Check className="w-6 h-6" strokeWidth={3} />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-slate-900">SCAT6 Form Complete</h4>
-                <p className="text-sm text-slate-600">All sections included</p>
+                <h4 className="text-lg font-bold text-slate-900">Assessment Summary</h4>
+                <p className="text-sm text-slate-600">All sections included in this assessment</p>
               </div>
             </div>
             <ul className="text-sm text-slate-600 space-y-1 grid grid-cols-2 gap-x-4">
@@ -1627,9 +1638,18 @@ export default function SCAT6Page() {
             </ul>
             <div className="mt-4 pt-4 border-t border-green-200">
               <p className="text-xs text-slate-500">
-                All auto-calculations working. Auto-save enabled. Colors match SCAT6 PDF.
+                Scores are auto-calculated. Your progress is auto-saved to this browser.
               </p>
             </div>
+          </div>
+
+          {/* SCAT6 Mastery Upsell */}
+          <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-xl text-center">
+            <p className="text-sm font-semibold text-slate-900 mb-1">Want to master the SCAT6?</p>
+            <p className="text-xs text-slate-600 mb-3">Free course: learn proper administration, scoring, and interpretation. 2 CPD points.</p>
+            <Link href="/scat-mastery" className="inline-block px-4 py-2 bg-[#5b9aa6] text-white text-sm font-semibold rounded-lg hover:bg-[#4a8a96] transition-colors">
+              Start Free SCAT6 Mastery Course →
+            </Link>
           </div>
         </div>
       </div>

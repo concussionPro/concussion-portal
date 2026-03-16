@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { put, list as listBlobs } from '@vercel/blob'
-import { sendEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { createUser } from '@/lib/users'
 

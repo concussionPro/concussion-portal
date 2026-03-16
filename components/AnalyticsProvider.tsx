@@ -172,10 +172,54 @@ function fireRemarketingEvent(pathname: string): void {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Scroll depth tracking — fires at 50% and 90% on key pages
+// ---------------------------------------------------------------------------
+
+const SCROLL_TRACKED_PAGES = ['/pricing', '/course', '/preview', '/scat-mastery'];
+
+function useScrollDepthTracking(pathname: string): void {
+  const firedRef = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!SCROLL_TRACKED_PAGES.includes(pathname)) return;
+    firedRef.current = new Set(); // Reset on page change
+
+    const thresholds = [50, 90];
+
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight <= 0) return;
+      const pct = Math.round((window.scrollY / scrollHeight) * 100);
+
+      for (const t of thresholds) {
+        if (pct >= t && !firedRef.current.has(t)) {
+          firedRef.current.add(t);
+          // Fire to internal analytics
+          sendEvent('scroll_depth', { depth: t, page: pathname }, pathname, null);
+          // Fire to GA4/Google Ads for audience building
+          if (typeof window !== 'undefined' && window.gtag) {
+            window.gtag('event', 'scroll_depth', {
+              percent_scrolled: t,
+              page_path: pathname,
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [pathname]);
+}
+
 function AnalyticsTracker(): null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const previousPathRef = useRef<string | null>(null);
+
+  // Track scroll depth on key conversion pages
+  useScrollDepthTracking(pathname);
 
   useEffect(() => {
     // Capture UTM params from URL on every navigation (persists first seen)

@@ -10,7 +10,7 @@ interface ProgressRingProps {
 
 export function ProgressRing({ progress, total }: ProgressRingProps) {
   const [mounted, setMounted] = useState(false)
-  const percentage = (progress / total) * 100
+  const percentage = total > 0 ? (progress / total) * 100 : 0
   const circumference = 2 * Math.PI * 42
 
   const springProgress = useSpring(0, {

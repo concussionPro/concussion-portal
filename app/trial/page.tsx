@@ -29,8 +29,8 @@ export default function TrialPage() {
       // Don't block the trial experience if API fails
     }
 
-    // Redirect to Module 1
-    router.push('/modules/1')
+    // Redirect to free SCAT mastery course
+    router.push('/scat-mastery')
   }
 
   return (
@@ -45,13 +45,13 @@ export default function TrialPage() {
             Free Trial
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-            Try Module 1 Free
+            Start Free SCAT6 Course
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-2">
-            Experience our premium CPD course at no cost
+            Master the SCAT6 assessment and earn 2 CPD points — completely free
           </p>
           <p className="text-base text-slate-500">
-            No credit card required · Full module access
+            No credit card required · 6 modules · AHPRA aligned
           </p>
         </div>
 
@@ -59,15 +59,15 @@ export default function TrialPage() {
         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mb-12">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-6">
-              What's Included in Your Free Trial
+              What's Included in Your Free Course
             </h2>
             <div className="space-y-4">
               {[
-                'Full access to Module 1: What is a Concussion?',
+                '6 complete modules covering SCAT6 assessment mastery',
                 'Interactive learning elements and quick knowledge checks',
-                'Downloadable clinical resources and cheat sheets',
+                'Earn 2 AHPRA-aligned CPD points on completion',
                 'Final quiz to test your knowledge',
-                'Earn 2 CPD points upon completion'
+                'No credit card required — start learning immediately'
               ].map((item, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-[#6b9da8] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
@@ -98,7 +98,7 @@ export default function TrialPage() {
               disabled={isLoading}
               className="w-full px-6 py-4 bg-gradient-to-r from-[#6b9da8] to-[#5b9aa6] text-white rounded-xl font-semibold hover:from-[#5b8d96] hover:to-[#5898a0] transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {isLoading ? 'Starting Your Trial...' : 'Start Free Trial'}
+              {isLoading ? 'Starting Your Course...' : 'Start Free Course'}
               <ArrowRight className="w-5 h-5" />
             </button>
 
@@ -124,9 +124,9 @@ export default function TrialPage() {
             <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
               <Clock className="w-6 h-6 text-[#5b9aa6]" strokeWidth={2} />
             </div>
-            <h3 className="font-bold text-slate-900 mb-2">45 Minutes</h3>
+            <h3 className="font-bold text-slate-900 mb-2">Self-Paced</h3>
             <p className="text-sm text-slate-600">
-              Complete Module 1 at your own pace, on any device
+              Complete all 6 modules at your own pace, on any device
             </p>
           </div>
 
@@ -136,7 +136,7 @@ export default function TrialPage() {
             </div>
             <h3 className="font-bold text-slate-900 mb-2">No Commitment</h3>
             <p className="text-sm text-slate-600">
-              Try Module 1 free. Upgrade to full course only if you love it
+              Complete the free course. Upgrade to full 8-module course only if you love it
             </p>
           </div>
         </div>
@@ -144,10 +144,10 @@ export default function TrialPage() {
         {/* What's Next */}
         <div className="bg-slate-900 rounded-2xl p-8">
           <h3 className="text-2xl font-bold text-white mb-4">
-            After Your Free Trial
+            Ready for More?
           </h3>
           <p className="text-slate-300 mb-6">
-            If you love Module 1, unlock the remaining 7 modules and earn all 14 CPD points (8 online + 6 in-person workshop). Full course includes SCAT6 mastery, VOMS protocols, return-to-play frameworks, and advanced rehabilitation pathways.
+            After completing your free SCAT6 course, unlock the full 8-module professional course and earn all 14 CPD points (8 online + 6 in-person workshop). Covers VOMS protocols, return-to-play frameworks, and advanced rehabilitation pathways.
           </p>
           <div className="grid md:grid-cols-3 gap-4 text-center">
             <div className="bg-slate-800 rounded-xl p-4">
@@ -156,10 +156,10 @@ export default function TrialPage() {
             </div>
             <div className="bg-slate-800 rounded-xl p-4">
               <div className="text-3xl font-bold text-teal-400 mb-1">14</div>
-              <div className="text-sm text-slate-400">CPD Points</div>
+              <div className="text-sm text-slate-400">CPD Points (Complete)</div>
             </div>
             <div className="bg-slate-800 rounded-xl p-4">
-              <div className="text-3xl font-bold text-teal-400 mb-1">~8</div>
+              <div className="text-3xl font-bold text-teal-400 mb-1">~10</div>
               <div className="text-sm text-slate-400">Online Hours</div>
             </div>
           </div>

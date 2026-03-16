@@ -10,7 +10,7 @@ import {
 import { resend } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
 
-const SCAT_MODULE_IDS = [101, 102, 103, 104, 105]
+const SCAT_MODULE_IDS = [101, 102, 103, 104, 105, 106]
 const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
 
 /**
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     const moduleIds = courseType === 'scat-mastery' ? SCAT_MODULE_IDS : PAID_MODULE_IDS
-    const allCompleted = moduleIds.every(id => progress[id]?.completed)
+    const allCompleted = moduleIds.every(id => progress[String(id)]?.completed)
 
     if (!allCompleted) {
       return NextResponse.json(
@@ -63,14 +63,29 @@ export async function GET(request: NextRequest) {
     const resolvedUser = user || await findUserById(sessionData.userId)
     const participantName = resolvedUser?.name || sessionData.name || 'Participant'
 
-    // Generate certificate
-    const certData = courseType === 'full-course'
-      ? getFullCourseCertificateData(participantName, sessionData.email, completionDate)
-      : courseType === 'scat-mastery'
-        ? getSCATCertificateData(participantName, sessionData.email, completionDate)
-        : getOnlineCourseCertificateData(participantName, sessionData.email, completionDate)
+    // Generate certificate data based on course type
+    let certData
+    if (courseType === 'scat-mastery') {
+      certData = getSCATCertificateData(participantName, sessionData.email, completionDate)
+    } else if (courseType === 'full-course') {
+      certData = getFullCourseCertificateData(participantName, sessionData.email, completionDate)
+    } else {
+      certData = getOnlineCourseCertificateData(participantName, sessionData.email, completionDate)
+    }
 
-    const { pdfBuffer, certificateId } = generateCertificatePDF(certData)
+    let pdfBuffer: Buffer
+    let certificateId: string
+    try {
+      const result = generateCertificatePDF(certData)
+      pdfBuffer = result.pdfBuffer
+      certificateId = result.certificateId
+    } catch (pdfError) {
+      console.error('PDF generation failed:', pdfError)
+      return NextResponse.json(
+        { error: 'Certificate PDF generation failed. Please try again or contact support.' },
+        { status: 500 }
+      )
+    }
 
     // Return PDF (convert Buffer to Uint8Array for NextResponse compatibility)
     return new NextResponse(new Uint8Array(pdfBuffer), {
@@ -81,7 +96,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Certificate generation error:', error)
-    return NextResponse.json({ error: 'Failed to generate certificate' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to generate certificate. Please try again or contact support.' },
+      { status: 500 }
+    )
   }
 }
 
@@ -121,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     const moduleIds = courseType === 'scat-mastery' ? SCAT_MODULE_IDS : PAID_MODULE_IDS
-    const allCompleted = moduleIds.every(id => progress[id]?.completed)
+    const allCompleted = moduleIds.every(id => progress[String(id)]?.completed)
 
     if (!allCompleted) {
       return NextResponse.json(
@@ -135,13 +153,47 @@ export async function POST(request: NextRequest) {
     const resolvedUser = userCheck || await findUserById(sessionData.userId)
     const participantName = resolvedUser?.name || sessionData.name || 'Participant'
 
-    const certData = courseType === 'full-course'
-      ? getFullCourseCertificateData(participantName, sessionData.email, completionDate)
-      : courseType === 'scat-mastery'
-        ? getSCATCertificateData(participantName, sessionData.email, completionDate)
-        : getOnlineCourseCertificateData(participantName, sessionData.email, completionDate)
+    // Generate certificate data based on course type
+    let certData
+    if (courseType === 'scat-mastery') {
+      certData = getSCATCertificateData(participantName, sessionData.email, completionDate)
+    } else if (courseType === 'full-course') {
+      certData = getFullCourseCertificateData(participantName, sessionData.email, completionDate)
+    } else {
+      certData = getOnlineCourseCertificateData(participantName, sessionData.email, completionDate)
+    }
 
-    const { pdfBuffer, certificateId } = generateCertificatePDF(certData)
+    let pdfBuffer: Buffer
+    let certificateId: string
+    try {
+      const result = generateCertificatePDF(certData)
+      pdfBuffer = result.pdfBuffer
+      certificateId = result.certificateId
+    } catch (pdfError) {
+      console.error('PDF generation failed:', pdfError)
+      return NextResponse.json(
+        { error: 'Certificate PDF generation failed. Please try again or contact support.' },
+        { status: 500 }
+      )
+    }
+
+    // Check if we're in dev mode (no actual email will be sent)
+    const isDevMode = !resend || process.env.NODE_ENV === 'development'
+
+    if (isDevMode) {
+      console.log('Certificate email would be sent:', {
+        to: sessionData.email,
+        subject: `Your CPD Certificate — ${certData.courseTitle}`,
+        certificateId,
+        attachmentSize: `${(pdfBuffer.length / 1024).toFixed(1)} KB`,
+      })
+      return NextResponse.json({
+        success: true,
+        certificateId,
+        emailSent: false,
+        message: 'Email skipped in development mode',
+      })
+    }
 
     // Send email with certificate attached
     const emailSent = await sendCertificateEmail({
@@ -163,7 +215,10 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Certificate email error:', error)
-    return NextResponse.json({ error: 'Failed to generate certificate' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to generate and email certificate. Please try again or contact support.' },
+      { status: 500 }
+    )
   }
 }
 
@@ -205,15 +260,15 @@ async function sendCertificateEmail(opts: {
   certificateId: string
   pdfBuffer: Buffer
 }): Promise<boolean> {
-  // Dev mode — log only
+  // Dev mode guard — should not be reached since POST handler checks this first,
+  // but kept as a safety net
   if (!resend || process.env.NODE_ENV === 'development') {
-    console.log('Certificate email would be sent:', {
+    console.log('Certificate email skipped (dev mode):', {
       to: opts.to,
       subject: `Your CPD Certificate — ${opts.courseTitle}`,
       certificateId: opts.certificateId,
-      attachmentSize: `${(opts.pdfBuffer.length / 1024).toFixed(1)} KB`,
     })
-    return true
+    return false
   }
 
   try {
@@ -251,13 +306,13 @@ async function sendCertificateEmail(opts: {
 
                 <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
                   <div style="font-size: 18px; font-weight: 700; color: #166534; margin-bottom: 8px;">
-                    ${opts.courseTitle}
+                    ${escapeHtml(opts.courseTitle)}
                   </div>
                   <div style="font-size: 32px; font-weight: 800; color: #059669;">
                     ${opts.cpdPoints} CPD Points
                   </div>
                   <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
-                    AHPRA-Aligned · Certificate ID: ${opts.certificateId}
+                    AHPRA-Aligned · Certificate ID: ${escapeHtml(opts.certificateId)}
                   </div>
                 </div>
 

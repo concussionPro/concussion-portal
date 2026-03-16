@@ -25,11 +25,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate location for full-course
-    if (courseType === 'full-course') {
-      if (!location || !VALID_LOCATIONS.includes(location)) {
+    // Validate location for full-course (optional — nominated after completing online modules)
+    if (courseType === 'full-course' && location) {
+      if (!VALID_LOCATIONS.includes(location)) {
         return NextResponse.json(
-          { error: 'Location is required for full course. Must be "sydney", "melbourne", or "byron-bay".' },
+          { error: 'Invalid location. Must be "sydney", "melbourne", or "byron-bay".' },
           { status: 400 }
         )
       }

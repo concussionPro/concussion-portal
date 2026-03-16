@@ -202,11 +202,31 @@ async function sha256(str: string): Promise<string> {
 }
 
 /**
+ * Wait for gtag to be loaded (afterInteractive script may not be ready immediately).
+ * Polls every 100ms up to timeoutMs. Without this, conversions are silently dropped
+ * when the API fetch resolves before gtag.js finishes loading.
+ */
+async function waitForGtag(timeoutMs = 5000): Promise<boolean> {
+  if (typeof window === 'undefined') return false
+  if (window.gtag) return true
+  return new Promise(resolve => {
+    const start = Date.now()
+    const check = () => {
+      if (window.gtag) return resolve(true)
+      if (Date.now() - start > timeoutMs) return resolve(false)
+      setTimeout(check, 100)
+    }
+    check()
+  })
+}
+
+/**
  * Track a lead conversion (free course signup, form download, interest registration)
  * Assign a value so Google's smart bidding can optimise for high-value leads.
  */
 export async function trackLeadConversion(label: string, value: number, email?: string) {
-  if (typeof window === 'undefined' || !window.gtag) return
+  const ready = await waitForGtag()
+  if (!ready) return
   const params: Record<string, unknown> = {
     send_to: `${GA_CONVERSION_ID}/${label}`,
     value,
@@ -216,7 +236,7 @@ export async function trackLeadConversion(label: string, value: number, email?: 
   if (email) {
     params.user_data = { sha256_email_address: await sha256(email) }
   }
-  window.gtag('event', 'conversion', params)
+  window.gtag!('event', 'conversion', params)
 }
 
 /**
@@ -239,7 +259,8 @@ export function trackFreeCourseCompletion(email: string) {
  * Track purchase conversion with enhanced conversion data
  */
 export async function trackPurchaseConversion(value: number, transactionId: string, email?: string) {
-  if (typeof window === 'undefined' || !window.gtag) return
+  const ready = await waitForGtag()
+  if (!ready) return
   const params: Record<string, unknown> = {
     send_to: `${GA_CONVERSION_ID}/${CONVERSION_LABELS.PURCHASE}`,
     value,
@@ -249,7 +270,7 @@ export async function trackPurchaseConversion(value: number, transactionId: stri
   if (email) {
     params.user_data = { sha256_email_address: await sha256(email) }
   }
-  window.gtag('event', 'conversion', params)
+  window.gtag!('event', 'conversion', params)
 }
 
 // Type declaration for gtag

@@ -219,7 +219,7 @@ export default function SCAT6vsSCOAT6Page() {
 
           <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-8">
             <h3 className="text-2xl font-bold text-green-900 mb-4">
-              Free Training: Master Both Tools in 2 Hours
+              Free Training: Master Both Tools in ~3 Hours
             </h3>
             <p className="text-lg text-slate-700 mb-6">
               Get step-by-step training on when to use which tool, how to administer every section correctly, and medicolegal documentation requirements. <strong>2 AHPRA-aligned CPD points + certificate.</strong>

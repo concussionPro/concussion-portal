@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { BentoGrid } from '@/components/dashboard/BentoGrid'
 import { WelcomeModal } from '@/components/dashboard/WelcomeModal'
@@ -9,46 +8,32 @@ import { NextActionCard } from '@/components/dashboard/NextActionCard'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { Loader2 } from 'lucide-react'
+import { SessionProvider, useSession } from '@/contexts/SessionContext'
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const [accessChecked, setAccessChecked] = useState(false)
-  const [userName, setUserName] = useState<string | null>(null)
-  const [accessLevel, setAccessLevel] = useState<string>('')
+  return (
+    <SessionProvider>
+      <DashboardInner />
+    </SessionProvider>
+  )
+}
+
+function DashboardInner() {
+  const { user, isLoading } = useSession()
+  const [workshopLocationOverride, setWorkshopLocationOverride] = useState<string | null>(null)
   const [isReturningUser, setIsReturningUser] = useState(false)
   const [greeting, setGreeting] = useState('Welcome')
 
   useAnalytics()
 
   useEffect(() => {
-    const checkAccessLevel = async () => {
-      try {
-        const response = await fetch('/api/auth/session', { credentials: 'include' })
-        if (response.ok) {
-          const data = await response.json()
-
-          if (data.user) {
-            const name = data.user.name || data.user.email?.split('@')[0] || null
-            setUserName(name)
-            setAccessLevel(data.user.accessLevel || '')
-          }
-        }
-
-        setAccessChecked(true)
-      } catch (error) {
-        console.error('Access check failed:', error)
-        setAccessChecked(true)
-      }
-    }
-
-    checkAccessLevel()
     setIsReturningUser(localStorage.getItem('hasSeenWelcome') === 'true')
 
     const hour = new Date().getHours()
     setGreeting(hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening')
-  }, [router])
+  }, [])
 
-  if (!accessChecked) {
+  if (isLoading) {
     return (
       <div className="min-h-screen dashboard-bg flex items-center justify-center">
         <div className="text-center">
@@ -59,6 +44,9 @@ export default function DashboardPage() {
     )
   }
 
+  const userName = user?.name || user?.email?.split('@')[0] || null
+  const accessLevel = user?.accessLevel || ''
+  const workshopLocation = workshopLocationOverride ?? user?.workshopLocation ?? null
   const firstName = userName ? userName.split(' ')[0] : null
 
   return (
@@ -84,7 +72,7 @@ export default function DashboardPage() {
             <NextActionCard />
 
             {/* Bento Grid — stats + quick actions */}
-            <BentoGrid accessLevel={accessLevel} />
+            <BentoGrid accessLevel={accessLevel} workshopLocation={workshopLocation} onWorkshopNominated={setWorkshopLocationOverride} />
           </div>
         </main>
       </div>

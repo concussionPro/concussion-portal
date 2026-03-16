@@ -22,10 +22,18 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
 
           {/* Headline */}
           <h3 className="text-2xl font-bold text-foreground mb-2">
-            Unlock the Full Module
+            {remainingSections && remainingSections.length > 0
+              ? `${remainingSections.length} more sections in this module`
+              : 'Unlock the Full Course'}
           </h3>
-          <p className="text-muted-foreground text-base mb-6 leading-relaxed max-w-2xl mx-auto">
-            You&apos;re viewing a preview. Enrol to unlock <strong className="text-foreground">all 8 modules</strong>, downloadable clinical tools, and earn <strong className="text-foreground">14 CPD points</strong> &mdash; endorsed by <strong className="text-accent">Osteopathy Australia</strong>.
+          <p className="text-muted-foreground text-base mb-3 leading-relaxed max-w-2xl mx-auto">
+            You&apos;ve seen the foundations. The full course covers <strong className="text-foreground">advanced clinical reasoning, phenotype-based rehabilitation, and return-to-activity protocols</strong> &mdash; the skills that set expert practitioners apart.
+          </p>
+          <p className="text-sm text-accent font-semibold mb-2">
+            Backed by a 7-day satisfaction guarantee &middot; Afterpay / Klarna available
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Trusted by 500+ Australian clinicians
           </p>
 
           {/* Value props row */}
@@ -43,7 +51,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             <div className="glass rounded-xl p-3 border border-border/30">
               <ShieldCheck className="w-5 h-5 text-accent mx-auto mb-1" />
               <div className="text-xs font-semibold text-foreground leading-tight mt-1">AHPRA Aligned</div>
-              <div className="text-[10px] text-muted-foreground">Endorsed by OA</div>
+              <div className="text-xs text-muted-foreground">Endorsed by OA</div>
             </div>
           </div>
 
@@ -52,7 +60,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             onClick={() => router.push('/pricing')}
             className="btn-primary inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
           >
-            View Pricing &amp; Enrol
+            Upgrade Now
             <ArrowRight className="w-5 h-5" />
           </button>
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createUser, findUserById } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
-import { sendMagicLinkEmail } from '@/lib/email'
+import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 
 function timingSafeCompare(a: string, b: string): boolean {

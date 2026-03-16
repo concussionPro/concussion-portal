@@ -396,7 +396,7 @@ function buildUserInsights(
         type: 'warning',
         category: 'users',
         title: `${zeroPct.toFixed(0)}% of free users completed 0 modules`,
-        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 5 SCAT modules.`,
+        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 6 SCAT modules.`,
         metric: `${zeroPct.toFixed(0)}% inactive`,
         action: 'Send a reminder email to users who signed up but never started. Add onboarding nudges. Check if the first module is too intimidating.',
       })
@@ -1699,7 +1699,7 @@ export default function AnalyticsDashboard() {
                         return true
                       })
                       const csv = ['Email,Name,Access Level,Modules Completed,CPD Points,Created,Last Login', ...filtered.map(u =>
-                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/5,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
+                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/6,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
                       )].join('\n')
                       const blob = new Blob([csv], { type: 'text/csv' })
                       const url = URL.createObjectURL(blob)

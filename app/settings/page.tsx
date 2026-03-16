@@ -15,6 +15,7 @@ interface SessionUser {
   name?: string
   createdAt?: string
   nurtureUnsubscribed?: boolean
+  progressEmailsOptedOut?: boolean
 }
 
 export default function SettingsPage() {
@@ -24,6 +25,12 @@ export default function SettingsPage() {
   const [certDownloading, setCertDownloading] = useState(false)
   const [certEmailStatus, setCertEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
+  const [certError, setCertError] = useState<string | null>(null)
+
+  // SCAT certificate state (for preview users)
+  const [scatCertDownloading, setScatCertDownloading] = useState(false)
+  const [scatCertEmailStatus, setScatCertEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
   // Name editing state
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
@@ -31,6 +38,9 @@ export default function SettingsPage() {
 
   // Marketing toggle state
   const [marketingSaving, setMarketingSaving] = useState(false)
+
+  // Progress emails toggle state
+  const [progressSaving, setProgressSaving] = useState(false)
 
   const { getTotalCompletedModules, isModuleComplete } = useProgress()
   useAnalytics()
@@ -80,6 +90,12 @@ export default function SettingsPage() {
   const completedModules = getTotalCompletedModules()
   const allModulesComplete = completedModules === 8
 
+  // SCAT mastery (preview users): check if all 6 free modules are complete
+  const scatModuleIds = [101, 102, 103, 104, 105, 106]
+  const completedScatModules = scatModuleIds.filter(id => isModuleComplete(id)).length
+  const allScatComplete = completedScatModules === 6
+  const isPreviewUser = user?.accessLevel === 'preview'
+
   const getCertType = () => {
     if (isFullCourse) return 'full-course'
     if (isPaidUser) return 'online-course'
@@ -89,6 +105,7 @@ export default function SettingsPage() {
   const handleDownloadCert = async () => {
     const certType = getCertType()
     if (!certType) return
+    setCertError(null)
     setCertDownloading(true)
     try {
       const res = await fetch(`/api/certificate?type=${certType}`, { credentials: 'include' })
@@ -102,8 +119,8 @@ export default function SettingsPage() {
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
-    } catch {
-      setCertDownloading(false)
+    } catch (error) {
+      setCertError('Failed to download certificate. Please try again.')
     } finally {
       setCertDownloading(false)
     }
@@ -112,6 +129,7 @@ export default function SettingsPage() {
   const handleEmailCert = async () => {
     const certType = getCertType()
     if (!certType) return
+    setCertError(null)
     setCertEmailStatus('sending')
     try {
       const res = await fetch('/api/certificate', {
@@ -122,8 +140,49 @@ export default function SettingsPage() {
       })
       const data = await res.json()
       setCertEmailStatus(data.success ? 'sent' : 'error')
-    } catch {
+    } catch (error) {
       setCertEmailStatus('error')
+      setCertError('Failed to email certificate. Please try again.')
+    }
+  }
+
+  const handleDownloadScatCert = async () => {
+    setCertError(null)
+    setScatCertDownloading(true)
+    try {
+      const response = await fetch('/api/certificate?type=scat-mastery', { credentials: 'include' })
+      if (!response.ok) throw new Error('Download failed')
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'CPD-Certificate.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      setCertError('Failed to download certificate. Please try again.')
+    } finally {
+      setScatCertDownloading(false)
+    }
+  }
+
+  const handleEmailScatCert = async () => {
+    setCertError(null)
+    setScatCertEmailStatus('sending')
+    try {
+      const res = await fetch('/api/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'scat-mastery' }),
+        credentials: 'include',
+      })
+      const data = await res.json()
+      setScatCertEmailStatus(data.success ? 'sent' : 'error')
+    } catch (error) {
+      setScatCertEmailStatus('error')
+      setCertError('Failed to email certificate. Please try again.')
     }
   }
 
@@ -166,6 +225,27 @@ export default function SettingsPage() {
       // ignore
     } finally {
       setMarketingSaving(false)
+    }
+  }
+
+  const handleToggleProgress = async () => {
+    if (!user || progressSaving) return
+    const newValue = !user.progressEmailsOptedOut
+    setProgressSaving(true)
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progressEmailsOptedOut: newValue }),
+        credentials: 'include',
+      })
+      if (res.ok) {
+        setUser(prev => prev ? { ...prev, progressEmailsOptedOut: newValue } : prev)
+      }
+    } catch {
+      // ignore
+    } finally {
+      setProgressSaving(false)
     }
   }
 
@@ -322,6 +402,33 @@ export default function SettingsPage() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Module progress emails toggle */}
+                    <div>
+                      <label className="text-sm font-semibold text-slate-700 block mb-2">
+                        Module Progress Emails
+                      </label>
+                      <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-sm text-slate-600">
+                          {user?.progressEmailsOptedOut ? 'Not receiving module progress reminders' : 'Reminders to continue your modules'}
+                        </span>
+                        <button
+                          onClick={handleToggleProgress}
+                          disabled={progressSaving}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                            !user?.progressEmailsOptedOut ? 'bg-[#5b9aa6]' : 'bg-slate-300'
+                          } ${progressSaving ? 'opacity-50' : ''}`}
+                          role="switch"
+                          aria-checked={!user?.progressEmailsOptedOut}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${
+                              !user?.progressEmailsOptedOut ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -370,7 +477,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">Reference Repository</div>
-                        <div className="text-xs text-slate-600 mt-1">150+ academic references</div>
+                        <div className="text-xs text-slate-600 mt-1">140+ academic references</div>
                       </div>
                       {isPaidUser ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -432,10 +539,12 @@ export default function SettingsPage() {
                             </span>
                           </div>
                           <p className="text-xs text-emerald-700 mb-1">
-                            {isFullCourse
-                              ? `Complete Course — ${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points`
-                              : `Online Course — ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD points`
-                            }
+                            Online Course — {CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD points
+                            {isFullCourse && (
+                              <span className="block text-emerald-500 mt-0.5">
+                                Workshop CPD ({CONFIG.COURSE.TOTAL_CPD_POINTS - CONFIG.COURSE.ONLINE_CPD_POINTS} points) awarded at your workshop
+                              </span>
+                            )}
                           </p>
                           <p className="text-xs text-emerald-600">
                             All {completedModules} modules completed with 75%+ quiz scores
@@ -479,6 +588,12 @@ export default function SettingsPage() {
                             Email to Me
                           </button>
                         </div>
+
+                        {certError && (
+                          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-sm text-red-700">{certError}</p>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
@@ -496,6 +611,101 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* SCAT6 Mastery Certificate + Upgrade CTA (preview users) */}
+                {isPreviewUser && (
+                  <div className="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Award className="w-5 h-5 text-[#5b9aa6]" strokeWidth={2} />
+                      <h2 className="text-xl font-bold text-slate-900">SCAT6 Mastery Certificate</h2>
+                    </div>
+
+                    {allScatComplete ? (
+                      <>
+                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-5 mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span className="text-sm font-bold text-emerald-900">
+                              Free CPD Certificate (2 points)
+                            </span>
+                          </div>
+                          <p className="text-xs text-emerald-700">
+                            All 6 SCAT6 Mastery modules completed. Download or email your certificate below.
+                          </p>
+                        </div>
+
+                        {scatCertEmailStatus === 'sent' && (
+                          <p className="text-xs text-emerald-700 mb-3">
+                            Certificate emailed to <span className="font-semibold">{user?.email}</span>
+                          </p>
+                        )}
+                        {scatCertEmailStatus === 'error' && (
+                          <p className="text-xs text-red-600 mb-3">
+                            Email failed — use the download button instead.
+                          </p>
+                        )}
+
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            onClick={handleDownloadScatCert}
+                            disabled={scatCertDownloading}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-[#5b9aa6] text-white rounded-lg hover:bg-[#4a8a96] transition-colors disabled:opacity-50"
+                          >
+                            {scatCertDownloading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Download className="w-4 h-4" />
+                            )}
+                            Download Certificate
+                          </button>
+                          <button
+                            onClick={handleEmailScatCert}
+                            disabled={scatCertEmailStatus === 'sending'}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white text-[#5b9aa6] border-2 border-[#5b9aa6] rounded-lg hover:bg-teal-50 transition-colors disabled:opacity-50"
+                          >
+                            {scatCertEmailStatus === 'sending' ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Mail className="w-4 h-4" />
+                            )}
+                            Email Certificate
+                          </button>
+                        </div>
+
+                        {certError && (
+                          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-sm text-red-700">{certError}</p>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
+                        <p className="text-sm font-semibold text-slate-700 mb-1">
+                          {completedScatModules}/6 modules completed
+                        </p>
+                        <p className="text-xs text-slate-500 mb-3">
+                          Complete all 6 SCAT6 Mastery modules to unlock your certificate.
+                        </p>
+                        <div className="w-full bg-slate-200 rounded-full h-2">
+                          <div
+                            className="bg-[#5b9aa6] h-2 rounded-full transition-all"
+                            style={{ width: `${(completedScatModules / 6) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
+                      <p className="text-sm text-purple-800 font-medium mb-2">Ready for more? Earn 8+ additional CPD points with the full course.</p>
+                      <button
+                        onClick={() => router.push('/pricing')}
+                        className="text-sm text-purple-600 hover:text-purple-800 font-semibold"
+                      >
+                        View Full Course &rarr;
+                      </button>
+                    </div>
                   </div>
                 )}
 

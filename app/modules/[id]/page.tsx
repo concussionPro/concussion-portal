@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { CourseNavigation } from '@/components/course/CourseNavigation'
 import { useProgress } from '@/contexts/ProgressContext'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import { CheckCircle2, Award, AlertCircle, ArrowRight, BookOpen, Clock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { trackEvent, ANALYTICS_EVENTS, trackFreeCourseCompletion } from '@/lib/analytics'
@@ -17,9 +18,11 @@ import { SectionNavButtons } from '@/components/course/SectionNavButtons'
 import { SectionTypeBadge, estimateReadingTime } from '@/components/course/SectionTypeBadge'
 import { useModuleData } from '@/hooks/useModuleData'
 import { CONFIG } from '@/lib/config'
+import type { QuizQuestion } from '@/data/modules'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
 // Upgrade offer screen for unauthenticated users
-function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: any }) {
+function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: AppRouterInstance }) {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <main className="flex-1 p-4 sm:p-6 md:p-8">
@@ -83,6 +86,16 @@ export default function ModulePage() {
   const params = useParams()
   const router = useRouter()
   const moduleId = parseInt(params.id as string)
+  if (isNaN(moduleId)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Module Not Found</h1>
+          <Link href="/learning" className="text-accent hover:underline">Back to Dashboard</Link>
+        </div>
+      </div>
+    )
+  }
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
@@ -96,7 +109,7 @@ export default function ModulePage() {
           const data = await response.json()
           if (data.success && data.user) {
             // Preview users trying to access paid modules (1-8): redirect to learning suite
-            if (data.user.accessLevel === 'preview' && moduleId >= 1 && moduleId <= 8) {
+            if (data.user.accessLevel === 'preview' && moduleId >= 2 && moduleId <= 8) {
               router.push('/learning')
               return
             }
@@ -131,8 +144,8 @@ export default function ModulePage() {
     return <UpgradeOfferScreen moduleId={moduleId} router={router} />
   }
 
-  // If not authenticated and trying to access SCAT module (101-105), redirect to signup
-  if (!isAuthenticated && moduleId >= 101 && moduleId <= 105) {
+  // If not authenticated and trying to access SCAT module (101-106), redirect to signup
+  if (!isAuthenticated && moduleId >= 101 && moduleId <= 106) {
     router.push('/scat-mastery')
     return (
       <div className="flex min-h-screen bg-slate-50 items-center justify-center">
@@ -145,11 +158,12 @@ export default function ModulePage() {
   return <ModulePageContent moduleId={moduleId} router={router} userEmail={userEmail} />
 }
 
-function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; router: any; userEmail: string }) {
+function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; router: AppRouterInstance; userEmail: string }) {
   // Fetch module content from secure API
-  const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade } = useModuleData(moduleId)
+  const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade, allSectionTitles } = useModuleData(moduleId)
   const {
     updateQuizScore,
+    saveQuizAnswers,
     markModuleComplete,
     markModuleStarted,
     trackActiveStudy,
@@ -157,12 +171,18 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     getModuleProgress,
     canMarkModuleComplete,
     isModuleComplete,
+    syncState,
   } = useProgress()
 
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({})
-  const [quizSubmitted, setQuizSubmitted] = useState(false)
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>(() => {
+    // Restore in-progress answers from server-synced ProgressContext
+    const saved = getModuleProgress(moduleId).quizAnswers
+    return saved || {}
+  })
+  const [quizSubmitted, setQuizSubmitted] = useState<Record<number, boolean>>({})
   const [quizValidationError, setQuizValidationError] = useState<string | null>(null)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
+  const [showCompletionCelebration, setShowCompletionCelebration] = useState(false)
   const [currentSectionIndex, setCurrentSectionIndex] = useState<number>(0)
   const [visitedSections, setVisitedSections] = useState<Set<number>>(new Set([0]))
   const contentAreaRef = useRef<HTMLDivElement>(null)
@@ -172,17 +192,60 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
   // Determine if user has full access based on API response
   const hasFullAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
 
-  const [isRetaking, setIsRetaking] = useState(false)
+  const [isRetaking, setIsRetaking] = useState<Record<number, boolean>>({})
 
   // Build virtual sections array: content sections + resources + apply-tomorrow + quiz
+  // When module has parts, insert part-quiz and part-milestone virtual sections
   const virtualSections: VirtualSection[] = React.useMemo(() => {
     if (!module) return []
+    const isSCATModule = moduleId >= 101 && moduleId <= 106
+
+    if (module.parts && module.parts.length > 0) {
+      // Parts-based layout
+      const sections: VirtualSection[] = []
+      module.parts.forEach((part, partIndex) => {
+        // Add content sections for this part
+        part.sectionIds.forEach(sectionId => {
+          const sIdx = module.sections.findIndex(s => s.id === sectionId)
+          if (sIdx >= 0) {
+            sections.push({
+              type: 'content' as const,
+              label: module.sections[sIdx].title,
+              index: sections.length,
+            })
+          }
+        })
+        // Add part quiz after this part's content
+        sections.push({
+          type: 'part-quiz' as const,
+          label: `${part.title} — Quiz`,
+          index: sections.length,
+        })
+        // Add milestone between parts (not after the last part)
+        if (partIndex < module.parts!.length - 1) {
+          sections.push({
+            type: 'part-milestone' as const,
+            label: `${part.title} Complete`,
+            index: sections.length,
+          })
+        }
+      })
+      // Add resources, apply-tomorrow at end
+      if (hasFullAccess) {
+        sections.push(
+          { type: 'resources', label: 'Downloadable Resources', index: sections.length },
+          { type: 'apply-tomorrow', label: 'Apply Tomorrow', index: sections.length + 1 },
+        )
+      }
+      return sections
+    }
+
+    // Standard layout (no parts)
     const sections: VirtualSection[] = module.sections.map((s, i) => ({
       type: 'content' as const,
       label: s.title,
       index: i,
     }))
-    const isSCATModule = moduleId >= 101 && moduleId <= 105
     if (hasFullAccess) {
       sections.push(
         { type: 'resources', label: 'Downloadable Resources', index: sections.length },
@@ -199,15 +262,30 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
   }, [module, hasFullAccess, moduleId])
 
   // For free/preview users: lock paid modules after section 1, but SCAT modules are fully open
-  const isSCATModule = moduleId >= 101 && moduleId <= 105
+  const isSCATModule = moduleId >= 101 && moduleId <= 106
   const lockedAfterIndex = (hasFullAccess || isSCATModule) ? undefined : 1
 
-  // Sync quizSubmitted with persisted progress (skip if user is retaking)
+  // Sync quizSubmitted with persisted progress (skip parts that user is retaking)
   useEffect(() => {
-    if (moduleProgress.quizCompleted && !isRetaking) {
-      setQuizSubmitted(true)
+    if (moduleProgress.quizCompleted) {
+      if (module?.parts && module.parts.length > 0) {
+        // Parts-based: mark all parts as submitted unless user is retaking that part
+        const submitted: Record<number, boolean> = {}
+        module.parts.forEach((_, i) => {
+          if (!isRetaking[i]) submitted[i] = true
+        })
+        setQuizSubmitted(prev => ({ ...prev, ...submitted }))
+      } else if (!isRetaking[0]) {
+        // Standard quiz: use key 0
+        setQuizSubmitted(prev => ({ ...prev, 0: true }))
+      }
     }
-  }, [moduleProgress.quizCompleted, isRetaking])
+  }, [moduleProgress.quizCompleted, isRetaking, module])
+
+  // Sync in-progress quiz answers to server via ProgressContext
+  useEffect(() => {
+    saveQuizAnswers(moduleId, quizAnswers)
+  }, [quizAnswers, moduleId])
 
   // Save current section to localStorage as checkpoint
   useEffect(() => {
@@ -238,9 +316,14 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
         const quizIdx = virtualSections.findIndex(v => v.type === 'quiz')
         if (quizIdx >= 0) setCurrentSectionIndex(quizIdx)
       } else if (hash && module.sections) {
-        const sectionIdx = module.sections.findIndex(s => s.id === hash)
-        if (sectionIdx >= 0 && (lockedAfterIndex === undefined || sectionIdx <= lockedAfterIndex)) {
-          setCurrentSectionIndex(sectionIdx)
+        // Find the virtualSection index for this section ID (accounts for part-quiz/milestone inserts)
+        const vsIdx = virtualSections.findIndex((v, i) => {
+          if (v.type !== 'content') return false
+          const contentIdx = virtualSections.slice(0, i).filter(vs => vs.type === 'content').length
+          return module.sections[contentIdx]?.id === hash
+        })
+        if (vsIdx >= 0 && (lockedAfterIndex === undefined || vsIdx <= lockedAfterIndex)) {
+          setCurrentSectionIndex(vsIdx)
         }
       }
     }
@@ -401,23 +484,42 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
   const handleQuizSubmit = () => {
     if (!module) return
 
-    const answeredCount = Object.keys(quizAnswers).length
-    if (answeredCount !== module.quiz.length) {
+    const unansweredQ = module.quiz.find((q: QuizQuestion) => quizAnswers[q.id] === undefined)
+    if (unansweredQ) {
+      const answeredCount = module.quiz.filter((q: QuizQuestion) => quizAnswers[q.id] !== undefined).length
       setQuizValidationError(
         `Please answer all ${module.quiz.length} questions before submitting. You've answered ${answeredCount} of ${module.quiz.length}.`
       )
       // Scroll to first unanswered question
-      const unansweredId = module.quiz.find((q: any) => quizAnswers[q.id] === undefined)?.id
-      if (unansweredId) {
-        const el = document.getElementById(`quiz-q-${unansweredId}`)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      const el = document.getElementById(`quiz-q-${unansweredQ.id}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      } else {
+        // If the unanswered question is in a different part, find which part it's in
+        // and navigate to that part's quiz section
+        if (module.parts) {
+          const partIndex = module.parts.findIndex(p => p.quizIds.includes(unansweredQ.id))
+          if (partIndex >= 0) {
+            const partQuizIndices = virtualSections
+              .map((vs, i) => vs.type === 'part-quiz' ? i : -1)
+              .filter(i => i >= 0)
+            if (partQuizIndices[partIndex] !== undefined) {
+              navigateSection(partQuizIndices[partIndex])
+              // After navigating, scroll to the question after a short delay
+              setTimeout(() => {
+                const elRetry = document.getElementById(`quiz-q-${unansweredQ.id}`)
+                if (elRetry) elRetry.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              }, 300)
+            }
+          }
+        }
       }
       return
     }
 
     setQuizValidationError(null)
     let correctCount = 0
-    module.quiz.forEach((question: any) => {
+    module.quiz.forEach((question: QuizQuestion) => {
       if (quizAnswers[question.id] === question.correctAnswer) {
         correctCount++
       }
@@ -433,8 +535,16 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
       passed: correctCount / module.quiz.length >= 0.75,
     })
 
-    setIsRetaking(false)
-    setQuizSubmitted(true)
+    // Mark all parts (or standard quiz key 0) as submitted
+    if (module.parts && module.parts.length > 0) {
+      const allSubmitted: Record<number, boolean> = {}
+      module.parts.forEach((_, i) => { allSubmitted[i] = true })
+      setIsRetaking({})
+      setQuizSubmitted(allSubmitted)
+    } else {
+      setIsRetaking({})
+      setQuizSubmitted({ 0: true })
+    }
   }
 
   const handleCompleteModule = async () => {
@@ -443,9 +553,9 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     if (canMarkModuleComplete(moduleId)) {
       markModuleComplete(moduleId)
 
-      // Check if all 5 SCAT modules (101-105) are now complete
-      if (moduleId >= 101 && moduleId <= 105) {
-        const scatModuleIds = [101, 102, 103, 104, 105]
+      // Check if all 6 SCAT modules (101-106) are now complete
+      if (moduleId >= 101 && moduleId <= 106) {
+        const scatModuleIds = [101, 102, 103, 104, 105, 106]
         const allScatComplete = scatModuleIds.every(
           id => id === moduleId || isModuleComplete(id)
         )
@@ -454,13 +564,24 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
         }
       }
 
-      await flushSave()
-      router.push('/learning')
+      try {
+        await flushSave()
+      } catch (error) {
+        console.error('Failed to save progress:', error)
+        // Still show completion — progress is saved locally and will sync on next load
+      }
+      // Clean up section checkpoint
+      localStorage.removeItem(`module-${moduleId}-checkpoint`)
+      // Show celebration before redirecting
+      setShowCompletionCelebration(true)
     }
   }
 
+  // Check if any part has been submitted (for overall quiz result display)
+  const anyQuizSubmitted = Object.values(quizSubmitted).some(Boolean)
+
   const getQuizResult = () => {
-    if (!quizSubmitted || moduleProgress.quizScore === null) return null
+    if (!anyQuizSubmitted || moduleProgress.quizScore === null) return null
     // Use saved total questions if available, otherwise use current module quiz length
     const totalQuestions = moduleProgress.quizTotalQuestions || module.quiz.length
     const percentage = (moduleProgress.quizScore / totalQuestions) * 100
@@ -469,6 +590,50 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
   }
 
   const quizResult = getQuizResult()
+
+  // Completion celebration overlay
+  if (showCompletionCelebration && module) {
+    return (
+      <div className="flex min-h-screen bg-slate-50 items-center justify-center">
+        <div className="max-w-lg mx-auto p-8 text-center animate-fadeInUp">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Award className="w-10 h-10 text-white" strokeWidth={2} />
+          </div>
+          <h1 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Module Complete!</h1>
+          <p className="text-lg text-slate-600 mb-8">
+            You&apos;ve completed <strong>{module.title}</strong> and earned <strong>{module.points} CPD {module.points === 1 ? 'point' : 'points'}</strong>.
+          </p>
+          {quizResult && (
+            <div className="bg-white rounded-xl p-5 border border-slate-200 mb-8 inline-block">
+              <div className="text-sm font-semibold text-slate-500 mb-1">Quiz Score</div>
+              <div className="text-2xl font-bold text-teal-600">
+                {quizResult.score} / {moduleProgress.quizTotalQuestions || module.quiz.length}
+                <span className="text-base text-slate-400 ml-2">({quizResult.percentage.toFixed(0)}%)</span>
+              </div>
+            </div>
+          )}
+          <div>
+            <button
+              onClick={() => router.push('/learning')}
+              className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
+            >
+              Continue Learning
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            {isSCATModule && (
+              <Link
+                href="/pricing"
+                className="mt-3 inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-accent border-2 border-accent rounded-xl hover:bg-accent/5 transition-colors"
+              >
+                Unlock all 8 modules · 8 CPD points
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -534,6 +699,23 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
               {isModuleComplete(moduleId) && (
                 <CheckCircle2 className="w-4 h-4 text-teal-600 flex-shrink-0" strokeWidth={2.5} />
               )}
+              {/* Sync status indicator */}
+              <div className="ml-auto flex-shrink-0">
+                {syncState === 'syncing' && (
+                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+                  </span>
+                )}
+                {syncState === 'synced' && (
+                  <span className="text-xs text-teal-500">Saved</span>
+                )}
+                {syncState === 'error' && (
+                  <span className="text-xs text-red-500">Save failed</span>
+                )}
+                {syncState === 'offline' && (
+                  <span className="text-xs text-amber-500">Offline</span>
+                )}
+              </div>
             </div>
           )}
 
@@ -553,16 +735,22 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
 
             // Locked section — show banner
             if (lockedAfterIndex !== undefined && currentSectionIndex > lockedAfterIndex) {
+              const lockedTitles = allSectionTitles
+                ? allSectionTitles.slice(lockedAfterIndex + 1)
+                : module.sections.slice(lockedAfterIndex + 1).map(s => s.title)
               return (
                 <ContentLockedBanner
-                  remainingSections={module.sections.slice(lockedAfterIndex + 1).map(s => s.title)}
+                  remainingSections={lockedTitles}
                 />
               )
             }
 
             // Content section
             if (currentVS.type === 'content') {
-              const section = module.sections[currentSectionIndex]
+              // Map virtual section index to actual module section
+              // Count how many content sections appear before this index
+              const contentIndex = virtualSections.slice(0, currentSectionIndex).filter(v => v.type === 'content').length
+              const section = module.sections[contentIndex]
               if (!section) return null
               const readTime = estimateReadingTime(section.content)
 
@@ -576,14 +764,14 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                     <div className="flex items-center gap-3 mb-2">
                       <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center shadow-sm">
                         <span className="text-sm font-bold text-white">
-                          {(currentSectionIndex + 1).toString().padStart(2, '0')}
+                          {(contentIndex + 1).toString().padStart(2, '0')}
                         </span>
                       </div>
                       <h2 className="text-xl font-bold text-slate-900 tracking-tight flex-1">
                         {section.title}
                       </h2>
                     </div>
-                    <div className="flex items-center gap-3 mb-6 ml-12">
+                    <div className="flex items-center gap-3 mb-6 ml-0 sm:ml-12">
                       <SectionTypeBadge sectionId={section.id} />
                       <span className="text-xs text-slate-400 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -603,7 +791,11 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                   {/* Show lock banner with remaining titles after last free section */}
                   {!hasFullAccess && lockedAfterIndex !== undefined && currentSectionIndex === lockedAfterIndex && (
                     <ContentLockedBanner
-                      remainingSections={module.sections.slice(lockedAfterIndex + 1).map(s => s.title)}
+                      remainingSections={
+                        allSectionTitles
+                          ? allSectionTitles.slice(lockedAfterIndex + 1)
+                          : module.sections.slice(lockedAfterIndex + 1).map(s => s.title)
+                      }
                     />
                   )}
                 </div>
@@ -628,6 +820,275 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
               )
             }
 
+            // Part Quiz section (parts-based modules)
+            if (currentVS.type === 'part-quiz' && module.parts) {
+              // Determine which part this quiz belongs to
+              const partQuizIndices = virtualSections
+                .map((vs, i) => vs.type === 'part-quiz' ? i : -1)
+                .filter(i => i >= 0)
+              const partNumber = partQuizIndices.indexOf(currentSectionIndex)
+              const part = module.parts[partNumber]
+              if (!part) return null
+
+              const partQuizQuestions = module.quiz.filter(q => part.quizIds.includes(q.id))
+              const partLabel = part.title
+
+              return (
+                <div key={`part-quiz-${partNumber}`} className="animate-fadeInUp">
+                  <div id={`part-quiz-${partNumber}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6">
+                    <div className="flex items-start gap-6 mb-8">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 border border-teal-200 flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6 text-teal-600" strokeWidth={2.5} />
+                      </div>
+                      <div className="flex-1">
+                        <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">{partLabel} — Knowledge Check</h2>
+                        <p className="text-[15px] text-slate-600 leading-relaxed">
+                          Test your understanding of the content covered in {partLabel.toLowerCase()}.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-8">
+                      {partQuizQuestions.map((question, qIndex) => {
+                        const partIsSubmitted = !!quizSubmitted[partNumber]
+                        return (
+                        <div key={question.id} className="space-y-4" id={`quiz-q-${question.id}`}>
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center">
+                                <span className="text-sm font-bold text-white">{qIndex + 1}</span>
+                              </div>
+                              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                                Question {qIndex + 1} of {partQuizQuestions.length}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="font-semibold text-slate-900 text-base leading-relaxed ml-0 sm:ml-11">
+                            {question.question}
+                          </p>
+                          <div className="space-y-3 ml-0 sm:ml-12">
+                            {question.options?.map((option: string, oIndex: number) => {
+                              const isSelected = quizAnswers[question.id] === oIndex
+                              const isCorrect = question.correctAnswer === oIndex
+                              const showResult = partIsSubmitted
+
+                              return (
+                                <label
+                                  key={oIndex}
+                                  className={cn(
+                                    'flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all border-2',
+                                    !showResult && 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
+                                    isSelected && !showResult && 'border-teal-500 bg-teal-50/50',
+                                    showResult && isCorrect && 'border-teal-500 bg-teal-50',
+                                    showResult && isSelected && !isCorrect && 'border-red-400 bg-red-50'
+                                  )}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={question.id}
+                                    checked={isSelected}
+                                    onChange={() =>
+                                      !partIsSubmitted &&
+                                      setQuizAnswers((prev) => ({
+                                        ...prev,
+                                        [question.id]: oIndex,
+                                      }))
+                                    }
+                                    disabled={partIsSubmitted}
+                                    className="mt-0.5 w-4 h-4 text-teal-600 flex-shrink-0"
+                                  />
+                                  <span className="text-[15px] text-slate-700 leading-relaxed">{option}</span>
+                                  {showResult && isCorrect && (
+                                    <CheckCircle2 className="w-5 h-5 text-teal-600 ml-auto flex-shrink-0" strokeWidth={2.5} />
+                                  )}
+                                </label>
+                              )
+                            })}
+                          </div>
+                          {partIsSubmitted && (
+                            <div className="ml-0 sm:ml-12 mt-4 p-5 rounded-xl bg-blue-50 border border-blue-200">
+                              <p className="text-sm font-semibold text-slate-900 mb-2">Explanation</p>
+                              <p className="text-[15px] text-slate-700 leading-relaxed">
+                                {question.explanation}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Show submit on last part-quiz, continue button on earlier parts */}
+                    {partNumber === (module.parts?.length ?? 1) - 1 ? (
+                      <>
+                        <div className="border-t border-slate-200 my-8" />
+                        {!quizSubmitted[partNumber] ? (
+                          <div>
+                            {quizValidationError && (
+                              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                                <p className="text-sm text-amber-800 font-medium">{quizValidationError}</p>
+                              </div>
+                            )}
+                            <button
+                              onClick={handleQuizSubmit}
+                              className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                            >
+                              Submit All Answers
+                              <ArrowRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className={cn(
+                            "p-6 rounded-xl border-2",
+                            quizResult?.passed ? "bg-teal-50 border-teal-500" : "bg-amber-50 border-amber-500"
+                          )}>
+                            <div className="flex items-start gap-4">
+                              <div className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                                quizResult?.passed ? "bg-teal-100" : "bg-amber-100"
+                              )}>
+                                {quizResult?.passed ? (
+                                  <CheckCircle2 className="w-5 h-5 text-teal-700" strokeWidth={2.5} />
+                                ) : (
+                                  <AlertCircle className="w-5 h-5 text-amber-700" strokeWidth={2.5} />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-lg font-bold text-slate-900 mb-1">
+                                  {quizResult?.passed ? 'Knowledge Check Passed!' : 'Review Required'}
+                                </p>
+                                <p className="text-[15px] text-slate-700 mb-4">
+                                  You scored {quizResult?.score} out of {module.quiz.length} ({quizResult?.percentage.toFixed(0)}%)
+                                  {!quizResult?.passed && '. Please review the content and try again.'}
+                                </p>
+                                {!quizResult?.passed && (
+                                  <button
+                                    onClick={() => {
+                                      // Clear ALL part answers and submitted states for a full retake
+                                      const retakingAll: Record<number, boolean> = {}
+                                      module.parts?.forEach((_, i) => { retakingAll[i] = true })
+                                      setIsRetaking(retakingAll)
+                                      setQuizSubmitted({})
+                                      setQuizAnswers({})
+                                    }}
+                                    className="px-6 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                                  >
+                                    Retake Quiz
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="border-t border-slate-200 my-8" />
+                        {(() => {
+                          const allPartQuestionsAnswered = partQuizQuestions.every(q => quizAnswers[q.id] !== undefined)
+                          const nextPartName = module.parts?.[partNumber + 1]?.title || 'Next Part'
+                          return (
+                            <div>
+                              {allPartQuestionsAnswered ? (
+                                <div className="bg-teal-50 border-2 border-teal-200 rounded-xl p-5 mb-4">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <CheckCircle2 className="w-5 h-5 text-teal-600" strokeWidth={2.5} />
+                                    <p className="text-sm font-bold text-teal-900">{partLabel} questions answered</p>
+                                  </div>
+                                  <p className="text-sm text-slate-600 ml-8">
+                                    Your answers are saved. Continue to the next part — all answers will be submitted together at the end.
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-slate-500 mb-4">
+                                  Answer all {partQuizQuestions.length} questions above before continuing. Your answers will be submitted with the final part.
+                                </p>
+                              )}
+                              <button
+                                onClick={() => navigateSection(currentSectionIndex + 1)}
+                                disabled={!allPartQuestionsAnswered}
+                                className={cn(
+                                  "px-8 py-3.5 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2",
+                                  allPartQuestionsAnswered
+                                    ? "bg-slate-900 text-white hover:bg-slate-800"
+                                    : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                                )}
+                              >
+                                Continue to {nextPartName}
+                                <ArrowRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )
+                        })()}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Complete Module Section — show after last part quiz */}
+                  {partNumber === (module.parts?.length ?? 1) - 1 && showCompleteButton && (
+                    <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-2xl shadow-sm border-2 border-teal-200 p-8 mb-6">
+                      <div className="flex items-start gap-6">
+                        <div className="w-12 h-12 rounded-xl bg-teal-500 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-6 h-6 text-white" strokeWidth={2.5} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Complete</h3>
+                          <p className="text-[15px] text-slate-700 mb-6 leading-relaxed">
+                            Congratulations! You&apos;ve met all the requirements for this module. Mark it as complete to earn your {module.points} CPD points.
+                          </p>
+                          <button
+                            onClick={handleCompleteModule}
+                            className="px-8 py-3.5 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                          >
+                            <CheckCircle2 className="w-5 h-5" strokeWidth={2.5} />
+                            Complete Module & Earn CPD Points
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            // Part Milestone section (between parts)
+            if (currentVS.type === 'part-milestone' && module.parts) {
+              const milestoneIndices = virtualSections
+                .map((vs, i) => vs.type === 'part-milestone' ? i : -1)
+                .filter(i => i >= 0)
+              const milestoneNumber = milestoneIndices.indexOf(currentSectionIndex)
+              const completedPart = module.parts[milestoneNumber]
+              const nextPart = module.parts[milestoneNumber + 1]
+
+              return (
+                <div key={`milestone-${milestoneNumber}`} className="animate-fadeInUp">
+                  <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-2xl shadow-sm border-2 border-teal-200 p-8 mb-6 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center mx-auto mb-4">
+                      <Award className="w-8 h-8 text-white" strokeWidth={2} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">{completedPart?.title} Complete!</h2>
+                    <p className="text-[15px] text-slate-600 mb-6 leading-relaxed max-w-lg mx-auto">
+                      Great progress! You&apos;ve completed {completedPart?.title || 'this part of the module'}.
+                    </p>
+                    {nextPart && (
+                      <div className="bg-white rounded-xl p-5 border border-slate-200 max-w-md mx-auto">
+                        <p className="text-xs font-bold text-teal-700 uppercase tracking-wide mb-1">Up Next</p>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">{nextPart.title}</h3>
+                        <p className="text-sm text-slate-600">{nextPart.subtitle}</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => navigateSection(currentSectionIndex + 1)}
+                      className="mt-6 px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
+                    >
+                      Continue to {nextPart?.title || 'Next Section'}
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )
+            }
+
             // Quiz section (paid only)
             if (currentVS.type === 'quiz') {
               return (
@@ -648,8 +1109,10 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
             </div>
 
             <div className="space-y-8">
-              {module.quiz?.map((question, qIndex) => (
-                <div key={question.id} className="space-y-4">
+              {module.quiz?.map((question, qIndex) => {
+                const stdQuizSubmitted = !!quizSubmitted[0]
+                return (
+                <div key={question.id} className="space-y-4" id={`quiz-q-${question.id}`}>
                   <div className="flex items-start gap-4 mb-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center">
@@ -662,14 +1125,14 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                       </span>
                     </div>
                   </div>
-                  <p className="font-semibold text-slate-900 text-base leading-relaxed ml-11">
+                  <p className="font-semibold text-slate-900 text-base leading-relaxed ml-0 sm:ml-11">
                     {question.question}
                   </p>
-                  <div className="space-y-3 ml-12">
+                  <div className="space-y-3 ml-0 sm:ml-12">
                     {question.options?.map((option, oIndex) => {
                       const isSelected = quizAnswers[question.id] === oIndex
                       const isCorrect = question.correctAnswer === oIndex
-                      const showResult = quizSubmitted
+                      const showResult = stdQuizSubmitted
 
                       return (
                         <label
@@ -687,13 +1150,13 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                             name={question.id}
                             checked={isSelected}
                             onChange={() =>
-                              !quizSubmitted &&
+                              !stdQuizSubmitted &&
                               setQuizAnswers((prev) => ({
                                 ...prev,
                                 [question.id]: oIndex,
                               }))
                             }
-                            disabled={quizSubmitted}
+                            disabled={stdQuizSubmitted}
                             className="mt-0.5 w-4 h-4 text-teal-600 flex-shrink-0"
                           />
                           <span className="text-[15px] text-slate-700 leading-relaxed">{option}</span>
@@ -704,8 +1167,8 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                       )
                     })}
                   </div>
-                  {quizSubmitted && (
-                    <div className="ml-12 mt-4 p-5 rounded-xl bg-blue-50 border border-blue-200">
+                  {stdQuizSubmitted && (
+                    <div className="ml-0 sm:ml-12 mt-4 p-5 rounded-xl bg-blue-50 border border-blue-200">
                       <p className="text-sm font-semibold text-slate-900 mb-2">Explanation</p>
                       <p className="text-[15px] text-slate-700 leading-relaxed">
                         {question.explanation}
@@ -713,12 +1176,13 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                     </div>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </div>
 
             <div className="border-t border-slate-200 my-8" />
 
-            {!quizSubmitted ? (
+            {!quizSubmitted[0] ? (
               <div>
                 {quizValidationError && (
                   <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
@@ -764,8 +1228,8 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                     {!quizResult?.passed && (
                       <button
                         onClick={() => {
-                          setIsRetaking(true)
-                          setQuizSubmitted(false)
+                          setIsRetaking({ 0: true })
+                          setQuizSubmitted({})
                           setQuizAnswers({})
                           // Scroll to quiz section
                           const quizSection = document.getElementById('quiz')

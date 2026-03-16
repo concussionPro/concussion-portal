@@ -43,21 +43,21 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
         title: 'SCAT6 Fillable PDF',
         description: 'Official SCAT6 form — fillable and printable',
         fileSize: 'PDF',
-        downloadUrl: '/docs/SCAT6_Fillable.pdf',
+        downloadUrl: '/api/download?file=SCAT6_Fillable.pdf',
         icon: 'pdf'
       },
       {
         title: 'SCOAT6 Fillable PDF',
         description: 'Official SCOAT6 form — fillable and printable',
         fileSize: 'PDF',
-        downloadUrl: '/docs/SCOAT6_Fillable.pdf',
+        downloadUrl: '/api/download?file=SCOAT6_Fillable.pdf',
         icon: 'pdf'
       },
       {
         title: 'SCAT/SCOAT Fillable PDFs (ZIP)',
         description: 'All SCAT and SCOAT forms bundled in a single download',
         fileSize: 'ZIP',
-        downloadUrl: '/docs/SCAT%3ASCOAT_FIllablePDFs.zip',
+        downloadUrl: '/api/download?file=SCAT:SCOAT_FIllablePDFs.zip',
         icon: 'checklist'
       }
     ],
@@ -137,19 +137,7 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
 
   const handleDownload = async (url: string, title: string) => {
     try {
-      // Direct CDN paths (e.g. /docs/...) — use native download link
-      // This avoids fetching large files into memory and bypasses serverless body limits
-      if (!url.startsWith('/api/')) {
-        const link = document.createElement('a')
-        link.href = url
-        link.download = url.split('/').pop() || title
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        return
-      }
-
-      // API routes — fetch blob for authenticated downloads
+      // All downloads go through authenticated /api/download route
       const urlObj = new URL(url, window.location.origin)
       const fileName = urlObj.searchParams.get('file') || urlObj.pathname.split('/').pop() || title
 

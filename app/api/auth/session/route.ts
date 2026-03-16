@@ -38,8 +38,9 @@ export async function GET(request: NextRequest) {
 
     if (user.accessLevel !== sessionData.accessLevel) {
       // Access level changed — issue a refreshed session cookie
+      // Preserve original session duration (don't always extend to 30 days)
       const newToken = createJWTSession(
-        user.id, user.email, user.name, user.accessLevel, true
+        user.id, user.email, user.name, user.accessLevel, false
       )
       const response = NextResponse.json({
         success: true,
@@ -48,15 +49,19 @@ export async function GET(request: NextRequest) {
           email: user.email,
           name: user.name,
           accessLevel: user.accessLevel,
+          workshopLocation: user.workshopLocation || null,
           createdAt: user.createdAt,
           nurtureUnsubscribed: user.nurtureUnsubscribed || false,
+          progressEmailsOptedOut: user.progressEmailsOptedOut || false,
         },
       })
+      // If rememberMe was false, use 7 days; if true, use 30 days
+      const maxAge = 7 * 24 * 60 * 60  // Match the JWT's internal expiry
       response.cookies.set('session', newToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60,
+        maxAge,
         path: '/',
       })
       return response
@@ -70,8 +75,10 @@ export async function GET(request: NextRequest) {
         email: user.email,
         name: user.name,
         accessLevel: user.accessLevel,
+        workshopLocation: user.workshopLocation || null,
         createdAt: user.createdAt,
         nurtureUnsubscribed: user.nurtureUnsubscribed || false,
+        progressEmailsOptedOut: user.progressEmailsOptedOut || false,
       },
     })
   } catch (error) {

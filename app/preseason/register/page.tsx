@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Building2, User, Mail, AlertCircle, Check, Copy, ArrowRight, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { trackLeadConversion } from '@/lib/analytics'
@@ -94,13 +95,13 @@ export default function RegisterPage() {
       <div className="noise-overlay" aria-hidden="true" />
 
       <div className="w-full max-w-md relative z-10">
-        <button
-          onClick={() => router.push('/preseason')}
+        <Link
+          href="/preseason"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Preseason
-        </button>
+        </Link>
 
         <div className="glass rounded-2xl p-8">
           {!success ? (
@@ -260,18 +261,18 @@ export default function RegisterPage() {
             </p>
           </div>
           <div className="flex flex-col gap-2">
-            <button
-              onClick={() => router.push('/scat-mastery')}
-              className="w-full btn-primary py-2.5 rounded-lg text-sm font-semibold"
+            <Link
+              href="/scat-mastery"
+              className="w-full btn-primary py-2.5 rounded-lg text-sm font-semibold text-center block"
             >
               Get Free Course (2 CPD pts) →
-            </button>
-            <a
+            </Link>
+            <Link
               href={CONFIG.SHOP_URL}
-              className="text-xs text-muted-foreground hover:text-accent text-center font-medium transition-colors"
+              className="text-xs text-muted-foreground hover:text-accent text-center font-medium transition-colors block"
             >
               Or view our full {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course →
-            </a>
+            </Link>
           </div>
         </div>
       </div>

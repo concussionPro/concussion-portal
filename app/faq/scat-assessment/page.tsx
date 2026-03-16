@@ -74,15 +74,15 @@ export default function SCATAssessmentFAQ() {
 
       <SiteNav />
       <div className="min-h-screen bg-slate-50">
-        <div className="bg-blue-600 text-white pt-[80px] pb-12">
+        <div className="bg-[#5b9aa6] text-white pt-[80px] pb-12">
           <div className="max-w-4xl mx-auto px-4">
             <h1 className="text-4xl font-bold mb-4">
               SCAT-6 Assessment FAQ
             </h1>
-            <p className="text-xl text-blue-100">
+            <p className="text-xl text-white/80">
               Essential guide for Australian healthcare professionals
             </p>
-            <div className="mt-6 text-sm text-blue-200">
+            <div className="mt-6 text-sm text-white/60">
               <strong>Last Updated:</strong> January 31, 2026 | <strong>Next Review:</strong> April 30, 2026
             </div>
           </div>
@@ -110,8 +110,8 @@ export default function SCATAssessmentFAQ() {
             ))}
           </div>
 
-          <div className="mt-12 bg-blue-50 border-2 border-blue-300 rounded-xl p-8">
-            <h3 className="text-2xl font-bold text-blue-900 mb-4">
+          <div className="mt-12 bg-teal-50 border-2 border-[#5b9aa6]/40 rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-teal-900 mb-4">
               Want to Master SCAT-6 Assessment?
             </h3>
             <p className="text-lg text-slate-700 mb-6">
@@ -119,7 +119,7 @@ export default function SCATAssessmentFAQ() {
             </p>
             <Link
               href="/scat-mastery"
-              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="inline-block bg-[#5b9aa6] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#4a8995] transition-colors"
             >
               Learn More - Free SCAT6/SCOAT6 Mastery Course →
             </Link>
@@ -130,21 +130,21 @@ export default function SCATAssessmentFAQ() {
             <ul className="space-y-2 text-sm text-slate-600">
               <li>
                 • Echemendia, R. J., et al. (2023). Sport Concussion Assessment Tool – 6 (SCAT6). <em>British Journal of Sports Medicine</em>, 57(11), 622–631.{' '}
-                <a href="https://bjsm.bmj.com/content/57/11/622" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                <a href="https://bjsm.bmj.com/content/57/11/622" target="_blank" rel="noopener noreferrer" className="text-[#5b9aa6] hover:underline">
                   bjsm.bmj.com/content/57/11/622
                 </a>
               </li>
               <li>
                 • Patricios, J. S., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport–Amsterdam, October 2022. <em>British Journal of Sports Medicine</em>, 57(11), 695–711.{' '}
-                <a href="https://bjsm.bmj.com/content/57/11/695" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                <a href="https://bjsm.bmj.com/content/57/11/695" target="_blank" rel="noopener noreferrer" className="text-[#5b9aa6] hover:underline">
                   bjsm.bmj.com/content/57/11/695
                 </a>
               </li>
               <li>
-                • Concussion in Sport Australia: <a href="https://www.concussioninsport.gov.au/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">concussioninsport.gov.au</a>
+                • Concussion in Sport Australia: <a href="https://www.concussioninsport.gov.au/" target="_blank" rel="noopener noreferrer" className="text-[#5b9aa6] hover:underline">concussioninsport.gov.au</a>
               </li>
               <li>
-                • ANZ Concussion Guidelines: <a href="https://anzconcussionguidelines.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">anzconcussionguidelines.com</a>
+                • ANZ Concussion Guidelines: <a href="https://anzconcussionguidelines.com/" target="_blank" rel="noopener noreferrer" className="text-[#5b9aa6] hover:underline">anzconcussionguidelines.com</a>
               </li>
             </ul>
           </div>

@@ -16,6 +16,7 @@ function getSecret(): string {
 const SECRET = getSecret()
 
 export interface SessionData {
+  type: 'session'
   userId: string
   email: string
   name: string
@@ -26,6 +27,7 @@ export interface SessionData {
 // Create a signed session token
 function createSessionToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview', expiresInMs: number): string {
   const payload: SessionData = {
+    type: 'session',
     userId,
     email,
     name,
@@ -71,6 +73,11 @@ export function verifySessionToken(token: string): SessionData | null {
     const payload: SessionData = JSON.parse(
       Buffer.from(payloadStr, 'base64url').toString()
     )
+
+    // Reject tokens that aren't session tokens (e.g. magic-link tokens)
+    if (payload.type !== 'session') {
+      return null
+    }
 
     // Check expiration
     if (payload.exp < Date.now()) {

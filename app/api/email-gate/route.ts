@@ -7,7 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
-import { sendEmail } from '@/lib/resend-client'
+import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -22,10 +23,6 @@ function checkRateLimit(key: string, limit: number): boolean {
   if (entry.count >= limit) return false
   entry.count++
   return true
-}
-
-function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 export async function POST(request: NextRequest) {
@@ -92,9 +89,15 @@ export async function POST(request: NextRequest) {
     // Send welcome email in background (don't await — don't block PDF download)
     if (!existingUser) {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+      const unsubToken = generateUnsubscribeToken(normalizedEmail)
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(normalizedEmail)}&token=${unsubToken}`
       sendEmail({
         to: normalizedEmail,
         subject: 'Your SCAT6 assessment PDF + free concussion course',
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
         html: `
           <!DOCTYPE html>
           <html>
@@ -123,7 +126,7 @@ export async function POST(request: NextRequest) {
                   <div class="highlight">
                     <strong>Your free account includes:</strong><br>
                     &bull; Digital SCAT6, SCOAT6 &amp; Child SCAT6 forms with PDF export<br>
-                    &bull; Free SCAT6/SCOAT6 Mastery course (~2 hours)<br>
+                    &bull; Free SCAT6/SCOAT6 Mastery course (~3 hours)<br>
                     &bull; 2 AHPRA-aligned CPD points + certificate
                   </div>
 
@@ -141,6 +144,7 @@ export async function POST(request: NextRequest) {
                 <div class="footer">
                   <p><strong>Concussion Education Australia</strong></p>
                   <p>zac@concussion-education-australia.com</p>
+                  <p style="margin-top: 12px; font-size: 12px;"><a href="${unsubscribeUrl}" style="color: #94a3b8;">You can unsubscribe from course emails at any time.</a></p>
                 </div>
               </div>
             </body>

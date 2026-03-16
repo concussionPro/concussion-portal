@@ -193,7 +193,10 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
   doc.setTextColor(30, 41, 59)
-  doc.text('Online — Self-Paced', col3X, gridY + 8, { align: 'center' })
+  const modeOfDelivery = data.courseType === 'full-course'
+    ? 'Blended Learning — Online & In-Person Workshop'
+    : 'Online — Self-Paced'
+  doc.text(modeOfDelivery, col3X, gridY + 8, { align: 'center' })
 
   // ── Activity Type ──────────────────────────────────
   y = gridY + 20
@@ -254,7 +257,7 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   return { pdfBuffer, certificateId }
 }
 
-// SCAT Mastery course-specific certificate data
+// SCAT6 Mastery course-specific certificate data
 export function getSCATCertificateData(participantName: string, participantEmail: string, completionDate: Date): CertificateData {
   return {
     participantName,

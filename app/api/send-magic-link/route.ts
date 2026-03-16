@@ -4,7 +4,7 @@
 import { NextResponse } from 'next/server'
 import { findUserByEmail } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
-import { sendMagicLinkEmail } from '@/lib/email'
+import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { logAuthFailure, logCriticalError, measurePerformance } from '@/lib/monitoring'
 
 // In-memory rate limiting (resets on cold start, but sufficient for Vercel serverless)

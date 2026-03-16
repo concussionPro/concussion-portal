@@ -89,7 +89,7 @@ export default function ResourcesPage() {
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-xl p-6 border border-slate-200 hover:border-slate-300 transition-colors"
+                  className="bg-white rounded-xl p-6 border border-slate-200"
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">

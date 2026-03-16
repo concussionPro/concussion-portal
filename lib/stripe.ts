@@ -92,7 +92,7 @@ export async function createCourseCheckoutSession({
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
-    payment_method_types: ['card', 'afterpay_clearpay'],
+    payment_method_types: ['card', 'afterpay_clearpay', 'klarna'],
     line_items: [
       {
         price_data: {

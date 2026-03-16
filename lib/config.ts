@@ -13,7 +13,7 @@ export const CONFIG = {
     TOTAL_CPD_POINTS: 14,
     ONLINE_CPD_POINTS: 8,
     IN_PERSON_CPD_POINTS: 6,
-    CPD_BADGE_TEXT: '14 CPD points - AHPRA Aligned, Endorsed by Osteopathy Australia',
+    CPD_BADGE_TEXT: 'Up to 14 CPD points - AHPRA Aligned, Endorsed by Osteopathy Australia',
     PRICE_ONLINE: 497,
     PRICE_REGULAR: 1400,
     PRICE_EARLY_BIRD: 1190,
@@ -57,6 +57,7 @@ export const CONFIG = {
     LEAD_TIME_WEEKS: 6,           // weeks of notice after threshold hit
     EARLY_BIRD_SEAT_THRESHOLD: 6, // 50% — early bird ends when this many seats sold (for confirmed cities)
     EARLY_BIRD_DAYS_BEFORE: 7,    // Early bird ends this many days before course date
+    EARLY_BIRD_DEADLINE: '2026-06-30', // Hard deadline for early bird pricing
     NEXT_ROUND: 'Jun–Aug 2026',   // Approximate window for next workshops
     Q1_COMPLETED: true,           // Q1 2026 workshops ran — used for social proof
   },

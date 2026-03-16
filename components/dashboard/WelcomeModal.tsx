@@ -3,35 +3,12 @@
 import { useState, useEffect } from 'react'
 import { X, Play, Award, BookOpen, Clock, GraduationCap, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-
-interface UserInfo {
-  name?: string
-  email?: string
-  accessLevel?: string
-  location?: string
-}
+import { useSession } from '@/contexts/SessionContext'
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
-  const [user, setUser] = useState<UserInfo | null>(null)
-
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const response = await fetch('/api/auth/session', { credentials: 'include' })
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.user) {
-            setUser(data.user)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load user:', error)
-      }
-    }
-    loadUser()
-  }, [])
+  const { user } = useSession()
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
@@ -44,6 +21,19 @@ export function WelcomeModal() {
     localStorage.setItem('hasSeenWelcome', 'true')
     setIsOpen(false)
   }
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose()
+    }
+    if (isOpen) window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [isOpen])
+
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [isOpen])
 
   const handleSkip = () => {
     localStorage.setItem('hasSeenWelcome', 'true')
@@ -73,6 +63,9 @@ export function WelcomeModal() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="welcome-modal-title"
         className="relative w-full max-w-2xl overflow-hidden rounded-3xl"
         style={{
           background: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.92) 50%, rgba(255,255,255,0.95) 100%)',
@@ -113,12 +106,12 @@ export function WelcomeModal() {
             >
               <GraduationCap className="h-8 w-8 text-white" strokeWidth={1.8} />
             </div>
-            <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+            <h2 id="welcome-modal-title" className="mb-2 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
               You&apos;re all set, {firstName}
             </h2>
             <p className="text-sm text-slate-500 md:text-base">
               {isPreviewUser
-                ? 'Your free SCAT Mastery course is ready — 5 modules, 2 CPD points.'
+                ? 'Your free SCAT6 Mastery course is ready — 6 modules, 2 CPD points.'
                 : isFullCourse
                 ? 'Your online modules are ready — complete them before your hands-on workshop.'
                 : 'Your 8 clinical modules are unlocked and ready to go.'}
@@ -177,7 +170,7 @@ export function WelcomeModal() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900">Pass the Module 1 Quiz</p>
-                  <p className="text-xs text-slate-500">Earn your first AHPRA CPD point — takes about 60 minutes total</p>
+                  <p className="text-xs text-slate-500">{isPreviewUser ? 'Earn your first 0.5 CPD points — takes about 30 minutes' : 'Earn your first AHPRA CPD point — takes about 75 minutes'}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>
@@ -199,8 +192,8 @@ export function WelcomeModal() {
                   <span className="text-sm font-bold" style={{ color: '#0d7377' }}>3</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">Download the Clinical Toolkit</p>
-                  <p className="text-xs text-slate-500">Referral templates, RTP forms, and clearance letters for your practice</p>
+                  <p className="text-sm font-semibold text-slate-900">Browse All Modules</p>
+                  <p className="text-xs text-slate-500">See the full curriculum and track your progress across all modules</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>
@@ -219,7 +212,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <BookOpen className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '5' : '8'}</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '6' : '8'}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Modules</div>
             </div>
@@ -247,7 +240,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <Clock className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~2' : '~8'}</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~2.5' : '~10'}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Hours Total</div>
             </div>

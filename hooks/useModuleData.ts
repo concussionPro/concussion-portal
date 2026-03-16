@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { Module } from '@/data/modules'
 
 interface UseModuleDataResult {
@@ -9,6 +9,7 @@ interface UseModuleDataResult {
   error: string | null
   accessLevel: 'preview' | 'online-only' | 'full-course' | null
   needsUpgrade: boolean
+  allSectionTitles: string[] | null
 }
 
 /**
@@ -23,55 +24,76 @@ export function useModuleData(moduleId: number): UseModuleDataResult {
   const [error, setError] = useState<string | null>(null)
   const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
   const [needsUpgrade, setNeedsUpgrade] = useState(false)
+  const [allSectionTitles, setAllSectionTitles] = useState<string[] | null>(null)
 
-  useEffect(() => {
-    async function fetchModule() {
+  const fetchModule = useCallback(async (isRefresh = false) => {
+    if (!isRefresh) {
       setLoading(true)
       setError(null)
-
-      try {
-        const response = await fetch(`/api/modules/${moduleId}`, {
-          credentials: 'include', // Include session cookie
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-
-          // Check if this is an upgrade requirement (403 with upgrade flag)
-          if (response.status === 403 && data.upgrade) {
-            setNeedsUpgrade(true)
-            setAccessLevel('preview')
-            setError(null) // Don't set error for upgrade prompts
-          } else if (response.status === 401) {
-            setError('Authentication required')
-          } else if (response.status === 404) {
-            setError('Module not found')
-          } else {
-            setError(data.error || 'Failed to load module')
-          }
-          setLoading(false)
-          return
-        }
-
-        const data = await response.json()
-
-        if (data.success && data.module) {
-          setModule(data.module)
-          setAccessLevel(data.accessLevel)
-          setNeedsUpgrade(false)
-        } else {
-          setError('Invalid response from server')
-        }
-      } catch (err) {
-        console.error('Module fetch error:', err)
-        setError('Network error - please check your connection')
-      } finally {
-        setLoading(false)
-      }
     }
 
-    fetchModule()
+    try {
+      const response = await fetch(`/api/modules/${moduleId}`, {
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+
+        if (response.status === 403 && data.upgrade) {
+          setNeedsUpgrade(true)
+          setAccessLevel('preview')
+          setError(null)
+        } else if (response.status === 401) {
+          setError('Authentication required')
+        } else if (response.status === 404) {
+          setError('Module not found')
+        } else {
+          setError(data.error || 'Failed to load module')
+        }
+        if (!isRefresh) setLoading(false)
+        return
+      }
+
+      const data = await response.json()
+
+      if (data.success && data.module) {
+        setModule(data.module)
+        setAccessLevel(data.accessLevel)
+        setNeedsUpgrade(false)
+        if (data.allSectionTitles) {
+          setAllSectionTitles(data.allSectionTitles)
+        } else {
+          setAllSectionTitles(null)
+        }
+      } else {
+        setError('Invalid response from server')
+      }
+    } catch (err) {
+      if (!isRefresh) {
+        console.error('Module fetch error:', err)
+        setError('Network error - please check your connection')
+      }
+    } finally {
+      if (!isRefresh) setLoading(false)
+    }
   }, [moduleId])
 
-  return { module, loading, error, accessLevel, needsUpgrade }
+  // Initial fetch
+  useEffect(() => {
+    fetchModule()
+  }, [fetchModule])
+
+  // Re-fetch when tab becomes visible (user returning from Stripe checkout)
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible' && accessLevel === 'preview') {
+        fetchModule(true)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [fetchModule, accessLevel])
+
+  return { module, loading, error, accessLevel, needsUpgrade, allSectionTitles }
 }

@@ -1,12 +1,13 @@
 /**
  * Free Signup API - No Stripe Required
- * For free course signups (SCAT Mastery)
+ * For free course signups (SCAT6 Mastery)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/users'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
-import { sendEmail } from '@/lib/resend-client'
+import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -21,10 +22,6 @@ function checkRateLimit(key: string, limit: number): boolean {
   if (entry.count >= limit) return false
   entry.count++
   return true
-}
-
-function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 export async function POST(request: NextRequest) {
@@ -83,10 +80,18 @@ export async function POST(request: NextRequest) {
     const accessLevel = existingUser ? existingUser.accessLevel : 'preview'
     const loginLink = generateMagicLinkJWT(userId, email, userName, accessLevel, baseUrl)
 
+    // Generate unsubscribe URL
+    const unsubToken = generateUnsubscribeToken(email)
+    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
+
     // Send welcome email (Day 0 of nurture sequence)
     await sendEmail({
       to: email,
       subject: 'Your free SCAT6/SCOAT6 Mastery Course is ready',
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
       html: `
         <!DOCTYPE html>
         <html>
@@ -106,14 +111,14 @@ export async function POST(request: NextRequest) {
           <body>
             <div class="container">
               <div class="header">
-                <h1>Welcome to SCAT Mastery</h1>
+                <h1>Welcome to SCAT6 Mastery</h1>
               </div>
               <div class="content">
                 <h2 style="margin-top: 0;">Hi ${escapeHtml(userName)},</h2>
                 <p>Your free SCAT6/SCOAT6 Mastery course is ready. Here's what it covers.</p>
 
                 <div class="highlight">
-                  <strong>Course overview (~2 hours):</strong><br>
+                  <strong>Course overview (~3 hours):</strong><br>
                   &bull; Step-by-step SCAT6 &amp; SCOAT6 administration<br>
                   &bull; Red flag recognition and escalation criteria<br>
                   &bull; When to use SCAT6 vs SCOAT6 (acute vs office follow-up)<br>
@@ -140,6 +145,7 @@ export async function POST(request: NextRequest) {
               <div class="footer">
                 <p><strong>Concussion Education Australia</strong></p>
                 <p>zac@concussion-education-australia.com</p>
+                <p style="margin-top: 12px; font-size: 12px;"><a href="${unsubscribeUrl}" style="color: #94a3b8;">You can unsubscribe from course emails at any time.</a></p>
               </div>
             </div>
           </body>

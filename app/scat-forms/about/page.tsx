@@ -43,7 +43,7 @@ const howToSteps = [
   },
   {
     name: 'Complete Training (Optional but Recommended)',
-    text: 'Take the free 2-hour SCAT6/SCOAT6 Mastery course to learn proper administration, red flags, and medicolegal documentation requirements. Receive 2 AHPRA-aligned CPD points.',
+    text: 'Take the free ~3-hour SCAT6/SCOAT6 Mastery course to learn proper administration, red flags, and medicolegal documentation requirements. Receive 2 AHPRA-aligned CPD points.',
   },
   {
     name: 'Use Forms in Clinical Practice',
@@ -215,7 +215,7 @@ export default function SCATFormsAboutPage() {
           {/* Training CTA */}
           <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-8 mb-12">
             <h3 className="text-2xl font-bold text-green-900 mb-4">
-              Free Training: Master SCAT6 & SCOAT6 in 2 Hours
+              Free Training: Master SCAT6 & SCOAT6 in ~3 Hours
             </h3>
             <p className="text-lg text-slate-700 mb-4">
               <strong>Proper SCAT6 administration requires structured training.</strong>

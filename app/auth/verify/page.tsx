@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
 
@@ -9,8 +9,12 @@ function VerifyContent() {
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('Verifying your login link...')
+  const hasVerified = useRef(false)
 
   useEffect(() => {
+    if (hasVerified.current) return
+    hasVerified.current = true
+
     const token = searchParams.get('token')
 
     if (!token) {
@@ -32,20 +36,33 @@ function VerifyContent() {
         setStatus('success')
         setMessage('Login successful! You\'ll stay logged in. Redirecting...')
 
+        // Fire gtag page_view and login event before redirecting
+        // This fixes 0s sessions and 100% bounce on magic link verify
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'login', {
+            method: 'magic_link',
+            access_level: data.user.accessLevel,
+          })
+        }
+
         // Session cookie is set automatically by the server
-        // Redirect after 2 seconds — respect saved redirect, else access-based default
+        // Short delay to allow gtag to fire before redirect
         setTimeout(() => {
           const savedRedirect = localStorage.getItem('login_redirect')
           localStorage.removeItem('login_redirect')
 
-          if (savedRedirect && savedRedirect.startsWith('/') && !savedRedirect.startsWith('//') && data.user.accessLevel !== 'preview') {
+          const isValidRedirect = (path: string) => {
+            return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !path.includes('\n')
+          }
+
+          if (savedRedirect && isValidRedirect(savedRedirect) && data.user.accessLevel !== 'preview') {
             router.push(savedRedirect)
           } else if (data.user.accessLevel === 'preview') {
-            router.push('/scat-course')
+            router.push('/modules/101')
           } else {
             router.push('/dashboard')
           }
-        }, 2000)
+        }, 500)
       })
       .catch((error) => {
         setStatus('error')

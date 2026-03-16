@@ -191,7 +191,7 @@ export default function PreseasonLandingPage() {
             </p>
 
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-6 border border-white/20 max-w-lg mx-auto text-left">
-              <h3 className="font-bold text-lg mb-3 text-center">Free SCAT Mastery Includes:</h3>
+              <h3 className="font-bold text-lg mb-3 text-center">Free SCAT6 Mastery Includes:</h3>
               <ul className="space-y-2 text-sm">
                 {[
                   'Step-by-step SCAT6 & SCOAT6 training (every section)',

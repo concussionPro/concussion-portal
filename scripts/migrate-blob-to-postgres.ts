@@ -26,6 +26,7 @@ async function createTables() {
       workshop_location TEXT,
       last_login_at TIMESTAMPTZ,
       nurture_unsubscribed BOOLEAN NOT NULL DEFAULT false,
+      progress_emails_opted_out BOOLEAN NOT NULL DEFAULT false,
       signup_source TEXT
     )
   `
@@ -79,6 +80,23 @@ async function createTables() {
 
   await sql`
     CREATE INDEX IF NOT EXISTS idx_email_events_type ON email_events(event_type)
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS email_audit_log (
+      id SERIAL PRIMARY KEY,
+      audit_key TEXT UNIQUE NOT NULL,
+      sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_email_audit_log_audit_key ON email_audit_log(audit_key)
+  `
+
+  // Add progress_emails_opted_out column to existing databases
+  await sql`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_emails_opted_out BOOLEAN NOT NULL DEFAULT false
   `
 
   console.log('Tables created.')

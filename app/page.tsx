@@ -49,29 +49,36 @@ export default function HomePage() {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-5">
+            <div className="flex flex-col sm:flex-row items-center gap-3 mb-5">
               <Link
                 href="/pricing"
-                className="btn-primary px-7 py-3.5 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"
+                className="btn-primary px-8 py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2 shadow-lg"
               >
-                Start Online — ${CONFIG.COURSE.PRICE_ONLINE}
-                <ArrowRight className="w-4 h-4" />
+                Start Your CPD Course
+                <ArrowRight className="w-4.5 h-4.5" />
               </Link>
               <Link
                 href="/preview"
-                className="btn-secondary px-7 py-3.5 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"
+                className="px-5 py-2.5 rounded-lg text-sm font-medium text-[var(--muted-foreground)] border border-[rgba(13,115,119,0.15)] hover:border-[rgba(13,115,119,0.3)] hover:text-[var(--foreground)] transition-colors flex items-center justify-center gap-1.5"
               >
                 Preview Course
               </Link>
             </div>
 
-            <p className="text-[13px] text-[var(--muted-foreground)]">
-              Or start with{' '}
+            <p className="text-sm text-muted-foreground mt-2">
+              From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100} with Afterpay) · 7-day guarantee
+            </p>
+            <p className="text-sm text-slate-500 mt-1">
+              Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+
+            <p className="text-[13px] text-[var(--muted-foreground)] mt-2">
+              Or try our{' '}
               <Link
                 href="/scat-mastery"
                 className="text-[var(--accent)] font-medium hover:underline"
               >
-                free SCAT6 training
+                free SCAT6 Mastery course
               </Link>
               {' '}·{' '}
               <Link
@@ -89,7 +96,10 @@ export default function HomePage() {
                   <span className="font-semibold text-[var(--foreground)]">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded by Australian clinicians
                 </span>
                 <span className="text-xs text-[var(--muted-foreground)]">·</span>
-                <span className="text-xs text-[var(--muted-foreground)]">Endorsed by <span className="font-semibold text-[var(--foreground)]">Osteopathy Australia</span></span>
+                <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
+                  <img src="/osteopathy-australia-endorsed.png" alt="" className="h-5 w-auto" aria-hidden="true" />
+                  <span>Endorsed by <span className="font-semibold text-[var(--foreground)]">Osteopathy Australia</span></span>
+                </span>
               </div>
             )}
           </div>
@@ -101,10 +111,9 @@ export default function HomePage() {
           <div className="max-w-[760px] mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-delay-1">
               {[
-                { value: CONFIG.COURSE.TOTAL_CPD_POINTS.toString(), label: 'AHPRA CPD Points', sub: 'Aligned' },
-                { value: '8', label: 'Online Modules', sub: '8 CPD points' },
-                { value: '150+', label: 'References', sub: 'Evidence-based' },
-                { value: '8h', label: 'Course Content', sub: 'Self-paced' },
+                { value: 'Up to 14', label: 'AHPRA CPD Points', sub: '8 online + 6 workshop' },
+                { value: '8', label: 'Online Modules', sub: 'Interactive quizzes' },
+                { value: '140+', label: 'References', sub: 'Evidence-based' },
               ].map((stat) => (
                 <div key={stat.label} className="stat-tile text-center">
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--accent)] mb-1">
@@ -118,6 +127,13 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
+              <div className="stat-tile flex items-center justify-center p-3">
+                <img
+                  src="/osteopathy-australia-endorsed.png"
+                  alt="Osteopathy Australia Endorsed Course"
+                  className="h-20 md:h-24 w-auto"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -136,7 +152,7 @@ export default function HomePage() {
                     Start with Free SCAT6 Mastery
                   </h2>
                   <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-4">
-                    Master SCAT6 &amp; SCOAT6 in 2 hours. Red flags, documentation, step-by-step protocols. 2 AHPRA CPD points + certificate.
+                    Master SCAT6 &amp; SCOAT6 in ~3 hours. Red flags, documentation, step-by-step protocols. 2 AHPRA CPD points + certificate.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2.5">
                     <Link
@@ -332,7 +348,7 @@ export default function HomePage() {
                 Ready to master evidence-based concussion management?
               </h2>
               <p className="text-sm text-white/60 mb-6 max-w-md mx-auto relative z-10">
-                {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE}
+                Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
                 <a

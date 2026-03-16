@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put, list as listBlobs } from '@vercel/blob'
-import { sendEmail } from '@/lib/resend-client'
+import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { verifySessionToken } from '@/lib/jwt-session'
 
 interface ReadyToTrainRegistration {
@@ -178,7 +178,7 @@ function buildConfirmationEmail(name: string, city: string): string {
       </h2>
 
       <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
-        Hi ${name.split(' ')[0]},
+        Hi ${escapeHtml(name.split(' ')[0])},
       </p>
 
       <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
@@ -228,12 +228,12 @@ function buildNotificationEmail(name: string, email: string, city: string, total
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
         <tr>
           <td style="padding: 8px 0; color: #64748b; width: 120px;">Name</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${name}</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${escapeHtml(name)}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b;">Email</td>
           <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">
-            <a href="mailto:${email}" style="color: #5b9aa6;">${email}</a>
+            <a href="mailto:${escapeHtml(email)}" style="color: #5b9aa6;">${escapeHtml(email)}</a>
           </td>
         </tr>
         <tr>

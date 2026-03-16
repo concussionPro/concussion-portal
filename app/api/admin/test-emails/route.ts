@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
       subject: `[TEST ${9 + i}/18] Workshop -${e.daysBefore}d: ${e.subject}`,
       html: e.template(name, 'Byron Bay', 'March 28, 2026'),
     })),
-    // 11-16. SCAT Mastery Sequence (6 emails)
+    // 11-16. SCAT6 Mastery Sequence (6 emails)
     ...SCAT_MASTERY_SEQUENCE.map((e, i) => ({
       subject: `[TEST ${11 + i}/18] SCAT Day ${e.day}: ${e.subject}`,
       html: e.template(name, i < 3 ? loginLink : upgradeLink),

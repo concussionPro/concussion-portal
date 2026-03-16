@@ -1,10 +1,10 @@
 'use client'
 
-import { CheckCircle2, Lock, FileText, Rocket, ClipboardCheck } from 'lucide-react'
+import { CheckCircle2, Lock, FileText, Rocket, ClipboardCheck, Award } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRef, useEffect } from 'react'
 
-export type VirtualSectionType = 'content' | 'resources' | 'apply-tomorrow' | 'quiz'
+export type VirtualSectionType = 'content' | 'resources' | 'apply-tomorrow' | 'quiz' | 'part-quiz' | 'part-milestone'
 
 export interface VirtualSection {
   type: VirtualSectionType
@@ -25,6 +25,8 @@ function getTypeIcon(type: VirtualSectionType) {
     case 'resources': return FileText
     case 'apply-tomorrow': return Rocket
     case 'quiz': return ClipboardCheck
+    case 'part-quiz': return ClipboardCheck
+    case 'part-milestone': return Award
     default: return null
   }
 }
@@ -64,60 +66,73 @@ export function SectionStepper({
       </div>
 
       {/* Stepper circles */}
-      <div
-        ref={scrollRef}
-        className="flex items-center gap-1 overflow-x-auto pb-2 scrollbar-hide"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {virtualSections.map((vs, i) => {
-          const isCurrent = i === currentIndex
-          const isVisited = visitedIndices.has(i)
-          const isLocked = lockedAfterIndex !== undefined && i > lockedAfterIndex
-          const TypeIcon = getTypeIcon(vs.type)
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex items-center gap-1 overflow-x-auto pb-2 scrollbar-hide"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {virtualSections.map((vs, i) => {
+            const isCurrent = i === currentIndex
+            const isVisited = visitedIndices.has(i)
+            const isLocked = lockedAfterIndex !== undefined && i > lockedAfterIndex
+            const TypeIcon = getTypeIcon(vs.type)
 
-          // Add a visual gap before special sections (resources, apply-tomorrow, quiz)
-          const isFirstSpecial = vs.type !== 'content' && (i === 0 || virtualSections[i - 1].type === 'content')
-          // Add subtle group separator every 5 content sections
-          const isGroupBreak = vs.type === 'content' && i > 0 && i % 5 === 0
+            // Add a visual gap before special sections (resources, apply-tomorrow, quiz, part-quiz, part-milestone)
+            const isFirstSpecial = vs.type !== 'content' && (i === 0 || virtualSections[i - 1].type === 'content')
+            const isPartDivider = vs.type === 'part-milestone'
+            // Add subtle group separator every 5 content sections
+            const isGroupBreak = vs.type === 'content' && i > 0 && i % 5 === 0
 
-          return (
-            <div key={i} className="flex items-center">
-              {/* Group separator */}
-              {isGroupBreak && (
-                <div className="w-px h-5 bg-slate-300 mx-1 flex-shrink-0" />
-              )}
-              {/* Separator before special sections */}
-              {isFirstSpecial && (
-                <div className="w-px h-5 bg-teal-300 mx-1.5 flex-shrink-0" />
-              )}
-              <button
-                ref={isCurrent ? activeRef : undefined}
-                onClick={() => !isLocked && onNavigate(i)}
-                disabled={isLocked}
-                title={vs.label}
-                className={cn(
-                  'flex-shrink-0 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200',
-                  // Special sections get slightly wider pill shape
-                  vs.type !== 'content' ? 'w-9 h-8 rounded-lg' : 'w-8 h-8',
-                  isCurrent && 'bg-gradient-to-br from-teal-500 to-blue-600 text-white shadow-md scale-110',
-                  !isCurrent && isVisited && !isLocked && 'bg-teal-100 text-teal-700 hover:bg-teal-200',
-                  !isCurrent && !isVisited && !isLocked && 'bg-slate-100 text-slate-500 hover:bg-slate-200',
-                  isLocked && 'bg-slate-100 text-slate-300 cursor-not-allowed'
+            return (
+              <div key={i} className="flex items-center">
+                {/* Group separator */}
+                {isGroupBreak && (
+                  <div className="w-px h-5 bg-slate-300 mx-1 flex-shrink-0" />
                 )}
-              >
-                {isLocked ? (
-                  <Lock className="w-3.5 h-3.5" />
-                ) : TypeIcon ? (
-                  <TypeIcon className="w-3.5 h-3.5" />
-                ) : isVisited && !isCurrent ? (
-                  <CheckCircle2 className="w-4 h-4" />
-                ) : (
-                  i + 1
+                {/* Prominent divider before part-milestone */}
+                {isPartDivider && (
+                  <div className="w-1 h-6 bg-gradient-to-b from-teal-400 to-blue-400 rounded-full mx-2 flex-shrink-0" />
                 )}
-              </button>
-            </div>
-          )
-        })}
+                {/* Separator before special sections */}
+                {isFirstSpecial && !isPartDivider && (
+                  <div className="w-px h-5 bg-teal-300 mx-1.5 flex-shrink-0" />
+                )}
+                <button
+                  ref={isCurrent ? activeRef : undefined}
+                  onClick={() => !isLocked && onNavigate(i)}
+                  disabled={isLocked}
+                  title={vs.label}
+                  aria-label={`${isLocked ? 'Locked: ' : ''}Section ${i + 1}: ${vs.label}${isCurrent ? ' (current)' : ''}${isVisited ? ' (visited)' : ''}`}
+                  aria-current={isCurrent ? 'step' : undefined}
+                  aria-disabled={isLocked}
+                  tabIndex={isLocked ? -1 : 0}
+                  className={cn(
+                    'flex-shrink-0 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200',
+                    // Mobile: 44px touch targets, desktop: 32px
+                    vs.type !== 'content' ? 'w-11 h-11 sm:w-9 sm:h-9 rounded-lg' : 'w-11 h-11 sm:w-8 sm:h-8',
+                    isCurrent && 'bg-gradient-to-br from-teal-500 to-blue-600 text-white shadow-md scale-110',
+                    !isCurrent && isVisited && !isLocked && 'bg-teal-100 text-teal-700 hover:bg-teal-200',
+                    !isCurrent && !isVisited && !isLocked && 'bg-slate-100 text-slate-500 hover:bg-slate-200',
+                    isLocked && 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                  )}
+                >
+                  {isLocked ? (
+                    <Lock className="w-3.5 h-3.5" />
+                  ) : TypeIcon ? (
+                    <TypeIcon className="w-3.5 h-3.5" />
+                  ) : isVisited && !isCurrent ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : (
+                    i + 1
+                  )}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+        {/* Right fade affordance to indicate more scrollable content */}
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
       </div>
 
       {/* Current section label */}

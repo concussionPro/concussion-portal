@@ -174,7 +174,7 @@ export default function SCATFormsLayout({
         {/* Promotional banners — ONLY shown to non-paid users */}
         {!loading && !isPaidUser && (isSCAT6 || isSCOAT6 || isChildSCAT6) && (
           <>
-            {/* FREE SCAT Mastery Banner - Lead Magnet */}
+            {/* FREE SCAT6 Mastery Banner - Lead Magnet */}
             <div className="bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 text-white rounded-xl p-6 mb-6 shadow-lg">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-white/20 backdrop-blur-sm rounded-lg">
@@ -182,7 +182,7 @@ export default function SCATFormsLayout({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-bold">Free Training: Master SCAT6 & SCOAT6 in 2 Hours</h3>
+                    <h3 className="text-xl font-bold">Free Training: Master SCAT6 & SCOAT6 in ~3 Hours</h3>
                   </div>
                   <p className="text-sm text-white/90 mb-3 leading-relaxed">
                     <strong>Learn to use this form correctly.</strong> Step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. <strong>2 AHPRA CPD points + certificate included.</strong>

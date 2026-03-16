@@ -13,6 +13,7 @@ export interface User {
   workshopLocation?: string // e.g. 'byron-bay', 'sydney', 'melbourne'
   lastLoginAt?: string
   nurtureUnsubscribed?: boolean
+  progressEmailsOptedOut?: boolean
   signupSource?: 'free-course' | 'preseason' | 'purchase' | 'admin'
   isTest?: boolean
 }
@@ -33,6 +34,7 @@ function rowToUser(row: any): User {
       ? (row.last_login_at instanceof Date ? row.last_login_at.toISOString() : row.last_login_at)
       : undefined,
     nurtureUnsubscribed: row.nurture_unsubscribed || undefined,
+    progressEmailsOptedOut: row.progress_emails_opted_out || undefined,
     signupSource: row.signup_source || undefined,
     isTest: row.is_test || undefined,
   }
@@ -144,20 +146,21 @@ export async function unsubscribeUser(email: string): Promise<boolean> {
   return (rowCount ?? 0) > 0
 }
 
-// Update user profile (name, nurtureUnsubscribed)
+// Update user profile (name, nurtureUnsubscribed, progressEmailsOptedOut)
 export async function updateUserProfile(
   userId: string,
-  updates: { name?: string; nurtureUnsubscribed?: boolean }
+  updates: { name?: string; nurtureUnsubscribed?: boolean; progressEmailsOptedOut?: boolean }
 ): Promise<User | null> {
   const user = await findUserById(userId)
   if (!user) return null
 
   const newName = updates.name !== undefined ? updates.name : user.name
   const newUnsub = updates.nurtureUnsubscribed !== undefined ? updates.nurtureUnsubscribed : (user.nurtureUnsubscribed || false)
+  const newProgressOptOut = updates.progressEmailsOptedOut !== undefined ? updates.progressEmailsOptedOut : (user.progressEmailsOptedOut || false)
 
   await sql`
-    UPDATE users SET name = ${newName}, nurture_unsubscribed = ${newUnsub} WHERE id = ${userId}
+    UPDATE users SET name = ${newName}, nurture_unsubscribed = ${newUnsub}, progress_emails_opted_out = ${newProgressOptOut} WHERE id = ${userId}
   `
 
-  return { ...user, name: newName, nurtureUnsubscribed: newUnsub }
+  return { ...user, name: newName, nurtureUnsubscribed: newUnsub, progressEmailsOptedOut: newProgressOptOut }
 }
