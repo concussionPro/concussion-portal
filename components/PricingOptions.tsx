@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Check,
   ArrowRight,
@@ -8,79 +8,26 @@ import {
   AlertCircle,
   BookOpen,
   Award,
-  Users,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type LocationStatus = 'collecting' | 'confirmed' | 'completed'
-
-interface LocationOption {
-  value: string
-  label: string
-  date: string
-  status: LocationStatus
-}
-
 export interface PricingOptionsProps {
   variant?: 'full' | 'compact'
 }
 
-// ─── Location data ────────────────────────────────────────────────────────────
-
-const LOCATIONS: LocationOption[] = [
-  {
-    value: CONFIG.LOCATIONS.SYDNEY.slug,
-    label: CONFIG.LOCATIONS.SYDNEY.city,
-    date: CONFIG.LOCATIONS.SYDNEY.date,
-    status: CONFIG.LOCATIONS.SYDNEY.status,
-  },
-  {
-    value: CONFIG.LOCATIONS.BYRON_BAY.slug,
-    label: CONFIG.LOCATIONS.BYRON_BAY.city,
-    date: CONFIG.LOCATIONS.BYRON_BAY.date,
-    status: CONFIG.LOCATIONS.BYRON_BAY.status,
-  },
-  {
-    value: CONFIG.LOCATIONS.MELBOURNE.slug,
-    label: CONFIG.LOCATIONS.MELBOURNE.city,
-    date: CONFIG.LOCATIONS.MELBOURNE.date,
-    status: CONFIG.LOCATIONS.MELBOURNE.status,
-  },
-]
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
-  const [selectedLocation, setSelectedLocation] = useState<string>('')
-  const [preferredCity, setPreferredCity] = useState<string>('')
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
-  const [isEarlyBird, setIsEarlyBird] = useState(true)
 
   const isCompact = variant === 'compact'
 
-  // Early bird: let the server decide at checkout; default to showing early bird price
-  useEffect(() => {
-    const selectedLoc = LOCATIONS.find(l => l.value === selectedLocation)
-    setIsEarlyBird(!selectedLoc || selectedLoc.status !== 'completed')
-  }, [selectedLocation])
-
-  // Fetch total enrollment count for social proof
-  useEffect(() => {
-    fetch('/api/enrollment-count')
-      .then(res => res.json())
-      .then(data => { if (data.count > 0) setEnrollmentCount(data.count) })
-      .catch(() => {})
-  }, [])
-
-  const handleLocationSelect = (value: string) => {
-    setSelectedLocation(value)
-    setError(null)
-  }
+  // Early bird: check deadline. Server is source of truth at checkout.
+  const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     setLoading(courseType)
@@ -92,11 +39,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseType,
-          location: courseType === 'full-course' && selectedLocation ? selectedLocation : undefined,
-          preferredCity: courseType === 'online-only' ? preferredCity || undefined : undefined,
-        }),
+        body: JSON.stringify({ courseType }),
       })
 
       const data = await res.json()
@@ -145,13 +88,19 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Save ${CONFIG.COURSE.SAVINGS}</span>
                   </div>
-                  <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
+                    <span className="text-[10px] text-slate-400">≈ $770 USD</span>
+                  </div>
                   <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
                   <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </>
               ) : (
                 <>
-                  <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                    <span className="text-[10px] text-slate-400">≈ $910 USD</span>
+                  </div>
                   <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
                 </>
               )}
@@ -205,7 +154,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
 
             <div className="mb-3">
-              <div className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</span>
+                <span className="text-[10px] text-slate-400">≈ $320 USD</span>
+              </div>
               <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
             </div>
@@ -218,7 +170,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 'Upgrade to Complete Course anytime',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
-                  <Check className="w-3 h-3 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={3} />
+                  <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
                   <span className="text-[var(--muted-foreground)]">{f}</span>
                 </li>
               ))}
@@ -334,7 +286,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           )}
 
-          {/* Enroll Button — above workshop selector to reduce friction */}
+          {/* Enroll Button */}
           <button
             onClick={() => handleCheckout('full-course')}
             disabled={loading !== null}
@@ -354,6 +306,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             &ldquo;Hands on component was invaluable&rdquo; — Amelia, Physiotherapist
           </p>
 
+          <div className="mt-3 pt-3 border-t border-[rgba(13,115,119,0.08)] text-center">
+            <a
+              href="/scat-mastery"
+              className="text-sm font-semibold text-[var(--accent)] hover:underline underline-offset-4"
+            >
+              Try free — 2 CPD points, no card needed →
+            </a>
+          </div>
         </div>
 
         {/* Online Course */}
@@ -392,7 +352,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Upgrade to Complete Course anytime',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
-                <Check className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                 <span className="text-[var(--muted-foreground)]">{feature}</span>
               </li>
             ))}
@@ -430,12 +390,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
       {/* Trust Signals */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-        {enrollmentCount >= 10 && (
-          <div className="flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
-            {enrollmentCount}+ clinicians enrolled
-          </div>
-        )}
         {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'AHPRA Aligned', 'Lifetime Access', 'Certificate Included'].map(item => (
           <div key={item} className="flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />

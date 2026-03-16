@@ -14,6 +14,15 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
 import { createFAQSchema } from '@/lib/schema-markup'
+import { CONFIG } from '@/lib/config'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface FaqItem {
+  q: string
+  a: string
+  link?: { text: string; href: string }
+}
 
 // ─── Main Pricing Content ────────────────────────────────────────────────────
 
@@ -46,7 +55,14 @@ function PricingContent() {
       .catch(() => {})
   }, [])
 
-  const faqs = [
+  // Only show progress bars when at least one city has registrations
+  const hasAnyRegistrations = Object.values(cityCounts).some(c => c > 0)
+
+  // Early bird deadline formatted from config
+  const earlyBirdDate = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00')
+    .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+
+  const faqs: FaqItem[] = [
     {
       q: 'Can I upgrade from online-only to the full course later?',
       a: 'Yes — contact us to arrange an upgrade. Note that early bird pricing may no longer be available, so enrolling in the complete course now locks in the best rate.',
@@ -73,7 +89,8 @@ function PricingContent() {
     },
     {
       q: 'What is your refund policy?',
-      a: 'We offer a 7-day satisfaction guarantee. If the course isn\'t right for you, email us within 7 days of purchase for a full refund (online content must be less than 25% accessed). Workshop cancellations: full refund 14+ days before your workshop date, 50% refund 7–13 days before. Attendee substitution is always available. See our full terms at /terms.',
+      a: 'We offer a 7-day satisfaction guarantee. If the course isn\'t right for you, email us within 7 days of purchase for a full refund (online content must be less than 25% accessed). Workshop cancellations: full refund 14+ days before your workshop date, 50% refund 7–13 days before. Attendee substitution is always available.',
+      link: { text: 'See our full terms and conditions', href: '/terms' },
     },
     {
       q: 'Can my employer pay for this?',
@@ -81,8 +98,66 @@ function PricingContent() {
     },
   ]
 
-  // FAQ schema for Google rich results
-  const faqSchemaData = faqs.map(f => ({ question: f.q, answer: f.a }))
+  // FAQ schema for Google rich results (plain text for structured data)
+  const faqSchemaData = faqs.map(f => ({
+    question: f.q,
+    answer: f.a + (f.link ? ` ${f.link.text}.` : ''),
+  }))
+
+  const testimonials = [
+    {
+      quote: 'Relevant, applicable and easy to absorb. A must for any clinician managing concussion',
+      name: 'Sarah',
+      role: 'Physiotherapist',
+      initials: 'S',
+    },
+    {
+      quote: "An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.",
+      name: 'Dean',
+      role: 'University Clinical Educator, QLD',
+      initials: 'D',
+    },
+    {
+      quote: 'Highly recommend for any health professional wanting to improve their concussion management skills',
+      name: 'Bailey',
+      role: 'Exercise Physiologist',
+      initials: 'B',
+    },
+    {
+      quote: 'Well organised...content explained in a way that was relevant and memorable',
+      name: 'Alex',
+      role: 'Osteopath, Melbourne',
+      initials: 'A',
+    },
+    {
+      quote: 'Incredibly thorough and well structured...hands on component was invaluable',
+      name: 'Amelia',
+      role: 'Physiotherapist',
+      initials: 'A',
+    },
+  ]
+
+  const TestimonialCard = ({ t }: { t: typeof testimonials[number] }) => (
+    <div className="glass rounded-xl p-5">
+      <div className="flex gap-0.5 mb-3">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+        ))}
+      </div>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">
+        &ldquo;{t.quote}&rdquo;
+      </p>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
+          {t.initials}
+        </div>
+        <div>
+          <div className="text-sm font-semibold text-foreground">{t.name}</div>
+          <div className="text-xs text-muted-foreground">{t.role}</div>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,14 +179,14 @@ function PricingContent() {
           </div>
         )}
 
-        {/* Page Header — tight, conversion-focused */}
+        {/* Page Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
             Australia&apos;s Only Hands-On{' '}
             <span className="text-gradient">Concussion CPD</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Master SCAT6, VOMS &amp; BESS with expert-led training. Early bird pricing ends 30 June 2026.
+            Master SCAT6, VOMS &amp; BESS with expert-led training. Early bird pricing ends {earlyBirdDate}.
           </p>
         </div>
 
@@ -133,13 +208,49 @@ function PricingContent() {
           )}
         </div>
 
-        {/* Pricing Cards — delegated to PricingOptions */}
+        {/* Pricing Cards */}
         <PricingOptions variant="full" />
 
-        {/* Why hands-on matters + Workshop progress */}
+        {/* Workshop city progress bars — urgency lever, positioned near pricing decision */}
+        {hasAnyRegistrations && (
+          <div className="max-w-[900px] mx-auto mt-8 p-4 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
+            <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Workshop Registrations — {CONFIG.WORKSHOP.NEXT_ROUND}</p>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                { slug: 'sydney', label: 'Sydney' },
+                { slug: 'melbourne', label: 'Melbourne' },
+                { slug: 'byron-bay', label: 'Byron Bay' },
+              ].map(city => {
+                const count = cityCounts[city.slug] || 0
+                const pct = Math.min(Math.round((count / cityThreshold) * 100), 100)
+                return (
+                  <div key={city.slug} className="bg-white/60 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-semibold text-foreground">{city.label}</span>
+                      <span className="text-[10px] text-muted-foreground">{count}/{cityThreshold} registered</span>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-accent rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    {count >= cityThreshold ? (
+                      <p className="text-[10px] text-emerald-600 font-medium mt-1">Threshold reached — date confirming soon</p>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground mt-1">{cityThreshold - count} more to confirm date</p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Why hands-on matters */}
         <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
           <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Why hands-on matters</p>
-          <ul className="space-y-2 mb-5">
+          <ul className="space-y-2">
             {[
               'Practice SCAT6 administration on real subjects with expert feedback',
               'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
@@ -151,42 +262,6 @@ function PricingContent() {
               </li>
             ))}
           </ul>
-
-          {/* Workshop city progress bars */}
-          {Object.keys(cityCounts).length > 0 && (
-            <div className="border-t border-[rgba(13,115,119,0.12)] pt-4">
-              <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Next Workshop Round — Jun–Aug 2026</p>
-              <div className="grid sm:grid-cols-3 gap-3">
-                {[
-                  { slug: 'sydney', label: 'Sydney' },
-                  { slug: 'melbourne', label: 'Melbourne' },
-                  { slug: 'byron-bay', label: 'Byron Bay' },
-                ].map(city => {
-                  const count = cityCounts[city.slug] || 0
-                  const pct = Math.min(Math.round((count / cityThreshold) * 100), 100)
-                  return (
-                    <div key={city.slug} className="bg-white/60 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-semibold text-foreground">{city.label}</span>
-                        <span className="text-[10px] text-muted-foreground">{count}/{cityThreshold} registered</span>
-                      </div>
-                      <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-accent rounded-full transition-all duration-500"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      {count >= cityThreshold ? (
-                        <p className="text-[10px] text-emerald-600 font-medium mt-1">Threshold reached — date confirming soon</p>
-                      ) : (
-                        <p className="text-[10px] text-muted-foreground mt-1">{cityThreshold - count} more to confirm date</p>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Compare Plans */}
@@ -198,7 +273,7 @@ function PricingContent() {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Feature</th>
-                  <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6]">Complete</th>
+                  <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6] bg-[rgba(13,115,119,0.04)]">Complete</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-700">Online</th>
                 </tr>
               </thead>
@@ -216,7 +291,7 @@ function PricingContent() {
                 ] as [string, boolean | string, boolean | string][]).map(([feature, complete, online], i) => (
                   <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                     <td className="py-3 px-4 text-slate-700">{feature}</td>
-                    <td className="py-3 px-4 text-center font-medium">
+                    <td className={`py-3 px-4 text-center font-medium ${i % 2 === 0 ? 'bg-[rgba(13,115,119,0.03)]' : 'bg-[rgba(13,115,119,0.06)]'}`}>
                       {complete === true ? '\u2713' : complete === false ? '\u2014' : complete}
                     </td>
                     <td className="py-3 px-4 text-center">
@@ -230,61 +305,17 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Testimonials — all 5 visible */}
+        {/* Testimonials — 3 + 2 centered */}
         <div className="max-w-4xl mx-auto mt-12">
           <h3 className="text-xl font-bold text-center text-foreground mb-6">What Clinicians Are Saying</h3>
           <div className="grid md:grid-cols-3 gap-4">
-            {[
-              {
-                quote: 'Relevant, applicable and easy to absorb. A must for any clinician managing concussion',
-                name: 'Sarah',
-                role: 'Physiotherapist',
-                initials: 'S',
-              },
-              {
-                quote: "An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.",
-                name: 'Dean',
-                role: 'University Clinical Educator, QLD',
-                initials: 'D',
-              },
-              {
-                quote: 'Highly recommend for any health professional wanting to improve their concussion management skills',
-                name: 'Bailey',
-                role: 'Exercise Physiologist',
-                initials: 'B',
-              },
-              {
-                quote: 'Well organised...content explained in a way that was relevant and memorable',
-                name: 'Alex',
-                role: 'Osteopath, Melbourne',
-                initials: 'A',
-              },
-              {
-                quote: 'Incredibly thorough and well structured...hands on component was invaluable',
-                name: 'Amelia',
-                role: 'Physiotherapist',
-                initials: 'A',
-              },
-            ].map((t) => (
-              <div key={t.name} className="glass rounded-xl p-5">
-                <div className="flex gap-0.5 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
-                    {t.initials}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">{t.role}</div>
-                  </div>
-                </div>
-              </div>
+            {testimonials.slice(0, 3).map((t) => (
+              <TestimonialCard key={t.name} t={t} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 md:max-w-[66.666%] md:mx-auto">
+            {testimonials.slice(3).map((t) => (
+              <TestimonialCard key={t.name} t={t} />
             ))}
           </div>
         </div>
@@ -343,7 +374,12 @@ function PricingContent() {
                 </button>
                 {openFaq === i && (
                   <div className="px-5 pb-4">
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {item.a}
+                      {item.link && (
+                        <>{' '}<a href={item.link.href} className="text-accent underline underline-offset-2 hover:text-accent/80">{item.link.text}</a>.</>
+                      )}
+                    </p>
                   </div>
                 )}
               </div>
