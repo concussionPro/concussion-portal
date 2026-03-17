@@ -98,6 +98,7 @@ export async function POST(request: Request) {
         await put('preseason-clinics.json', JSON.stringify(clinics, null, 2), {
           access: 'private',
           contentType: 'application/json',
+          addRandomSuffix: false,
         })
       }
     } catch (err) {

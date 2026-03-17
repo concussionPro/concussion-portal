@@ -500,6 +500,7 @@ export async function POST(request: Request) {
         await put('preseason-baselines.json', JSON.stringify(baselines, null, 2), {
           access: 'private',
           contentType: 'application/json',
+          addRandomSuffix: false,
         })
       } catch (err) {
         console.error('Failed to persist baseline submission to Blob:', err)
