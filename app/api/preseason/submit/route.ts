@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { put, get as getBlob } from '@vercel/blob'
+import { put, get as getBlob, list as listBlobs } from '@vercel/blob'
 import { jsPDF } from 'jspdf'
 import { sendEmailWithAttachment } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
@@ -477,7 +477,15 @@ export async function POST(request: Request) {
       try {
         let baselines: Array<{ clinicCode: string; clinicName: string; athleteName: string; dob?: string; submittedAt: string; symptomCount: number; symptomSeverity: number; cognitiveScore: number }> = []
         try {
-          const blob = await getBlob('preseason-baselines.json', { access: 'private' })
+          // Try exact pathname first (new writes), then list+filter (old suffixed writes)
+          let blob = await getBlob('preseason-baselines.json', { access: 'private' })
+          if (!blob) {
+            const { blobs } = await listBlobs({ prefix: 'preseason-baselines' })
+            const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+            if (sorted.length > 0) {
+              blob = await getBlob(sorted[0].url, { access: 'private' })
+            }
+          }
           if (blob && blob.statusCode === 200 && blob.stream) {
             const text = await new Response(blob.stream).text()
             baselines = JSON.parse(text)

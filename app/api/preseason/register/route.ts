@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { put, get as getBlob } from '@vercel/blob'
+import { put, get as getBlob, list as listBlobs } from '@vercel/blob'
 import { sendEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { createUser } from '@/lib/users'
@@ -76,7 +76,14 @@ export async function POST(request: Request) {
     try {
       let clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }> = []
       try {
-        const blob = await getBlob('preseason-clinics.json', { access: 'private' })
+        let blob = await getBlob('preseason-clinics.json', { access: 'private' })
+        if (!blob) {
+          const { blobs } = await listBlobs({ prefix: 'preseason-clinics' })
+          const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+          if (sorted.length > 0) {
+            blob = await getBlob(sorted[0].url, { access: 'private' })
+          }
+        }
         if (blob && blob.statusCode === 200 && blob.stream) {
           const text = await new Response(blob.stream).text()
           clinics = JSON.parse(text)

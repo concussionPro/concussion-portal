@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { get as getBlob } from '@vercel/blob'
+import { get as getBlob, list as listBlobs } from '@vercel/blob'
 import crypto from 'crypto'
 
 function timingSafeCompare(a: string, b: string): boolean {
@@ -50,24 +50,35 @@ export async function GET(request: NextRequest) {
     let clinics: ClinicRegistration[] = []
     let baselines: BaselineSubmission[] = []
 
+    // Helper: try exact pathname first, then list+filter for old suffixed blobs
+    async function readPrivateBlob(pathname: string): Promise<string | null> {
+      let blob = await getBlob(pathname, { access: 'private' })
+      if (!blob) {
+        const prefix = pathname.replace('.json', '')
+        const { blobs } = await listBlobs({ prefix })
+        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+        if (sorted.length > 0) {
+          blob = await getBlob(sorted[0].url, { access: 'private' })
+        }
+      }
+      if (blob && blob.statusCode === 200 && blob.stream) {
+        return new Response(blob.stream).text()
+      }
+      return null
+    }
+
     // Load clinics data
     try {
-      const blob = await getBlob('preseason-clinics.json', { access: 'private' })
-      if (blob && blob.statusCode === 200 && blob.stream) {
-        const text = await new Response(blob.stream).text()
-        clinics = JSON.parse(text)
-      }
+      const text = await readPrivateBlob('preseason-clinics.json')
+      if (text) clinics = JSON.parse(text)
     } catch (err) {
       console.warn('Failed to load preseason clinics:', err)
     }
 
     // Load baselines data
     try {
-      const blob = await getBlob('preseason-baselines.json', { access: 'private' })
-      if (blob && blob.statusCode === 200 && blob.stream) {
-        const text = await new Response(blob.stream).text()
-        baselines = JSON.parse(text)
-      }
+      const text = await readPrivateBlob('preseason-baselines.json')
+      if (text) baselines = JSON.parse(text)
     } catch (err) {
       console.warn('Failed to load preseason baselines:', err)
     }
