@@ -353,6 +353,13 @@ function InternationalPricingContent() {
               )}
             </button>
 
+            <Link
+              href="/preview"
+              className="w-full py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm mt-3 border border-slate-200 text-[var(--foreground)] hover:bg-slate-50 transition-colors"
+            >
+              Preview Course
+            </Link>
+
             <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
               &ldquo;An outstanding blend of evidence-based knowledge and practical skills&rdquo; — Dean, University Clinical Educator
             </p>
