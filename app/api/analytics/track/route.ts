@@ -121,32 +121,28 @@ function writeLocalNdjson(dateKey: string, content: string): void {
 // ---------------------------------------------------------------------------
 
 async function readBlobNdjson(dateKey: string): Promise<string | null> {
-  if (!blobGet) return null;
-  try {
-    // Try exact pathname first (new writes without random suffix)
-    const blobPath = getBlobPath(dateKey);
-    const blob = await blobGet(blobPath, { access: 'private' });
-    if (blob && blob.statusCode === 200 && blob.stream) {
-      return await new Response(blob.stream).text();
-    }
-  } catch { /* not found at exact path */ }
+  const blobPath = getBlobPath(dateKey);
 
-  // Fallback: list blobs matching this date (old writes with random suffix)
+  // Try private get first (new blobs written with access: 'private')
+  if (blobGet) {
+    try {
+      const blob = await blobGet(blobPath, { access: 'private' });
+      if (blob && blob.statusCode === 200 && blob.stream) {
+        return await new Response(blob.stream).text();
+      }
+    } catch { /* not found as private */ }
+  }
+
+  // Fallback: list and fetch URL directly (works for old public blobs)
   if (blobList) {
     try {
-      const prefix = `analytics/${dateKey}`;
-      const { blobs } = await blobList({ prefix });
-      if (blobs.length > 0) {
-        // Read the most recently uploaded blob (largest accumulated data)
-        const sorted = blobs.sort((a, b) =>
-          new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-        );
-        const fallback = await blobGet!(sorted[0].pathname, { access: 'private' });
-        if (fallback && fallback.statusCode === 200 && fallback.stream) {
-          return await new Response(fallback.stream).text();
-        }
+      const { blobs } = await blobList({ prefix: `analytics/${dateKey}` });
+      const match = blobs.find(b => b.pathname === blobPath);
+      if (match) {
+        const res = await fetch(match.url, { cache: 'no-store' });
+        if (res.ok) return await res.text();
       }
-    } catch { /* list failed */ }
+    } catch { /* list/fetch failed */ }
   }
 
   return null;

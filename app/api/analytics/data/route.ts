@@ -130,27 +130,46 @@ function fetchEventsLocalForDateRange(dateKeys: string[]): StoredEvent[] {
 // Blob fetching
 // ---------------------------------------------------------------------------
 
-async function fetchEventsForDate(
-  dateKey: string,
-  blobDateMap: Map<string, string[]>
-): Promise<StoredEvent[]> {
-  const pathnames = blobDateMap.get(dateKey);
-  if (!pathnames || pathnames.length === 0) return [];
-  if (!blobGet) return [];
+interface BlobEntry {
+  pathname: string;
+  url: string;
+}
 
-  const allEvents: StoredEvent[] = [];
-  for (const pathname of pathnames) {
+async function readBlobText(entry: BlobEntry): Promise<string | null> {
+  // Try private get first (new blobs written with access: 'private')
+  if (blobGet) {
     try {
-      const blob = await blobGet(pathname, { access: 'private' });
+      const blob = await blobGet(entry.pathname, { access: 'private' });
       if (blob && blob.statusCode === 200 && blob.stream) {
-        const text = await new Response(blob.stream).text();
-        allEvents.push(...parseNdjson(text));
+        return await new Response(blob.stream).text();
       }
-    } catch { /* blob not found */ }
+    } catch { /* not found as private */ }
   }
 
-  // Deduplicate events (old writes with addRandomSuffix created overlapping blobs)
-  if (pathnames.length > 1) {
+  // Fallback: fetch the URL directly (works for old public blobs)
+  try {
+    const res = await fetch(entry.url, { cache: 'no-store' });
+    if (res.ok) return await res.text();
+  } catch { /* fetch failed */ }
+
+  return null;
+}
+
+async function fetchEventsForDate(
+  dateKey: string,
+  blobDateMap: Map<string, BlobEntry[]>
+): Promise<StoredEvent[]> {
+  const entries = blobDateMap.get(dateKey);
+  if (!entries || entries.length === 0) return [];
+
+  const allEvents: StoredEvent[] = [];
+  for (const entry of entries) {
+    const text = await readBlobText(entry);
+    if (text) allEvents.push(...parseNdjson(text));
+  }
+
+  // Deduplicate if multiple blobs for same date
+  if (entries.length > 1) {
     const seen = new Set<string>();
     return allEvents.filter(e => {
       const key = `${e.sessionId}:${e.timestamp}`;
@@ -163,8 +182,8 @@ async function fetchEventsForDate(
   return allEvents;
 }
 
-async function buildBlobDateMap(): Promise<Map<string, string[]>> {
-  const dateMap = new Map<string, string[]>();
+async function buildBlobDateMap(): Promise<Map<string, BlobEntry[]>> {
+  const dateMap = new Map<string, BlobEntry[]>();
   if (!blobList) return dateMap;
   try {
     let cursor: string | undefined;
@@ -175,12 +194,11 @@ async function buildBlobDateMap(): Promise<Map<string, string[]>> {
         limit: 1000,
       });
       for (const blob of result.blobs) {
-        // Extract date key from pathname: "analytics/2026-03-15.ndjson" or "analytics/2026-03-15-abcdef.ndjson"
         const match = blob.pathname.match(/^analytics\/(\d{4}-\d{2}-\d{2})/);
         if (match) {
           const dateKey = match[1];
           const arr = dateMap.get(dateKey) || [];
-          arr.push(blob.pathname);
+          arr.push({ pathname: blob.pathname, url: blob.url });
           dateMap.set(dateKey, arr);
         }
       }
@@ -194,7 +212,7 @@ async function buildBlobDateMap(): Promise<Map<string, string[]>> {
 
 async function fetchEventsForDateRange(
   dateKeys: string[],
-  blobDateMap: Map<string, string[]>
+  blobDateMap: Map<string, BlobEntry[]>
 ): Promise<StoredEvent[]> {
   const CONCURRENCY = 10;
   const allEvents: StoredEvent[] = [];

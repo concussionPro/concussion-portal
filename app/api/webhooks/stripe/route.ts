@@ -51,26 +51,25 @@ async function logAnalyticsEvent(eventType: string, eventData: Record<string, un
       const blobPath = `analytics/${dateKey}.ndjson`
       // Read existing, append
       let existing = ''
+      // Try private get first (new blobs)
       if (blobGetW) {
         try {
           const blob = await blobGetW(blobPath, { access: 'private' })
           if (blob && blob.statusCode === 200 && blob.stream) {
             existing = await new Response(blob.stream).text()
           }
-        } catch { /* not found at exact path */ }
-        // Fallback: old blobs with random suffix
-        if (!existing && blobListW) {
-          try {
-            const { blobs } = await blobListW({ prefix: `analytics/${dateKey}` })
-            if (blobs.length > 0) {
-              const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-              const fallback = await blobGetW(sorted[0].pathname, { access: 'private' })
-              if (fallback && fallback.statusCode === 200 && fallback.stream) {
-                existing = await new Response(fallback.stream).text()
-              }
-            }
-          } catch { /* list failed */ }
-        }
+        } catch { /* not found as private */ }
+      }
+      // Fallback: fetch URL directly (old public blobs)
+      if (!existing && blobListW) {
+        try {
+          const { blobs } = await blobListW({ prefix: `analytics/${dateKey}` })
+          const match = blobs.find(b => b.pathname === blobPath)
+          if (match) {
+            const res = await fetch(match.url, { cache: 'no-store' })
+            if (res.ok) existing = await res.text()
+          }
+        } catch { /* list/fetch failed */ }
       }
       await blobPut(blobPath, existing + line, {
         access: 'private' as any, // Security: analytics data must not be publicly accessible
