@@ -31,8 +31,8 @@ interface SymptomData {
 
 interface CognitiveData {
   orientation: { month: string; date: string; dayOfWeek: string; year: string; time: string; score: number }
-  immediateMemory: { listUsed: string; trial1: number; trial2: number; trial3: number; total: number }
-  concentration: { digitsScore: number; monthsScore: number; total: number }
+  immediateMemory: { listUsed: string; score?: number; trial1?: number; trial2?: number; trial3?: number; total?: number }
+  concentration: { digitsScore: number; monthsScore: number; monthsTimeSeconds?: number | null; total: number }
   delayedRecall: { score: number }
 }
 
@@ -216,18 +216,30 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   addText('COGNITIVE SCREENING', margin, y, { fontSize: 12, fontStyle: 'bold' })
   y += 10
 
+  // Resolve immediate memory score — handles both old (trial1/2/3/total) and new (score) formats
+  const imm = data.cognitive.immediateMemory
+  const hasTrials = imm.trial1 !== undefined && imm.trial1 !== null
+  const immTotal = imm.total ?? imm.score ?? 0
+  const immMax = hasTrials ? '30' : '10'
+
   // Score table
-  const scores = [
+  const scores: string[][] = [
     ['Orientation', `${data.cognitive.orientation.score}`, '5'],
-    ['Immediate Memory', `${data.cognitive.immediateMemory.total}`, '30'],
-    ['  Trial 1', `${data.cognitive.immediateMemory.trial1}`, '10'],
-    ['  Trial 2', `${data.cognitive.immediateMemory.trial2}`, '10'],
-    ['  Trial 3', `${data.cognitive.immediateMemory.trial3}`, '10'],
+    ['Immediate Memory', `${immTotal}`, immMax],
+  ]
+  if (hasTrials) {
+    scores.push(
+      ['  Trial 1', `${imm.trial1}`, '10'],
+      ['  Trial 2', `${imm.trial2 ?? 0}`, '10'],
+      ['  Trial 3', `${imm.trial3 ?? 0}`, '10'],
+    )
+  }
+  scores.push(
     ['Concentration', `${data.cognitive.concentration.total}`, '5'],
     ['  Digits Backward', `${data.cognitive.concentration.digitsScore}`, '4'],
     ['  Months in Reverse', `${data.cognitive.concentration.monthsScore}`, '1'],
     ['Delayed Recall', `${data.cognitive.delayedRecall.score}`, '10'],
-  ]
+  )
 
   // Table header
   doc.setFillColor(240, 240, 240)
@@ -250,10 +262,11 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   doc.setFillColor(91, 154, 166)
   doc.rect(margin, y - 4, contentWidth, 10, 'F')
   doc.setTextColor(255, 255, 255)
-  const totalCognitive = data.cognitive.orientation.score + data.cognitive.immediateMemory.total +
+  const totalCognitive = data.cognitive.orientation.score + immTotal +
     data.cognitive.concentration.total + data.cognitive.delayedRecall.score
+  const totalMax = hasTrials ? 50 : 30
   addText('TOTAL COGNITIVE SCORE', margin + 2, y + 1, { fontSize: 11, fontStyle: 'bold' })
-  addText(`${totalCognitive}/50`, margin + contentWidth - 50, y + 1, { fontSize: 11, fontStyle: 'bold' })
+  addText(`${totalCognitive}/${totalMax}`, margin + contentWidth - 50, y + 1, { fontSize: 11, fontStyle: 'bold' })
   doc.setTextColor(0, 0, 0)
   y += 15
 
@@ -376,7 +389,8 @@ export async function POST(request: Request) {
     const date = new Date().toLocaleDateString('en-AU')
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.APP_URL
 
-    const totalCognitive = body.cognitive.orientation.score + body.cognitive.immediateMemory.total +
+    const immScore = body.cognitive.immediateMemory.total ?? body.cognitive.immediateMemory.score ?? 0
+    const totalCognitive = body.cognitive.orientation.score + immScore +
       body.cognitive.concentration.total + body.cognitive.delayedRecall.score
     const symptomCount = body.symptoms.ratings.filter((r: number) => r > 0).length
     const symptomTotal = body.symptoms.ratings.reduce((a: number, b: number) => a + b, 0)
