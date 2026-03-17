@@ -298,9 +298,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   // Step 4: Send magic link email — best effort, user can request new link from /login
   try {
-    const finalAccess = existingUser
-      ? (accessLevel === 'full-course' ? 'full-course' : existingUser.accessLevel)
-      : accessLevel
+    // Use the higher of the two access levels — never encode a stale snapshot
+    // (existingUser is fetched before the upgrade, so its accessLevel is outdated)
+    const finalAccess = existingUser?.accessLevel === 'full-course' ? 'full-course' : accessLevel
     const userName = existingUser?.name || customerName
     const token = createMagicToken(userId, customerEmail, userName, finalAccess)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'

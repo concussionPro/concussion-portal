@@ -43,3 +43,8 @@ Allow: /
 
 # Sitemap location
 Sitemap: https://portal.concussion-education-australia.com/sitemap.xml
+
+# LLM-readable information
+# https://portal.concussion-education-australia.com/llms.txt
+# https://portal.concussion-education-australia.com/llms-full.txt
+# https://portal.concussion-education-australia.com/.well-known/llms.txt

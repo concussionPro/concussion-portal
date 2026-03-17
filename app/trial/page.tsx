@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Play, CheckCircle2, ArrowRight, Award, Clock } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
+import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 
 export default function TrialPage() {
   const router = useRouter()
@@ -36,6 +37,10 @@ export default function TrialPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: '/' },
+        { name: 'Free SCAT6 Course', url: '/trial' },
+      ]} />
       <SiteNav />
 
       {/* Hero */}

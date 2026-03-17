@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
+import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
 import { CONFIG } from '@/lib/config'
 
@@ -205,6 +206,11 @@ function PricingContent() {
 
   return (
     <div className="min-h-screen bg-background">
+      <CourseSchema />
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: '/' },
+        { name: 'Pricing', url: '/pricing' },
+      ]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(createFAQSchema(faqSchemaData)) }}

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
+import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { trackLeadConversion } from '@/lib/analytics'
 
 declare global {
@@ -86,6 +87,10 @@ export default function SCATMasteryPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: '/' },
+        { name: 'Free SCAT6 Mastery Course', url: '/scat-mastery' },
+      ]} />
       {/* Ambient gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-teal-50/40" />
       <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-gradient-to-bl from-teal-100/50 to-transparent blur-3xl pointer-events-none" />

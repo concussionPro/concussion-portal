@@ -143,12 +143,16 @@ export async function createCourseCheckoutSession({
  *     2. 50% of seats sold (6/12)
  */
 async function isEarlyBirdActiveForLocation(location?: string): Promise<boolean> {
+  // Hard deadline — applies to ALL locations regardless of status
+  const hardDeadline = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
+  if (new Date() > hardDeadline) return false
+
   // Find location config
   const locationConfig = location
     ? Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === location)
     : null
 
-  // Collecting or unknown location → always early bird
+  // Collecting or unknown location → early bird (within hard deadline)
   if (!locationConfig || locationConfig.status === 'collecting') {
     return true
   }
