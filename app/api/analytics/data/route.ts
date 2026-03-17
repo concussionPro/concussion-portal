@@ -132,28 +132,40 @@ function fetchEventsLocalForDateRange(dateKeys: string[]): StoredEvent[] {
 
 async function fetchEventsForDate(
   dateKey: string,
-  blobUrlMap: Map<string, string>
+  blobDateMap: Map<string, string[]>
 ): Promise<StoredEvent[]> {
-  const blobPath = `analytics/${dateKey}.ndjson`;
-  if (!blobUrlMap.has(blobPath)) return [];
+  const pathnames = blobDateMap.get(dateKey);
+  if (!pathnames || pathnames.length === 0) return [];
+  if (!blobGet) return [];
 
-  // Use SDK get() for private blob access
-  if (blobGet) {
+  const allEvents: StoredEvent[] = [];
+  for (const pathname of pathnames) {
     try {
-      const blob = await blobGet(blobPath, { access: 'private' });
+      const blob = await blobGet(pathname, { access: 'private' });
       if (blob && blob.statusCode === 200 && blob.stream) {
         const text = await new Response(blob.stream).text();
-        return parseNdjson(text);
+        allEvents.push(...parseNdjson(text));
       }
     } catch { /* blob not found */ }
   }
 
-  return [];
+  // Deduplicate events (old writes with addRandomSuffix created overlapping blobs)
+  if (pathnames.length > 1) {
+    const seen = new Set<string>();
+    return allEvents.filter(e => {
+      const key = `${e.sessionId}:${e.timestamp}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  return allEvents;
 }
 
-async function buildBlobUrlMap(): Promise<Map<string, string>> {
-  const map = new Map<string, string>();
-  if (!blobList) return map;
+async function buildBlobDateMap(): Promise<Map<string, string[]>> {
+  const dateMap = new Map<string, string[]>();
+  if (!blobList) return dateMap;
   try {
     let cursor: string | undefined;
     do {
@@ -163,19 +175,26 @@ async function buildBlobUrlMap(): Promise<Map<string, string>> {
         limit: 1000,
       });
       for (const blob of result.blobs) {
-        map.set(blob.pathname, blob.url);
+        // Extract date key from pathname: "analytics/2026-03-15.ndjson" or "analytics/2026-03-15-abcdef.ndjson"
+        const match = blob.pathname.match(/^analytics\/(\d{4}-\d{2}-\d{2})/);
+        if (match) {
+          const dateKey = match[1];
+          const arr = dateMap.get(dateKey) || [];
+          arr.push(blob.pathname);
+          dateMap.set(dateKey, arr);
+        }
       }
       cursor = result.cursor;
     } while (cursor);
   } catch (err) {
     console.error('[analytics/data] Failed to list blobs:', err);
   }
-  return map;
+  return dateMap;
 }
 
 async function fetchEventsForDateRange(
   dateKeys: string[],
-  blobUrlMap: Map<string, string>
+  blobDateMap: Map<string, string[]>
 ): Promise<StoredEvent[]> {
   const CONCURRENCY = 10;
   const allEvents: StoredEvent[] = [];
@@ -183,7 +202,7 @@ async function fetchEventsForDateRange(
   for (let i = 0; i < dateKeys.length; i += CONCURRENCY) {
     const batch = dateKeys.slice(i, i + CONCURRENCY);
     const results = await Promise.all(
-      batch.map((key) => fetchEventsForDate(key, blobUrlMap))
+      batch.map((key) => fetchEventsForDate(key, blobDateMap))
     );
     for (const r of results) allEvents.push(...r);
   }
@@ -998,8 +1017,8 @@ function buildMetrics(
 
 async function getEventsForDateRange(dateKeys: string[]): Promise<StoredEvent[]> {
   if (useBlob && blobList) {
-    const blobUrlMap = await buildBlobUrlMap();
-    return fetchEventsForDateRange(dateKeys, blobUrlMap);
+    const blobDateMap = await buildBlobDateMap();
+    return fetchEventsForDateRange(dateKeys, blobDateMap);
   }
   return fetchEventsLocalForDateRange(dateKeys);
 }

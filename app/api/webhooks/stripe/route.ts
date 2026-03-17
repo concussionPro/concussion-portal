@@ -17,12 +17,16 @@ import path from 'path'
 // ---------------------------------------------------------------------------
 
 let blobPut: typeof import('@vercel/blob').put | null = null
+let blobGetW: typeof import('@vercel/blob').get | null = null
+let blobListW: typeof import('@vercel/blob').list | null = null
 const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN
 
 if (useBlob) {
   try {
     const blob = require('@vercel/blob')
     blobPut = blob.put
+    blobGetW = blob.get
+    blobListW = blob.list
   } catch {}
 }
 
@@ -46,16 +50,27 @@ async function logAnalyticsEvent(eventType: string, eventData: Record<string, un
     try {
       const blobPath = `analytics/${dateKey}.ndjson`
       // Read existing, append
-      let blobGet: typeof import('@vercel/blob').get | null = null
-      try { blobGet = require('@vercel/blob').get } catch {}
       let existing = ''
-      if (blobGet) {
+      if (blobGetW) {
         try {
-          const blob = await blobGet(blobPath, { access: 'private' })
+          const blob = await blobGetW(blobPath, { access: 'private' })
           if (blob && blob.statusCode === 200 && blob.stream) {
             existing = await new Response(blob.stream).text()
           }
-        } catch { /* blob doesn't exist yet */ }
+        } catch { /* not found at exact path */ }
+        // Fallback: old blobs with random suffix
+        if (!existing && blobListW) {
+          try {
+            const { blobs } = await blobListW({ prefix: `analytics/${dateKey}` })
+            if (blobs.length > 0) {
+              const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+              const fallback = await blobGetW(sorted[0].pathname, { access: 'private' })
+              if (fallback && fallback.statusCode === 200 && fallback.stream) {
+                existing = await new Response(fallback.stream).text()
+              }
+            }
+          } catch { /* list failed */ }
+        }
       }
       await blobPut(blobPath, existing + line, {
         access: 'private' as any, // Security: analytics data must not be publicly accessible

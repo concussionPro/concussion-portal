@@ -123,15 +123,33 @@ function writeLocalNdjson(dateKey: string, content: string): void {
 async function readBlobNdjson(dateKey: string): Promise<string | null> {
   if (!blobGet) return null;
   try {
+    // Try exact pathname first (new writes without random suffix)
     const blobPath = getBlobPath(dateKey);
     const blob = await blobGet(blobPath, { access: 'private' });
     if (blob && blob.statusCode === 200 && blob.stream) {
       return await new Response(blob.stream).text();
     }
-    return null;
-  } catch {
-    return null;
+  } catch { /* not found at exact path */ }
+
+  // Fallback: list blobs matching this date (old writes with random suffix)
+  if (blobList) {
+    try {
+      const prefix = `analytics/${dateKey}`;
+      const { blobs } = await blobList({ prefix });
+      if (blobs.length > 0) {
+        // Read the most recently uploaded blob (largest accumulated data)
+        const sorted = blobs.sort((a, b) =>
+          new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+        );
+        const fallback = await blobGet!(sorted[0].pathname, { access: 'private' });
+        if (fallback && fallback.statusCode === 200 && fallback.stream) {
+          return await new Response(fallback.stream).text();
+        }
+      }
+    } catch { /* list failed */ }
   }
+
+  return null;
 }
 
 function parseNdjson(text: string): StoredEvent[] {
