@@ -73,20 +73,18 @@ export default function HomePage() {
               Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
 
-            <p className="text-[13px] text-[var(--muted-foreground)] mt-2">
-              Or try our{' '}
+            <p className="text-[13px] text-[var(--muted-foreground)] mt-3 flex items-center justify-center gap-2 flex-wrap">
               <Link
                 href="/scat-mastery"
-                className="text-[var(--accent)] font-medium hover:underline"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-[var(--accent)] text-xs font-semibold hover:bg-teal-100 transition-colors border border-teal-200/50"
               >
-                free SCAT6 Mastery course
+                Free SCAT6 Course — 2 CPD points
               </Link>
-              {' '}·{' '}
               <Link
                 href="/scat-forms"
                 className="text-[var(--accent)] font-medium hover:underline"
               >
-                free SCAT forms
+                Free SCAT forms
               </Link>
             </p>
 

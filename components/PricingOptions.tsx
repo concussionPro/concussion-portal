@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Check,
   ArrowRight,
@@ -29,17 +29,30 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // Early bird: check deadline. Server is source of truth at checkout.
   const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
+  // Read pre-selected location from URL (e.g. /pricing?location=sydney from city pages)
+  const [preselectedLocation, setPreselectedLocation] = useState<string | null>(null)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const loc = params.get('location')
+    if (loc && ['sydney', 'melbourne', 'byron-bay'].includes(loc)) {
+      setPreselectedLocation(loc)
+    }
+  }, [])
+
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     setLoading(courseType)
     setError(null)
 
-    trackEvent('checkout_start', { courseType, source: 'pricing_page' })
+    trackEvent('checkout_start', { courseType, source: 'pricing_page', location: preselectedLocation })
 
     try {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseType }),
+        body: JSON.stringify({
+          courseType,
+          ...(courseType === 'full-course' && preselectedLocation ? { location: preselectedLocation } : {}),
+        }),
       })
 
       const data = await res.json()
@@ -93,7 +106,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-[10px] text-slate-400">≈ $770 USD</span>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
-                  <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
                 </>
               ) : (
                 <>
@@ -252,7 +265,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   <span className="text-xs text-slate-400">≈ $770 USD</span>
                 </div>
                 <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
-                <p className="text-xs text-orange-600 font-medium mt-1">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                <p className="text-xs text-orange-600 font-medium mt-1">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
               </>
             ) : (
               <>

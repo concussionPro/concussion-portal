@@ -63,7 +63,7 @@ export function StickyCTA() {
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <p className="text-sm text-white/80 truncate">
               <span className="font-semibold text-white">Stop guessing on concussion cases.</span>
-              <span className="hidden sm:inline"> Online + hands-on training · Up to 14 CPD points</span>
+              <span className="hidden sm:inline"> Online + hands-on training · 14 CPD points</span>
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">

@@ -56,7 +56,7 @@ export default function SydneyPage() {
                 <CountdownTimer className="justify-center mb-8" />
 
                 <a
-                  href={CONFIG.SHOP_URL}
+                  href={`${CONFIG.SHOP_URL}?location=sydney`}
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label={`Enrol in Sydney session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
                 >
@@ -143,7 +143,7 @@ export default function SydneyPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               {location.status === 'confirmed' ? (
                 <a
-                  href={CONFIG.SHOP_URL}
+                  href={`${CONFIG.SHOP_URL}?location=sydney`}
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                 >
                   Enrol Now

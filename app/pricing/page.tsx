@@ -231,7 +231,7 @@ function PricingContent() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Master SCAT6, VOMS &amp; BESS with expert-led training.{' '}
             {isEarlyBird
-              ? `Early bird pricing ends ${earlyBirdDate}.`
+              ? `Early bird pricing ends ${earlyBirdDate} — price increases to $${CONFIG.COURSE.PRICE_REGULAR}.`
               : 'Enrol today — lifetime access included.'}
           </p>
 
@@ -253,7 +253,7 @@ function PricingContent() {
             <span className="text-sm font-semibold text-foreground">Endorsed by Osteopathy Australia</span>
           </div>
           <span className="hidden sm:inline text-slate-300">|</span>
-          <span className="text-sm text-muted-foreground">AHPRA Aligned · Up to 14 CPD Points</span>
+          <span className="text-sm text-muted-foreground">AHPRA Aligned · 14 CPD Points (8 online + 6 workshop)</span>
           <span className="hidden sm:inline text-slate-300">|</span>
           <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
           {enrollmentCount >= 10 && (

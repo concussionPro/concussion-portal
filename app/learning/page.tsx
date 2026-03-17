@@ -356,15 +356,16 @@ function LearningSuiteInner() {
                     <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold text-foreground mb-1">Add the hands-on workshop</h3>
+                    <h3 className="text-sm font-bold text-foreground mb-1">Complete your 14 CPD points — add the workshop</h3>
                     <p className="text-xs text-muted-foreground mb-3">
-                      Upgrade to the complete course for 6 additional CPD points. Practice SCAT6, VOMS & BESS with expert feedback in a full-day workshop.
+                      Your online modules teach the theory. The full-day workshop is where you practice SCAT6 administration, VOMS testing &amp; BESS scoring with expert feedback — the skills you can&apos;t learn from a screen.
                     </p>
                     <button
                       onClick={() => router.push('/pricing')}
                       className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5"
                     >
-                      View Workshop Options
+                      Upgrade to Complete Course
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>

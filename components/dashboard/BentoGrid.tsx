@@ -306,6 +306,7 @@ function WorkshopCard({
   onNavigate: (path: string) => void
 }) {
   const isFullCourse = accessLevel === 'full-course'
+  const isOnlineOnly = accessLevel === 'online-only'
   const showNomination = isFullCourse && allModulesComplete && !workshopLocation
   const hasNominated = isFullCourse && !!workshopLocation
 
@@ -411,15 +412,15 @@ function WorkshopCard({
 
   // Default: preview/online-only/full-course pre-completion
   return (
-    <Card onClick={() => onNavigate(isPreview ? '/pricing' : '/in-person')}>
+    <Card onClick={() => onNavigate(isPreview || isOnlineOnly ? '/pricing' : '/in-person')}>
       <div className="flex items-center gap-3 mb-3">
         <div className={cn(
           'w-9 h-9 rounded-xl flex items-center justify-center',
-          isPreview
+          isPreview || isOnlineOnly
             ? 'bg-gradient-to-br from-slate-200/50 to-slate-100/50'
             : 'bg-gradient-to-br from-rose-500/10 to-rose-400/5'
         )}>
-          {isPreview
+          {isPreview || isOnlineOnly
             ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
             : <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
           }
@@ -428,6 +429,11 @@ function WorkshopCard({
         {isFullCourse && (
           <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
             Included
+          </span>
+        )}
+        {isOnlineOnly && (
+          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-wider">
+            Upgrade
           </span>
         )}
         {isPreview && (
@@ -440,6 +446,8 @@ function WorkshopCard({
       <p className="text-xs text-muted-foreground leading-relaxed">
         {isFullCourse && !allModulesComplete
           ? 'Complete your online modules to nominate your workshop city.'
+          : isOnlineOnly
+          ? 'Add the hands-on workshop to earn all 14 CPD points. SCAT6, VOMS & BESS with expert feedback.'
           : 'Hands-on training with standardised assessments, sideline protocols, and case studies.'}
       </p>
     </Card>
