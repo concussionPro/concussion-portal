@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { list as listBlobs } from '@vercel/blob'
+import { get as getBlob } from '@vercel/blob'
 
 interface BaselineEntry {
   clinicCode: string
@@ -24,19 +24,13 @@ export async function POST(request: Request) {
     const normCode = clinicCode.trim().toUpperCase()
 
     // Load baselines from blob
-    const { blobs } = await listBlobs()
-    const existing = blobs
-      .filter(b => b.pathname === 'preseason-baselines.json')
-      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-
-    if (existing.length === 0) {
-      return NextResponse.json({ previousTests: 0, dates: [] })
-    }
-
     let baselines: BaselineEntry[] = []
     try {
-      const res = await fetch(`${existing[0].downloadUrl}?t=${Date.now()}`, { cache: 'no-store' })
-      baselines = await res.json()
+      const blob = await getBlob('preseason-baselines.json', { access: 'private' })
+      if (blob && blob.statusCode === 200 && blob.stream) {
+        const text = await new Response(blob.stream).text()
+        baselines = JSON.parse(text)
+      }
     } catch {
       return NextResponse.json({ previousTests: 0, dates: [] })
     }

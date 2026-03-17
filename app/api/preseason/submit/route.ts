@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { put, list as listBlobs } from '@vercel/blob'
+import { put, get as getBlob } from '@vercel/blob'
 import { jsPDF } from 'jspdf'
 import { sendEmailWithAttachment } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
@@ -476,18 +476,14 @@ export async function POST(request: Request) {
     if (!isDemo) {
       try {
         let baselines: Array<{ clinicCode: string; clinicName: string; athleteName: string; dob?: string; submittedAt: string; symptomCount: number; symptomSeverity: number; cognitiveScore: number }> = []
-        const { blobs } = await listBlobs()
-        const existing = blobs
-          .filter(b => b.pathname === 'preseason-baselines.json')
-          .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-
-        if (existing.length > 0) {
-          try {
-            const res = await fetch(`${existing[0].downloadUrl}?t=${Date.now()}`, { cache: 'no-store' })
-            baselines = await res.json()
-          } catch (err) {
-            console.warn('Could not load existing preseason baselines blob:', err)
+        try {
+          const blob = await getBlob('preseason-baselines.json', { access: 'private' })
+          if (blob && blob.statusCode === 200 && blob.stream) {
+            const text = await new Response(blob.stream).text()
+            baselines = JSON.parse(text)
           }
+        } catch (err) {
+          console.warn('Could not load existing preseason baselines blob:', err)
         }
 
         baselines.push({

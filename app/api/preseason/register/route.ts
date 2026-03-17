@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { put, list as listBlobs } from '@vercel/blob'
+import { put, get as getBlob } from '@vercel/blob'
 import { sendEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { createUser } from '@/lib/users'
@@ -75,18 +75,14 @@ export async function POST(request: Request) {
     // Persist to Blob storage for admin dashboard
     try {
       let clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }> = []
-      const { blobs } = await listBlobs()
-      const existing = blobs
-        .filter(b => b.pathname === 'preseason-clinics.json')
-        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-
-      if (existing.length > 0) {
-        try {
-          const res = await fetch(`${existing[0].downloadUrl}?t=${Date.now()}`, { cache: 'no-store' })
-          clinics = await res.json()
-        } catch (err) {
-          console.warn('Could not load existing preseason clinics blob:', err)
+      try {
+        const blob = await getBlob('preseason-clinics.json', { access: 'private' })
+        if (blob && blob.statusCode === 200 && blob.stream) {
+          const text = await new Response(blob.stream).text()
+          clinics = JSON.parse(text)
         }
+      } catch (err) {
+        console.warn('Could not load existing preseason clinics blob:', err)
       }
 
       // Avoid duplicates by code
