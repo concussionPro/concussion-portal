@@ -57,7 +57,7 @@ export default function TrialPage() {
             Master the SCAT6 assessment and earn 2 CPD points — completely free
           </p>
           <p className="text-base text-slate-500">
-            No credit card required · 6 modules · AHPRA aligned
+            No credit card required · 5 modules · AHPRA aligned
           </p>
         </div>
 
@@ -69,7 +69,7 @@ export default function TrialPage() {
             </h2>
             <div className="space-y-4">
               {[
-                '6 complete modules covering SCAT6 assessment mastery',
+                '5 complete modules covering SCAT6 assessment mastery',
                 'Interactive learning elements and quick knowledge checks',
                 'Earn 2 AHPRA-aligned CPD points on completion',
                 'Final quiz to test your knowledge',
@@ -132,7 +132,7 @@ export default function TrialPage() {
             </div>
             <h3 className="font-bold text-slate-900 mb-2">Self-Paced</h3>
             <p className="text-sm text-slate-600">
-              Complete all 6 modules at your own pace, on any device
+              Complete all 5 modules at your own pace, on any device
             </p>
           </div>
 

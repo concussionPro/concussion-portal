@@ -31,6 +31,7 @@ export const COURSE_PRICING = {
   ONLINE_ONLY: 49700,           // $497 AUD
   FULL_COURSE_EARLY: 119000,    // $1,190 AUD (early bird)
   FULL_COURSE_REGULAR: 140000,  // $1,400 AUD (regular)
+  INTERNATIONAL_ONLINE: 34700,  // $347 USD
 } as const
 
 /**
@@ -39,6 +40,7 @@ export const COURSE_PRICING = {
 export const COURSE_ACCESS_MAP: Record<string, 'online-only' | 'full-course'> = {
   'online-only': 'online-only',
   'full-course': 'full-course',
+  'international-online': 'online-only',
 }
 
 /**
@@ -50,7 +52,7 @@ export type WorkshopLocation = typeof VALID_LOCATIONS[number]
 /**
  * Valid course types (including international)
  */
-export const VALID_COURSE_TYPES = ['online-only', 'full-course'] as const
+export const VALID_COURSE_TYPES = ['online-only', 'full-course', 'international-online'] as const
 export type CourseType = typeof VALID_COURSE_TYPES[number]
 
 /**
@@ -77,7 +79,12 @@ export async function createCourseCheckoutSession({
   let productName: string
   let productDescription: string
 
-  if (courseType === 'online-only') {
+  if (courseType === 'international-online') {
+    unitAmount = COURSE_PRICING.INTERNATIONAL_ONLINE
+    currency = 'usd'
+    productName = 'ConcussionPro Online Course — International'
+    productDescription = '8 online modules (8 CE credits) · Lifetime access · Clinical Toolkit · Reference Repository · Certificate of completion'
+  } else if (courseType === 'online-only') {
     unitAmount = COURSE_PRICING.ONLINE_ONLY
     currency = 'aud'
     productName = 'ConcussionPro — Online Course'

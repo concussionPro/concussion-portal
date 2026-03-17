@@ -36,7 +36,7 @@ export default function PreseasonLandingPage() {
 
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
               Let athletes self-administer the SCAT6 baseline remotely. No appointment needed.
-              Completed reports are emailed directly to your clinic — no data stored.
+              Reports are emailed to your clinic, and basic test records are stored for repeat-test tracking.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">

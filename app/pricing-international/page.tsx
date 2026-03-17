@@ -1,0 +1,602 @@
+'use client'
+
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
+
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
+import {
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Star,
+  ShieldCheck,
+  Check,
+  ArrowRight,
+  Loader2,
+  BookOpen,
+  Building2,
+  GraduationCap,
+  Globe,
+  User,
+} from 'lucide-react'
+import { SiteNav } from '@/components/SiteNav'
+import { BreadcrumbSchema } from '@/components/SchemaMarkup'
+import { createFAQSchema } from '@/lib/schema-markup'
+import { trackEvent } from '@/lib/analytics'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface FaqItem {
+  q: string
+  a: string
+  link?: { text: string; href: string }
+}
+
+// ─── Canceled Banner ─────────────────────────────────────────────────────────
+
+function CanceledBannerInner() {
+  const searchParams = useSearchParams()
+  const canceled = searchParams.get('canceled')
+  if (!canceled) return null
+  return (
+    <div className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-amber-800">
+        Checkout was canceled — no charge was made. You can try again whenever you&apos;re ready.
+      </p>
+    </div>
+  )
+}
+
+function CanceledBanner() {
+  return (
+    <Suspense fallback={null}>
+      <CanceledBannerInner />
+    </Suspense>
+  )
+}
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const PRICE_USD = 347
+const AFTERPAY_INSTALLMENT = (Math.ceil(PRICE_USD / 4 * 100) / 100).toFixed(2)
+
+// ─── Main Content ────────────────────────────────────────────────────────────
+
+function InternationalPricingContent() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Enrollment count
+  const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
+  useEffect(() => {
+    fetch('/api/enrollment-count')
+      .then(res => res.json())
+      .then(data => { if (data.count > 0) setEnrollmentCount(data.count) })
+      .catch(() => {})
+  }, [])
+
+  // Fire international pricing view event
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'international_pricing_view', {
+        page: '/pricing-international',
+      })
+    }
+    trackEvent('international_pricing_view', { page: '/pricing-international' })
+  }, [])
+
+  const handleCheckout = async () => {
+    setLoading(true)
+    setError(null)
+
+    trackEvent('checkout_start', { courseType: 'international-online', source: 'pricing_international' })
+
+    try {
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseType: 'international-online' }),
+      })
+
+      const data = await res.json()
+
+      if (data.success && data.url) {
+        window.location.href = data.url
+      } else {
+        setError(data.error || 'Something went wrong. Please try again.')
+        setLoading(false)
+      }
+    } catch {
+      setError('Network error. Please check your connection and try again.')
+      setLoading(false)
+    }
+  }
+
+  const faqs: FaqItem[] = [
+    {
+      q: 'Is this course relevant outside of Australia?',
+      a: 'Yes — the clinical content follows international consensus guidelines (Berlin 2023, Amsterdam 2023). SCAT6 administration, VOMS assessment, BESS scoring, and return-to-play protocols are the same worldwide. The course was built to Australian regulatory standards (AHPRA) but the clinical skills are universally applicable.',
+    },
+    {
+      q: 'What CE credits do I receive?',
+      a: '8 CE credits on completion, with a certificate of completion. The course is structured continuing education applicable across physiotherapy, athletic training, chiropractic, sports medicine, and general practice.',
+    },
+    {
+      q: 'When do I get access?',
+      a: "Immediately after purchase. You'll receive a login link via email within minutes.",
+    },
+    {
+      q: 'How much time does the course take?',
+      a: 'The 8 online modules take approximately 8–10 hours total, completed at your own pace with no deadline. Most clinicians complete the course over 2–4 weeks alongside their clinical workload.',
+    },
+    {
+      q: 'What is your refund policy?',
+      a: 'We offer a 7-day satisfaction guarantee. If the course isn\'t right for you, email us within 7 days of purchase for a full refund (online content must be less than 25% accessed). No questions asked.',
+      link: { text: 'See our full terms and conditions', href: '/terms' },
+    },
+    {
+      q: 'Can my employer pay for this?',
+      a: 'Yes — most practices and employers cover continuing education costs. After purchase, you\'ll receive an invoice and CE certificate that your employer can use for reimbursement.',
+    },
+  ]
+
+  const faqSchemaData = faqs.map(f => ({
+    question: f.q,
+    answer: f.a + (f.link ? ` ${f.link.text}.` : ''),
+  }))
+
+  const testimonials = [
+    {
+      quote: 'Before this training, our approach to concussion cases was uncertain. Now, my team has the confidence and proven skills to diagnose and manage them with clarity.',
+      name: 'Andy',
+      role: 'Clinic Owner',
+      initials: 'A',
+    },
+    {
+      quote: "An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.",
+      name: 'Dean',
+      role: 'University Clinical Educator',
+      initials: 'D',
+    },
+    {
+      quote: 'Incredibly thorough and well structured. I left feeling genuinely confident in my concussion assessments.',
+      name: 'Amelia',
+      role: 'Physiotherapist',
+      initials: 'A',
+    },
+    {
+      quote: 'Well organised — content explained in a way that was relevant and memorable. Changed how I approach concussion in clinic.',
+      name: 'Alex',
+      role: 'Osteopath',
+      initials: 'A',
+    },
+    {
+      quote: 'A must for any health professional managing concussion. Relevant, applicable and easy to absorb.',
+      name: 'Sarah',
+      role: 'Physiotherapist',
+      initials: 'S',
+    },
+  ]
+
+  const TestimonialCard = ({ t }: { t: typeof testimonials[number] }) => (
+    <div className="glass rounded-xl p-5">
+      <div className="flex gap-0.5 mb-3">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+        ))}
+      </div>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">
+        &ldquo;{t.quote}&rdquo;
+      </p>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
+          {t.initials}
+        </div>
+        <div>
+          <div className="text-sm font-semibold text-foreground">{t.name}</div>
+          <div className="text-xs text-muted-foreground">{t.role}</div>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-background">
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: '/' },
+        { name: 'Pricing', url: '/pricing-international' },
+      ]} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(createFAQSchema(faqSchemaData)) }}
+      />
+      <SiteNav />
+
+      <div className="max-w-6xl mx-auto px-6 pt-[80px] pb-12 md:pb-20">
+
+        <CanceledBanner />
+
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+            The Clinical Concussion Course{' '}
+            <span className="text-gradient">for Healthcare Professionals</span>
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Master SCAT6, VOMS and BESS — the assessments that matter most in clinical practice.
+            Comprehensive concussion certification at a fraction of the cost of alternatives.
+          </p>
+        </div>
+
+        {/* ─── Why Clinicians Trust This Course ─────────────────────────── */}
+        <div className="max-w-4xl mx-auto mb-10">
+          {/* Credential badges row */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+            {[
+              { icon: Building2, label: 'Endorsed by a national medical peak body' },
+              { icon: ShieldCheck, label: 'Built to national regulatory standards (AHPRA)' },
+              { icon: BookOpen, label: 'Evidence-based — 140+ peer-reviewed references' },
+              { icon: User, label: 'Created by a registered osteopath & concussion specialist' },
+              { icon: Globe, label: 'Trusted by clinicians in AU, US, CA & UK' },
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col items-center text-center p-3 glass rounded-xl">
+                <item.icon className="w-5 h-5 text-accent mb-2" />
+                <span className="text-[11px] text-muted-foreground leading-tight">{item.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* OA endorsement bar */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 py-4 px-6 glass rounded-xl border border-accent/10 mb-4">
+            <div className="flex items-center gap-2">
+              <Image src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" width={36} height={32} className="h-8 w-auto" priority />
+              <div>
+                <span className="text-sm font-semibold text-foreground">Endorsed by Osteopathy Australia</span>
+                <span className="text-xs text-muted-foreground block">Australia&apos;s national peak body for osteopathic medicine — 3,000+ registered practitioners</span>
+              </div>
+            </div>
+            <span className="hidden sm:inline text-slate-300">|</span>
+            <span className="text-sm text-muted-foreground">8 CE Credits · Evidence-Based Certification</span>
+            <span className="hidden sm:inline text-slate-300">|</span>
+            <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
+            {enrollmentCount >= 10 && (
+              <>
+                <span className="hidden sm:inline text-slate-300">|</span>
+                <span className="text-sm font-semibold text-foreground">{enrollmentCount}+ clinicians enrolled</span>
+              </>
+            )}
+          </div>
+
+          {/* Explainer paragraph */}
+          <div className="glass rounded-xl p-5 border border-accent/10">
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+              This course was built to meet Australia&apos;s national health practitioner regulatory standards (AHPRA) — one of the world&apos;s most rigorous clinical education frameworks. It is endorsed by Osteopathy Australia, the national peak body for osteopathic medicine. While designed in Australia, the clinical content — SCAT6 administration, VOMS assessment, BESS scoring, and return-to-play protocols — follows international consensus guidelines and is directly applicable to clinical practice worldwide.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              <GraduationCap className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
+              Created by Zac Lewis, B.Clin.Sci., M.Ost.Med. — AHPRA-registered osteopath and concussion specialist with clinical experience across sport and primary care settings.
+            </p>
+          </div>
+        </div>
+
+        {/* ─── Pricing Card ──────────────────────────────────────────── */}
+        <div className="max-w-lg mx-auto">
+          {error && (
+            <div className="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
+          <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+                <BookOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
+              </div>
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
+                Online Course
+              </span>
+            </div>
+
+            <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">ConcussionPro Online Course</h3>
+            <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
+              8 comprehensive online modules at your own pace. Master the clinical assessments that matter most in concussion management.
+            </p>
+
+            <div className="mb-6">
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${PRICE_USD}</span>
+                <span className="text-sm text-[var(--muted-foreground)]">USD</span>
+              </div>
+              <p className="text-sm text-slate-500 mt-1">or 4 x ${AFTERPAY_INSTALLMENT} with Afterpay</p>
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · 8 CE credits</p>
+            </div>
+
+            <ul className="space-y-3 mb-6">
+              {[
+                '8 online modules (8 CE credits)',
+                'SCAT6 administration & interpretation',
+                'VOMS assessment & clinical reasoning',
+                'BESS & balance testing protocols',
+                'Return-to-play decision framework',
+                'Clinical Toolkit & downloadable resources',
+                'Complete at your own pace — no deadlines',
+                'Lifetime access — content updated regularly',
+              ].map((feature, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm">
+                  <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[var(--muted-foreground)]">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={handleCheckout}
+              disabled={loading}
+              className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Enrol Now — USD ${PRICE_USD}
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+
+            <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
+              &ldquo;An outstanding blend of evidence-based knowledge and practical skills&rdquo; — Dean, University Clinical Educator
+            </p>
+          </div>
+
+          {/* Trust Signals */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
+            {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'Evidence-Based', 'Lifetime Access', 'Certificate Included'].map(item => (
+              <div key={item} className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Single "Try free" link */}
+        <p className="text-center mt-6 text-sm text-muted-foreground">
+          Not ready to enrol?{' '}
+          <Link href="/scat-mastery" className="text-accent font-semibold hover:underline underline-offset-2">
+            Try our free SCAT6 Mastery course (2 CE credits)
+          </Link>
+        </p>
+
+        {/* ─── What You'll Master ─────────────────────────────────────── */}
+        <div className="max-w-3xl mx-auto mt-12">
+          <h3 className="text-xl font-bold text-center text-foreground mb-6">What&apos;s Included</h3>
+          <div className="overflow-x-auto -mx-4 px-4">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <table className="min-w-[400px] w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Feature</th>
+                    <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6]">Included</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {([
+                    ['8 online modules', true],
+                    ['SCAT6, VOMS & BESS training', true],
+                    ['Clinical Toolkit downloads', true],
+                    ['140+ peer-reviewed references', true],
+                    ['90 quiz questions', true],
+                    ['23 video lessons', true],
+                    ['CE certificate (8 credits)', true],
+                    ['Lifetime access', true],
+                    ['Afterpay / Klarna available', true],
+                    ['7-day money-back guarantee', true],
+                  ] as [string, boolean][]).map(([feature, included], i) => (
+                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className="py-3 px-4 text-slate-700">{feature}</td>
+                      <td className="py-3 px-4 text-center font-medium text-emerald-600">
+                        {included ? '\u2713' : '\u2014'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── Professional Development Credits ─────────────────────── */}
+        <div className="max-w-4xl mx-auto mt-12">
+          <h3 className="text-xl font-bold text-center text-foreground mb-6">
+            Recognised for Professional Development
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            {[
+              { flag: '\ud83c\udde6\ud83c\uddfa', country: 'Australia', detail: 'Endorsed by Osteopathy Australia \u00b7 AHPRA-aligned \u00b7 8 CPD points' },
+              { flag: '\ud83c\uddec\ud83c\udde7', country: 'United Kingdom', detail: 'Accepted for HCPC CPD portfolios \u00b7 Outcomes-based learning' },
+              { flag: '\ud83c\uddf3\ud83c\uddff', country: 'New Zealand', detail: 'Claimable for Physiotherapy Board NZ CPD' },
+              { flag: '\ud83c\uddee\ud83c\uddea', country: 'Ireland', detail: 'Accepted for CORU CPD requirements' },
+              { flag: '\ud83c\udde8\ud83c\udde6', country: 'Canada', detail: 'Claimable for CPD in most Canadian provinces' },
+              { flag: '\ud83c\uddfa\ud83c\uddf8', country: 'United States', detail: '8 structured contact hours \u00b7 Self-study CE applicable in most states' },
+            ].map((item, i) => (
+              <div key={i} className="glass rounded-xl p-4 border border-slate-200/60">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">{item.flag}</span>
+                  <span className="text-sm font-bold text-foreground">{item.country}</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+            Built to AHPRA standards and endorsed by Osteopathy Australia. Curriculum follows international consensus guidelines (SCAT6, VOMS, return-to-play). Certificate of completion with documented learning outcomes provided.
+          </p>
+          <p className="text-[10px] text-slate-400">
+            CE/CPD applicability varies by jurisdiction, profession and licensing board. Verify acceptance with your regulatory body before purchase.
+          </p>
+        </div>
+
+        {/* Testimonials */}
+        <div className="max-w-4xl mx-auto mt-12">
+          <h3 className="text-xl font-bold text-center text-foreground mb-2">What Clinicians Are Saying</h3>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            Trusted by clinicians across Australia, the US, Canada and the UK
+          </p>
+          <div className="grid md:grid-cols-3 gap-4">
+            {testimonials.slice(0, 3).map((t) => (
+              <TestimonialCard key={t.name} t={t} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 md:max-w-[66.666%] md:mx-auto">
+            {testimonials.slice(3).map((t) => (
+              <TestimonialCard key={t.name} t={t} />
+            ))}
+          </div>
+        </div>
+
+        {/* Guarantee + CE reimbursement */}
+        <div className="max-w-4xl mx-auto mt-16 md:mt-20 grid md:grid-cols-2 gap-4">
+          <div className="glass rounded-xl p-6 border border-emerald-200/50">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              </div>
+              <h3 className="font-bold text-foreground">7-Day Satisfaction Guarantee</h3>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Complete Module 1. If you&apos;re not confident this course is right for you,
+              email us within 7 days for a full refund — no questions asked.
+            </p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-blue-200/50">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="font-bold text-foreground">Employer CE Reimbursement</h3>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Most employers and practices cover continuing education costs. We provide an
+              invoice and CE certificate — everything your employer needs to approve reimbursement.
+            </p>
+          </div>
+        </div>
+
+        {/* FAQ */}
+        <div className="max-w-2xl mx-auto mt-16 md:mt-20">
+          <h2 className="text-2xl font-bold text-center mb-8 text-foreground">Common Questions</h2>
+          <div className="space-y-3">
+            {faqs.map((item, i) => (
+              <div key={i} className="glass rounded-xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left gap-3"
+                  aria-expanded={openFaq === i}
+                >
+                  <span className="font-semibold text-sm text-foreground">{item.q}</span>
+                  {openFaq === i ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  )}
+                </button>
+                {openFaq === i && (
+                  <div className="px-5 pb-4">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {item.a}
+                      {item.link && (
+                        <>{' '}<a href={item.link.href} className="text-accent underline underline-offset-2 hover:text-accent/80">{item.link.text}</a>.</>
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Final CTA */}
+        <div className="mt-16 md:mt-20">
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              Start building concussion confidence today
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {enrollmentCount >= 10
+                ? `Join ${enrollmentCount}+ clinicians across 4 countries.`
+                : 'Join clinicians building concussion confidence.'}
+              {' '}7-day money-back guarantee.
+            </p>
+          </div>
+
+          {/* Compact final CTA card */}
+          <div className="max-w-md mx-auto">
+            <div className="card card-visible rounded-xl p-5 flex flex-col" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+                  <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
+                  Online Course
+                </span>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-bold text-[var(--foreground)]">${PRICE_USD}</span>
+                  <span className="text-xs text-slate-400">USD</span>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${AFTERPAY_INSTALLMENT} with Afterpay</p>
+                <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CE credits</p>
+              </div>
+
+              <button
+                onClick={handleCheckout}
+                disabled={loading}
+                className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <>Enrol Now — USD ${PRICE_USD}</>
+                )}
+              </button>
+
+              <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
+                &ldquo;Relevant, applicable and easy to absorb&rdquo; — Sarah, Physiotherapist
+              </p>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-[var(--muted-foreground)]">
+              {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout'].map(item => (
+                <div key={item} className="flex items-center gap-1">
+                  <Check className="w-3 h-3 text-[var(--accent)]" strokeWidth={2.5} />
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+// ─── Page Export ─────────────────────────────────────────────────────────────
+
+export default function PricingInternationalPage() {
+  return <InternationalPricingContent />
+}

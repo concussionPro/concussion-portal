@@ -84,8 +84,29 @@ async function verifySessionEdge(token: string): Promise<{ accessLevel: string; 
   }
 }
 
+// Bot user-agent patterns — don't geo-redirect crawlers
+const BOT_UA_PATTERN = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|linkedinbot|twitterbot|whatsapp|googlebot|gptbot|claude|chatgpt|perplexity/i
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // ─── Geo-routing: /pricing → /pricing-international for non-AU/NZ ─────────
+  if (pathname === '/pricing') {
+    // Vercel provides geo data via x-vercel-ip-country header
+    const country = request.headers.get('x-vercel-ip-country')
+    const ua = request.headers.get('user-agent') || ''
+
+    // Don't redirect bots (preserve SEO for /pricing)
+    if (!BOT_UA_PATTERN.test(ua)) {
+      // Redirect non-AU/NZ visitors to international pricing
+      if (country && country !== 'AU' && country !== 'NZ') {
+        const intlUrl = request.nextUrl.clone()
+        intlUrl.pathname = '/pricing-international'
+        // Preserve query params (e.g. ?canceled=true, ?location=sydney)
+        return NextResponse.redirect(intlUrl, 302)
+      }
+    }
+  }
 
   // Handle /docs/ file access (PDFs and ZIPs)
   if (pathname.startsWith('/docs/') && (pathname.endsWith('.pdf') || pathname.endsWith('.zip'))) {
@@ -186,6 +207,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/pricing',
     '/docs/:path*.pdf',
     '/docs/:path*.zip',
     '/resources/:path*.pdf',

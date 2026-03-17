@@ -247,7 +247,7 @@ CAMPAIGNS = [
                         ],
                         "descriptions": [
                             "Evidence-based concussion assessment and management. 8 modules — SCAT6, VOMS, BESS, cervicogenic screening and return-to-play. AHPRA certificate included.",
-                            "Australia's only concussion CPD covering VOMS, BESS and cervicogenic differentiation. Skills that separate confident clinicians from uncertain ones. From $497.",
+                            "Australia's leading concussion CPD covering VOMS, BESS and cervicogenic differentiation. Skills that separate confident clinicians from uncertain ones. From $497.",
                             "14 AHPRA CPD hours. 8 self-paced online modules + optional full-day practical workshop. Lifetime access. Endorsed by Osteopathy Australia. 7-day guarantee.",
                             "Built by clinicians for clinicians. Includes SCAT6 & SCOAT6 auto-scoring forms, referral templates, return-to-play flowcharts. Tax-deductible. Enrol today.",
                         ],

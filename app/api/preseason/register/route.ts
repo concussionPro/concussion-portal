@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         })
 
         await put('preseason-clinics.json', JSON.stringify(clinics, null, 2), {
-          access: 'public',
+          access: 'private',
           contentType: 'application/json',
         })
       }
@@ -176,7 +176,7 @@ export async function POST(request: Request) {
                   </div>
                   <div class="step">
                     <div class="step-num">3</div>
-                    <div><strong>You receive a PDF report</strong> by email — no data stored on our servers</div>
+                    <div><strong>You receive a PDF report</strong> by email — basic test records are stored for repeat-test tracking</div>
                   </div>
                 </div>
 

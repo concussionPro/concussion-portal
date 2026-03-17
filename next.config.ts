@@ -4,6 +4,17 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  // Redirects
+  async redirects() {
+    return [
+      {
+        source: '/pricing/international',
+        destination: '/pricing-international',
+        permanent: true,
+      },
+    ]
+  },
+
   // Security headers
   async headers() {
     return [

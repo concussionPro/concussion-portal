@@ -225,7 +225,7 @@ function PricingContent() {
         {/* Page Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Australia&apos;s Only Hands-On{' '}
+            Australia&apos;s Leading Hands-On{' '}
             <span className="text-gradient">Concussion CPD</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">

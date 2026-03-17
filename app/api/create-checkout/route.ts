@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Validate course type
     if (!courseType || !VALID_COURSE_TYPES.includes(courseType)) {
       return NextResponse.json(
-        { error: 'Invalid course type. Must be "online-only" or "full-course".' },
+        { error: 'Invalid course type.' },
         { status: 400 }
       )
     }
@@ -53,7 +53,9 @@ export async function POST(request: NextRequest) {
       preferredCity: courseType === 'online-only' ? preferredCity : undefined,
       customerEmail: email,
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${baseUrl}/pricing?canceled=true`,
+      cancelUrl: courseType === 'international-online'
+        ? `${baseUrl}/pricing-international?canceled=true`
+        : `${baseUrl}/pricing?canceled=true`,
     })
 
     return NextResponse.json({

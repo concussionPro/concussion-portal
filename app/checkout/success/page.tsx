@@ -247,7 +247,7 @@ function CheckoutSuccessContent() {
             <div>
               <h3 className="font-semibold mb-1">Start Module 1</h3>
               <p className="text-sm text-muted-foreground">
-                Begin with &ldquo;What is a Concussion?&rdquo; — covers concussion pathophysiology and the neurometabolic cascade. About 60 minutes.
+                Begin with &ldquo;What is a Concussion?&rdquo; — covers concussion pathophysiology and the neurometabolic cascade. About 75 minutes.
               </p>
             </div>
           </div>

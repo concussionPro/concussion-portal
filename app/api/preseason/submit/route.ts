@@ -69,6 +69,7 @@ interface OculomotorData {
 
 interface SubmitPayload {
   clinicCode: string
+  testNumber?: number
   athlete: AthleteBackground
   symptoms: SymptomData
   cognitive: CognitiveData
@@ -115,7 +116,8 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   doc.setFillColor(91, 154, 166)
   doc.rect(0, 0, pageWidth, 35, 'F')
   doc.setTextColor(255, 255, 255)
-  addText('SCAT6 Pre-Season Baseline — Self-Administered', margin, 15, { fontSize: 16, fontStyle: 'bold' })
+  const testLabel = data.testNumber && data.testNumber > 1 ? ` (Test #${data.testNumber})` : ''
+  addText(`SCAT6 Pre-Season Baseline — Self-Administered${testLabel}`, margin, 15, { fontSize: 16, fontStyle: 'bold' })
   addText(`Generated: ${new Date().toLocaleDateString('en-AU', { dateStyle: 'full' })} at ${new Date().toLocaleTimeString('en-AU', { timeStyle: 'short' })}`, margin, 25, { fontSize: 9 })
   doc.setTextColor(0, 0, 0)
   y = 45
@@ -392,6 +394,9 @@ export async function POST(request: Request) {
     const immScore = body.cognitive.immediateMemory.total ?? body.cognitive.immediateMemory.score ?? 0
     const totalCognitive = body.cognitive.orientation.score + immScore +
       body.cognitive.concentration.total + body.cognitive.delayedRecall.score
+    const immData = body.cognitive.immediateMemory
+    const hasTrialData = immData.trial1 !== undefined && immData.trial1 !== null
+    const totalCognitiveMax = hasTrialData ? 50 : 30
     const symptomCount = body.symptoms.ratings.filter((r: number) => r > 0).length
     const symptomTotal = body.symptoms.ratings.reduce((a: number, b: number) => a + b, 0)
 
@@ -417,11 +422,14 @@ export async function POST(request: Request) {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Baseline Report: ${athleteName}</h1>
+              <h1>Baseline Report: ${athleteName}${body.testNumber && body.testNumber > 1 ? ` <span style="font-size: 14px; font-weight: 400;">(Test #${body.testNumber})</span>` : ''}</h1>
             </div>
             <div class="content">
               <p>Hi ${escapeHtml(clinic.contactName)},</p>
-              <p>A new pre-season baseline has been completed. The full report is attached as a PDF.</p>
+              <p>${body.testNumber && body.testNumber > 1
+                ? `This is baseline test <strong>#${body.testNumber}</strong> for ${athleteName}. The full report is attached as a PDF.`
+                : 'A new pre-season baseline has been completed. The full report is attached as a PDF.'
+              }</p>
 
               <p style="font-weight: 700; margin-bottom: 8px;">Quick Summary:</p>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0;">
@@ -439,7 +447,7 @@ export async function POST(request: Request) {
                 <tr><td colspan="3" style="height: 12px;"></td></tr>
                 <tr>
                   <td style="background: #f8fafc; border-radius: 10px; padding: 14px; text-align: center;" colspan="3">
-                    <div style="font-size: 28px; font-weight: 800; color: #5b9aa6;">${totalCognitive}/50</div>
+                    <div style="font-size: 28px; font-weight: 800; color: #5b9aa6;">${totalCognitive}/${totalCognitiveMax}</div>
                     <div style="font-size: 12px; color: #64748b;">Total Cognitive Score</div>
                   </td>
                 </tr>
@@ -467,7 +475,7 @@ export async function POST(request: Request) {
     // Persist baseline submission to Blob storage for admin dashboard (skip demo)
     if (!isDemo) {
       try {
-        let baselines: Array<{ clinicCode: string; clinicName: string; athleteName: string; submittedAt: string; symptomCount: number; symptomSeverity: number; cognitiveScore: number }> = []
+        let baselines: Array<{ clinicCode: string; clinicName: string; athleteName: string; dob?: string; submittedAt: string; symptomCount: number; symptomSeverity: number; cognitiveScore: number }> = []
         const { blobs } = await listBlobs()
         const existing = blobs
           .filter(b => b.pathname === 'preseason-baselines.json')
@@ -486,6 +494,7 @@ export async function POST(request: Request) {
           clinicCode: body.clinicCode.toUpperCase(),
           clinicName: clinic.clinicName,
           athleteName: body.athlete.name || 'Unknown',
+          dob: body.athlete.dob || '',
           submittedAt: new Date().toISOString(),
           symptomCount,
           symptomSeverity: symptomTotal,
@@ -493,7 +502,7 @@ export async function POST(request: Request) {
         })
 
         await put('preseason-baselines.json', JSON.stringify(baselines, null, 2), {
-          access: 'public',
+          access: 'private',
           contentType: 'application/json',
         })
       } catch (err) {
@@ -509,7 +518,7 @@ export async function POST(request: Request) {
     // Send via Resend SDK with attachment
     const emailSent = await sendEmailWithAttachment({
       to: clinic.email,
-      subject: `SCAT6 Baseline Report — ${athleteName} (${date})`,
+      subject: `SCAT6 Baseline Report — ${athleteName}${body.testNumber && body.testNumber > 1 ? ` (Test #${body.testNumber})` : ''} (${date})`,
       html: emailHtml,
       attachments: [
         {

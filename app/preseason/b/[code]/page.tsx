@@ -251,15 +251,12 @@ export default function AthleteBaselineForm() {
   const [clinicError, setClinicError] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // Word/digit list rotation: persists per-athlete per-clinic via localStorage
-  // so the same athlete always gets the NEXT list on their next test
-  const [listIndex] = useState<number>(() => {
-    if (typeof window === 'undefined') return 0
-    const key = `preseason-list-index-${code}`
-    const lastIndex = localStorage.getItem(key)
-    if (lastIndex === null) return 0 // First test: List A
-    return (parseInt(lastIndex, 10) + 1) % 3 // Rotate: A→B→C→A...
-  })
+  // Word/digit list rotation: set after athlete history lookup (per-athlete, not per-browser)
+  const [listIndex, setListIndex] = useState<number>(0)
+
+  // Athlete test tracking
+  const [testNumber, setTestNumber] = useState<number>(1) // 1 = first test
+  const [lookingUpHistory, setLookingUpHistory] = useState(false)
 
   // Form step
   const [step, setStep] = useState(1)
@@ -527,6 +524,7 @@ export default function AthleteBaselineForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clinicCode: code,
+          testNumber,
           athlete: {
             name, dob, idNumber, sex, dominantHand, sport, team, position,
             yearsOfEducation, primaryLanguage, previousConcussions,
@@ -563,8 +561,6 @@ export default function AthleteBaselineForm() {
       })
 
       if (response.ok) {
-        // Save current list index so next test rotates to the next list
-        localStorage.setItem(`preseason-list-index-${code}`, String(listIndex))
         setSubmitted(true)
         trackEvent(ANALYTICS_EVENTS.PRESEASON_BASELINE_SUBMIT, {
           clinicCode: code,
@@ -693,7 +689,7 @@ export default function AthleteBaselineForm() {
           <p className="text-muted-foreground mb-4">
             {code.toUpperCase() === 'DEMO00'
               ? 'This was a demo — no report was sent. Register your clinic to start collecting real baselines.'
-              : <>Your baseline report has been sent to <strong>{clinicName}</strong>. No data has been stored.</>
+              : <>Your results have been emailed to <strong>{clinicName}</strong>. Basic test records are stored to support future baseline comparisons.</>
             }
           </p>
           <div className="glass rounded-xl p-4 mb-4 border border-accent/20">
@@ -753,7 +749,7 @@ export default function AthleteBaselineForm() {
             />
           ))}
         </div>
-        <p className="text-xs text-muted-foreground text-center mb-6">
+        <p className="text-xs text-muted-foreground text-center mb-4">
           Step {step} of {totalSteps}: {
             step === 1 ? 'Athlete Background' :
             step === 2 ? 'Symptom Evaluation' :
@@ -763,6 +759,20 @@ export default function AthleteBaselineForm() {
             'Score Summary'
           }
         </p>
+
+        {/* Test number indicator — shown after step 1 */}
+        {step > 1 && testNumber > 0 && (
+          <div className={`text-center mb-6 py-2 px-4 rounded-lg text-xs font-semibold ${
+            testNumber === 1
+              ? 'bg-accent/10 text-accent'
+              : 'bg-amber-50 text-amber-700 border border-amber-200'
+          }`}>
+            {testNumber === 1
+              ? `First baseline for ${name} — Word List ${wordListKey}`
+              : `Baseline test #${testNumber} for ${name} — Word List ${wordListKey}`
+            }
+          </div>
+        )}
 
         {/* STEP 1: Athlete Background */}
         {step === 1 && (
@@ -1750,14 +1760,43 @@ export default function AthleteBaselineForm() {
                     setSubmitError('Please enter the sport to continue.')
                     return
                   }
+                  // Look up previous baselines for this athlete
+                  setSubmitError('')
+                  setLookingUpHistory(true)
+                  fetch('/api/preseason/athlete-history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clinicCode: code, name: name.trim(), dob }),
+                  })
+                    .then(res => res.json())
+                    .then(data => {
+                      const prev = data.previousTests || 0
+                      setTestNumber(prev + 1)
+                      // Rotate word list based on athlete's actual test count: 1st→A, 2nd→B, 3rd→C, 4th→A...
+                      setListIndex(prev % 3)
+                    })
+                    .catch(() => {
+                      // On error, default to test #1 / list A
+                      setTestNumber(1)
+                      setListIndex(0)
+                    })
+                    .finally(() => {
+                      setLookingUpHistory(false)
+                      setStep(2)
+                    })
+                  return
                 }
                 setSubmitError('')
                 setStep(prev => prev + 1)
               }}
-              disabled={step === 5 && !delayedRecallReady}
+              disabled={(step === 5 && !delayedRecallReady) || lookingUpHistory}
               className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
             >
-              Next <ChevronRight className="w-4 h-4" />
+              {lookingUpHistory ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+              ) : (
+                <>Next <ChevronRight className="w-4 h-4" /></>
+              )}
             </button>
           )}
         </div>
