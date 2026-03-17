@@ -152,7 +152,7 @@ function pct(value: number, prev: number): { delta: number; sign: string; color:
   if (prev === 0 && value > 0) return { delta: 0, sign: '', color: 'text-[var(--accent)]', isNew: true }
   if (prev === 0) return { delta: 0, sign: '', color: 'text-gray-400', isNew: false }
   const delta = ((value - prev) / prev) * 100
-  const sign = delta >= 0 ? '+' : ''
+  const sign = delta >= 0 ? '+' : '-'
   const color = delta >= 0 ? 'text-emerald-600' : 'text-rose-500'
   return { delta: Math.abs(delta), sign, color, isNew: false }
 }
@@ -417,7 +417,7 @@ function buildUserInsights(
         type: 'warning',
         category: 'users',
         title: `${zeroPct.toFixed(0)}% of free users completed 0 modules`,
-        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 6 SCAT modules.`,
+        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 5 SCAT modules.`,
         metric: `${zeroPct.toFixed(0)}% inactive`,
         action: 'Send a reminder email to users who signed up but never started. Add onboarding nudges. Check if the first module is too intimidating.',
       })
@@ -1653,7 +1653,7 @@ export default function AnalyticsDashboard() {
                               <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{b.clinicName || b.clinicCode}</td>
                               <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{b.symptomCount != null ? `${b.symptomCount}/22` : '—'}</td>
                               <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{b.symptomSeverity != null ? `${b.symptomSeverity}/132` : '—'}</td>
-                              <td className="py-2.5 px-2 text-right tabular-nums font-semibold text-[var(--foreground)]">{b.cognitiveScore != null ? `${b.cognitiveScore}/50` : '—'}</td>
+                              <td className="py-2.5 px-2 text-right tabular-nums font-semibold text-[var(--foreground)]">{b.cognitiveScore != null ? `${b.cognitiveScore}/${b.cognitiveScore > 30 ? 50 : 30}` : '—'}</td>
                               <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">{new Date(b.submittedAt).toLocaleDateString('en-AU')}</td>
                             </tr>
                           ))}
@@ -1733,8 +1733,8 @@ export default function AnalyticsDashboard() {
                         if (usersFilter === 'paid') return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
                         return true
                       })
-                      const csv = ['Email,Name,Access Level,Modules Completed,CPD Points,Created,Last Login', ...filtered.map(u =>
-                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/6,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
+                      const csv = ['Email,Name,Access Level,Modules Completed,SCAT Modules,CPD Points,Created,Last Login', ...filtered.map(u =>
+                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/5,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
                       )].join('\n')
                       const blob = new Blob([csv], { type: 'text/csv' })
                       const url = URL.createObjectURL(blob)

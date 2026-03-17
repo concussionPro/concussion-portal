@@ -3,8 +3,10 @@ import { get as getBlob, list as listBlobs } from '@vercel/blob'
 import crypto from 'crypto'
 
 function timingSafeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+  // Hash both to normalize length — prevents leaking key length via timing
+  const aHash = crypto.createHmac('sha256', 'compare').update(a).digest()
+  const bHash = crypto.createHmac('sha256', 'compare').update(b).digest()
+  return crypto.timingSafeEqual(aHash, bHash)
 }
 
 function isAdminAuthorized(request: NextRequest): boolean {

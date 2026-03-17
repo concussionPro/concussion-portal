@@ -49,6 +49,7 @@ interface AthleteBackground {
   primaryLanguage: string
   previousConcussions: string
   mostRecentConcussionDate: string
+  previousConcussionSymptoms?: string
   longestRecovery: string
   diagnosedMigraines: boolean
   medicalHistory: string[]
@@ -161,6 +162,10 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   addText(`Most Recent: ${data.athlete.mostRecentConcussionDate || 'N/A'}`, margin, y, { fontSize: 9 })
   addText(`Longest Recovery: ${data.athlete.longestRecovery || 'N/A'}`, margin + contentWidth / 2, y, { fontSize: 9 })
   y += 6
+  if (data.athlete.previousConcussionSymptoms) {
+    addText(`Previous Concussion Symptoms: ${data.athlete.previousConcussionSymptoms}`, margin, y, { fontSize: 9, maxWidth: contentWidth })
+    y += Math.ceil(data.athlete.previousConcussionSymptoms.length / 90) * 5 + 3
+  }
   addText(`Diagnosed Migraines: ${data.athlete.diagnosedMigraines ? 'Yes' : 'No'}`, margin, y, { fontSize: 9 })
   y += 6
 
@@ -374,14 +379,14 @@ export async function POST(request: Request) {
     if (!isDemo) {
       const today = new Date().toISOString().slice(0, 10)
       const submitRateKey = `rate:submit:${body.clinicCode.toUpperCase()}:${today}`
-      const submitCount = await kv.get<number>(submitRateKey) || 0
-      if (submitCount >= 50) {
+      const submitCount = await kv.incr(submitRateKey)
+      if (submitCount === 1) await kv.expire(submitRateKey, 86400)
+      if (submitCount > 50) {
         return NextResponse.json(
           { error: 'Daily submission limit reached. Please try again tomorrow.' },
           { status: 429 }
         )
       }
-      await kv.set(submitRateKey, submitCount + 1, { ex: 86400 })
     }
 
     // Generate PDF
@@ -534,7 +539,9 @@ export async function POST(request: Request) {
     })
 
     if (!emailSent) {
-      return NextResponse.json({ error: 'Failed to send report' }, { status: 500 })
+      // Data is already saved to blob storage — don't return 500 or user will retry and create duplicates
+      console.error(`Baseline email failed for ${clinic.email} — data saved, email not delivered`)
+      return NextResponse.json({ success: true, emailFailed: true })
     }
 
     return NextResponse.json({ success: true })

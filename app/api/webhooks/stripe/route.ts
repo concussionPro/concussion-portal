@@ -46,16 +46,16 @@ async function logAnalyticsEvent(eventType: string, eventData: Record<string, un
     try {
       const blobPath = `analytics/${dateKey}.ndjson`
       // Read existing, append
-      let blobList: typeof import('@vercel/blob').list | null = null
-      try { blobList = require('@vercel/blob').list } catch {}
+      let blobGet: typeof import('@vercel/blob').get | null = null
+      try { blobGet = require('@vercel/blob').get } catch {}
       let existing = ''
-      if (blobList) {
-        const { blobs } = await blobList({ prefix: blobPath })
-        const match = blobs.find((b: any) => b.pathname === blobPath)
-        if (match) {
-          const res = await fetch(match.url, { cache: 'no-store' })
-          if (res.ok) existing = await res.text()
-        }
+      if (blobGet) {
+        try {
+          const blob = await blobGet(blobPath, { access: 'private' })
+          if (blob && blob.statusCode === 200 && blob.stream) {
+            existing = await new Response(blob.stream).text()
+          }
+        } catch { /* blob doesn't exist yet */ }
       }
       await blobPut(blobPath, existing + line, {
         access: 'private' as any, // Security: analytics data must not be publicly accessible
@@ -310,10 +310,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.log(`Login link sent to: ${customerEmail} | Course: ${courseType} | City: ${workshopCity || 'N/A'} | Access: ${finalAccess}`)
     } else {
       console.error(`Email send FAILED for ${customerEmail} — user account created, they can request a new link from /login`)
+      // Alert business owner so they can manually send the link
+      try {
+        await sendEmail({
+          to: 'zac@concussion-education-australia.com',
+          subject: `ACTION REQUIRED: Login email failed for ${customerEmail}`,
+          html: `<p>A customer just paid but their login email failed to send.</p><p><strong>Email:</strong> ${customerEmail}<br><strong>Course:</strong> ${courseType}<br><strong>Access:</strong> ${finalAccess}</p><p>They can request a new login link from /login, but you may want to reach out proactively.</p>`,
+        })
+      } catch { /* best effort */ }
     }
   } catch (emailError) {
-    // User account exists — they can request a new login link from /login
     console.error(`Email send failed for ${customerEmail} (user account created, they can use /login):`, emailError)
+    try {
+      await sendEmail({
+        to: 'zac@concussion-education-australia.com',
+        subject: `ACTION REQUIRED: Login email failed for ${customerEmail}`,
+        html: `<p>A customer just paid but their login email threw an error.</p><p><strong>Email:</strong> ${customerEmail}<br><strong>Course:</strong> ${courseType}</p><p>Error: ${emailError}</p>`,
+      })
+    } catch { /* best effort */ }
   }
 }
 

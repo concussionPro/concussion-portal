@@ -235,7 +235,7 @@ export default function AdminPreseasonPage() {
                       {b.symptomSeverity != null ? `${b.symptomSeverity}/132` : '—'}
                     </td>
                     <td className="px-6 py-4 text-sm text-right tabular-nums font-semibold text-slate-900">
-                      {b.cognitiveScore != null ? `${b.cognitiveScore}/50` : '—'}
+                      {b.cognitiveScore != null ? `${b.cognitiveScore}/${b.cognitiveScore > 30 ? 50 : 30}` : '—'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">

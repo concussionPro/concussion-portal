@@ -38,9 +38,11 @@ export async function GET(request: NextRequest) {
 
     if (user.accessLevel !== sessionData.accessLevel) {
       // Access level changed — issue a refreshed session cookie
-      // Preserve original session duration (don't always extend to 30 days)
+      // Detect if original session was rememberMe (30 days) by checking remaining time
+      const remainingMs = sessionData.exp - Date.now()
+      const wasRememberMe = remainingMs > 10 * 24 * 60 * 60 * 1000 // >10 days remaining = was 30-day
       const newToken = createJWTSession(
-        user.id, user.email, user.name, user.accessLevel, false
+        user.id, user.email, user.name, user.accessLevel, wasRememberMe
       )
       const response = NextResponse.json({
         success: true,
@@ -55,8 +57,7 @@ export async function GET(request: NextRequest) {
           progressEmailsOptedOut: user.progressEmailsOptedOut || false,
         },
       })
-      // If rememberMe was false, use 7 days; if true, use 30 days
-      const maxAge = 7 * 24 * 60 * 60  // Match the JWT's internal expiry
+      const maxAge = wasRememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60
       response.cookies.set('session', newToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

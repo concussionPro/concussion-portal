@@ -6,12 +6,14 @@ import path from 'path';
 
 // Conditionally use @vercel/blob when token is available
 let blobList: typeof import('@vercel/blob').list | null = null;
+let blobGet: typeof import('@vercel/blob').get | null = null;
 const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
 
 if (useBlob) {
   try {
     const blob = require('@vercel/blob');
     blobList = blob.list;
+    blobGet = blob.get;
   } catch {
     // @vercel/blob not available
   }
@@ -132,17 +134,21 @@ async function fetchEventsForDate(
   dateKey: string,
   blobUrlMap: Map<string, string>
 ): Promise<StoredEvent[]> {
-  const url = blobUrlMap.get(`analytics/${dateKey}.ndjson`);
-  if (!url) return [];
+  const blobPath = `analytics/${dateKey}.ndjson`;
+  if (!blobUrlMap.has(blobPath)) return [];
 
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const text = await res.text();
-    return parseNdjson(text);
-  } catch {
-    return [];
+  // Use SDK get() for private blob access
+  if (blobGet) {
+    try {
+      const blob = await blobGet(blobPath, { access: 'private' });
+      if (blob && blob.statusCode === 200 && blob.stream) {
+        const text = await new Response(blob.stream).text();
+        return parseNdjson(text);
+      }
+    } catch { /* blob not found */ }
   }
+
+  return [];
 }
 
 async function buildBlobUrlMap(): Promise<Map<string, string>> {

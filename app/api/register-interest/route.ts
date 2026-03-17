@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { put, list as listBlobs } from '@vercel/blob'
+import { put, get as getBlob, list as listBlobs } from '@vercel/blob'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 
@@ -81,14 +81,18 @@ export async function POST(request: NextRequest) {
     let registrations: InterestRegistration[] = []
 
     try {
-      const { blobs } = await listBlobs()
-      const existing = blobs
-        .filter(b => b.pathname === blobPath)
-        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-
-      if (existing.length > 0) {
-        const res = await fetch(`${existing[0].downloadUrl}?t=${Date.now()}`, { cache: 'no-store' })
-        registrations = await res.json()
+      let blob = await getBlob(blobPath, { access: 'private' })
+      if (!blob) {
+        const prefix = blobPath.replace('.json', '')
+        const { blobs } = await listBlobs({ prefix })
+        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+        if (sorted.length > 0) {
+          blob = await getBlob(sorted[0].url, { access: 'private' })
+        }
+      }
+      if (blob && blob.statusCode === 200 && blob.stream) {
+        const text = await new Response(blob.stream).text()
+        registrations = JSON.parse(text)
       }
     } catch (err) {
       console.warn('Could not load existing registrations:', err)
@@ -116,8 +120,9 @@ export async function POST(request: NextRequest) {
     // Save to Vercel Blob
     try {
       await put(blobPath, JSON.stringify(registrations, null, 2), {
-        access: 'public',
+        access: 'private',
         contentType: 'application/json',
+        addRandomSuffix: false,
       })
     } catch (err) {
       console.error('Failed to save registration to Blob:', err)

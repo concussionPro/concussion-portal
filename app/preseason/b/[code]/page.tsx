@@ -248,7 +248,7 @@ export default function AthleteBaselineForm() {
 
   // Clinic validation
   const [clinicName, setClinicName] = useState<string | null>(null)
-  const [clinicError, setClinicError] = useState(false)
+  const [clinicError, setClinicError] = useState<false | 'invalid' | 'unavailable'>(false)
   const [loading, setLoading] = useState(true)
 
   // Word/digit list rotation: set after athlete history lookup (per-athlete, not per-browser)
@@ -257,6 +257,7 @@ export default function AthleteBaselineForm() {
   // Athlete test tracking
   const [testNumber, setTestNumber] = useState<number>(1) // 1 = first test
   const [lookingUpHistory, setLookingUpHistory] = useState(false)
+  const historyLookedUpRef = useRef(false)
 
   // Form step
   const [step, setStep] = useState(1)
@@ -294,6 +295,7 @@ export default function AthleteBaselineForm() {
   const [orientDay, setOrientDay] = useState('')
   const [orientYear, setOrientYear] = useState('')
   const [orientTime, setOrientTime] = useState('')
+  const [orientationTimestamp, setOrientationTimestamp] = useState<Date | null>(null) // capture time when answers given
 
   // Immediate Memory — rotate lists A→B→C across tests (repeats every 3)
   const wordListKey: WordListKey = (['A', 'B', 'C'] as const)[listIndex]
@@ -342,10 +344,12 @@ export default function AthleteBaselineForm() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [validationError, setValidationError] = useState('')
 
   const wordTimerRef = useRef<NodeJS.Timeout | null>(null)
   const digitTimerRef = useRef<NodeJS.Timeout | null>(null)
   const monthsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const oculomotorAutoAdvanceRef = useRef<NodeJS.Timeout | null>(null)
   const monthsStartTimeRef = useRef<number>(0)
 
   // Validate clinic code
@@ -353,15 +357,25 @@ export default function AthleteBaselineForm() {
     if (!code) return
     fetch(`/api/preseason/clinic/${code}`)
       .then(res => {
-        if (!res.ok) throw new Error('Invalid')
+        if (res.status === 404 || res.status === 400) {
+          setClinicError('invalid')
+          setLoading(false)
+          return null
+        }
+        if (!res.ok) {
+          setClinicError('unavailable')
+          setLoading(false)
+          return null
+        }
         return res.json()
       })
       .then(data => {
+        if (!data) return
         setClinicName(data.clinicName)
         setLoading(false)
       })
       .catch(() => {
-        setClinicError(true)
+        setClinicError('unavailable')
         setLoading(false)
       })
   }, [code])
@@ -434,6 +448,7 @@ export default function AthleteBaselineForm() {
 
   // Digit display
   const startDigitShow = useCallback(() => {
+    if (digitTimerRef.current) clearTimeout(digitTimerRef.current)
     setDigitPhase('showing')
     digitTimerRef.current = setTimeout(() => {
       setDigitPhase('input')
@@ -460,7 +475,8 @@ export default function AthleteBaselineForm() {
   const symptomTotal = symptomRatings.reduce((a, b) => a + b, 0)
 
   const orientationScore = (() => {
-    const now = new Date()
+    // Use captured timestamp (when orientation was completed) not current time
+    const now = orientationTimestamp || new Date()
     let score = 0
     const correctMonth = now.toLocaleString('en-AU', { month: 'long' })
     if (orientMonth === correctMonth) score++
@@ -475,7 +491,8 @@ export default function AthleteBaselineForm() {
       const ampm = timeParts[2].toLowerCase()
       if (ampm === 'pm' && hour < 12) hour += 12
       if (ampm === 'am' && hour === 12) hour = 0
-      if (Math.abs(hour - now.getHours()) <= 1) score++
+      const diff = Math.abs(hour - now.getHours())
+      if (diff <= 1 || diff >= 23) score++
     }
     return score
   })()
@@ -551,7 +568,7 @@ export default function AthleteBaselineForm() {
             concentration: {
               digitsScore: digitsBackwardScore,
               monthsScore: monthsReverseScore,
-              monthsTimeSeconds: monthsCorrect ? monthsTimeElapsed : null,
+              monthsTimeSeconds: monthsTimeElapsed || null,
               total: concentrationScore,
             },
             delayedRecall: { score: delayedRecallScore },
@@ -600,6 +617,7 @@ export default function AthleteBaselineForm() {
     if (currentDigitIndex < allDigits.length - 1) {
       setCurrentDigitIndex(prev => prev + 1)
       setDigitPhase('showing')
+      if (digitTimerRef.current) clearTimeout(digitTimerRef.current)
       digitTimerRef.current = setTimeout(() => {
         setDigitPhase('input')
         setDigitInput('')
@@ -661,16 +679,29 @@ export default function AthleteBaselineForm() {
           <div className="icon-container w-14 h-14 mx-auto mb-5 bg-red-100">
             <AlertCircle className="w-7 h-7 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Invalid Link</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {clinicError === 'invalid' ? 'Invalid Link' : 'Service Temporarily Unavailable'}
+          </h1>
           <p className="text-muted-foreground mb-6">
-            This baseline testing link is not valid. Please check with your clinic for the correct link.
+            {clinicError === 'invalid'
+              ? 'This baseline testing link is not valid. Please check with your clinic for the correct link.'
+              : 'The baseline testing service is temporarily unavailable. Please try again in a few minutes.'}
           </p>
-          <button
-            onClick={() => router.push('/')}
-            className="btn-primary px-8 py-3 rounded-xl font-semibold"
-          >
-            Go to ConcussionPro
-          </button>
+          {clinicError === 'unavailable' ? (
+            <button
+              onClick={() => window.location.reload()}
+              className="btn-primary px-8 py-3 rounded-xl font-semibold"
+            >
+              Try Again
+            </button>
+          ) : (
+            <button
+              onClick={() => router.push('/')}
+              className="btn-primary px-8 py-3 rounded-xl font-semibold"
+            >
+              Go to ConcussionPro
+            </button>
+          )}
         </div>
       </div>
     )
@@ -765,10 +796,10 @@ export default function AthleteBaselineForm() {
             <h2 className="text-lg font-bold mb-1">Athlete Information</h2>
             <p className="text-xs text-muted-foreground mb-4">All fields marked * are required for a complete baseline.</p>
 
-            {submitError && (
+            {validationError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                <p className="text-sm text-red-700">{submitError}</p>
+                <p className="text-sm text-red-700">{validationError}</p>
               </div>
             )}
 
@@ -1100,7 +1131,7 @@ export default function AthleteBaselineForm() {
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                  <button onClick={() => setCognitiveSubStep('digits')}
+                  <button onClick={() => { if (!orientationTimestamp) setOrientationTimestamp(new Date()); setCognitiveSubStep('digits') }}
                     className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1">
                     Next: Digits Backward <ChevronRight className="w-4 h-4" />
                   </button>
@@ -1463,9 +1494,17 @@ export default function AthleteBaselineForm() {
                                   },
                                 }
                               })
+                              // Cancel any pending auto-advance when a non-None symptom is selected
+                              if (!isNone && oculomotorAutoAdvanceRef.current) {
+                                clearTimeout(oculomotorAutoAdvanceRef.current)
+                                oculomotorAutoAdvanceRef.current = null
+                              }
                               // Auto-advance when "None" is selected
                               if (isNone && !isSelected) {
-                                setTimeout(() => setOculomotorSubStep(prev => prev + 1), 300)
+                                oculomotorAutoAdvanceRef.current = setTimeout(() => {
+                                  setOculomotorSubStep(prev => prev + 1)
+                                  oculomotorAutoAdvanceRef.current = null
+                                }, 300)
                               }
                             }}
                             className={`p-2.5 rounded-xl text-sm font-medium transition-all ${
@@ -1587,7 +1626,7 @@ export default function AthleteBaselineForm() {
                     Complete Delayed Recall Now
                   </button>
                   <button
-                    onClick={() => setStep(1)}
+                    onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
                     className="btn-secondary px-6 py-2.5 rounded-lg text-sm font-semibold"
                   >
                     Review Previous Sections
@@ -1754,7 +1793,7 @@ export default function AthleteBaselineForm() {
         <div className="flex justify-between mt-6">
           {step > 1 ? (
             <button
-              onClick={() => setStep(prev => prev - 1)}
+              onClick={() => { setStep(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
               className="btn-secondary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1"
             >
               <ChevronLeft className="w-4 h-4" /> Back
@@ -1766,47 +1805,55 @@ export default function AthleteBaselineForm() {
               onClick={() => {
                 if (step === 1) {
                   if (!name) {
-                    setSubmitError('Please enter the athlete\'s name to continue.')
+                    setValidationError('Please enter the athlete\'s name to continue.')
                     return
                   }
                   if (!sex) {
-                    setSubmitError('Please select sex to continue.')
+                    setValidationError('Please select sex to continue.')
                     return
                   }
                   if (!sport) {
-                    setSubmitError('Please enter the sport to continue.')
+                    setValidationError('Please enter the sport to continue.')
                     return
                   }
-                  // Look up previous baselines for this athlete
-                  setSubmitError('')
-                  setLookingUpHistory(true)
-                  fetch('/api/preseason/athlete-history', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ clinicCode: code, name: name.trim(), dob }),
-                  })
-                    .then(res => res.json())
-                    .then(data => {
-                      const prev = data.previousTests || 0
-                      setTestNumber(prev + 1)
-                      // Rotate word list based on athlete's actual test count: 1st→A, 2nd→B, 3rd→C, 4th→A...
-                      setListIndex(prev % 3)
+                  // Look up previous baselines for this athlete (only once)
+                  setValidationError('')
+                  if (historyLookedUpRef.current) {
+                    setStep(2)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  } else {
+                    setLookingUpHistory(true)
+                    fetch('/api/preseason/athlete-history', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ clinicCode: code, name: name.trim(), dob }),
                     })
-                    .catch(() => {
-                      // On error, default to test #1 / list A
-                      setTestNumber(1)
-                      setListIndex(0)
-                    })
-                    .finally(() => {
-                      setLookingUpHistory(false)
-                      setStep(2)
-                    })
+                      .then(res => res.json())
+                      .then(data => {
+                        const prev = data.previousTests || 0
+                        setTestNumber(prev + 1)
+                        // Rotate word list based on athlete's actual test count: 1st→A, 2nd→B, 3rd→C, 4th→A...
+                        setListIndex(prev % 3)
+                      })
+                      .catch(() => {
+                        // On error, default to test #1 / list A
+                        setTestNumber(1)
+                        setListIndex(0)
+                      })
+                      .finally(() => {
+                        historyLookedUpRef.current = true
+                        setLookingUpHistory(false)
+                        setStep(2)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      })
+                  }
                   return
                 }
                 setSubmitError('')
                 setStep(prev => prev + 1)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
               }}
-              disabled={(step === 5 && !delayedRecallReady) || lookingUpHistory}
+              disabled={(step === 5 && !delayedRecallReady) || (step === 3 && memoryPhase !== 'done') || (step === 4 && oculomotorSubStep < 9) || lookingUpHistory}
               className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
             >
               {lookingUpHistory ? (

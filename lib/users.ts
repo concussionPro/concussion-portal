@@ -86,6 +86,15 @@ export async function createUser(data: {
           workshop_location = COALESCE(${data.workshopLocation || null}, workshop_location)
         WHERE id = ${existing.id}
       `
+    } else if (existing.accessLevel === 'full-course' && (data.stripeCustomerId || data.workshopLocation)) {
+      // Update Stripe metadata for existing full-course users (webhook retries, etc.)
+      await sql`
+        UPDATE users SET
+          stripe_customer_id = COALESCE(${data.stripeCustomerId || null}, stripe_customer_id),
+          stripe_subscription_id = COALESCE(${data.stripeSubscriptionId || null}, stripe_subscription_id),
+          workshop_location = COALESCE(${data.workshopLocation || null}, workshop_location)
+        WHERE id = ${existing.id}
+      `
     }
     return existing.id
   }

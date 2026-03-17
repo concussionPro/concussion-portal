@@ -6,6 +6,7 @@ import path from 'path';
 // Conditionally import @vercel/blob — only available when BLOB_READ_WRITE_TOKEN is set
 let blobPut: typeof import('@vercel/blob').put | null = null;
 let blobList: typeof import('@vercel/blob').list | null = null;
+let blobGet: typeof import('@vercel/blob').get | null = null;
 
 const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
 
@@ -14,6 +15,7 @@ if (useBlob) {
     const blob = require('@vercel/blob');
     blobPut = blob.put;
     blobList = blob.list;
+    blobGet = blob.get;
   } catch {
     // @vercel/blob not available
   }
@@ -119,15 +121,14 @@ function writeLocalNdjson(dateKey: string, content: string): void {
 // ---------------------------------------------------------------------------
 
 async function readBlobNdjson(dateKey: string): Promise<string | null> {
-  if (!blobList) return null;
+  if (!blobGet) return null;
   try {
     const blobPath = getBlobPath(dateKey);
-    const { blobs } = await blobList({ prefix: blobPath });
-    const match = blobs.find((b) => b.pathname === blobPath);
-    if (!match) return null;
-    const res = await fetch(match.url, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return await res.text();
+    const blob = await blobGet(blobPath, { access: 'private' });
+    if (blob && blob.statusCode === 200 && blob.stream) {
+      return await new Response(blob.stream).text();
+    }
+    return null;
   } catch {
     return null;
   }
@@ -219,7 +220,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     try {
       await blobPut(blobPath, serializeNdjson(events), {
-        access: 'public',
+        access: 'private',
         addRandomSuffix: false,
         contentType: 'application/x-ndjson',
       });

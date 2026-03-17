@@ -44,9 +44,10 @@ export async function POST(request: Request) {
     // Rate limit: 3 registrations per email per day
     const today = new Date().toISOString().slice(0, 10)
     const rateKey = `rate:preseason:${email.toLowerCase()}:${today}`
-    const count = await kv.get<number>(rateKey) || 0
+    const count = await kv.incr(rateKey)
+    if (count === 1) await kv.expire(rateKey, 86400)
 
-    if (count >= 3) {
+    if (count > 3) {
       return NextResponse.json(
         { error: 'Maximum registrations reached for today. Please try again tomorrow.' },
         { status: 429 }
@@ -60,6 +61,9 @@ export async function POST(request: Request) {
       code = generateCode()
       attempts++
     }
+    if (attempts >= 10 && await kv.exists(`clinic:${code}`)) {
+      return NextResponse.json({ error: 'Unable to generate unique code. Please try again.' }, { status: 500 })
+    }
 
     // Store clinic data
     await kv.set(`clinic:${code}`, {
@@ -69,8 +73,7 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     })
 
-    // Increment rate limit counter (expires after 24h)
-    await kv.set(rateKey, count + 1, { ex: 86400 })
+    // Rate limit already incremented atomically above
 
     // Persist to Blob storage for admin dashboard
     try {
@@ -129,7 +132,7 @@ export async function POST(request: Request) {
     const athleteLink = `${baseUrl}/preseason/b/${code}`
 
     // Send confirmation email
-    await sendEmail({
+    const emailSent = await sendEmail({
       to: email,
       subject: 'Your Pre-Season Baseline Testing Link — ConcussionPro',
       html: `
@@ -205,7 +208,12 @@ export async function POST(request: Request) {
       `,
     })
 
-    return NextResponse.json({ success: true, code, athleteLink })
+    return NextResponse.json({
+      success: true,
+      code,
+      athleteLink,
+      ...(emailSent ? {} : { warning: 'Confirmation email may not have been delivered. Please save this code and link.' }),
+    })
   } catch (error) {
     console.error('Preseason registration error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
