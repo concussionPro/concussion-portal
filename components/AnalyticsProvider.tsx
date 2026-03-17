@@ -22,14 +22,14 @@ function getOrCreateSessionId(): string {
 // UTM Parameter Tracking
 // ---------------------------------------------------------------------------
 
-const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
+const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid'] as const;
 const UTM_STORAGE_KEY = 'cea_utm';
 
 function captureUtmParams(): void {
   if (typeof window === 'undefined') return;
   const params = new URLSearchParams(window.location.search);
-  const hasUtm = UTM_PARAMS.some(k => params.has(k));
-  if (!hasUtm) return;
+  const hasTracking = UTM_PARAMS.some(k => params.has(k));
+  if (!hasTracking) return;
 
   const utm: Record<string, string> = {};
   UTM_PARAMS.forEach(k => {
