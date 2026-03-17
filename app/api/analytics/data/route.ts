@@ -33,6 +33,7 @@ interface StoredEvent {
   path: string;
   search: string | null;
   ip?: string;
+  country?: string;
 }
 
 interface StatValue {
@@ -331,6 +332,7 @@ function classifyChannel(e: StoredEvent): string {
 interface SessionSummary {
   sessionId: string;
   ip: string;
+  country: string;
   events: StoredEvent[];
   firstTs: number;
   lastTs: number;
@@ -373,6 +375,7 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
     summaries.push({
       sessionId,
       ip: (firstEvent as any).ip || 'unknown',
+      country: firstEvent.country || '',
       events: sorted,
       firstTs: firstEvent.timestamp,
       lastTs: lastEvent.timestamp,
@@ -518,7 +521,7 @@ function buildRetargeting(sessions: SessionSummary[]) {
   const ipData = new Map<string, {
     ip: string; sessions: SessionSummary[]; totalPageviews: number;
     pricingViews: number; converted: boolean; lastSeen: number;
-    pages: Set<string>; channel: string; device: string;
+    pages: Set<string>; channel: string; device: string; country: string;
   }>();
 
   for (const s of sessions) {
@@ -526,7 +529,7 @@ function buildRetargeting(sessions: SessionSummary[]) {
     const existing = ipData.get(s.ip) || {
       ip: s.ip, sessions: [], totalPageviews: 0,
       pricingViews: 0, converted: false, lastSeen: 0,
-      pages: new Set(), channel: s.channel, device: s.device,
+      pages: new Set(), channel: s.channel, device: s.device, country: s.country,
     };
     existing.sessions.push(s);
     existing.totalPageviews += s.pageviews;
@@ -551,6 +554,7 @@ function buildRetargeting(sessions: SessionSummary[]) {
       pagesVisited: Array.from(d.pages).slice(0, 5),
       channel: d.channel,
       device: d.device,
+      country: d.country,
     }));
 
   // Preseason leads who haven't viewed pricing
@@ -568,6 +572,7 @@ function buildRetargeting(sessions: SessionSummary[]) {
       hasRegistered: d.sessions.some((s) => s.hasPreseasonRegister),
       hasSubmitted: d.sessions.some((s) => s.hasPreseasonSubmit),
       channel: d.channel,
+      country: d.country,
     }));
 
   // Summary stats
@@ -576,9 +581,21 @@ function buildRetargeting(sessions: SessionSummary[]) {
   const pricingViewers = Array.from(ipData.values()).filter((d) => d.pricingViews > 0).length;
   const converters = Array.from(ipData.values()).filter((d) => d.converted).length;
 
+  // Geography breakdown
+  const countryCounts = new Map<string, number>();
+  for (const d of ipData.values()) {
+    const c = d.country || 'Unknown';
+    countryCounts.set(c, (countryCounts.get(c) ?? 0) + 1);
+  }
+  const geography = Array.from(countryCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([country, visitors]) => ({ country, visitors }));
+
   return {
     hotLeads,
     preseasonLeads,
+    geography,
     summary: {
       totalVisitors,
       returningVisitors,
@@ -952,6 +969,9 @@ function buildMetrics(
         break;
       case 'browser':
         key = detectBrowser(e.userAgent ?? '');
+        break;
+      case 'country':
+        key = e.country || 'Unknown';
         break;
       default:
         key = 'unknown';

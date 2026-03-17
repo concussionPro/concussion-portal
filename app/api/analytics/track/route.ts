@@ -50,6 +50,7 @@ interface TrackPayload {
 
 interface StoredEvent extends TrackPayload {
   ip?: string;
+  country?: string;
 }
 
 function getTodayKey(): string {
@@ -182,6 +183,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // Geo: Vercel injects x-vercel-ip-country on edge
+  const country = request.headers.get('x-vercel-ip-country') || undefined;
+
   const event: StoredEvent = {
     eventType: String(payload.eventType).slice(0, 64),
     eventData: payload.eventData ?? {},
@@ -192,6 +196,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     path: String(payload.path).slice(0, 512),
     search: payload.search ? String(payload.search).slice(0, 512) : null,
     ip,
+    country,
   };
 
   const dateKey = getTodayKey();

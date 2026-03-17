@@ -1463,6 +1463,10 @@ export default function AthleteBaselineForm() {
                                   },
                                 }
                               })
+                              // Auto-advance when "None" is selected
+                              if (isNone && !isSelected) {
+                                setTimeout(() => setOculomotorSubStep(prev => prev + 1), 300)
+                              }
                             }}
                             className={`p-2.5 rounded-xl text-sm font-medium transition-all ${
                               isSelected

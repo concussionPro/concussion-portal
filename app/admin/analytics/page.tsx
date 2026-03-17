@@ -74,14 +74,16 @@ interface FlowData {
 
 interface HotLead {
   ip: string; visits: number; pageviews: number; pricingViews: number
-  lastSeen: number; pagesVisited: string[]; channel: string; device: string
+  lastSeen: number; pagesVisited: string[]; channel: string; device: string; country?: string
 }
 interface PreseasonLead {
   ip: string; visits: number; lastSeen: number
-  hasRegistered: boolean; hasSubmitted: boolean; channel: string
+  hasRegistered: boolean; hasSubmitted: boolean; channel: string; country?: string
 }
+interface GeoEntry { country: string; visitors: number }
 interface RetargetingData {
   hotLeads: HotLead[]; preseasonLeads: PreseasonLead[]
+  geography?: GeoEntry[]
   summary: {
     totalVisitors: number; returningVisitors: number; returningRate: number
     pricingViewers: number; pricingToConversion: number; converters: number
@@ -153,6 +155,25 @@ function pct(value: number, prev: number): { delta: number; sign: string; color:
   const sign = delta >= 0 ? '+' : ''
   const color = delta >= 0 ? 'text-emerald-600' : 'text-rose-500'
   return { delta: Math.abs(delta), sign, color, isNew: false }
+}
+
+const COUNTRY_NAMES: Record<string, string> = {
+  AU: 'Australia', US: 'United States', GB: 'United Kingdom', NZ: 'New Zealand',
+  CA: 'Canada', IE: 'Ireland', SG: 'Singapore', IN: 'India', ZA: 'South Africa',
+  DE: 'Germany', FR: 'France', JP: 'Japan', HK: 'Hong Kong', AE: 'UAE',
+  NL: 'Netherlands', SE: 'Sweden', NO: 'Norway', DK: 'Denmark', FI: 'Finland',
+  MY: 'Malaysia', PH: 'Philippines', ID: 'Indonesia', TH: 'Thailand',
+  KR: 'South Korea', CN: 'China', BR: 'Brazil', MX: 'Mexico', IT: 'Italy',
+  ES: 'Spain', PT: 'Portugal', PL: 'Poland', AT: 'Austria', CH: 'Switzerland',
+  BE: 'Belgium', NG: 'Nigeria', KE: 'Kenya', GH: 'Ghana', EG: 'Egypt',
+}
+
+function countryLabel(code: string): string {
+  if (!code || code === 'Unknown') return 'Unknown'
+  // Convert country code to flag emoji
+  const flag = code.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65))
+  const name = COUNTRY_NAMES[code.toUpperCase()] || code.toUpperCase()
+  return `${flag} ${name}`
 }
 
 function normaliseMetrics(data: any): MetricRow[] {
@@ -1032,6 +1053,18 @@ export default function AnalyticsDashboard() {
                     )}
                   </div>
                 </div>
+
+                {/* Geography */}
+                {retargetingData?.geography && retargetingData.geography.length > 0 && (
+                  <div>
+                    <SectionTitle title="Visitors by Country" subtitle="Geographic distribution of unique visitors" />
+                    <div className="space-y-1">
+                      {retargetingData.geography.map((row) => (
+                        <MetricRowBar key={row.country} label={countryLabel(row.country)} value={row.visitors} max={retargetingData.geography![0]?.visitors ?? 1} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1307,11 +1340,12 @@ export default function AnalyticsDashboard() {
                         <thead>
                           <tr className="border-b border-[rgba(13,115,119,0.08)]">
                             <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">IP</th>
+                            <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)] hidden sm:table-cell">Country</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Visits</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Pages</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Pricing</th>
-                            <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)] hidden sm:table-cell">Channel</th>
-                            <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)] hidden md:table-cell">Device</th>
+                            <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)] hidden md:table-cell">Channel</th>
+                            <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)] hidden lg:table-cell">Device</th>
                             <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Last Seen</th>
                           </tr>
                         </thead>
@@ -1319,11 +1353,12 @@ export default function AnalyticsDashboard() {
                           {retargetingData.hotLeads.map((lead) => (
                             <tr key={lead.ip} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
                               <td className="py-2.5 pr-4 font-mono text-xs text-[var(--foreground)]">{lead.ip}</td>
+                              <td className="py-2.5 px-2 text-xs text-[var(--muted-foreground)] hidden sm:table-cell">{countryLabel(lead.country || '')}</td>
                               <td className="py-2.5 px-2 text-right tabular-nums text-[var(--accent)] font-semibold">{lead.visits}</td>
                               <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{lead.pageviews}</td>
                               <td className="py-2.5 px-2 text-right tabular-nums font-semibold text-amber-600">{lead.pricingViews}x</td>
-                              <td className="py-2.5 px-2 text-[var(--muted-foreground)] hidden sm:table-cell">{lead.channel}</td>
-                              <td className="py-2.5 px-2 hidden md:table-cell">
+                              <td className="py-2.5 px-2 text-[var(--muted-foreground)] hidden md:table-cell">{lead.channel}</td>
+                              <td className="py-2.5 px-2 hidden lg:table-cell">
                                 <span className="flex items-center gap-1 text-[var(--muted-foreground)]">
                                   <DeviceIcon device={lead.device} />{lead.device}
                                 </span>
