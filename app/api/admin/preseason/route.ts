@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     if (clinicBlobs.length > 0) {
       try {
-        const res = await fetch(`${clinicBlobs[0].url}?t=${Date.now()}`, { cache: 'no-store' })
+        const res = await fetch(`${clinicBlobs[0].downloadUrl}?t=${Date.now()}`, { cache: 'no-store' })
         clinics = await res.json()
       } catch (err) {
         console.warn('Failed to load preseason clinics:', err)
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     if (baselineBlobs.length > 0) {
       try {
-        const res = await fetch(`${baselineBlobs[0].url}?t=${Date.now()}`, { cache: 'no-store' })
+        const res = await fetch(`${baselineBlobs[0].downloadUrl}?t=${Date.now()}`, { cache: 'no-store' })
         baselines = await res.json()
       } catch (err) {
         console.warn('Failed to load preseason baselines:', err)

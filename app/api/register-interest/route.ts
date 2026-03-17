@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
 
       if (existing.length > 0) {
-        const res = await fetch(`${existing[0].url}?t=${Date.now()}`, { cache: 'no-store' })
+        const res = await fetch(`${existing[0].downloadUrl}?t=${Date.now()}`, { cache: 'no-store' })
         registrations = await res.json()
       }
     } catch (err) {

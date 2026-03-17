@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     let baselines: BaselineEntry[] = []
     try {
-      const res = await fetch(`${existing[0].url}?t=${Date.now()}`, { cache: 'no-store' })
+      const res = await fetch(`${existing[0].downloadUrl}?t=${Date.now()}`, { cache: 'no-store' })
       baselines = await res.json()
     } catch {
       return NextResponse.json({ previousTests: 0, dates: [] })
