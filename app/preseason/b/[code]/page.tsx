@@ -696,24 +696,9 @@ export default function AthleteBaselineForm() {
             <p className="text-sm font-semibold mb-1">Your Cognitive Score</p>
             <p className="text-3xl font-bold text-accent">{totalCognitiveScore}/30</p>
           </div>
-          <p className="text-xs text-muted-foreground mb-6">
+          <p className="text-xs text-muted-foreground">
             This score is one piece of a comprehensive baseline. The full SCAT6 covers 7 additional domains.
           </p>
-          <div className="space-y-3">
-            <a
-              href="/scat-mastery"
-              className="btn-primary w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
-            >
-              Free SCAT6 Mastery Course
-              <ArrowRight className="w-4 h-4 flex-shrink-0" />
-            </a>
-            <a
-              href="/preview"
-              className="w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 border border-accent/20 text-accent hover:bg-accent/5 transition-colors"
-            >
-              Full Concussion Management Training
-            </a>
-          </div>
         </div>
       </div>
     )
@@ -762,14 +747,14 @@ export default function AthleteBaselineForm() {
 
         {/* Test number indicator — shown after step 1 */}
         {step > 1 && testNumber > 0 && (
-          <div className={`text-center mb-6 py-2 px-4 rounded-lg text-xs font-semibold ${
+          <div className={`text-center mb-6 py-2.5 px-4 rounded-xl text-sm font-bold ${
             testNumber === 1
               ? 'bg-accent/10 text-accent'
               : 'bg-amber-50 text-amber-700 border border-amber-200'
           }`}>
             {testNumber === 1
-              ? `First baseline for ${name} — Word List ${wordListKey}`
-              : `Baseline test #${testNumber} for ${name} — Word List ${wordListKey}`
+              ? `Baseline Test 1 — ${name}`
+              : `Baseline Test ${testNumber} — ${name}`
             }
           </div>
         )}
@@ -1183,18 +1168,28 @@ export default function AthleteBaselineForm() {
                         </button>
                       ))}
                     </div>
-                    <div className="mt-4 flex justify-between items-center">
-                      <div className="glass rounded-lg px-3 py-1.5 border border-accent/20">
-                        <span className="text-sm font-bold text-accent">
-                          {Object.values(trialSelections[currentTrial] || {}).filter(Boolean).length}
-                        </span>
-                        <span className="text-sm text-muted-foreground">/10 selected</span>
-                      </div>
-                      <button onClick={completeTrialRecall}
-                        className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold">
-                        Done
-                      </button>
-                    </div>
+                    {(() => {
+                      const selectedCount = Object.values(trialSelections[currentTrial] || {}).filter(Boolean).length
+                      return (
+                        <div className="mt-4 flex justify-between items-center">
+                          <div className={`rounded-xl px-4 py-2 border-2 font-bold transition-all ${
+                            selectedCount === 10
+                              ? 'bg-green-100 border-green-500 text-green-700'
+                              : selectedCount > 0
+                                ? 'bg-accent/10 border-accent text-accent'
+                                : 'bg-slate-100 border-slate-300 text-slate-500'
+                          }`}>
+                            <span className="text-lg">{selectedCount}</span>
+                            <span className="text-base">/10</span>
+                            <span className="text-xs ml-1.5 font-medium opacity-75">selected</span>
+                          </div>
+                          <button onClick={completeTrialRecall}
+                            className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold">
+                            Done
+                          </button>
+                        </div>
+                      )
+                    })()}
                   </div>
                 )}
 
@@ -1578,14 +1573,22 @@ export default function AthleteBaselineForm() {
                   {Math.floor(delayTimeRemaining / 60)}:{(delayTimeRemaining % 60).toString().padStart(2, '0')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-4">
-                  You can go back to review previous sections while waiting.
+                  You can go back to review previous sections while waiting, or proceed when ready.
                 </p>
-                <button
-                  onClick={() => setStep(1)}
-                  className="btn-secondary px-6 py-2.5 rounded-lg text-sm font-semibold mt-4"
-                >
-                  Review Previous Sections
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+                  <button
+                    onClick={() => setDelayedRecallReady(true)}
+                    className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold"
+                  >
+                    Complete Delayed Recall Now
+                  </button>
+                  <button
+                    onClick={() => setStep(1)}
+                    className="btn-secondary px-6 py-2.5 rounded-lg text-sm font-semibold"
+                  >
+                    Review Previous Sections
+                  </button>
+                </div>
               </div>
             ) : (
               <div>
@@ -1609,14 +1612,24 @@ export default function AthleteBaselineForm() {
                     </button>
                   ))}
                 </div>
-                <div className="mt-3 text-center">
-                  <div className="inline-block glass rounded-lg px-3 py-1.5 border border-accent/20">
-                    <span className="text-sm font-bold text-accent">
-                      {Object.values(delayedRecallSelections).filter(Boolean).length}
-                    </span>
-                    <span className="text-sm text-muted-foreground">/10 selected</span>
-                  </div>
-                </div>
+                {(() => {
+                  const selectedCount = Object.values(delayedRecallSelections).filter(Boolean).length
+                  return (
+                    <div className="mt-3 text-center">
+                      <div className={`inline-block rounded-xl px-4 py-2 border-2 font-bold transition-all ${
+                        selectedCount === 10
+                          ? 'bg-green-100 border-green-500 text-green-700'
+                          : selectedCount > 0
+                            ? 'bg-accent/10 border-accent text-accent'
+                            : 'bg-slate-100 border-slate-300 text-slate-500'
+                      }`}>
+                        <span className="text-lg">{selectedCount}</span>
+                        <span className="text-base">/10</span>
+                        <span className="text-xs ml-1.5 font-medium opacity-75">selected</span>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )}
           </div>
