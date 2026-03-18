@@ -126,7 +126,7 @@ function PricingContent() {
     },
     {
       q: 'How much time does the course take?',
-      a: 'The online modules take approximately 10 hours total, completed at your own pace with no deadline. The hands-on workshop is a single full day (6 hours). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
+      a: 'The online modules take approximately 8 hours total (8 CPD points), completed at your own pace with no deadline. The hands-on workshop is a single full day (6 hours, 6 CPD points). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
     },
     {
       q: 'Is this course only for osteopaths?',
@@ -140,6 +140,10 @@ function PricingContent() {
     {
       q: 'Can my employer pay for this?',
       a: 'Yes — most practices and employers cover CPD training costs. After purchase, you\'ll receive a tax invoice and AHPRA-aligned CPD certificate that your employer can use for reimbursement. Many clinicians pay nothing out of pocket.',
+    },
+    {
+      q: 'Does this count toward my AHPRA CPD requirements?',
+      a: 'Yes. The online modules count as formal CPD hours (8 hours), and the workshop adds 6 hours. Log it as "Educational Activity — Reviewing & Reflecting" in your CPD portfolio. Your certificate includes completion date, CPD hours, and a unique certificate ID — everything you need for an AHPRA audit. Endorsed by Osteopathy Australia.',
     },
   ]
 
@@ -274,6 +278,41 @@ function PricingContent() {
             Try our free SCAT6 Mastery course (2 CPD points)
           </Link>
         </p>
+
+        {/* Regulatory context — informative, not fear-based */}
+        <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-slate-50 border border-slate-200">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Why clinicians are upskilling now</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Link href="/blog/ais-concussion-brain-health-position-statement-2024" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
+              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">AIS Position Statement 2024</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Physiotherapists formally recognised as first-line concussion care providers</p>
+              </div>
+            </Link>
+            <Link href="/blog/21-day-concussion-stand-down-youth-sport-australia" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
+              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">21-Day Stand-Down Rule</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Clubs need qualified assessors to manage the graded return protocol</p>
+              </div>
+            </Link>
+            <Link href="/blog/nsw-mandatory-concussion-training-combat-sports" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
+              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">NSW Combat Sports Legislation</p>
+                <p className="text-xs text-muted-foreground mt-0.5">First Australian jurisdiction to mandate concussion training</p>
+              </div>
+            </Link>
+            <Link href="/blog/ahpra-cpd-requirements-concussion-education" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
+              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">AHPRA CPD Requirements</p>
+                <p className="text-xs text-muted-foreground mt-0.5">How structured concussion education counts toward your annual obligations</p>
+              </div>
+            </Link>
+          </div>
+        </div>
 
         {/* Workshop city progress bars — urgency lever, positioned near pricing decision */}
         {hasAnyRegistrations && (

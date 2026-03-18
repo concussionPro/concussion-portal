@@ -10,7 +10,10 @@ import {
   Award,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-import { trackEvent } from '@/lib/analytics'
+import { trackEvent, trackLeadConversion } from '@/lib/analytics'
+
+// Google Ads conversion label for enrol/checkout clicks
+const ENROL_CLICK_LABEL = 'TVzUCLHT0IccEJWXu_9C'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -44,6 +47,12 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
     setError(null)
 
     trackEvent('checkout_start', { courseType, source: 'pricing_page', location: preselectedLocation })
+
+    // Fire Google Ads conversion for checkout intent
+    const conversionValue = courseType === 'full-course'
+      ? (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR)
+      : CONFIG.COURSE.PRICE_ONLINE
+    trackLeadConversion(ENROL_CLICK_LABEL, conversionValue)
 
     try {
       const res = await fetch('/api/create-checkout', {

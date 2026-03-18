@@ -46,7 +46,7 @@ export default function HomePage() {
 
             {/* Subhead */}
             <p className="text-base md:text-lg text-[var(--muted-foreground)] leading-relaxed mb-8 max-w-[560px]">
-              Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} modules, {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points, and the only course with hands-on SCAT6, VOMS &amp; BESS training.
+              Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points.
             </p>
 
             {/* CTAs */}
@@ -276,6 +276,49 @@ export default function HomePage() {
         </section>
 
 
+        {/* ── Why now ──────────────────────────────────────── */}
+        <section className="section-padding relative z-10">
+          <div className="max-w-[640px] mx-auto">
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--foreground)] mb-2">
+              Why clinicians are upskilling now
+            </h2>
+            <p className="text-sm text-[var(--muted-foreground)] mb-5">
+              Recent policy changes are raising the bar for concussion competency across Australian sport.
+            </p>
+            <div className="space-y-3">
+              {[
+                {
+                  title: 'AIS Position Statement 2024',
+                  desc: 'Physiotherapists formally recognised as first-line concussion care providers. 30+ NSOs adopted.',
+                  href: '/blog/ais-concussion-brain-health-position-statement-2024',
+                },
+                {
+                  title: '21-day mandatory stand-down',
+                  desc: 'Youth and community sport now requires structured return-to-play protocols and medical clearance.',
+                  href: '/blog/21-day-concussion-stand-down-youth-sport-australia',
+                },
+                {
+                  title: 'NSW combat sports legislation',
+                  desc: 'First Australian jurisdiction to mandate concussion training — a signal of where regulation is heading.',
+                  href: '/blog/nsw-mandatory-concussion-training-combat-sports',
+                },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group flex items-start gap-3 p-4 rounded-xl card hover:shadow-sm transition-all"
+                >
+                  <span className="text-[var(--accent)] mt-0.5 text-base font-bold leading-none">→</span>
+                  <div>
+                    <p className="text-[13px] font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors">{item.title}</p>
+                    <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">{item.desc}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── Divider ──────────────────────────────────────── */}
         <div className="max-w-[640px] mx-auto px-5 md:px-8">
           <div className="divider" />
@@ -351,14 +394,14 @@ export default function HomePage() {
                 Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE} · Early bird pricing available
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
-                <a
+                <Link
                   href={CONFIG.SHOP_URL}
                   onClick={() => trackShopClick('footer-cta')}
                   className="bg-white text-[var(--foreground)] px-7 py-3.5 rounded-xl text-[15px] font-semibold inline-flex items-center gap-2 hover:bg-white/90 transition-colors shadow-lg"
                 >
                   Enrol Now
                   <ArrowRight className="w-4 h-4" />
-                </a>
+                </Link>
                 <Link
                   href="/preview"
                   className="text-white/70 px-7 py-3.5 rounded-xl text-[15px] font-semibold inline-flex items-center gap-2 hover:text-white transition-colors border border-white/20 hover:border-white/40"

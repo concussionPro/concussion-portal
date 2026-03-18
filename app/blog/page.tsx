@@ -20,6 +20,38 @@ export const metadata: Metadata = {
 
 const blogPosts = [
   {
+    title: 'AHPRA CPD Requirements for Allied Health: Where Concussion Education Fits',
+    description: 'Annual CPD requirements for physiotherapists, osteopaths, chiropractors, and exercise physiologists — and how structured concussion education counts toward your obligations.',
+    date: 'March 18, 2026',
+    href: '/blog/ahpra-cpd-requirements-concussion-education',
+    gradient: 'from-violet-600 to-purple-500',
+    readTime: '8 min',
+  },
+  {
+    title: '21-Day Concussion Stand-Down in Youth Sport: What Every Australian Clinician Should Know',
+    description: 'Australia\'s 21-day mandatory stand-down after concussion in youth and community sport is now the national standard. Understand the rules, which sports enforce them, and what clinicians need to do.',
+    date: 'March 18, 2026',
+    href: '/blog/21-day-concussion-stand-down-youth-sport-australia',
+    gradient: 'from-emerald-600 to-teal-500',
+    readTime: '9 min',
+  },
+  {
+    title: 'AIS Concussion and Brain Health Position Statement 2024: Key Takeaways for Clinicians',
+    description: 'The AIS Position Statement introduces a 21-day stand-down for youth sport, formally expands the role of physiotherapists, and aligns Australia with UK and NZ concussion guidelines.',
+    date: 'March 18, 2026',
+    href: '/blog/ais-concussion-brain-health-position-statement-2024',
+    gradient: 'from-blue-700 to-indigo-600',
+    readTime: '10 min',
+  },
+  {
+    title: 'NSW Mandatory Concussion Training for Combat Sports: What Clinicians Need to Know',
+    description: 'The Combat Sports Amendment Act 2024 requires all NSW combat sports participants to complete mandatory concussion training. Here\'s what changed, who it affects, and why it matters beyond the ring.',
+    date: 'March 18, 2026',
+    href: '/blog/nsw-mandatory-concussion-training-combat-sports',
+    gradient: 'from-red-600 to-orange-500',
+    readTime: '8 min',
+  },
+  {
     title: '7 Concussion Myths Clinicians Should Stop Believing in 2026',
     description: 'From loss of consciousness to prolonged rest — evidence-based debunking of the most persistent concussion misconceptions still affecting clinical practice.',
     date: 'March 9, 2026',

@@ -367,6 +367,28 @@ export default function SCATMasteryPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Regulatory context — blog links ── */}
+        <div className="mt-12 max-w-2xl mx-auto">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Further reading</p>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {[
+              { title: 'AIS Position Statement 2024', href: '/blog/ais-concussion-brain-health-position-statement-2024' },
+              { title: '21-Day Stand-Down Rule Explained', href: '/blog/21-day-concussion-stand-down-youth-sport-australia' },
+              { title: 'AHPRA CPD Requirements Guide', href: '/blog/ahpra-cpd-requirements-concussion-education' },
+              { title: 'NSW Combat Sports Legislation', href: '/blog/nsw-mandatory-concussion-training-combat-sports' },
+            ].map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="group flex items-center gap-2 p-3 rounded-lg bg-white/60 border border-slate-200/50 hover:border-[#5b9aa6]/30 transition-colors"
+              >
+                <span className="text-[#5b9aa6] text-sm">→</span>
+                <span className="text-xs font-medium text-slate-600 group-hover:text-[#5b9aa6] transition-colors">{item.title}</span>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

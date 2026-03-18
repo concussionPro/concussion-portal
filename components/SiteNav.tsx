@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { label: 'Pricing', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Preseason', path: '/preseason', accent: false },
-  { label: 'Preview', path: '/preview', accent: false },
+  { label: 'Blog', path: '/blog', accent: false },
   { label: 'Login', path: '/login', accent: false },
 ]
 

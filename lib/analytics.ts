@@ -225,18 +225,31 @@ async function waitForGtag(timeoutMs = 5000): Promise<boolean> {
  * Assign a value so Google's smart bidding can optimise for high-value leads.
  */
 export async function trackLeadConversion(label: string, value: number, email?: string) {
-  const ready = await waitForGtag()
-  if (!ready) return
-  const params: Record<string, unknown> = {
-    send_to: `${GA_CONVERSION_ID}/${label}`,
-    value,
-    currency: 'AUD',
+  try {
+    const ready = await waitForGtag()
+    if (!ready) {
+      console.warn('[ads] gtag not ready — conversion dropped:', label)
+      return
+    }
+    const params: Record<string, unknown> = {
+      send_to: `${GA_CONVERSION_ID}/${label}`,
+      value,
+      currency: 'AUD',
+    }
+    // Enhanced conversions — send SHA-256 hashed email for better attribution
+    // Wrapped in try-catch so a hashing failure doesn't kill the conversion
+    if (email) {
+      try {
+        params.user_data = { sha256_email_address: await sha256(email) }
+      } catch {
+        // crypto.subtle unavailable (HTTP or old browser) — fire conversion without enhanced data
+      }
+    }
+    window.gtag!('event', 'conversion', params)
+    console.log('[ads] conversion fired:', label, value)
+  } catch (err) {
+    console.error('[ads] conversion error:', err)
   }
-  // Enhanced conversions — send SHA-256 hashed email for better attribution
-  if (email) {
-    params.user_data = { sha256_email_address: await sha256(email) }
-  }
-  window.gtag!('event', 'conversion', params)
 }
 
 /**
@@ -259,18 +272,30 @@ export function trackFreeCourseCompletion(email: string) {
  * Track purchase conversion with enhanced conversion data
  */
 export async function trackPurchaseConversion(value: number, transactionId: string, email?: string) {
-  const ready = await waitForGtag()
-  if (!ready) return
-  const params: Record<string, unknown> = {
-    send_to: `${GA_CONVERSION_ID}/${CONVERSION_LABELS.PURCHASE}`,
-    value,
-    currency: 'AUD',
-    transaction_id: transactionId,
+  try {
+    const ready = await waitForGtag()
+    if (!ready) {
+      console.warn('[ads] gtag not ready — purchase conversion dropped')
+      return
+    }
+    const params: Record<string, unknown> = {
+      send_to: `${GA_CONVERSION_ID}/${CONVERSION_LABELS.PURCHASE}`,
+      value,
+      currency: 'AUD',
+      transaction_id: transactionId,
+    }
+    if (email) {
+      try {
+        params.user_data = { sha256_email_address: await sha256(email) }
+      } catch {
+        // crypto.subtle unavailable — fire conversion without enhanced data
+      }
+    }
+    window.gtag!('event', 'conversion', params)
+    console.log('[ads] purchase conversion fired:', value, transactionId)
+  } catch (err) {
+    console.error('[ads] purchase conversion error:', err)
   }
-  if (email) {
-    params.user_data = { sha256_email_address: await sha256(email) }
-  }
-  window.gtag!('event', 'conversion', params)
 }
 
 // Type declaration for gtag
