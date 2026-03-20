@@ -70,8 +70,9 @@ function isAuthorised(request: NextRequest): boolean {
   const key = request.headers.get('x-admin-key');
   const expected = process.env.ANALYTICS_API_KEY || process.env.ADMIN_API_KEY;
   if (!expected || !key) return false;
-  if (key.length !== expected.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(key), Buffer.from(expected));
+  const aHash = crypto.createHmac('sha256', 'compare').update(key).digest();
+  const bHash = crypto.createHmac('sha256', 'compare').update(expected).digest();
+  return crypto.timingSafeEqual(aHash, bHash);
 }
 
 // ---------------------------------------------------------------------------
@@ -250,8 +251,18 @@ function parseNdjson(text: string): StoredEvent[] {
 // Aggregation helpers
 // ---------------------------------------------------------------------------
 
+/** Filter out server-side webhook events (sessionId starts with 'server_') */
+function excludeServerEvents(events: StoredEvent[]): StoredEvent[] {
+  return events.filter((e) => !e.sessionId.startsWith('server_'));
+}
+
+/** Match both 'page_view' (current client) and 'pageview' (legacy data) */
+function isPageView(e: StoredEvent): boolean {
+  return e.eventType === 'page_view' || e.eventType === 'pageview';
+}
+
 function countPageviews(events: StoredEvent[]): number {
-  return events.filter((e) => e.eventType === 'pageview').length;
+  return events.filter(isPageView).length;
 }
 
 function countUniqueSessionIds(events: StoredEvent[]): number {
@@ -261,7 +272,7 @@ function countUniqueSessionIds(events: StoredEvent[]): number {
 function countBounces(events: StoredEvent[]): number {
   const pvPerSession = new Map<string, number>();
   for (const e of events) {
-    if (e.eventType === 'pageview') {
+    if (isPageView(e)) {
       pvPerSession.set(e.sessionId, (pvPerSession.get(e.sessionId) ?? 0) + 1);
     }
   }
@@ -399,8 +410,10 @@ interface SessionSummary {
 }
 
 function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
+  // Exclude server-side webhook events from session analysis
+  const clientEvents = excludeServerEvents(events);
   const sessionMap = new Map<string, StoredEvent[]>();
-  for (const e of events) {
+  for (const e of clientEvents) {
     const arr = sessionMap.get(e.sessionId) || [];
     arr.push(e);
     sessionMap.set(e.sessionId, arr);
@@ -409,7 +422,7 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
   const summaries: SessionSummary[] = [];
   for (const [sessionId, sessionEvents] of sessionMap.entries()) {
     const sorted = sessionEvents.sort((a, b) => a.timestamp - b.timestamp);
-    const pvEvents = sorted.filter((e) => e.eventType === 'pageview');
+    const pvEvents = sorted.filter((e) => isPageView(e));
     const firstEvent = sorted[0];
     const lastEvent = sorted[sorted.length - 1];
     const utm = getUtmFromEvent(firstEvent);
@@ -438,7 +451,7 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
       hasPricingView: sorted.some((e) => e.path === '/pricing'),
       hasPreseasonRegister: sorted.some((e) => e.eventType === 'preseason_clinic_register'),
       hasPreseasonSubmit: sorted.some((e) => e.eventType === 'preseason_baseline_submit'),
-      hasEnrollClick: sorted.some((e) => e.eventType === 'enroll_button_click'),
+      hasEnrollClick: sorted.some((e) => e.eventType === 'enroll_button_click' || e.eventType === 'enrol_click'),
     });
   }
 
@@ -942,22 +955,25 @@ function buildInsights(
 // ---------------------------------------------------------------------------
 
 function buildStats(current: StoredEvent[], prev: StoredEvent[]): StatsResponse {
+  // Exclude server-side webhook events from visitor-facing metrics
+  const cur = excludeServerEvents(current);
+  const prv = excludeServerEvents(prev);
   return {
     pageviews: {
-      value: countPageviews(current),
-      prev: countPageviews(prev),
+      value: countPageviews(cur),
+      prev: countPageviews(prv),
     },
     uniques: {
-      value: countUniqueSessionIds(current),
-      prev: countUniqueSessionIds(prev),
+      value: countUniqueSessionIds(cur),
+      prev: countUniqueSessionIds(prv),
     },
     bounces: {
-      value: countBounces(current),
-      prev: countBounces(prev),
+      value: countBounces(cur),
+      prev: countBounces(prv),
     },
     totaltime: {
-      value: calcTotalTime(current),
-      prev: calcTotalTime(prev),
+      value: calcTotalTime(cur),
+      prev: calcTotalTime(prv),
     },
   };
 }
@@ -976,7 +992,7 @@ function buildTimeSeries(
 
   for (const e of currentEvents) {
     const dateKey = toDateKey(new Date(e.timestamp));
-    if (e.eventType === 'pageview' && pvByDate.has(dateKey)) {
+    if (isPageView(e) && pvByDate.has(dateKey)) {
       pvByDate.set(dateKey, (pvByDate.get(dateKey) ?? 0) + 1);
     }
     if (sessionsByDate.has(dateKey)) {
@@ -1000,7 +1016,7 @@ function buildMetrics(
   const counts = new Map<string, number>();
 
   for (const e of events) {
-    if (e.eventType !== 'pageview' && metricType === 'url') continue;
+    if (!isPageView(e) && metricType === 'url') continue;
 
     let key: string;
     switch (metricType) {
@@ -1098,7 +1114,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const counts = new Map<string, { count: number; latest: StoredEvent[] }>();
 
     for (const e of currentEvents) {
-      if (e.eventType === 'pageview') continue;
+      if (isPageView(e)) continue;
       const existing = counts.get(e.eventType) || { count: 0, latest: [] };
       existing.count++;
       if (existing.latest.length < 10) existing.latest.push(e);

@@ -14,7 +14,7 @@ export const resend = process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !
   : null
 
 const FROM_EMAIL = 'zac@concussion-education-australia.com'
-const FROM_NAME = 'Zac Lewis - Concussion Education Australia'
+const FROM_NAME = 'Concussion Education Australia'
 
 interface EmailOptions {
   to: string

@@ -31,13 +31,16 @@ export async function GET(request: NextRequest) {
 
     const courseType = request.nextUrl.searchParams.get('type') || 'scat-mastery'
 
+    // The full-course (14 CPD) certificate is issued manually by the workshop instructor.
+    // Only scat-mastery (2 CPD) and online-course (8 CPD) are auto-generated.
+    if (courseType === 'full-course') {
+      return NextResponse.json({ error: 'Full course certificates are issued at your workshop' }, { status: 403 })
+    }
+
     // Verify user has the required access level for this certificate type
     const user = await findUserById(sessionData.userId)
     if (courseType === 'online-course' && (!user || user.accessLevel === 'preview')) {
       return NextResponse.json({ error: 'Online course access required' }, { status: 403 })
-    }
-    if (courseType === 'full-course' && (!user || user.accessLevel !== 'full-course')) {
-      return NextResponse.json({ error: 'Full course access required' }, { status: 403 })
     }
 
     // Load user progress to verify completion
@@ -123,13 +126,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const courseType = body.type || 'scat-mastery'
 
+    // The full-course (14 CPD) certificate is issued manually by the workshop instructor.
+    if (courseType === 'full-course') {
+      return NextResponse.json({ error: 'Full course certificates are issued at your workshop' }, { status: 403 })
+    }
+
     // Verify user has the required access level for this certificate type
     const userCheck = await findUserById(sessionData.userId)
     if (courseType === 'online-course' && (!userCheck || userCheck.accessLevel === 'preview')) {
       return NextResponse.json({ error: 'Online course access required' }, { status: 403 })
-    }
-    if (courseType === 'full-course' && (!userCheck || userCheck.accessLevel !== 'full-course')) {
-      return NextResponse.json({ error: 'Full course access required' }, { status: 403 })
     }
 
     // Load user progress to verify completion
@@ -273,7 +278,7 @@ async function sendCertificateEmail(opts: {
 
   try {
     const result = await resend.emails.send({
-      from: 'Zac Lewis - Concussion Education Australia <zac@concussion-education-australia.com>',
+      from: 'Concussion Education Australia <zac@concussion-education-australia.com>',
       replyTo: 'zac@concussion-education-australia.com',
       to: opts.to,
       subject: `Your CPD Certificate — ${opts.courseTitle}`,
