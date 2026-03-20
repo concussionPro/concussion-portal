@@ -5,12 +5,10 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Building2, User, Mail, AlertCircle, Check, Copy, ArrowRight, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
-import { useAnalytics } from '@/hooks/useAnalytics'
-import { trackLeadConversion } from '@/lib/analytics'
+import { trackEvent, trackLeadConversion, ANALYTICS_EVENTS } from '@/lib/analytics'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { trackEvent, ANALYTICS_EVENTS } = useAnalytics()
 
   const [clinicName, setClinicName] = useState('')
   const [contactName, setContactName] = useState('')

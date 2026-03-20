@@ -6,11 +6,9 @@ import { ArrowRight, Check, Star } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { OrganizationSchema, CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
-import { useAnalytics } from '@/hooks/useAnalytics'
 import { trackShopClick } from '@/lib/analytics'
 
 export default function HomePage() {
-  useAnalytics()
 
   return (
     <>

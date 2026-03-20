@@ -6,7 +6,6 @@ import { User, Mail, Shield, LogOut, CheckCircle2, Crown, Award, Download, Loade
 import { useState, useEffect } from 'react'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useRouter } from 'next/navigation'
-import { useAnalytics } from '@/hooks/useAnalytics'
 import { CONFIG } from '@/lib/config'
 
 interface SessionUser {
@@ -43,7 +42,6 @@ export default function SettingsPage() {
   const [progressSaving, setProgressSaving] = useState(false)
 
   const { getTotalCompletedModules, isModuleComplete } = useProgress()
-  useAnalytics()
 
   useEffect(() => {
     async function loadUser() {
@@ -97,7 +95,8 @@ export default function SettingsPage() {
   const isPreviewUser = user?.accessLevel === 'preview'
 
   const getCertType = () => {
-    if (isFullCourse) return 'full-course'
+    // All paid users get the online-course certificate (8 CPD).
+    // The in-person workshop certificate is issued manually by the instructor.
     if (isPaidUser) return 'online-course'
     return null
   }
@@ -698,7 +697,7 @@ export default function SettingsPage() {
                     )}
 
                     <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
-                      <p className="text-sm text-purple-800 font-medium mb-2">Ready for more? Earn 8+ additional CPD points with the full course.</p>
+                      <p className="text-sm text-purple-800 font-medium mb-2">Ready for more? Earn up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points with the full course.</p>
                       <button
                         onClick={() => router.push('/pricing')}
                         className="text-sm text-purple-600 hover:text-purple-800 font-semibold"

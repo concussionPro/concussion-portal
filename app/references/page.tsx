@@ -5,7 +5,6 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { ReferenceRepository } from '@/components/dashboard/ReferenceRepository'
 import { useState, useEffect } from 'react'
-import { useAnalytics } from '@/hooks/useAnalytics'
 import { Loader2 } from 'lucide-react'
 
 export default function ReferencesPage() {
@@ -13,7 +12,6 @@ export default function ReferencesPage() {
   const [accessLevel, setAccessLevel] = useState<'online-only' | 'full-course' | null>(null)
   const [loading, setLoading] = useState(true)
   const [accessChecked, setAccessChecked] = useState(false)
-  useAnalytics() // Track page views
 
   useEffect(() => {
     // Check session-based access level

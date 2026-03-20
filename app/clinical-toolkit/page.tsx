@@ -6,7 +6,6 @@ import { FileText, Download, Lock, CheckCircle2, Star, ClipboardCheck, Heart, Fi
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CONFIG } from '@/lib/config'
-import { useAnalytics } from '@/hooks/useAnalytics'
 import { trackDownload, trackShopClick, trackEvent } from '@/lib/analytics'
 
 interface ToolkitResource {
@@ -151,8 +150,6 @@ export default function ClinicalToolkitPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [accessLevel, setAccessLevel] = useState<'online-only' | 'full-course' | null>(null)
   const [loading, setLoading] = useState(true)
-  useAnalytics() // Track page views
-
   useEffect(() => {
     // Check session-based access level
     async function checkAccess() {

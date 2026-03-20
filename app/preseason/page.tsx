@@ -3,12 +3,10 @@
 import { useRouter } from 'next/navigation'
 import { ArrowRight, ArrowLeft, ClipboardList, Share2, FileText, Shield, Brain, Users, CheckCircle2 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-import { useAnalytics } from '@/hooks/useAnalytics'
 import { SiteNav } from '@/components/SiteNav'
 
 export default function PreseasonLandingPage() {
   const router = useRouter()
-  useAnalytics()
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -117,7 +115,7 @@ export default function PreseasonLandingPage() {
             {[
               { title: 'Symptom Evaluation', desc: 'All 22 symptoms rated 0-6, symptom number and severity score' },
               { title: 'Orientation', desc: 'Month, date, day of week, year, and time assessment' },
-              { title: 'Immediate Memory', desc: '10-word recall across 3 trials using standard SCAT6 word lists' },
+              { title: 'Immediate Memory', desc: '10-word recall using standard SCAT6 word lists' },
               { title: 'Concentration', desc: 'Digits backward and months in reverse order' },
               { title: 'Delayed Recall', desc: '10-word recall after minimum 5-minute delay' },
               { title: 'Medical History', desc: 'Concussion history, medical conditions, current medications' },

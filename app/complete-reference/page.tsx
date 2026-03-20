@@ -5,11 +5,8 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { BookMarked, Download, ExternalLink, AlertCircle, Check } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAnalytics } from '@/hooks/useAnalytics'
-
 export default function CompleteReferencePage() {
   const router = useRouter()
-  useAnalytics()
   const [accessLevel, setAccessLevel] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [pdfLoadError, setPdfLoadError] = useState(false)

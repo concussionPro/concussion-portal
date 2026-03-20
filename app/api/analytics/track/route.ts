@@ -198,6 +198,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // Exclude admin pages from analytics
+  if (payload.path.startsWith('/admin')) {
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  // Filter out known bots and crawlers
+  const ua = (payload.userAgent || '').toLowerCase();
+  const BOT_PATTERNS = [
+    'bot', 'crawler', 'spider', 'headless', 'phantom', 'puppeteer',
+    'selenium', 'googlebot', 'bingbot', 'yandex', 'baidu', 'duckduckbot',
+    'slurp', 'ia_archiver', 'facebookexternalhit', 'twitterbot',
+    'linkedinbot', 'embedly', 'quora link', 'outbrain', 'pinterest',
+    'applebot', 'semrushbot', 'ahrefsbot', 'mj12bot', 'dotbot',
+    'petalbot', 'bytespider', 'gptbot', 'claudebot',
+  ];
+  if (BOT_PATTERNS.some(p => ua.includes(p))) {
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
   // Geo: Vercel injects x-vercel-ip-country on edge
   const country = request.headers.get('x-vercel-ip-country') || undefined;
 
@@ -236,6 +255,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       await blobPut(blobPath, serializeNdjson(events), {
         access: 'private',
         addRandomSuffix: false,
+        allowOverwrite: true,
         contentType: 'application/x-ndjson',
       });
     } catch (err) {

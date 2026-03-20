@@ -6,7 +6,6 @@ import { BentoGrid } from '@/components/dashboard/BentoGrid'
 import { WelcomeModal } from '@/components/dashboard/WelcomeModal'
 import { NextActionCard } from '@/components/dashboard/NextActionCard'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { useAnalytics } from '@/hooks/useAnalytics'
 import { Loader2 } from 'lucide-react'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 
@@ -23,8 +22,6 @@ function DashboardInner() {
   const [workshopLocationOverride, setWorkshopLocationOverride] = useState<string | null>(null)
   const [isReturningUser, setIsReturningUser] = useState(false)
   const [greeting, setGreeting] = useState('Welcome')
-
-  useAnalytics()
 
   useEffect(() => {
     setIsReturningUser(localStorage.getItem('hasSeenWelcome') === 'true')

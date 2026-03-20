@@ -8,7 +8,6 @@ import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useState } from 'react'
-import { useAnalytics } from '@/hooks/useAnalytics'
 import { CONFIG } from '@/lib/config'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 
@@ -28,8 +27,6 @@ function LearningSuiteInner() {
     if (typeof window === 'undefined') return true
     return localStorage.getItem('framing-card-dismissed') !== 'true'
   })
-  useAnalytics() // Track page views
-
   if (accessLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -333,7 +330,7 @@ function LearningSuiteInner() {
                     <div className="flex-1">
                       <h3 className="text-base font-bold text-foreground mb-1">Upgrade to the Full Course</h3>
                       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                        Unlock 8 advanced modules, the Clinical Toolkit, and Reference Repository. Online Course: <strong className="text-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points</strong> for ${CONFIG.COURSE.PRICE_ONLINE}. Complete Course (online + workshop): <strong className="text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points</strong> for ${CONFIG.COURSE.PRICE_EARLY_BIRD}.
+                        Unlock {CONFIG.COURSE.TOTAL_MODULES} modules, the Clinical Toolkit, and Reference Repository. Online: <strong className="text-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD</strong> for ${CONFIG.COURSE.PRICE_ONLINE}. Complete (online + workshop): <strong className="text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD</strong> from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird. 7-day guarantee · Afterpay / Klarna available.
                       </p>
                       <button
                         onClick={() => router.push('/pricing')}
