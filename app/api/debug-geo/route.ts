@@ -9,7 +9,5 @@ export async function GET(request: NextRequest) {
     'x-real-ip': request.headers.get('x-real-ip'),
   }
 
-  const geo = request.geo || {}
-
-  return NextResponse.json({ headers, geo })
+  return NextResponse.json({ headers })
 }
