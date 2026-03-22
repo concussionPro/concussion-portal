@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
     // Admin auth (timing-safe)
     const adminKey = request.headers.get('x-admin-key')
     const expected = process.env.ADMIN_API_KEY
-    if (!expected || !adminKey || adminKey.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(adminKey), Buffer.from(expected))) {
+    if (!expected || !adminKey || !crypto.timingSafeEqual(
+      crypto.createHmac('sha256', 'compare').update(adminKey).digest(),
+      crypto.createHmac('sha256', 'compare').update(expected).digest()
+    )) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

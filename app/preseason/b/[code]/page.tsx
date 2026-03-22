@@ -341,6 +341,7 @@ export default function AthleteBaselineForm() {
   const [delayTimeRemaining, setDelayTimeRemaining] = useState(300) // 5 minutes in seconds
 
   // Submission
+  const submittingRef = useRef(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -443,6 +444,7 @@ export default function AthleteBaselineForm() {
       if (monthsTimerRef.current) clearInterval(monthsTimerRef.current)
       if (oculomotorTimerRef.current) clearTimeout(oculomotorTimerRef.current)
       if (oculomotorRafRef.current) cancelAnimationFrame(oculomotorRafRef.current)
+      if (oculomotorAutoAdvanceRef.current) clearTimeout(oculomotorAutoAdvanceRef.current)
     }
   }, [])
 
@@ -528,6 +530,8 @@ export default function AthleteBaselineForm() {
 
   // Submit handler
   const handleSubmit = async () => {
+    if (submittingRef.current) return
+    submittingRef.current = true
     setSubmitting(true)
     setSubmitError('')
 
@@ -592,6 +596,7 @@ export default function AthleteBaselineForm() {
     } catch {
       setSubmitError('Something went wrong. Please try again.')
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
@@ -1103,7 +1108,7 @@ export default function AthleteBaselineForm() {
                   <div>
                     <label className="block text-xs font-semibold mb-2">What year is it?</label>
                     <div className="grid grid-cols-4 gap-1.5">
-                      {[2024, 2025, 2026, 2027].map(yr => (
+                      {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() + 2].map(yr => (
                         <button key={yr} onClick={() => setOrientYear(String(yr))}
                           className={`py-2 rounded-lg text-xs font-medium transition-all ${
                             orientYear === String(yr) ? 'bg-accent text-white' : 'glass hover:bg-slate-50'
@@ -1853,7 +1858,7 @@ export default function AthleteBaselineForm() {
                 setStep(prev => prev + 1)
                 window.scrollTo({ top: 0, behavior: 'smooth' })
               }}
-              disabled={(step === 5 && !delayedRecallReady) || (step === 3 && memoryPhase !== 'done') || (step === 4 && oculomotorSubStep < 9) || lookingUpHistory}
+              disabled={(step === 5 && !delayedRecallReady) || (step === 3 && (memoryPhase !== 'done' || digitPhase !== 'done' || monthsPhase !== 'done')) || (step === 4 && oculomotorSubStep < 9) || lookingUpHistory}
               className="btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
             >
               {lookingUpHistory ? (

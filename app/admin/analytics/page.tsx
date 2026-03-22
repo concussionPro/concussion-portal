@@ -533,12 +533,13 @@ function Skeleton({ className = '' }: { className?: string }) {
 }
 
 function StatCard({
-  label, value, prev, icon: Icon, format = 'number', loading = false, onClick,
+  label, value, prev, icon: Icon, format = 'number', loading = false, onClick, invertColor = false,
 }: {
   label: string; value: number; prev: number; icon: React.ElementType
-  format?: 'number' | 'percent' | 'duration'; loading?: boolean; onClick?: () => void
+  format?: 'number' | 'percent' | 'duration'; loading?: boolean; onClick?: () => void; invertColor?: boolean
 }) {
-  const { delta, sign, color, isNew } = pct(value, prev)
+  const { delta, sign, color: rawColor, isNew } = pct(value, prev)
+  const color = invertColor ? (rawColor === 'text-emerald-600' ? 'text-rose-500' : rawColor === 'text-rose-500' ? 'text-emerald-600' : rawColor) : rawColor
   const displayVal = format === 'duration' ? fmtDuration(value)
     : format === 'percent' ? fmtPct(value) : fmtNum(value)
 
@@ -863,7 +864,7 @@ export default function AnalyticsDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} onClick={() => setActiveTab('overview')} />
           <StatCard label="Page Views" value={stats?.pageviews.value ?? 0} prev={stats?.pageviews.prev ?? 0} icon={Eye} loading={loading && !stats} onClick={() => setActiveTab('overview')} />
-          <StatCard label="Bounce Rate" value={bounceRate} prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0} icon={TrendingUp} format="percent" loading={loading && !stats} onClick={() => setActiveTab('channels')} />
+          <StatCard label="Bounce Rate" value={bounceRate} prev={stats ? stats.bounces.prev / Math.max(stats.uniques.prev, 1) : 0} icon={TrendingUp} format="percent" loading={loading && !stats} onClick={() => setActiveTab('channels')} invertColor />
           <StatCard label="Avg. Session" value={avgDuration} prev={stats ? Math.round(stats.totaltime.prev / Math.max(stats.uniques.prev, 1)) : 0} icon={Clock} format="duration" loading={loading && !stats} onClick={() => setActiveTab('flow')} />
         </div>
 

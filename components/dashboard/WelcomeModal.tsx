@@ -58,7 +58,7 @@ export function WelcomeModal() {
   const firstName = user?.name?.split(' ')[0] || 'there'
   const isPreviewUser = user?.accessLevel === 'preview'
   const isFullCourse = user?.accessLevel === 'full-course'
-  const cpdPoints = isFullCourse ? '14' : isPreviewUser ? '2' : '8'
+  const cpdPoints = isPreviewUser ? '2' : '8'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
@@ -240,7 +240,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <Clock className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~2.5' : '~10'}</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~3' : '~8'}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Hours Total</div>
             </div>

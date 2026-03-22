@@ -24,25 +24,25 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
             Module {moduleNumber} is Locked
           </h2>
           <p className="text-base text-slate-600 mb-6 leading-relaxed">
-            <span className="font-semibold">{moduleTitle}</span> is part of the full course. Unlock all 8 online modules and earn your CPD points.
+            <span className="font-semibold">{moduleTitle}</span> is part of the full course. Unlock all {CONFIG.COURSE.TOTAL_MODULES} online modules and earn your CPD points.
           </p>
 
           {/* Stats */}
           <div className="grid grid-cols-4 gap-2 mb-6">
             <div className="bg-slate-50 rounded-lg p-3">
-              <div className="text-xl font-bold text-teal-600 mb-1">8</div>
+              <div className="text-xl font-bold text-teal-600 mb-1">{CONFIG.COURSE.TOTAL_MODULES}</div>
               <div className="text-xs text-slate-600 leading-tight">Online Modules</div>
             </div>
             <div className="bg-slate-50 rounded-lg p-3">
-              <div className="text-xl font-bold text-teal-600 mb-1">8</div>
+              <div className="text-xl font-bold text-teal-600 mb-1">{CONFIG.COURSE.ONLINE_CPD_POINTS}</div>
               <div className="text-xs text-slate-600 leading-tight">Online CPD</div>
             </div>
             <div className="bg-slate-50 rounded-lg p-3">
-              <div className="text-xl font-bold text-teal-600 mb-1">6</div>
+              <div className="text-xl font-bold text-teal-600 mb-1">{CONFIG.COURSE.IN_PERSON_CPD_POINTS}</div>
               <div className="text-xs text-slate-600 leading-tight">In-Person CPD</div>
             </div>
             <div className="bg-blue-50 rounded-lg p-3 border-2 border-blue-200">
-              <div className="text-xl font-bold text-blue-600 mb-1">14</div>
+              <div className="text-xl font-bold text-blue-600 mb-1">{CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
               <div className="text-xs text-blue-700 font-semibold leading-tight">Total CPD</div>
             </div>
           </div>
@@ -60,9 +60,12 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
               href="/pricing"
               className="block w-full px-6 py-3.5 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl font-semibold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl text-center"
             >
-              Unlock Full Course — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
+              See Pricing &amp; Options
               <ArrowRight className="w-4 h-4 inline-block ml-2" />
             </a>
+            <p className="text-xs text-slate-500 mt-2 text-center">
+              Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} (early bird)
+            </p>
             <button
               onClick={() => router.push('/dashboard')}
               className="block w-full px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-all text-center"
@@ -72,7 +75,7 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
           </div>
 
           <p className="text-xs text-slate-500 mt-4">
-            Early bird pricing available with code <span className="font-semibold">SCAT6</span>
+            7-day satisfaction guarantee · Afterpay / Klarna available
           </p>
         </div>
       </div>

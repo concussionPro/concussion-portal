@@ -8,7 +8,7 @@ import { X, ArrowRight, Shield, Award } from 'lucide-react'
  * Exit-intent popup — captures email by offering free SCAT6 Mastery course.
  *
  * Triggers when mouse moves toward top of viewport (desktop) or after
- * 45 seconds of inactivity (mobile fallback).
+ * 90 seconds of inactivity (mobile fallback).
  *
  * Only shows on public marketing pages, once per session.
  * Excluded from: dashboard, login, admin, checkout, course pages.
@@ -67,7 +67,7 @@ export function ExitIntentPopup() {
     let idleTimer: ReturnType<typeof setTimeout>
     const resetIdle = () => {
       clearTimeout(idleTimer)
-      idleTimer = setTimeout(triggerPopup, 45000)
+      idleTimer = setTimeout(triggerPopup, 90000)
     }
 
     document.addEventListener('mouseleave', handleMouseLeave)

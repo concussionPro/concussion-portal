@@ -1,25 +1,9 @@
 // /app/api/analytics/data/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
+import { sql } from '@/lib/db';
 
-// Conditionally use @vercel/blob when token is available
-let blobList: typeof import('@vercel/blob').list | null = null;
-let blobGet: typeof import('@vercel/blob').get | null = null;
-const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
-
-if (useBlob) {
-  try {
-    const blob = require('@vercel/blob');
-    blobList = blob.list;
-    blobGet = blob.get;
-  } catch {
-    // @vercel/blob not available
-  }
-}
-
-const LOCAL_DIR = path.join(process.cwd(), '.data', 'analytics');
+// Legacy blob support removed — all data now in Vercel Postgres
 
 // ---------------------------------------------------------------------------
 // Types
@@ -106,145 +90,34 @@ function parsePeriodDays(period: string): number {
 }
 
 // ---------------------------------------------------------------------------
-// Local filesystem storage (dev fallback)
+// Postgres event fetching
 // ---------------------------------------------------------------------------
 
-function readLocalNdjson(dateKey: string): StoredEvent[] {
-  const filePath = path.join(LOCAL_DIR, `${dateKey}.ndjson`);
+async function fetchEventsFromPostgres(startMs: number, endMs: number): Promise<StoredEvent[]> {
   try {
-    const text = fs.readFileSync(filePath, 'utf-8');
-    return parseNdjson(text);
-  } catch {
+    const { rows } = await sql`
+      SELECT event_type, event_data, session_id, timestamp_ms, user_agent,
+             referrer, path, search, ip, country
+      FROM analytics_events
+      WHERE timestamp_ms >= ${startMs} AND timestamp_ms < ${endMs}
+      ORDER BY timestamp_ms ASC
+    `;
+    return rows.map((r: any) => ({
+      eventType: r.event_type,
+      eventData: typeof r.event_data === 'string' ? JSON.parse(r.event_data) : (r.event_data || {}),
+      sessionId: r.session_id,
+      timestamp: Number(r.timestamp_ms),
+      userAgent: r.user_agent || '',
+      referrer: r.referrer || null,
+      path: r.path,
+      search: r.search || null,
+      ip: r.ip,
+      country: r.country,
+    }));
+  } catch (err) {
+    console.error('[analytics/data] Postgres read failed:', err);
     return [];
   }
-}
-
-function fetchEventsLocalForDateRange(dateKeys: string[]): StoredEvent[] {
-  const allEvents: StoredEvent[] = [];
-  for (const key of dateKeys) {
-    allEvents.push(...readLocalNdjson(key));
-  }
-  return allEvents;
-}
-
-// ---------------------------------------------------------------------------
-// Blob fetching
-// ---------------------------------------------------------------------------
-
-interface BlobEntry {
-  pathname: string;
-  url: string;
-}
-
-async function readBlobText(entry: BlobEntry): Promise<string | null> {
-  // Try private get first (new blobs written with access: 'private')
-  if (blobGet) {
-    try {
-      const blob = await blobGet(entry.pathname, { access: 'private' });
-      if (blob && blob.statusCode === 200 && blob.stream) {
-        return await new Response(blob.stream).text();
-      }
-    } catch { /* not found as private */ }
-  }
-
-  // Fallback: fetch the URL directly (works for old public blobs)
-  try {
-    const res = await fetch(entry.url, { cache: 'no-store' });
-    if (res.ok) return await res.text();
-  } catch { /* fetch failed */ }
-
-  return null;
-}
-
-async function fetchEventsForDate(
-  dateKey: string,
-  blobDateMap: Map<string, BlobEntry[]>
-): Promise<StoredEvent[]> {
-  const entries = blobDateMap.get(dateKey);
-  if (!entries || entries.length === 0) return [];
-
-  const allEvents: StoredEvent[] = [];
-  for (const entry of entries) {
-    const text = await readBlobText(entry);
-    if (text) allEvents.push(...parseNdjson(text));
-  }
-
-  // Deduplicate if multiple blobs for same date
-  if (entries.length > 1) {
-    const seen = new Set<string>();
-    return allEvents.filter(e => {
-      const key = `${e.sessionId}:${e.timestamp}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }
-
-  return allEvents;
-}
-
-async function buildBlobDateMap(): Promise<Map<string, BlobEntry[]>> {
-  const dateMap = new Map<string, BlobEntry[]>();
-  if (!blobList) return dateMap;
-  try {
-    let cursor: string | undefined;
-    do {
-      const result = await blobList({
-        prefix: 'analytics/',
-        cursor,
-        limit: 1000,
-      });
-      for (const blob of result.blobs) {
-        const match = blob.pathname.match(/^analytics\/(\d{4}-\d{2}-\d{2})/);
-        if (match) {
-          const dateKey = match[1];
-          const arr = dateMap.get(dateKey) || [];
-          arr.push({ pathname: blob.pathname, url: blob.url });
-          dateMap.set(dateKey, arr);
-        }
-      }
-      cursor = result.cursor;
-    } while (cursor);
-  } catch (err) {
-    console.error('[analytics/data] Failed to list blobs:', err);
-  }
-  return dateMap;
-}
-
-async function fetchEventsForDateRange(
-  dateKeys: string[],
-  blobDateMap: Map<string, BlobEntry[]>
-): Promise<StoredEvent[]> {
-  const CONCURRENCY = 10;
-  const allEvents: StoredEvent[] = [];
-
-  for (let i = 0; i < dateKeys.length; i += CONCURRENCY) {
-    const batch = dateKeys.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(
-      batch.map((key) => fetchEventsForDate(key, blobDateMap))
-    );
-    for (const r of results) allEvents.push(...r);
-  }
-
-  return allEvents;
-}
-
-// ---------------------------------------------------------------------------
-// NDJSON parsing
-// ---------------------------------------------------------------------------
-
-function parseNdjson(text: string): StoredEvent[] {
-  return text
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .flatMap((l) => {
-      try {
-        return [JSON.parse(l) as StoredEvent];
-      } catch {
-        return [];
-      }
-    });
 }
 
 // ---------------------------------------------------------------------------
@@ -1046,15 +919,16 @@ function buildMetrics(
 }
 
 // ---------------------------------------------------------------------------
-// Unified event fetcher (blob or local)
+// Unified event fetcher — Postgres
 // ---------------------------------------------------------------------------
 
 async function getEventsForDateRange(dateKeys: string[]): Promise<StoredEvent[]> {
-  if (useBlob && blobList) {
-    const blobDateMap = await buildBlobDateMap();
-    return fetchEventsForDateRange(dateKeys, blobDateMap);
-  }
-  return fetchEventsLocalForDateRange(dateKeys);
+  if (dateKeys.length === 0) return [];
+  // Convert date keys to timestamp range
+  const startDate = new Date(dateKeys[0] + 'T00:00:00Z');
+  const endDate = new Date(dateKeys[dateKeys.length - 1] + 'T00:00:00Z');
+  endDate.setUTCDate(endDate.getUTCDate() + 1); // inclusive end
+  return fetchEventsFromPostgres(startDate.getTime(), endDate.getTime());
 }
 
 // ---------------------------------------------------------------------------

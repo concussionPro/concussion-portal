@@ -15,12 +15,21 @@ import { getEnrollmentCount } from '@/lib/users'
 export async function GET(request: NextRequest) {
   const location = request.nextUrl.searchParams.get('location')
 
+  // Hard deadline check — applies globally regardless of location
+  const hardDeadline = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
+  if (new Date() > hardDeadline) {
+    return NextResponse.json({
+      isActive: false,
+      reason: 'past_hard_deadline',
+    })
+  }
+
   // Find location config
   const locationConfig = Object.values(CONFIG.LOCATIONS).find(
     loc => loc.slug === location
   )
 
-  // Collecting or unknown location → always early bird
+  // Collecting or unknown location → early bird (within hard deadline)
   if (!locationConfig || locationConfig.status === 'collecting') {
     return NextResponse.json({
       isActive: true,

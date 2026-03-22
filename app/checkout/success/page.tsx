@@ -185,12 +185,12 @@ function CheckoutSuccessContent() {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
               <BookOpen className="w-5 h-5 text-accent flex-shrink-0" />
-              <span className="text-sm font-medium">8 clinical modules</span>
+              <span className="text-sm font-medium">{CONFIG.COURSE.TOTAL_MODULES} clinical modules</span>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
               <span className="text-sm font-medium flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-                {sessionData?.courseType === 'full-course' ? '14' : '8'} CPD points
+                {sessionData?.courseType === 'full-course' ? CONFIG.COURSE.TOTAL_CPD_POINTS : CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points
               </span>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
@@ -201,17 +201,15 @@ function CheckoutSuccessContent() {
               <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
               <span className="text-sm font-medium">140+ references</span>
             </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+              <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+              <span className="text-sm font-medium">Lifetime access</span>
+            </div>
             {sessionData?.courseType === 'full-course' && (
-              <>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
-                  <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-                  <span className="text-sm font-medium">Full-day workshop</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
-                  <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-                  <span className="text-sm font-medium">Lifetime access</span>
-                </div>
-              </>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+                <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+                <span className="text-sm font-medium">Full-day workshop</span>
+              </div>
             )}
           </div>
         </div>
@@ -268,7 +266,7 @@ function CheckoutSuccessContent() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push(sessionData?.customerEmail ? `/login?email=${encodeURIComponent(sessionData.customerEmail)}` : '/login')}
             className="flex-1 btn-primary px-8 py-4 rounded-xl font-bold text-center flex items-center justify-center gap-2"
           >
             Open Your Course

@@ -8,6 +8,7 @@ declare global {
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { CONFIG } from '@/lib/config'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -64,7 +65,7 @@ function CanceledBanner() {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const PRICE_USD = 347
+const PRICE_USD = CONFIG.COURSE.PRICE_INTERNATIONAL
 const AFTERPAY_INSTALLMENT = (Math.ceil(PRICE_USD / 4 * 100) / 100).toFixed(2)
 
 // ─── Main Content ────────────────────────────────────────────────────────────
@@ -135,7 +136,7 @@ function InternationalPricingContent() {
     },
     {
       q: 'How much time does the course take?',
-      a: 'The 8 online modules take approximately 8–10 hours total, completed at your own pace with no deadline. Most clinicians complete the course over 2–4 weeks alongside their clinical workload.',
+      a: 'The 8 online modules take approximately 8 hours total (8 CPD points), completed at your own pace with no deadline. Most clinicians complete the course over 2–4 weeks alongside their clinical workload.',
     },
     {
       q: 'What is your refund policy?',

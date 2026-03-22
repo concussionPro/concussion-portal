@@ -1,27 +1,9 @@
 // /app/api/analytics/track/route.ts
+// Analytics event ingestion — stores events in Vercel Postgres (Neon)
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { sql } from '@/lib/db';
 
-// Conditionally import @vercel/blob — only available when BLOB_READ_WRITE_TOKEN is set
-let blobPut: typeof import('@vercel/blob').put | null = null;
-let blobList: typeof import('@vercel/blob').list | null = null;
-let blobGet: typeof import('@vercel/blob').get | null = null;
-
-const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
-
-if (useBlob) {
-  try {
-    const blob = require('@vercel/blob');
-    blobPut = blob.put;
-    blobList = blob.list;
-    blobGet = blob.get;
-  } catch {
-    // @vercel/blob not available
-  }
-}
-
-// Rate limiting
+// Rate limiting (in-memory, per serverless instance)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 function checkRateLimit(key: string, limit: number): boolean {
@@ -34,37 +16,6 @@ function checkRateLimit(key: string, limit: number): boolean {
   if (entry.count >= limit) return false;
   entry.count++;
   return true;
-}
-
-// Local filesystem analytics directory (dev fallback)
-const LOCAL_DIR = path.join(process.cwd(), '.data', 'analytics');
-
-interface TrackPayload {
-  eventType: string;
-  eventData: Record<string, unknown>;
-  sessionId: string;
-  timestamp: number;
-  userAgent: string;
-  referrer: string | null;
-  path: string;
-  search: string | null;
-}
-
-interface StoredEvent extends TrackPayload {
-  ip?: string;
-  country?: string;
-}
-
-function getTodayKey(): string {
-  const now = new Date();
-  const yyyy = now.getUTCFullYear();
-  const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(now.getUTCDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function getBlobPath(dateKey: string): string {
-  return `analytics/${dateKey}.ndjson`;
 }
 
 function isAllowedOrigin(request: NextRequest): boolean {
@@ -91,97 +42,35 @@ function isAllowedOrigin(request: NextRequest): boolean {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Local filesystem storage (dev fallback)
-// ---------------------------------------------------------------------------
+const BOT_PATTERNS = [
+  'bot', 'crawler', 'spider', 'headless', 'phantom', 'puppeteer',
+  'selenium', 'googlebot', 'bingbot', 'yandex', 'baidu', 'duckduckbot',
+  'slurp', 'ia_archiver', 'facebookexternalhit', 'twitterbot',
+  'linkedinbot', 'embedly', 'quora link', 'outbrain', 'pinterest',
+  'applebot', 'semrushbot', 'ahrefsbot', 'mj12bot', 'dotbot',
+  'petalbot', 'bytespider', 'gptbot', 'claudebot',
+];
 
-function ensureLocalDir(): void {
-  if (!fs.existsSync(LOCAL_DIR)) {
-    fs.mkdirSync(LOCAL_DIR, { recursive: true });
-  }
-}
-
-function readLocalNdjson(dateKey: string): string | null {
-  const filePath = path.join(LOCAL_DIR, `${dateKey}.ndjson`);
-  try {
-    return fs.readFileSync(filePath, 'utf-8');
-  } catch {
-    return null;
-  }
-}
-
-function writeLocalNdjson(dateKey: string, content: string): void {
-  ensureLocalDir();
-  const filePath = path.join(LOCAL_DIR, `${dateKey}.ndjson`);
-  fs.writeFileSync(filePath, content, 'utf-8');
-}
-
-// ---------------------------------------------------------------------------
-// Blob storage
-// ---------------------------------------------------------------------------
-
-async function readBlobNdjson(dateKey: string): Promise<string | null> {
-  const blobPath = getBlobPath(dateKey);
-
-  // Try private get first (new blobs written with access: 'private')
-  if (blobGet) {
-    try {
-      const blob = await blobGet(blobPath, { access: 'private' });
-      if (blob && blob.statusCode === 200 && blob.stream) {
-        return await new Response(blob.stream).text();
-      }
-    } catch { /* not found as private */ }
-  }
-
-  // Fallback: list and fetch URL directly (works for old public blobs)
-  if (blobList) {
-    try {
-      const { blobs } = await blobList({ prefix: `analytics/${dateKey}` });
-      const match = blobs.find(b => b.pathname === blobPath);
-      if (match) {
-        const res = await fetch(match.url, { cache: 'no-store' });
-        if (res.ok) return await res.text();
-      }
-    } catch { /* list/fetch failed */ }
-  }
-
-  return null;
-}
-
-function parseNdjson(text: string): StoredEvent[] {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .flatMap((line) => {
-      try {
-        return [JSON.parse(line) as StoredEvent];
-      } catch {
-        return [];
-      }
-    });
-}
-
-function serializeNdjson(events: StoredEvent[]): string {
-  return events.map((e) => JSON.stringify(e)).join('\n') + '\n';
+interface TrackPayload {
+  eventType: string;
+  eventData: Record<string, unknown>;
+  sessionId: string;
+  timestamp: number;
+  userAgent: string;
+  referrer: string | null;
+  path: string;
+  search: string | null;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!isAllowedOrigin(request)) {
-    return NextResponse.json(
-      { error: 'Forbidden: cross-origin tracking not allowed' },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // Rate limit by IP
   const forwarded = request.headers.get('x-forwarded-for');
   const ip = forwarded?.split(',')[0]?.trim() || 'unknown';
   if (!checkRateLimit(`ip:${ip}`, 200)) {
-    return NextResponse.json(
-      { error: 'Too many requests' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   let payload: TrackPayload;
@@ -192,91 +81,42 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   if (!payload.eventType || !payload.sessionId || !payload.path) {
-    return NextResponse.json(
-      { error: 'Missing required fields: eventType, sessionId, path' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  // Exclude admin pages from analytics
+  // Exclude admin pages
   if (payload.path.startsWith('/admin')) {
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
-  // Filter out known bots and crawlers
+  // Filter bots
   const ua = (payload.userAgent || '').toLowerCase();
-  const BOT_PATTERNS = [
-    'bot', 'crawler', 'spider', 'headless', 'phantom', 'puppeteer',
-    'selenium', 'googlebot', 'bingbot', 'yandex', 'baidu', 'duckduckbot',
-    'slurp', 'ia_archiver', 'facebookexternalhit', 'twitterbot',
-    'linkedinbot', 'embedly', 'quora link', 'outbrain', 'pinterest',
-    'applebot', 'semrushbot', 'ahrefsbot', 'mj12bot', 'dotbot',
-    'petalbot', 'bytespider', 'gptbot', 'claudebot',
-  ];
   if (BOT_PATTERNS.some(p => ua.includes(p))) {
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
-  // Geo: Vercel injects x-vercel-ip-country on edge
-  const country = request.headers.get('x-vercel-ip-country') || undefined;
+  const country = request.headers.get('x-vercel-ip-country') || null;
+  const eventType = String(payload.eventType).slice(0, 64);
+  const sessionId = String(payload.sessionId).slice(0, 128);
+  const ts = typeof payload.timestamp === 'number' ? payload.timestamp : Date.now();
+  const userAgent = String(payload.userAgent ?? '').slice(0, 512);
+  const referrer = payload.referrer ? String(payload.referrer).slice(0, 512) : null;
+  const pagePath = String(payload.path).slice(0, 512);
+  const search = payload.search ? String(payload.search).slice(0, 512) : null;
+  const eventData = JSON.stringify(payload.eventData ?? {});
 
-  const event: StoredEvent = {
-    eventType: String(payload.eventType).slice(0, 64),
-    eventData: payload.eventData ?? {},
-    sessionId: String(payload.sessionId).slice(0, 128),
-    timestamp: typeof payload.timestamp === 'number' ? payload.timestamp : Date.now(),
-    userAgent: String(payload.userAgent ?? '').slice(0, 512),
-    referrer: payload.referrer ? String(payload.referrer).slice(0, 512) : null,
-    path: String(payload.path).slice(0, 512),
-    search: payload.search ? String(payload.search).slice(0, 512) : null,
-    ip,
-    country,
-  };
-
-  const dateKey = getTodayKey();
-
-  // --- Vercel Blob path ---
-  if (useBlob && blobPut) {
-    const blobPath = getBlobPath(dateKey);
-    let existingText: string | null = null;
-    try {
-      existingText = await readBlobNdjson(dateKey);
-    } catch {
-      existingText = null;
-    }
-
-    let events: StoredEvent[] = [];
-    if (existingText) {
-      events = parseNdjson(existingText);
-    }
-    events.push(event);
-
-    try {
-      await blobPut(blobPath, serializeNdjson(events), {
-        access: 'private',
-        addRandomSuffix: false,
-        allowOverwrite: true,
-        contentType: 'application/x-ndjson',
-      });
-    } catch (err) {
-      console.error('[analytics/track] Failed to write blob:', err);
-      return NextResponse.json({ error: 'Failed to store event' }, { status: 500 });
-    }
-
-    return NextResponse.json({ ok: true }, { status: 200 });
-  }
-
-  // --- Local filesystem fallback (dev) ---
   try {
-    const existingText = readLocalNdjson(dateKey);
-    let events: StoredEvent[] = [];
-    if (existingText) {
-      events = parseNdjson(existingText);
-    }
-    events.push(event);
-    writeLocalNdjson(dateKey, serializeNdjson(events));
+    await sql`
+      INSERT INTO analytics_events (
+        event_type, event_data, session_id, timestamp_ms, user_agent,
+        referrer, path, search, ip, country
+      ) VALUES (
+        ${eventType}, ${eventData}::jsonb, ${sessionId}, ${ts}, ${userAgent},
+        ${referrer}, ${pagePath}, ${search}, ${ip}, ${country}
+      )
+    `;
   } catch (err) {
-    console.error('[analytics/track] Failed to write local file:', err);
+    console.error('[analytics/track] Postgres write failed:', err);
     return NextResponse.json({ error: 'Failed to store event' }, { status: 500 });
   }
 

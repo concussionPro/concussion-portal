@@ -30,22 +30,22 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             You&apos;ve seen the foundations. The full course covers <strong className="text-foreground">advanced clinical reasoning, phenotype-based rehabilitation, and return-to-activity protocols</strong> &mdash; the skills that set expert practitioners apart.
           </p>
           <p className="text-sm text-accent font-semibold mb-2">
-            Backed by a 7-day satisfaction guarantee &middot; Afterpay / Klarna available
+            7-day satisfaction guarantee &middot; Afterpay / Klarna available
           </p>
           <p className="text-sm text-muted-foreground mb-6">
-            Trusted by 500+ Australian clinicians
+            Endorsed by Osteopathy Australia &middot; AHPRA Aligned
           </p>
 
           {/* Value props row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 max-w-lg mx-auto">
             <div className="glass rounded-xl p-3 border border-border/30">
               <BookOpen className="w-5 h-5 text-accent mx-auto mb-1" />
-              <div className="text-lg font-bold text-foreground">8</div>
+              <div className="text-lg font-bold text-foreground">{CONFIG.COURSE.TOTAL_MODULES}</div>
               <div className="text-xs text-muted-foreground">Modules</div>
             </div>
             <div className="glass rounded-xl p-3 border border-border/30">
               <Award className="w-5 h-5 text-accent mx-auto mb-1" />
-              <div className="text-lg font-bold text-foreground">14</div>
+              <div className="text-lg font-bold text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
               <div className="text-xs text-muted-foreground">CPD Points</div>
             </div>
             <div className="glass rounded-xl p-3 border border-border/30">
@@ -65,7 +65,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
           </button>
 
           <p className="text-muted-foreground text-sm mt-4">
-            Online from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD
+            Online from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD (early bird)
           </p>
         </div>
       </div>

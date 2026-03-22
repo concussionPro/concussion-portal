@@ -1,9 +1,15 @@
 /**
- * Stripe Product Setup Script
+ * DEPRECATED — DO NOT USE
  *
- * Run once to create products and prices in Stripe
- * Usage: npx tsx scripts/setup-stripe-products.ts
+ * This script is STALE and creates WRONG products (subscriptions instead of
+ * one-time payments, wrong CPD values, wrong prices). The actual checkout
+ * flow in lib/stripe.ts uses inline price_data and does not rely on
+ * pre-created Stripe products. This file is kept for historical reference only.
+ *
+ * If you need to set up Stripe products, create them manually in the dashboard
+ * or write a new script referencing CONFIG values from lib/config.ts.
  */
+throw new Error('This script is deprecated. See comment above.')
 
 import { config } from 'dotenv'
 import { resolve } from 'path'

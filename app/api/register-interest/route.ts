@@ -126,30 +126,38 @@ export async function POST(request: NextRequest) {
       })
     } catch (err) {
       console.error('Failed to save registration to Blob:', err)
-      // Don't fail the request — emails can still go out
+      return NextResponse.json({ error: 'Failed to save registration. Please try again.' }, { status: 500 })
     }
 
-    // Send confirmation email to registrant
-    await sendEmail({
-      to: cleanEmail,
-      subject: `You're on the list — ${cityLabel} Workshop`,
-      html: buildConfirmationEmail(cleanName, cityLabel),
-      tags: [
-        { name: 'type', value: 'interest-confirmation' },
-        { name: 'city', value: city },
-      ],
-    })
+    // Send confirmation email to registrant (best effort — blob write already succeeded)
+    try {
+      await sendEmail({
+        to: cleanEmail,
+        subject: `You're on the list — ${cityLabel} Workshop`,
+        html: buildConfirmationEmail(cleanName, cityLabel),
+        tags: [
+          { name: 'type', value: 'interest-confirmation' },
+          { name: 'city', value: city },
+        ],
+      })
+    } catch (emailErr) {
+      console.error('Failed to send interest confirmation email:', emailErr)
+    }
 
-    // Notify Zac
-    await sendEmail({
-      to: 'zac@concussion-education-australia.com',
-      subject: `New Interest: ${cityLabel} Workshop — ${cleanName}`,
-      html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, registrations.length),
-      tags: [
-        { name: 'type', value: 'interest-notification' },
-        { name: 'city', value: city },
-      ],
-    })
+    // Notify Zac (best effort)
+    try {
+      await sendEmail({
+        to: 'zac@concussion-education-australia.com',
+        subject: `New Interest: ${cityLabel} Workshop — ${cleanName}`,
+        html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, registrations.length),
+        tags: [
+          { name: 'type', value: 'interest-notification' },
+          { name: 'city', value: city },
+        ],
+      })
+    } catch (emailErr) {
+      console.error('Failed to send interest notification email:', emailErr)
+    }
 
     console.log(`Interest registered: ${cleanEmail} for ${cityLabel} (total: ${registrations.length})`)
 

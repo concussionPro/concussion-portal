@@ -103,8 +103,14 @@ function VerifyContent() {
                   <li>• Link is invalid or corrupted</li>
                 </ul>
                 <button
-                  onClick={() => router.push('/')}
+                  onClick={() => router.push('/login')}
                   className="mt-6 w-full px-6 py-3 bg-[#5b9aa6] text-white rounded-lg font-semibold hover:bg-[#5898a0] transition-colors"
+                >
+                  Request a New Login Link
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="mt-3 w-full px-6 py-3 text-slate-600 rounded-lg font-medium hover:text-slate-900 transition-colors"
                 >
                   Go to Homepage
                 </button>

@@ -31,8 +31,8 @@ export default function TrialPage() {
       // Don't block the trial experience if API fails
     }
 
-    // Redirect to free SCAT mastery course
-    router.push('/scat-mastery')
+    // Redirect to login with email pre-filled — signup-free sends a magic link
+    router.push(`/login?email=${encodeURIComponent(email)}`)
   }
 
   return (
@@ -165,7 +165,7 @@ export default function TrialPage() {
               <div className="text-sm text-slate-400">CPD Points (Complete)</div>
             </div>
             <div className="bg-slate-800 rounded-xl p-4">
-              <div className="text-3xl font-bold text-teal-400 mb-1">~10</div>
+              <div className="text-3xl font-bold text-teal-400 mb-1">~8</div>
               <div className="text-sm text-slate-400">Online Hours</div>
             </div>
           </div>

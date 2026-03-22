@@ -132,27 +132,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save registration. Please try again.' }, { status: 500 })
     }
 
-    // Send confirmation email to user
-    await sendEmail({
-      to: session.email,
-      subject: `You're in the ${cityLabel} Training Pool`,
-      html: buildConfirmationEmail(session.name, cityLabel),
-      tags: [
-        { name: 'type', value: 'ready-to-train-confirmation' },
-        { name: 'city', value: city },
-      ],
-    })
+    // Send confirmation email to user (best effort — blob write already succeeded)
+    try {
+      await sendEmail({
+        to: session.email,
+        subject: `You're in the ${cityLabel} Training Pool`,
+        html: buildConfirmationEmail(session.name, cityLabel),
+        tags: [
+          { name: 'type', value: 'ready-to-train-confirmation' },
+          { name: 'city', value: city },
+        ],
+      })
+    } catch (emailErr) {
+      console.error('Failed to send ready-to-train confirmation email:', emailErr)
+    }
 
-    // Notify Zac
-    await sendEmail({
-      to: 'zac@concussion-education-australia.com',
-      subject: `🏋️ Ready to Train: ${cityLabel} — ${session.name} (${registrations.length} total)`,
-      html: buildNotificationEmail(session.name, session.email, cityLabel, registrations.length),
-      tags: [
-        { name: 'type', value: 'ready-to-train-notification' },
-        { name: 'city', value: city },
-      ],
-    })
+    // Notify Zac (best effort)
+    try {
+      await sendEmail({
+        to: 'zac@concussion-education-australia.com',
+        subject: `Ready to Train: ${cityLabel} — ${session.name} (${registrations.length} total)`,
+        html: buildNotificationEmail(session.name, session.email, cityLabel, registrations.length),
+        tags: [
+          { name: 'type', value: 'ready-to-train-notification' },
+          { name: 'city', value: city },
+        ],
+      })
+    } catch (emailErr) {
+      console.error('Failed to send ready-to-train notification email:', emailErr)
+    }
 
     console.log(`✅ Ready-to-train: ${session.email} for ${cityLabel} (total: ${registrations.length})`)
 

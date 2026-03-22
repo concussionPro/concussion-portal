@@ -6,8 +6,9 @@ import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 
 function timingSafeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+  const aHash = crypto.createHmac('sha256', 'compare').update(a).digest()
+  const bHash = crypto.createHmac('sha256', 'compare').update(b).digest()
+  return crypto.timingSafeEqual(aHash, bHash)
 }
 
 function isAdminAuthorized(request: NextRequest): boolean {

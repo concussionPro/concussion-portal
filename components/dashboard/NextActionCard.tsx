@@ -50,7 +50,8 @@ export function NextActionCard() {
   useEffect(() => {
     if (allComplete && accessLevel && userEmail && !certTriggered.current) {
       certTriggered.current = true
-      const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      // All paid users get online-course cert (8 CPD). In-person cert issued manually by instructor.
+      const certType = isPreview ? 'scat-mastery' : 'online-course'
       const sentKey = `cert-sent-${certType}-${userEmail}`
       if (typeof window !== 'undefined' && localStorage.getItem(sentKey)) return
       setCertificateStatus('sending')
@@ -76,7 +77,7 @@ export function NextActionCard() {
   const handleDownloadCertificate = async () => {
     setCertificateDownloading(true)
     try {
-      const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      const certType = isPreview ? 'scat-mastery' : 'online-course'
       const res = await fetch(`/api/certificate?type=${certType}`, { credentials: 'include' })
       if (!res.ok) throw new Error('Download failed')
       const blob = await res.blob()
@@ -98,7 +99,7 @@ export function NextActionCard() {
   const handleResendCertificate = async () => {
     setCertificateStatus('sending')
     try {
-      const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
+      const certType = isPreview ? 'scat-mastery' : 'online-course'
       const res = await fetch('/api/certificate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,7 +140,7 @@ export function NextActionCard() {
   /* ── All Complete ───────────────────────────── */
   if (allComplete) {
     const showPoolCTA = accessLevel === 'online-only'
-    const certType = isPreview ? 'scat-mastery' : accessLevel === 'full-course' ? 'full-course' : 'online-course'
+    const certType = isPreview ? 'scat-mastery' : 'online-course'
 
     return (
       <>
@@ -167,10 +168,10 @@ export function NextActionCard() {
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">
                 {isPreview
-                  ? "Outstanding achievement — you've earned 2 free AHPRA CPD points. Upgrade to unlock 8 advanced modules, the Clinical Toolkit, and earn 14 total CPD points."
+                  ? `Outstanding achievement — you've earned 2 free AHPRA CPD points. Upgrade to unlock ${CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS & return-to-play, plus the Clinical Toolkit — up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points.`
                   : accessLevel === 'online-only'
-                  ? "Outstanding achievement — you've earned all 8 online AHPRA CPD points. Download your certificate below."
-                  : "Outstanding achievement — you've earned all 8 online AHPRA CPD points. Complete the 6-hour in-person practical to earn your full 14 CPD point certificate."}
+                  ? `Outstanding achievement — you've earned all ${CONFIG.COURSE.ONLINE_CPD_POINTS} online AHPRA CPD points. Download your certificate below, or add the workshop for ${CONFIG.COURSE.TOTAL_CPD_POINTS} total.`
+                  : `Outstanding achievement — you've earned all ${CONFIG.COURSE.ONLINE_CPD_POINTS} online AHPRA CPD points. Complete the ${CONFIG.COURSE.IN_PERSON_CPD_POINTS}-hour in-person practical to earn your full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point certificate.`}
               </p>
 
               {/* Certificate Section */}
@@ -223,12 +224,24 @@ export function NextActionCard() {
 
               {isPreview && (
                 <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
-                  <p className="text-sm text-purple-800 font-medium mb-2">Ready for more? Earn 8+ additional CPD points with the full course.</p>
+                  <p className="text-sm text-purple-800 font-medium mb-2">Ready to master VOMS, BESS testing &amp; return-to-play protocols? Earn up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points with the full course.</p>
                   <button
                     onClick={() => router.push('/pricing')}
                     className="text-sm text-purple-600 hover:text-purple-800 font-semibold"
                   >
                     View Full Course &rarr;
+                  </button>
+                </div>
+              )}
+
+              {accessLevel === 'online-only' && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <p className="text-sm text-blue-800 font-medium mb-2">You&apos;ve earned {CONFIG.COURSE.ONLINE_CPD_POINTS} online CPD points. Add the 6-hour workshop for {CONFIG.COURSE.TOTAL_CPD_POINTS} total.</p>
+                  <button
+                    onClick={() => router.push('/pricing')}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                  >
+                    Add Workshop &rarr;
                   </button>
                 </div>
               )}

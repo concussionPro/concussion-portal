@@ -27,7 +27,7 @@ export default function SCATCoursePage() {
       .then(res => res.json())
       .then(data => {
         if (!data.user) {
-          router.push('/')
+          router.push('/login')
           return
         }
 
@@ -37,7 +37,7 @@ export default function SCATCoursePage() {
       })
       .catch(error => {
         console.error('Failed to load course:', error)
-        router.push('/')
+        router.push('/login')
       })
   }, [router])
 
@@ -230,10 +230,10 @@ export default function SCATCoursePage() {
                 </div>
                 <div className="pt-4 border-t border-emerald-200">
                   <p className="text-sm text-emerald-800 font-semibold mb-2">
-                    Want to go deeper?
+                    Ready for the full course?
                   </p>
                   <p className="text-sm text-emerald-700 mb-3">
-                    Unlock 8 advanced modules covering VOMS, BESS, return-to-play protocols, rehabilitation pathways, and more — from ${CONFIG.COURSE.PRICE_ONLINE} AUD.
+                    Unlock {CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS, return-to-play protocols, phenotype-based rehabilitation, and more. Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} (early bird).
                   </p>
                   <button
                     onClick={() => router.push('/pricing')}
@@ -392,34 +392,43 @@ export default function SCATCoursePage() {
             </div>
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-slate-900 mb-3">
-                Want More? Upgrade to the Full Course
+                Unlock the Full {CONFIG.COURSE.TOTAL_MODULES}-Module Course
               </h3>
               <p className="text-slate-700 mb-4">
-                Get access to 8 additional modules covering advanced concussion management, BESS testing, VOMS protocols, return-to-play frameworks, and more. 14 total CPD points.
+                Go deeper with advanced concussion management — phenotype-based rehabilitation, BESS testing, VOMS protocols, return-to-play frameworks, and clinical case studies. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop).
               </p>
-              <ul className="grid md:grid-cols-2 gap-2 mb-6">
+              <ul className="grid md:grid-cols-2 gap-2 mb-4">
                 <li className="flex items-center gap-2 text-sm text-slate-700">
                   <CheckCircle className="w-4 h-4 text-purple-600" />
-                  14 AHPRA CPD points (vs 2 in free course)
+                  {CONFIG.COURSE.TOTAL_MODULES} online modules ({CONFIG.COURSE.ONLINE_CPD_POINTS} CPD)
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-700">
                   <CheckCircle className="w-4 h-4 text-purple-600" />
-                  Advanced assessment protocols
+                  Full-day hands-on workshop ({CONFIG.COURSE.IN_PERSON_CPD_POINTS} CPD)
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-700">
                   <CheckCircle className="w-4 h-4 text-purple-600" />
-                  Clinical case studies &amp; scenarios
+                  Clinical Toolkit &amp; 140+ references
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-700">
                   <CheckCircle className="w-4 h-4 text-purple-600" />
-                  Full-day in-person practical workshop
+                  Lifetime access &amp; digital certificate
                 </li>
               </ul>
+              <div className="bg-white/80 rounded-lg p-3 mb-5 border border-purple-100">
+                <p className="text-sm text-slate-800">
+                  <strong>Online from ${CONFIG.COURSE.PRICE_ONLINE}</strong> · Complete from <strong>${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} (early bird)</strong>
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  7-day satisfaction guarantee · Afterpay / Klarna available
+                </p>
+              </div>
               <button
                 onClick={() => router.push('/pricing')}
-                className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors inline-flex items-center gap-2"
               >
-                View Pricing & Upgrade →
+                View Pricing &amp; Enrol
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>

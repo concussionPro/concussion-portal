@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Edge-compatible constant-time string comparison
+// Pads shorter string to prevent leaking length via timing
 function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  let result = 0
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  const maxLen = Math.max(a.length, b.length)
+  const aPadded = a.padEnd(maxLen, '\0')
+  const bPadded = b.padEnd(maxLen, '\0')
+  let result = a.length ^ b.length // non-zero if lengths differ
+  for (let i = 0; i < maxLen; i++) {
+    result |= aPadded.charCodeAt(i) ^ bPadded.charCodeAt(i)
   }
   return result === 0
 }
@@ -77,6 +80,9 @@ async function verifySessionEdge(token: string): Promise<{ accessLevel: string; 
 
     // Check expiration
     if (payload.exp < Date.now()) return null
+
+    // Reject non-session tokens (e.g. magic link tokens)
+    if (payload.type !== 'session') return null
 
     return payload
   } catch {

@@ -74,6 +74,7 @@ async function logAnalyticsEvent(eventType: string, eventData: Record<string, un
       await blobPut(blobPath, existing + line, {
         access: 'private' as any, // Security: analytics data must not be publicly accessible
         addRandomSuffix: false,
+        allowOverwrite: true,
         contentType: 'application/x-ndjson',
       })
     } catch (err) {
@@ -125,7 +126,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify webhook signature
-    const event = constructWebhookEvent(body, signature, webhookSecret)
+    let event: Stripe.Event
+    try {
+      event = constructWebhookEvent(body, signature, webhookSecret)
+    } catch (sigError) {
+      console.error('Stripe webhook signature verification failed:', sigError)
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+    }
 
     console.log(`Stripe webhook received: ${event.type} (${event.id})`)
 

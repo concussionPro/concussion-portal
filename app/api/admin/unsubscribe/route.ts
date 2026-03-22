@@ -3,8 +3,9 @@ import crypto from 'crypto'
 import { unsubscribeUser } from '@/lib/users'
 
 function timingSafeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+  const aHash = crypto.createHmac('sha256', 'compare').update(a).digest()
+  const bHash = crypto.createHmac('sha256', 'compare').update(b).digest()
+  return crypto.timingSafeEqual(aHash, bHash)
 }
 
 function isAuthorized(request: NextRequest): boolean {

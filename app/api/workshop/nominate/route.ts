@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { findUserById } from '@/lib/users'
 import { VALID_LOCATIONS } from '@/lib/stripe'
-import { sql } from '@vercel/postgres'
+import { sql } from '@/lib/db'
 
 /**
  * POST /api/workshop/nominate
