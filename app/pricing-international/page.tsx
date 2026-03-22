@@ -288,28 +288,80 @@ function InternationalPricingContent() {
           </div>
         </div>
 
-        {/* ─── Pricing Card ──────────────────────────────────────────── */}
-        <div className="max-w-lg mx-auto">
-          {error && (
-            <div className="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
+        {/* ─── Two-column: Free + Paid ─────────────────────────────── */}
+        <div className="max-w-[900px] mx-auto grid md:grid-cols-2 gap-6">
 
+          {/* Free Course — left column */}
+          <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border-2 border-emerald-200/40">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center border border-emerald-200/50">
+                <GraduationCap className="w-5 h-5 text-emerald-600" strokeWidth={2} />
+              </div>
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Start Free
+              </span>
+            </div>
+
+            <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">SCAT6 Mastery</h3>
+            <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
+              5 focused modules on SCAT6 — the gold standard sideline assessment. See the course quality first, no commitment.
+            </p>
+
+            <div className="mb-6">
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-emerald-700 tracking-tight">Free</span>
+              </div>
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">No card required · 2 CE credits · Instant access</p>
+            </div>
+
+            <ul className="space-y-3 mb-6 flex-1">
+              {[
+                '5 SCAT6-focused modules',
+                '2 CE credits on completion',
+                'No card or payment required',
+                'See the course quality before you commit',
+              ].map((feature, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm">
+                  <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[var(--muted-foreground)]">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/scat-mastery"
+              className="w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+            >
+              Start Free Course
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
+              No account needed — start learning in 30 seconds
+            </p>
+          </div>
+
+          {/* Paid Course — right column */}
           <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+            {error && (
+              <div className="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-3">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-800">{error}</p>
+              </div>
+            )}
+
             <div className="flex items-center gap-3 mb-5">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
                 <BookOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
               </div>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                Online Course
+                Full Course
               </span>
             </div>
 
             <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">ConcussionPro Online Course</h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-              8 comprehensive online modules at your own pace. Master the clinical assessments that matter most in concussion management.
+              8 comprehensive modules. Master SCAT6, VOMS, BESS and return-to-play — everything for clinical confidence.
             </p>
 
             <div className="mb-6">
@@ -321,15 +373,12 @@ function InternationalPricingContent() {
               <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · 8 CE credits</p>
             </div>
 
-            <ul className="space-y-3 mb-6">
+            <ul className="space-y-3 mb-6 flex-1">
               {[
                 '8 online modules (8 CE credits)',
-                'SCAT6 administration & interpretation',
-                'VOMS assessment & clinical reasoning',
-                'BESS & balance testing protocols',
+                'SCAT6, VOMS & BESS training',
                 'Return-to-play decision framework',
                 'Clinical Toolkit & downloadable resources',
-                'Complete at your own pace — no deadlines',
                 'Lifetime access — content updated regularly',
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm">
@@ -354,36 +403,21 @@ function InternationalPricingContent() {
               )}
             </button>
 
-            <Link
-              href="/preview"
-              className="w-full py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm mt-3 border border-slate-200 text-[var(--foreground)] hover:bg-slate-50 transition-colors"
-            >
-              Preview Course
-            </Link>
-
             <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
               &ldquo;An outstanding blend of evidence-based knowledge and practical skills&rdquo; — Dean, University Clinical Educator
             </p>
           </div>
-
-          {/* Trust Signals */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-            {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'Evidence-Based', 'Lifetime Access', 'Certificate Included'].map(item => (
-              <div key={item} className="flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
-                {item}
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Single "Try free" link */}
-        <p className="text-center mt-6 text-sm text-muted-foreground">
-          Not ready to enrol?{' '}
-          <Link href="/scat-mastery" className="text-accent font-semibold hover:underline underline-offset-2">
-            Try our free SCAT6 Mastery course (2 CE credits)
-          </Link>
-        </p>
+        {/* Trust Signals */}
+        <div className="max-w-[900px] mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
+          {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'Evidence-Based', 'Lifetime Access', 'Certificate Included'].map(item => (
+            <div key={item} className="flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
+              {item}
+            </div>
+          ))}
+        </div>
 
         {/* ─── What You'll Master ─────────────────────────────────────── */}
         <div className="max-w-3xl mx-auto mt-12">

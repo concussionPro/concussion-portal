@@ -12,6 +12,9 @@ import {
   ShieldCheck,
   Building2,
   Clock,
+  GraduationCap,
+  Check,
+  ArrowRight,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
@@ -268,16 +271,43 @@ function PricingContent() {
           )}
         </div>
 
+        {/* Free course card — prominent CTA for cold traffic */}
+        <div className="max-w-[900px] mx-auto mb-8">
+          <div className="card rounded-2xl p-6 md:p-7 flex flex-col sm:flex-row items-center gap-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border-2 border-emerald-200/40">
+            <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center border border-emerald-200/50 flex-shrink-0">
+              <GraduationCap className="w-7 h-7 text-emerald-600" strokeWidth={2} />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                <h3 className="text-lg font-bold text-foreground">Start Free — SCAT6 Mastery</h3>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Free
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                5 focused modules on SCAT6 administration. 2 CPD points, no card required. See the course quality before you commit.
+              </p>
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                {['5 modules', '2 CPD points', 'No payment required', 'Instant access'].map(item => (
+                  <li key={item} className="flex items-center gap-1">
+                    <Check className="w-3 h-3 text-emerald-600" strokeWidth={2.5} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Link
+              href="/scat-mastery"
+              className="flex-shrink-0 px-6 py-3.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors whitespace-nowrap flex items-center gap-2"
+            >
+              Start Free Course
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
         {/* Pricing Cards */}
         <PricingOptions variant="full" />
-
-        {/* Single "Try free" link — consolidated from card footers */}
-        <p className="text-center mt-4 text-sm text-muted-foreground">
-          Not ready to enrol?{' '}
-          <Link href="/scat-mastery" className="text-accent font-semibold hover:underline underline-offset-2">
-            Try our free SCAT6 Mastery course (2 CPD points)
-          </Link>
-        </p>
 
         {/* Regulatory context — informative, not fear-based */}
         <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-slate-50 border border-slate-200">

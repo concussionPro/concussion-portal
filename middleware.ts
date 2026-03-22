@@ -98,8 +98,10 @@ export async function middleware(request: NextRequest) {
 
   // ─── Geo-routing: /pricing → /pricing-international for non-AU/NZ ─────────
   if (pathname === '/pricing') {
-    // Vercel provides geo data via x-vercel-ip-country header
-    const country = request.headers.get('x-vercel-ip-country')
+    // Cloudflare proxies requests, so Vercel sees Cloudflare's IP, not the user's.
+    // cf-ipcountry has the real user's country; x-vercel-ip-country is the fallback.
+    const country = request.headers.get('cf-ipcountry')
+      || request.headers.get('x-vercel-ip-country')
     const ua = request.headers.get('user-agent') || ''
 
     // Don't redirect bots (preserve SEO for /pricing)
