@@ -15,23 +15,35 @@
 import Stripe from 'stripe'
 import { CONFIG } from '@/lib/config'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables')
+// Lazy init: Stripe is only needed at request time, not during build page collection
+let _stripe: Stripe | null = null
+export function getStripe(): Stripe {
+  if (_stripe) return _stripe
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not set in environment variables')
+  }
+  _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2026-01-28.clover',
+    typescript: true,
+  })
+  return _stripe
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2026-01-28.clover',
-  typescript: true,
+/** @deprecated Use getStripe() instead — kept for backwards compat */
+export const stripe: Stripe = new Proxy({} as Stripe, {
+  get(_, prop) {
+    return (getStripe() as any)[prop]
+  },
 })
 
 /**
  * Course pricing (cents)
  */
 export const COURSE_PRICING = {
-  ONLINE_ONLY: 49700,           // $497 AUD
-  FULL_COURSE_EARLY: 119000,    // $1,190 AUD (early bird)
-  FULL_COURSE_REGULAR: 140000,  // $1,400 AUD (regular)
-  INTERNATIONAL_ONLINE: 34700,  // $347 USD
+  ONLINE_ONLY: CONFIG.COURSE.PRICE_ONLINE * 100,
+  FULL_COURSE_EARLY: CONFIG.COURSE.PRICE_EARLY_BIRD * 100,
+  FULL_COURSE_REGULAR: CONFIG.COURSE.PRICE_REGULAR * 100,
+  INTERNATIONAL_ONLINE: CONFIG.COURSE.PRICE_INTERNATIONAL * 100,
 } as const
 
 /**
@@ -99,7 +111,7 @@ export async function createCourseCheckoutSession({
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
-    payment_method_types: ['card', 'afterpay_clearpay', 'klarna'],
+    payment_method_types: currency === 'aud' ? ['card', 'afterpay_clearpay', 'klarna'] : ['card'],
     line_items: [
       {
         price_data: {
