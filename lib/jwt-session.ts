@@ -2,7 +2,10 @@
 import crypto from 'crypto'
 
 // SECURITY: No fallback secrets - must be configured in environment
+// Lazy evaluation: only resolve at request time, not at module import (build crashes otherwise)
+let _secret: string | null = null
 function getSecret(): string {
+  if (_secret) return _secret
   const secret = process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET
   if (!secret) {
     throw new Error(
@@ -10,10 +13,9 @@ function getSecret(): string {
       'Generate a secure secret with: openssl rand -base64 32'
     )
   }
-  return secret
+  _secret = secret
+  return _secret
 }
-
-const SECRET = getSecret()
 
 export interface SessionData {
   type: 'session'
@@ -37,7 +39,7 @@ function createSessionToken(userId: string, email: string, name: string, accessL
 
   const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64url')
   const signature = crypto
-    .createHmac('sha256', SECRET)
+    .createHmac('sha256', getSecret())
     .update(payloadStr)
     .digest('base64url')
 
@@ -55,7 +57,7 @@ export function verifySessionToken(token: string): SessionData | null {
 
     // Verify signature
     const expectedSignature = crypto
-      .createHmac('sha256', SECRET)
+      .createHmac('sha256', getSecret())
       .update(payloadStr)
       .digest('base64url')
 
