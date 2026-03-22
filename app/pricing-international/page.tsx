@@ -419,41 +419,56 @@ function InternationalPricingContent() {
           ))}
         </div>
 
-        {/* ─── What You'll Master ─────────────────────────────────────── */}
+        {/* ─── Compare: Free vs Full ─────────────────────────────────── */}
         <div className="max-w-3xl mx-auto mt-12">
-          <h3 className="text-xl font-bold text-center text-foreground mb-6">What&apos;s Included</h3>
+          <h3 className="text-xl font-bold text-center text-foreground mb-6">Compare Plans</h3>
           <div className="overflow-x-auto -mx-4 px-4">
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <table className="min-w-[400px] w-full text-sm">
+              <table className="min-w-[500px] w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50">
                     <th className="text-left py-3 px-4 font-semibold text-slate-700">Feature</th>
-                    <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6]">Included</th>
+                    <th className="text-center py-3 px-4 font-semibold text-emerald-700 bg-emerald-50/50">Free</th>
+                    <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6] bg-[rgba(13,115,119,0.04)]">Full Course</th>
                   </tr>
                 </thead>
                 <tbody>
                   {([
-                    ['8 online modules', true],
-                    ['SCAT6, VOMS & BESS training', true],
-                    ['Clinical Toolkit downloads', true],
-                    ['140+ peer-reviewed references', true],
-                    ['90 quiz questions', true],
-                    ['23 video lessons', true],
-                    ['CE certificate (8 credits)', true],
-                    ['Lifetime access', true],
-                    ['Afterpay / Klarna available', true],
-                    ['7-day money-back guarantee', true],
-                  ] as [string, boolean][]).map(([feature, included], i) => (
+                    ['SCAT6 training', true, true],
+                    ['VOMS assessment', false, true],
+                    ['BESS & balance testing', false, true],
+                    ['Return-to-play framework', false, true],
+                    ['Clinical Toolkit downloads', false, true],
+                    ['140+ peer-reviewed references', false, true],
+                    ['90 quiz questions', false, true],
+                    ['23 video lessons', false, true],
+                    ['CE credits', '2', '8'],
+                    ['Lifetime access', true, true],
+                    ['Certificate of completion', true, true],
+                    ['7-day money-back guarantee', false, true],
+                    ['Price', 'Free', `$${PRICE_USD} USD`],
+                  ] as [string, boolean | string, boolean | string][]).map(([feature, free, full], i) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                       <td className="py-3 px-4 text-slate-700">{feature}</td>
-                      <td className="py-3 px-4 text-center font-medium text-emerald-600">
-                        {included ? '\u2713' : '\u2014'}
+                      <td className={`py-3 px-4 text-center font-medium ${i % 2 === 0 ? 'bg-emerald-50/30' : 'bg-emerald-50/50'}`}>
+                        {free === true ? <span className="text-emerald-600">{'\u2713'}</span> : free === false ? <span className="text-slate-300">{'\u2014'}</span> : <span className="text-emerald-700 font-semibold">{free}</span>}
+                      </td>
+                      <td className={`py-3 px-4 text-center font-medium ${i % 2 === 0 ? 'bg-[rgba(13,115,119,0.03)]' : 'bg-[rgba(13,115,119,0.06)]'}`}>
+                        {full === true ? <span className="text-emerald-600">{'\u2713'}</span> : full === false ? <span className="text-slate-300">{'\u2014'}</span> : full}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+            <Link href="/scat-mastery" className="px-6 py-3 rounded-xl font-semibold text-sm bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-2">
+              Start Free Course <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link href="/preview" className="px-6 py-3 rounded-xl font-semibold text-sm border border-slate-200 text-[var(--foreground)] hover:bg-slate-50 transition-colors flex items-center gap-2">
+              Preview Full Course <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
 

@@ -9,6 +9,7 @@ import {
   BookOpen,
   Award,
 } from 'lucide-react'
+import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
@@ -329,6 +330,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             )}
           </button>
 
+          <Link
+            href="/preview"
+            className="w-full py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm mt-2 border border-slate-200 text-[var(--foreground)] hover:bg-slate-50 transition-colors"
+          >
+            Preview Course
+          </Link>
+
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
             &ldquo;Hands on component was invaluable&rdquo; — Amelia, Physiotherapist
           </p>
@@ -391,6 +399,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </>
             )}
           </button>
+
+          <Link
+            href="/preview"
+            className="w-full py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm mt-2 border border-slate-200 text-[var(--foreground)] hover:bg-slate-50 transition-colors"
+          >
+            Preview Course
+          </Link>
 
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
             &ldquo;Well organised...content explained in a way that was relevant and memorable&rdquo; — Alex, Osteopath
