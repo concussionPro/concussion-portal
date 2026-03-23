@@ -156,9 +156,22 @@ export default function SCATMasteryPage() {
               </ul>
             </div>
 
-            {/* Endorsement */}
-            <div className="mt-8 text-sm text-slate-500">
-              <span>AHPRA aligned · Endorsed by Osteopathy Australia</span>
+            {/* Social proof */}
+            <div className="mt-8 space-y-4">
+              <div className="bg-white/70 backdrop-blur-xl rounded-xl border border-slate-200/60 p-4">
+                <div className="flex gap-0.5 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-sm text-slate-600 italic mb-2">
+                  &ldquo;A must for any health professional managing concussion. Relevant, applicable and easy to absorb.&rdquo;
+                </p>
+                <p className="text-xs text-slate-500 font-semibold">— Sarah, Physiotherapist</p>
+              </div>
+              <p className="text-sm text-slate-500">
+                AHPRA aligned · Endorsed by Osteopathy Australia
+              </p>
             </div>
           </div>
 
@@ -332,7 +345,7 @@ export default function SCATMasteryPage() {
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
             <div className="text-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-2">
-                You&apos;ve mastered the SCAT6 — ready for the full 14 CPD points?
+                Want more than SCAT6? Get the full 14 CPD points.
               </h2>
               <p className="text-sm text-slate-500">
                 The complete course covers everything the free training doesn&apos;t.

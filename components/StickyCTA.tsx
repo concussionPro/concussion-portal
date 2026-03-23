@@ -24,6 +24,8 @@ const EXCLUDED_PATHS = [
   '/complete-reference',
   '/certificate',
   '/preseason/b',
+  '/scat-mastery',
+  '/preview',
 ]
 
 export function StickyCTA() {

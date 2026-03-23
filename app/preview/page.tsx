@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { getPreviewModules } from '@/data/preview-modules'
 import { CONFIG } from '@/lib/config'
+import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { PricingOptions } from '@/components/PricingOptions'
@@ -324,6 +325,28 @@ export default function PreviewPage() {
               <ArrowRight className="w-4 h-4" />
             </button>
             <span className="text-xs text-slate-500">Free — see where you stand</span>
+          </div>
+        </div>
+
+        {/* Free course CTA — capture visitors not ready to pay */}
+        <div className="max-w-3xl mx-auto mt-10 p-6 rounded-2xl bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border-2 border-emerald-200/40">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center border border-emerald-200/50 flex-shrink-0">
+              <Award className="w-7 h-7 text-emerald-600" strokeWidth={2} />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Not ready to enrol? Start free.</h3>
+              <p className="text-sm text-slate-600">
+                SCAT6 Mastery — 5 modules, 2 CPD points, no card required. Experience the course quality before you commit.
+              </p>
+            </div>
+            <Link
+              href="/scat-mastery"
+              className="flex-shrink-0 px-6 py-3.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors whitespace-nowrap flex items-center gap-2"
+            >
+              Start Free Course
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
 
