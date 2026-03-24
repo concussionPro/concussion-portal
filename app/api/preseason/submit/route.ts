@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { put, get as getBlob, list as listBlobs } from '@vercel/blob'
 import { jsPDF } from 'jspdf'
 import { sendEmailWithAttachment } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
+import { sql } from '@/lib/db'
 
 function escapeHtml(str: string): string {
   return str
@@ -616,6 +616,30 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   return Buffer.from(doc.output('arraybuffer'))
 }
 
+// One-time table creation — ensures preseason_baselines table exists
+let baselinesTableReady = false
+async function ensureBaselinesTable() {
+  if (baselinesTableReady) return
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS preseason_baselines (
+        id SERIAL PRIMARY KEY,
+        clinic_code TEXT NOT NULL,
+        clinic_name TEXT NOT NULL DEFAULT '',
+        athlete_name TEXT NOT NULL DEFAULT '',
+        dob TEXT,
+        submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        symptom_count INTEGER NOT NULL DEFAULT 0,
+        symptom_severity INTEGER NOT NULL DEFAULT 0,
+        cognitive_score INTEGER NOT NULL DEFAULT 0
+      )
+    `
+  } catch {
+    // Table already exists or permissions differ — safe to continue
+  }
+  baselinesTableReady = true
+}
+
 export async function POST(request: Request) {
   try {
     if (!process.env.KV_REST_API_URL) {
@@ -744,46 +768,16 @@ export async function POST(request: Request) {
       </html>
     `
 
-    // Persist baseline submission to Blob storage for admin dashboard (skip demo)
+    // Persist baseline submission to Postgres for admin dashboard (skip demo)
     if (!isDemo) {
       try {
-        let baselines: Array<{ clinicCode: string; clinicName: string; athleteName: string; dob?: string; submittedAt: string; symptomCount: number; symptomSeverity: number; cognitiveScore: number }> = []
-        try {
-          // Try exact pathname first (new writes), then list+filter (old suffixed writes)
-          let blob = await getBlob('preseason-baselines.json', { access: 'private' })
-          if (!blob) {
-            const { blobs } = await listBlobs({ prefix: 'preseason-baselines' })
-            const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-            if (sorted.length > 0) {
-              blob = await getBlob(sorted[0].url, { access: 'private' })
-            }
-          }
-          if (blob && blob.statusCode === 200 && blob.stream) {
-            const text = await new Response(blob.stream).text()
-            baselines = JSON.parse(text)
-          }
-        } catch (err) {
-          console.warn('Could not load existing preseason baselines blob:', err)
-        }
-
-        baselines.push({
-          clinicCode: body.clinicCode.toUpperCase(),
-          clinicName: clinic.clinicName,
-          athleteName: body.athlete.name || 'Unknown',
-          dob: body.athlete.dob || '',
-          submittedAt: new Date().toISOString(),
-          symptomCount,
-          symptomSeverity: symptomTotal,
-          cognitiveScore: totalCognitive,
-        })
-
-        await put('preseason-baselines.json', JSON.stringify(baselines, null, 2), {
-          access: 'private',
-          contentType: 'application/json',
-          addRandomSuffix: false,
-        })
+        await ensureBaselinesTable()
+        await sql`
+          INSERT INTO preseason_baselines (clinic_code, clinic_name, athlete_name, dob, submitted_at, symptom_count, symptom_severity, cognitive_score)
+          VALUES (${body.clinicCode.toUpperCase()}, ${clinic.clinicName}, ${body.athlete.name || 'Unknown'}, ${body.athlete.dob || null}, NOW(), ${symptomCount}, ${symptomTotal}, ${totalCognitive})
+        `
       } catch (err) {
-        console.error('Failed to persist baseline submission to Blob:', err)
+        console.error('Failed to persist baseline submission to Postgres:', err)
       }
     }
 

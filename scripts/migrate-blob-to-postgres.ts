@@ -109,6 +109,25 @@ async function createTables() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false
   `
 
+  // Preseason baseline submissions — replaces lossy Blob read-modify-write
+  await sql`
+    CREATE TABLE IF NOT EXISTS preseason_baselines (
+      id SERIAL PRIMARY KEY,
+      clinic_code TEXT NOT NULL,
+      clinic_name TEXT NOT NULL DEFAULT '',
+      athlete_name TEXT NOT NULL DEFAULT '',
+      dob TEXT,
+      submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      symptom_count INTEGER NOT NULL DEFAULT 0,
+      symptom_severity INTEGER NOT NULL DEFAULT 0,
+      cognitive_score INTEGER NOT NULL DEFAULT 0
+    )
+  `
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_preseason_baselines_clinic ON preseason_baselines(clinic_code)
+  `
+
   console.log('Tables created.')
 }
 
