@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL } from '@/lib/email-sequences'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
 import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
@@ -461,6 +461,62 @@ export async function GET(request: Request) {
         }
       } catch (err) {
         console.error(`[Almost Done] Failed to check progress for ${user.email}:`, err)
+      }
+    }
+
+    // ── 8. SCAT6 Mastery Completion Upsell (cron fallback) ──
+    // Catches preview users who completed all 6 modules but didn't trigger upsell
+    // via the certificate endpoint (e.g. downloaded PDF only, or never clicked certificate)
+    for (const user of users) {
+      if (user.accessLevel !== 'preview') continue
+      if (user.nurtureUnsubscribed) continue
+
+      try {
+        const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
+        if (progressRows.length === 0) continue
+        const progress = progressRows[0].progress
+        if (!progress) continue
+
+        // Check if all 6 SCAT modules (101-106) are completed
+        let allScatDone = true
+        for (let i = 101; i <= 106; i++) {
+          if (!progress[String(i)]?.completed) {
+            allScatDone = false
+            break
+          }
+        }
+        if (!allScatDone) continue
+
+        // Dedup — may have already been sent by the certificate endpoint
+        const auditKey = `scat_completion_upsell_${user.id}`
+        const { rowCount: upsellInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        if (upsellInserted === 0) continue // Already sent
+
+        const pricingLink = `${baseUrl}/pricing`
+        const unsubToken = generateUnsubscribeToken(user.email)
+        const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+        const html = SCAT_COMPLETION_UPSELL.template(user.name || 'there', pricingLink)
+          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+        await sendEmail({
+          to: user.email,
+          subject: SCAT_COMPLETION_UPSELL.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'scat-completion-upsell' },
+            { name: 'trigger', value: 'cron-fallback' },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        })
+
+        emailsSent++
+        console.log(`[Completion Upsell] Cron fallback → ${user.email}`)
+      } catch (err) {
+        console.error(`[Completion Upsell] Failed for ${user.email}:`, err)
       }
     }
 

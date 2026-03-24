@@ -738,12 +738,8 @@ export default function AthleteBaselineForm() {
               : <>Your results have been emailed to <strong>{clinicName}</strong>. Basic test records are stored to support future baseline comparisons.</>
             }
           </p>
-          <div className="glass rounded-xl p-4 mb-4 border border-accent/20">
-            <p className="text-sm font-semibold mb-1">Your Cognitive Score</p>
-            <p className="text-3xl font-bold text-accent">{totalCognitiveScore}/30</p>
-          </div>
           <p className="text-xs text-muted-foreground">
-            This score is one piece of a comprehensive baseline. The full SCAT6 covers 7 additional domains.
+            Your detailed results have been included in the report sent to your clinician. This baseline covers a subset of the full SCAT6 assessment.
           </p>
         </div>
       </div>
@@ -1245,9 +1241,8 @@ export default function AthleteBaselineForm() {
                       <Check className="w-6 h-6 text-green-600" />
                     </div>
                     <p className="text-sm font-semibold mb-1">Memory Test Complete</p>
-                    <p className="text-lg font-bold text-accent">{immediateMemoryScore}/10</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      You'll be asked to recall these words again at the end of the test.
+                      Your responses have been recorded. You'll be asked to recall these words again at the end of the test.
                     </p>
 
                     <div className="mt-4">
@@ -1319,17 +1314,7 @@ export default function AthleteBaselineForm() {
                         <Check className="w-6 h-6 text-green-600" />
                       </div>
                       <p className="text-sm font-semibold mb-1">Digits Backward Complete</p>
-                      <p className="text-lg font-bold text-accent">Score: {digitsBackwardScore}/4</p>
-                    </div>
-
-                    {/* Answer breakdown */}
-                    <div className="mt-3 space-y-1">
-                      {digitAnswerLog.map((entry, i) => (
-                        <div key={i} className={`flex items-center justify-between text-xs px-3 py-1.5 rounded-lg ${entry.correct ? 'bg-green-50' : 'bg-red-50'}`}>
-                          <span className="text-muted-foreground">Shown: {entry.shown}</span>
-                          <span>You: <strong>{entry.typed}</strong> {entry.correct ? '✓' : `✗ (was ${entry.expected})`}</span>
-                        </div>
-                      ))}
+                      <p className="text-xs text-muted-foreground mt-1">Your responses have been recorded.</p>
                     </div>
 
                     <div className="mt-4 text-center">
@@ -1394,18 +1379,11 @@ export default function AthleteBaselineForm() {
 
                 {monthsPhase === 'done' && (
                   <div className="text-center py-4">
-                    <div className={`icon-container w-12 h-12 mx-auto mb-3 ${monthsCorrect ? 'bg-green-100' : 'bg-red-100'}`}>
-                      {monthsCorrect ? <Check className="w-6 h-6 text-green-600" /> : <AlertCircle className="w-6 h-6 text-red-600" />}
+                    <div className="icon-container w-12 h-12 mx-auto mb-3 bg-green-100">
+                      <Check className="w-6 h-6 text-green-600" />
                     </div>
-                    {monthsCorrect ? (
-                      <>
-                        <p className="text-3xl font-mono font-bold text-accent mb-1">{monthsTimeElapsed.toFixed(1)}s</p>
-                        <p className="text-sm text-muted-foreground">All 12 months in correct order</p>
-                      </>
-                    ) : (
-                      <p className="text-sm font-semibold text-red-600">Incorrect order — tapped {monthsTapped.length}/12</p>
-                    )}
-                    <p className="text-lg font-bold text-accent mt-2">Score: {monthsReverseScore}/1</p>
+                    <p className="text-lg font-bold mb-1">Section Complete</p>
+                    <p className="text-sm text-muted-foreground">Your responses have been recorded.</p>
                   </div>
                 )}
               </div>
@@ -1693,87 +1671,34 @@ export default function AthleteBaselineForm() {
           </div>
         )}
 
-        {/* STEP 6: Score Summary */}
+        {/* STEP 6: Review & Submit */}
         {step === 6 && (
           <div className="glass rounded-2xl p-6 animate-fade-in">
-            <h2 className="text-lg font-bold mb-4 text-center">Score Summary</h2>
-
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="glass rounded-xl p-3 text-center">
-                  <p className="text-2xl font-bold text-accent">{symptomCount}/22</p>
-                  <p className="text-xs text-muted-foreground">Symptom Number</p>
-                </div>
-                <div className="glass rounded-xl p-3 text-center">
-                  <p className="text-2xl font-bold text-accent">{symptomTotal}/132</p>
-                  <p className="text-xs text-muted-foreground">Severity Score</p>
-                </div>
+            <div className="text-center mb-4">
+              <div className="icon-container w-14 h-14 mx-auto mb-3 bg-green-100">
+                <Check className="w-7 h-7 text-green-600" />
               </div>
-
-              <div className="glass rounded-xl p-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Orientation</span>
-                    <span className="font-bold">{orientationScore}/5</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Immediate Memory</span>
-                    <span className="font-bold">{immediateMemoryScore}/10</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Concentration</span>
-                    <span className="font-bold">{concentrationScore}/5</span>
-                  </div>
-                  <div className="flex justify-between text-sm pl-4 text-muted-foreground">
-                    <span>Digits Backward</span>
-                    <span>{digitsBackwardScore}/4</span>
-                  </div>
-                  <div className="flex justify-between text-sm pl-4 text-muted-foreground">
-                    <span>Months in Reverse</span>
-                    <span>{monthsReverseScore}/1{monthsCorrect && monthsTimeElapsed > 0 ? ` (${monthsTimeElapsed.toFixed(1)}s)` : ''}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Delayed Recall</span>
-                    <span className="font-bold">{delayedRecallScore}/10</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass rounded-xl p-4 bg-gradient-to-br from-accent/5 to-transparent border border-accent/20 text-center">
-                <p className="text-sm font-semibold mb-1">Total Cognitive Score</p>
-                <p className="text-4xl font-bold text-accent">{totalCognitiveScore}/30</p>
-              </div>
-
-              {/* Oculomotor Screening Summary */}
-              <div className="glass rounded-xl p-4">
-                <p className="text-sm font-semibold mb-2">Oculomotor Screening</p>
-                <div className="space-y-2">
-                  {OCULOMOTOR_EXERCISES.map(ex => {
-                    const result = oculomotorResults[ex.key]
-                    const hasSymptoms = result.symptoms.length > 0 && !result.symptoms.includes('None')
-                    return (
-                      <div key={ex.key} className="flex justify-between text-sm">
-                        <span>{ex.label}</span>
-                        <span className={hasSymptoms ? 'font-bold text-amber-600' : 'text-muted-foreground'}>
-                          {hasSymptoms ? `${result.symptoms.join(', ')} (${result.severity}/10)` : 'None'}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="mt-2 pt-2 border-t border-slate-200 flex justify-between text-sm">
-                  <span className="font-semibold">Exercises with symptoms</span>
-                  <span className="font-bold">{OCULOMOTOR_EXERCISES.filter(ex => {
-                    const r = oculomotorResults[ex.key]
-                    return r.symptoms.length > 0 && !r.symptoms.includes('None')
-                  }).length}/4</span>
-                </div>
-              </div>
-
-              <p className="text-xs text-muted-foreground text-center">
-                Sections requiring clinical observation (balance, cervical spine, GCS) were not administered.
+              <h2 className="text-lg font-bold">All Sections Complete</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                All responses have been recorded. Tap &quot;Submit&quot; to send your baseline report to your clinician.
               </p>
             </div>
+
+            <div className="glass rounded-xl p-4 mb-3">
+              <p className="text-sm font-semibold mb-2">Sections completed:</p>
+              <div className="space-y-1.5">
+                {['Symptom Evaluation', 'Orientation', 'Immediate Memory', 'Concentration', 'Delayed Recall', 'Oculomotor Screening'].map(section => (
+                  <div key={section} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                    <span>{section}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Your detailed scores will be included in the clinician&apos;s report only.
+            </p>
 
             {submitError && (
               <div className="glass bg-red-50 border border-red-200 rounded-xl p-3 mt-4">

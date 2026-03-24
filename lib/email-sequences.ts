@@ -384,9 +384,9 @@ export const SCAT_MASTERY_SEQUENCE = [
     day: 10,
     subject: 'You earned it — here\'s $50 off the full course',
     template: (name: string, upgradeLink: string) => emailShell(`
-      <h2>Congratulations, ${escapeHtml(name.split(' ')[0])}!</h2>
-      <p>You've completed the SCAT6 Mastery course &mdash; that's 2 CPD points locked in and a solid foundation in SCAT6 administration. Well done.</p>
-      <p>As a thank you, I'd like to offer you <strong>$50 off</strong> the full Concussion Management course:</p>
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>You've been working through the SCAT6 Mastery course &mdash; great to see you investing in your concussion knowledge.</p>
+      <p>As a thank you for getting started, here's <strong>$50 off</strong> the full Concussion Management course:</p>
       <div class="callout">
         <strong>Your promo code: ${CONFIG.COURSE.PROMO_CODE}</strong><br><br>
         Use code <strong>${CONFIG.COURSE.PROMO_CODE}</strong> at checkout for $50 off any course option.<br><br>
@@ -488,6 +488,40 @@ export const SCAT_MASTERY_SEQUENCE = [
     `),
   },
 ]
+
+// ─── Post-Completion Upsell (Highest-Intent Moment) ─────────────────────────
+
+/**
+ * Sent after a free-course user completes all 6 SCAT modules.
+ * Triggered from POST /api/certificate (immediate) + cron fallback.
+ * Uses existing SCAT6 promo code ($50 off).
+ */
+export const SCAT_COMPLETION_UPSELL = {
+  subject: "You've completed SCAT6 Mastery — here's what's next",
+  template: (name: string, pricingLink: string) => emailShell(`
+    <h2>Congratulations, ${escapeHtml(name.split(' ')[0])}!</h2>
+    <p>You've earned your 2 CPD point certificate for SCAT6 Mastery &mdash; that puts you ahead of most clinicians when it comes to SCAT6 administration.</p>
+    <p>The online course picks up where SCAT6 Mastery leaves off &mdash; 8 modules covering the clinical knowledge you need to confidently manage concussion:</p>
+    <ul>
+      <li><strong>Concussion pathophysiology</strong> &mdash; the neurometabolic cascade and injury mechanisms</li>
+      <li><strong>Persistent post-concussive symptoms</strong> &mdash; when recovery stalls and what to do about it</li>
+      <li><strong>Return-to-play, work &amp; school</strong> &mdash; staged protocols, clearance criteria, and the documentation that protects you</li>
+      <li><strong>Rehabilitation by phenotype</strong> &mdash; targeted protocols for vestibular, autonomic, migraine, and cervicogenic subtypes</li>
+      <li><strong>Legal, ethical &amp; communication</strong> &mdash; medico-legal frameworks for concussion management</li>
+    </ul>
+    <div class="callout">
+      <strong>Your code: ${CONFIG.COURSE.PROMO_CODE}</strong><br><br>
+      Use code <strong>${CONFIG.COURSE.PROMO_CODE}</strong> at checkout for $50 off the online modules.
+    </div>
+    <center><a href="${utm(pricingLink + (pricingLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_completion_upsell', 'upgrade_now')}" class="cta-btn">See the Online Course</a></center>
+    <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">$${CONFIG.COURSE.PRICE_ONLINE} &middot; 8 online modules &middot; 8 CPD points &middot; Lifetime access</p>
+    <p class="ps">P.S. If you want hands-on clinical skills too (VOMS, BESS, SCAT6 administration), you can add the in-person workshop later &mdash; you'll only pay the difference.</p>
+    <div class="sig">
+      Zac Lewis<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
 
 // ─── Workshop Threshold Sequences ────────────────────────────────────────────
 

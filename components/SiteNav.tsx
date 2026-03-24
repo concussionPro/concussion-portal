@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { label: 'Free Training', path: '/scat-mastery', accent: true },
   { label: 'Pricing', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
-  { label: 'Preseason', path: '/preseason', accent: false },
+  { label: 'Preseason Baseline', path: '/preseason', accent: false },
   { label: 'Blog', path: '/blog', accent: false },
   { label: 'Login', path: '/login', accent: false },
 ]

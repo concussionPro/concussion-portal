@@ -7,8 +7,10 @@ import {
   getOnlineCourseCertificateData,
   getFullCourseCertificateData,
 } from '@/lib/certificate'
-import { resend } from '@/lib/resend-client'
+import { resend, sendEmail } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
+import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
 const SCAT_MODULE_IDS = [101, 102, 103, 104, 105, 106]
 const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -200,15 +202,31 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Send email with certificate attached
-    const emailSent = await sendCertificateEmail({
-      to: sessionData.email,
-      participantName,
-      courseTitle: certData.courseTitle,
-      cpdPoints: certData.cpdPoints,
-      certificateId,
-      pdfBuffer,
-    })
+    // Deduplicate certificate emails — prevents double-send if user clicks twice
+    const certAuditKey = `certificate_email_${courseType}_${sessionData.userId}`
+    const { rowCount: certInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${certAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+
+    let emailSent = false
+    if (certInserted === 0) {
+      // Already sent — skip email but still return success (user can download PDF)
+      console.log(`[Certificate] Already emailed ${courseType} cert to ${sessionData.email} — skipping duplicate`)
+    } else {
+      // Send email with certificate attached
+      emailSent = await sendCertificateEmail({
+        to: sessionData.email,
+        participantName,
+        courseTitle: certData.courseTitle,
+        cpdPoints: certData.cpdPoints,
+        certificateId,
+        pdfBuffer,
+      })
+
+      // After scat-mastery certificate: fire the completion upsell email
+      // This is the highest-intent moment — they just earned their certificate
+      if (emailSent && courseType === 'scat-mastery') {
+        await sendCompletionUpsell(sessionData.userId, sessionData.email, participantName)
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -216,7 +234,9 @@ export async function POST(request: NextRequest) {
       emailSent,
       message: emailSent
         ? 'Certificate generated and emailed successfully'
-        : 'Certificate generated but email failed — you can download it from your dashboard',
+        : certInserted === 0
+          ? 'Certificate already emailed — download it from your dashboard'
+          : 'Certificate generated but email failed — you can download it from your dashboard',
     })
   } catch (error) {
     console.error('Certificate email error:', error)
@@ -371,5 +391,45 @@ async function sendCertificateEmail(opts: {
   } catch (error) {
     console.error('Certificate email error:', error)
     return false
+  }
+}
+
+/**
+ * Send the post-completion upsell email after scat-mastery certificate.
+ * Deduped via audit log — safe to call multiple times.
+ */
+async function sendCompletionUpsell(userId: string, email: string, name: string) {
+  const auditKey = `scat_completion_upsell_${userId}`
+  const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+  if (inserted === 0) {
+    console.log(`[Completion Upsell] Already sent to ${email} — skipping`)
+    return
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+  const pricingLink = `${baseUrl}/pricing`
+  const unsubToken = generateUnsubscribeToken(email)
+  const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
+
+  const html = SCAT_COMPLETION_UPSELL.template(name, pricingLink)
+    .replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+  try {
+    await sendEmail({
+      to: email,
+      subject: SCAT_COMPLETION_UPSELL.subject,
+      html,
+      tags: [
+        { name: 'sequence', value: 'scat-completion-upsell' },
+        { name: 'trigger', value: 'certificate' },
+      ],
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    })
+    console.log(`[Completion Upsell] Sent to ${email}`)
+  } catch (err) {
+    console.error(`[Completion Upsell] Failed to send to ${email}:`, err)
   }
 }

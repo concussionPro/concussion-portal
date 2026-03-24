@@ -49,7 +49,7 @@ export default function PreseasonLandingPage() {
 
             <button
               onClick={() => router.push('/preseason/b/DEMO00')}
-              className="text-sm text-accent font-semibold hover:underline underline-offset-4 transition-colors"
+              className="text-sm text-orange-600 font-semibold hover:underline underline-offset-4 transition-colors px-4 py-2 rounded-lg bg-orange-50 border border-orange-200 shadow-[0_0_12px_rgba(249,115,22,0.3)] hover:shadow-[0_0_18px_rgba(249,115,22,0.45)]"
             >
               Try the test yourself first →
             </button>
