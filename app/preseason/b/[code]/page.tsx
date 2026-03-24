@@ -568,14 +568,24 @@ export default function AthleteBaselineForm() {
             immediateMemory: {
               listUsed: wordListKey,
               score: immediateMemoryScore,
+              wordsSelected: Object.entries(trialSelections[0] || {})
+                .filter(([, s]) => s).map(([w]) => w),
+              targetWords: [...WORD_LISTS[wordListKey]],
             },
             concentration: {
               digitsScore: digitsBackwardScore,
               monthsScore: monthsReverseScore,
               monthsTimeSeconds: monthsTimeElapsed || null,
               total: concentrationScore,
+              digitTrials: digitAnswerLog,
+              monthsOrder: monthsTapped,
             },
-            delayedRecall: { score: delayedRecallScore },
+            delayedRecall: {
+              score: delayedRecallScore,
+              wordsSelected: Object.entries(delayedRecallSelections)
+                .filter(([, s]) => s).map(([w]) => w),
+              targetWords: [...WORD_LISTS[wordListKey]],
+            },
           },
           oculomotor: oculomotorResults,
         }),

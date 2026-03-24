@@ -31,9 +31,21 @@ interface SymptomData {
 
 interface CognitiveData {
   orientation: { month: string; date: string; dayOfWeek: string; year: string; time: string; score: number }
-  immediateMemory: { listUsed: string; score?: number; trial1?: number; trial2?: number; trial3?: number; total?: number }
-  concentration: { digitsScore: number; monthsScore: number; monthsTimeSeconds?: number | null; total: number }
-  delayedRecall: { score: number }
+  immediateMemory: {
+    listUsed: string; score?: number; trial1?: number; trial2?: number; trial3?: number; total?: number
+    wordsSelected?: string[]
+    targetWords?: string[]
+  }
+  concentration: {
+    digitsScore: number; monthsScore: number; monthsTimeSeconds?: number | null; total: number
+    digitTrials?: { shown: string; expected: string; typed: string; correct: boolean }[]
+    monthsOrder?: string[]
+  }
+  delayedRecall: {
+    score: number
+    wordsSelected?: string[]
+    targetWords?: string[]
+  }
 }
 
 interface AthleteBackground {
@@ -131,12 +143,23 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   addText('ATHLETE INFORMATION', margin, y, { fontSize: 12, fontStyle: 'bold' })
   y += 8
 
+  // Calculate age from DOB
+  let ageString = '—'
+  if (data.athlete.dob) {
+    const dob = new Date(data.athlete.dob)
+    if (!isNaN(dob.getTime())) {
+      const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      ageString = `${age} years`
+    }
+  }
+
   const fields = [
     ['Name', data.athlete.name], ['Date of Birth', data.athlete.dob],
-    ['ID/Jersey', data.athlete.idNumber], ['Sex', data.athlete.sex],
-    ['Dominant Hand', data.athlete.dominantHand], ['Sport', data.athlete.sport],
-    ['Team/Club', data.athlete.team], ['Position', data.athlete.position],
-    ['Years of Education', data.athlete.yearsOfEducation], ['Primary Language', data.athlete.primaryLanguage],
+    ['Age', ageString], ['Sex', data.athlete.sex],
+    ['ID/Jersey', data.athlete.idNumber], ['Dominant Hand', data.athlete.dominantHand],
+    ['Sport', data.athlete.sport], ['Team/Club', data.athlete.team],
+    ['Position', data.athlete.position], ['Years of Education', data.athlete.yearsOfEducation],
+    ['Primary Language', data.athlete.primaryLanguage],
   ]
 
   for (let i = 0; i < fields.length; i += 2) {
@@ -280,6 +303,33 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   addText(`Word List Used: List ${data.cognitive.immediateMemory.listUsed}`, margin, y, { fontSize: 9 })
   y += 10
 
+  // Immediate Memory — Word Recognition Detail
+  if (imm.targetWords && imm.wordsSelected) {
+    checkPage(35)
+    addText('IMMEDIATE MEMORY — WORD RECOGNITION', margin, y, { fontSize: 10, fontStyle: 'bold' })
+    y += 7
+    const selectedSet = new Set(imm.wordsSelected)
+    const targetSet = new Set(imm.targetWords)
+    const hits = imm.targetWords.filter(w => selectedSet.has(w))
+    const misses = imm.targetWords.filter(w => !selectedSet.has(w))
+    const falsePositives = imm.wordsSelected.filter(w => !targetSet.has(w))
+
+    // Target words with hit/miss indicator
+    addText('Target Words:', margin, y, { fontSize: 8, fontStyle: 'bold' })
+    y += 5
+    const targetDisplay = imm.targetWords.map(w => `${w} ${selectedSet.has(w) ? '(Y)' : '(N)'}`).join('   ')
+    addText(targetDisplay, margin + 4, y, { fontSize: 8, maxWidth: contentWidth - 4 })
+    y += Math.ceil(targetDisplay.length / 95) * 5 + 3
+
+    if (falsePositives.length > 0) {
+      addText(`False Positives: ${falsePositives.join(', ')}`, margin, y, { fontSize: 8 })
+      y += 5
+    }
+
+    addText(`${hits.length}/10 correct  ·  ${misses.length} miss${misses.length !== 1 ? 'es' : ''}  ·  ${falsePositives.length} false positive${falsePositives.length !== 1 ? 's' : ''}`, margin, y, { fontSize: 8, fontStyle: 'bold' })
+    y += 8
+  }
+
   // Orientation answers
   checkPage(30)
   addText('Orientation Responses:', margin, y, { fontSize: 9, fontStyle: 'bold' })
@@ -290,6 +340,96 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
     y += 5
   }
   y += 10
+
+  // Digits Backward — Trial Detail
+  const conc = data.cognitive.concentration
+  if (conc.digitTrials && conc.digitTrials.length > 0) {
+    checkPage(70)
+    drawLine()
+    addText('DIGITS BACKWARD — TRIAL DETAIL', margin, y, { fontSize: 10, fontStyle: 'bold' })
+    y += 8
+
+    // Table header
+    doc.setFillColor(240, 240, 240)
+    doc.rect(margin, y - 4, contentWidth, 8, 'F')
+    const dtCols = [margin + 2, margin + 28, margin + 68, margin + 112, margin + contentWidth - 22]
+    addText('Length', dtCols[0], y, { fontSize: 7, fontStyle: 'bold' })
+    addText('Shown', dtCols[1], y, { fontSize: 7, fontStyle: 'bold' })
+    addText('Expected', dtCols[2], y, { fontSize: 7, fontStyle: 'bold' })
+    addText('Response', dtCols[3], y, { fontSize: 7, fontStyle: 'bold' })
+    addText('Result', dtCols[4], y, { fontSize: 7, fontStyle: 'bold' })
+    y += 7
+
+    // Track which length levels had at least one correct trial
+    const lengthLevels = new Map<number, boolean>()
+    for (const trial of conc.digitTrials) {
+      checkPage(6)
+      const len = trial.shown.replace(/[^0-9]/g, '').length || trial.shown.split(/[-\s]/).length
+      if (!lengthLevels.has(len)) lengthLevels.set(len, false)
+      if (trial.correct) lengthLevels.set(len, true)
+
+      addText(`${len}-digit`, dtCols[0], y, { fontSize: 7 })
+      addText(trial.shown, dtCols[1], y, { fontSize: 7 })
+      addText(trial.expected, dtCols[2], y, { fontSize: 7 })
+      addText(trial.typed || '—', dtCols[3], y, { fontSize: 7 })
+      addText(trial.correct ? 'PASS' : 'FAIL', dtCols[4], y, { fontSize: 7, fontStyle: trial.correct ? 'bold' : 'normal' })
+      y += 5
+    }
+    y += 3
+
+    // Scoring explanation
+    const passedLevels = [...lengthLevels.entries()].filter(([, passed]) => passed).map(([len]) => `${len}-digit`)
+    addText(`Score = length levels with at least 1 correct trial: ${passedLevels.join(', ') || 'none'}`, margin, y, { fontSize: 7 })
+    y += 4
+    addText(`Digits Backward Score: ${conc.digitsScore}/4`, margin, y, { fontSize: 8, fontStyle: 'bold' })
+    y += 8
+  }
+
+  // Months in Reverse — Detail
+  if (conc.monthsOrder && conc.monthsOrder.length > 0) {
+    checkPage(25)
+    if (!conc.digitTrials || conc.digitTrials.length === 0) drawLine()
+    addText('MONTHS IN REVERSE — DETAIL', margin, y, { fontSize: 10, fontStyle: 'bold' })
+    y += 7
+    const completed = conc.monthsScore === 1
+    addText(`Completed: ${completed ? 'Yes (all 12 months in correct reverse order)' : `No — reached ${conc.monthsOrder.length}/12 before error`}`, margin, y, { fontSize: 8 })
+    y += 5
+    if (conc.monthsTimeSeconds != null) {
+      addText(`Time: ${conc.monthsTimeSeconds.toFixed(1)} seconds`, margin, y, { fontSize: 8 })
+      y += 5
+    }
+    const orderStr = conc.monthsOrder.join(' > ')
+    addText(`Order: ${orderStr}`, margin, y, { fontSize: 8, maxWidth: contentWidth })
+    y += Math.ceil(orderStr.length / 90) * 5 + 5
+  }
+
+  // Delayed Recall — Word Recognition Detail
+  const dr = data.cognitive.delayedRecall
+  if (dr.targetWords && dr.wordsSelected) {
+    checkPage(30)
+    drawLine()
+    addText('DELAYED RECALL — WORD RECOGNITION', margin, y, { fontSize: 10, fontStyle: 'bold' })
+    y += 7
+    const drSelectedSet = new Set(dr.wordsSelected)
+    const drTargetSet = new Set(dr.targetWords)
+    const drHits = dr.targetWords.filter(w => drSelectedSet.has(w))
+    const drMisses = dr.targetWords.filter(w => !drSelectedSet.has(w))
+    const drFalsePositives = dr.wordsSelected.filter(w => !drTargetSet.has(w))
+
+    addText('Target Words:', margin, y, { fontSize: 8, fontStyle: 'bold' })
+    y += 5
+    const drDisplay = dr.targetWords.map(w => `${w} ${drSelectedSet.has(w) ? '(Y)' : '(N)'}`).join('   ')
+    addText(drDisplay, margin + 4, y, { fontSize: 8, maxWidth: contentWidth - 4 })
+    y += Math.ceil(drDisplay.length / 95) * 5 + 3
+
+    if (drFalsePositives.length > 0) {
+      addText(`False Positives: ${drFalsePositives.join(', ')}`, margin, y, { fontSize: 8 })
+      y += 5
+    }
+
+    addText(`${drHits.length}/10 correct  ·  ${drMisses.length} miss${drMisses.length !== 1 ? 'es' : ''}  ·  ${drFalsePositives.length} false positive${drFalsePositives.length !== 1 ? 's' : ''}`, margin, y, { fontSize: 8, fontStyle: 'bold' })
+    y += 8
+  }
 
   // Oculomotor Screening
   if (data.oculomotor) {
@@ -331,13 +471,131 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
     y += 10
   }
 
-  // Footer / Disclaimer
-  checkPage(30)
+  // ── SCORE SUMMARY ──
+  checkPage(65)
   drawLine()
-  doc.setFontSize(8)
-  doc.setTextColor(100)
-  const disclaimer = 'Self-administered baseline — not a clinical assessment. Sections requiring clinical observation (Red Flags, Observable Signs, Maddocks Questions, Glasgow Coma Scale, Cervical Spine Assessment, Modified BESS, Tandem Gait, Dual Task Gait, Decision & HCP Attestation) were not administered.'
-  doc.text(disclaimer, margin, y, { maxWidth: contentWidth })
+  doc.setFillColor(91, 154, 166)
+  doc.rect(margin, y - 4, contentWidth, 10, 'F')
+  doc.setTextColor(255, 255, 255)
+  addText('SCORE SUMMARY', margin + 2, y + 1, { fontSize: 11, fontStyle: 'bold' })
+  const testLabelSummary = data.testNumber && data.testNumber > 1 ? `Test #${data.testNumber}` : 'Baseline'
+  addText(testLabelSummary, margin + contentWidth - 30, y + 1, { fontSize: 9, fontStyle: 'bold' })
+  doc.setTextColor(0, 0, 0)
+  y += 12
+
+  // Summary table
+  const summaryRows: [string, string, string][] = [
+    ['Symptom Number', `${symptomCount}`, '/ 22'],
+    ['Symptom Severity', `${symptomTotal}`, '/ 132'],
+    ['', '', ''],
+    ['Orientation', `${data.cognitive.orientation.score}`, '/ 5'],
+    ['Immediate Memory', `${immTotal}`, `/ ${immMax}`],
+    ['Concentration — Digits Backward', `${conc.digitsScore}`, '/ 4'],
+    ['Concentration — Months in Reverse', `${conc.monthsScore}`, '/ 1'],
+    ['Delayed Recall', `${data.cognitive.delayedRecall.score}`, '/ 10'],
+  ]
+  if (conc.monthsTimeSeconds != null) {
+    summaryRows.push(['Months in Reverse Time', `${conc.monthsTimeSeconds.toFixed(1)}s`, ''])
+  }
+
+  for (const [label, score, max] of summaryRows) {
+    if (label === '' && score === '') { y += 2; continue }
+    doc.setFillColor(summaryRows.indexOf([label, score, max]) % 2 === 0 ? 250 : 255, 250, 250)
+    addText(label, margin + 4, y, { fontSize: 8 })
+    addText(score, margin + contentWidth - 40, y, { fontSize: 9, fontStyle: 'bold' })
+    addText(max, margin + contentWidth - 22, y, { fontSize: 8 })
+    y += 5.5
+  }
+
+  y += 3
+  doc.setFillColor(91, 154, 166)
+  doc.rect(margin, y - 4, contentWidth, 10, 'F')
+  doc.setTextColor(255, 255, 255)
+  addText('TOTAL COGNITIVE', margin + 4, y + 1, { fontSize: 10, fontStyle: 'bold' })
+  addText(`${totalCognitive} / ${totalMax}`, margin + contentWidth - 40, y + 1, { fontSize: 10, fontStyle: 'bold' })
+  doc.setTextColor(0, 0, 0)
+  y += 12
+
+  // Oculomotor summary if present
+  if (data.oculomotor) {
+    const oculoKeys: (keyof OculomotorData)[] = ['horizontalSaccades', 'verticalSaccades', 'horizontalPursuit', 'verticalPursuit']
+    const exercisesProvoked = oculoKeys.filter(k => {
+      const r = data.oculomotor![k]
+      return r.symptoms.length > 0 && !r.symptoms.includes('None')
+    }).length
+    addText('Oculomotor: Exercises Provoking Symptoms', margin + 4, y, { fontSize: 8 })
+    addText(`${exercisesProvoked}`, margin + contentWidth - 40, y, { fontSize: 9, fontStyle: 'bold' })
+    addText('/ 4', margin + contentWidth - 22, y, { fontSize: 8 })
+    y += 8
+  }
+
+  addText(`Feels Normal: ${data.symptoms.feelNormalPercent}%`, margin + 4, y, { fontSize: 8 })
+  addText(`Physical Worsens: ${data.symptoms.physicalWorsens ? 'Yes' : 'No'}`, margin + contentWidth / 2, y, { fontSize: 8 })
+  y += 5
+  addText(`Mental Worsens: ${data.symptoms.mentalWorsens ? 'Yes' : 'No'}`, margin + contentWidth / 2, y, { fontSize: 8 })
+  y += 10
+
+  // SCAT6 Assessment Domains Checklist
+  checkPage(55)
+  drawLine()
+  addText('SCAT6 ASSESSMENT DOMAINS', margin, y, { fontSize: 10, fontStyle: 'bold' })
+  addText('Self-administered baseline — not a clinical assessment.', margin + 65, y, { fontSize: 7 })
+  y += 6
+
+  const hasOculomotor = !!data.oculomotor
+  const administered: string[] = [
+    'Symptom Evaluation',
+    'Orientation',
+    'Immediate Memory',
+    'Digits Backward',
+    'Months in Reverse',
+    'Delayed Recall',
+    ...(hasOculomotor ? ['Oculomotor Screening'] : []),
+  ]
+  const notAdministered: string[] = [
+    'Red Flags',
+    'Observable Signs',
+    'Maddocks Questions',
+    'Glasgow Coma Scale',
+    'Cervical Spine Assessment',
+    'Modified BESS (Balance)',
+    'Tandem Gait',
+    'Dual Task Gait',
+    ...(hasOculomotor ? [] : ['Oculomotor Screening']),
+    'Decision & HCP Attestation',
+  ]
+
+  // Two-column layout: Administered (left) | Not Administered (right)
+  const colLeft = margin + 2
+  const colRight = margin + contentWidth / 2
+  doc.setTextColor(80)
+  addText('Administered (self)', colLeft, y, { fontSize: 7, fontStyle: 'bold' })
+  doc.setTextColor(140)
+  addText('Not administered (requires clinician)', colRight, y, { fontSize: 7, fontStyle: 'bold' })
+  y += 4
+
+  const maxRows = Math.max(administered.length, notAdministered.length)
+  for (let i = 0; i < maxRows; i++) {
+    checkPage(4)
+    if (i < administered.length) {
+      doc.setTextColor(80)
+      addText(`[Y]  ${administered[i]}`, colLeft, y, { fontSize: 6.5 })
+    }
+    if (i < notAdministered.length) {
+      doc.setTextColor(160)
+      addText(`[  ]  ${notAdministered[i]}`, colRight, y, { fontSize: 6.5 })
+    }
+    y += 3.5
+  }
+  y += 3
+
+  // Serial testing note
+  doc.setTextColor(0, 0, 0)
+  checkPage(15)
+  doc.setFillColor(245, 248, 250)
+  doc.rect(margin, y - 3, contentWidth, 12, 'F')
+  addText('Serial Testing: This baseline establishes reference values for comparison with future post-injury assessments.', margin + 3, y + 2, { fontSize: 7, fontStyle: 'bold' })
+  addText('Changes from baseline may indicate concussion. Repeat testing recommended annually and after any suspected concussion.', margin + 3, y + 7, { fontSize: 7 })
   y += 15
 
   doc.setTextColor(91, 154, 166)
@@ -345,6 +603,15 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   doc.text('Powered by ConcussionPro — concussion-education-australia.com', margin, y)
   y += 6
   doc.text('Free SCAT6/SCOAT6 Mastery Course (2 CPD pts): portal.concussion-education-australia.com/scat-mastery', margin, y)
+
+  // Page numbers
+  const totalPages = doc.getNumberOfPages()
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i)
+    doc.setFontSize(8)
+    doc.setTextColor(150)
+    doc.text(`Page ${i} of ${totalPages}`, pageWidth / 2, 290, { align: 'center' })
+  }
 
   return Buffer.from(doc.output('arraybuffer'))
 }
