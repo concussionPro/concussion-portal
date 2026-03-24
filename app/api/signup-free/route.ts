@@ -8,6 +8,7 @@ import { createUser, findUserByEmail } from '@/lib/users'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { sql } from '@/lib/db'
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -73,6 +74,27 @@ export async function POST(request: NextRequest) {
         signupSource: 'free-course',
       })
       console.log(`New user created for free course: ${email}`)
+    }
+
+    // Log analytics event (server-side — client can't track this)
+    try {
+      await sql`
+        INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
+        VALUES (
+          'free_course_signup',
+          ${JSON.stringify({ email: email.toLowerCase(), name: userName, isExisting: !!existingUser })}::jsonb,
+          ${'server_' + Date.now()},
+          ${Date.now()},
+          ${request.headers.get('user-agent') || 'unknown'},
+          ${request.headers.get('referer') || null},
+          '/api/signup-free',
+          ${null},
+          ${ip},
+          ${request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country') || null}
+        )
+      `
+    } catch (err) {
+      console.error('Failed to log free signup analytics:', err)
     }
 
     // Generate magic link with token — preserve existing access level for paid users

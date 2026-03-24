@@ -360,6 +360,18 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   const errorMsg = paymentIntent.last_payment_error?.message || 'Unknown error'
   console.log(`Payment failed for ${email || 'unknown'}: ${errorMsg}`)
 
+  // Log to analytics
+  try {
+    await logAnalyticsEvent('payment_failed', {
+      email: email || 'unknown',
+      error: errorMsg,
+      amount: (paymentIntent.amount || 0) / 100,
+      currency: paymentIntent.currency,
+    })
+  } catch (err) {
+    console.error('Failed to log payment failure analytics:', err)
+  }
+
   if (!email) return
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
@@ -430,6 +442,13 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
   console.log(`Checkout expired: ${email} — ${courseType} ($${amount})`)
 
+  // Log to analytics
+  try {
+    await logAnalyticsEvent('checkout_expired', { email, courseType, amount })
+  } catch (err) {
+    console.error('Failed to log checkout expired analytics:', err)
+  }
+
   // Check if already tracked (same email within last 24h) — dedup before email AND db insert
   try {
     const { rows: recent } = await sql`
@@ -471,7 +490,20 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     return
   }
 
-  console.log(`Refund processed for ${email} — $${(charge.amount_refunded || 0) / 100} AUD`)
+  const refundAmount = (charge.amount_refunded || 0) / 100
+  console.log(`Refund processed for ${email} — $${refundAmount} AUD`)
+
+  // Log to analytics
+  try {
+    await logAnalyticsEvent('charge_refunded', {
+      email,
+      amountRefunded: refundAmount,
+      amountOriginal: (charge.amount || 0) / 100,
+      isFullRefund: charge.amount_refunded >= charge.amount,
+    })
+  } catch (err) {
+    console.error('Failed to log refund analytics:', err)
+  }
 
   // Only downgrade on full refund — partial refunds keep access
   if (charge.amount_refunded < charge.amount) {

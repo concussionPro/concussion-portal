@@ -14,7 +14,8 @@ export interface User {
   lastLoginAt?: string
   nurtureUnsubscribed?: boolean
   progressEmailsOptedOut?: boolean
-  signupSource?: 'free-course' | 'preseason' | 'purchase' | 'admin'
+  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin'
+  convertedFrom?: string  // original signup source before upgrade
   isTest?: boolean
 }
 
@@ -36,6 +37,7 @@ function rowToUser(row: any): User {
     nurtureUnsubscribed: row.nurture_unsubscribed || undefined,
     progressEmailsOptedOut: row.progress_emails_opted_out || undefined,
     signupSource: row.signup_source || undefined,
+    convertedFrom: row.converted_from || undefined,
     isTest: row.is_test || undefined,
   }
 }
@@ -67,7 +69,7 @@ export async function createUser(data: {
   stripeCustomerId?: string
   stripeSubscriptionId?: string
   workshopLocation?: string
-  signupSource?: 'free-course' | 'preseason' | 'purchase' | 'admin'
+  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin'
 }): Promise<string> {
   // Check if user already exists
   const existing = await findUserByEmail(data.email)
@@ -78,12 +80,17 @@ export async function createUser(data: {
       (existing.accessLevel === 'online-only' || existing.accessLevel === 'preview') &&
       (data.accessLevel === 'full-course' || data.accessLevel === 'online-only')
     ) {
+      // Track conversion: save original signup source before overwriting
+      const convertedFrom = existing.signupSource && data.signupSource && existing.signupSource !== data.signupSource
+        ? existing.signupSource : null
       await sql`
         UPDATE users SET
           access_level = ${data.accessLevel},
           stripe_customer_id = COALESCE(${data.stripeCustomerId || null}, stripe_customer_id),
           stripe_subscription_id = COALESCE(${data.stripeSubscriptionId || null}, stripe_subscription_id),
-          workshop_location = COALESCE(${data.workshopLocation || null}, workshop_location)
+          workshop_location = COALESCE(${data.workshopLocation || null}, workshop_location),
+          signup_source = COALESCE(${data.signupSource || null}, signup_source),
+          converted_from = COALESCE(${convertedFrom}, converted_from)
         WHERE id = ${existing.id}
       `
     } else if (existing.accessLevel === 'full-course' && (data.stripeCustomerId || data.workshopLocation)) {
@@ -102,7 +109,7 @@ export async function createUser(data: {
   // Create new user
   const id = crypto.randomBytes(16).toString('hex')
   await sql`
-    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, signup_source)
+    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, signup_source, converted_from)
     VALUES (
       ${id},
       ${data.email},
@@ -113,7 +120,8 @@ export async function createUser(data: {
       ${data.stripeCustomerId || null},
       ${data.stripeSubscriptionId || null},
       ${data.workshopLocation || null},
-      ${data.signupSource || null}
+      ${data.signupSource || null},
+      ${null}
     )
   `
   return id

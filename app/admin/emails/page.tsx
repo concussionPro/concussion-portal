@@ -12,6 +12,7 @@ interface EmailEntry {
   lastLogin: string | null
   nurtureUnsubscribed: boolean
   signupSource: string | null
+  convertedFrom: string | null
 }
 
 export default function AdminEmailsPage() {
@@ -300,14 +301,21 @@ export default function AdminEmailsPage() {
                         email.signupSource === 'purchase' ? 'bg-blue-100 text-blue-700' :
                         email.signupSource === 'admin' ? 'bg-slate-100 text-slate-700' :
                         email.signupSource === 'free-course' ? 'bg-teal-100 text-teal-700' :
+                        email.signupSource === 'scat-export' ? 'bg-purple-100 text-purple-700' :
                         'bg-slate-50 text-slate-400'
                       }`}>
                         {email.signupSource === 'free-course' ? 'Free Course' :
+                         email.signupSource === 'scat-export' ? 'SCAT Export' :
                          email.signupSource === 'preseason' ? 'Preseason' :
                          email.signupSource === 'purchase' ? 'Purchase' :
                          email.signupSource === 'admin' ? 'Admin' :
                          'Unknown'}
                       </span>
+                      {email.convertedFrom && (
+                        <span className="inline-flex ml-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700">
+                          via {email.convertedFrom === 'free-course' ? 'Free' : email.convertedFrom === 'scat-export' ? 'Export' : email.convertedFrom === 'preseason' ? 'Preseason' : email.convertedFrom}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">

@@ -30,6 +30,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Ensure new columns exist (safe idempotent migration)
+    try {
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS converted_from TEXT`
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false`
+    } catch {
+      // Column may already exist or DB permissions differ — safe to continue
+    }
+
     const users = await loadUsers()
 
     // Load all progress from Postgres in one query
@@ -81,6 +89,7 @@ export async function GET(request: NextRequest) {
         workshopLocation: user.workshopLocation || null,
         nurtureUnsubscribed: user.nurtureUnsubscribed || false,
         signupSource: user.signupSource || null,
+        convertedFrom: user.convertedFrom || null,
         isTest: user.isTest || false,
         completedModules,
         completedScatModules,

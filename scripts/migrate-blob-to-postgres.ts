@@ -99,6 +99,16 @@ async function createTables() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_emails_opted_out BOOLEAN NOT NULL DEFAULT false
   `
 
+  // Add converted_from column for tracking upgrade conversion path
+  await sql`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS converted_from TEXT
+  `
+
+  // Add is_test column for marking test accounts
+  await sql`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false
+  `
+
   console.log('Tables created.')
 }
 

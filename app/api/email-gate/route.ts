@@ -9,6 +9,7 @@ import { createUser, findUserByEmail } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { sql } from '@/lib/db'
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -70,8 +71,29 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail,
         name: userName,
         accessLevel: 'preview',
-        signupSource: 'free-course',
+        signupSource: 'scat-export',
       })
+    }
+
+    // Log analytics event
+    try {
+      await sql`
+        INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
+        VALUES (
+          'scat_export_signup',
+          ${JSON.stringify({ email: normalizedEmail, isExisting: !!existingUser })}::jsonb,
+          ${'server_' + Date.now()},
+          ${Date.now()},
+          ${request.headers.get('user-agent') || 'unknown'},
+          ${request.headers.get('referer') || null},
+          '/api/email-gate',
+          ${null},
+          ${ip},
+          ${request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country') || null}
+        )
+      `
+    } catch (err) {
+      console.error('Failed to log email gate analytics:', err)
     }
 
     // Create session token and set cookie immediately
