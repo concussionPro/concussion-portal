@@ -44,6 +44,7 @@ function rowToUser(row: any): User {
 
 // Load all users
 export async function loadUsers(): Promise<User[]> {
+  await ensureColumns()
   const { rows } = await sql`SELECT * FROM users ORDER BY created_at DESC`
   return rows.map(rowToUser)
 }
@@ -60,6 +61,19 @@ export async function findUserById(id: string): Promise<User | null> {
   return rows.length > 0 ? rowToUser(rows[0]) : null
 }
 
+// One-time migration flag — ensures converted_from column exists before first write
+let columnMigrated = false
+async function ensureColumns() {
+  if (columnMigrated) return
+  try {
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS converted_from TEXT`
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false`
+  } catch {
+    // Column already exists or permissions differ — safe to continue
+  }
+  columnMigrated = true
+}
+
 // Create new user (or upgrade existing)
 export async function createUser(data: {
   email: string
@@ -71,6 +85,8 @@ export async function createUser(data: {
   workshopLocation?: string
   signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin'
 }): Promise<string> {
+  await ensureColumns()
+
   // Check if user already exists
   const existing = await findUserByEmail(data.email)
 
