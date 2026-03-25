@@ -10,6 +10,7 @@ import {
   Award,
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { CONFIG } from '@/lib/config'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
@@ -33,13 +34,18 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // Early bird: check deadline. Server is source of truth at checkout.
   const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
-  // Read pre-selected location from URL (e.g. /pricing?location=sydney from city pages)
+  // Read pre-selected location and promo code from URL
   const [preselectedLocation, setPreselectedLocation] = useState<string | null>(null)
+  const [promoCode, setPromoCode] = useState<string | null>(null)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
     if (loc && ['sydney', 'melbourne', 'byron-bay'].includes(loc)) {
       setPreselectedLocation(loc)
+    }
+    const promo = params.get('promo')
+    if (promo) {
+      setPromoCode(promo)
     }
   }, [])
 
@@ -62,6 +68,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         body: JSON.stringify({
           courseType,
           ...(courseType === 'full-course' && preselectedLocation ? { location: preselectedLocation } : {}),
+          ...(promoCode ? { promoCode } : {}),
         }),
       })
 
@@ -232,6 +239,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // FULL VARIANT
   return (
     <div className="max-w-[900px] mx-auto">
+      {/* Promo code banner */}
+      {promoCode && (
+        <div className="max-w-2xl mx-auto mb-6 flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-200 text-sm">
+          <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" strokeWidth={2.5} />
+          <span className="text-emerald-800 font-semibold">Promo code {promoCode} will be applied at checkout</span>
+        </div>
+      )}
+
       {/* Global error */}
       {error && (
         <div className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -292,11 +307,11 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           <ul className="space-y-3 mb-6 flex-1">
             {[
-              '8 online modules (8 CPD points)',
-              'Full-day in-person workshop (6 CPD points)',
-              'Hands-on SCAT6, VOMS & BESS training',
-              'Clinical Toolkit & all resources',
-              'Choose your preferred location',
+              '8 online modules + full-day workshop (14 CPD)',
+              'Administer SCAT6, VOMS & BESS with confidence',
+              'Make evidence-based return-to-play decisions',
+              'Diagnose concussion phenotypes & prescribe rehab',
+              'Clinical Toolkit — use in practice Monday morning',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
@@ -313,6 +328,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </p>
             </div>
           )}
+
+          {/* Workshop photo */}
+          <div className="relative rounded-xl overflow-hidden mb-4">
+            <Image
+              src="/workshop-training.jpg"
+              alt="Hands-on clinical assessment at a Concussion Education Australia workshop"
+              width={600}
+              height={450}
+              className="w-full h-auto"
+            />
+          </div>
 
           {/* Enroll Button */}
           <button
@@ -373,10 +399,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <ul className="space-y-3 mb-7 flex-1">
             {[
               '8 online modules (8 CPD points)',
-              'Complete at your own pace — no deadlines',
-              'Lifetime access — content updated regularly',
+              'Understand concussion pathophysiology & phenotypes',
+              'Learn VOMS, BESS & SCAT6 protocols in depth',
               'Clinical Toolkit & downloadable resources',
-              'Upgrade to Complete Course anytime',
+              'Upgrade to add hands-on training anytime',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Clock, MapPin, Users, Award, CheckCircle2, ArrowRight, Loader2, Mail } from 'lucide-react'
+import Image from 'next/image'
 import { CONFIG } from '@/lib/config'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
@@ -62,6 +63,21 @@ export default function InPersonTrainingPage() {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               <strong className="text-foreground">Theory isn't enough.</strong> This intensive hands-on workshop gives you the clinical confidence to accurately assess, phenotype, and manage concussions from day one.
             </p>
+          </div>
+
+          {/* Workshop Photo */}
+          <div className="relative rounded-2xl overflow-hidden mb-12 shadow-lg">
+            <Image
+              src="/workshop-training.jpg"
+              alt="Hands-on vestibular-ocular assessment demonstration during a Concussion Education Australia workshop"
+              width={1200}
+              height={900}
+              className="w-full h-auto"
+              priority
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-6 py-4">
+              <p className="text-white text-sm font-medium">Supervised clinical assessment practice — Byron Bay workshop, 2025</p>
+            </div>
           </div>
 
           {/* Key Info Cards */}

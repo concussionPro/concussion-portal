@@ -14,7 +14,7 @@ export interface User {
   lastLoginAt?: string
   nurtureUnsubscribed?: boolean
   progressEmailsOptedOut?: boolean
-  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin'
+  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace'
   convertedFrom?: string  // original signup source before upgrade
   isTest?: boolean
 }
@@ -83,7 +83,7 @@ export async function createUser(data: {
   stripeCustomerId?: string
   stripeSubscriptionId?: string
   workshopLocation?: string
-  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin'
+  signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace'
 }): Promise<string> {
   await ensureColumns()
 
