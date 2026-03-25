@@ -1,18 +1,48 @@
 'use client'
 
-import { Lock, ArrowRight, Award, BookOpen, ShieldCheck } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { Lock, ArrowRight, Award, BookOpen, ShieldCheck, Star, Loader2 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { trackEvent, trackLeadConversion } from '@/lib/analytics'
+
+const ENROL_CLICK_LABEL = 'TVzUCLHT0IccEJWXu_9C'
 
 export function ContentLockedBanner({ remainingSections }: { remainingSections?: string[] }) {
-  const router = useRouter()
+  const [loading, setLoading] = useState<string | null>(null)
+
+  const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
+
+  const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
+    setLoading(courseType)
+    trackEvent('checkout_start', { courseType, source: 'content_locked_banner' })
+    const value = courseType === 'full-course'
+      ? (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR)
+      : CONFIG.COURSE.PRICE_ONLINE
+    trackLeadConversion(ENROL_CLICK_LABEL, value)
+
+    try {
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseType }),
+      })
+      const data = await res.json()
+      if (data.success && data.url) {
+        window.location.href = data.url
+      } else {
+        setLoading(null)
+      }
+    } catch {
+      setLoading(null)
+    }
+  }
 
   return (
     <div className="relative my-8">
       {/* Fade out effect above the banner */}
       <div className="absolute inset-x-0 -top-24 h-24 bg-gradient-to-b from-transparent to-white z-10"></div>
 
-      {/* Lock banner - glassmorphic light style */}
+      {/* Lock banner */}
       <div className="relative z-20 glass rounded-2xl p-8 border-2 border-accent/30 shadow-xl">
         <div className="text-center">
           {/* Lock Icon */}
@@ -27,12 +57,26 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
               : 'Unlock the Full Course'}
           </h3>
           <p className="text-muted-foreground text-base mb-3 leading-relaxed max-w-2xl mx-auto">
-            You&apos;ve seen the foundations. The full course covers <strong className="text-foreground">advanced clinical reasoning, phenotype-based rehabilitation, and return-to-activity protocols</strong> &mdash; the skills that set expert practitioners apart.
+            You&apos;ve seen the foundations. The full course teaches you to <strong className="text-foreground">administer VOMS screening, score BESS accurately, make confident return-to-play decisions, and treat by concussion phenotype</strong> &mdash; the clinical skills most practitioners haven&apos;t been trained on.
           </p>
-          <p className="text-sm text-accent font-semibold mb-2">
+
+          {/* Testimonial */}
+          <div className="max-w-md mx-auto my-5 px-5 py-4 rounded-xl bg-accent/5 border border-accent/10">
+            <div className="flex items-center justify-center gap-0.5 mb-2">
+              {[1, 2, 3, 4, 5].map(i => (
+                <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              ))}
+            </div>
+            <p className="text-sm text-foreground italic leading-relaxed">
+              &ldquo;Hands on component was invaluable — I feel confident assessing concussion now, not just reading about it.&rdquo;
+            </p>
+            <p className="text-xs text-muted-foreground mt-1.5">Amelia, Physiotherapist</p>
+          </div>
+
+          <p className="text-sm text-accent font-semibold mb-1">
             7-day satisfaction guarantee &middot; Afterpay / Klarna available
           </p>
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-sm text-muted-foreground mb-5">
             Endorsed by Osteopathy Australia &middot; AHPRA Aligned
           </p>
 
@@ -45,8 +89,8 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             </div>
             <div className="glass rounded-xl p-3 border border-border/30">
               <Award className="w-5 h-5 text-accent mx-auto mb-1" />
-              <div className="text-lg font-bold text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
-              <div className="text-xs text-muted-foreground">CPD Points</div>
+              <div className="text-lg font-bold text-foreground">Up to {CONFIG.COURSE.TOTAL_CPD_POINTS}</div>
+              <div className="text-xs text-muted-foreground">8 online + 6 workshop</div>
             </div>
             <div className="glass rounded-xl p-3 border border-border/30">
               <ShieldCheck className="w-5 h-5 text-accent mx-auto mb-1" />
@@ -55,17 +99,44 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             </div>
           </div>
 
-          {/* CTA */}
-          <button
-            onClick={() => router.push('/pricing')}
-            className="btn-primary inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
-          >
-            Upgrade Now
-            <ArrowRight className="w-5 h-5" />
-          </button>
+          {/* Direct checkout CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
+            <button
+              onClick={() => handleCheckout('online-only')}
+              disabled={loading !== null}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-bold text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors disabled:opacity-40"
+            >
+              {loading === 'online-only' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>Online — ${CONFIG.COURSE.PRICE_ONLINE}</>
+              )}
+            </button>
+            <button
+              onClick={() => handleCheckout('full-course')}
+              disabled={loading !== null}
+              className="w-full sm:w-auto btn-primary inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-40"
+            >
+              {loading === 'full-course' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Complete — ${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
 
-          <p className="text-muted-foreground text-sm mt-4">
-            Online from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD (early bird)
+          {/* Early bird urgency */}
+          {isEarlyBird && (
+            <p className="text-xs font-semibold text-orange-600 mb-1">
+              Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}
+            </p>
+          )}
+
+          <p className="text-muted-foreground text-xs mt-2">
+            8 CPD points (online) &middot; 14 CPD points (complete with workshop)
           </p>
         </div>
       </div>

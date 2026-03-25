@@ -85,7 +85,7 @@ export default function InPersonTrainingPage() {
             <div className="glass rounded-xl p-5 text-center">
               <Clock className="w-8 h-8 text-accent mx-auto mb-2" />
               <h3 className="font-bold mb-1">Duration</h3>
-              <p className="text-sm text-muted-foreground">9:00 AM - 5:00 PM</p>
+              <p className="text-sm text-muted-foreground">8:00 AM - 4:00 PM</p>
             </div>
             <div className="glass rounded-xl p-5 text-center">
               <Users className="w-8 h-8 text-accent mx-auto mb-2" />

@@ -328,9 +328,9 @@ function LearningSuiteInner() {
                       <Award className="w-6 h-6 text-white" strokeWidth={2} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base font-bold text-foreground mb-1">Upgrade to the Full Course</h3>
+                      <h3 className="text-base font-bold text-foreground mb-1">Ready to manage concussion cases with confidence?</h3>
                       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                        Unlock {CONFIG.COURSE.TOTAL_MODULES} modules, the Clinical Toolkit, and Reference Repository. Online: <strong className="text-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD</strong> for ${CONFIG.COURSE.PRICE_ONLINE}. Complete (online + workshop): <strong className="text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD</strong> from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird. 7-day guarantee · Afterpay / Klarna available.
+                        The full course goes beyond SCAT6 — learn VOMS screening, BESS scoring, return-to-play protocols, and phenotype-based rehabilitation. Add a <strong className="text-foreground">hands-on workshop</strong> to practice these skills with expert feedback. Online: <strong className="text-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD</strong> for ${CONFIG.COURSE.PRICE_ONLINE}. Complete (online + workshop): <strong className="text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD</strong> from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird. 7-day guarantee · Afterpay / Klarna available.
                       </p>
                       <button
                         onClick={() => router.push('/pricing')}
@@ -364,6 +364,11 @@ function LearningSuiteInner() {
                       Upgrade to Complete Course
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
+                    {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
+                      <p className="text-[11px] text-orange-600 font-medium mt-2">
+                        Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — save ${CONFIG.COURSE.SAVINGS}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

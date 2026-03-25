@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { CheckCircle2, Mail, BookOpen, ArrowRight, Loader2, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, Mail, BookOpen, ArrowRight, Loader2, AlertTriangle, Award } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { trackPurchaseConversion } from '@/lib/analytics'
 
@@ -214,6 +214,27 @@ function CheckoutSuccessContent() {
           </div>
         </div>
 
+        {/* Clinical outcomes reminder */}
+        <div className="glass rounded-2xl p-6 md:p-8 mb-8 border border-accent/10">
+          <h2 className="font-bold text-lg mb-3">By completing this course, you&apos;ll be able to</h2>
+          <ul className="space-y-2.5">
+            {[
+              'Administer and interpret SCAT6, VOMS, and BESS assessments accurately',
+              'Identify concussion phenotypes and prescribe targeted rehabilitation',
+              'Make confident, evidence-based return-to-play decisions',
+              ...(sessionData?.courseType === 'full-course'
+                ? ['Apply hands-on assessment skills practised under expert supervision']
+                : []),
+              'Use the clinical toolkit in your practice from day one',
+            ].map((outcome, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <CheckCircle2 className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
+                <span className="text-muted-foreground">{outcome}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {/* Next Steps */}
         <div className="space-y-4 mb-10">
           <h2 className="font-bold text-lg">Next steps</h2>
@@ -274,8 +295,79 @@ function CheckoutSuccessContent() {
           </button>
         </div>
 
+        {/* Workshop upsell for online-only buyers */}
+        {sessionData?.courseType === 'online-only' && (() => {
+          const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
+          const upgradePrice = isEarlyBird
+            ? CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
+            : CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+          return (
+            <div className="mt-8 glass rounded-2xl p-6 border-2 border-orange-200/60">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                  <Award className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">Add the hands-on workshop</h3>
+                  <p className="text-sm text-muted-foreground">Upgrade to the Complete Course for {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points</p>
+                </div>
+              </div>
+              <ul className="space-y-1.5 mb-4 ml-[52px]">
+                {[
+                  'Full-day practical workshop (SCAT6, VOMS, BESS)',
+                  'Supervised assessment practice with expert feedback',
+                  `6 additional CPD points (${CONFIG.COURSE.TOTAL_CPD_POINTS} total)`,
+                  'Small group — max 12 participants',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="ml-[52px]">
+                <button
+                  onClick={() => router.push('/pricing?location=sydney')}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+                >
+                  Upgrade from ${upgradePrice} more
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                {isEarlyBird && (
+                  <p className="text-xs text-orange-600 font-medium mt-2">
+                    Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                )}
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Referral ask */}
+        <div className="mt-8 glass rounded-xl p-5 text-center">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            <strong className="text-foreground">Know a colleague who&apos;d benefit?</strong> Share the free SCAT6 Mastery course with them — no cost, 2 CPD points.
+          </p>
+          <button
+            onClick={() => {
+              const url = 'https://portal.concussion-education-australia.com/scat-mastery'
+              const text = 'Free SCAT6 Mastery course — 2 AHPRA CPD points. Worth a look:'
+              if (navigator.share) {
+                navigator.share({ title: 'Free SCAT6 Training', text, url })
+              } else {
+                navigator.clipboard.writeText(`${text} ${url}`)
+                alert('Link copied to clipboard!')
+              }
+            }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-accent/20 text-accent hover:bg-accent/5 transition-colors"
+          >
+            Share with a colleague
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
         {/* Personal touch */}
-        <div className="mt-10 glass rounded-xl p-5">
+        <div className="mt-6 glass rounded-xl p-5">
           <p className="text-sm text-muted-foreground leading-relaxed">
             <strong className="text-foreground">From Zac:</strong> If you have questions as you work through the modules, reply to any email from us. I read every message.
           </p>

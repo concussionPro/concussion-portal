@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { X, ArrowRight, Shield, Award } from 'lucide-react'
+import { trackLeadConversion } from '@/lib/analytics'
 
 /**
  * Exit-intent popup — captures email by offering free SCAT6 Mastery course.
@@ -17,7 +18,7 @@ import { X, ArrowRight, Shield, Award } from 'lucide-react'
 const EXCLUDED_PREFIXES = [
   '/dashboard', '/login', '/admin', '/checkout',
   '/courses', '/course', '/learning', '/settings', '/scat-mastery',
-  '/pricing', '/preseason/b',
+  '/preseason/b',
 ]
 
 export function ExitIntentPopup() {
@@ -100,13 +101,8 @@ export function ExitIntentPopup() {
       const data = await res.json()
       if (res.ok && data.success) {
         setSubmitted(true)
-        // Track conversion
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          ;(window as any).gtag('event', 'generate_lead', {
-            event_category: 'exit_intent',
-            event_label: 'scat_mastery_popup',
-          })
-        }
+        // Track Google Ads lead conversion with proper label
+        trackLeadConversion('fcoOCLTT0IccEJWXu_9C', 25, email.trim())
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
       }
