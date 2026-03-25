@@ -35,13 +35,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
   // Read pre-selected location and promo code from URL
-  const [preselectedLocation, setPreselectedLocation] = useState<string | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState<string | null>(null)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
     if (loc && ['sydney', 'melbourne', 'byron-bay'].includes(loc)) {
-      setPreselectedLocation(loc)
+      setSelectedLocation(loc)
     }
     const promo = params.get('promo')
     if (promo) {
@@ -53,7 +53,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
     setLoading(courseType)
     setError(null)
 
-    trackEvent('checkout_start', { courseType, source: 'pricing_page', location: preselectedLocation })
+    trackEvent('checkout_start', { courseType, source: 'pricing_page', location: selectedLocation })
 
     // Fire Google Ads conversion for checkout intent
     const conversionValue = courseType === 'full-course'
@@ -67,7 +67,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           courseType,
-          ...(courseType === 'full-course' && preselectedLocation ? { location: preselectedLocation } : {}),
+          ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
           ...(promoCode ? { promoCode } : {}),
         }),
       })
@@ -338,6 +338,42 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               height={450}
               className="w-full h-auto"
             />
+          </div>
+
+          {/* Location selector */}
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-[var(--foreground)] mb-2">Preferred workshop city</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { slug: 'sydney', label: 'Sydney' },
+                { slug: 'melbourne', label: 'Melbourne' },
+                { slug: 'byron-bay', label: 'Byron Bay' },
+              ].map(city => (
+                <button
+                  key={city.slug}
+                  type="button"
+                  onClick={() => setSelectedLocation(selectedLocation === city.slug ? null : city.slug)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    selectedLocation === city.slug
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
+                  }`}
+                >
+                  {city.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSelectedLocation(null)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  selectedLocation === null
+                    ? 'bg-slate-100 text-[var(--foreground)] border-slate-300'
+                    : 'bg-white text-[var(--muted-foreground)] border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                Choose later
+              </button>
+            </div>
           </div>
 
           {/* Enroll Button */}

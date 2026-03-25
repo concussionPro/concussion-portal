@@ -15,6 +15,7 @@ import {
   GraduationCap,
   Check,
   ArrowRight,
+  ExternalLink,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
@@ -77,6 +78,19 @@ function PricingContent() {
   // FAQ accordion
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
+  // Sticky mobile CTA — show after scrolling past pricing cards
+  const [showStickyCta, setShowStickyCta] = useState(false)
+  useEffect(() => {
+    const target = document.getElementById('pricing-cards')
+    if (!target) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyCta(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [])
+
   // Enrollment count for credential bar social proof
   const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
   useEffect(() => {
@@ -98,9 +112,6 @@ function PricingContent() {
       })
       .catch(() => {})
   }, [])
-
-  // Only show progress bars when at least one city has registrations
-  const hasAnyRegistrations = Object.values(cityCounts).some(c => c > 0)
 
   // Early bird countdown
   const daysLeft = useCountdown(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)
@@ -263,7 +274,7 @@ function PricingContent() {
           <span className="text-sm text-muted-foreground">AHPRA Aligned · 14 CPD Points (8 online + 6 workshop)</span>
           <span className="hidden sm:inline text-slate-300">|</span>
           <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
-          {enrollmentCount >= 10 && (
+          {enrollmentCount >= 1 && (
             <>
               <span className="hidden sm:inline text-slate-300">|</span>
               <span className="text-sm font-semibold text-foreground">{enrollmentCount}+ clinicians enrolled</span>
@@ -271,7 +282,42 @@ function PricingContent() {
           )}
         </div>
 
-        {/* Free course card — prominent CTA for cold traffic */}
+        {/* Regulatory context — "why now" urgency before solution (CXL: +15-25% for considered purchases) */}
+        <div className="max-w-3xl mx-auto mb-8 p-5 rounded-xl bg-slate-50 border border-slate-200">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Why clinicians are upskilling now</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Link href="/blog/ais-concussion-brain-health-position-statement-2024" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
+              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">AIS Position Statement 2024</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Physiotherapists formally recognised as first-line concussion care providers</p>
+              </div>
+            </Link>
+            <Link href="/blog/21-day-concussion-stand-down-youth-sport-australia" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
+              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">21-Day Stand-Down Rule</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Clubs need qualified assessors to manage the graded return protocol</p>
+              </div>
+            </Link>
+            <Link href="/blog/nsw-mandatory-concussion-training-combat-sports" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
+              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">NSW Combat Sports Legislation</p>
+                <p className="text-xs text-muted-foreground mt-0.5">First Australian jurisdiction to mandate concussion training</p>
+              </div>
+            </Link>
+            <Link href="/blog/ahpra-cpd-requirements-concussion-education" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
+              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">AHPRA CPD Requirements</p>
+                <p className="text-xs text-muted-foreground mt-0.5">How structured concussion education counts toward your annual obligations</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Free course card — captures research-mode visitors before price exposure (Fogg: graduated commitment) */}
         <div className="max-w-[900px] mx-auto mb-8">
           <div className="card rounded-2xl p-6 md:p-7 flex flex-col sm:flex-row items-center gap-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border-2 border-emerald-200/40">
             <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center border border-emerald-200/50 flex-shrink-0">
@@ -306,82 +352,39 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <PricingOptions variant="full" />
-
-        {/* Regulatory context — informative, not fear-based */}
-        <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-slate-50 border border-slate-200">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Why clinicians are upskilling now</p>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Link href="/blog/ais-concussion-brain-health-position-statement-2024" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
-              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">AIS Position Statement 2024</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Physiotherapists formally recognised as first-line concussion care providers</p>
-              </div>
-            </Link>
-            <Link href="/blog/21-day-concussion-stand-down-youth-sport-australia" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
-              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">21-Day Stand-Down Rule</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Clubs need qualified assessors to manage the graded return protocol</p>
-              </div>
-            </Link>
-            <Link href="/blog/nsw-mandatory-concussion-training-combat-sports" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
-              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">NSW Combat Sports Legislation</p>
-                <p className="text-xs text-muted-foreground mt-0.5">First Australian jurisdiction to mandate concussion training</p>
-              </div>
-            </Link>
-            <Link href="/blog/ahpra-cpd-requirements-concussion-education" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
-              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">AHPRA CPD Requirements</p>
-                <p className="text-xs text-muted-foreground mt-0.5">How structured concussion education counts toward your annual obligations</p>
-              </div>
-            </Link>
+        {/* Meet Your Instructor — authority before price (NNG: strongest trust signal for professionals) */}
+        <div className="max-w-3xl mx-auto mb-8">
+          <h3 className="text-xl font-bold text-center text-foreground mb-6">Meet Your Instructor</h3>
+          <div className="glass rounded-xl p-6 md:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <Image
+              src="/zac-lewis-headshot.jpg"
+              alt="Zac Lewis — Osteopath, Neuroscience Researcher"
+              width={96}
+              height={96}
+              className="w-24 h-24 rounded-full object-cover flex-shrink-0 border-2 border-accent/20"
+            />
+            <div>
+              <h4 className="text-lg font-bold text-foreground mb-0.5">Zac Lewis</h4>
+              <p className="text-sm text-accent font-medium mb-1">Osteopath · Neuroscience Researcher</p>
+              <p className="text-xs text-muted-foreground mb-3">B.Clin.Sci, M.Ost.Med, PhD Candidate</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                With over a decade of clinical experience, Zac has managed concussion across national and professional ice hockey in New Zealand and Canada. He now leads Concussion Education Australia, combining clinical mentorship with the latest evidence to train the next generation of concussion-confident clinicians.
+              </p>
+              <a
+                href="https://concussion-education-australia.com/#facilitators"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:text-accent/80 transition-colors"
+              >
+                See all facilitators
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* Workshop city progress bars — urgency lever, positioned near pricing decision */}
-        {hasAnyRegistrations && (
-          <div className="max-w-[900px] mx-auto mt-8 p-4 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
-            <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Workshop Registrations — {CONFIG.WORKSHOP.NEXT_ROUND}</p>
-            <div className="grid sm:grid-cols-3 gap-3">
-              {[
-                { slug: 'sydney', label: 'Sydney' },
-                { slug: 'melbourne', label: 'Melbourne' },
-                { slug: 'byron-bay', label: 'Byron Bay' },
-              ].map(city => {
-                const count = cityCounts[city.slug] || 0
-                const pct = Math.min(Math.round((count / cityThreshold) * 100), 100)
-                return (
-                  <div key={city.slug} className="bg-white/60 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-semibold text-foreground">{city.label}</span>
-                      <span className="text-[10px] text-muted-foreground">{count}/{cityThreshold} registered</span>
-                    </div>
-                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-accent rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    {count >= cityThreshold ? (
-                      <p className="text-[10px] text-emerald-600 font-medium mt-1">Threshold reached — date confirming soon</p>
-                    ) : (
-                      <p className="text-[10px] text-muted-foreground mt-1">{cityThreshold - count} more to confirm date</p>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Why hands-on matters */}
-        <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
+        {/* Why hands-on matters — value frame before price (Cialdini: contrast principle) */}
+        <div className="max-w-3xl mx-auto mb-8 p-5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
           <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Why hands-on matters</p>
           <ul className="space-y-2">
             {[
@@ -397,7 +400,12 @@ function PricingContent() {
           </ul>
         </div>
 
-        {/* Compare Plans */}
+        {/* Pricing Cards — after trust, urgency, credibility, and value framing (Baymard: premature price = +30-40% abandonment) */}
+        <div id="pricing-cards">
+          <PricingOptions variant="full" />
+        </div>
+
+        {/* Compare Plans — analytical decision support immediately after pricing (NNG: comparison tables) */}
         <div className="mt-12 max-w-3xl mx-auto">
           <h3 className="text-xl font-bold text-center text-foreground mb-6">Compare Plans</h3>
           <div className="overflow-x-auto -mx-4 px-4">
@@ -439,7 +447,7 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Testimonials — 3 + 2 centered */}
+        {/* Testimonials — post-price objection handling (CXL: 20-30% more effective after price reveal) */}
         <div className="max-w-4xl mx-auto mt-12">
           <h3 className="text-xl font-bold text-center text-foreground mb-6">What Clinicians Are Saying</h3>
           <div className="grid md:grid-cols-3 gap-4">
@@ -454,7 +462,43 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Guarantee + Employer Reimbursement */}
+        {/* Workshop city progress bars — authentic scarcity after social proof (Cialdini: scarcity principle) */}
+        <div className="max-w-[900px] mx-auto mt-10 p-4 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
+          <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Workshop Registrations — {CONFIG.WORKSHOP.NEXT_ROUND}</p>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {[
+              { slug: 'sydney', label: 'Sydney' },
+              { slug: 'melbourne', label: 'Melbourne' },
+              { slug: 'byron-bay', label: 'Byron Bay' },
+            ].map(city => {
+              const count = cityCounts[city.slug] || 0
+              const pct = Math.min(Math.round((count / cityThreshold) * 100), 100)
+              return (
+                <div key={city.slug} className="bg-white/60 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-semibold text-foreground">{city.label}</span>
+                    <span className="text-[10px] text-muted-foreground">{count}/{cityThreshold} registered</span>
+                  </div>
+                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  {count >= cityThreshold ? (
+                    <p className="text-[10px] text-emerald-600 font-medium mt-1">Threshold reached — date confirming soon</p>
+                  ) : count === 0 ? (
+                    <p className="text-[10px] text-accent font-medium mt-1">Be the first to register</p>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground mt-1">{cityThreshold - count} more to confirm date</p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Guarantee + Employer Reimbursement — final objection removal (Baymard: bottom-third placement +15-20%) */}
         <div className="max-w-4xl mx-auto mt-16 md:mt-20 grid md:grid-cols-2 gap-4">
           {/* Money-back guarantee */}
           <div className="glass rounded-xl p-6 border border-emerald-200/50">
@@ -465,9 +509,8 @@ function PricingContent() {
               <h3 className="font-bold text-foreground">7-Day Satisfaction Guarantee</h3>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Complete Module 1. If you&apos;re not confident this course is right for you,
-              email us within 7 days for a full refund — no questions asked.
-              We&apos;re confident in what we&apos;ve built, and we want you to be too.
+              Try the course risk-free. If it&apos;s not right for you, email us within
+              7 days for a full refund — no questions asked.
             </p>
           </div>
 
@@ -530,7 +573,7 @@ function PricingContent() {
                 : 'Enrol today — lifetime access included'}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {enrollmentCount >= 10
+              {enrollmentCount >= 1
                 ? `Join ${enrollmentCount}+ clinicians building concussion confidence.`
                 : 'Join clinicians building concussion confidence.'}
               {' '}7-day money-back guarantee.
@@ -539,6 +582,26 @@ function PricingContent() {
           <PricingOptions variant="compact" />
         </div>
 
+      </div>
+
+      {/* Sticky mobile CTA — appears after scrolling past pricing cards */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300 ${
+          showStickyCta ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        <div className="backdrop-blur-lg bg-background/90 border-t border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-foreground">
+            Enrol — from ${CONFIG.COURSE.PRICE_ONLINE}
+          </span>
+          <a
+            href="#pricing-cards"
+            className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0"
+          >
+            View Plans
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </div>
     </div>
   )
