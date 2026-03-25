@@ -383,24 +383,7 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Why hands-on matters — value frame before price (Cialdini: contrast principle) */}
-        <div className="max-w-3xl mx-auto mb-8 p-5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
-          <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Why hands-on matters</p>
-          <ul className="space-y-2">
-            {[
-              'Practice SCAT6 administration on real subjects with expert feedback',
-              'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
-              'Leave with a clinical toolkit you can use Monday morning',
-            ].map((item, i) => (
-              <li key={i} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
-                <span className="text-accent mt-0.5">•</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Pricing Cards — after trust, urgency, credibility, and value framing (Baymard: premature price = +30-40% abandonment) */}
+        {/* Pricing Cards — after trust, urgency, and credibility */}
         <div id="pricing-cards">
           <PricingOptions variant="full" />
         </div>
@@ -414,8 +397,8 @@ function PricingContent() {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Feature</th>
-                  <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6] bg-[rgba(13,115,119,0.04)]">Complete</th>
-                  <th className="text-center py-3 px-4 font-semibold text-slate-700">Online</th>
+                  <th className="text-center py-3 px-4 font-semibold text-[#5b9aa6] bg-[rgba(13,115,119,0.04)]">Online</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-700">+ Workshop</th>
                 </tr>
               </thead>
               <tbody>
@@ -424,20 +407,20 @@ function PricingContent() {
                   ['Clinical Toolkit downloads', true, true],
                   ['CPD certificate (online)', '8 pts', '8 pts'],
                   ['Lifetime access', true, true],
-                  ['Full-day hands-on workshop', true, false],
-                  ['Expert coaching & 1:1 feedback', true, false],
-                  ['Supervised clinical practice', true, false],
-                  ['Workshop CPD certificate', '6 pts', false],
-                  ['Total CPD points', '14', '8'],
+                  ['Full-day hands-on workshop', false, true],
+                  ['Expert coaching & 1:1 feedback', false, true],
+                  ['Supervised clinical practice', false, true],
+                  ['Workshop CPD certificate', false, '6 pts'],
+                  ['Total CPD points', '8', '14'],
                   ['Afterpay / Klarna available', true, true],
-                ] as [string, boolean | string, boolean | string][]).map(([feature, complete, online], i) => (
+                ] as [string, boolean | string, boolean | string][]).map(([feature, online, workshop], i) => (
                   <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                     <td className="py-3 px-4 text-slate-700">{feature}</td>
                     <td className={`py-3 px-4 text-center font-medium ${i % 2 === 0 ? 'bg-[rgba(13,115,119,0.03)]' : 'bg-[rgba(13,115,119,0.06)]'}`}>
-                      {complete === true ? '\u2713' : complete === false ? '\u2014' : complete}
+                      {online === true ? '\u2713' : online === false ? '\u2014' : online}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      {online === true ? '\u2713' : online === false ? '\u2014' : online}
+                      {workshop === true ? '\u2713' : workshop === false ? '\u2014' : workshop}
                     </td>
                   </tr>
                 ))}
@@ -445,6 +428,23 @@ function PricingContent() {
             </table>
           </div>
           </div>
+        </div>
+
+        {/* Why hands-on matters — workshop upsell nudge, placed after pricing to create desire without blocking online sale */}
+        <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
+          <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Ready to take it further? Why hands-on matters</p>
+          <ul className="space-y-2">
+            {[
+              'Practice SCAT6 administration on real subjects with expert feedback',
+              'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
+              'Leave with a clinical toolkit you can use Monday morning',
+            ].map((item, i) => (
+              <li key={i} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
+                <span className="text-accent mt-0.5">•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Testimonials — post-price objection handling (CXL: 20-30% more effective after price reveal) */}

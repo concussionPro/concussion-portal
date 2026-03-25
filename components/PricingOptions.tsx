@@ -98,14 +98,66 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         )}
 
         <div className="grid sm:grid-cols-2 gap-4 pt-5">
-          {/* Complete Course - Compact (Recommended) — shown first */}
+          {/* Online Course - Compact (Most Popular) — primary conversion target */}
           <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+                <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
+                Most Popular
+              </span>
+            </div>
+
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
+
+            <div className="mb-3">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</span>
+                <span className="text-[10px] text-slate-400">≈ $320 USD</span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
+            </div>
+
+            <ul className="space-y-1.5 mb-4 flex-1">
+              {[
+                '8 online modules (8 CPD points)',
+                'Own pace — no deadlines',
+                'Clinical Toolkit & resources',
+                'Upgrade to add workshop anytime',
+              ].map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs">
+                  <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
+                  <span className="text-[var(--muted-foreground)]">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => handleCheckout('online-only')}
+              disabled={loading !== null}
+              className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {loading === 'online-only' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                `Enrol Now — $${CONFIG.COURSE.PRICE_ONLINE}`
+              )}
+            </button>
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
+              &ldquo;Relevant, applicable and easy to absorb&rdquo; — Sarah, Physio
+            </p>
+          </div>
+
+          {/* Complete Course - Compact (Upgrade path) */}
+          <div className="card rounded-xl p-5 flex flex-col relative">
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
                 <Award className="w-4 h-4 text-orange-500" strokeWidth={2} />
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                Recommended
+                + Hands-On Workshop
               </span>
             </div>
 
@@ -139,15 +191,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
-                '8 online modules (8 CPD points)',
+                'Everything in Online, plus:',
                 'Full-day workshop (6 CPD points)',
                 'Hands-on SCAT6, VOMS, BESS',
-                'Clinical Toolkit & all resources',
-                'Choose your preferred location',
+                'Choose your preferred AU location',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
-                  <span className="text-[var(--muted-foreground)]">{f}</span>
+                  <span className={`text-[var(--muted-foreground)] ${i === 0 ? 'font-semibold' : ''}`}>{f}</span>
                 </li>
               ))}
             </ul>
@@ -155,7 +206,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <button
               onClick={() => handleCheckout('full-course')}
               disabled={loading !== null}
-              className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading === 'full-course' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -168,58 +219,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               &ldquo;Hands on component was invaluable&rdquo; — Amelia
             </p>
 
-          </div>
-
-          {/* Online Course - Compact */}
-          <div className="card rounded-xl p-5 flex flex-col relative">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
-                <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                Online Only
-              </span>
-            </div>
-
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
-
-            <div className="mb-3">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</span>
-                <span className="text-[10px] text-slate-400">≈ $320 USD</span>
-              </div>
-              <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
-            </div>
-
-            <ul className="space-y-1.5 mb-4 flex-1">
-              {[
-                '8 online modules (8 CPD points)',
-                'Own pace — no deadlines',
-                'Clinical Toolkit & resources',
-                'Upgrade to Complete Course anytime',
-              ].map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs">
-                  <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
-                  <span className="text-[var(--muted-foreground)]">{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            <button
-              onClick={() => handleCheckout('online-only')}
-              disabled={loading !== null}
-              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading === 'online-only' ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                `Enrol Now — $${CONFIG.COURSE.PRICE_ONLINE}`
-              )}
-            </button>
-            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
-              &ldquo;Relevant, applicable and easy to absorb&rdquo; — Sarah, Physio
-            </p>
           </div>
         </div>
 
@@ -255,24 +254,94 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Cards — Complete Course first for price anchoring */}
+      {/* Pricing Cards — Online Course first (primary conversion target), Complete Course as upgrade */}
       <div className="grid md:grid-cols-2 gap-6 pt-5">
 
-        {/* Complete Course — Recommended */}
+        {/* Online Course — Most Popular (primary conversion target) */}
         <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+          {/* Icon + Badge */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+              <BookOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
+            </div>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
+              Most Popular
+            </span>
+          </div>
+
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Online Course</h3>
+          <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
+            8 comprehensive modules at your own pace. Master concussion assessment theory, then upgrade to add hands-on training when you&apos;re ready.
+          </p>
+
+          <div className="mb-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
+              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+              <span className="text-xs text-slate-400">≈ $320 USD</span>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
+          </div>
+
+          <ul className="space-y-3 mb-7 flex-1">
+            {[
+              '8 online modules (8 CPD points)',
+              'Understand concussion pathophysiology & phenotypes',
+              'Learn VOMS, BESS & SCAT6 protocols in depth',
+              'Clinical Toolkit & downloadable resources',
+              'Upgrade to add hands-on workshop anytime',
+            ].map((feature, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-[var(--muted-foreground)]">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            onClick={() => handleCheckout('online-only')}
+            disabled={loading !== null}
+            className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+          >
+            {loading === 'online-only' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                Enrol Now — ${CONFIG.COURSE.PRICE_ONLINE}
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+
+          <Link
+            href="/preview"
+            className="w-full py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm mt-2 border border-slate-200 text-[var(--foreground)] hover:bg-slate-50 transition-colors"
+          >
+            Preview Course
+          </Link>
+
+          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
+            &ldquo;Well organised...content explained in a way that was relevant and memorable&rdquo; — Alex, Osteopath
+          </p>
+
+        </div>
+
+        {/* Complete Course — Upgrade path (+ hands-on workshop) */}
+        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative">
           {/* Icon + Badge */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
               <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
             </div>
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-              Recommended
+              + Hands-On Workshop
             </span>
           </div>
 
           <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Complete Course</h3>
           <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-            Online modules plus a full-day hands-on workshop. Everything for clinical confidence in concussion management.
+            Everything in Online, plus a full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback.
           </p>
 
           <div className="mb-6">
@@ -307,15 +376,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           <ul className="space-y-3 mb-6 flex-1">
             {[
-              '8 online modules + full-day workshop (14 CPD)',
+              'Everything in Online, plus:',
+              'Full-day hands-on workshop (6 extra CPD)',
               'Administer SCAT6, VOMS & BESS with confidence',
-              'Make evidence-based return-to-play decisions',
-              'Diagnose concussion phenotypes & prescribe rehab',
-              'Clinical Toolkit — use in practice Monday morning',
+              'Expert coaching & 1:1 feedback',
+              'Choose your preferred AU location',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                <span className="text-[var(--muted-foreground)]">{feature}</span>
+                <span className={`text-[var(--muted-foreground)] ${i === 0 ? 'font-semibold' : ''}`}>{feature}</span>
               </li>
             ))}
           </ul>
@@ -380,7 +449,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <button
             onClick={() => handleCheckout('full-course')}
             disabled={loading !== null}
-            className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+            className="w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
           >
             {loading === 'full-course' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -401,76 +470,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
             &ldquo;Hands on component was invaluable&rdquo; — Amelia, Physiotherapist
-          </p>
-
-        </div>
-
-        {/* Online Course */}
-        <div className="card rounded-2xl p-7 md:p-8 flex flex-col relative">
-          {/* Icon + Badge */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
-              <BookOpen className="w-5 h-5 text-[var(--accent)]" strokeWidth={2} />
-            </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-              Online Only
-            </span>
-          </div>
-
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Online Course</h3>
-          <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-            8 online modules at your own pace. Upgrade to the Complete Course anytime to add hands-on training.
-          </p>
-
-          <div className="mb-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
-              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
-              <span className="text-xs text-slate-400">≈ $320 USD</span>
-            </div>
-            <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay</p>
-            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
-          </div>
-
-          <ul className="space-y-3 mb-7 flex-1">
-            {[
-              '8 online modules (8 CPD points)',
-              'Understand concussion pathophysiology & phenotypes',
-              'Learn VOMS, BESS & SCAT6 protocols in depth',
-              'Clinical Toolkit & downloadable resources',
-              'Upgrade to add hands-on training anytime',
-            ].map((feature, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm">
-                <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                <span className="text-[var(--muted-foreground)]">{feature}</span>
-              </li>
-            ))}
-          </ul>
-
-          <button
-            onClick={() => handleCheckout('online-only')}
-            disabled={loading !== null}
-            className="w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
-          >
-            {loading === 'online-only' ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                Enrol — ${CONFIG.COURSE.PRICE_ONLINE}
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-
-          <Link
-            href="/preview"
-            className="w-full py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm mt-2 border border-slate-200 text-[var(--foreground)] hover:bg-slate-50 transition-colors"
-          >
-            Preview Course
-          </Link>
-
-          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
-            &ldquo;Well organised...content explained in a way that was relevant and memorable&rdquo; — Alex, Osteopath
           </p>
 
         </div>

@@ -84,8 +84,15 @@ function InternationalPricingContent() {
       .catch(() => {})
   }, [])
 
+  // Read promo code from URL (e.g. ?promo=SCAT6 from nurture emails)
+  const [promoCode, setPromoCode] = useState<string | null>(null)
+
   // Fire international pricing view event
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const promo = params.get('promo')
+    if (promo) setPromoCode(promo)
+
     if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
       window.gtag('event', 'international_pricing_view', {
         page: '/pricing-international',
@@ -104,7 +111,7 @@ function InternationalPricingContent() {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseType: 'international-online' }),
+        body: JSON.stringify({ courseType: 'international-online', ...(promoCode ? { promoCode } : {}) }),
       })
 
       const data = await res.json()
@@ -268,7 +275,7 @@ function InternationalPricingContent() {
             <span className="text-sm text-muted-foreground">8 CE Credits · Evidence-Based Certification</span>
             <span className="hidden sm:inline text-slate-300">|</span>
             <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
-            {enrollmentCount >= 10 && (
+            {enrollmentCount >= 1 && (
               <>
                 <span className="hidden sm:inline text-slate-300">|</span>
                 <span className="text-sm font-semibold text-foreground">{enrollmentCount}+ clinicians enrolled</span>
@@ -287,6 +294,14 @@ function InternationalPricingContent() {
             </p>
           </div>
         </div>
+
+        {/* Promo code banner */}
+        {promoCode && (
+          <div className="max-w-[900px] mx-auto mb-6 flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-200 text-sm">
+            <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" strokeWidth={2.5} />
+            <span className="text-emerald-800 font-semibold">Promo code {promoCode} will be applied at checkout</span>
+          </div>
+        )}
 
         {/* ─── Two-column: Free + Paid ─────────────────────────────── */}
         <div className="max-w-[900px] mx-auto grid md:grid-cols-2 gap-6">
@@ -531,8 +546,8 @@ function InternationalPricingContent() {
               <h3 className="font-bold text-foreground">7-Day Satisfaction Guarantee</h3>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Complete Module 1. If you&apos;re not confident this course is right for you,
-              email us within 7 days for a full refund — no questions asked.
+              Try the course risk-free. If it&apos;s not right for you, email us within
+              7 days for a full refund — no questions asked.
             </p>
           </div>
 
@@ -591,7 +606,7 @@ function InternationalPricingContent() {
               Start building concussion confidence today
             </h3>
             <p className="text-sm text-muted-foreground">
-              {enrollmentCount >= 10
+              {enrollmentCount >= 1
                 ? `Join ${enrollmentCount}+ clinicians across 4 countries.`
                 : 'Join clinicians building concussion confidence.'}
               {' '}7-day money-back guarantee.
