@@ -10,7 +10,6 @@ import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 import { Analytics } from "@vercel/analytics/next";
 import { CONFIG } from "@/lib/config";
 import { organizationSchema } from "@/lib/schema-markup";
-import Script from 'next/script';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -115,20 +114,23 @@ export default function RootLayout({
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {/*
-          gtag function definition — MUST be immediate (not afterInteractive)
-          so window.gtag exists before hydration. Events queue in dataLayer
-          and are flushed once gtag.js loads. This fixes remarketing pixel
-          capture rate (was 14% because events fired before gtag existed).
+          Google tag (gtag.js) — loaded with Google Ads ID so the Ads
+          verification crawler finds it in the raw server-rendered HTML.
+          GA4 still works via gtag('config', 'G-LRDRZBWJ2E') below.
+
+          IMPORTANT: Must be a plain <script> tag, NOT next/script with
+          afterInteractive, because Google's Ads tag verification checks
+          static HTML — afterInteractive injects via JS after hydration
+          and the crawler never sees it ("Misconfigured" status).
         */}
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17984048021"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LRDRZBWJ2E');gtag('config','AW-17984048021');`,
           }}
-        />
-        {/* Load gtag.js asynchronously after first paint */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-LRDRZBWJ2E"
-          strategy="afterInteractive"
         />
       </head>
       <body
