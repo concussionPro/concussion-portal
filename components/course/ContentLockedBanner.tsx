@@ -5,7 +5,8 @@ import { Lock, ArrowRight, Award, BookOpen, ShieldCheck, Star, Loader2 } from 'l
 import { CONFIG } from '@/lib/config'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
-const ENROL_CLICK_LABEL = 'TVzUCLHT0IccEJWXu_9C'
+// Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
+const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
 
 export function ContentLockedBanner({ remainingSections }: { remainingSections?: string[] }) {
   const [loading, setLoading] = useState<string | null>(null)

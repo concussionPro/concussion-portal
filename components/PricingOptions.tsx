@@ -14,8 +14,8 @@ import Image from 'next/image'
 import { CONFIG } from '@/lib/config'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
-// Google Ads conversion label for enrol/checkout clicks
-const ENROL_CLICK_LABEL = 'TVzUCLHT0IccEJWXu_9C'
+// Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
+const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

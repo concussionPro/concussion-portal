@@ -190,7 +190,8 @@ const GA_CONVERSION_ID = 'AW-17984048021'
 // Google Ads conversion labels — safe to hardcode (public, baked into client JS)
 const CONVERSION_LABELS = {
   PURCHASE: 'xgAlCJmUyIccEJWXu_9C',
-  ENROL_CLICK: 'TVzUCLHT0IccEJWXu_9C',
+  ENROL_CLICK: 'vHoXCNKd6Y8cEJWXu_9C',   // Paid enrol button clicks (Add to cart)
+  FREE_SIGNUP: 'TVzUCLHT0IccEJWXu_9C',    // Free course signups (Sign-up)
   FREE_COMPLETE: 'fcoOCLTT0IccEJWXu_9C',
   INTEREST: '74x1CLfT0IccEJWXu_9C',
 }
