@@ -100,19 +100,6 @@ function PricingContent() {
       .catch(() => {})
   }, [])
 
-  // Per-city enrollment counts for workshop progress bars
-  const [cityCounts, setCityCounts] = useState<Record<string, number>>({})
-  const [cityThreshold, setCityThreshold] = useState<number>(8)
-  useEffect(() => {
-    fetch('/api/enrollment-counts')
-      .then(res => res.json())
-      .then(data => {
-        if (data.counts) setCityCounts(data.counts)
-        if (data.threshold) setCityThreshold(data.threshold)
-      })
-      .catch(() => {})
-  }, [])
-
   // Early bird countdown
   const daysLeft = useCountdown(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)
   const isEarlyBird = daysLeft !== null && daysLeft > 0
@@ -462,43 +449,7 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Workshop city progress bars — authentic scarcity after social proof (Cialdini: scarcity principle) */}
-        <div className="max-w-[900px] mx-auto mt-10 p-4 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
-          <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Workshop Registrations — {CONFIG.WORKSHOP.NEXT_ROUND}</p>
-          <div className="grid sm:grid-cols-3 gap-3">
-            {[
-              { slug: 'sydney', label: 'Sydney' },
-              { slug: 'melbourne', label: 'Melbourne' },
-              { slug: 'byron-bay', label: 'Byron Bay' },
-            ].map(city => {
-              const count = cityCounts[city.slug] || 0
-              const pct = Math.min(Math.round((count / cityThreshold) * 100), 100)
-              return (
-                <div key={city.slug} className="bg-white/60 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-foreground">{city.label}</span>
-                    <span className="text-[10px] text-muted-foreground">{count}/{cityThreshold} registered</span>
-                  </div>
-                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-accent rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  {count >= cityThreshold ? (
-                    <p className="text-[10px] text-emerald-600 font-medium mt-1">Threshold reached — date confirming soon</p>
-                  ) : count === 0 ? (
-                    <p className="text-[10px] text-accent font-medium mt-1">Be the first to register</p>
-                  ) : (
-                    <p className="text-[10px] text-muted-foreground mt-1">{cityThreshold - count} more to confirm date</p>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Guarantee + Employer Reimbursement — final objection removal (Baymard: bottom-third placement +15-20%) */}
+        {/* Guarantee + Employer Reimbursement — final objection removal */}
         <div className="max-w-4xl mx-auto mt-16 md:mt-20 grid md:grid-cols-2 gap-4">
           {/* Money-back guarantee */}
           <div className="glass rounded-xl p-6 border border-emerald-200/50">
