@@ -66,7 +66,9 @@ export default function SCATMasteryPage() {
       if (data.success) {
         // Fire gtag lead conversion with value + enhanced data
         trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 25, email.trim().toLowerCase())
-        setSuccessData(data)
+        // User is now logged in (cookie set by API) — redirect to course
+        window.location.href = '/scat-course'
+        return
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
       }

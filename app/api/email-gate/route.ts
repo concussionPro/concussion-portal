@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createUser, findUserByEmail } from '@/lib/users'
+import { createUser, findUserByEmail, updateLastLogin } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
 
     // Create session token and set cookie immediately
     const sessionToken = createJWTSession(userId, normalizedEmail, existingUser?.name || userName, accessLevel, true)
+    await updateLastLogin(userId)
 
     const response = NextResponse.json({ success: true })
     response.cookies.set('session', sessionToken, {

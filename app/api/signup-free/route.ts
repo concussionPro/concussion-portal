@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createUser, findUserByEmail } from '@/lib/users'
+import { createUser, findUserByEmail, updateLastLogin } from '@/lib/users'
+import { createJWTSession } from '@/lib/jwt-session'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -97,9 +98,15 @@ export async function POST(request: NextRequest) {
       console.error('Failed to log free signup analytics:', err)
     }
 
-    // Generate magic link with token — preserve existing access level for paid users
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    // Auto-login: set session cookie immediately so user is logged in without clicking email
     const accessLevel = existingUser ? existingUser.accessLevel : 'preview'
+    const sessionToken = createJWTSession(userId, email.toLowerCase(), userName, accessLevel as 'preview' | 'online-only' | 'full-course', true)
+
+    // Update last_login so admin dashboard shows accurate data
+    await updateLastLogin(userId)
+
+    // Generate magic link for the email (backup login if they open on a different device)
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const loginLink = generateMagicLinkJWT(userId, email, userName, accessLevel, baseUrl)
 
     // Generate unsubscribe URL
@@ -179,10 +186,18 @@ export async function POST(request: NextRequest) {
       ],
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      message: 'Welcome email sent! Check your inbox for your login link.',
+      message: 'You\'re signed up! Redirecting to your course...',
     })
+    response.cookies.set('session', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: '/',
+    })
+    return response
   } catch (error) {
     console.error('Free signup error:', error)
     return NextResponse.json(
