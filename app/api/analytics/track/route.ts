@@ -95,7 +95,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
-  const country = request.headers.get('x-vercel-ip-country') || null;
+  const country = request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country') || null;
   const eventType = String(payload.eventType).slice(0, 64);
   const sessionId = String(payload.sessionId).slice(0, 128);
   const ts = typeof payload.timestamp === 'number' ? payload.timestamp : Date.now();

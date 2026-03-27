@@ -72,6 +72,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         }),
       })
 
+      if (!res.ok) {
+        const text = await res.text()
+        console.error('[checkout] API error:', res.status, text)
+        setError('Checkout unavailable — please try again or contact support.')
+        setLoading(null)
+        return
+      }
+
       const data = await res.json()
 
       if (data.success && data.url) {
@@ -80,7 +88,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         setError(data.error || 'Something went wrong. Please try again.')
         setLoading(null)
       }
-    } catch {
+    } catch (err) {
+      console.error('[checkout] Network error:', err)
       setError('Network error. Please check your connection and try again.')
       setLoading(null)
     }
