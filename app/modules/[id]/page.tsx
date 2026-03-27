@@ -109,7 +109,7 @@ export default function ModulePage() {
           const data = await response.json()
           if (data.success && data.user) {
             // Preview users trying to access paid modules (1-8): redirect to learning suite
-            if (data.user.accessLevel === 'preview' && moduleId >= 2 && moduleId <= 8) {
+            if (data.user.accessLevel === 'preview' && moduleId >= 1 && moduleId <= 8) {
               router.push('/learning')
               return
             }
@@ -591,6 +591,11 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
 
   const quizResult = getQuizResult()
 
+  // Check if ALL SCAT modules are complete (for special completion screen)
+  const allScatComplete = isSCATModule && [101, 102, 103, 104, 105, 106].every(
+    id => id === moduleId || isModuleComplete(id)
+  )
+
   // Completion celebration overlay
   if (showCompletionCelebration && module) {
     return (
@@ -599,37 +604,81 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center mx-auto mb-6 shadow-lg">
             <Award className="w-10 h-10 text-white" strokeWidth={2} />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Module Complete!</h1>
-          <p className="text-lg text-slate-600 mb-8">
-            You&apos;ve completed <strong>{module.title}</strong> and earned <strong>{module.points} CPD {module.points === 1 ? 'point' : 'points'}</strong>.
-          </p>
-          {quizResult && (
-            <div className="bg-white rounded-xl p-5 border border-slate-200 mb-8 inline-block">
-              <div className="text-sm font-semibold text-slate-500 mb-1">Quiz Score</div>
-              <div className="text-2xl font-bold text-teal-600">
-                {quizResult.score} / {moduleProgress.quizTotalQuestions || module.quiz.length}
-                <span className="text-base text-slate-400 ml-2">({quizResult.percentage.toFixed(0)}%)</span>
+
+          {allScatComplete ? (
+            <>
+              <h1 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">SCAT6 Mastery Complete!</h1>
+              <p className="text-lg text-slate-600 mb-6">
+                You&apos;ve completed all 6 modules and earned <strong>2 CPD points</strong>. Your certificate is ready on your dashboard.
+              </p>
+
+              {/* Promo offer */}
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border-2 border-emerald-200 mb-6 text-left">
+                <p className="text-sm font-bold text-emerald-800 mb-2">You&apos;ve earned $50 off the full course</p>
+                <p className="text-sm text-slate-600 mb-3">
+                  SCAT6 is one assessment tool — but confident concussion management requires more. The full course teaches you to administer VOMS vestibular screening, score BESS accurately, identify concussion phenotypes, and make evidence-based return-to-play decisions. Online ({CONFIG.COURSE.ONLINE_CPD_POINTS} CPD) or complete with hands-on workshop ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD).
+                </p>
+                <div className="flex items-center gap-2 text-xs text-emerald-700 font-semibold bg-emerald-100 rounded-lg px-3 py-2 w-fit">
+                  Code: {CONFIG.COURSE.PROMO_CODE} · $50 off · applied automatically
+                </div>
               </div>
-            </div>
+
+              <div className="flex flex-col items-center gap-3">
+                <Link
+                  href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
+                  className="px-8 py-3.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
+                >
+                  Claim $50 Off — View Full Course
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <button
+                  onClick={() => router.push('/learning')}
+                  className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                >
+                  Back to dashboard
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Module Complete!</h1>
+              <p className="text-lg text-slate-600 mb-8">
+                You&apos;ve completed <strong>{module.title}</strong> and earned <strong>{module.points} CPD {module.points === 1 ? 'point' : 'points'}</strong>.
+              </p>
+              {quizResult && (
+                <div className="bg-white rounded-xl p-5 border border-slate-200 mb-8 inline-block">
+                  <div className="text-sm font-semibold text-slate-500 mb-1">Quiz Score</div>
+                  <div className="text-2xl font-bold text-teal-600">
+                    {quizResult.score} / {moduleProgress.quizTotalQuestions || module.quiz.length}
+                    <span className="text-base text-slate-400 ml-2">({quizResult.percentage.toFixed(0)}%)</span>
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={() => router.push('/learning')}
+                  className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
+                >
+                  Continue Learning
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                {isSCATModule && (
+                  <div className="flex flex-col items-center gap-2">
+                    <Link
+                      href="/pricing"
+                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-accent border-2 border-accent rounded-xl hover:bg-accent/5 transition-colors"
+                    >
+                      Unlock all 8 modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <p className="text-xs text-slate-500 max-w-sm text-center mt-1">
+                      Learn VOMS screening, BESS scoring, return-to-play protocols &amp; phenotype-based rehabilitation
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
-          <div>
-            <button
-              onClick={() => router.push('/learning')}
-              className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
-            >
-              Continue Learning
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            {isSCATModule && (
-              <Link
-                href="/pricing"
-                className="mt-3 inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-accent border-2 border-accent rounded-xl hover:bg-accent/5 transition-colors"
-              >
-                Unlock all 8 modules · 8 CPD points
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            )}
-          </div>
         </div>
       </div>
     )
@@ -1225,6 +1274,21 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                       You scored {quizResult?.score} out of {module.quiz.length} ({quizResult?.percentage.toFixed(0)}%)
                       {!quizResult?.passed && '. Please review the content and try again.'}
                     </p>
+                    {quizResult?.passed && isSCATModule && (
+                      <div className="mb-4 p-4 rounded-xl bg-white border border-teal-200">
+                        <p className="text-sm text-slate-700 leading-relaxed">
+                          <strong>Want to go deeper?</strong> The full course covers VOMS vestibular screening, BESS balance scoring, return-to-play protocols, and phenotype-based rehabilitation — the clinical skills that set concussion experts apart.
+                        </p>
+                        <Link href="/pricing" className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
+                          See full course <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    )}
+                    {!quizResult?.passed && isSCATModule && (
+                      <p className="text-sm text-amber-700 mb-4">
+                        These clinical scenarios are covered in depth in the <Link href="/pricing" className="font-semibold underline hover:no-underline">full concussion management course</Link> — 8 modules, 14 CPD points.
+                      </p>
+                    )}
                     {!quizResult?.passed && (
                       <button
                         onClick={() => {

@@ -61,6 +61,22 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Validate quiz scores — 75% required for each module with a quiz
+    const failedModules = moduleIds.filter(id => {
+      const mod = progress[String(id)]
+      if (mod?.quizTotalQuestions && mod.quizTotalQuestions > 0) {
+        const score = (mod.quizScore || 0) / mod.quizTotalQuestions
+        return score < 0.75
+      }
+      return false
+    })
+    if (failedModules.length > 0) {
+      return NextResponse.json(
+        { error: `You need at least 75% on all quizzes. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${failedModules.join(', ')}.` },
+        { status: 403 }
+      )
+    }
+
     // Get the latest completion date across all modules
     const completionDate = getLatestCompletionDate(progress, moduleIds)
 
@@ -151,6 +167,22 @@ export async function POST(request: NextRequest) {
     if (!allCompleted) {
       return NextResponse.json(
         { error: 'Course not yet completed' },
+        { status: 403 }
+      )
+    }
+
+    // Validate quiz scores — 75% required for each module with a quiz
+    const failedModules = moduleIds.filter(id => {
+      const mod = progress[String(id)]
+      if (mod?.quizTotalQuestions && mod.quizTotalQuestions > 0) {
+        const score = (mod.quizScore || 0) / mod.quizTotalQuestions
+        return score < 0.75
+      }
+      return false
+    })
+    if (failedModules.length > 0) {
+      return NextResponse.json(
+        { error: `You need at least 75% on all quizzes. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${failedModules.join(', ')}.` },
         { status: 403 }
       )
     }

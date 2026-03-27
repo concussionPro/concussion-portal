@@ -154,8 +154,8 @@ export async function POST(request: NextRequest) {
                   </div>
 
                   <center>
-                    <a href="${baseUrl}/dashboard?utm_source=email&utm_medium=transactional&utm_campaign=scat-export-welcome" class="button">
-                      Go to Your Dashboard →
+                    <a href="${baseUrl}/scat-course?utm_source=email&utm_medium=transactional&utm_campaign=scat-export-welcome" class="button">
+                      Start Free Course →
                     </a>
                   </center>
 
