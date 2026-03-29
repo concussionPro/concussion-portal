@@ -4,6 +4,7 @@ import { ArrowRight, Clock, Eye, CheckCircle, BarChart3, Target, Stethoscope } f
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Beyond SCAT6: How Vestibular/Ocular Screening Improves Concussion Care',
@@ -289,6 +290,8 @@ export default function VOMSConcussionPage() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['baseline-testing', 'bess-testing', 'return-to-play']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

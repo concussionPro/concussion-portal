@@ -4,6 +4,7 @@ import { ArrowRight, Clock, CheckCircle, Users, Activity, Brain, Stethoscope } f
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'AIS Concussion and Brain Health Position Statement 2024: Key Takeaways for Clinicians',
@@ -250,6 +251,8 @@ export default function AISPositionStatementPage() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['21-day-stand-down', 'ahpra-cpd', 'nsw-combat-sports']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

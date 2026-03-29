@@ -77,6 +77,7 @@ export async function createCourseCheckoutSession({
   customerEmail,
   successUrl,
   cancelUrl,
+  promoCode,
 }: {
   courseType: CourseType
   location?: string
@@ -84,6 +85,7 @@ export async function createCourseCheckoutSession({
   customerEmail?: string
   successUrl: string
   cancelUrl: string
+  promoCode?: string
 }) {
   const isEarlyBird = await isEarlyBirdActiveForLocation(location)
   let unitAmount: number
@@ -107,6 +109,25 @@ export async function createCourseCheckoutSession({
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `ConcussionPro — Complete Course (${locationLabel})`
     productDescription = `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD points · AHPRA aligned · All materials included`
+  }
+
+  // If a promo code was provided, look it up in Stripe to auto-apply
+  let discounts: { promotion_code: string }[] | undefined
+  let allowPromotionCodes: boolean | undefined
+  if (promoCode) {
+    try {
+      const promoCodes = await stripe.promotionCodes.list({ code: promoCode, active: true, limit: 1 })
+      if (promoCodes.data.length > 0) {
+        discounts = [{ promotion_code: promoCodes.data[0].id }]
+      } else {
+        // Promo code not found — fall back to manual entry field
+        allowPromotionCodes = true
+      }
+    } catch {
+      allowPromotionCodes = true
+    }
+  } else {
+    allowPromotionCodes = true
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -138,7 +159,7 @@ export async function createCourseCheckoutSession({
       source: 'portal',
       timestamp: new Date().toISOString(),
     },
-    allow_promotion_codes: true,
+    ...(discounts ? { discounts } : { allow_promotion_codes: allowPromotionCodes }),
     billing_address_collection: 'required',
     phone_number_collection: { enabled: true },
     custom_text: {

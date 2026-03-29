@@ -4,6 +4,7 @@ import { ArrowRight, Clock, CheckCircle, FileText, Brain, Activity, AlertCircle,
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'How to Use the SCAT6 for Concussion Management: A Clinician\'s Guide',
@@ -345,6 +346,8 @@ export default function HowToUseSCAT6Page() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['scat6-vs-scoat6', 'voms-screening', 'scat6-pdf']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

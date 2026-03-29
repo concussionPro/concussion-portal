@@ -15,7 +15,7 @@ import type { CourseType } from '@/lib/stripe'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { courseType, location, email, preferredCity } = body
+    const { courseType, location, email, preferredCity, promoCode } = body
 
     // Validate course type
     if (!courseType || !VALID_COURSE_TYPES.includes(courseType)) {
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
       cancelUrl: courseType === 'international-online'
         ? `${baseUrl}/pricing-international?canceled=true`
         : `${baseUrl}/pricing?canceled=true`,
+      promoCode: typeof promoCode === 'string' ? promoCode : undefined,
     })
 
     return NextResponse.json({

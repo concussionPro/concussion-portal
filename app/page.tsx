@@ -57,10 +57,10 @@ export default function HomePage() {
                 <ArrowRight className="w-4.5 h-4.5" />
               </Link>
               <Link
-                href="/preview"
-                className="px-5 py-2.5 rounded-lg text-sm font-medium text-[var(--muted-foreground)] border border-[rgba(13,115,119,0.15)] hover:border-[rgba(13,115,119,0.3)] hover:text-[var(--foreground)] transition-colors flex items-center justify-center gap-1.5"
+                href="/scat-mastery"
+                className="px-6 py-3 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1.5"
               >
-                Preview Course
+                Start Free — 2 CPD Points
               </Link>
             </div>
 
@@ -73,11 +73,12 @@ export default function HomePage() {
 
             <p className="text-[13px] text-[var(--muted-foreground)] mt-3 flex items-center justify-center gap-2 flex-wrap">
               <Link
-                href="/scat-mastery"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-[var(--accent)] text-xs font-semibold hover:bg-teal-100 transition-colors border border-teal-200/50"
+                href="/preview"
+                className="text-[var(--accent)] font-medium hover:underline"
               >
-                Free SCAT6 Course — 2 CPD points
+                Preview course content
               </Link>
+              <span className="text-slate-300">·</span>
               <Link
                 href="/scat-forms"
                 className="text-[var(--accent)] font-medium hover:underline"

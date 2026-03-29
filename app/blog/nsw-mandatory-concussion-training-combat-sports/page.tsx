@@ -4,6 +4,7 @@ import { ArrowRight, Clock, CheckCircle, AlertTriangle, FileText, Shield } from 
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'NSW Mandatory Concussion Training for Combat Sports: What Clinicians Need to Know',
@@ -246,6 +247,8 @@ export default function NSWConcussionTrainingPage() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['ahpra-cpd', '21-day-stand-down', 'ais-position-statement']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

@@ -3,6 +3,7 @@ import { createFAQSchema, createBlogPostSchema } from '@/lib/schema-markup'
 import { AlertTriangle, CheckCircle, X } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'SCAT6 vs SCOAT6: Which Tool to Use When? | Complete Guide 2026',
@@ -216,6 +217,8 @@ export default function SCAT6vsSCOAT6Page() {
               </div>
             ))}
           </div>
+
+          <RelatedPosts slugs={['scat6-guide', 'concussion-update-2026', 'scat6-pdf']} />
 
           <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-8">
             <h3 className="text-2xl font-bold text-green-900 mb-4">

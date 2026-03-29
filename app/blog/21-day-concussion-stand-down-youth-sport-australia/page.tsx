@@ -4,6 +4,7 @@ import { ArrowRight, Clock, CheckCircle, AlertTriangle, Timer, Users } from 'luc
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: '21-Day Concussion Stand-Down in Youth Sport: What Every Australian Clinician Should Know',
@@ -272,6 +273,8 @@ export default function StandDownPage() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['ais-position-statement', 'return-to-play', 'ahpra-cpd']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

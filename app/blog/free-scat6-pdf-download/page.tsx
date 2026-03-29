@@ -3,6 +3,7 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { Download, FileText, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Free SCAT6 PDF Download - Fillable Form with Auto-Scoring | Australia 2026',
@@ -172,6 +173,8 @@ export default function FreeSCAT6PDFDownloadPage() {
               Start Free Training →
             </Link>
           </div>
+
+          <RelatedPosts slugs={['scat6-guide', 'scat6-vs-scoat6', 'return-to-play']} />
 
           <div className="bg-slate-100 rounded-xl p-6">
             <h3 className="text-lg font-bold text-slate-900 mb-4">Official SCAT6 References</h3>

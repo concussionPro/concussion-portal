@@ -4,6 +4,7 @@ import { ArrowRight, Clock, Brain, AlertTriangle, CheckCircle, XCircle, ShieldAl
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: '7 Concussion Myths Clinicians Should Stop Believing in 2026',
@@ -430,6 +431,8 @@ export default function ConcussionMythsPage() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['concussion-update-2026', 'return-to-play', 'voms-screening']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

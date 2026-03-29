@@ -109,7 +109,13 @@ export function CourseSchema() {
     },
   }
 
-  // Aggregate rating omitted — add when sufficient volume exists
+  // 7 verified testimonials across homepage + pricing page
+  schema.aggregateRating = {
+    '@type': 'AggregateRating',
+    ratingValue: '5',
+    bestRating: '5',
+    ratingCount: '7',
+  }
 
   if (courseInstances.length > 0) {
     schema.hasCourseInstance = courseInstances

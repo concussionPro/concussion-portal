@@ -4,6 +4,7 @@ import { ArrowRight, Clock, CheckCircle, BookOpen, Award, FileText } from 'lucid
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'AHPRA CPD Requirements for Allied Health: Where Concussion Education Fits',
@@ -331,6 +332,8 @@ export default function AHPRACPDPage() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['21-day-stand-down', 'ais-position-statement', 'nsw-combat-sports']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

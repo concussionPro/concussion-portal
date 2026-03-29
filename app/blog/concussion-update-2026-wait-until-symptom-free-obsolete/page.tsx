@@ -4,6 +4,7 @@ import { ArrowRight, Clock, Activity, Eye, Brain, AlertCircle, CheckCircle } fro
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
@@ -308,6 +309,8 @@ export default function ConcussionUpdate2026Page() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['voms-screening', 'scat6-vs-scoat6', 'return-to-play']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

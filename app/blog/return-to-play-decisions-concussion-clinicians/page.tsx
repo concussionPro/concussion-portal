@@ -4,6 +4,7 @@ import { ArrowRight, Clock, CheckCircle, ClipboardList, Brain, Activity, Layers,
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Safe Return-to-Play Decisions After Concussion: 5 Quick Wins for Clinicians',
@@ -358,6 +359,8 @@ export default function ReturnToPlayPage() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['scat6-guide', 'bess-testing', 'voms-screening']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">

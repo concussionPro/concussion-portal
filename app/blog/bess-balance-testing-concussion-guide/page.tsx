@@ -4,6 +4,7 @@ import { ArrowRight, Clock, CheckCircle, BarChart3, Scale, AlertTriangle, Clipbo
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { CONFIG } from '@/lib/config'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'BESS Balance Testing for Concussion: A Clinician\u0027s Complete Guide',
@@ -523,6 +524,8 @@ export default function BESSBalanceTestingPage() {
               </li>
             </ul>
           </div>
+
+          <RelatedPosts slugs={['voms-screening', 'baseline-testing', 'return-to-play']} />
 
           {/* CTA Section */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">
