@@ -38,6 +38,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Ensure audit table exists (prevents silent failures if table was dropped/never created)
+    await sql`CREATE TABLE IF NOT EXISTS email_audit_log (audit_key TEXT PRIMARY KEY, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`
+
     const users = await loadUsers()
     const now = new Date()
     let emailsSent = 0

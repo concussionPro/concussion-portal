@@ -149,10 +149,10 @@ export async function POST(request: NextRequest) {
 
       // Send Day 0 welcome email (cron skips Day 0)
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+      const userName = name || 'there'
       const loginLink = generateMagicLinkJWT(userId, email, name || email.split('@')[0], 'preview', baseUrl)
       const unsubToken = generateUnsubscribeToken(email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
-      const userName = name || email.split('@')[0]
 
       const preseasonLink = `${baseUrl}/preseason`
 

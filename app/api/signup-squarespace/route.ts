@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
     `
 
     const userName = name || email.split('@')[0]
+    const displayName = name || 'there'
 
     const userId = await createUser({
       email,
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
         'List-Unsubscribe': `<${unsubscribeUrl}>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
-      html: buildWelcomeEmail(escapeHtml(userName), loginLink, preseasonLink, unsubscribeUrl),
+      html: buildWelcomeEmail(escapeHtml(displayName), loginLink, preseasonLink, unsubscribeUrl),
       tags: [
         { name: 'sequence', value: 'scat-mastery' },
         { name: 'day', value: '0' },
