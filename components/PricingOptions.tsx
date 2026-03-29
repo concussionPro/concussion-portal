@@ -34,9 +34,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // Early bird: check deadline. Server is source of truth at checkout.
   const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
-  // Read pre-selected location and promo code from URL
+  // Read pre-selected location, promo code, and UTM params from URL
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState<string | null>(null)
+  const [utmParams, setUtmParams] = useState<Record<string, string>>({})
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
@@ -47,6 +48,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
     if (promo) {
       setPromoCode(promo)
     }
+    // Capture UTM params for Stripe attribution
+    const utm: Record<string, string> = {}
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'gclid']) {
+      const val = params.get(key)
+      if (val) utm[key] = val
+    }
+    if (Object.keys(utm).length > 0) setUtmParams(utm)
   }, [])
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
@@ -69,6 +77,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           courseType,
           ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
           ...(promoCode ? { promoCode } : {}),
+          ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
         }),
       })
 

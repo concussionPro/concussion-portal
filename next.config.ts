@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
         destination: '/pricing-international',
         permanent: true,
       },
+      // Squarespace path redirects — catch traffic when SS pages redirect to portal domain
+      { source: '/shop', destination: '/pricing', permanent: false },
+      { source: '/concussion-course', destination: '/pricing', permanent: false },
+      { source: '/scat-6-digital-tools', destination: '/scat-forms', permanent: false },
+      { source: '/formsdl', destination: '/scat-forms', permanent: false },
+      { source: '/allied', destination: '/pricing', permanent: false },
+      { source: '/gp-portal', destination: '/pricing', permanent: false },
+      { source: '/ty-page', destination: '/scat-mastery', permanent: false },
+      { source: '/blog-1', destination: '/blog', permanent: false },
+      { source: '/blog-1/:slug*', destination: '/blog', permanent: false },
     ]
   },
 

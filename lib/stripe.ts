@@ -78,6 +78,7 @@ export async function createCourseCheckoutSession({
   successUrl,
   cancelUrl,
   promoCode,
+  utm,
 }: {
   courseType: CourseType
   location?: string
@@ -86,6 +87,7 @@ export async function createCourseCheckoutSession({
   successUrl: string
   cancelUrl: string
   promoCode?: string
+  utm?: Record<string, string>
 }) {
   const isEarlyBird = await isEarlyBirdActiveForLocation(location)
   let unitAmount: number
@@ -158,6 +160,10 @@ export async function createCourseCheckoutSession({
       currency,
       source: 'portal',
       timestamp: new Date().toISOString(),
+      ...(utm?.utm_source ? { utm_source: utm.utm_source } : {}),
+      ...(utm?.utm_medium ? { utm_medium: utm.utm_medium } : {}),
+      ...(utm?.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}),
+      ...(utm?.gclid ? { gclid: utm.gclid } : {}),
     },
     ...(discounts ? { discounts } : { allow_promotion_codes: allowPromotionCodes }),
     billing_address_collection: 'required',
