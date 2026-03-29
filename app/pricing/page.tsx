@@ -16,6 +16,7 @@ import {
   Check,
   ArrowRight,
   ExternalLink,
+  Mail,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
@@ -145,6 +146,18 @@ function PricingContent() {
     {
       q: 'Does this count toward my AHPRA CPD requirements?',
       a: 'Yes. The online modules count as formal CPD hours (8 hours), and the workshop adds 6 hours. Log it as "Educational Activity — Reviewing & Reflecting" in your CPD portfolio. Your certificate includes completion date, CPD hours, and a unique certificate ID — everything you need for an AHPRA audit. Endorsed by Osteopathy Australia.',
+    },
+    {
+      q: 'Where are workshops held and when is the next one?',
+      a: 'Workshops run in Sydney, Melbourne, and Byron Bay. Dates are confirmed once enough clinicians register per city — this ensures a quality small-group experience (max 12 per session). Q1 2026 workshops ran successfully across all three cities. The next round is expected Jun–Aug 2026. You\'ll receive at least 6 weeks\' notice once your city\'s date is locked in.',
+    },
+    {
+      q: 'Can I pay in instalments?',
+      a: 'Yes — Afterpay and Klarna are available at checkout for both the online and complete course options. Split the cost into interest-free instalments with no additional fees.',
+    },
+    {
+      q: 'I\'m not sure which option is right for me',
+      a: 'The online course is ideal if you want flexible, self-paced concussion education you can fit around clinical work. The complete course adds a full day of supervised hands-on practice — administering SCAT6, VOMS, and BESS on real subjects with expert feedback. If you\'re unsure, start with the free SCAT6 Mastery course to experience the teaching style, or email Zac directly for a personal recommendation.',
     },
   ]
 
@@ -512,6 +525,34 @@ function PricingContent() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Ask Zac — personal contact CTA for undecided visitors */}
+        <div className="max-w-2xl mx-auto mt-10">
+          <div className="glass rounded-xl p-6 flex flex-col sm:flex-row items-center gap-5">
+            <Image
+              src="/zac-lewis-headshot.jpg"
+              alt="Zac Lewis"
+              width={64}
+              height={64}
+              className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-accent/20"
+            />
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-bold text-foreground mb-1">Still have questions?</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Not sure which option fits your situation? Email me directly — I&apos;m happy to
+                help you work out the right path. I reply within 24 hours.
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">— Zac Lewis, Course Director</p>
+            </div>
+            <a
+              href="mailto:zac@concussion-education-australia.com?subject=Question about the concussion course"
+              className="flex-shrink-0 px-5 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors whitespace-nowrap flex items-center gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Email Zac
+            </a>
           </div>
         </div>
 

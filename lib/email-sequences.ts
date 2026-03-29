@@ -359,7 +359,8 @@ export const SCAT_MASTERY_SEQUENCE = [
     `),
   },
 
-  // WEEK 2 (Day 7) - Clinical case study for credibility
+  // WEEK 2 (Day 7) - Clinical case study + full-price upgrade CTA (active users)
+  // NOTE: Inactive users (never logged in) get FREE_USER_REENGAGEMENT instead (handled by cron)
   {
     day: 7,
     subject: 'Would you clear this patient to play Saturday?',
@@ -375,31 +376,32 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p>What would you do? Clear him? Bench him? What documentation protects you if something goes wrong?</p>
       <p>This exact scenario comes up in the SCAT6 Mastery course &mdash; and the clinical reasoning behind the right decision is worth the 8 minutes it takes to work through.</p>
       <center><a href="${utm(loginLink, 'scat_mastery_day7', 'case_study')}" class="cta-btn">Work Through This Case</a></center>
+      <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">If you're finding the free course useful, the full Concussion Management course covers VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype &mdash; 8 modules, 8 CPD points.</p>
+      <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'scat_mastery_day7', 'see_course')}" class="cta-secondary">See Full Course &mdash; $${CONFIG.COURSE.PRICE_ONLINE}</a></center>
       <div class="sig">Zac</div>
     `),
   },
 
-  // DAY 10 - Promo code for free course completers
+  // DAY 10 - Promo code (ONLY sent to users with 3+ modules completed — gated by cron)
+  // Users with <3 modules get SCAT_DAY10_ENGAGEMENT instead
   {
     day: 10,
     subject: 'You earned it — here\'s $50 off the full course',
-    template: (name: string, upgradeLink: string) => emailShell(`
+    template: (name: string, upgradeLink: string, expiryDate?: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
       <p>You've been working through the SCAT6 Mastery course &mdash; great to see you investing in your concussion knowledge.</p>
-      <p>As a thank you for getting started, here's <strong>$50 off</strong> the full Concussion Management course:</p>
-      <div class="callout">
-        <strong>Your promo code: ${CONFIG.COURSE.PROMO_CODE}</strong><br><br>
-        Use code <strong>${CONFIG.COURSE.PROMO_CODE}</strong> at checkout for $50 off any course option.<br><br>
-        <span style="color: #d97706; font-weight: 600;">Valid for 72 hours only.</span>
+      <p>As a thank you, here's <strong>$50 off</strong> the full Concussion Management course:</p>
+      <div class="callout-warn">
+        <strong>Your code: ${CONFIG.COURSE.PROMO_CODE}</strong><br><br>
+        $50 off the online course at checkout.<br><br>
+        <strong>Expires: ${expiryDate || 'in 72 hours'}</strong>
       </div>
       <p>The full course picks up where SCAT6 Mastery leaves off &mdash; 8 modules covering concussion pathophysiology, VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype. Plus the option to add a hands-on workshop day.</p>
-      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day10', 'promo_code')}" class="cta-btn">Claim Your $50 Off</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} &middot; Code ${CONFIG.COURSE.PROMO_CODE} applied at checkout</p>
+      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day10', 'promo_code')}" class="cta-btn">Claim Your $50 Off &mdash; $${CONFIG.COURSE.PRICE_ONLINE - 50}</a></center>
       <div class="sig">
         Zac Lewis<br>
         Concussion Education Australia
       </div>
-      <p class="ps">P.S. This code expires in 72 hours. If you have any questions about the full course, just reply &mdash; happy to help.</p>
     `),
   },
 
@@ -437,29 +439,32 @@ export const SCAT_MASTERY_SEQUENCE = [
     `),
   },
 
-  // WEEK 5 (Day 28) - Early bird reminder + social proof
+  // WEEK 5 (Day 28) - Last chance promo with hard 72h deadline
   {
     day: 28,
-    subject: 'Early bird pricing closes soon',
-    template: (name: string, upgradeLink: string) => emailShell(`
+    subject: 'Last chance — $50 off expires this week',
+    template: (name: string, upgradeLink: string, expiryDate?: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-      <p>Quick note &mdash; early bird pricing is currently active for all workshop cities while dates are being confirmed by demand.</p>
+      <p>This is the last time I'll send this offer.</p>
+      <div class="callout-warn">
+        <strong>Code: ${CONFIG.COURSE.PROMO_CODE}</strong> &mdash; $50 off the online course<br><br>
+        <strong>Expires: ${expiryDate || 'in 72 hours'}</strong>
+      </div>
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
         <tr style="border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
           <td style="padding: 12px 16px; font-weight: 700;">Option</td>
-          <td style="padding: 12px 16px; font-weight: 700; text-align: right;">Early Bird</td>
+          <td style="padding: 12px 16px; font-weight: 700; text-align: right;">Price</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
           <td style="padding: 14px 16px;"><strong>Online Course</strong><br><span style="font-size: 13px; color: #64748b;">8 modules &middot; 8 CPD points &middot; Lifetime access</span></td>
-          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_ONLINE}</td>
+          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;"><s style="color:#94a3b8;">$${CONFIG.COURSE.PRICE_ONLINE}</s> $${CONFIG.COURSE.PRICE_ONLINE - 50}</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
           <td style="padding: 14px 16px;"><strong>Complete Course</strong><br><span style="font-size: 13px; color: #64748b;">Online + workshop &middot; 14 CPD points</span></td>
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</td>
         </tr>
       </table>
-      <p>Both options include lifetime access, the clinical toolkit (referral templates, RTP forms, clearance letters), and an AHPRA-aligned CPD certificate.</p>
-      <center><a href="${utm(upgradeLink, 'scat_mastery_day28', 'view_pricing')}" class="cta-btn">View Pricing</a></center>
+      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day28', 'last_chance')}" class="cta-btn">Claim $50 Off Before It Expires</a></center>
       <p class="ps">P.S. You can start with the online course and upgrade to include the workshop later &mdash; you'll only pay the difference.</p>
       <div class="sig">Zac</div>
     `),
@@ -731,6 +736,70 @@ export const REENGAGEMENT_EMAIL = {
       <strong>Quick tip:</strong> Modules 3 and 6 are the most clinically actionable — they cover practical assessment skills and return-to-play/work/school protocols you can use immediately.
     </div>
     <center><a href="${utm(loginLink, 'reengagement', 'continue_course')}" class="cta-btn">Continue Your Course</a></center>
+    <div class="sig">Zac</div>
+  `),
+}
+
+// ─── Free User Nurture Variants ─────────────────────────────────────────────
+
+/**
+ * FREE_USER_REENGAGEMENT — sent at Day 7 instead of clinical case
+ * for preview users who never logged in after signup (ghosters).
+ */
+export const FREE_USER_REENGAGEMENT = {
+  subject: 'Your free CPD points are still waiting',
+  template: (name: string, loginLink: string) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <p>You signed up for the free SCAT6 Mastery course a week ago but haven't started yet.</p>
+    <p>No pressure — but the 2 AHPRA-aligned CPD points are yours whenever you're ready. Module 1 takes about 20 minutes and you can pick up where you left off any time.</p>
+    <div class="callout">
+      <strong>What's waiting for you:</strong><br><br>
+      &#8226; 6 modules covering SCAT6 and SCOAT6 administration<br>
+      &#8226; 2 CPD points + certificate upon completion<br>
+      &#8226; Digital SCAT6 and SCOAT6 forms with PDF export<br><br>
+      Self-paced &middot; ~3 hours total &middot; Free
+    </div>
+    <center><a href="${utm(loginLink, 'free_reengagement_day7', 'start_now')}" class="cta-btn">Start Module 1 — It Takes 20 Minutes</a></center>
+    <div class="sig">Zac</div>
+  `),
+}
+
+/**
+ * SCAT_DAY10_ENGAGEMENT — sent at Day 10 instead of promo code
+ * for preview users with fewer than 3 SCAT modules completed.
+ * Encourages them to keep going rather than selling too early.
+ */
+export const SCAT_DAY10_ENGAGEMENT = {
+  subject: 'Where did you get up to?',
+  template: (name: string, loginLink: string, completedCount: number) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <p>You've completed ${completedCount} of 6 modules in the SCAT6 Mastery course${completedCount > 0 ? ' — great start' : ''}.</p>
+    <p>The next module picks up right where you left off and takes about 30 minutes. Each one builds on the last, so the course gets more clinically useful as you go.</p>
+    <div class="callout">
+      <strong>Coming up:</strong><br><br>
+      &#8226; Red flag recognition and escalation criteria<br>
+      &#8226; When to use SCAT6 vs SCOAT6 — the distinction most clinicians miss<br>
+      &#8226; Clinical case studies with decision-making frameworks<br><br>
+      2 CPD points are waiting at the end.
+    </div>
+    <center><a href="${utm(loginLink, 'scat_engagement_day10', 'continue_course')}" class="cta-btn">Continue Your Course</a></center>
+    <div class="sig">Zac</div>
+  `),
+}
+
+/**
+ * FREE_ALMOST_DONE — sent when a preview user has completed 5 of 6 SCAT modules.
+ * One-time nudge to finish and earn the free certificate + upsell.
+ */
+export const FREE_ALMOST_DONE = {
+  subject: "One module left — your CPD certificate is almost ready",
+  template: (name: string, loginLink: string) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <p>You've completed <strong>5 of 6 modules</strong> in the SCAT6 Mastery course. One more and your 2 CPD point certificate is generated automatically.</p>
+    <p>The final module takes about 20 minutes and covers clinical case studies — the practical application of everything you've learned so far.</p>
+    <center><a href="${utm(loginLink, 'free_almost_done', 'finish_last_module')}" class="cta-btn">Finish Your Last Module</a></center>
+    <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">Once you've earned your SCAT6 Mastery certificate, the full Concussion Management course takes your skills further — 8 modules covering VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype. 8 additional CPD points.</p>
+    <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'free_almost_done', 'see_full_course')}" class="cta-secondary">See Full Course &mdash; $${CONFIG.COURSE.PRICE_ONLINE}</a></center>
     <div class="sig">Zac</div>
   `),
 }

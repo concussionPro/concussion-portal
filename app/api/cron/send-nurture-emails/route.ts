@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE } from '@/lib/email-sequences'
 import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
@@ -44,6 +44,7 @@ export async function GET(request: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
     // ── 1. SCAT6 Mastery Nurture Sequence (preview users) ──
+    // Routes Day 7 and Day 10 to variant emails based on user activity/progress
     for (const user of users) {
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
@@ -61,14 +62,107 @@ export async function GET(request: Request) {
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
-      // Dedup via email_audit_log (INSERT-first to avoid TOCTOU race)
+      // Load user progress for routing decisions (Day 7+)
+      let scatCompletedCount = 0
+      if (daysSinceSignup >= 7) {
+        try {
+          const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
+          if (progressRows.length > 0 && progressRows[0].progress) {
+            const progress = progressRows[0].progress
+            for (let i = 101; i <= 106; i++) {
+              if (progress[String(i)]?.completed) scatCompletedCount++
+            }
+          }
+        } catch (err) {
+          console.error(`[Nurture] Failed to load progress for ${user.email}:`, err)
+        }
+      }
+
+      // ── Day 7: Route based on login activity ──
+      // Ghosters (never logged in) → FREE_USER_REENGAGEMENT
+      // Active users → clinical case study + full-price CTA (default sequence)
+      if (daysSinceSignup === 7 && !user.lastLoginAt) {
+        const auditKey = `scat_day7_reengagement_${user.id}`
+        const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        if (inserted === 0) continue
+
+        const html = FREE_USER_REENGAGEMENT.template(user.name, loginLink)
+          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: FREE_USER_REENGAGEMENT.subject,
+            html,
+            tags: [
+              { name: 'sequence', value: 'scat-mastery' },
+              { name: 'day', value: '7' },
+              { name: 'variant', value: 'reengagement' },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          })
+          emailsSent++
+          console.log(`[Nurture] Day 7 (reengagement) → ${user.email}`)
+        } catch (err) {
+          console.error(`[Nurture] Failed to send Day 7 reengagement to ${user.email}:`, err)
+        }
+        continue
+      }
+
+      // ── Day 10: Route based on module completion ──
+      // <3 modules → engagement push (SCAT_DAY10_ENGAGEMENT)
+      // 3+ modules → promo code with 72h deadline (default sequence)
+      if (daysSinceSignup === 10 && scatCompletedCount < 3) {
+        const auditKey = `scat_day10_engagement_${user.id}`
+        const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        if (inserted === 0) continue
+
+        const html = SCAT_DAY10_ENGAGEMENT.template(user.name, loginLink, scatCompletedCount)
+          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: SCAT_DAY10_ENGAGEMENT.subject,
+            html,
+            tags: [
+              { name: 'sequence', value: 'scat-mastery' },
+              { name: 'day', value: '10' },
+              { name: 'variant', value: 'engagement' },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          })
+          emailsSent++
+          console.log(`[Nurture] Day 10 (engagement, ${scatCompletedCount} modules) → ${user.email}`)
+        } catch (err) {
+          console.error(`[Nurture] Failed to send Day 10 engagement to ${user.email}:`, err)
+        }
+        continue
+      }
+
+      // ── Default sequence (Days 3, 7 active, 10 with 3+ modules, 14, 28, 42) ──
       const auditKey = `scat_day${email.day}_${user.id}`
       const { rowCount: scatInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
       if (scatInserted === 0) continue // Already sent
 
+      // Calculate 72h expiry date for Day 10 and Day 28 promo emails
+      let expiryDate: string | undefined
+      if (daysSinceSignup === 10 || daysSinceSignup === 28) {
+        const expiry = new Date(now.getTime() + 72 * 60 * 60 * 1000)
+        expiryDate = expiry.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })
+      }
+
       // Days 0-7: link to free course login. Days 14+: link to pricing/upgrade.
-      const html = email.template(user.name, daysSinceSignup <= 7 ? loginLink : upgradeLink)
-        .replace('{{unsubscribe_url}}', unsubscribeUrl)
+      const ctaLink = daysSinceSignup <= 7 ? loginLink : upgradeLink
+      const html = (daysSinceSignup === 10 || daysSinceSignup === 28)
+        ? email.template(user.name, ctaLink, expiryDate).replace('{{unsubscribe_url}}', unsubscribeUrl)
+        : email.template(user.name, ctaLink).replace('{{unsubscribe_url}}', unsubscribeUrl)
 
       try {
         await sendEmail({
@@ -517,6 +611,57 @@ export async function GET(request: Request) {
         console.log(`[Completion Upsell] Cron fallback → ${user.email}`)
       } catch (err) {
         console.error(`[Completion Upsell] Failed for ${user.email}:`, err)
+      }
+    }
+
+    // ── 9. Free "Almost Done" (preview users with 5/6 SCAT modules) ──
+    for (const user of users) {
+      if (user.accessLevel !== 'preview') continue
+      if (user.nurtureUnsubscribed) continue
+
+      try {
+        const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
+        if (progressRows.length === 0) continue
+        const progress = progressRows[0].progress
+        if (!progress) continue
+
+        // Count completed SCAT modules (101-106)
+        let scatDone = 0
+        for (let i = 101; i <= 106; i++) {
+          if (progress[String(i)]?.completed) scatDone++
+        }
+
+        if (scatDone === 5) {
+          const auditKey = `free_almost_done_${user.id}`
+          const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+          if (inserted === 0) continue // Already sent
+
+          const loginLink = `${baseUrl}/login?redirect=/learning`
+          const unsubToken = generateUnsubscribeToken(user.email)
+          const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+          const html = FREE_ALMOST_DONE.template(user.name || 'there', loginLink)
+            .replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+          await sendEmail({
+            to: user.email,
+            subject: FREE_ALMOST_DONE.subject,
+            html,
+            tags: [
+              { name: 'sequence', value: 'free-almost-done' },
+              { name: 'trigger', value: 'progress-5of6' },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          })
+
+          emailsSent++
+          console.log(`[Free Almost Done] 5/6 SCAT modules → ${user.email}`)
+        }
+      } catch (err) {
+        console.error(`[Free Almost Done] Failed for ${user.email}:`, err)
       }
     }
 
