@@ -101,6 +101,16 @@ function PricingContent() {
       .catch(() => {})
   }, [])
 
+  // UTM-aware messaging: swap hero for CPD-deadline ad traffic (campaign 2C)
+  const [isCpdTraffic, setIsCpdTraffic] = useState(false)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const utmCampaign = params.get('utm_campaign')
+    if (utmCampaign && utmCampaign.toLowerCase().includes('cpd')) {
+      setIsCpdTraffic(true)
+    }
+  }, [])
+
   // Early bird countdown
   const daysLeft = useCountdown(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)
   const isEarlyBird = daysLeft !== null && daysLeft > 0
@@ -240,18 +250,33 @@ function PricingContent() {
         {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
         <CanceledBanner />
 
-        {/* Page Header */}
+        {/* Page Header — CPD variant for ad group 2C traffic */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Australia&apos;s Leading Hands-On{' '}
-            <span className="text-gradient">Concussion CPD</span>
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Master SCAT6, VOMS &amp; BESS with expert-led training.{' '}
-            {isEarlyBird
-              ? `Early bird pricing ends ${earlyBirdDate} — price increases to $${CONFIG.COURSE.PRICE_REGULAR}.`
-              : 'Enrol today — lifetime access included.'}
-          </p>
+          {isCpdTraffic ? (
+            <>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+                Earn 14 AHPRA CPD Points{' '}
+                <span className="text-gradient">Online</span>
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Concussion assessment training for physiotherapists &amp; osteopaths.
+                Certificate on completion. Most employers reimburse — we provide the tax invoice.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+                Australia&apos;s Leading Hands-On{' '}
+                <span className="text-gradient">Concussion CPD</span>
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Master SCAT6, VOMS &amp; BESS with expert-led training.{' '}
+                {isEarlyBird
+                  ? `Early bird pricing ends ${earlyBirdDate} — price increases to $${CONFIG.COURSE.PRICE_REGULAR}.`
+                  : 'Enrol today — lifetime access included.'}
+              </p>
+            </>
+          )}
 
           {/* Countdown timer */}
           {isEarlyBird && daysLeft !== null && (
@@ -274,13 +299,24 @@ function PricingContent() {
           <span className="text-sm text-muted-foreground">AHPRA Aligned · 14 CPD Points (8 online + 6 workshop)</span>
           <span className="hidden sm:inline text-slate-300">|</span>
           <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
-          {enrollmentCount >= 1 && (
+          {enrollmentCount >= 100 && (
             <>
               <span className="hidden sm:inline text-slate-300">|</span>
               <span className="text-sm font-semibold text-foreground">{enrollmentCount}+ clinicians enrolled</span>
             </>
           )}
         </div>
+
+        {/* CPD traffic: employer reimbursement callout — #1 objection for CPD-seeking clinicians */}
+        {isCpdTraffic && (
+          <div className="max-w-3xl mx-auto mb-8 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
+            <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Most clinicians pay $0 out of pocket</p>
+              <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. We provide a tax invoice and AHPRA-aligned CPD certificate for reimbursement.</p>
+            </div>
+          </div>
+        )}
 
         {/* Regulatory context — "why now" urgency before solution (CXL: +15-25% for considered purchases) */}
         <div className="max-w-3xl mx-auto mb-8 p-5 rounded-xl bg-slate-50 border border-slate-200">
@@ -565,7 +601,7 @@ function PricingContent() {
                 : 'Enrol today — lifetime access included'}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {enrollmentCount >= 1
+              {enrollmentCount >= 100
                 ? `Join ${enrollmentCount}+ clinicians building concussion confidence.`
                 : 'Join clinicians building concussion confidence.'}
               {' '}7-day money-back guarantee.

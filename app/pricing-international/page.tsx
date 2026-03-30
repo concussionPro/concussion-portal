@@ -84,14 +84,23 @@ function InternationalPricingContent() {
       .catch(() => {})
   }, [])
 
-  // Read promo code from URL (e.g. ?promo=SCAT6 from nurture emails)
+  // Read promo code and UTM params from URL
   const [promoCode, setPromoCode] = useState<string | null>(null)
+  const [utmParams, setUtmParams] = useState<Record<string, string>>({})
 
-  // Fire international pricing view event
+  // Fire international pricing view event + capture UTM params
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const promo = params.get('promo')
     if (promo) setPromoCode(promo)
+
+    // Capture UTM params for Stripe attribution
+    const utm: Record<string, string> = {}
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'gclid']) {
+      const val = params.get(key)
+      if (val) utm[key] = val
+    }
+    if (Object.keys(utm).length > 0) setUtmParams(utm)
 
     if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
       window.gtag('event', 'international_pricing_view', {
@@ -111,7 +120,7 @@ function InternationalPricingContent() {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseType: 'international-online', ...(promoCode ? { promoCode } : {}) }),
+        body: JSON.stringify({ courseType: 'international-online', ...(promoCode ? { promoCode } : {}), ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}) }),
       })
 
       const data = await res.json()
@@ -275,7 +284,7 @@ function InternationalPricingContent() {
             <span className="text-sm text-muted-foreground">8 CE Credits · Evidence-Based Certification</span>
             <span className="hidden sm:inline text-slate-300">|</span>
             <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
-            {enrollmentCount >= 1 && (
+            {enrollmentCount >= 100 && (
               <>
                 <span className="hidden sm:inline text-slate-300">|</span>
                 <span className="text-sm font-semibold text-foreground">{enrollmentCount}+ clinicians enrolled</span>
@@ -384,7 +393,7 @@ function InternationalPricingContent() {
                 <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${PRICE_USD}</span>
                 <span className="text-sm text-[var(--muted-foreground)]">USD</span>
               </div>
-              <p className="text-sm text-slate-500 mt-1">or 4 x ${AFTERPAY_INSTALLMENT} with Afterpay</p>
+              <p className="text-sm text-slate-500 mt-1">or 4 x ${AFTERPAY_INSTALLMENT} with Afterpay or Klarna</p>
               <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · 8 CE credits</p>
             </div>
 
@@ -606,7 +615,7 @@ function InternationalPricingContent() {
               Start building concussion confidence today
             </h3>
             <p className="text-sm text-muted-foreground">
-              {enrollmentCount >= 1
+              {enrollmentCount >= 100
                 ? `Join ${enrollmentCount}+ clinicians across 4 countries.`
                 : 'Join clinicians building concussion confidence.'}
               {' '}7-day money-back guarantee.
@@ -630,7 +639,7 @@ function InternationalPricingContent() {
                   <span className="text-2xl font-bold text-[var(--foreground)]">${PRICE_USD}</span>
                   <span className="text-xs text-slate-400">USD</span>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${AFTERPAY_INSTALLMENT} with Afterpay</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${AFTERPAY_INSTALLMENT} with Afterpay or Klarna</p>
                 <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CE credits</p>
               </div>
 
