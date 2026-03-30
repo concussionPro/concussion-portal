@@ -28,7 +28,9 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     // Basic rate limiting: max 10 signups per IP per hour
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    const ip = request.headers.get('cf-connecting-ip')
+      || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || 'unknown'
     const { rows: recentFromIp } = await sql`
       SELECT COUNT(*) as cnt FROM email_audit_log
       WHERE audit_key LIKE ${'ss_form_' + ip + '_%'}

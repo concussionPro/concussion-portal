@@ -47,8 +47,9 @@ const CITY_LABELS: Record<ValidCity, string> = {
  */
 export async function POST(request: NextRequest) {
   try {
-    const forwarded = request.headers.get('x-forwarded-for')
-    const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
+    const ip = request.headers.get('cf-connecting-ip')
+      || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || 'unknown'
 
     const body = await request.json()
     const { email, name, city } = body

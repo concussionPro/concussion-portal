@@ -28,8 +28,9 @@ function checkRateLimit(key: string, limit: number): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const forwarded = request.headers.get('x-forwarded-for')
-    const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
+    const ip = request.headers.get('cf-connecting-ip')
+      || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || 'unknown'
 
     let body: Record<string, unknown>
     try {

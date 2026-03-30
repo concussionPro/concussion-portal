@@ -32,9 +32,10 @@ function checkRateLimit(key: string, limit: number): boolean {
 
 export async function POST(request: Request) {
   try {
-    // Get IP for rate limiting
-    const forwarded = request.headers.get('x-forwarded-for')
-    const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
+    // Get IP for rate limiting (cf-connecting-ip = real client IP behind Cloudflare)
+    const ip = request.headers.get('cf-connecting-ip')
+      || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || 'unknown'
     
     const { email } = await request.json()
 
