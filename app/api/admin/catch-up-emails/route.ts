@@ -66,6 +66,11 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
   const url = new URL(request.url)
   if (url.searchParams.get('dryRun') === 'true') dryRun = true
 
+  // Reset: clear stale catchup_ audit keys (e.g. from a previous dry run bug)
+  if (url.searchParams.get('reset') === 'true') {
+    await sql`DELETE FROM email_audit_log WHERE audit_key LIKE 'catchup_%'`
+  }
+
   const users = await loadUsers()
   const now = new Date()
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
