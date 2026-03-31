@@ -187,11 +187,11 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
 
     if (!html || !subject || !auditKey) { skipped++; continue }
 
-    // Dedup — don't send if catch-up already sent
-    const { rowCount: inserted } = await sql`
-      INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING
+    // Dedup — check if catch-up already sent (don't INSERT on dry run)
+    const { rows: existingAudit } = await sql`
+      SELECT 1 FROM email_audit_log WHERE audit_key = ${auditKey} LIMIT 1
     `
-    if (inserted === 0) { skipped++; continue }
+    if (existingAudit.length > 0) { skipped++; continue }
 
     html = html.replace('{{unsubscribe_url}}', unsubscribeUrl)
 
@@ -210,6 +210,12 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
     actions.push(action)
 
     if (!dryRun) {
+      // Claim the audit key before sending
+      const { rowCount: inserted } = await sql`
+        INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING
+      `
+      if (inserted === 0) { skipped++; continue }
+
       try {
         await sendEmail({
           to: user.email,
