@@ -3,13 +3,13 @@ import { getAllModules } from '@/data/modules'
 
 /**
  * Public (no auth) API route.
- * Module 1: first 7 sections unlocked (myths quiz through DAI).
- * Cuts right before the neurometabolic cascade — the content clinicians
- * need most — creating a natural cliffhanger to convert.
+ * Module 1: first 3 sections unlocked (myths intro, learning objectives,
+ * introduction with "Is This a Concussion?" clinical scenario).
+ * The scenario ends with an upgrade CTA → /pricing.
  * Modules 2-8: first section only.
  */
 
-const MODULE_1_PREVIEW_COUNT = 7
+const MODULE_1_PREVIEW_COUNT = 3
 
 export async function GET() {
   const modules = getAllModules()

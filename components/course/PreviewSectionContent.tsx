@@ -44,6 +44,7 @@ export function PreviewSectionContent({ moduleId, section, sectionNumber = 1 }: 
           moduleId={moduleId}
           section={section}
           sectionIndex={0}
+          isPreview
         />
       </div>
     </div>

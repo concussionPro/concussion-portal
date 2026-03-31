@@ -280,10 +280,11 @@ interface ScenarioStep {
   }
 }
 
-export function ClinicalScenario({ title, patientSummary, steps }: {
+export function ClinicalScenario({ title, patientSummary, steps, isPreview }: {
   title: string
   patientSummary: string
   steps: ScenarioStep[]
+  isPreview?: boolean
 }) {
   const [currentStepId, setCurrentStepId] = useState(steps[0]?.id || '')
   const [history, setHistory] = useState<string[]>([])
@@ -369,12 +370,21 @@ export function ClinicalScenario({ title, patientSummary, steps }: {
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Clinical Reasoning</p>
             <p className="text-sm text-slate-700 leading-relaxed">{currentStep.outcome.clinicalReasoning}</p>
           </div>
-          <button
-            onClick={handleRestart}
-            className="mt-4 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-all"
-          >
-            Try Again
-          </button>
+          {isPreview ? (
+            <a
+              href="/pricing"
+              className="mt-4 inline-block px-6 py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-lg text-sm font-semibold hover:from-teal-600 hover:to-blue-700 transition-all shadow-lg"
+            >
+              Continue Learning →
+            </a>
+          ) : (
+            <button
+              onClick={handleRestart}
+              className="mt-4 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-all"
+            >
+              Try Again
+            </button>
+          )}
         </div>
       ) : (
         <div>

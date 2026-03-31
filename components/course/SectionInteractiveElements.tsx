@@ -6,9 +6,10 @@ interface SectionInteractiveElementsProps {
   moduleId: number
   section: { id: string; title: string; content: string[] }
   sectionIndex: number
+  isPreview?: boolean
 }
 
-export function SectionInteractiveElements({ moduleId, section, sectionIndex }: SectionInteractiveElementsProps) {
+export function SectionInteractiveElements({ moduleId, section, sectionIndex, isPreview }: SectionInteractiveElementsProps) {
   return (
     <>
       {/* Module 1: Myths Quiz in Section 1 */}
@@ -85,6 +86,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex }: 
             content="Rotational forces are MORE damaging than linear forces. This is why some 'minor' impacts can cause significant symptoms while major linear impacts may not."
           />
           <ClinicalScenario
+            isPreview={isPreview}
             title="Is This a Concussion?"
             patientSummary="A 22-year-old rugby union player takes a legal shoulder-to-chest tackle. He doesn't hit the ground but stumbles, looks confused for 10 seconds, then says he's fine and wants to continue playing. No loss of consciousness. No visible head contact."
             steps={[
