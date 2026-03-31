@@ -44,20 +44,28 @@ export async function GET(request: NextRequest) {
     // Find all ready-to-train blob files
     const rttBlobs = blobs.filter(b => b.pathname.startsWith('ready-to-train-'))
 
-    // Group by city (take most recent blob per pathname)
-    const blobsByPath = new Map<string, typeof blobs[0]>()
+    // Resolve city slug from pathname, stripping Vercel Blob random suffixes
+    // e.g. "ready-to-train-sydney-9zXOpar3EqibT4H8FCk2Q2n.json" → "sydney"
+    const knownCities = Object.keys(CITY_LABELS).sort((a, b) => b.length - a.length)
+    function resolveCitySlug(pathname: string): string {
+      const raw = pathname.replace('ready-to-train-', '').replace('.json', '')
+      return knownCities.find(key => raw === key || raw.startsWith(key + '-')) || raw
+    }
+
+    // Group by resolved city (take most recent blob per city)
+    const blobsByCity = new Map<string, typeof blobs[0]>()
     for (const blob of rttBlobs) {
-      const existing = blobsByPath.get(blob.pathname)
+      const city = resolveCitySlug(blob.pathname)
+      const existing = blobsByCity.get(city)
       if (!existing || new Date(blob.uploadedAt) > new Date(existing.uploadedAt)) {
-        blobsByPath.set(blob.pathname, blob)
+        blobsByCity.set(city, blob)
       }
     }
 
     const cities = []
     let totalCount = 0
 
-    for (const [pathname, blob] of blobsByPath) {
-      const citySlug = pathname.replace('ready-to-train-', '').replace('.json', '')
+    for (const [citySlug, blob] of blobsByCity) {
       try {
         const res = await fetch(`${blob.url}?t=${Date.now()}`, { cache: 'no-store' })
         const registrations = await res.json()
@@ -71,7 +79,7 @@ export async function GET(request: NextRequest) {
         })
         totalCount += count
       } catch (err) {
-        console.warn(`Failed to read ${pathname}:`, err)
+        console.warn(`Failed to read ${citySlug}:`, err)
       }
     }
 
