@@ -48,13 +48,19 @@ export default function HomePage() {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 mb-5">
+            <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
               <Link
                 href="/pricing"
                 className="btn-primary px-8 py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2 shadow-lg"
               >
                 Compare Plans
                 <ArrowRight className="w-4.5 h-4.5" />
+              </Link>
+              <Link
+                href="/preview"
+                className="px-6 py-3 rounded-xl text-sm font-semibold text-[var(--foreground)] bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                Preview Course
               </Link>
               <Link
                 href="/scat-mastery"
@@ -71,14 +77,7 @@ export default function HomePage() {
               Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
 
-            <p className="text-[13px] text-[var(--muted-foreground)] mt-3 flex items-center justify-center gap-2 flex-wrap">
-              <Link
-                href="/preview"
-                className="text-[var(--accent)] font-medium hover:underline"
-              >
-                Preview course content
-              </Link>
-              <span className="text-slate-300">·</span>
+            <p className="text-[13px] text-[var(--muted-foreground)] mt-3">
               <Link
                 href="/scat-forms"
                 className="text-[var(--accent)] font-medium hover:underline"
