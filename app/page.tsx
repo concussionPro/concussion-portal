@@ -53,7 +53,7 @@ export default function HomePage() {
                 href="/pricing"
                 className="btn-primary px-8 py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2 shadow-lg"
               >
-                Compare Plans
+                Compare Pricing
                 <ArrowRight className="w-4.5 h-4.5" />
               </Link>
               <Link
