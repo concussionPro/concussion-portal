@@ -44,9 +44,10 @@ interface ProfilesResponse {
 
 export async function GET(request: Request) {
   try {
-    // Accept either CRON_SECRET (Vercel cron) or ADMIN_API_KEY (manual trigger)
+    // Accept CRON_SECRET (Vercel cron), x-admin-key header, or ?key= query param
+    const url = new URL(request.url)
     const authHeader = request.headers.get('authorization')
-    const adminKey = request.headers.get('x-admin-key')
+    const adminKey = request.headers.get('x-admin-key') || url.searchParams.get('key')
     const cronSecret = process.env.CRON_SECRET
     const adminApiKey = process.env.ADMIN_API_KEY
 
@@ -62,6 +63,14 @@ export async function GET(request: Request) {
     }
     if (!authorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // DB health check
+    try {
+      await sql`SELECT 1`
+    } catch (dbErr) {
+      console.error('[SS Sync] Database connection failed:', dbErr)
+      return NextResponse.json({ error: 'Database connection failed', detail: String(dbErr) }, { status: 503 })
     }
 
     const apiKey = process.env.SQUARESPACE_API_KEY
