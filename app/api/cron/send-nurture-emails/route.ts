@@ -44,6 +44,7 @@ export async function GET(request: Request) {
     const users = await loadUsers()
     const now = new Date()
     let emailsSent = 0
+    const errors: string[] = []
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
     // ── 1. SCAT6 Mastery Nurture Sequence (preview users) ──
@@ -422,7 +423,9 @@ export async function GET(request: Request) {
       const abandonedEmailsSent = await processAbandonedCheckouts(baseUrl)
       emailsSent += abandonedEmailsSent
     } catch (err) {
+      // Log but don't fail the entire cron — other sequences already sent
       console.error('Abandoned checkout processing error:', err)
+      errors.push(`Abandoned checkout: ${err}`)
     }
 
     // ── Online-only / full-course user sequences (upgrade nudge + re-engagement) ──
@@ -672,6 +675,7 @@ export async function GET(request: Request) {
       success: true,
       emailsSent,
       totalUsers: users.length,
+      ...(errors.length > 0 ? { errors } : {}),
     })
   } catch (error) {
     console.error('Cron job error:', error)
