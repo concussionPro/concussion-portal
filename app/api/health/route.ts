@@ -28,7 +28,7 @@ export async function GET() {
   let tableCheck = ''
   try {
     const { rows: tables } = await sql`SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`
-    tableCheck = tables.map((r: { tablename: string }) => r.tablename).join(', ')
+    tableCheck = tables.map((r) => (r as { tablename: string }).tablename).join(', ')
   } catch (err) {
     tableCheck = `error: ${String(err)}`
   }
