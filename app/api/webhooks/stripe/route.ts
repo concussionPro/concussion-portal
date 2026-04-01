@@ -100,9 +100,12 @@ async function logAnalyticsEvent(eventType: string, eventData: Record<string, un
  *   → Create user account, send magic link login email
  *
  * Metadata stored on checkout session:
- *   courseType: 'online-only' | 'full-course'
+ *   courseType: 'online-only' | 'full-course' | 'workshop-upgrade'
  *   location: 'sydney' | 'melbourne' | 'byron-bay' | ''
  *   accessLevel: 'online-only' | 'full-course'
+ *
+ * Workshop upgrades: courseType='workshop-upgrade' maps to accessLevel='full-course'
+ * via COURSE_ACCESS_MAP. The shouldUpgrade logic handles online-only → full-course.
  */
 export async function POST(request: NextRequest) {
   try {

@@ -44,6 +44,8 @@ export const COURSE_PRICING = {
   FULL_COURSE_EARLY: CONFIG.COURSE.PRICE_EARLY_BIRD * 100,
   FULL_COURSE_REGULAR: CONFIG.COURSE.PRICE_REGULAR * 100,
   INTERNATIONAL_ONLINE: CONFIG.COURSE.PRICE_INTERNATIONAL * 100,
+  WORKSHOP_UPGRADE_EARLY: (CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE) * 100,
+  WORKSHOP_UPGRADE_REGULAR: (CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE) * 100,
 } as const
 
 /**
@@ -53,6 +55,7 @@ export const COURSE_ACCESS_MAP: Record<string, 'online-only' | 'full-course'> = 
   'online-only': 'online-only',
   'full-course': 'full-course',
   'international-online': 'online-only',
+  'workshop-upgrade': 'full-course',
 }
 
 /**
@@ -64,7 +67,7 @@ export type WorkshopLocation = typeof VALID_LOCATIONS[number]
 /**
  * Valid course types (including international)
  */
-export const VALID_COURSE_TYPES = ['online-only', 'full-course', 'international-online'] as const
+export const VALID_COURSE_TYPES = ['online-only', 'full-course', 'international-online', 'workshop-upgrade'] as const
 export type CourseType = typeof VALID_COURSE_TYPES[number]
 
 /**
@@ -100,6 +103,12 @@ export async function createCourseCheckoutSession({
     currency = 'usd'
     productName = 'ConcussionPro Online Course — International'
     productDescription = '8 online modules (8 CE credits) · Lifetime access · Clinical Toolkit · Reference Repository · Certificate of completion'
+  } else if (courseType === 'workshop-upgrade') {
+    unitAmount = isEarlyBird ? COURSE_PRICING.WORKSHOP_UPGRADE_EARLY : COURSE_PRICING.WORKSHOP_UPGRADE_REGULAR
+    currency = 'aud'
+    const locationLabel = location ? formatLocation(location) : 'TBD'
+    productName = `ConcussionPro — Workshop Upgrade (${locationLabel})`
+    productDescription = `Full-day in-person workshop (${locationLabel}) · 6 additional CPD points (14 total) · AHPRA aligned · All materials included`
   } else if (courseType === 'online-only') {
     unitAmount = COURSE_PRICING.ONLINE_ONLY
     currency = 'aud'
@@ -114,9 +123,12 @@ export async function createCourseCheckoutSession({
   }
 
   // If a promo code was provided, look it up in Stripe to auto-apply
+  // Workshop upgrades: no promo codes (already discounted)
   let discounts: { promotion_code: string }[] | undefined
   let allowPromotionCodes: boolean | undefined
-  if (promoCode) {
+  if (courseType === 'workshop-upgrade') {
+    // Already discounted — no promo codes allowed
+  } else if (promoCode) {
     try {
       const promoCodes = await stripe.promotionCodes.list({ code: promoCode, active: true, limit: 1 })
       if (promoCodes.data.length > 0) {
@@ -170,7 +182,7 @@ export async function createCourseCheckoutSession({
     phone_number_collection: { enabled: true },
     custom_text: {
       submit: {
-        message: courseType === 'full-course'
+        message: courseType === 'full-course' || courseType === 'workshop-upgrade'
           ? getCheckoutSubmitMessage(location)
           : "You'll receive a login link by email after purchase to start learning immediately.",
       },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createCourseCheckoutSession, VALID_LOCATIONS, VALID_COURSE_TYPES } from '@/lib/stripe'
 import type { CourseType } from '@/lib/stripe'
+import { verifySessionToken } from '@/lib/jwt-session'
 
 /**
  * POST /api/create-checkout
@@ -8,9 +9,9 @@ import type { CourseType } from '@/lib/stripe'
  * Creates a Stripe Checkout session for course purchases.
  *
  * Body params:
- *   courseType: 'online-only' | 'full-course'
- *   location?: 'sydney' | 'melbourne' | 'byron-bay' (required for full-course)
- *   email?: string (optional, pre-fills checkout)
+ *   courseType: 'online-only' | 'full-course' | 'workshop-upgrade'
+ *   location?: 'sydney' | 'melbourne' | 'byron-bay' (required for full-course and workshop-upgrade)
+ *   email?: string (optional, pre-fills checkout — ignored for workshop-upgrade, uses session email)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,39 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid course type.' },
         { status: 400 }
       )
+    }
+
+    // Workshop upgrade: requires authenticated online-only user + valid location
+    let sessionEmail: string | undefined
+    if (courseType === 'workshop-upgrade') {
+      const sessionCookie = request.cookies.get('session')?.value
+      if (!sessionCookie) {
+        return NextResponse.json(
+          { error: 'You must be logged in to upgrade.' },
+          { status: 401 }
+        )
+      }
+      const session = verifySessionToken(sessionCookie)
+      if (!session) {
+        return NextResponse.json(
+          { error: 'Invalid session. Please log in again.' },
+          { status: 401 }
+        )
+      }
+      if (session.accessLevel !== 'online-only') {
+        return NextResponse.json(
+          { error: 'Upgrade is only available for online-only course holders.' },
+          { status: 403 }
+        )
+      }
+      if (!location || !VALID_LOCATIONS.includes(location)) {
+        return NextResponse.json(
+          { error: 'Please select a workshop location.' },
+          { status: 400 }
+        )
+      }
+      // Use session email to prevent upgrading a different account
+      sessionEmail = session.email
     }
 
     // Validate location for full-course (optional — nominated after completing online modules)
@@ -46,24 +80,32 @@ export async function POST(request: NextRequest) {
     // Use server-side env var only — origin header is spoofable
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
+    // Determine cancel URL based on course type
+    let cancelUrl: string
+    if (courseType === 'workshop-upgrade') {
+      cancelUrl = `${baseUrl}/upgrade?canceled=true`
+    } else if (courseType === 'international-online') {
+      cancelUrl = `${baseUrl}/pricing-international?canceled=true`
+    } else {
+      cancelUrl = `${baseUrl}/pricing?canceled=true`
+    }
+
     // Create Stripe Checkout Session
-    const session = await createCourseCheckoutSession({
+    const checkoutSession = await createCourseCheckoutSession({
       courseType: courseType as CourseType,
-      location: courseType === 'full-course' ? location : undefined,
+      location: (courseType === 'full-course' || courseType === 'workshop-upgrade') ? location : undefined,
       preferredCity: courseType === 'online-only' ? preferredCity : undefined,
-      customerEmail: email,
+      customerEmail: sessionEmail || email,
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: courseType === 'international-online'
-        ? `${baseUrl}/pricing-international?canceled=true`
-        : `${baseUrl}/pricing?canceled=true`,
+      cancelUrl,
       promoCode: typeof promoCode === 'string' ? promoCode : undefined,
       utm: utm && typeof utm === 'object' ? utm : undefined,
     })
 
     return NextResponse.json({
       success: true,
-      sessionId: session.id,
-      url: session.url,
+      sessionId: checkoutSession.id,
+      url: checkoutSession.url,
     })
   } catch (error) {
     console.error('Checkout session creation failed:', error)

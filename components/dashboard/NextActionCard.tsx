@@ -238,10 +238,10 @@ export function NextActionCard() {
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
                   <p className="text-sm text-blue-800 font-medium mb-2">You&apos;ve earned {CONFIG.COURSE.ONLINE_CPD_POINTS} online CPD points. Add the 6-hour workshop for {CONFIG.COURSE.TOTAL_CPD_POINTS} total.</p>
                   <button
-                    onClick={() => router.push('/pricing')}
+                    onClick={() => router.push('/upgrade')}
                     className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
                   >
-                    Add Workshop &rarr;
+                    Upgrade to Workshop &rarr;
                   </button>
                 </div>
               )}

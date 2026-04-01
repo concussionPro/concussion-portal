@@ -104,7 +104,9 @@ function CheckoutSuccessContent() {
     )
   }
 
-  const courseName = sessionData?.courseType === 'full-course'
+  const isFullCourseType = sessionData?.courseType === 'full-course' || sessionData?.courseType === 'workshop-upgrade'
+
+  const courseName = isFullCourseType
     ? `Complete Course${sessionData?.location ? ` — ${formatLocation(sessionData.location)}` : ''}`
     : 'Online Course'
 
@@ -132,14 +134,14 @@ function CheckoutSuccessContent() {
             Enrolment confirmed{sessionData?.customerName ? `, ${sessionData.customerName.split(' ')[0]}` : ''}.
           </h1>
           <p className="text-lg text-muted-foreground">
-            {sessionData?.courseType === 'full-course'
+            {isFullCourseType
               ? 'Your concussion management training starts now.'
               : 'You now have lifetime access to all 8 modules.'}
           </p>
         </div>
 
         {/* Early bird savings callout */}
-        {sessionData?.amountPaid && sessionData.amountPaid < CONFIG.COURSE.PRICE_REGULAR && sessionData.courseType === 'full-course' && (
+        {sessionData?.amountPaid && sessionData.amountPaid < CONFIG.COURSE.PRICE_REGULAR && isFullCourseType && (
           <div className="text-center mb-8 py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-200">
             <p className="text-sm font-semibold text-emerald-800">
               Early bird pricing — you saved ${(CONFIG.COURSE.PRICE_REGULAR - sessionData.amountPaid).toLocaleString()} AUD
@@ -147,8 +149,8 @@ function CheckoutSuccessContent() {
           </div>
         )}
 
-        {/* Workshop info for full-course */}
-        {sessionData?.courseType === 'full-course' && sessionData?.location && (() => {
+        {/* Workshop info for full-course and workshop-upgrade */}
+        {isFullCourseType && sessionData?.location && (() => {
           const location = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === sessionData.location)
           if (!location) return null
 
@@ -190,7 +192,7 @@ function CheckoutSuccessContent() {
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
               <span className="text-sm font-medium flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-                {sessionData?.courseType === 'full-course' ? CONFIG.COURSE.TOTAL_CPD_POINTS : CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points
+                {isFullCourseType ? CONFIG.COURSE.TOTAL_CPD_POINTS : CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points
               </span>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
@@ -205,7 +207,7 @@ function CheckoutSuccessContent() {
               <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
               <span className="text-sm font-medium">Lifetime access</span>
             </div>
-            {sessionData?.courseType === 'full-course' && (
+            {isFullCourseType && (
               <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
                 <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
                 <span className="text-sm font-medium">Full-day workshop</span>
@@ -222,7 +224,7 @@ function CheckoutSuccessContent() {
               'Administer and interpret SCAT6, VOMS, and BESS assessments accurately',
               'Identify concussion phenotypes and prescribe targeted rehabilitation',
               'Make confident, evidence-based return-to-play decisions',
-              ...(sessionData?.courseType === 'full-course'
+              ...(isFullCourseType
                 ? ['Apply hands-on assessment skills practised under expert supervision']
                 : []),
               'Use the clinical toolkit in your practice from day one',
@@ -327,7 +329,7 @@ function CheckoutSuccessContent() {
               </ul>
               <div className="ml-[52px]">
                 <button
-                  onClick={() => router.push('/pricing?location=sydney')}
+                  onClick={() => router.push('/upgrade')}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-orange-500 text-white hover:bg-orange-600 transition-colors"
                 >
                   Upgrade from ${upgradePrice} more
