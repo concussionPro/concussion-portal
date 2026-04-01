@@ -435,7 +435,7 @@ export async function GET(request: Request) {
 
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
-      const upgradeLink = `${baseUrl}/pricing`
+      const upgradeLink = user.accessLevel === 'online-only' ? `${baseUrl}/upgrade` : `${baseUrl}/pricing`
       const loginLink = `${baseUrl}/login?redirect=/learning`
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
