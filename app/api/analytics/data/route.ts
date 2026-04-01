@@ -321,7 +321,7 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
       isBounce: pvEvents.length <= 1,
       visitNumber: typeof ed?.visitNumber === 'number' ? ed.visitNumber : 1,
       hasConversion: sorted.some((e) => e.path?.startsWith('/checkout/success')),
-      hasPricingView: sorted.some((e) => e.path === '/pricing'),
+      hasPricingView: sorted.some((e) => e.path === '/pricing' || e.path === '/pricing-international'),
       hasPreseasonRegister: sorted.some((e) => e.eventType === 'preseason_clinic_register'),
       hasPreseasonSubmit: sorted.some((e) => e.eventType === 'preseason_baseline_submit'),
       hasEnrollClick: sorted.some((e) => e.eventType === 'enroll_button_click' || e.eventType === 'enrol_click'),

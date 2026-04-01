@@ -144,6 +144,7 @@ function trackGtagConversion(
 
 const REMARKETING_PAGES: Record<string, string> = {
   '/pricing': 'pricing_page_viewer',
+  '/pricing-international': 'pricing_page_viewer',
   '/preview': 'course_explorer',
   '/scat-mastery': 'free_course_viewer',
   '/course': 'course_page_viewer',
@@ -176,7 +177,7 @@ function fireRemarketingEvent(pathname: string): void {
 // Scroll depth tracking — fires at 50% and 90% on key pages
 // ---------------------------------------------------------------------------
 
-const SCROLL_TRACKED_PAGES = ['/pricing', '/course', '/preview', '/scat-mastery'];
+const SCROLL_TRACKED_PAGES = ['/pricing', '/pricing-international', '/course', '/preview', '/scat-mastery'];
 
 function useScrollDepthTracking(pathname: string): void {
   const firedRef = useRef<Set<number>>(new Set());
