@@ -328,7 +328,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         &#8226; When to use SCAT6 vs SCOAT6 (the distinction most clinicians get wrong)<br>
         &#8226; Red flag recognition and escalation criteria<br>
         &#8226; 2 AHPRA-aligned CPD points upon completion<br><br>
-        6 modules &middot; ~3 hours total &middot; Self-paced &middot; Free
+        6 modules &middot; ~2 hours total &middot; Self-paced &middot; Free
       </div>
       <p>Your fillable SCAT6 and SCOAT6 forms are also waiting for you in the <a href="${utm('https://portal.concussion-education-australia.com/scat6-download', 'scat_mastery_day0', 'download_forms')}">downloads section</a>.</p>
       <div class="sig">
@@ -346,7 +346,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
       <p>Just checking in &mdash; have you had a chance to work through the free SCAT6 Mastery course?</p>
-      <p>It takes about 3 hours and covers:</p>
+      <p>It takes about 2 hours and covers:</p>
       <ul>
         <li>Step-by-step SCAT6 and SCOAT6 administration</li>
         <li>When to use SCAT6 vs SCOAT6 (the distinction most clinicians get wrong)</li>
@@ -354,7 +354,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>2 AHPRA-aligned CPD points upon completion</li>
       </ul>
       <center><a href="${utm(loginLink, 'scat_mastery_day3', 'continue_course')}" class="cta-btn">Continue the Course</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">~3 hours &middot; Self-paced &middot; Free &middot; Includes CPD certificate</p>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">~2 hours &middot; Self-paced &middot; Free &middot; Includes CPD certificate</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -757,7 +757,7 @@ export const FREE_USER_REENGAGEMENT = {
       &#8226; 6 modules covering SCAT6 and SCOAT6 administration<br>
       &#8226; 2 CPD points + certificate upon completion<br>
       &#8226; Digital SCAT6 and SCOAT6 forms with PDF export<br><br>
-      Self-paced &middot; ~3 hours total &middot; Free
+      Self-paced &middot; ~2 hours total &middot; Free
     </div>
     <center><a href="${utm(loginLink, 'free_reengagement_day7', 'start_now')}" class="cta-btn">Start Module 1 — It Takes 20 Minutes</a></center>
     <div class="sig">Zac</div>

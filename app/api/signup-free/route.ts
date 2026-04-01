@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
                 <p>Your free SCAT6/SCOAT6 Mastery course is ready. Here's what it covers.</p>
 
                 <div class="highlight">
-                  <strong>Course overview (~3 hours):</strong><br>
+                  <strong>Course overview (~2 hours):</strong><br>
                   &bull; Step-by-step SCAT6 &amp; SCOAT6 administration<br>
                   &bull; Red flag recognition and escalation criteria<br>
                   &bull; When to use SCAT6 vs SCOAT6 (acute vs office follow-up)<br>

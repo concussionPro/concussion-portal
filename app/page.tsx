@@ -150,7 +150,7 @@ export default function HomePage() {
                     Start with Free SCAT6 Mastery
                   </h2>
                   <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-4">
-                    Master SCAT6 &amp; SCOAT6 in ~3 hours. Red flags, documentation, step-by-step protocols. 2 AHPRA CPD points + certificate.
+                    Master SCAT6 &amp; SCOAT6 in ~2 hours. Red flags, documentation, step-by-step protocols. 2 AHPRA CPD points + certificate.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2.5">
                     <Link

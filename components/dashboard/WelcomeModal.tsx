@@ -240,7 +240,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <Clock className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~3' : '~8'}</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~2' : '~8'}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Hours Total</div>
             </div>

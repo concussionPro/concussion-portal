@@ -56,15 +56,50 @@ export async function GET(request: Request) {
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
 
-      // Skip Day 0 — welcome email is already sent by the signup-free API
+      // Skip Day 0 — welcome email is sent by the signup-free API or sync endpoint
       if (daysSinceSignup === 0) continue
-      const email = SCAT_MASTERY_SEQUENCE.find(e => e.day === daysSinceSignup)
-      if (!email) continue
 
       const loginLink = `${baseUrl}/login?redirect=/learning`
       const upgradeLink = `${baseUrl}/pricing`
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+      // Catch-up: if Day 0 welcome was never sent (e.g. Squarespace sync failure), send it now
+      const day0AuditKey = `scat_day0_${user.id}`
+      const { rows: day0Check } = await sql`SELECT 1 FROM email_audit_log WHERE audit_key = ${day0AuditKey}`
+      if (day0Check.length === 0) {
+        const day0Email = SCAT_MASTERY_SEQUENCE.find(e => e.day === 0)
+        if (day0Email) {
+          const { rowCount: day0Inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${day0AuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+          if (day0Inserted && day0Inserted > 0) {
+            try {
+              const html = day0Email.template(user.name, loginLink).replace('{{unsubscribe_url}}', unsubscribeUrl)
+              await sendEmail({
+                to: user.email,
+                subject: day0Email.subject,
+                html,
+                tags: [
+                  { name: 'sequence', value: 'scat-mastery' },
+                  { name: 'day', value: '0' },
+                  { name: 'variant', value: 'catch-up' },
+                ],
+                headers: {
+                  'List-Unsubscribe': `<${unsubscribeUrl}>`,
+                  'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                },
+              })
+              emailsSent++
+              console.log(`[Nurture] Day 0 catch-up → ${user.email}`)
+            } catch (err) {
+              console.error(`[Nurture] Failed Day 0 catch-up for ${user.email}:`, err)
+            }
+          }
+        }
+        continue // They'll get their scheduled day email on the next cron run
+      }
+
+      const email = SCAT_MASTERY_SEQUENCE.find(e => e.day === daysSinceSignup)
+      if (!email) continue
 
       // Load user progress for routing decisions (Day 7+)
       let scatCompletedCount = 0

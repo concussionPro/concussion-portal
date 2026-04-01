@@ -150,7 +150,7 @@ function buildWelcomeEmail(userName: string, loginLink: string, preseasonLink: s
         <p>You signed up for SCAT resources through our website. We've since built a dedicated learning portal with free clinical tools and courses &mdash; and your account is already set up.</p>
 
         <div class="highlight">
-          <strong>Free SCAT6/SCOAT6 Mastery Course (~3 hours, 2 CPD points):</strong><br><br>
+          <strong>Free SCAT6/SCOAT6 Mastery Course (~2 hours, 2 CPD points):</strong><br><br>
           &bull; Step-by-step SCAT6 &amp; SCOAT6 administration<br>
           &bull; Red flag recognition and escalation criteria<br>
           &bull; When to use SCAT6 vs SCOAT6<br>

@@ -163,7 +163,7 @@ export function ExitIntentPopup() {
                   Before you go — free SCAT6 training
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Get instant access to our ~3-hour SCAT6 Mastery course with
+                  Get instant access to our ~2-hour SCAT6 Mastery course with
                   fillable SCAT6 &amp; SCOAT6 forms. Earn 2 AHPRA CPD points — completely free.
                 </p>
               </div>
