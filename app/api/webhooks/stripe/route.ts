@@ -9,86 +9,26 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import Stripe from 'stripe'
-import fs from 'fs'
-import path from 'path'
-
-// ---------------------------------------------------------------------------
-// Server-side analytics event logging (same NDJSON format as /api/analytics/track)
-// ---------------------------------------------------------------------------
-
-let blobPut: typeof import('@vercel/blob').put | null = null
-let blobGetW: typeof import('@vercel/blob').get | null = null
-let blobListW: typeof import('@vercel/blob').list | null = null
-const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN
-
-if (useBlob) {
-  try {
-    const blob = require('@vercel/blob')
-    blobPut = blob.put
-    blobGetW = blob.get
-    blobListW = blob.list
-  } catch {}
-}
-
+// Server-side analytics — writes to Postgres (same table as client-side tracking)
 async function logAnalyticsEvent(eventType: string, eventData: Record<string, unknown>) {
-  const now = new Date()
-  const dateKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`
-  const event = {
-    eventType,
-    eventData,
-    sessionId: `server_${Date.now()}`,
-    timestamp: Date.now(),
-    userAgent: 'stripe-webhook',
-    referrer: null,
-    path: '/api/webhooks/stripe',
-    search: null,
-    ip: 'server',
-  }
-  const line = JSON.stringify(event) + '\n'
-
-  if (useBlob && blobPut) {
-    try {
-      const blobPath = `analytics/${dateKey}.ndjson`
-      // Read existing, append
-      let existing = ''
-      // Try private get first (new blobs)
-      if (blobGetW) {
-        try {
-          const blob = await blobGetW(blobPath, { access: 'private' })
-          if (blob && blob.statusCode === 200 && blob.stream) {
-            existing = await new Response(blob.stream).text()
-          }
-        } catch { /* not found as private */ }
-      }
-      // Fallback: fetch URL directly (old public blobs)
-      if (!existing && blobListW) {
-        try {
-          const { blobs } = await blobListW({ prefix: `analytics/${dateKey}` })
-          const match = blobs.find(b => b.pathname === blobPath)
-          if (match) {
-            const res = await fetch(match.url, { cache: 'no-store' })
-            if (res.ok) existing = await res.text()
-          }
-        } catch { /* list/fetch failed */ }
-      }
-      await blobPut(blobPath, existing + line, {
-        access: 'private' as any, // Security: analytics data must not be publicly accessible
-        addRandomSuffix: false,
-        allowOverwrite: true,
-        contentType: 'application/x-ndjson',
-      })
-    } catch (err) {
-      console.error('[webhook] Failed to write analytics blob:', err)
-    }
-  } else {
-    // Local filesystem fallback (dev)
-    try {
-      const dir = path.join(process.cwd(), '.data', 'analytics')
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-      fs.appendFileSync(path.join(dir, `${dateKey}.ndjson`), line)
-    } catch (err) {
-      console.error('[webhook] Failed to write local analytics:', err)
-    }
+  try {
+    await sql`
+      INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
+      VALUES (
+        ${eventType},
+        ${JSON.stringify(eventData)}::jsonb,
+        ${'server_' + Date.now()},
+        ${Date.now()},
+        ${'stripe-webhook'},
+        ${null},
+        ${'/api/webhooks/stripe'},
+        ${null},
+        ${'server'},
+        ${null}
+      )
+    `
+  } catch (err) {
+    console.error('[webhook] Failed to log analytics:', err)
   }
 }
 
