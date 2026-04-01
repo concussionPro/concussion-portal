@@ -216,6 +216,13 @@ function CheckoutSuccessContent() {
           </div>
         </div>
 
+        {/* Refund guarantee — reduces post-purchase anxiety */}
+        <div className="glass rounded-xl p-4 mb-8 border border-emerald-200/50 bg-emerald-50/30">
+          <p className="text-sm text-muted-foreground">
+            <strong className="text-emerald-700">7-day satisfaction guarantee.</strong> If the course isn&apos;t right for you, email us within 7 days for a full refund — no questions asked.
+          </p>
+        </div>
+
         {/* Clinical outcomes reminder */}
         <div className="glass rounded-2xl p-6 md:p-8 mb-8 border border-accent/10">
           <h2 className="font-bold text-lg mb-3">By completing this course, you&apos;ll be able to</h2>
@@ -246,26 +253,6 @@ function CheckoutSuccessContent() {
               <span className="text-accent font-bold">1</span>
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Check your inbox</h3>
-              <p className="text-sm text-muted-foreground">
-                We&apos;ve sent a login link to <strong>{sessionData?.customerEmail || 'your email'}</strong>. Click it to access your course — no password needed. Check your spam folder if you don&apos;t see it within 2 minutes.
-              </p>
-              {sessionData?.customerEmail && (
-                <a
-                  href={`/login?email=${encodeURIComponent(sessionData.customerEmail)}`}
-                  className="inline-block mt-2 text-sm text-accent font-medium hover:underline"
-                >
-                  Didn&apos;t get it? Request a new login link →
-                </a>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4 glass rounded-xl p-5">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-              <span className="text-accent font-bold">2</span>
-            </div>
-            <div>
               <h3 className="font-semibold mb-1">Start Module 1</h3>
               <p className="text-sm text-muted-foreground">
                 Begin with &ldquo;What is a Concussion?&rdquo; — covers concussion pathophysiology and the neurometabolic cascade. About 75 minutes.
@@ -275,7 +262,7 @@ function CheckoutSuccessContent() {
 
           <div className="flex items-start gap-4 glass rounded-xl p-5">
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-              <span className="text-accent font-bold">3</span>
+              <span className="text-accent font-bold">2</span>
             </div>
             <div>
               <h3 className="font-semibold mb-1">Download the clinical toolkit</h3>
@@ -284,15 +271,27 @@ function CheckoutSuccessContent() {
               </p>
             </div>
           </div>
+
+          <div className="flex items-start gap-4 glass rounded-xl p-5">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+              <span className="text-accent font-bold">3</span>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-1">We&apos;ve also emailed you a login link</h3>
+              <p className="text-sm text-muted-foreground">
+                Sent to <strong>{sessionData?.customerEmail || 'your email'}</strong>. Use it to log in from any device — no password needed.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
-            onClick={() => router.push(sessionData?.customerEmail ? `/login?email=${encodeURIComponent(sessionData.customerEmail)}` : '/login')}
+            onClick={() => router.push(sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1')}
             className="flex-1 btn-primary px-8 py-4 rounded-xl font-bold text-center flex items-center justify-center gap-2"
           >
-            Open Your Course
+            {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>

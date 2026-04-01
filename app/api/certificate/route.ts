@@ -387,7 +387,7 @@ async function sendCertificateEmail(opts: {
                   <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b21a8;">
                     Upgrade to the full ConcussionPro course for 14 total AHPRA-aligned CPD points — including advanced assessment protocols and a full-day practical workshop.
                   </p>
-                  <a href="https://portal.concussion-education-australia.com/pricing" style="display: inline-block; padding: 10px 24px; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                  <a href="https://portal.concussion-education-australia.com/pricing?utm_source=email&utm_medium=email&utm_campaign=scat-completion-upsell&utm_content=certificate" style="display: inline-block; padding: 10px 24px; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
                     View Full Course →
                   </a>
                 </div>

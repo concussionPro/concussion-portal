@@ -18,6 +18,7 @@ import { sendEmail } from '@/lib/resend-client'
 import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE } from '@/lib/email-sequences'
 import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 
@@ -66,7 +67,7 @@ export async function GET(request: Request) {
       // Skip Day 0 — welcome email is sent by the signup-free API or sync endpoint
       if (daysSinceSignup === 0) continue
 
-      const loginLink = `${baseUrl}/login?redirect=/learning`
+      const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
       const upgradeLink = `${baseUrl}/pricing`
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
@@ -240,7 +241,7 @@ export async function GET(request: Request) {
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
 
-      const loginLink = `${baseUrl}/login?redirect=/learning`
+      const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
@@ -478,7 +479,7 @@ export async function GET(request: Request) {
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
       const upgradeLink = user.accessLevel === 'online-only' ? `${baseUrl}/upgrade` : `${baseUrl}/pricing`
-      const loginLink = `${baseUrl}/login?redirect=/learning`
+      const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
@@ -579,7 +580,7 @@ export async function GET(request: Request) {
           const { rowCount: almostDoneInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
           if (almostDoneInserted === 0) continue // Already sent
 
-          const almostDoneLoginLink = `${baseUrl}/login?redirect=/learning`
+          const almostDoneLoginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'there', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
           const unsubToken = generateUnsubscribeToken(user.email)
           const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
@@ -684,7 +685,7 @@ export async function GET(request: Request) {
           const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
           if (inserted === 0) continue // Already sent
 
-          const loginLink = `${baseUrl}/login?redirect=/learning`
+          const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
           const unsubToken = generateUnsubscribeToken(user.email)
           const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
@@ -746,6 +747,19 @@ async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
     const nextEmail = ABANDONED_CHECKOUT_SEQUENCE[checkout.emails_sent]
 
     if (hoursSinceAbandoned >= nextEmail.hoursAfter) {
+      // Check if user has unsubscribed
+      try {
+        const { rows: userRows } = await sql`
+          SELECT nurture_unsubscribed FROM users WHERE email = ${checkout.email} LIMIT 1
+        `
+        if (userRows.length > 0 && userRows[0].nurture_unsubscribed) {
+          // Mark as fully sent so we stop processing
+          await sql`UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${checkout.id}`
+          console.log(`[Abandoned] Skipped ${checkout.email} — unsubscribed`)
+          continue
+        }
+      } catch { /* user may not exist — proceed */ }
+
       const unsubToken = generateUnsubscribeToken(checkout.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(checkout.email)}&token=${unsubToken}`
       const html = nextEmail.template(checkout.name)

@@ -17,6 +17,7 @@ import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import {
   SCAT_MASTERY_SEQUENCE,
   FREE_USER_REENGAGEMENT,
@@ -114,7 +115,7 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
     } catch { /* no progress record */ }
 
     const hasLoggedIn = !!user.lastLoginAt
-    const loginLink = `${baseUrl}/login?redirect=/learning`
+    const loginLink = generateMagicLinkJWT(user.id, user.email, user.name || 'Student', user.accessLevel as 'preview' | 'online-only' | 'full-course', baseUrl)
     const pricingLink = `${baseUrl}/pricing`
     const unsubToken = generateUnsubscribeToken(user.email)
     const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`

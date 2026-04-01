@@ -104,7 +104,7 @@ export function CourseNavigation({
           </span>
         </div>
         <button
-          onClick={() => router.push(accessLevel === 'preview' ? '/scat-course' : '/dashboard')}
+          onClick={() => router.push(accessLevel === 'preview' ? '/learning' : '/dashboard')}
           className="flex items-start gap-3 text-left hover:opacity-70 transition-all w-full group"
         >
           <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center group-hover:scale-110 transition-transform">

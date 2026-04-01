@@ -146,6 +146,7 @@ export async function createCourseCheckoutSession({
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour (gives BNPL users time)
     payment_method_types: currency === 'aud' ? ['card', 'afterpay_clearpay', 'klarna'] : ['card'],
     line_items: [
       {
@@ -176,6 +177,13 @@ export async function createCourseCheckoutSession({
       ...(utm?.utm_medium ? { utm_medium: utm.utm_medium } : {}),
       ...(utm?.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}),
       ...(utm?.gclid ? { gclid: utm.gclid } : {}),
+    },
+    // Pass email to PaymentIntent so payment_failed handler can send recovery emails
+    payment_intent_data: {
+      metadata: {
+        email: customerEmail || '',
+        courseType,
+      },
     },
     ...(discounts ? { discounts } : { allow_promotion_codes: allowPromotionCodes }),
     billing_address_collection: 'required',

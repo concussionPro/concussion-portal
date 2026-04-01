@@ -273,7 +273,7 @@ export default function BlogIndexPage() {
                     href="/pricing"
                     className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
                   >
-                    Full Course — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
+                    Full Course — from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
                   </Link>
                 </div>
               </div>

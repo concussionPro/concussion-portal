@@ -27,11 +27,10 @@ export default function CompleteReferencePage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
-            if (data.user.accessLevel === 'preview') {
-              router.push('/scat-course')
-              return
+            // Preview users see the locked state (builds upgrade desire)
+            if (data.user.accessLevel !== 'preview') {
+              setAccessLevel(data.user.accessLevel)
             }
-            setAccessLevel(data.user.accessLevel)
           }
         }
       } catch (error) {

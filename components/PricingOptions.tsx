@@ -34,10 +34,11 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // Early bird: check deadline. Server is source of truth at checkout.
   const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
-  // Read pre-selected location, promo code, and UTM params from URL
+  // Read pre-selected location, promo code, UTM params, and session email
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
@@ -55,6 +56,12 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       if (val) utm[key] = val
     }
     if (Object.keys(utm).length > 0) setUtmParams(utm)
+
+    // Pre-fill email from session (free users upgrading to paid)
+    fetch('/api/auth/session', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => { if (data.user?.email) setSessionEmail(data.user.email) })
+      .catch(() => {})
   }, [])
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
@@ -76,6 +83,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         body: JSON.stringify({
           courseType,
           ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
+          ...(sessionEmail ? { email: sessionEmail } : {}),
           ...(promoCode ? { promoCode } : {}),
           ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
         }),
@@ -134,7 +142,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</span>
                 <span className="text-[10px] text-slate-400">≈ $320 USD</span>
               </div>
-              <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+              <p className="text-xs text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
             </div>
 
@@ -192,7 +200,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
                     <span className="text-[10px] text-slate-400">≈ $770 USD</span>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
                   <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
                 </>
               ) : (
@@ -201,7 +209,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
                     <span className="text-[10px] text-slate-400">≈ $910 USD</span>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
                 </>
               )}
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>

@@ -299,12 +299,10 @@ function PricingContent() {
           <span className="text-sm text-muted-foreground">AHPRA Aligned · 14 CPD Points (8 online + 6 workshop)</span>
           <span className="hidden sm:inline text-slate-300">|</span>
           <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
-          {enrollmentCount >= 100 && (
-            <>
-              <span className="hidden sm:inline text-slate-300">|</span>
-              <span className="text-sm font-semibold text-foreground">{enrollmentCount}+ clinicians enrolled</span>
-            </>
-          )}
+          <span className="hidden sm:inline text-slate-300">|</span>
+          <span className="text-sm font-semibold text-foreground">
+            {enrollmentCount >= 100 ? `${enrollmentCount}+ clinicians enrolled` : 'Trusted by clinicians Australia-wide'}
+          </span>
         </div>
 
         {/* CPD traffic: employer reimbursement callout — #1 objection for CPD-seeking clinicians */}
@@ -367,10 +365,10 @@ function PricingContent() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
-                5 focused modules on SCAT6 administration. 2 CPD points, no card required. See the course quality before you commit.
+                6 focused modules on SCAT6 administration. 2 CPD points, no card required. See the course quality before you commit.
               </p>
               <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                {['5 modules', '2 CPD points', 'No payment required', 'Instant access'].map(item => (
+                {['6 modules', '2 CPD points', 'No payment required', 'Instant access'].map(item => (
                   <li key={item} className="flex items-center gap-1">
                     <Check className="w-3 h-3 text-emerald-600" strokeWidth={2.5} />
                     {item}
@@ -394,15 +392,15 @@ function PricingContent() {
           <div className="glass rounded-xl p-6 md:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <Image
               src="/zac-lewis-headshot.jpg"
-              alt="Zac Lewis — Osteopath, Neuroscience Researcher"
+              alt="Zac Lewis — Osteopath, Concussion Researcher"
               width={96}
               height={96}
               className="w-24 h-24 rounded-full object-cover flex-shrink-0 border-2 border-accent/20"
             />
             <div>
               <h4 className="text-lg font-bold text-foreground mb-0.5">Zac Lewis</h4>
-              <p className="text-sm text-accent font-medium mb-1">Osteopath · Neuroscience Researcher</p>
-              <p className="text-xs text-muted-foreground mb-3">B.Clin.Sci, M.Ost.Med, PhD Candidate</p>
+              <p className="text-sm text-accent font-medium mb-1">Osteopath · Concussion Researcher</p>
+              <p className="text-xs text-muted-foreground mb-3">B.Clin.Sci, M.Ost.Med, Concussion Researcher</p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                 With over a decade of clinical experience, Zac has managed concussion across national and professional ice hockey in New Zealand and Canada. He now leads Concussion Education Australia, combining clinical mentorship with the latest evidence to train the next generation of concussion-confident clinicians.
               </p>

@@ -16,7 +16,6 @@ import {
   BookOpen,
   CheckCircle2,
   Star,
-  ChevronRight,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
@@ -66,8 +65,9 @@ export default function SCATMasteryPage() {
       if (data.success) {
         // Fire gtag lead conversion with value + enhanced data
         trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 25, email.trim().toLowerCase())
-        // User is now logged in (cookie set by API) — redirect to course
-        window.location.href = '/scat-course'
+        // Show success state, then redirect (cookie already set by API)
+        setSuccessData(data)
+        setTimeout(() => { window.location.href = '/scat-course' }, 1500)
         return
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
@@ -180,41 +180,19 @@ export default function SCATMasteryPage() {
           {/* ── Right column: form ── */}
           <div className="lg:sticky lg:top-8">
             {successData ? (
-              /* Success state */
+              /* Success state — brief confirmation before redirect to course */
               <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-emerald-200 p-8 shadow-xl shadow-emerald-100/50">
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-5">
                     <Check className="w-8 h-8 text-emerald-600" strokeWidth={2.5} />
                   </div>
                   <h2 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
-                    You&apos;re registered.
+                    You&apos;re in!
                   </h2>
-                  <p className="text-slate-500 text-sm mb-6">
-                    Check your email for a login link to access the course.
+                  <p className="text-slate-500 text-sm mb-4">
+                    Taking you to your course now...
                   </p>
-
-                  <div className="bg-slate-50 rounded-xl p-5 mb-6 border border-slate-200/60 text-left space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Mail className="w-4 h-4 text-[#5b9aa6] flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-slate-700">
-                        A login link has been sent to <strong>{email}</strong>. Check your inbox (and spam folder).
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Clock className="w-4 h-4 text-[#5b9aa6] flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-slate-700">
-                        Link expires in 24 hours.
-                      </p>
-                    </div>
-                  </div>
-
-                  <a
-                    href={`/login?email=${encodeURIComponent(email)}`}
-                    className="w-full py-3.5 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200"
-                  >
-                    Go to login
-                    <ChevronRight className="w-4 h-4" />
-                  </a>
+                  <Loader2 className="w-6 h-6 text-[#5b9aa6] animate-spin mx-auto" />
                 </div>
               </div>
             ) : (

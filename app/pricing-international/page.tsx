@@ -66,7 +66,6 @@ function CanceledBanner() {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const PRICE_USD = CONFIG.COURSE.PRICE_INTERNATIONAL
-const AFTERPAY_INSTALLMENT = (Math.ceil(PRICE_USD / 4 * 100) / 100).toFixed(2)
 
 // ─── Main Content ────────────────────────────────────────────────────────────
 
@@ -328,7 +327,7 @@ function InternationalPricingContent() {
 
             <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">SCAT6 Mastery</h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-              5 focused modules on SCAT6 — the gold standard sideline assessment. See the course quality first, no commitment.
+              6 focused modules on SCAT6 — the gold standard sideline assessment. See the course quality first, no commitment.
             </p>
 
             <div className="mb-6">
@@ -340,7 +339,7 @@ function InternationalPricingContent() {
 
             <ul className="space-y-3 mb-6 flex-1">
               {[
-                '5 SCAT6-focused modules',
+                '6 SCAT6-focused modules',
                 '2 CE credits on completion',
                 'No card or payment required',
                 'See the course quality before you commit',
@@ -393,7 +392,6 @@ function InternationalPricingContent() {
                 <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${PRICE_USD}</span>
                 <span className="text-sm text-[var(--muted-foreground)]">USD</span>
               </div>
-              <p className="text-sm text-slate-500 mt-1">or 4 x ${AFTERPAY_INSTALLMENT} with Afterpay or Klarna</p>
               <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · 8 CE credits</p>
             </div>
 
@@ -435,7 +433,7 @@ function InternationalPricingContent() {
 
         {/* Trust Signals */}
         <div className="max-w-[900px] mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-          {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout', 'Evidence-Based', 'Lifetime Access', 'Certificate Included'].map(item => (
+          {['7-Day Guarantee', 'Secure Checkout', 'Evidence-Based', 'Lifetime Access', 'Certificate Included'].map(item => (
             <div key={item} className="flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
               {item}
@@ -639,7 +637,6 @@ function InternationalPricingContent() {
                   <span className="text-2xl font-bold text-[var(--foreground)]">${PRICE_USD}</span>
                   <span className="text-xs text-slate-400">USD</span>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5">or 4 x ${AFTERPAY_INSTALLMENT} with Afterpay or Klarna</p>
                 <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CE credits</p>
               </div>
 
@@ -661,7 +658,7 @@ function InternationalPricingContent() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-[var(--muted-foreground)]">
-              {['Afterpay / Klarna', '7-Day Guarantee', 'Secure Checkout'].map(item => (
+              {['7-Day Guarantee', 'Secure Checkout'].map(item => (
                 <div key={item} className="flex items-center gap-1">
                   <Check className="w-3 h-3 text-[var(--accent)]" strokeWidth={2.5} />
                   {item}

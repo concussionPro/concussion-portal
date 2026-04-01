@@ -34,7 +34,7 @@ function UpgradeContent() {
   useEffect(() => {
     if (isLoading) return
     if (!user) {
-      router.replace('/login?next=/upgrade')
+      router.replace('/login?redirect=/upgrade')
       return
     }
     if (user.accessLevel === 'full-course') {

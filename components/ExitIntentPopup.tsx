@@ -18,7 +18,7 @@ import { trackLeadConversion } from '@/lib/analytics'
 const EXCLUDED_PREFIXES = [
   '/dashboard', '/login', '/admin', '/checkout',
   '/courses', '/course', '/learning', '/settings', '/scat-mastery',
-  '/preseason/b',
+  '/scat-course', '/preseason/b',
 ]
 
 export function ExitIntentPopup() {

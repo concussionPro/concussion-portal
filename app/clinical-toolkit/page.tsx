@@ -161,13 +161,12 @@ export default function ClinicalToolkitPage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
-            // CRITICAL: Preview users should NOT access clinical toolkit - redirect to SCAT course
+            // Preview users see the toolkit in locked state (builds upgrade desire)
             if (data.user.accessLevel === 'preview') {
-              router.push('/scat-course')
-              return
+              // Keep accessLevel as null → shows locked UI with upgrade CTA
+            } else {
+              setAccessLevel(data.user.accessLevel)
             }
-
-            setAccessLevel(data.user.accessLevel)
           }
         }
       } catch (error) {
@@ -264,23 +263,37 @@ export default function ClinicalToolkitPage() {
                 </button>
               )}
 
-              {/* Unauthenticated users - prompt to enroll */}
+              {/* Locked state for preview/unauthenticated users */}
               {!accessLevel && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                  <Star className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-900">
-                      Unlock Full Toolkit Access
+                <div className="bg-gradient-to-r from-purple-50 to-teal-50 border-2 border-purple-200 rounded-xl p-6 flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                    <Lock className="w-6 h-6 text-white" strokeWidth={2} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-lg font-bold text-slate-900 mb-1">
+                      12 Clinical Resources Included With the Course
                     </p>
-                    <p className="text-sm text-amber-700 mt-1">
-                      Enrol to access all clinical resources, templates, flowcharts, and assessment tools.
+                    <p className="text-sm text-slate-700 mb-1">
+                      Flowcharts, fillable SCAT6/SCOAT6 PDFs, patient handouts, referral pathways, return-to-play ladders, and email templates — ready to use in clinic from day one.
                     </p>
-                    <button
-                      onClick={() => router.push('/pricing')}
-                      className="inline-block mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors"
-                    >
-                      Enrol Now
-                    </button>
+                    <p className="text-xs text-slate-500 mb-4">Included free with your online course enrolment. No extra cost.</p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        onClick={() => {
+                          trackShopClick('toolkit-locked-upgrade', {})
+                          router.push('/pricing')
+                        }}
+                        className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-teal-600 text-white rounded-lg text-sm font-bold hover:from-purple-700 hover:to-teal-700 transition-all text-center"
+                      >
+                        Unlock Toolkit — Enrol from ${CONFIG.COURSE.PRICE_ONLINE}
+                      </button>
+                      <button
+                        onClick={() => router.push('/scat-mastery')}
+                        className="px-5 py-2.5 border-2 border-purple-200 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-50 transition-all text-center"
+                      >
+                        Start Free — 2 CPD Points
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -303,11 +316,11 @@ export default function ClinicalToolkitPage() {
                         <button
                           onClick={() => {
                             trackShopClick('toolkit-online-only-upgrade', { accessLevel: 'online-only' })
-                            router.push('/pricing')
+                            router.push('/upgrade')
                           }}
                           className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                         >
-                          Upgrade Now — Add Workshop from ${CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE}
+                          Add Workshop — ${new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') ? (CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE) : (CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE)}
                         </button>
                         <button
                           onClick={() => {

@@ -80,7 +80,9 @@ function LearningSuiteInner() {
                 <p className="text-sm text-muted-foreground">
                   {isPreview
                     ? '2 Free CPD Points · SCAT6, SCOAT6 & Child SCAT6 Assessment Training'
-                    : `${CONFIG.COURSE.ONLINE_CPD_POINTS} Online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} In-Person CPD Points (${CONFIG.COURSE.TOTAL_CPD_POINTS} Total) · Evidence-Based Concussion Management`}
+                    : accessLevel === 'full-course'
+                    ? `${CONFIG.COURSE.ONLINE_CPD_POINTS} Online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} In-Person CPD Points (${CONFIG.COURSE.TOTAL_CPD_POINTS} Total) · Evidence-Based Concussion Management`
+                    : `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD Points · Evidence-Based Concussion Management`}
                 </p>
               </div>
 
@@ -358,10 +360,10 @@ function LearningSuiteInner() {
                       Your online modules teach the theory. The full-day workshop is where you practice SCAT6 administration, VOMS testing &amp; BESS scoring with expert feedback — the skills you can&apos;t learn from a screen.
                     </p>
                     <button
-                      onClick={() => router.push('/pricing')}
+                      onClick={() => router.push('/upgrade')}
                       className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5"
                     >
-                      Upgrade to Complete Course
+                      Add Workshop
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (

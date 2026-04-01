@@ -169,7 +169,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protected frontend routes — require valid session, redirect to /login if missing
-  const protectedPrefixes = ['/learning', '/dashboard', '/settings', '/clinical-toolkit', '/complete-reference', '/assessment']
+  const protectedPrefixes = ['/learning', '/dashboard', '/settings', '/clinical-toolkit', '/complete-reference', '/assessment', '/scat-course', '/references']
   if (protectedPrefixes.some(p => pathname.startsWith(p))) {
     const sessionToken = request.cookies.get('session')?.value
     if (!sessionToken) {
@@ -226,5 +226,7 @@ export const config = {
     '/clinical-toolkit/:path*',
     '/complete-reference/:path*',
     '/assessment/:path*',
+    '/scat-course/:path*',
+    '/references/:path*',
   ]
 }

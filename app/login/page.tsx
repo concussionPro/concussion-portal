@@ -4,16 +4,25 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, AlertCircle, ArrowLeft, Check, Brain, Shield, Award } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { useSession } from '@/contexts/SessionContext'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user, isLoading: sessionLoading } = useSession()
   const [email, setEmail] = useState(searchParams.get('email') || '')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [devMagicLink, setDevMagicLink] = useState('')
   const redirectParam = searchParams.get('redirect')
+
+  // Redirect authenticated users — no need to log in again
+  useEffect(() => {
+    if (sessionLoading || !user) return
+    const dest = redirectParam || '/dashboard'
+    router.replace(dest)
+  }, [user, sessionLoading, router, redirectParam])
 
   // Persist redirect destination so it survives the magic link email flow
   useEffect(() => {
@@ -194,7 +203,10 @@ function LoginForm() {
                           Click the link in your email to access your course. The link expires in 24 hours.
                         </p>
                         <p className="text-xs text-slate-500">
-                          Don't see it? Check your spam folder.
+                          Don&apos;t see it? Check your spam folder.
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2">
+                          Not enrolled yet? <a href="/pricing" className="text-[#5b9aa6] hover:underline font-medium">View course options</a> or start with the <a href="/scat-mastery" className="text-[#5b9aa6] hover:underline font-medium">free SCAT course</a>.
                         </p>
                       </>
                     )}

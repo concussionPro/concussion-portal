@@ -8,6 +8,7 @@ import { createMagicToken } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
+import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
 import Stripe from 'stripe'
 // Server-side analytics — writes to Postgres (same table as client-side tracking)
 async function logAnalyticsEvent(eventType: string, eventData: Record<string, unknown>) {
@@ -147,7 +148,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const accessLevel = (session.metadata?.accessLevel || 'online-only') as 'online-only' | 'full-course'
 
   const workshopCity = location || preferredCity
-  console.log(`Payment completed: ${customerEmail} — ${courseType}${workshopCity ? ` (${workshopCity})` : ''} — $${(session.amount_total || 0) / 100} AUD`)
+  const currency = (session.currency || 'aud').toUpperCase()
+  console.log(`Payment completed: ${customerEmail} — ${courseType}${workshopCity ? ` (${workshopCity})` : ''} — $${(session.amount_total || 0) / 100} ${currency}`)
 
   // Step 1: Create/upgrade user account — MUST succeed or Stripe will retry
   const existingUser = await findUserByEmail(customerEmail)
@@ -243,7 +245,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       email: customerEmail,
       courseType,
       amount: purchaseAmount,
-      currency: 'AUD',
+      currency,
       transactionId: session.id,
       accessLevel,
     })
@@ -255,7 +257,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // The checkout success page also fires client-side — GA4 deduplicates by transaction_id
   try {
     const { trackServerPurchase } = await import('@/lib/measurement-protocol')
-    await trackServerPurchase(session.id, purchaseAmount, 'AUD', customerEmail)
+    await trackServerPurchase(session.id, purchaseAmount, currency, customerEmail)
   } catch (err) {
     console.error('Failed to fire server-side purchase conversion:', err)
   }
@@ -408,18 +410,56 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     console.error('Failed to check abandoned checkout dedup:', err)
   }
 
-  // Store abandoned checkout in Postgres for recovery cron drip sequence.
-  // The drip sequence (ABANDONED_CHECKOUT_SEQUENCE) handles all recovery emails
-  // at 1h, 24h, and 72h intervals. No immediate email is sent here to avoid
-  // duplicating the first drip email.
+  // Store abandoned checkout and send first recovery email immediately.
+  // With 30-min Stripe session expiry, the user just left — strike while warm.
+  // Cron handles emails 2 (24h) and 3 (72h).
   try {
+    // Check if user has unsubscribed from nurture emails
+    let unsubscribed = false
+    try {
+      const { rows: userRows } = await sql`
+        SELECT nurture_unsubscribed FROM users WHERE email = ${email.toLowerCase()} LIMIT 1
+      `
+      if (userRows.length > 0 && userRows[0].nurture_unsubscribed) {
+        unsubscribed = true
+      }
+    } catch { /* user may not exist yet — proceed */ }
+
+    const firstEmail = ABANDONED_CHECKOUT_SEQUENCE[0]
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    const unsubToken = generateUnsubscribeToken(email)
+    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
+
+    if (!unsubscribed) {
+      const html = firstEmail.template(name)
+        .replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+      await sendEmail({
+        to: email,
+        subject: firstEmail.subject,
+        html,
+        tags: [
+          { name: 'sequence', value: 'abandoned-checkout' },
+          { name: 'email-number', value: '1' },
+        ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
+      })
+      console.log(`[Abandoned] Email 1 sent immediately → ${email}`)
+    } else {
+      console.log(`[Abandoned] Skipped email for ${email} — unsubscribed`)
+    }
+
+    // Store with emails_sent = 1 (or 0 if unsubscribed, so cron won't re-send email 1 either)
     await sql`
       INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered)
-      VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), 0, false)
+      VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), ${unsubscribed ? 0 : 1}, false)
     `
-    console.log(`Stored abandoned checkout for ${email} — drip sequence will handle recovery emails`)
+    console.log(`Stored abandoned checkout for ${email} (emails_sent: ${unsubscribed ? 0 : 1})`)
   } catch (err) {
-    console.error('Failed to store abandoned checkout:', err)
+    console.error('Failed to process abandoned checkout:', err)
   }
 }
 
@@ -434,7 +474,8 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   }
 
   const refundAmount = (charge.amount_refunded || 0) / 100
-  console.log(`Refund processed for ${email} — $${refundAmount} AUD`)
+  const refundCurrency = (charge.currency || 'aud').toUpperCase()
+  console.log(`Refund processed for ${email} — $${refundAmount} ${refundCurrency}`)
 
   // Log to analytics
   try {

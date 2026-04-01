@@ -97,9 +97,8 @@ export const metadata: Metadata = {
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
   },
-  alternates: {
-    canonical: CONFIG.SEO.SITE_URL,
-  },
+  // Canonical URLs are set per-page in their own layout.tsx files.
+  // Omitted here to avoid root layout setting a homepage canonical on all pages.
 };
 
 export default function RootLayout({

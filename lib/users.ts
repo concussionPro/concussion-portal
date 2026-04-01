@@ -102,6 +102,7 @@ export async function createUser(data: {
       await sql`
         UPDATE users SET
           access_level = ${data.accessLevel},
+          name = COALESCE(NULLIF(${data.name || null}, ''), name),
           stripe_customer_id = COALESCE(${data.stripeCustomerId || null}, stripe_customer_id),
           stripe_subscription_id = COALESCE(${data.stripeSubscriptionId || null}, stripe_subscription_id),
           workshop_location = COALESCE(${data.workshopLocation || null}, workshop_location),

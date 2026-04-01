@@ -144,9 +144,9 @@ export function Sidebar() {
               return (
                 <Link
                   key={item.label}
-                  href="/pricing"
+                  href={item.href}
                   onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg opacity-40 cursor-pointer text-muted-foreground hover:opacity-60 transition-all relative group"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg opacity-50 cursor-pointer text-muted-foreground hover:opacity-70 transition-all relative group"
                 >
                   <item.icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
                   <span className="text-sm font-medium">{item.label}</span>

@@ -205,7 +205,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
       </Card>
 
       {/* ── 5. Clinical Toolkit ─────────────────────── */}
-      <Card onClick={() => router.push(isPreview ? '/pricing' : '/clinical-toolkit')}>
+      <Card onClick={() => router.push('/clinical-toolkit')}>
         <div className="flex items-center gap-3 mb-3">
           <div className={cn(
             'w-9 h-9 rounded-xl flex items-center justify-center',
@@ -246,7 +246,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
       </Card>
 
       {/* ── 7. Reference Repository (wide) ──────────── */}
-      <Card onClick={() => router.push(isPreview ? '/pricing' : '/references')} span2>
+      <Card onClick={() => router.push('/references')} span2>
         <div className="flex items-start gap-4">
           <div className={cn(
             'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
@@ -412,7 +412,7 @@ function WorkshopCard({
 
   // Default: preview/online-only/full-course pre-completion
   return (
-    <Card onClick={() => onNavigate(isPreview || isOnlineOnly ? '/pricing' : '/in-person')}>
+    <Card onClick={() => onNavigate(isPreview ? '/pricing' : isOnlineOnly ? '/upgrade' : '/in-person')}>
       <div className="flex items-center gap-3 mb-3">
         <div className={cn(
           'w-9 h-9 rounded-xl flex items-center justify-center',

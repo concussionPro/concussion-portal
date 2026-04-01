@@ -50,23 +50,17 @@ export default function HomePage() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
               <Link
-                href="/pricing"
+                href="/scat-mastery"
                 className="btn-primary px-8 py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2 shadow-lg"
               >
-                Compare Pricing
+                Start Free — 2 CPD Points
                 <ArrowRight className="w-4.5 h-4.5" />
               </Link>
               <Link
-                href="/preview"
+                href="/pricing"
                 className="px-6 py-3 rounded-xl text-sm font-semibold text-[var(--foreground)] bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
               >
-                Preview Course
-              </Link>
-              <Link
-                href="/scat-mastery"
-                className="px-6 py-3 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1.5"
-              >
-                Start Free — 2 CPD Points
+                Compare Pricing
               </Link>
             </div>
 

@@ -434,10 +434,10 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
               </p>
 
               <button
-                onClick={() => router.push('/scat-course')}
+                onClick={() => router.push('/learning')}
                 className="mt-6 text-slate-400 hover:text-white underline text-sm"
               >
-                ← Back to Free SCAT Course
+                ← Back to My Course
               </button>
             </div>
           </div>
@@ -656,13 +656,19 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                 </div>
               )}
               <div className="flex flex-col items-center gap-3">
-                <button
-                  onClick={() => router.push('/learning')}
-                  className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
-                >
-                  Continue Learning
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {(() => {
+                  const lastModuleId = isSCATModule ? 106 : 8
+                  const hasNext = moduleId < lastModuleId
+                  return (
+                    <button
+                      onClick={() => router.push(hasNext ? `/modules/${moduleId + 1}` : '/learning')}
+                      className="px-8 py-3.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
+                    >
+                      {hasNext ? `Start Module ${isSCATModule ? moduleId - 99 : moduleId + 1}` : 'View All Modules'}
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )
+                })()}
                 {isSCATModule && (
                   <div className="flex flex-col items-center gap-2">
                     <Link

@@ -490,18 +490,26 @@ export default function SettingsPage() {
                       )}
                     </div>
 
-                    {isFullCourse && (
-                      <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <div>
-                          <div className="text-sm font-semibold text-slate-900">In-Person Workshop</div>
-                          <div className="text-xs text-slate-600 mt-1">Full-day practical training (6 CPD points)</div>
-                        </div>
+                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">In-Person Workshop</div>
+                        <div className="text-xs text-slate-600 mt-1">Full-day practical training (6 CPD points)</div>
+                      </div>
+                      {isFullCourse ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           INCLUDED
                         </div>
-                      </div>
-                    )}
+                      ) : isPaidUser ? (
+                        <a href="/upgrade" className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200 transition-colors">
+                          ADD WORKSHOP →
+                        </a>
+                      ) : (
+                        <div className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                          NOT INCLUDED
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Show confirmation message for paid users */}

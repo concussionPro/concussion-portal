@@ -8,6 +8,7 @@ import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
 import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { CONFIG } from '@/lib/config'
+import { trackEvent } from '@/lib/analytics'
 
 const POOL_CITIES = Object.values(CONFIG.LOCATIONS).map(loc => ({
   value: loc.slug,
@@ -66,6 +67,7 @@ export function NextActionCard() {
           if (data.success) {
             setCertificateStatus('sent')
             if (typeof window !== 'undefined') localStorage.setItem(sentKey, '1')
+            trackEvent('course_complete', { courseType: certType, accessLevel, modules: totalModules })
           } else {
             setCertificateStatus('error')
           }
@@ -130,6 +132,7 @@ export function NextActionCard() {
         success: res.ok,
         message: data.message || data.error || 'Something went wrong.',
       })
+      if (res.ok) trackEvent('workshop_pool_join', { city: selectedCity })
     } catch {
       setPoolResult({ success: false, message: 'Network error. Please try again.' })
     } finally {
@@ -179,7 +182,7 @@ export function NextActionCard() {
                 <div className="flex items-center gap-2 mb-2">
                   <Award className="w-4 h-4 text-emerald-600" />
                   <span className="text-sm font-bold text-emerald-900">
-                    {isPreview ? 'Free CPD Certificate (2 points)' : 'CPD Certificate'}
+                    {isPreview ? 'Free CPD Certificate (2 points)' : `CPD Certificate (${CONFIG.COURSE.ONLINE_CPD_POINTS} points)`}
                   </span>
                 </div>
                 {certificateStatus === 'sending' && (
@@ -226,7 +229,7 @@ export function NextActionCard() {
                 <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
                   <p className="text-sm text-purple-800 font-medium mb-2">Ready to master VOMS, BESS testing &amp; return-to-play protocols? Earn up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points with the full course.</p>
                   <button
-                    onClick={() => router.push('/pricing')}
+                    onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_card', from: 'preview' }); router.push('/pricing') }}
                     className="text-sm text-purple-600 hover:text-purple-800 font-semibold"
                   >
                     View Full Course &rarr;
@@ -234,17 +237,30 @@ export function NextActionCard() {
                 </div>
               )}
 
-              {accessLevel === 'online-only' && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                  <p className="text-sm text-blue-800 font-medium mb-2">You&apos;ve earned {CONFIG.COURSE.ONLINE_CPD_POINTS} online CPD points. Add the 6-hour workshop for {CONFIG.COURSE.TOTAL_CPD_POINTS} total.</p>
-                  <button
-                    onClick={() => router.push('/upgrade')}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
-                  >
-                    Upgrade to Workshop &rarr;
-                  </button>
-                </div>
-              )}
+              {accessLevel === 'online-only' && (() => {
+                const earlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
+                const price = earlyBird
+                  ? CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
+                  : CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+                return (
+                  <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl text-center">
+                    <p className="text-sm text-blue-900 font-bold mb-1">Add the hands-on workshop — ${price} AUD</p>
+                    <p className="text-xs text-blue-700 mb-3">Earn {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points with supervised SCAT6, VOMS &amp; BESS practice.</p>
+                    <button
+                      onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_card', from: 'online-only' }); router.push('/upgrade') }}
+                      className="inline-flex items-center gap-1.5 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors"
+                    >
+                      Upgrade to Workshop
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    {earlyBird && (
+                      <p className="text-[11px] text-blue-600 font-medium mt-2">
+                        Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+                      </p>
+                    )}
+                  </div>
+                )
+              })()}
 
               <div className="flex flex-wrap gap-3">
                 <button
@@ -256,7 +272,7 @@ export function NextActionCard() {
                 </button>
                 {isPreview ? (
                   <button
-                    onClick={() => router.push('/pricing')}
+                    onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_primary', from: 'preview' }); router.push('/pricing') }}
                     className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all flex items-center gap-2"
                   >
                     Upgrade — Unlock 14 CPD Points

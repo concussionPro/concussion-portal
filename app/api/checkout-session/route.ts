@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { retrieveCheckoutSession } from '@/lib/stripe'
+import { retrieveCheckoutSession, COURSE_ACCESS_MAP } from '@/lib/stripe'
+import { findUserByEmail } from '@/lib/users'
+import { createJWTSession } from '@/lib/jwt-session'
 
 // Rate limit: max 20 requests per session ID per 15 minutes
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -59,16 +61,44 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    const customerEmail = session.customer_details?.email || ''
+    const customerName = session.customer_details?.name || ''
+    const courseType = session.metadata?.courseType || 'online-only'
+
+    const response = NextResponse.json({
       success: true,
       session: {
-        customerName: session.customer_details?.name || '',
-        customerEmail: session.customer_details?.email || '',
-        courseType: session.metadata?.courseType || 'online-only',
+        customerName,
+        customerEmail,
+        courseType,
         location: session.metadata?.location || '',
         amountPaid: (session.amount_total || 0) / 100,
       },
     })
+
+    // Auto-login: set session cookie so user can access course immediately
+    // No more "check your email" friction for paid customers
+    if (customerEmail && !request.cookies.get('session')?.value) {
+      try {
+        const user = await findUserByEmail(customerEmail)
+        if (user) {
+          const accessLevel = user.accessLevel as 'preview' | 'online-only' | 'full-course'
+          const sessionToken = createJWTSession(user.id, user.email, user.name || customerName, accessLevel, true)
+          response.cookies.set('session', sessionToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 30 * 24 * 60 * 60,
+            path: '/',
+          })
+        }
+      } catch (err) {
+        // Best effort — user can still use magic link
+        console.error('Auto-login on success page failed:', err)
+      }
+    }
+
+    return response
   } catch (error) {
     console.error('Error retrieving checkout session:', error)
     return NextResponse.json(
