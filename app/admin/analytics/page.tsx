@@ -510,6 +510,7 @@ const EVENT_LABELS: Record<string, string> = {
   preseason_baseline_submit: 'Baseline Submission',
   shop_click: 'Shop / Enrol Click',
   enroll_button_click: 'Enrol Button Click',
+  checkout_start: 'Checkout Started',
   pricing_view: 'Pricing Page View',
   login_attempt: 'Login Attempt',
   login_success: 'Login Success',

@@ -324,7 +324,7 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
       hasPricingView: sorted.some((e) => e.path === '/pricing' || e.path === '/pricing-international'),
       hasPreseasonRegister: sorted.some((e) => e.eventType === 'preseason_clinic_register'),
       hasPreseasonSubmit: sorted.some((e) => e.eventType === 'preseason_baseline_submit'),
-      hasEnrollClick: sorted.some((e) => e.eventType === 'enroll_button_click' || e.eventType === 'enrol_click'),
+      hasEnrollClick: sorted.some((e) => e.eventType === 'enroll_button_click' || e.eventType === 'enrol_click' || e.eventType === 'checkout_start'),
     });
   }
 
