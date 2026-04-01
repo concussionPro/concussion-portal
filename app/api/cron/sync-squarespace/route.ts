@@ -44,17 +44,23 @@ interface ProfilesResponse {
 
 export async function GET(request: Request) {
   try {
-    if (!process.env.CRON_SECRET) {
-      return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
-    }
-
+    // Accept either CRON_SECRET (Vercel cron) or ADMIN_API_KEY (manual trigger)
     const authHeader = request.headers.get('authorization')
-    const expected = `Bearer ${process.env.CRON_SECRET}`
-    if (
-      !authHeader ||
-      authHeader.length !== expected.length ||
-      !crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
-    ) {
+    const adminKey = request.headers.get('x-admin-key')
+    const cronSecret = process.env.CRON_SECRET
+    const adminApiKey = process.env.ADMIN_API_KEY
+
+    let authorized = false
+    if (cronSecret && authHeader) {
+      const expected = `Bearer ${cronSecret}`
+      if (authHeader.length === expected.length && crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
+        authorized = true
+      }
+    }
+    if (!authorized && adminApiKey && adminKey === adminApiKey) {
+      authorized = true
+    }
+    if (!authorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
