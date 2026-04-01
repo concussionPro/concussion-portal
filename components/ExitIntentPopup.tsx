@@ -102,7 +102,7 @@ export function ExitIntentPopup() {
       if (res.ok && data.success) {
         setSubmitted(true)
         // Track Google Ads lead conversion with proper label
-        trackLeadConversion('fcoOCLTT0IccEJWXu_9C', 25, email.trim())
+        trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 25, email.trim())
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
       }
@@ -139,21 +139,21 @@ export function ExitIntentPopup() {
 
         <div className="p-6 md:p-8">
           {submitted ? (
-            /* Success state */
+            /* Success state — redirect to course (user is already logged in via session cookie) */
             <div className="text-center py-4">
               <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
                 <Award className="w-7 h-7 text-emerald-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">You&apos;re in!</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Check your email for a login link to start the free SCAT6 Mastery course.
+                Your course is ready. We also sent a login link to your email for future access.
               </p>
-              <button
-                onClick={() => setShow(false)}
-                className="px-6 py-2.5 bg-[#0d9488] text-white rounded-lg text-sm font-semibold hover:bg-[#0f766e] transition-colors"
+              <a
+                href="/scat-course"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0d9488] text-white rounded-lg text-sm font-semibold hover:bg-[#0f766e] transition-colors"
               >
-                Got it
-              </button>
+                Start Course Now <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
           ) : (
             /* Form state */
