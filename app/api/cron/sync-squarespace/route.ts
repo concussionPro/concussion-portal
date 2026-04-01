@@ -79,6 +79,32 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'SQUARESPACE_API_KEY not configured' }, { status: 500 })
     }
 
+    // Test mode: just verify Squarespace API connectivity
+    if (url.searchParams.get('test') === '1') {
+      try {
+        const testUrl = `${SQUARESPACE_API_BASE}/profiles?sortField=createdOn&sortDirection=dsc`
+        const testResp = await fetch(testUrl, {
+          headers: { 'Authorization': `Bearer ${apiKey}`, 'User-Agent': 'ConcussionPro-Portal/1.0' },
+          signal: AbortSignal.timeout(10000),
+        })
+        if (!testResp.ok) {
+          const errText = await testResp.text()
+          return NextResponse.json({ test: 'fail', status: testResp.status, error: errText.slice(0, 500) })
+        }
+        const testData = await testResp.json()
+        const { rows: userCount } = await sql`SELECT COUNT(*) as n FROM users WHERE signup_source = 'squarespace'`
+        return NextResponse.json({
+          test: 'pass',
+          profileCount: testData.profiles?.length ?? 0,
+          firstProfile: testData.profiles?.[0] ? { email: testData.profiles[0].email, createdOn: testData.profiles[0].createdOn } : null,
+          hasNextPage: testData.pagination?.hasNextPage,
+          sqUsersInDb: Number(userCount[0].n),
+        })
+      } catch (err) {
+        return NextResponse.json({ test: 'error', detail: String(err) }, { status: 500 })
+      }
+    }
+
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     let created = 0
     let skipped = 0
@@ -102,6 +128,7 @@ export async function GET(request: Request) {
           'Authorization': `Bearer ${apiKey}`,
           'User-Agent': 'ConcussionPro-Portal/1.0',
         },
+        signal: AbortSignal.timeout(15000),
       })
 
       if (!response.ok) {
