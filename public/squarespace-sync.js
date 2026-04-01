@@ -10,8 +10,6 @@
   var UTM = '?utm_source=squarespace&utm_medium=referral&utm_campaign=banner';
   var FREE_TRAINING = PORTAL + '/scat-mastery' + UTM;
 
-  console.log('[CEA] squarespace-sync.js loaded');
-
   // ── 1. Form submit: Google Ads conversion + portal account sync ──
   // Squarespace 7.1 React forms don't fire native 'submit' events.
   // Use click listener on submit buttons + submit fallback.
@@ -51,6 +49,14 @@
       var hint = ((inp.name || '') + (inp.placeholder || '') + (inp.getAttribute('data-title') || '')).toLowerCase();
       if (hint.indexOf('name') !== -1 && inp.value) return inp.value.trim();
     }
+    // Fallback: first non-email text input (Squarespace labels it "Text" not "Name")
+    for (var k = 0; k < inputs.length; k++) {
+      var inp2 = inputs[k];
+      if (inp2.type === 'email') continue;
+      var title = (inp2.getAttribute('data-title') || '').toLowerCase();
+      if (title === 'email') continue;
+      if (inp2.value) return inp2.value.trim();
+    }
     return '';
   }
 
@@ -78,7 +84,6 @@
   // Primary: click listener on submit buttons (works with React forms)
   document.addEventListener('click', function(e) {
     var btn = e.target;
-    console.log('[CEA] click:', btn.tagName, btn.className);
     while (btn && btn !== document.body) {
       if (btn.tagName === 'BUTTON' || (btn.tagName === 'INPUT' && btn.type === 'submit')) break;
       if (btn.classList && btn.classList.contains('form-button-wrapper')) { btn = btn.querySelector('button') || btn; break; }
@@ -86,14 +91,11 @@
     }
     if (!btn || btn === document.body) return;
 
-    console.log('[CEA] found button:', btn.tagName, btn.className);
     var container = btn.closest('form') || btn.closest('.form-block') || btn.closest('.sqs-block-form') || btn.closest('[data-block-type="form"]');
-    console.log('[CEA] container:', container ? container.tagName + '.' + container.className : 'NONE');
     if (!container) return;
 
     var email = ceaFindEmail(container);
     var name = ceaFindName(container);
-    console.log('[CEA] email:', email, 'name:', name);
     if (email) ceaSync(email, name);
   }, true);
 
