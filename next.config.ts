@@ -29,6 +29,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Prevent Cloudflare from long-caching the Squarespace sync script
+        source: '/squarespace-sync.js',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, must-revalidate' },
+        ],
+      },
+      {
         source: '/:path*',
         headers: [
           {
