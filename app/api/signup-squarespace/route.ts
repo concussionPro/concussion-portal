@@ -15,14 +15,23 @@ import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': 'https://www.concussion-education-australia.com',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+const ALLOWED_ORIGINS = [
+  'https://www.concussion-education-australia.com',
+  'https://concussion-education-australia.com',
+]
+
+function getCorsHeaders(request?: NextRequest): Record<string, string> {
+  const origin = request?.headers.get('origin') || ''
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  }
 }
 
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: getCorsHeaders(request) })
 }
 
 export async function POST(request: NextRequest) {
@@ -37,7 +46,7 @@ export async function POST(request: NextRequest) {
       AND sent_at > NOW() - INTERVAL '1 hour'
     `
     if (recentFromIp[0]?.cnt > 10) {
-      return NextResponse.json({ error: 'Rate limited' }, { status: 429, headers: CORS_HEADERS })
+      return NextResponse.json({ error: 'Rate limited' }, { status: 429, headers: getCorsHeaders(request) })
     }
 
     const body = await request.json()
@@ -45,18 +54,18 @@ export async function POST(request: NextRequest) {
     const name = (body.name || '').trim()
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: 'Invalid email' }, { status: 400, headers: CORS_HEADERS })
+      return NextResponse.json({ error: 'Invalid email' }, { status: 400, headers: getCorsHeaders(request) })
     }
 
     // Honeypot field — if filled, it's a bot
     if (body.website) {
-      return NextResponse.json({ success: true }, { headers: CORS_HEADERS })
+      return NextResponse.json({ success: true }, { headers: getCorsHeaders(request) })
     }
 
     // Skip if user already exists
     const existing = await findUserByEmail(email)
     if (existing) {
-      return NextResponse.json({ success: true, message: 'Already registered' }, { headers: CORS_HEADERS })
+      return NextResponse.json({ success: true, message: 'Already registered' }, { headers: getCorsHeaders(request) })
     }
 
     // Dedup via audit log
@@ -66,7 +75,7 @@ export async function POST(request: NextRequest) {
       ON CONFLICT (audit_key) DO NOTHING
     `
     if (inserted === 0) {
-      return NextResponse.json({ success: true, message: 'Already processed' }, { headers: CORS_HEADERS })
+      return NextResponse.json({ success: true, message: 'Already processed' }, { headers: getCorsHeaders(request) })
     }
 
     // Rate limit audit (for IP tracking)
@@ -113,10 +122,10 @@ export async function POST(request: NextRequest) {
 
     console.log(`[SS Form] Created + emailed: ${email}`)
 
-    return NextResponse.json({ success: true }, { headers: CORS_HEADERS })
+    return NextResponse.json({ success: true }, { headers: getCorsHeaders(request) })
   } catch (error) {
     console.error('[SS Form] Error:', error)
-    return NextResponse.json({ error: 'Failed' }, { status: 500, headers: CORS_HEADERS })
+    return NextResponse.json({ error: 'Failed' }, { status: 500, headers: getCorsHeaders(request) })
   }
 }
 

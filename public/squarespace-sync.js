@@ -11,15 +11,53 @@
   var FREE_TRAINING = PORTAL + '/scat-mastery' + UTM;
 
   // ── 1. Form submit: Google Ads conversion + portal account sync ──
-  document.addEventListener('submit', function(e) {
-    var form = e.target;
-    if (!form) return;
-    var emailInput = form.querySelector('input[type="email"]');
-    if (!emailInput) return;
-    var email = emailInput.value.trim();
-    if (!email) return;
+  // Squarespace 7.1 React forms don't fire native 'submit' events.
+  // Use click listener on submit buttons + submit fallback.
 
-    // Google Ads conversion
+  function ceaFindEmail(container) {
+    var sels = [
+      'input[type="email"]',
+      'input[data-title="Email"]', 'input[data-title="email"]',
+      'input[autocomplete="email"]'
+    ];
+    for (var i = 0; i < sels.length; i++) {
+      var el = container.querySelector(sels[i]);
+      if (el && el.value) return el.value.trim();
+    }
+    // Fallback: any input whose placeholder/name contains "email"
+    var inputs = container.querySelectorAll('input[type="text"], input:not([type])');
+    for (var j = 0; j < inputs.length; j++) {
+      var inp = inputs[j];
+      var hint = ((inp.name || '') + (inp.placeholder || '') + (inp.getAttribute('data-title') || '')).toLowerCase();
+      if (hint.indexOf('email') !== -1 && inp.value && inp.value.indexOf('@') !== -1) return inp.value.trim();
+    }
+    return '';
+  }
+
+  function ceaFindName(container) {
+    var sels = [
+      'input[data-title="Name"]', 'input[data-title="name"]',
+      'input[data-title="First Name"]', 'input[data-title="First name"]'
+    ];
+    for (var i = 0; i < sels.length; i++) {
+      var el = container.querySelector(sels[i]);
+      if (el && el.value) return el.value.trim();
+    }
+    var inputs = container.querySelectorAll('input[type="text"], input:not([type])');
+    for (var j = 0; j < inputs.length; j++) {
+      var inp = inputs[j];
+      var hint = ((inp.name || '') + (inp.placeholder || '') + (inp.getAttribute('data-title') || '')).toLowerCase();
+      if (hint.indexOf('name') !== -1 && inp.value) return inp.value.trim();
+    }
+    return '';
+  }
+
+  function ceaSync(email, name) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    // Session dedup — both click + submit listeners may fire
+    if (sessionStorage.getItem('cea-synced-' + email)) return;
+    sessionStorage.setItem('cea-synced-' + email, '1');
+
     if (typeof gtag === 'function') {
       gtag('event', 'conversion', {
         'send_to': 'AW-17984048021/74x1CLfT0IccEJWXu_9C',
@@ -28,18 +66,37 @@
       });
     }
 
-    // Sync to portal
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      var ni = form.querySelector('input[name*="name"]');
-      if (!ni) ni = form.querySelector('input[name*="Name"]');
-      if (!ni) ni = form.querySelector('input[name*="fname"]');
-      var nm = ni ? ni.value.trim() : '';
-      fetch(PORTAL + '/api/signup-squarespace', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, name: nm })
-      }).catch(function() {});
+    fetch(PORTAL + '/api/signup-squarespace', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, name: name || '' })
+    }).catch(function() {});
+  }
+
+  // Primary: click listener on submit buttons (works with React forms)
+  document.addEventListener('click', function(e) {
+    var btn = e.target;
+    while (btn && btn !== document.body) {
+      if (btn.tagName === 'BUTTON' || (btn.tagName === 'INPUT' && btn.type === 'submit')) break;
+      if (btn.classList && btn.classList.contains('form-button-wrapper')) { btn = btn.querySelector('button') || btn; break; }
+      btn = btn.parentElement;
     }
+    if (!btn || btn === document.body) return;
+
+    var container = btn.closest('form') || btn.closest('.form-block') || btn.closest('.sqs-block-form') || btn.closest('[data-block-type="form"]');
+    if (!container) return;
+
+    var email = ceaFindEmail(container);
+    var name = ceaFindName(container);
+    if (email) ceaSync(email, name);
+  }, true);
+
+  // Fallback: native submit event (in case some forms do fire it)
+  document.addEventListener('submit', function(e) {
+    if (!e.target) return;
+    var email = ceaFindEmail(e.target);
+    var name = ceaFindName(e.target);
+    if (email) ceaSync(email, name);
   }, true);
 
   // ── 2. Fix broken link ──

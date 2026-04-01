@@ -25,6 +25,13 @@ export const maxDuration = 120
 
 export async function GET(request: Request) {
   try {
+    // Guard: only run on the primary project (concussion-portal with custom domain)
+    // Prevents duplicate cron runs from the second Vercel project
+    const prodUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || ''
+    if (prodUrl && !prodUrl.includes('concussion-education-australia.com')) {
+      return NextResponse.json({ skipped: true, reason: 'Not primary project' })
+    }
+
     // Guard: CRON_SECRET must be set
     if (!process.env.CRON_SECRET) {
       console.error('CRON_SECRET not configured — refusing to run')
