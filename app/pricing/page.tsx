@@ -316,8 +316,13 @@ function PricingContent() {
           </div>
         )}
 
-        {/* Regulatory context — "why now" urgency before solution (CXL: +15-25% for considered purchases) */}
-        <div className="max-w-3xl mx-auto mb-8 p-5 rounded-xl bg-slate-50 border border-slate-200">
+        {/* Pricing Cards — visible within first scroll on mobile */}
+        <div id="pricing-cards">
+          <PricingOptions variant="full" />
+        </div>
+
+        {/* Regulatory context — reinforces decision after seeing price */}
+        <div className="max-w-3xl mx-auto mt-12 mb-8 p-5 rounded-xl bg-slate-50 border border-slate-200">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Why clinicians are upskilling now</p>
           <div className="grid sm:grid-cols-2 gap-3">
             <Link href="/blog/ais-concussion-brain-health-position-statement-2024" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
@@ -351,7 +356,7 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Free course card — captures research-mode visitors before price exposure (Fogg: graduated commitment) */}
+        {/* Free course card — escape hatch for not-ready visitors */}
         <div className="max-w-[900px] mx-auto mb-8">
           <div className="card rounded-2xl p-6 md:p-7 flex flex-col sm:flex-row items-center gap-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border-2 border-emerald-200/40">
             <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center border border-emerald-200/50 flex-shrink-0">
@@ -359,7 +364,7 @@ function PricingContent() {
             </div>
             <div className="flex-1 text-center sm:text-left">
               <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <h3 className="text-lg font-bold text-foreground">Start Free — SCAT6 Mastery</h3>
+                <h3 className="text-lg font-bold text-foreground">Not ready to commit? Start Free</h3>
                 <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Free
                 </span>
@@ -386,7 +391,7 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Meet Your Instructor — authority before price (NNG: strongest trust signal for professionals) */}
+        {/* Meet Your Instructor */}
         <div className="max-w-3xl mx-auto mb-8">
           <h3 className="text-xl font-bold text-center text-foreground mb-6">Meet Your Instructor</h3>
           <div className="glass rounded-xl p-6 md:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
@@ -415,11 +420,6 @@ function PricingContent() {
               </a>
             </div>
           </div>
-        </div>
-
-        {/* Pricing Cards — after trust, urgency, and credibility */}
-        <div id="pricing-cards">
-          <PricingOptions variant="full" />
         </div>
 
         {/* Compare Plans — analytical decision support immediately after pricing (NNG: comparison tables) */}
