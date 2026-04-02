@@ -147,7 +147,10 @@ export async function createCourseCheckoutSession({
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour (gives BNPL users time)
-    payment_method_types: currency === 'aud' ? ['card', 'afterpay_clearpay', 'klarna'] : ['card'],
+    // Let Stripe auto-detect optimal payment methods per device/location/currency.
+    // Shows Apple Pay, Google Pay, Link, cards, Afterpay, Klarna as appropriate.
+    // Requires: (1) payment methods enabled in Stripe Dashboard, (2) Apple Pay
+    // domain verification file at /.well-known/apple-developer-merchantid-domain-association
     line_items: [
       {
         price_data: {
