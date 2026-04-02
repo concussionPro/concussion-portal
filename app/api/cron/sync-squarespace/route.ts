@@ -116,10 +116,11 @@ export async function GET(request: Request) {
     // Stop when we hit profiles older than lookback window or already in our DB
     // Use ?days=N to override default 30-day lookback (e.g. ?days=999 for full history)
     const lookbackDays = Math.min(Number(url.searchParams.get('days')) || 30, 9999)
-    const skipEmails = url.searchParams.get('noEmail') === '1'
     let cursor: string | null = null
     let keepGoing = true
     const cutoffDate = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000)
+    // Only email profiles from the last 30 days — older ones are silently imported
+    const emailCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
     while (keepGoing) {
       const url = cursor
@@ -190,34 +191,41 @@ export async function GET(request: Request) {
 
           created++
 
-          if (!skipEmails) {
-            // Send Day 0 welcome email (same as webhook handler)
-            const loginLink = generateMagicLinkJWT(userId, email, name, 'preview', baseUrl)
-            const unsubToken = generateUnsubscribeToken(email)
-            const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
-            const preseasonLink = `${baseUrl}/preseason`
+          // Only email subscribers from the last 30 days
+          const isRecent = profileDate >= emailCutoff
+          if (isRecent) {
+            // Check audit log BEFORE sending to prevent duplicates on re-runs
+            const auditKey = `scat_day0_${userId}`
+            const { rows: existing } = await sql`SELECT 1 FROM email_audit_log WHERE audit_key = ${auditKey} LIMIT 1`
+            if (existing.length === 0) {
+              const loginLink = generateMagicLinkJWT(userId, email, name, 'preview', baseUrl)
+              const unsubToken = generateUnsubscribeToken(email)
+              const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
+              const preseasonLink = `${baseUrl}/preseason`
 
-            await sendEmail({
-              to: email,
-              subject: 'Your concussion education portal account is ready',
-              headers: {
-                'List-Unsubscribe': `<${unsubscribeUrl}>`,
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-              },
-              html: buildWelcomeEmail(escapeHtml(name), loginLink, preseasonLink, unsubscribeUrl),
-              tags: [
-                { name: 'sequence', value: 'scat-mastery' },
-                { name: 'day', value: '0' },
-                { name: 'source', value: 'squarespace-sync' },
-              ],
-            })
+              // Record audit key BEFORE sending so a crash + re-run won't double-send
+              await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
 
-            // Record audit key so cron won't re-send Day 0
-            await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
-            emailed++
+              await sendEmail({
+                to: email,
+                subject: 'Your concussion education portal account is ready',
+                headers: {
+                  'List-Unsubscribe': `<${unsubscribeUrl}>`,
+                  'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                },
+                html: buildWelcomeEmail(escapeHtml(name), loginLink, preseasonLink, unsubscribeUrl),
+                tags: [
+                  { name: 'sequence', value: 'scat-mastery' },
+                  { name: 'day', value: '0' },
+                  { name: 'source', value: 'squarespace-sync' },
+                ],
+              })
+
+              emailed++
+            }
           }
 
-          console.log(`[SS Sync] Created${skipEmails ? '' : ' + emailed'}: ${email}`)
+          console.log(`[SS Sync] Created${isRecent ? ' + emailed' : ' (silent)'}: ${email}`)
         } catch (err) {
           console.error(`[SS Sync] Error processing ${email}:`, err)
           errors++
