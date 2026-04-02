@@ -113,10 +113,13 @@ export async function GET(request: Request) {
     let totalFetched = 0
 
     // Fetch profiles sorted by createdOn descending (newest first)
-    // Stop when we hit profiles older than 30 days or already in our DB
+    // Stop when we hit profiles older than lookback window or already in our DB
+    // Use ?days=N to override default 30-day lookback (e.g. ?days=999 for full history)
+    const lookbackDays = Math.min(Number(url.searchParams.get('days')) || 30, 9999)
+    const skipEmails = url.searchParams.get('noEmail') === '1'
     let cursor: string | null = null
     let keepGoing = true
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const cutoffDate = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000)
 
     while (keepGoing) {
       const url = cursor
@@ -152,9 +155,9 @@ export async function GET(request: Request) {
         const email = profile.email.trim().toLowerCase()
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) continue
 
-        // Stop if profile is older than 30 days
+        // Stop if profile is older than lookback window
         const profileDate = new Date(profile.createdOn)
-        if (profileDate < thirtyDaysAgo) {
+        if (profileDate < cutoffDate) {
           keepGoing = false
           break
         }
@@ -187,32 +190,34 @@ export async function GET(request: Request) {
 
           created++
 
-          // Send Day 0 welcome email (same as webhook handler)
-          const loginLink = generateMagicLinkJWT(userId, email, name, 'preview', baseUrl)
-          const unsubToken = generateUnsubscribeToken(email)
-          const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
-          const preseasonLink = `${baseUrl}/preseason`
+          if (!skipEmails) {
+            // Send Day 0 welcome email (same as webhook handler)
+            const loginLink = generateMagicLinkJWT(userId, email, name, 'preview', baseUrl)
+            const unsubToken = generateUnsubscribeToken(email)
+            const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
+            const preseasonLink = `${baseUrl}/preseason`
 
-          await sendEmail({
-            to: email,
-            subject: 'Your concussion education portal account is ready',
-            headers: {
-              'List-Unsubscribe': `<${unsubscribeUrl}>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            },
-            html: buildWelcomeEmail(escapeHtml(name), loginLink, preseasonLink, unsubscribeUrl),
-            tags: [
-              { name: 'sequence', value: 'scat-mastery' },
-              { name: 'day', value: '0' },
-              { name: 'source', value: 'squarespace-sync' },
-            ],
-          })
+            await sendEmail({
+              to: email,
+              subject: 'Your concussion education portal account is ready',
+              headers: {
+                'List-Unsubscribe': `<${unsubscribeUrl}>`,
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
+              html: buildWelcomeEmail(escapeHtml(name), loginLink, preseasonLink, unsubscribeUrl),
+              tags: [
+                { name: 'sequence', value: 'scat-mastery' },
+                { name: 'day', value: '0' },
+                { name: 'source', value: 'squarespace-sync' },
+              ],
+            })
 
-          // Record audit key so cron won't re-send Day 0
-          await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
-          emailed++
+            // Record audit key so cron won't re-send Day 0
+            await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+            emailed++
+          }
 
-          console.log(`[SS Sync] Created + emailed: ${email}`)
+          console.log(`[SS Sync] Created${skipEmails ? '' : ' + emailed'}: ${email}`)
         } catch (err) {
           console.error(`[SS Sync] Error processing ${email}:`, err)
           errors++
