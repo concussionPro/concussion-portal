@@ -33,6 +33,19 @@ export async function GET(request: NextRequest) {
     const { rows: userRows } = await sql`SELECT COUNT(*) as cnt FROM users`
     const userCount = Number(userRows[0].cnt)
 
+    // Abandoned checkouts
+    const { rows: abandonedRows } = await sql`
+      SELECT email, course_type, amount, abandoned_at, emails_sent, recovered
+      FROM abandoned_checkouts
+      ORDER BY abandoned_at DESC
+      LIMIT 20
+    `
+
+    // Squarespace sync stats
+    const { rows: sqRows } = await sql`
+      SELECT COUNT(*) as cnt FROM users WHERE signup_source = 'squarespace'
+    `
+
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
@@ -40,7 +53,9 @@ export async function GET(request: NextRequest) {
       metrics: {
         userCount,
         todayEvents,
+        squarespaceUsers: Number(sqRows[0].cnt),
       },
+      abandonedCheckouts: abandonedRows,
       systemHealth: {
         database: true,
         authentication: true,
