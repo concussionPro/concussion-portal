@@ -50,6 +50,14 @@ function verifySvixSignature(
   }
   if (!svixId || !svixTimestamp || !svixSignature) return false
 
+  // Reject stale webhooks (replay protection — 5 minute window)
+  const timestampSec = parseInt(svixTimestamp, 10)
+  const nowSec = Math.floor(Date.now() / 1000)
+  if (isNaN(timestampSec) || Math.abs(nowSec - timestampSec) > 300) {
+    console.warn(`Resend webhook: stale timestamp (${svixTimestamp})`)
+    return false
+  }
+
   // Svix secret starts with "whsec_" — strip prefix and base64-decode
   const secretBytes = Buffer.from(secret.replace('whsec_', ''), 'base64')
 

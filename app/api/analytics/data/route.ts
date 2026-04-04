@@ -243,6 +243,7 @@ function getUtmFromEvent(e: StoredEvent): Record<string, string> {
 function classifyChannel(e: StoredEvent): string {
   const utm = getUtmFromEvent(e);
   if (utm.gclid || utm.utm_medium === 'cpc' || utm.utm_medium === 'paidsearch') return 'Paid Search';
+  if (utm.fbclid) return 'Social';
   if (utm.utm_medium === 'email') return 'Email';
   if (utm.utm_medium === 'social' || utm.utm_medium === 'paidsocial') return 'Social';
   if (utm.utm_source) return 'Referral';

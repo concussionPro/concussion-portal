@@ -102,6 +102,15 @@ export async function POST(request: NextRequest) {
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
         break
 
+      // BNPL (Afterpay/Klarna): payment confirmed asynchronously after checkout.session.completed
+      case 'checkout.session.async_payment_succeeded':
+        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
+        break
+
+      case 'checkout.session.async_payment_failed':
+        console.log(`Async payment failed for session: ${(event.data.object as Stripe.Checkout.Session).id}`)
+        break
+
       case 'checkout.session.expired':
         await handleCheckoutExpired(event.data.object as Stripe.Checkout.Session)
         break
@@ -132,6 +141,13 @@ export async function POST(request: NextRequest) {
  * Handle successful checkout (one-time payment)
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  // BNPL (Afterpay/Klarna) fires checkout.session.completed with payment_status='unpaid'.
+  // Do NOT provision the account until payment is confirmed — async_payment_succeeded will re-call this.
+  if (session.payment_status !== 'paid') {
+    console.log(`Deferred payment — skipping provisioning for ${session.id} (status: ${session.payment_status})`)
+    return
+  }
+
   const customerEmail = session.customer_email || session.customer_details?.email
   const customerName = session.customer_details?.name || 'Student'
 
@@ -264,11 +280,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   // Step 4: Send magic link email — best effort, user can request new link from /login
   try {
-    // Use the higher of the two access levels — never encode a stale snapshot
-    // (existingUser is fetched before the upgrade, so its accessLevel is outdated)
-    const finalAccess = existingUser?.accessLevel === 'full-course' ? 'full-course' : accessLevel
-    const userName = existingUser?.name || customerName
-    const token = createMagicToken(userId, customerEmail, userName, finalAccess)
+    // Re-read user to get definitive post-upgrade access level (existingUser is stale)
+    const freshUser = await findUserByEmail(customerEmail)
+    const finalAccess = (freshUser?.accessLevel || accessLevel) as 'preview' | 'online-only' | 'full-course'
+    const userName = freshUser?.name || customerName
+    const token = createMagicToken(freshUser?.id || userId, customerEmail, userName, finalAccess)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
@@ -318,6 +334,17 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   }
 
   if (!email) return
+
+  // Check if user has unsubscribed
+  try {
+    const { rows: userRows } = await sql`
+      SELECT nurture_unsubscribed FROM users WHERE LOWER(email) = ${email.toLowerCase()} LIMIT 1
+    `
+    if (userRows.length > 0 && userRows[0].nurture_unsubscribed) {
+      console.log(`[Payment Failed] Skipped recovery email for ${email} — unsubscribed`)
+      return
+    }
+  } catch { /* user may not exist — proceed */ }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   const unsubToken = generateUnsubscribeToken(email)
@@ -501,13 +528,23 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     return
   }
 
-  // Determine downgrade level based on refund amount and current access.
-  // Workshop-upgrade refunds ($693/$903) should downgrade to online-only, not preview,
-  // because the user still has a separate online course purchase.
-  // Full-course or online-only refunds downgrade to preview.
+  // Determine downgrade level: workshop-upgrade refunds downgrade to online-only
+  // (user still has their original online course purchase), all others to preview.
+  // Look up courseType from Stripe metadata for accuracy (price heuristic as fallback).
   let downgradeLevel: 'preview' | 'online-only' = 'preview'
+  let courseType: string | undefined
+  try {
+    const { getStripe } = await import('@/lib/stripe')
+    if (charge.payment_intent && typeof charge.payment_intent === 'string') {
+      const pi = await getStripe().paymentIntents.retrieve(charge.payment_intent)
+      courseType = pi.metadata?.courseType
+    }
+  } catch { /* fallback to heuristic */ }
+
   const chargeAmount = (charge.amount || 0) / 100
-  const isWorkshopUpgradeRefund = user.accessLevel === 'full-course' && chargeAmount < 1000
+  const isWorkshopUpgradeRefund = courseType
+    ? courseType === 'workshop-upgrade'
+    : (user.accessLevel === 'full-course' && chargeAmount < 1000)
   if (isWorkshopUpgradeRefund) {
     downgradeLevel = 'online-only'
   }

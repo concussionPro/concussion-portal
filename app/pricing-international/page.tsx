@@ -100,7 +100,7 @@ function InternationalPricingContent() {
 
     // Capture UTM params for Stripe attribution
     const utm: Record<string, string> = {}
-    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'gclid']) {
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'gclid', 'fbclid']) {
       const val = params.get(key)
       if (val) utm[key] = val
     }
@@ -119,8 +119,8 @@ function InternationalPricingContent() {
     setError(null)
 
     trackEvent('checkout_start', { courseType: 'international-online', source: 'pricing_international' })
-    // Fire Google Ads enrol click conversion (Add to cart)
-    trackLeadConversion('vHoXCNKd6Y8cEJWXu_9C', PRICE_USD)
+    // Fire Google Ads enrol click conversion (Add to cart) — USD for international
+    trackLeadConversion('vHoXCNKd6Y8cEJWXu_9C', PRICE_USD, undefined, 'USD')
 
     try {
       const res = await fetch('/api/create-checkout', {
@@ -129,7 +129,14 @@ function InternationalPricingContent() {
         body: JSON.stringify({ courseType: 'international-online', ...(sessionEmail ? { email: sessionEmail } : {}), ...(promoCode ? { promoCode } : {}), ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}) }),
       })
 
-      const data = await res.json()
+      if (!res.ok) {
+        console.error('[checkout] API error:', res.status)
+        setError('Checkout unavailable — please try again or contact support.')
+        setLoading(false)
+        return
+      }
+
+      const data = await res.json().catch(() => ({ success: false, error: 'Unexpected server response' }))
 
       if (data.success && data.url) {
         window.location.href = data.url

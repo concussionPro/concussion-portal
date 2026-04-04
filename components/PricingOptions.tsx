@@ -51,7 +51,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
     }
     // Capture UTM params for Stripe attribution
     const utm: Record<string, string> = {}
-    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'gclid']) {
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'gclid', 'fbclid']) {
       const val = params.get(key)
       if (val) utm[key] = val
     }
@@ -97,7 +97,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         return
       }
 
-      const data = await res.json()
+      const data = await res.json().catch(() => ({ success: false, error: 'Unexpected server response' }))
 
       if (data.success && data.url) {
         window.location.href = data.url

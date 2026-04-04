@@ -431,6 +431,15 @@ async function sendCertificateEmail(opts: {
  * Deduped via audit log — safe to call multiple times.
  */
 async function sendCompletionUpsell(userId: string, email: string, name: string) {
+  // Respect unsubscribe preference
+  try {
+    const { rows } = await sql`SELECT nurture_unsubscribed FROM users WHERE id = ${userId} LIMIT 1`
+    if (rows.length > 0 && rows[0].nurture_unsubscribed) {
+      console.log(`[Completion Upsell] Skipped ${email} — unsubscribed`)
+      return
+    }
+  } catch { /* proceed if check fails */ }
+
   const auditKey = `scat_completion_upsell_${userId}`
   const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
   if (inserted === 0) {

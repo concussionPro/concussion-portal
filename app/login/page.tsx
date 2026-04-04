@@ -17,16 +17,20 @@ function LoginForm() {
   const [devMagicLink, setDevMagicLink] = useState('')
   const redirectParam = searchParams.get('redirect')
 
+  // Validate redirect to prevent open redirect attacks
+  const isValidRedirect = (path: string) =>
+    path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !path.includes('\n')
+
   // Redirect authenticated users — no need to log in again
   useEffect(() => {
     if (sessionLoading || !user) return
-    const dest = redirectParam || '/dashboard'
+    const dest = (redirectParam && isValidRedirect(redirectParam)) ? redirectParam : '/dashboard'
     router.replace(dest)
   }, [user, sessionLoading, router, redirectParam])
 
   // Persist redirect destination so it survives the magic link email flow
   useEffect(() => {
-    if (redirectParam) {
+    if (redirectParam && isValidRedirect(redirectParam)) {
       localStorage.setItem('login_redirect', redirectParam)
     }
   }, [redirectParam])

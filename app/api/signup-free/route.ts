@@ -112,11 +112,14 @@ export async function POST(request: NextRequest) {
     // Uses preview access — the /api/auth/session endpoint will upgrade the JWT
     // to the user's real access level on first use if they have paid access.
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const loginLink = generateMagicLinkJWT(userId, email, existingUser?.name || userName, 'preview', baseUrl)
+    const loginLink = generateMagicLinkJWT(userId, email.toLowerCase(), existingUser?.name || userName, 'preview', baseUrl)
 
     // Generate unsubscribe URL
     const unsubToken = generateUnsubscribeToken(email)
     const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
+
+    // Record Day 0 audit BEFORE sending so a crash + re-run won't double-send
+    await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
 
     // Send welcome email (Day 0 of nurture sequence)
     await sendEmail({
@@ -190,9 +193,6 @@ export async function POST(request: NextRequest) {
         { name: 'day', value: '0' },
       ],
     })
-
-    // Record Day 0 audit so cron won't re-send
-    await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
 
     const response = NextResponse.json({
       success: true,

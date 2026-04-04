@@ -560,6 +560,7 @@ export async function GET(request: Request) {
     for (const user of users) {
       if (user.accessLevel !== 'online-only' && user.accessLevel !== 'full-course') continue
       if (user.nurtureUnsubscribed) continue
+      if (user.progressEmailsOptedOut) continue
 
       try {
         const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`

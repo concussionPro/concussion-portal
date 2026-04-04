@@ -104,7 +104,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const referrer = payload.referrer ? String(payload.referrer).slice(0, 512) : null;
   const pagePath = String(payload.path).slice(0, 512);
   const search = payload.search ? String(payload.search).slice(0, 512) : null;
-  const eventData = JSON.stringify(payload.eventData ?? {});
+  const eventDataRaw = JSON.stringify(payload.eventData ?? {});
+  const eventData = eventDataRaw.length > 4096 ? '{}' : eventDataRaw;
 
   try {
     await sql`

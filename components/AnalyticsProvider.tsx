@@ -22,7 +22,7 @@ function getOrCreateSessionId(): string {
 // UTM Parameter Tracking
 // ---------------------------------------------------------------------------
 
-const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid'] as const;
+const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'] as const;
 const UTM_STORAGE_KEY = 'cea_utm';
 
 function captureUtmParams(): void {
@@ -274,10 +274,10 @@ export function AnalyticsProvider({
     (courseId: string, courseName: string): void => {
       trackEvent('enrol_click', { courseId, courseName });
 
-      // Google Ads conversion — hardcoded to avoid missing env var issues
+      // Google Ads enrol click conversion (ENROL_CLICK label, not FREE_SIGNUP)
       trackGtagConversion(
         'AW-17984048021',
-        'TVzUCLHT0IccEJWXu_9C',
+        'vHoXCNKd6Y8cEJWXu_9C',
         undefined,
         undefined
       );

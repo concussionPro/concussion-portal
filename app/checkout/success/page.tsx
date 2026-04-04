@@ -151,7 +151,7 @@ function CheckoutSuccessContent() {
         </div>
 
         {/* Early bird savings callout */}
-        {sessionData?.amountPaid && sessionData.amountPaid < CONFIG.COURSE.PRICE_REGULAR && isFullCourseType && (
+        {sessionData?.amountPaid && sessionData.amountPaid < CONFIG.COURSE.PRICE_REGULAR && isFullCourseType && (!sessionData?.currency || sessionData.currency === 'AUD') && (
           <div className="text-center mb-8 py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-200">
             <p className="text-sm font-semibold text-emerald-800">
               Early bird pricing — you saved ${(CONFIG.COURSE.PRICE_REGULAR - sessionData.amountPaid).toLocaleString()} AUD

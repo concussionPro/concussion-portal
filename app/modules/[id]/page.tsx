@@ -38,7 +38,7 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: Ap
               Professional CPD Course
             </h1>
             <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">14 AHPRA CPD points</strong>.
+              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 14 AHPRA CPD points</strong>.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -47,8 +47,8 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: Ap
                 <div className="text-sm text-slate-300">Complete Modules</div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                <div className="text-3xl font-bold text-amber-400 mb-1">14</div>
-                <div className="text-sm text-slate-300">CPD Points</div>
+                <div className="text-3xl font-bold text-amber-400 mb-1">Up to 14</div>
+                <div className="text-sm text-slate-300">8 online + 6 workshop</div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <Award className="w-8 h-8 text-amber-400 mx-auto mb-1" />
@@ -403,7 +403,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                 Unlock Full Course Access
               </h1>
               <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-                This module is part of the <strong className="text-white">complete 8-module course</strong>. Upgrade to get instant access to all modules, downloadable resources, and earn <strong className="text-white">14 CPD points</strong>.
+                This module is part of the <strong className="text-white">complete 8-module course</strong>. Upgrade to get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 14 CPD points</strong>.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -412,8 +412,8 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                   <div className="text-sm text-slate-300">Complete Modules</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                  <div className="text-3xl font-bold text-amber-400 mb-1">14</div>
-                  <div className="text-sm text-slate-300">CPD Points</div>
+                  <div className="text-3xl font-bold text-amber-400 mb-1">Up to 14</div>
+                  <div className="text-sm text-slate-300">8 online + 6 workshop</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                   <Award className="w-8 h-8 text-amber-400 mx-auto mb-1" />
@@ -425,12 +425,12 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                 href={CONFIG.SHOP_URL}
                 className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
               >
-                Upgrade Now — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
+                Upgrade Now — from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}
                 <ArrowRight className="w-5 h-5" />
               </a>
 
               <p className="text-slate-400 text-sm mt-6">
-                Includes full-day practical workshop + 8 online modules
+                Online from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()} · Full course with workshop from ${(new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}
               </p>
 
               <button

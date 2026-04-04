@@ -118,6 +118,10 @@ export async function trackEvent(
   eventData: Record<string, any> = {}
 ): Promise<void> {
   try {
+    // MUST call getVisitNumber() BEFORE creating session ID,
+    // because it checks for absence of session ID to detect new visits
+    const visitNumber = getVisitNumber()
+
     // Get or create session ID
     // Use same session key as AnalyticsProvider to avoid fragmenting session data
     let sessionId = sessionStorage.getItem('cea_session_id')
@@ -125,8 +129,6 @@ export async function trackEvent(
       sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
       sessionStorage.setItem('cea_session_id', sessionId)
     }
-
-    const visitNumber = getVisitNumber()
     const firstReferrer = getFirstReferrer()
     const utmParams = getUtmParams()
     const firstUtm = getFirstUtm()
@@ -226,7 +228,7 @@ async function waitForGtag(timeoutMs = 5000): Promise<boolean> {
  * Track a lead conversion (free course signup, form download, interest registration)
  * Assign a value so Google's smart bidding can optimise for high-value leads.
  */
-export async function trackLeadConversion(label: string, value: number, email?: string) {
+export async function trackLeadConversion(label: string, value: number, email?: string, currency: string = 'AUD') {
   try {
     const ready = await waitForGtag()
     if (!ready) {
@@ -236,7 +238,7 @@ export async function trackLeadConversion(label: string, value: number, email?: 
     const params: Record<string, unknown> = {
       send_to: `${GA_CONVERSION_ID}/${label}`,
       value,
-      currency: 'AUD',
+      currency,
     }
     // Enhanced conversions — send SHA-256 hashed email for better attribution
     // Wrapped in try-catch so a hashing failure doesn't kill the conversion
