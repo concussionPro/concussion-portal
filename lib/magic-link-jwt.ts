@@ -27,14 +27,15 @@ interface TokenPayload {
 }
 
 // Create a signed token
-export function createMagicToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview'): string {
+// ttlMs defaults to 24 hours for login links; nurture email CTAs use 7 days
+export function createMagicToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview', ttlMs?: number): string {
   const payload: TokenPayload = {
     type: 'magic-link',
     userId,
     email,
     name,
     accessLevel,
-    exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+    exp: Date.now() + (ttlMs ?? 24 * 60 * 60 * 1000),
   }
 
   const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64url')

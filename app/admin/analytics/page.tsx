@@ -417,7 +417,7 @@ function buildUserInsights(
         type: 'warning',
         category: 'users',
         title: `${zeroPct.toFixed(0)}% of free users completed 0 modules`,
-        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 5 SCAT modules.`,
+        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 6 SCAT modules.`,
         metric: `${zeroPct.toFixed(0)}% inactive`,
         action: 'Send a reminder email to users who signed up but never started. Add onboarding nudges. Check if the first module is too intimidating.',
       })

@@ -78,11 +78,11 @@ function InternationalPricingContent() {
   const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
   const [sessionEmail, setSessionEmail] = useState<string | null>(null)
   useEffect(() => {
-    fetch('/api/enrollment-count')
+    fetch('/api/enrollment-count', { credentials: 'include' })
       .then(res => res.json())
       .then(data => { if (data.count > 0) setEnrollmentCount(data.count) })
       .catch(() => {})
-    fetch('/api/auth/session')
+    fetch('/api/auth/session', { credentials: 'include' })
       .then(res => res.json())
       .then(data => { if (data.user?.email) setSessionEmail(data.user.email) })
       .catch(() => {})
@@ -126,6 +126,7 @@ function InternationalPricingContent() {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ courseType: 'international-online', ...(sessionEmail ? { email: sessionEmail } : {}), ...(promoCode ? { promoCode } : {}), ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}) }),
       })
 
@@ -374,7 +375,7 @@ function InternationalPricingContent() {
             </Link>
 
             <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center">
-              No account needed — start learning in 30 seconds
+              Instant access — start learning in 30 seconds
             </p>
           </div>
 

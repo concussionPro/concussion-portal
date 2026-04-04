@@ -51,7 +51,15 @@ export async function GET(request: NextRequest) {
 
     const session = await retrieveCheckoutSession(sessionId)
 
-    if (!session || session.payment_status !== 'paid') {
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Session not found' },
+        { status: 400 }
+      )
+    }
+
+    // BNPL (Afterpay/Klarna) redirects with payment_status='unpaid' — still valid
+    if (session.payment_status !== 'paid' && session.payment_status !== 'unpaid') {
       return NextResponse.json(
         { success: false, error: 'Payment not completed' },
         { status: 400 }

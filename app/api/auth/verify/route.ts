@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
       console.error('Failed to update last login:', err)
     )
 
-    // Check if remember me is requested (explicit opt-in for security)
-    const rememberMe = searchParams.get('rememberMe') === 'true'
+    // Always use long-lived sessions — magic links are ephemeral anyway
+    const rememberMe = true
 
     // Create JWT session token (no Blob storage needed - instant!)
     const sessionToken = createJWTSession(

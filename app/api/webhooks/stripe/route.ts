@@ -217,7 +217,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     try {
       const { getEnrollmentCount } = await import('@/lib/users')
       const count = await getEnrollmentCount(workshopCity)
-      if (count === CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD) {
+      if (count >= CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD) {
         const cityLabel = workshopCity === 'byron-bay' ? 'Byron Bay' : workshopCity.charAt(0).toUpperCase() + workshopCity.slice(1)
         const adminEmail = CONFIG.CONTACT_EMAIL
         await sendEmail({

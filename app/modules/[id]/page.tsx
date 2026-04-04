@@ -86,7 +86,12 @@ export default function ModulePage() {
   const params = useParams()
   const router = useRouter()
   const moduleId = parseInt(params.id as string)
-  if (isNaN(moduleId)) {
+  const isValidModuleId = !isNaN(moduleId)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  const [userEmail, setUserEmail] = useState<string>('')
+
+  if (!isValidModuleId) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
@@ -96,9 +101,6 @@ export default function ModulePage() {
       </div>
     )
   }
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [checkingAuth, setCheckingAuth] = useState(true)
-  const [userEmail, setUserEmail] = useState<string>('')
 
   // Check authentication first
   useEffect(() => {

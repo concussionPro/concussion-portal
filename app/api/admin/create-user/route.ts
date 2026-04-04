@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       userId,
       accessLevel,
       emailSent,
+      magicLink,
     })
   } catch (error) {
     console.error('Admin create user error:', error)

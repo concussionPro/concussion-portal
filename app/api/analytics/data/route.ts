@@ -325,7 +325,7 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
       hasPricingView: sorted.some((e) => e.path === '/pricing' || e.path === '/pricing-international'),
       hasPreseasonRegister: sorted.some((e) => e.eventType === 'preseason_clinic_register'),
       hasPreseasonSubmit: sorted.some((e) => e.eventType === 'preseason_baseline_submit'),
-      hasEnrollClick: sorted.some((e) => e.eventType === 'enroll_button_click' || e.eventType === 'enrol_click' || e.eventType === 'checkout_start'),
+      hasEnrollClick: sorted.some((e) => e.eventType === 'enroll_button_click' || e.eventType === 'enrol_click' || e.eventType === 'checkout_start' || e.eventType === 'shop_click'),
     });
   }
 
@@ -968,7 +968,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   if (type === 'pageviews') {
-    const currentEvents = await getEventsForDateRange(currentDates);
+    const currentEvents = excludeServerEvents(await getEventsForDateRange(currentDates));
     const timeSeries = buildTimeSeries(currentEvents, currentDates);
     return NextResponse.json(timeSeries, {
       headers: { 'Cache-Control': 'no-store' },
@@ -976,7 +976,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   if (type === 'metrics') {
-    const currentEvents = await getEventsForDateRange(currentDates);
+    const currentEvents = excludeServerEvents(await getEventsForDateRange(currentDates));
     const metrics = buildMetrics(currentEvents, metricType);
     return NextResponse.json(metrics, {
       headers: { 'Cache-Control': 'no-store' },
