@@ -869,7 +869,7 @@ function buildTimeSeries(
     if (isPageView(e) && pvByDate.has(dateKey)) {
       pvByDate.set(dateKey, (pvByDate.get(dateKey) ?? 0) + 1);
     }
-    if (sessionsByDate.has(dateKey)) {
+    if (isPageView(e) && sessionsByDate.has(dateKey)) {
       sessionsByDate.get(dateKey)!.add(e.sessionId);
     }
   }

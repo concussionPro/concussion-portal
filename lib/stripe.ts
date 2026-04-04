@@ -130,7 +130,7 @@ export async function createCourseCheckoutSession({
     // Already discounted — no promo codes allowed
   } else if (promoCode) {
     try {
-      const promoCodes = await stripe.promotionCodes.list({ code: promoCode, active: true, limit: 1 })
+      const promoCodes = await stripe.promotionCodes.list({ code: promoCode.toUpperCase(), active: true, limit: 1 })
       if (promoCodes.data.length > 0) {
         discounts = [{ promotion_code: promoCodes.data[0].id }]
       } else {

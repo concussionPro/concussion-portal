@@ -592,6 +592,10 @@ export async function GET(request: Request) {
               to: user.email,
               subject: ALMOST_DONE_EMAIL.subject,
               html: almostDoneHtml,
+              tags: [
+                { name: 'sequence', value: 'almost-done' },
+                { name: 'trigger', value: 'progress-7of8' },
+              ],
               headers: {
                 'List-Unsubscribe': `<${unsubscribeUrl}>`,
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -759,7 +763,10 @@ async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
           console.log(`[Abandoned] Skipped ${checkout.email} — unsubscribed`)
           continue
         }
-      } catch { /* user may not exist — proceed */ }
+      } catch (err) {
+        console.error(`[Abandoned] Unsubscribe check failed for ${checkout.email}, skipping to be safe:`, err)
+        continue
+      }
 
       const unsubToken = generateUnsubscribeToken(checkout.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(checkout.email)}&token=${unsubToken}`
