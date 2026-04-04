@@ -501,12 +501,22 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     return
   }
 
-  // Downgrade to preview (free) access
+  // Determine downgrade level based on refund amount and current access.
+  // Workshop-upgrade refunds ($693/$903) should downgrade to online-only, not preview,
+  // because the user still has a separate online course purchase.
+  // Full-course or online-only refunds downgrade to preview.
+  let downgradeLevel: 'preview' | 'online-only' = 'preview'
+  const chargeAmount = (charge.amount || 0) / 100
+  const isWorkshopUpgradeRefund = user.accessLevel === 'full-course' && chargeAmount < 1000
+  if (isWorkshopUpgradeRefund) {
+    downgradeLevel = 'online-only'
+  }
+
   try {
     await sql`
-      UPDATE users SET access_level = 'preview' WHERE email = ${email.toLowerCase()}
+      UPDATE users SET access_level = ${downgradeLevel} WHERE email = ${email.toLowerCase()}
     `
-    console.log(`Downgraded ${email} to preview access after refund`)
+    console.log(`Downgraded ${email} to ${downgradeLevel} access after refund ($${chargeAmount})`)
   } catch (err) {
     console.error(`Failed to downgrade ${email} after refund:`, err)
   }

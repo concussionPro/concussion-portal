@@ -18,6 +18,7 @@ interface SessionData {
   courseType: string
   location: string
   amountPaid: number
+  currency?: string
 }
 
 function CheckoutSuccessContent() {
@@ -48,7 +49,8 @@ function CheckoutSuccessContent() {
             trackPurchaseConversion(
               data.session.amountPaid,
               sessionId!,
-              data.session.customerEmail
+              data.session.customerEmail,
+              data.session.currency
             )
             conversionFiredRef.current = true
           }

@@ -272,7 +272,7 @@ export function trackFreeCourseCompletion(email: string) {
 /**
  * Track purchase conversion with enhanced conversion data
  */
-export async function trackPurchaseConversion(value: number, transactionId: string, email?: string) {
+export async function trackPurchaseConversion(value: number, transactionId: string, email?: string, currency?: string) {
   try {
     const ready = await waitForGtag()
     if (!ready) {
@@ -282,7 +282,7 @@ export async function trackPurchaseConversion(value: number, transactionId: stri
     const params: Record<string, unknown> = {
       send_to: `${GA_CONVERSION_ID}/${CONVERSION_LABELS.PURCHASE}`,
       value,
-      currency: 'AUD',
+      currency: currency || 'AUD',
       transaction_id: transactionId,
     }
     if (email) {

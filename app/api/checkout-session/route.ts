@@ -73,14 +73,23 @@ export async function GET(request: NextRequest) {
         courseType,
         location: session.metadata?.location || '',
         amountPaid: (session.amount_total || 0) / 100,
+        currency: (session.currency || 'aud').toUpperCase(),
       },
     })
 
-    // Auto-login: set session cookie so user can access course immediately
-    // No more "check your email" friction for paid customers
-    if (customerEmail && !request.cookies.get('session')?.value) {
+    // Auto-login + JWT refresh after purchase
+    // - Retries user lookup if webhook hasn't created/upgraded the user yet (#11)
+    // - Always sets fresh JWT so access level reflects the purchase (#13)
+    if (customerEmail) {
       try {
-        const user = await findUserByEmail(customerEmail)
+        let user = await findUserByEmail(customerEmail)
+        // Webhook may still be processing — retry up to 3 times with 1.5s delay
+        if (!user) {
+          for (let attempt = 0; attempt < 3 && !user; attempt++) {
+            await new Promise(r => setTimeout(r, 1500))
+            user = await findUserByEmail(customerEmail)
+          }
+        }
         if (user) {
           const accessLevel = user.accessLevel as 'preview' | 'online-only' | 'full-course'
           const sessionToken = createJWTSession(user.id, user.email, user.name || customerName, accessLevel, true)

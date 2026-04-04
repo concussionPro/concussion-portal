@@ -82,7 +82,7 @@ function InternationalPricingContent() {
       .then(res => res.json())
       .then(data => { if (data.count > 0) setEnrollmentCount(data.count) })
       .catch(() => {})
-    fetch('/api/auth/me')
+    fetch('/api/auth/session')
       .then(res => res.json())
       .then(data => { if (data.user?.email) setSessionEmail(data.user.email) })
       .catch(() => {})
