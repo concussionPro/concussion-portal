@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { put, get as getBlob, list as listBlobs } from '@vercel/blob'
+import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { verifySessionToken } from '@/lib/jwt-session'
-
-interface ReadyToTrainRegistration {
-  email: string
-  name: string
-  city: string
-  registeredAt: string
-  completedAt: string
-}
 
 const VALID_CITIES = ['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa'] as const
 type ValidCity = (typeof VALID_CITIES)[number]
@@ -27,6 +19,7 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
 function checkRateLimit(key: string, maxAttempts: number, windowMs: number): boolean {
   const now = Date.now()
+  if (rateLimitMap.size > 1000) rateLimitMap.clear()
   const entry = rateLimitMap.get(key)
   if (!entry || now > entry.resetAt) {
     rateLimitMap.set(key, { count: 1, resetAt: now + windowMs })
@@ -40,8 +33,8 @@ function checkRateLimit(key: string, maxAttempts: number, windowMs: number): boo
 /**
  * POST /api/ready-to-train
  *
- * Registers a user who has completed all online modules into the
- * "ready to train" pool for a specific city.
+ * Registers an online-only user who has completed all modules into the
+ * "ready to upgrade" pool for a specific city.
  * Body: { city }
  */
 export async function POST(request: NextRequest) {
@@ -79,30 +72,14 @@ export async function POST(request: NextRequest) {
 
     const cityLabel = CITY_LABELS[city as ValidCity]
 
-    // Load existing registrations for this city
-    const blobPath = `ready-to-train-${city}.json`
-    let registrations: ReadyToTrainRegistration[] = []
+    // Insert into Postgres (ON CONFLICT = duplicate)
+    const { rowCount } = await sql`
+      INSERT INTO workshop_ready_to_train (email, name, city)
+      VALUES (${session.email}, ${session.name}, ${city})
+      ON CONFLICT (email, city) DO NOTHING
+    `
 
-    try {
-      let blob = await getBlob(blobPath, { access: 'private' })
-      if (!blob) {
-        const prefix = blobPath.replace('.json', '')
-        const { blobs } = await listBlobs({ prefix })
-        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-        if (sorted.length > 0) {
-          blob = await getBlob(sorted[0].url, { access: 'private' })
-        }
-      }
-      if (blob && blob.statusCode === 200 && blob.stream) {
-        const text = await new Response(blob.stream).text()
-        registrations = JSON.parse(text)
-      }
-    } catch (err) {
-      console.warn('Could not load existing ready-to-train registrations:', err)
-    }
-
-    // Check for duplicate
-    if (registrations.some(r => r.email === session.email)) {
+    if (rowCount === 0) {
       return NextResponse.json({
         success: true,
         message: `You're already in the ${cityLabel} pool. We'll notify you when 8+ clinicians are ready.`,
@@ -110,29 +87,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Add new registration
-    const newRegistration: ReadyToTrainRegistration = {
-      email: session.email,
-      name: session.name,
-      city,
-      registeredAt: new Date().toISOString(),
-      completedAt: new Date().toISOString(),
-    }
-    registrations.push(newRegistration)
+    // Get total count for this city
+    const { rows: countRows } = await sql`
+      SELECT COUNT(*)::int AS count FROM workshop_ready_to_train WHERE city = ${city}
+    `
+    const totalInPool = countRows[0]?.count || 1
 
-    // Save to Vercel Blob
-    try {
-      await put(blobPath, JSON.stringify(registrations, null, 2), {
-        access: 'private',
-        contentType: 'application/json',
-        addRandomSuffix: false,
-      })
-    } catch (err) {
-      console.error('Failed to save ready-to-train registration to Blob:', err)
-      return NextResponse.json({ error: 'Failed to save registration. Please try again.' }, { status: 500 })
-    }
-
-    // Send confirmation email to user (best effort — blob write already succeeded)
+    // Send confirmation email to user (best effort)
     try {
       await sendEmail({
         to: session.email,
@@ -151,8 +112,8 @@ export async function POST(request: NextRequest) {
     try {
       await sendEmail({
         to: 'zac@concussion-education-australia.com',
-        subject: `Ready to Train: ${cityLabel} — ${session.name} (${registrations.length} total)`,
-        html: buildNotificationEmail(session.name, session.email, cityLabel, registrations.length),
+        subject: `Ready to Train: ${cityLabel} — ${session.name} (${totalInPool} total)`,
+        html: buildNotificationEmail(session.name, session.email, cityLabel, totalInPool),
         tags: [
           { name: 'type', value: 'ready-to-train-notification' },
           { name: 'city', value: city },
@@ -162,12 +123,12 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send ready-to-train notification email:', emailErr)
     }
 
-    console.log(`✅ Ready-to-train: ${session.email} for ${cityLabel} (total: ${registrations.length})`)
+    console.log(`Ready-to-train: ${session.email} for ${cityLabel} (total: ${totalInPool})`)
 
     return NextResponse.json({
       success: true,
       message: `You're in the ${cityLabel} pool! We'll notify you when 8+ clinicians are ready.`,
-      totalInPool: registrations.length,
+      totalInPool,
     })
   } catch (error) {
     console.error('Ready-to-train error:', error)
@@ -226,7 +187,7 @@ function buildNotificationEmail(name: string, email: string, city: string, total
   const threshold = totalCount >= 8
     ? `<div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 16px;">
         <p style="font-size: 14px; color: #166534; margin: 0; font-weight: 600;">
-          🎉 ${city} has reached ${totalCount} people — ready to schedule a workshop!
+          ${city} has reached ${totalCount} people — ready to schedule a workshop!
         </p>
       </div>`
     : `<p style="font-size: 13px; color: #64748b; margin-top: 16px;">

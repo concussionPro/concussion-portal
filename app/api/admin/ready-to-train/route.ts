@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { list as listBlobs } from '@vercel/blob'
 import crypto from 'crypto'
+import { sql } from '@/lib/db'
 import { getEnrollmentsByLocation, getEnrollmentCount } from '@/lib/users'
 import { CONFIG } from '@/lib/config'
 
@@ -31,7 +31,11 @@ function isAdminAuthorized(request: NextRequest): boolean {
 
 /**
  * GET /api/admin/ready-to-train
- * Returns all ready-to-train pool data grouped by city.
+ *
+ * Returns workshop pipeline data in 3 clear sections:
+ * 1. paidEnrollments — full-course users who paid (confirmed attendees)
+ * 2. readyToUpgrade — online-only users who completed modules and chose a city
+ * 3. interest — pre-purchase interest registrations (browsing, not bought yet)
  */
 export async function GET(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
@@ -39,55 +43,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { blobs } = await listBlobs()
-
-    // Find all ready-to-train blob files
-    const rttBlobs = blobs.filter(b => b.pathname.startsWith('ready-to-train-'))
-
-    // Resolve city slug from pathname, stripping Vercel Blob random suffixes
-    // e.g. "ready-to-train-sydney-9zXOpar3EqibT4H8FCk2Q2n.json" → "sydney"
-    const knownCities = Object.keys(CITY_LABELS).sort((a, b) => b.length - a.length)
-    function resolveCitySlug(pathname: string): string {
-      const raw = pathname.replace('ready-to-train-', '').replace('.json', '')
-      return knownCities.find(key => raw === key || raw.startsWith(key + '-')) || raw
-    }
-
-    // Group by resolved city (take most recent blob per city)
-    const blobsByCity = new Map<string, typeof blobs[0]>()
-    for (const blob of rttBlobs) {
-      const city = resolveCitySlug(blob.pathname)
-      const existing = blobsByCity.get(city)
-      if (!existing || new Date(blob.uploadedAt) > new Date(existing.uploadedAt)) {
-        blobsByCity.set(city, blob)
-      }
-    }
-
-    const cities = []
-    let totalCount = 0
-
-    for (const [citySlug, blob] of blobsByCity) {
-      try {
-        const res = await fetch(`${blob.url}?t=${Date.now()}`, { cache: 'no-store' })
-        const registrations = await res.json()
-        const count = registrations.length
-
-        cities.push({
-          city: citySlug,
-          label: CITY_LABELS[citySlug] || citySlug,
-          count,
-          registrations,
-        })
-        totalCount += count
-      } catch (err) {
-        console.warn(`Failed to read ${citySlug}:`, err)
-      }
-    }
-
-    // Sort by count descending
-    cities.sort((a, b) => b.count - a.count)
-
-    // Paid threshold data — per-city full-course enrollments from Postgres
-    const paidThreshold: Array<{
+    // 1. Paid enrollments (from users table — confirmed workshop attendees)
+    const paidEnrollments: Array<{
       city: string; label: string; count: number; threshold: number;
       registrants: Array<{ name: string; email: string; createdAt: string }>
     }> = []
@@ -96,7 +53,7 @@ export async function GET(request: NextRequest) {
     for (const loc of Object.values(CONFIG.LOCATIONS)) {
       const count = await getEnrollmentCount(loc.slug)
       const registrants = await getEnrollmentsByLocation(loc.slug)
-      paidThreshold.push({
+      paidEnrollments.push({
         city: loc.slug,
         label: loc.city,
         count,
@@ -106,17 +63,91 @@ export async function GET(request: NextRequest) {
       paidTotal += count
     }
 
+    // 2. Ready to upgrade (online-only users who completed modules)
+    const { rows: rttRows } = await sql`
+      SELECT city, email, name, registered_at, completed_at
+      FROM workshop_ready_to_train
+      ORDER BY city, registered_at DESC
+    `
+
+    const readyByCity = new Map<string, Array<{ email: string; name: string; registeredAt: string; completedAt: string }>>()
+    for (const r of rttRows) {
+      const city = r.city
+      if (!readyByCity.has(city)) readyByCity.set(city, [])
+      readyByCity.get(city)!.push({
+        email: r.email,
+        name: r.name,
+        registeredAt: r.registered_at instanceof Date ? r.registered_at.toISOString() : r.registered_at,
+        completedAt: r.completed_at instanceof Date ? r.completed_at.toISOString() : r.completed_at,
+      })
+    }
+
+    const readyToUpgrade: Array<{
+      city: string; label: string; count: number;
+      registrations: Array<{ email: string; name: string; registeredAt: string; completedAt: string }>
+    }> = []
+    let readyTotal = 0
+
+    for (const [city, registrations] of readyByCity) {
+      readyToUpgrade.push({
+        city,
+        label: CITY_LABELS[city] || city,
+        count: registrations.length,
+        registrations,
+      })
+      readyTotal += registrations.length
+    }
+    readyToUpgrade.sort((a, b) => b.count - a.count)
+
+    // 3. Interest registrations (pre-purchase browsing)
+    const { rows: interestRows } = await sql`
+      SELECT city, email, name, source, created_at
+      FROM workshop_interest
+      ORDER BY city, created_at DESC
+    `
+
+    const interestByCity = new Map<string, Array<{ email: string; name: string; source: string; createdAt: string }>>()
+    for (const r of interestRows) {
+      const city = r.city
+      if (!interestByCity.has(city)) interestByCity.set(city, [])
+      interestByCity.get(city)!.push({
+        email: r.email,
+        name: r.name,
+        source: r.source,
+        createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+      })
+    }
+
+    const interest: Array<{
+      city: string; label: string; count: number;
+      registrations: Array<{ email: string; name: string; source: string; createdAt: string }>
+    }> = []
+    let interestTotal = 0
+
+    for (const [city, registrations] of interestByCity) {
+      interest.push({
+        city,
+        label: CITY_LABELS[city] || city,
+        count: registrations.length,
+        registrations,
+      })
+      interestTotal += registrations.length
+    }
+    interest.sort((a, b) => b.count - a.count)
+
     return NextResponse.json({
       success: true,
-      totalCount,
-      cities,
-      paidThreshold,
+      paidEnrollments,
       paidTotal,
+      readyToUpgrade,
+      readyTotal,
+      interest,
+      interestTotal,
     })
   } catch (error) {
     console.error('Admin ready-to-train API error:', error)
     return NextResponse.json(
-      { error: 'Failed to load ready-to-train data' },
+      { error: 'Failed to load workshop pipeline data' },
       { status: 500 }
     )
   }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { put, get as getBlob, list as listBlobs } from '@vercel/blob'
+import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 
@@ -8,6 +8,7 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
 function checkRateLimit(key: string, limit: number): boolean {
   const now = Date.now()
+  if (rateLimitMap.size > 1000) rateLimitMap.clear()
   const entry = rateLimitMap.get(key)
   if (!entry || now > entry.resetAt) {
     rateLimitMap.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 })
@@ -16,13 +17,6 @@ function checkRateLimit(key: string, limit: number): boolean {
   if (entry.count >= limit) return false
   entry.count++
   return true
-}
-
-interface InterestRegistration {
-  email: string
-  name: string
-  city: string
-  registeredAt: string
 }
 
 // Derive valid cities from a single source of truth
@@ -41,7 +35,7 @@ const CITY_LABELS: Record<ValidCity, string> = {
  * POST /api/register-interest
  *
  * Registers interest for a workshop location (especially TBA dates).
- * Stores in Vercel Blob, sends confirmation to registrant, notifies Zac.
+ * Stores in Postgres workshop_interest table, sends confirmation + notification.
  *
  * Body: { email, name, city }
  */
@@ -77,31 +71,14 @@ export async function POST(request: NextRequest) {
     const cleanName = name.trim()
     const cityLabel = CITY_LABELS[city as ValidCity]
 
-    // Load existing registrations for this city
-    const blobPath = `interest-${city}.json`
-    let registrations: InterestRegistration[] = []
+    // Insert into Postgres (ON CONFLICT = duplicate)
+    const { rowCount } = await sql`
+      INSERT INTO workshop_interest (email, name, city, source)
+      VALUES (${cleanEmail}, ${cleanName}, ${city}, 'pricing_page')
+      ON CONFLICT (email, city) DO NOTHING
+    `
 
-    try {
-      let blob = await getBlob(blobPath, { access: 'private' })
-      if (!blob) {
-        const prefix = blobPath.replace('.json', '')
-        const { blobs } = await listBlobs({ prefix })
-        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-        if (sorted.length > 0) {
-          blob = await getBlob(sorted[0].url, { access: 'private' })
-        }
-      }
-      if (blob && blob.statusCode === 200 && blob.stream) {
-        const text = await new Response(blob.stream).text()
-        registrations = JSON.parse(text)
-      }
-    } catch (err) {
-      console.warn('Could not load existing registrations:', err)
-    }
-
-    // Check for duplicate
-    const alreadyRegistered = registrations.some(r => r.email === cleanEmail)
-    if (alreadyRegistered) {
+    if (rowCount === 0) {
       return NextResponse.json({
         success: true,
         message: "You're already registered. We'll notify you when the date is confirmed.",
@@ -109,28 +86,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Add new registration
-    const newRegistration: InterestRegistration = {
-      email: cleanEmail,
-      name: cleanName,
-      city,
-      registeredAt: new Date().toISOString(),
-    }
-    registrations.push(newRegistration)
+    // Get total count for this city
+    const { rows: countRows } = await sql`
+      SELECT COUNT(*)::int AS count FROM workshop_interest WHERE city = ${city}
+    `
+    const totalCount = countRows[0]?.count || 1
 
-    // Save to Vercel Blob
-    try {
-      await put(blobPath, JSON.stringify(registrations, null, 2), {
-        access: 'private',
-        contentType: 'application/json',
-        addRandomSuffix: false,
-      })
-    } catch (err) {
-      console.error('Failed to save registration to Blob:', err)
-      return NextResponse.json({ error: 'Failed to save registration. Please try again.' }, { status: 500 })
-    }
-
-    // Send confirmation email to registrant (best effort — blob write already succeeded)
+    // Send confirmation email to registrant (best effort)
     try {
       await sendEmail({
         to: cleanEmail,
@@ -150,7 +112,7 @@ export async function POST(request: NextRequest) {
       await sendEmail({
         to: 'zac@concussion-education-australia.com',
         subject: `New Interest: ${cityLabel} Workshop — ${cleanName}`,
-        html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, registrations.length),
+        html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, totalCount),
         tags: [
           { name: 'type', value: 'interest-notification' },
           { name: 'city', value: city },
@@ -160,7 +122,7 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send interest notification email:', emailErr)
     }
 
-    console.log(`Interest registered: ${cleanEmail} for ${cityLabel} (total: ${registrations.length})`)
+    console.log(`Interest registered: ${cleanEmail} for ${cityLabel} (total: ${totalCount})`)
 
     return NextResponse.json({
       success: true,

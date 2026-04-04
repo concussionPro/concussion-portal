@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { put, get as getBlob, list as listBlobs } from '@vercel/blob'
+import { sql } from '@/lib/db'
 import { sendEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { createUser } from '@/lib/users'
@@ -75,44 +75,15 @@ export async function POST(request: Request) {
 
     // Rate limit already incremented atomically above
 
-    // Persist to Blob storage for admin dashboard
+    // Persist to Postgres for admin dashboard
     try {
-      let clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }> = []
-      try {
-        let blob = await getBlob('preseason-clinics.json', { access: 'private' })
-        if (!blob) {
-          const { blobs } = await listBlobs({ prefix: 'preseason-clinics' })
-          const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-          if (sorted.length > 0) {
-            blob = await getBlob(sorted[0].url, { access: 'private' })
-          }
-        }
-        if (blob && blob.statusCode === 200 && blob.stream) {
-          const text = await new Response(blob.stream).text()
-          clinics = JSON.parse(text)
-        }
-      } catch (err) {
-        console.warn('Could not load existing preseason clinics blob:', err)
-      }
-
-      // Avoid duplicates by code
-      if (!clinics.some(c => c.code === code)) {
-        clinics.push({
-          clinicName,
-          contactName,
-          email: email.toLowerCase(),
-          code,
-          createdAt: new Date().toISOString(),
-        })
-
-        await put('preseason-clinics.json', JSON.stringify(clinics, null, 2), {
-          access: 'private',
-          contentType: 'application/json',
-          addRandomSuffix: false,
-        })
-      }
+      await sql`
+        INSERT INTO preseason_clinics (clinic_name, contact_name, email, code)
+        VALUES (${clinicName}, ${contactName}, ${email.toLowerCase()}, ${code})
+        ON CONFLICT (code) DO NOTHING
+      `
     } catch (err) {
-      console.error('Failed to persist clinic registration to Blob:', err)
+      console.error('Failed to persist clinic registration to Postgres:', err)
     }
 
     // Add to user list for nurture emails (won't duplicate if already exists)

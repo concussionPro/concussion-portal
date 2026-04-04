@@ -1,28 +1,59 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, MapPin, Calendar, Mail, Download } from 'lucide-react'
+import { Users, MapPin, Calendar, Mail, Download, CheckCircle, Clock, Eye } from 'lucide-react'
 
-interface Registration {
+interface PaidRegistrant {
+  name: string
+  email: string
+  createdAt: string
+}
+
+interface PaidCity {
+  city: string
+  label: string
+  count: number
+  threshold: number
+  registrants: PaidRegistrant[]
+}
+
+interface ReadyRegistration {
   email: string
   name: string
-  city: string
   registeredAt: string
   completedAt: string
 }
 
-interface CityData {
+interface ReadyCity {
   city: string
   label: string
   count: number
-  registrations: Registration[]
+  registrations: ReadyRegistration[]
+}
+
+interface InterestRegistration {
+  email: string
+  name: string
+  source: string
+  createdAt: string
+}
+
+interface InterestCity {
+  city: string
+  label: string
+  count: number
+  registrations: InterestRegistration[]
 }
 
 const TARGET = 8
 
 export default function AdminReadyToTrainPage() {
-  const [cities, setCities] = useState<CityData[]>([])
-  const [totalCount, setTotalCount] = useState(0)
+  const [paidEnrollments, setPaidEnrollments] = useState<PaidCity[]>([])
+  const [paidTotal, setPaidTotal] = useState(0)
+  const [readyToUpgrade, setReadyToUpgrade] = useState<ReadyCity[]>([])
+  const [readyTotal, setReadyTotal] = useState(0)
+  const [interest, setInterest] = useState<InterestCity[]>([])
+  const [interestTotal, setInterestTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -44,13 +75,17 @@ export default function AdminReadyToTrainPage() {
       })
       const data = await res.json()
       if (res.ok && data.success) {
-        setCities(data.cities)
-        setTotalCount(data.totalCount)
+        setPaidEnrollments(data.paidEnrollments || [])
+        setPaidTotal(data.paidTotal || 0)
+        setReadyToUpgrade(data.readyToUpgrade || [])
+        setReadyTotal(data.readyTotal || 0)
+        setInterest(data.interest || [])
+        setInterestTotal(data.interestTotal || 0)
       } else {
         setError(data.error || 'Failed to load data')
       }
     } catch {
-      setError('Failed to fetch ready-to-train data')
+      setError('Failed to fetch workshop pipeline data')
     } finally {
       setLoading(false)
     }
@@ -58,23 +93,44 @@ export default function AdminReadyToTrainPage() {
 
   const exportCSV = () => {
     const rows = [
-      ['City', 'Name', 'Email', 'Registered', 'Completed'],
-      ...cities.flatMap(c =>
+      ['Section', 'City', 'Name', 'Email', 'Date', 'Source'],
+      ...paidEnrollments.flatMap(c =>
+        c.registrants.map(r => [
+          'Paid',
+          c.label,
+          r.name,
+          r.email,
+          new Date(r.createdAt).toLocaleDateString(),
+          'stripe',
+        ])
+      ),
+      ...readyToUpgrade.flatMap(c =>
         c.registrations.map(r => [
+          'Ready to Upgrade',
           c.label,
           r.name,
           r.email,
           new Date(r.registeredAt).toLocaleDateString(),
-          r.completedAt ? new Date(r.completedAt).toLocaleDateString() : '',
+          'completed-online',
+        ])
+      ),
+      ...interest.flatMap(c =>
+        c.registrations.map(r => [
+          'Interest',
+          c.label,
+          r.name,
+          r.email,
+          new Date(r.createdAt).toLocaleDateString(),
+          r.source,
         ])
       ),
     ]
-    const csv = rows.map(row => row.join(',')).join('\n')
+    const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `ready-to-train-${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `workshop-pipeline-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
   }
 
@@ -83,7 +139,7 @@ export default function AdminReadyToTrainPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-slate-600">Loading pool data...</p>
+          <p className="text-slate-600">Loading pipeline data...</p>
         </div>
       </div>
     )
@@ -102,9 +158,9 @@ export default function AdminReadyToTrainPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Ready to Train Pool</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Workshop Pipeline</h1>
           <p className="text-slate-600">
-            {totalCount} total registrations across {cities.length} cities
+            {paidTotal} paid &middot; {readyTotal} ready to upgrade &middot; {interestTotal} interested
           </p>
         </div>
         <button
@@ -116,113 +172,198 @@ export default function AdminReadyToTrainPage() {
         </button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {cities.map(city => {
-          const progress = Math.min((city.count / TARGET) * 100, 100)
-          const isReady = city.count >= TARGET
-
-          return (
-            <div
-              key={city.city}
-              className={`bg-white rounded-lg p-6 shadow-sm border ${
-                isReady ? 'border-green-300 bg-green-50' : 'border-slate-200'
-              }`}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <MapPin className={`w-5 h-5 ${isReady ? 'text-green-600' : 'text-blue-600'}`} />
-                <h3 className="text-lg font-bold text-slate-900">{city.label}</h3>
-              </div>
-              <p className="text-3xl font-bold text-slate-900 mb-2">
-                {city.count} <span className="text-base font-normal text-slate-500">/ {TARGET}</span>
-              </p>
-              <div className="w-full bg-slate-200 rounded-full h-2.5 mb-1">
-                <div
-                  className={`h-2.5 rounded-full transition-all ${
-                    isReady ? 'bg-green-500' : 'bg-blue-500'
-                  }`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="text-xs text-slate-500">
-                {isReady
-                  ? 'Ready to schedule workshop!'
-                  : `${TARGET - city.count} more needed`}
-              </p>
-            </div>
-          )
-        })}
-
-        {/* Total card */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-          <div className="flex items-center gap-3 mb-3">
-            <Users className="w-5 h-5 text-purple-600" />
-            <h3 className="text-lg font-bold text-slate-900">Total</h3>
-          </div>
-          <p className="text-3xl font-bold text-slate-900">{totalCount}</p>
-          <p className="text-xs text-slate-500 mt-2">Across all cities</p>
+      {/* ═══════════════════ SECTION 1: PAID ENROLLMENTS ═══════════════════ */}
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <CheckCircle className="w-5 h-5 text-green-600" />
+          <h2 className="text-xl font-bold text-slate-900">Paid Enrollments</h2>
+          <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+            {paidTotal} confirmed
+          </span>
         </div>
-      </div>
+        <p className="text-sm text-slate-500 mb-4">
+          Full-course users who have paid. {TARGET} per city needed to confirm a workshop date.
+        </p>
 
-      {/* Tables per city */}
-      {cities.map(city => (
-        <div key={city.city} className="bg-white rounded-lg shadow-sm border border-slate-200 mb-6 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <h2 className="text-lg font-bold text-slate-900">
-              {city.label} ({city.count})
-            </h2>
-          </div>
-          <div className="overflow-x-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          {paidEnrollments.map(city => {
+            const progress = Math.min((city.count / city.threshold) * 100, 100)
+            const isReady = city.count >= city.threshold
+
+            return (
+              <div
+                key={city.city}
+                className={`bg-white rounded-lg p-5 shadow-sm border ${
+                  isReady ? 'border-green-300 bg-green-50' : 'border-slate-200'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className={`w-4 h-4 ${isReady ? 'text-green-600' : 'text-green-500'}`} />
+                  <h3 className="text-base font-bold text-slate-900">{city.label}</h3>
+                </div>
+                <p className="text-2xl font-bold text-slate-900 mb-2">
+                  {city.count} <span className="text-sm font-normal text-slate-500">/ {city.threshold}</span>
+                </p>
+                <div className="w-full bg-slate-200 rounded-full h-2 mb-1">
+                  <div
+                    className={`h-2 rounded-full transition-all ${isReady ? 'bg-green-500' : 'bg-green-400'}`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-slate-500">
+                  {isReady ? 'Ready to schedule!' : `${city.threshold - city.count} more needed`}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Paid registrants table */}
+        {paidEnrollments.filter(c => c.count > 0).map(city => (
+          <div key={city.city} className="bg-white rounded-lg shadow-sm border border-green-200 mb-4 overflow-hidden">
+            <div className="px-6 py-3 border-b border-green-100 bg-green-50">
+              <h3 className="text-sm font-bold text-green-800">{city.label} — {city.count} paid</h3>
+            </div>
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Name</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Registered</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Completed</th>
+                  <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Name</th>
+                  <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Email</th>
+                  <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Enrolled</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
-                {city.registrations.map((r, i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{r.name}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-700">{r.email}</span>
+              <tbody className="divide-y divide-slate-100">
+                {city.registrants.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="px-6 py-3 text-sm font-medium text-slate-900">{r.name}</td>
+                    <td className="px-6 py-3 text-sm text-slate-700">
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
+                        {r.email}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-600">
-                          {new Date(r.registeredAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {r.completedAt ? new Date(r.completedAt).toLocaleDateString() : '—'}
-                    </td>
+                    <td className="px-6 py-3 text-sm text-slate-600">{new Date(r.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {city.registrations.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-slate-500 text-sm">No registrations yet</p>
-            </div>
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
 
-      {cities.length === 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 text-center py-16">
-          <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">No ready-to-train registrations yet</p>
-          <p className="text-slate-400 text-sm mt-1">Registrations will appear here when users join the pool</p>
+      {/* ═══════════════════ SECTION 2: READY TO UPGRADE ═══════════════════ */}
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Clock className="w-5 h-5 text-blue-600" />
+          <h2 className="text-xl font-bold text-slate-900">Ready to Upgrade</h2>
+          <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+            {readyTotal} waiting
+          </span>
         </div>
-      )}
+        <p className="text-sm text-slate-500 mb-4">
+          Online-only users who completed all 8 modules and chose a city. High intent — they want the workshop.
+        </p>
+
+        {readyToUpgrade.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 text-center py-10">
+            <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-slate-500 text-sm">No ready-to-upgrade registrations yet</p>
+          </div>
+        ) : (
+          readyToUpgrade.map(city => (
+            <div key={city.city} className="bg-white rounded-lg shadow-sm border border-blue-200 mb-4 overflow-hidden">
+              <div className="px-6 py-3 border-b border-blue-100 bg-blue-50">
+                <h3 className="text-sm font-bold text-blue-800">{city.label} — {city.count} ready</h3>
+              </div>
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Name</th>
+                    <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Email</th>
+                    <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Registered</th>
+                    <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Completed</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {city.registrations.map((r, i) => (
+                    <tr key={i} className="hover:bg-slate-50">
+                      <td className="px-6 py-3 text-sm font-medium text-slate-900">{r.name}</td>
+                      <td className="px-6 py-3 text-sm text-slate-700">
+                        <div className="flex items-center gap-1.5">
+                          <Mail className="w-3.5 h-3.5 text-slate-400" />
+                          {r.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 text-sm text-slate-600">
+                        {new Date(r.registeredAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-3 text-sm text-slate-600">
+                        {r.completedAt ? new Date(r.completedAt).toLocaleDateString() : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ═══════════════════ SECTION 3: INTEREST ═══════════════════ */}
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Eye className="w-5 h-5 text-slate-500" />
+          <h2 className="text-xl font-bold text-slate-900">Interest Registrations</h2>
+          <span className="ml-2 px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">
+            {interestTotal} interested
+          </span>
+        </div>
+        <p className="text-sm text-slate-500 mb-4">
+          People who registered interest but haven&apos;t purchased yet. Lower intent — lead gen data.
+        </p>
+
+        {interest.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 text-center py-10">
+            <Eye className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-slate-500 text-sm">No interest registrations yet</p>
+          </div>
+        ) : (
+          interest.map(city => (
+            <div key={city.city} className="bg-white rounded-lg shadow-sm border border-slate-200 mb-4 overflow-hidden">
+              <div className="px-6 py-3 border-b border-slate-100 bg-slate-50">
+                <h3 className="text-sm font-bold text-slate-700">{city.label} — {city.count} interested</h3>
+              </div>
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Name</th>
+                    <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Email</th>
+                    <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Source</th>
+                    <th className="text-left px-6 py-2 text-xs font-semibold text-slate-600 uppercase">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {city.registrations.map((r, i) => (
+                    <tr key={i} className="hover:bg-slate-50">
+                      <td className="px-6 py-3 text-sm font-medium text-slate-900">{r.name}</td>
+                      <td className="px-6 py-3 text-sm text-slate-700">
+                        <div className="flex items-center gap-1.5">
+                          <Mail className="w-3.5 h-3.5 text-slate-400" />
+                          {r.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 text-sm text-slate-500">{r.source}</td>
+                      <td className="px-6 py-3 text-sm text-slate-600">
+                        {new Date(r.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }

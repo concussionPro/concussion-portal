@@ -1,16 +1,5 @@
 import { NextResponse } from 'next/server'
-import { get as getBlob, list as listBlobs } from '@vercel/blob'
-
-interface BaselineEntry {
-  clinicCode: string
-  clinicName: string
-  athleteName: string
-  dob?: string
-  submittedAt: string
-  symptomCount: number
-  symptomSeverity: number
-  cognitiveScore: number
-}
+import { sql } from '@/lib/db'
 
 export async function POST(request: Request) {
   try {
@@ -23,37 +12,25 @@ export async function POST(request: Request) {
     const normName = name.trim().toLowerCase()
     const normCode = clinicCode.trim().toUpperCase()
 
-    // Load baselines from blob
-    let baselines: BaselineEntry[] = []
-    try {
-      let blob = await getBlob('preseason-baselines.json', { access: 'private' })
-      if (!blob) {
-        const { blobs } = await listBlobs({ prefix: 'preseason-baselines' })
-        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-        if (sorted.length > 0) {
-          blob = await getBlob(sorted[0].url, { access: 'private' })
-        }
-      }
-      if (blob && blob.statusCode === 200 && blob.stream) {
-        const text = await new Response(blob.stream).text()
-        baselines = JSON.parse(text)
-      }
-    } catch {
-      return NextResponse.json({ previousTests: 0, dates: [] })
-    }
-
-    // Match by clinic code + normalized name (+ DOB if available)
-    const matches = baselines.filter(b => {
-      if (b.clinicCode !== normCode) return false
-      if (b.athleteName.trim().toLowerCase() !== normName) return false
-      // If both have DOB, use it as extra confirmation
-      if (dob && b.dob && b.dob !== dob) return false
-      return true
-    })
+    // Query baselines from Postgres
+    const { rows } = dob
+      ? await sql`
+          SELECT submitted_at FROM preseason_baselines
+          WHERE clinic_code = ${normCode}
+            AND LOWER(TRIM(athlete_name)) = ${normName}
+            AND (dob IS NULL OR dob = ${dob})
+          ORDER BY submitted_at ASC
+        `
+      : await sql`
+          SELECT submitted_at FROM preseason_baselines
+          WHERE clinic_code = ${normCode}
+            AND LOWER(TRIM(athlete_name)) = ${normName}
+          ORDER BY submitted_at ASC
+        `
 
     return NextResponse.json({
-      previousTests: matches.length,
-      dates: matches.map(m => m.submittedAt).sort(),
+      previousTests: rows.length,
+      dates: rows.map(r => r.submitted_at instanceof Date ? r.submitted_at.toISOString() : r.submitted_at),
     })
   } catch (error) {
     console.error('Athlete history lookup error:', error)
