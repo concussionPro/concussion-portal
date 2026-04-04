@@ -74,12 +74,17 @@ function InternationalPricingContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Enrollment count
+  // Enrollment count + session email (for pre-filling Stripe checkout)
   const [enrollmentCount, setEnrollmentCount] = useState<number>(0)
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null)
   useEffect(() => {
     fetch('/api/enrollment-count')
       .then(res => res.json())
       .then(data => { if (data.count > 0) setEnrollmentCount(data.count) })
+      .catch(() => {})
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => { if (data.user?.email) setSessionEmail(data.user.email) })
       .catch(() => {})
   }, [])
 
@@ -119,7 +124,7 @@ function InternationalPricingContent() {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseType: 'international-online', ...(promoCode ? { promoCode } : {}), ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}) }),
+        body: JSON.stringify({ courseType: 'international-online', ...(sessionEmail ? { email: sessionEmail } : {}), ...(promoCode ? { promoCode } : {}), ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}) }),
       })
 
       const data = await res.json()
