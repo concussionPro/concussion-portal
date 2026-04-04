@@ -29,7 +29,7 @@ import {
 import { SiteNav } from '@/components/SiteNav'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
-import { trackEvent } from '@/lib/analytics'
+import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -119,6 +119,8 @@ function InternationalPricingContent() {
     setError(null)
 
     trackEvent('checkout_start', { courseType: 'international-online', source: 'pricing_international' })
+    // Fire Google Ads enrol click conversion (Add to cart)
+    trackLeadConversion('vHoXCNKd6Y8cEJWXu_9C', PRICE_USD)
 
     try {
       const res = await fetch('/api/create-checkout', {

@@ -233,7 +233,7 @@ function AnalyticsTracker(): null {
     if (previousPathRef.current === currentPath) return;
     previousPathRef.current = currentPath;
 
-    sendEvent('pageview', {}, pathname, search);
+    sendEvent('page_view', {}, pathname, search);
 
     // Fire Google Ads remarketing audience event for high-intent pages
     fireRemarketingEvent(pathname);

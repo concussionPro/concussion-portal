@@ -62,7 +62,7 @@ function getVisitNumber(): number {
     const raw = localStorage.getItem('analytics_visit_number')
     const current = raw ? parseInt(raw, 10) : 0
     // Increment on new session (sessionStorage key absent = new session)
-    if (!sessionStorage.getItem('analytics_session_id')) {
+    if (!sessionStorage.getItem('cea_session_id')) {
       const next = current + 1
       localStorage.setItem('analytics_visit_number', String(next))
       return next
@@ -119,10 +119,11 @@ export async function trackEvent(
 ): Promise<void> {
   try {
     // Get or create session ID
-    let sessionId = sessionStorage.getItem('analytics_session_id')
+    // Use same session key as AnalyticsProvider to avoid fragmenting session data
+    let sessionId = sessionStorage.getItem('cea_session_id')
     if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      sessionStorage.setItem('analytics_session_id', sessionId)
+      sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+      sessionStorage.setItem('cea_session_id', sessionId)
     }
 
     const visitNumber = getVisitNumber()

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { CheckCircle2, Mail, BookOpen, ArrowRight, Loader2, AlertTriangle, Award } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-import { trackPurchaseConversion } from '@/lib/analytics'
+import { trackPurchaseConversion, trackEvent } from '@/lib/analytics'
 
 declare global {
   interface Window {
@@ -44,8 +44,16 @@ function CheckoutSuccessContent() {
         if (data.success) {
           setSessionData(data.session)
 
-          // Fire Google Ads conversion with enhanced data (only once)
+          // Fire conversions (only once)
           if (!conversionFiredRef.current) {
+            // Internal analytics event — visible in our dashboard
+            trackEvent('purchase', {
+              courseType: data.session.courseType,
+              amount: data.session.amountPaid,
+              currency: data.session.currency || 'AUD',
+              location: data.session.location || null,
+            })
+            // Google Ads conversion with enhanced data
             trackPurchaseConversion(
               data.session.amountPaid,
               sessionId!,
