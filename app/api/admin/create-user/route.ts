@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, name, amount } = await request.json()
+    const { email, name, amount, location } = await request.json()
 
     if (!email || !name || !amount) {
       return NextResponse.json(
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       name,
       accessLevel: accessLevel as 'online-only' | 'full-course' | 'preview',
       signupSource: 'admin',
+      ...(location ? { workshopLocation: location } : {}),
     })
 
     const user = await findUserById(userId)
