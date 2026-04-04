@@ -61,11 +61,9 @@ export async function POST(request: NextRequest) {
     const existingUser = await findUserByEmail(normalizedEmail)
 
     let userId: string
-    let accessLevel: 'preview' | 'online-only' | 'full-course' = 'preview'
 
     if (existingUser) {
       userId = existingUser.id
-      accessLevel = existingUser.accessLevel as typeof accessLevel
     } else {
       // Create new user with preview access
       userId = await createUser({
@@ -97,8 +95,10 @@ export async function POST(request: NextRequest) {
       console.error('Failed to log email gate analytics:', err)
     }
 
-    // Create session token and set cookie immediately
-    const sessionToken = createJWTSession(userId, normalizedEmail, existingUser?.name || userName, accessLevel, true)
+    // Create session token with preview access only.
+    // SECURITY: Never grant paid access via email gate — even for existing paid users.
+    // The /api/auth/session endpoint will upgrade the JWT to real access level on first use.
+    const sessionToken = createJWTSession(userId, normalizedEmail, existingUser?.name || userName, 'preview', true)
     await updateLastLogin(userId)
 
     const response = NextResponse.json({ success: true })

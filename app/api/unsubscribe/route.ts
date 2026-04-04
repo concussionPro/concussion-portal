@@ -27,8 +27,33 @@ export function generateUnsubscribeToken(email: string): string {
 }
 
 /**
+ * POST /api/unsubscribe?email=...&token=...
+ * RFC 8058 one-click unsubscribe — email clients (Gmail, Apple Mail, Yahoo) send POST
+ * with body "List-Unsubscribe=One-Click"
+ */
+export async function POST(request: NextRequest) {
+  const email = request.nextUrl.searchParams.get('email')
+  const token = request.nextUrl.searchParams.get('token')
+
+  if (!email || !token) {
+    return NextResponse.json({ error: 'Invalid unsubscribe link' }, { status: 400 })
+  }
+
+  try {
+    if (!verifyUnsubscribeToken(email, token)) {
+      return NextResponse.json({ error: 'Invalid unsubscribe link' }, { status: 400 })
+    }
+  } catch {
+    return NextResponse.json({ error: 'Invalid unsubscribe link' }, { status: 400 })
+  }
+
+  await unsubscribeUser(email)
+  return NextResponse.json({ success: true })
+}
+
+/**
  * GET /api/unsubscribe?email=...&token=...
- * One-click unsubscribe from nurture sequence
+ * Browser-based unsubscribe — shows confirmation page
  */
 export async function GET(request: NextRequest) {
   const email = request.nextUrl.searchParams.get('email')

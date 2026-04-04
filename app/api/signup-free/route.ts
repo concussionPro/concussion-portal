@@ -99,16 +99,20 @@ export async function POST(request: NextRequest) {
       console.error('Failed to log free signup analytics:', err)
     }
 
-    // Auto-login: set session cookie immediately so user is logged in without clicking email
-    const accessLevel = existingUser ? existingUser.accessLevel : 'preview'
-    const sessionToken = createJWTSession(userId, email.toLowerCase(), userName, accessLevel as 'preview' | 'online-only' | 'full-course', true)
+    // Auto-login with preview access only.
+    // SECURITY: Never grant paid access via free signup — even for existing paid users.
+    // Paid users already have a session; this endpoint is for free course access only.
+    // Granting existing accessLevel here would let anyone with a known email get full access.
+    const sessionToken = createJWTSession(userId, email.toLowerCase(), existingUser?.name || userName, 'preview', true)
 
     // Update last_login so admin dashboard shows accurate data
     await updateLastLogin(userId)
 
     // Generate magic link for the email (backup login if they open on a different device)
+    // Uses preview access — the /api/auth/session endpoint will upgrade the JWT
+    // to the user's real access level on first use if they have paid access.
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const loginLink = generateMagicLinkJWT(userId, email, userName, accessLevel, baseUrl)
+    const loginLink = generateMagicLinkJWT(userId, email, existingUser?.name || userName, 'preview', baseUrl)
 
     // Generate unsubscribe URL
     const unsubToken = generateUnsubscribeToken(email)
