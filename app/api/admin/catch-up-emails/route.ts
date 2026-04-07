@@ -105,7 +105,7 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
       const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
       if (progressRows.length > 0 && progressRows[0].progress) {
         const progress = progressRows[0].progress
-        for (let i = 101; i <= 106; i++) {
+        for (let i = 101; i <= 103; i++) {
           if (progress[String(i)]?.completed) scatCompleted++
         }
         for (let i = 1; i <= 8; i++) {
@@ -127,17 +127,17 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
 
     // ── PREVIEW (FREE) USERS ──
     if (user.accessLevel === 'preview') {
-      if (scatCompleted === 6) {
+      if (scatCompleted === 3) {
         // Completed all SCAT modules — send completion upsell
         subject = SCAT_COMPLETION_UPSELL.subject
         html = SCAT_COMPLETION_UPSELL.template(user.name || 'there', pricingLink)
-        actionDesc = 'scat-completion-upsell (completed all 6 SCAT modules)'
+        actionDesc = 'scat-completion-upsell (completed all 3 SCAT modules)'
         auditKey = `catchup_scat_complete_${user.id}`
-      } else if (scatCompleted === 5) {
+      } else if (scatCompleted === 2) {
         // Almost done — one more module
         subject = FREE_ALMOST_DONE.subject
         html = FREE_ALMOST_DONE.template(user.name || 'there', loginLink)
-        actionDesc = 'free-almost-done (5/6 SCAT modules)'
+        actionDesc = 'free-almost-done (2/3 SCAT modules)'
         auditKey = `catchup_free_almost_${user.id}`
       } else if (!hasLoggedIn) {
         // Never logged in — re-engagement
@@ -149,14 +149,14 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
         // Logged in but low progress — encouragement
         subject = SCAT_DAY10_ENGAGEMENT.subject
         html = SCAT_DAY10_ENGAGEMENT.template(user.name || 'there', loginLink, scatCompleted)
-        actionDesc = `scat-engagement (${scatCompleted}/6 modules)`
+        actionDesc = `scat-engagement (${scatCompleted}/3 modules)`
         auditKey = `catchup_scat_engagement_${user.id}`
       } else {
         // 3-4 modules done, engaged — send the Day 14 full course breakdown
         const day14 = SCAT_MASTERY_SEQUENCE.find(e => e.day === 14)!
         subject = day14.subject
         html = day14.template(user.name || 'there', pricingLink)
-        actionDesc = `scat-day14-cpd-breakdown (${scatCompleted}/6 modules, engaged)`
+        actionDesc = `scat-day14-cpd-breakdown (${scatCompleted}/3 modules, engaged)`
         auditKey = `catchup_scat_day14_${user.id}`
       }
     }

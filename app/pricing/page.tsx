@@ -370,10 +370,10 @@ function PricingContent() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
-                6 focused modules on SCAT6 administration. 2 CPD points, no card required. See the course quality before you commit.
+                3 focused modules on SCAT6 administration. Free, no card required. See the course quality before you commit.
               </p>
               <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                {['6 modules', '2 CPD points', 'No payment required', 'Instant access'].map(item => (
+                {['3 modules', 'Free', 'No payment required', 'Instant access'].map(item => (
                   <li key={item} className="flex items-center gap-1">
                     <Check className="w-3 h-3 text-emerald-600" strokeWidth={2.5} />
                     {item}

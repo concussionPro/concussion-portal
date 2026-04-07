@@ -64,8 +64,8 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
   for (let i = 1; i <= 8; i++) {
     defaults[i] = createDefaultModuleProgress(i)
   }
-  // SCAT free modules 101-106
-  for (let i = 101; i <= 106; i++) {
+  // SCAT free modules 101-103
+  for (let i = 101; i <= 103; i++) {
     defaults[i] = createDefaultModuleProgress(i)
   }
   return defaults

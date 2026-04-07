@@ -97,20 +97,18 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
 
   // For preview users, show SCAT progress
   const scatCompleted = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 106 && p.completed,
+    (p) => p.moduleId >= 101 && p.moduleId <= 103 && p.completed,
   ).length
-  // Modules 101-104 are 0.5 CPD each, Modules 105-106 are 0 CPD
-  const scatCPD = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 104 && p.completed,
-  ).length * 0.5
+  // SCAT modules have 0 CPD (free lead gen course)
+  const scatCPD = 0
   const scatInProgress = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 106 && !!p.startedAt && !p.completed,
+    (p) => p.moduleId >= 101 && p.moduleId <= 103 && !!p.startedAt && !p.completed,
   ).length
 
   const displayModules = isPreview ? scatCompleted : completedModules
-  const displayMaxModules = isPreview ? 6 : 8
+  const displayMaxModules = isPreview ? 3 : 8
   const displayCPD = isPreview ? scatCPD : cpdPoints
-  const displayMaxCPD = isPreview ? 2 : 8
+  const displayMaxCPD = isPreview ? 0 : 8
 
   const inProgressCount = isPreview
     ? scatInProgress
@@ -196,10 +194,10 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
           </div>
           <p className="stat-label mb-0">Learning Suite</p>
         </div>
-        <p className="text-sm text-foreground font-semibold mb-1">{isPreview ? '6 Free SCAT Modules' : '8 Clinical Modules'}</p>
+        <p className="text-sm text-foreground font-semibold mb-1">{isPreview ? '3 Free SCAT Modules' : '8 Clinical Modules'}</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
           {isPreview
-            ? 'SCAT6 & SCOAT6 mastery training — earn 2 free CPD points.'
+            ? 'SCAT6 & SCOAT6 mastery training — completely free.'
             : 'Evidence-based concussion management training with AHPRA-aligned CPD tracking.'}
         </p>
       </Card>

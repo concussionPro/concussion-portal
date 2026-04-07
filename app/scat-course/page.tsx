@@ -169,7 +169,7 @@ export default function SCATCoursePage() {
                 <Clock className="w-5 h-5" />
                 <span className="text-sm font-semibold">Time Investment</span>
               </div>
-              <div className="text-2xl font-bold">~2 Hours</div>
+              <div className="text-2xl font-bold">~1 Hour</div>
               <div className="text-sm text-blue-100 mt-1">Self-paced learning</div>
             </div>
           </div>
@@ -204,7 +204,7 @@ export default function SCATCoursePage() {
                   Course Complete — Your CPD Certificate is Ready!
                 </h2>
                 <p className="text-sm text-emerald-800 mb-4">
-                  You've earned <strong>2 AHPRA-aligned CPD points</strong>.
+                  You've completed the SCAT Mastery course.
                   {certificateStatus === 'sent' && ' Your certificate has been emailed to you.'}
                   {certificateStatus === 'sending' && ' Emailing your certificate now...'}
                   {certificateStatus === 'error' && ' We had trouble emailing your certificate, but you can download it below.'}

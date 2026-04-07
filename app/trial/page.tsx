@@ -54,10 +54,10 @@ export default function TrialPage() {
             Start Free SCAT6 Course
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-2">
-            Master the SCAT6 assessment and earn 2 CPD points — completely free
+            Master the SCAT6 assessment — completely free
           </p>
           <p className="text-base text-slate-500">
-            No credit card required · 6 modules · AHPRA aligned
+            No credit card required · 3 modules · ~1 hour
           </p>
         </div>
 
@@ -69,9 +69,9 @@ export default function TrialPage() {
             </h2>
             <div className="space-y-4">
               {[
-                '5 complete modules covering SCAT6 assessment mastery',
+                '3 complete modules covering SCAT6 assessment mastery',
                 'Interactive learning elements and quick knowledge checks',
-                'Earn 2 AHPRA-aligned CPD points on completion',
+                'Free — no credit card, no cost',
                 'Final quiz to test your knowledge',
                 'No credit card required — start learning immediately'
               ].map((item, index) => (
@@ -122,7 +122,7 @@ export default function TrialPage() {
             </div>
             <h3 className="font-bold text-slate-900 mb-2">AHPRA Aligned</h3>
             <p className="text-sm text-slate-600">
-              Earn CPD points recognized for Australian health practitioner registration
+              AHPRA-aligned training for Australian health practitioners
             </p>
           </div>
 
@@ -132,7 +132,7 @@ export default function TrialPage() {
             </div>
             <h3 className="font-bold text-slate-900 mb-2">Self-Paced</h3>
             <p className="text-sm text-slate-600">
-              Complete all 6 modules at your own pace, on any device
+              Complete all 3 modules at your own pace, on any device
             </p>
           </div>
 

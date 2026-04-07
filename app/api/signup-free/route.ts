@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     // Send welcome email (Day 0 of nurture sequence)
     await sendEmail({
       to: email,
-      subject: 'Your free SCAT6/SCOAT6 Mastery Course is ready',
+      subject: 'Module 1 is ready — 20 minutes to confident SCAT6 use',
       headers: {
         'List-Unsubscribe': `<${unsubscribeUrl}>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -134,55 +134,50 @@ export async function POST(request: NextRequest) {
         <html>
           <head>
             <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; margin: 0; padding: 0; }
-              .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-              .header { background: linear-gradient(135deg, #3b82f6 0%, #14b8a6 100%); padding: 40px 24px; text-align: center; }
-              .header h1 { margin: 0; color: white; font-size: 28px; font-weight: 700; }
-              .content { padding: 32px 24px; }
-              .button { display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #3b82f6 0%, #14b8a6 100%); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 24px 0; }
-              .highlight { background: #dbeafe; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 16px 0; }
-              .footer { padding: 24px; text-align: center; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1e293b; background: #f8fafc; margin: 0; padding: 0; }
+              .container { max-width: 580px; margin: 0 auto; background: white; }
+              .header-bar { height: 4px; background: linear-gradient(90deg, #0d9488, #0ea5e9); }
+              .content { padding: 32px 28px; }
+              .content p { margin: 0 0 16px; font-size: 15px; }
+              .cta-btn { display: inline-block; padding: 14px 28px; background: #0d9488; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 8px 0; }
+              .callout { background: #f0fdfa; padding: 16px 20px; border-radius: 8px; border-left: 3px solid #0d9488; margin: 20px 0; font-size: 14px; }
+              .sig { margin-top: 28px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b; }
+              .footer { padding: 16px 28px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
             </style>
           </head>
           <body>
             <div class="container">
-              <div class="header">
-                <h1>Welcome to SCAT6 Mastery</h1>
-              </div>
+              <div class="header-bar"></div>
               <div class="content">
-                <h2 style="margin-top: 0;">Hi ${escapeHtml(userName)},</h2>
-                <p>Your free SCAT6/SCOAT6 Mastery course is ready. Here's what it covers.</p>
+                <p>Hi ${escapeHtml(userName.split(' ')[0])},</p>
 
-                <div class="highlight">
-                  <strong>Course overview (~2 hours):</strong><br>
-                  &bull; Step-by-step SCAT6 &amp; SCOAT6 administration<br>
-                  &bull; Red flag recognition and escalation criteria<br>
-                  &bull; When to use SCAT6 vs SCOAT6 (acute vs office follow-up)<br>
-                  &bull; Clinical toolkit: referral templates, RTP forms<br>
-                  &bull; 2 AHPRA-aligned CPD points + certificate
+                <p>Module 1 is ready. It takes about 20 minutes and covers the rule most clinicians get wrong: <strong>when to use SCAT6 vs SCOAT6</strong>.</p>
+
+                <p>Using the wrong tool at the wrong time isn't just poor practice &mdash; it's a failure of standard of care with medicolegal consequences. Module 1 covers the distinction, red flag recognition, and when to refer.</p>
+
+                <center><a href="${loginLink}" class="cta-btn">Start Module 1 (20 min)</a></center>
+
+                <div class="callout">
+                  <strong>What you'll cover:</strong><br><br>
+                  &#8226; SCAT6 vs SCOAT6 &mdash; which tool, when, and why<br>
+                  &#8226; Red flags that trigger immediate referral<br>
+                  &#8226; Medico-legal documentation that protects you
                 </div>
 
-                <center>
-                  <a href="${loginLink}" class="button">
-                    Start Course Now →
-                  </a>
-                </center>
+                <p>Your fillable SCAT6 and SCOAT6 forms are also ready in the <a href="https://portal.concussion-education-australia.com/scat-forms" style="color: #0d9488;">downloads section</a>.</p>
 
-                <p style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                  <strong>Quick question:</strong> What's your biggest challenge with concussion management right now?<br>
-                  Just reply to this email - I read every message.
-                </p>
+                <p>Questions? Just reply &mdash; I read every message.</p>
 
-                <p style="color: #64748b;">
-                  - Zac Lewis<br>
-                  <em style="font-size: 14px;">Osteopath (B.Clin.Sci., M.Ost.Med) · Founder, Concussion Education Australia</em>
-                </p>
+                <div class="sig">
+                  Zac Lewis<br>
+                  Osteopath &middot; Founder, Concussion Education Australia
+                </div>
               </div>
               <div class="footer">
-                <p><strong>Concussion Education Australia</strong></p>
-                <p>zac@concussion-education-australia.com</p>
-                <p style="margin-top: 12px; font-size: 12px;"><a href="${unsubscribeUrl}" style="color: #94a3b8;">You can unsubscribe from course emails at any time.</a></p>
+                Concussion Education Australia &middot; Endorsed by Osteopathy Australia<br>
+                <a href="${unsubscribeUrl}" style="color: #94a3b8; font-size: 11px;">Unsubscribe</a>
               </div>
             </div>
           </body>

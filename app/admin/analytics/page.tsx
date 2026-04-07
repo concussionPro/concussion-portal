@@ -408,8 +408,8 @@ function buildUserInsights(
   // --- User engagement (free users SCAT module completion) ---
   if (freeUsers.length > 3) {
     const zeroModules = freeUsers.filter(u => !u.completedScatModules || u.completedScatModules === 0).length
-    const someModules = freeUsers.filter(u => (u.completedScatModules || 0) > 0 && (u.completedScatModules || 0) < 5).length
-    const allModules = freeUsers.filter(u => (u.completedScatModules || 0) >= 5).length
+    const someModules = freeUsers.filter(u => (u.completedScatModules || 0) > 0 && (u.completedScatModules || 0) < 3).length
+    const allModules = freeUsers.filter(u => (u.completedScatModules || 0) >= 3).length
     const zeroPct = (zeroModules / freeUsers.length) * 100
 
     if (zeroPct > 60) {
@@ -417,7 +417,7 @@ function buildUserInsights(
         type: 'warning',
         category: 'users',
         title: `${zeroPct.toFixed(0)}% of free users completed 0 modules`,
-        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 6 SCAT modules.`,
+        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 3 SCAT modules.`,
         metric: `${zeroPct.toFixed(0)}% inactive`,
         action: 'Send a reminder email to users who signed up but never started. Add onboarding nudges. Check if the first module is too intimidating.',
       })
@@ -1736,7 +1736,7 @@ export default function AnalyticsDashboard() {
                         return true
                       })
                       const csv = ['Email,Name,Access Level,Modules Completed,SCAT Modules,CPD Points,Created,Last Login', ...filtered.map(u =>
-                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/5,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
+                        `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/3,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
                       )].join('\n')
                       const blob = new Blob([csv], { type: 'text/csv' })
                       const url = URL.createObjectURL(blob)
@@ -1775,7 +1775,7 @@ export default function AnalyticsDashboard() {
                         const scatCompleted = u.completedScatModules || 0
                         const isFree = u.accessLevel === 'preview'
                         const progressCount = isFree ? scatCompleted : completed
-                        const progressTotal = isFree ? 5 : 8
+                        const progressTotal = isFree ? 3 : 8
                         const pctDone = Math.round((progressCount / progressTotal) * 100)
                         return (
                         <tr key={u.id} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">

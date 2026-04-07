@@ -166,16 +166,28 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   doc.setFontSize(8)
   doc.setTextColor(100, 116, 139)
 
-  // Column 1 — CPD Points
-  doc.text('CPD POINTS AWARDED', col1X, gridY, { align: 'center' })
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(18)
-  doc.setTextColor(91, 154, 166)
-  doc.text(`${data.cpdPoints}`, col1X, gridY + 8, { align: 'center' })
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7)
-  doc.setTextColor(100, 116, 139)
-  doc.text('AHPRA-Aligned', col1X, gridY + 13, { align: 'center' })
+  // Column 1 — CPD Points (or completion badge for free course)
+  if (data.cpdPoints > 0) {
+    doc.text('CPD POINTS AWARDED', col1X, gridY, { align: 'center' })
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(18)
+    doc.setTextColor(91, 154, 166)
+    doc.text(`${data.cpdPoints}`, col1X, gridY + 8, { align: 'center' })
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7)
+    doc.setTextColor(100, 116, 139)
+    doc.text('AHPRA-Aligned', col1X, gridY + 13, { align: 'center' })
+  } else {
+    doc.text('STATUS', col1X, gridY, { align: 'center' })
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(13)
+    doc.setTextColor(91, 154, 166)
+    doc.text('Completed', col1X, gridY + 8, { align: 'center' })
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7)
+    doc.setTextColor(100, 116, 139)
+    doc.text('Certificate of Completion', col1X, gridY + 13, { align: 'center' })
+  }
 
   // Column 2 — Date of Completion
   doc.setFontSize(8)
@@ -264,7 +276,7 @@ export function getSCATCertificateData(participantName: string, participantEmail
     participantEmail,
     courseTitle: 'SCAT6/SCOAT6 Mastery Course',
     courseDescription: 'Comprehensive training in Sport Concussion Assessment Tool (SCAT6) and Sport Concussion Office Assessment Tool (SCOAT6) administration, scoring, interpretation, and clinical application for Australian health practitioners.',
-    cpdPoints: 2,
+    cpdPoints: 0,
     completionDate,
     learningOutcomes: [
       'Correctly administer and score the SCAT6 for acute/sideline concussion assessment',

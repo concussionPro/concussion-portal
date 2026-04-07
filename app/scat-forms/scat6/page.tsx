@@ -1646,7 +1646,7 @@ export default function SCAT6Page() {
           {/* SCAT6 Mastery Upsell */}
           <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-xl text-center">
             <p className="text-sm font-semibold text-slate-900 mb-1">Want to master the SCAT6?</p>
-            <p className="text-xs text-slate-600 mb-3">Free course: learn proper administration, scoring, and interpretation. 2 CPD points.</p>
+            <p className="text-xs text-slate-600 mb-3">Free course: learn proper administration, scoring, and interpretation.</p>
             <Link href="/scat-mastery" className="inline-block px-4 py-2 bg-[#5b9aa6] text-white text-sm font-semibold rounded-lg hover:bg-[#4a8a96] transition-colors">
               Start Free SCAT6 Mastery Course →
             </Link>

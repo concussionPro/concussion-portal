@@ -123,7 +123,7 @@ export function EmailGateModal({ isOpen, onClose, onSuccess, accentColor = 'blue
           </button>
 
           <p className="text-[11px] text-slate-400 text-center mt-3 leading-relaxed">
-            You'll also get access to our free SCAT mastery course with 2 CPD points. No spam, unsubscribe anytime.
+            You'll also get access to our free SCAT6 Mastery course. No spam, unsubscribe anytime.
           </p>
         </form>
       </div>

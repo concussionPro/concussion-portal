@@ -266,7 +266,7 @@ export default function BlogIndexPage() {
                     href="/scat-mastery"
                     className="btn-primary px-6 py-3 rounded-xl text-sm font-bold inline-flex items-center justify-center gap-2"
                   >
-                    Free SCAT6 Course (2 CPD)
+                    Free SCAT6 Course
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <Link

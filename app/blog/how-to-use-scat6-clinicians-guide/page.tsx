@@ -353,11 +353,11 @@ export default function HowToUseSCAT6Page() {
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">
             <h2 className="text-2xl font-bold mb-3">Take the Next Step</h2>
             <p className="text-white/70 mb-6 leading-relaxed">
-              Move beyond reading about the SCAT6 -- learn to administer it with confidence. Our free training covers every section of the SCAT6 and SCOAT6 with video demonstrations, clinical scenarios, and common pitfalls to avoid. Earn 2 AHPRA-aligned CPD points.
+              Move beyond reading about the SCAT6 -- learn to administer it with confidence. Our free training covers every section of the SCAT6 and SCOAT6 with clinical scenarios and common pitfalls to avoid.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-900 rounded-xl text-sm font-bold hover:bg-white/90 transition-all">
-                Free SCAT6 Training (2 CPD)
+                Free SCAT6 Training
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">

@@ -150,8 +150,8 @@ export async function POST(request: NextRequest) {
                   <div class="highlight">
                     <strong>Your free account includes:</strong><br>
                     &bull; Digital SCAT6, SCOAT6 &amp; Child SCAT6 forms with PDF export<br>
-                    &bull; Free SCAT6/SCOAT6 Mastery course (~2 hours)<br>
-                    &bull; 2 AHPRA-aligned CPD points + certificate
+                    &bull; Free SCAT6/SCOAT6 Mastery course (~1 hour)<br>
+                    &bull; Certificate of completion included
                   </div>
 
                   <center>

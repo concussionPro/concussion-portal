@@ -182,10 +182,10 @@ export default function SCATFormsLayout({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-bold">Free Training: Master SCAT6 & SCOAT6 in ~2 Hours</h3>
+                    <h3 className="text-xl font-bold">Free Training: Master SCAT6 & SCOAT6 in ~1 Hour</h3>
                   </div>
                   <p className="text-sm text-white/90 mb-3 leading-relaxed">
-                    <strong>Learn to use this form correctly.</strong> Step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. <strong>2 AHPRA CPD points + certificate included.</strong>
+                    <strong>Learn to use this form correctly.</strong> Step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. <strong>Certificate included.</strong>
                   </p>
                   <div className="flex items-center gap-2 mb-3 text-xs text-white/75">
                     <span className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded font-semibold">100% FREE</span>

@@ -6,7 +6,7 @@ import { verifySessionToken } from '@/lib/jwt-session'
 /**
  * Module List API - Returns module metadata based on access level
  *
- * - Preview users: FREE SCAT6/SCOAT6 Mastery course modules (6 modules)
+ * - Preview users: FREE SCAT6/SCOAT6 Mastery course modules (3 modules)
  * - Paid users: Full concussion management course (8 modules)
  */
 export async function GET(request: NextRequest) {

@@ -291,7 +291,7 @@ export default function ClinicalToolkitPage() {
                         onClick={() => router.push('/scat-mastery')}
                         className="px-5 py-2.5 border-2 border-purple-200 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-50 transition-all text-center"
                       >
-                        Start Free — 2 CPD Points
+                        Start Free Course
                       </button>
                     </div>
                   </div>

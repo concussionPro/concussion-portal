@@ -196,7 +196,7 @@ export default function PreseasonLandingPage() {
                   'Fillable, auto-scoring SCAT6 & SCOAT6 forms',
                   'Clinical toolkit: referral letters, parent handouts, RTP forms',
                   'Knowledge quiz to identify your gaps',
-                  'Certificate of completion — 2 AHPRA CPD points',
+                  'Certificate of completion included',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-green-300" />
@@ -211,7 +211,7 @@ export default function PreseasonLandingPage() {
                 onClick={() => router.push('/scat-mastery')}
                 className="bg-white text-teal-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-teal-50 transition-all shadow-2xl flex items-center gap-2 w-full sm:w-auto"
               >
-                Get Free Course (2 CPD pts)
+                Get Free Course
                 <ArrowRight className="w-5 h-5" />
               </button>
               <a

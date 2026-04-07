@@ -317,44 +317,37 @@ export const SCAT_MASTERY_SEQUENCE = [
   // NOTE: Day 0 welcome email is sent by signup-free API. Cron skips day 0.
   {
     day: 0,
-    subject: 'Start Module 1 now — your SCAT6 training is ready',
+    subject: 'Module 1 is ready — 20 minutes to confident SCAT6 use',
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name)},</h2>
-      <p>Your free SCAT6 Mastery course is ready. Module 1 takes about 20 minutes and covers the foundations of SCAT6 administration &mdash; the framework everything else builds on.</p>
-      <center><a href="${utm(loginLink, 'scat_mastery_day0', 'start_module1')}" class="cta-btn">Start Module 1 Now</a></center>
+      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Module 1 is ready. It takes about 20 minutes and covers the rule most clinicians get wrong: <strong>when to use SCAT6 vs SCOAT6</strong>.</p>
+      <p>Using the wrong tool at the wrong time isn't just poor practice &mdash; it's a failure of standard of care with medicolegal consequences. Module 1 covers the distinction, red flag recognition, and when to refer.</p>
+      <center><a href="${utm(loginLink, 'scat_mastery_day0', 'start_module1')}" class="cta-btn">Start Module 1 (20 min)</a></center>
       <div class="callout">
-        <strong>What you'll learn in the free course:</strong><br><br>
-        &#8226; Step-by-step SCAT6 and SCOAT6 administration<br>
-        &#8226; When to use SCAT6 vs SCOAT6 (the distinction most clinicians get wrong)<br>
-        &#8226; Red flag recognition and escalation criteria<br>
-        &#8226; 2 AHPRA-aligned CPD points upon completion<br><br>
-        6 modules &middot; ~2 hours total &middot; Self-paced &middot; Free
+        <strong>What you'll cover:</strong><br><br>
+        &#8226; SCAT6 vs SCOAT6 &mdash; which tool, when, and why<br>
+        &#8226; Red flags that trigger immediate referral<br>
+        &#8226; Medico-legal documentation that protects you
       </div>
-      <p>Your fillable SCAT6 and SCOAT6 forms are also waiting for you in the <a href="${utm('https://portal.concussion-education-australia.com/scat6-download', 'scat_mastery_day0', 'download_forms')}">downloads section</a>.</p>
+      <p>Your fillable SCAT6 and SCOAT6 forms are also ready in the <a href="${utm('https://portal.concussion-education-australia.com/scat-forms', 'scat_mastery_day0', 'download_forms')}">downloads section</a>.</p>
+      <p>Questions? Just reply &mdash; I read every message.</p>
       <div class="sig">
         Zac Lewis<br>
-        Founder, Concussion Education Australia<br>
-        <a href="mailto:zac@concussion-education-australia.com">zac@concussion-education-australia.com</a>
+        Osteopath &middot; Founder, Concussion Education Australia
       </div>
     `),
   },
 
-  // WEEK 1 (Day 3) - Complete free course nudge
+  // WEEK 1 (Day 3) - Module 1 nudge (not "did you finish the course")
   {
     day: 3,
-    subject: 'Did you finish SCAT6 Mastery?',
+    subject: 'Have you tried Module 1 yet?',
     template: (name: string, loginLink: string) => emailShell(`
-      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-      <p>Just checking in &mdash; have you had a chance to work through the free SCAT6 Mastery course?</p>
-      <p>It takes about 2 hours and covers:</p>
-      <ul>
-        <li>Step-by-step SCAT6 and SCOAT6 administration</li>
-        <li>When to use SCAT6 vs SCOAT6 (the distinction most clinicians get wrong)</li>
-        <li>Red flag recognition and escalation criteria</li>
-        <li>2 AHPRA-aligned CPD points upon completion</li>
-      </ul>
-      <center><a href="${utm(loginLink, 'scat_mastery_day3', 'continue_course')}" class="cta-btn">Continue the Course</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">~2 hours &middot; Self-paced &middot; Free &middot; Includes CPD certificate</p>
+      <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+      <p>Quick check &mdash; have you had a chance to start Module 1?</p>
+      <p>It takes 20 minutes and covers <strong>the SCAT6 vs SCOAT6 distinction</strong> &mdash; which tool to use, when, and the medicolegal reasons it matters. Most clinicians haven't been taught this explicitly.</p>
+      <p>You'll also cover red flag recognition and the three referral triggers every clinician should know before Saturday sport.</p>
+      <center><a href="${utm(loginLink, 'scat_mastery_day3', 'start_module1')}" class="cta-btn">Start Module 1 (20 min)</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -411,7 +404,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     subject: '14 CPD points — here\'s the full breakdown',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-      <p>The free SCAT6 Mastery course earns you 2 CPD points. If you're looking for more, here's what the full Concussion Management course covers:</p>
+      <p>The free SCAT6 Mastery course covers the essentials. If you want to go deeper, here's what the full Concussion Management course covers:</p>
       <p><strong>8 online modules (8 CPD points):</strong></p>
       <ol>
         <li>Concussion pathophysiology &mdash; the neurometabolic cascade and mechanisms</li>
@@ -497,7 +490,7 @@ export const SCAT_MASTERY_SEQUENCE = [
 // ─── Post-Completion Upsell (Highest-Intent Moment) ─────────────────────────
 
 /**
- * Sent after a free-course user completes all 6 SCAT modules.
+ * Sent after a free-course user completes all 3 SCAT modules.
  * Triggered from POST /api/certificate (immediate) + cron fallback.
  * Uses existing SCAT6 promo code ($50 off).
  */
@@ -505,7 +498,7 @@ export const SCAT_COMPLETION_UPSELL = {
   subject: "You've completed SCAT6 Mastery — here's what's next",
   template: (name: string, pricingLink: string) => emailShell(`
     <h2>Congratulations, ${escapeHtml(name.split(' ')[0])}!</h2>
-    <p>You've earned your 2 CPD point certificate for SCAT6 Mastery &mdash; that puts you ahead of most clinicians when it comes to SCAT6 administration.</p>
+    <p>You've finished the SCAT6 Mastery course &mdash; that puts you ahead of most clinicians when it comes to SCAT6 administration.</p>
     <p>The online course picks up where SCAT6 Mastery leaves off &mdash; 8 modules covering the clinical knowledge you need to confidently manage concussion:</p>
     <ul>
       <li><strong>Concussion pathophysiology</strong> &mdash; the neurometabolic cascade and injury mechanisms</li>
@@ -747,17 +740,17 @@ export const REENGAGEMENT_EMAIL = {
  * for preview users who never logged in after signup (ghosters).
  */
 export const FREE_USER_REENGAGEMENT = {
-  subject: 'Your free CPD points are still waiting',
+  subject: 'Your free SCAT6 training is still waiting',
   template: (name: string, loginLink: string) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
     <p>You signed up for the free SCAT6 Mastery course a week ago but haven't started yet.</p>
-    <p>No pressure — but the 2 AHPRA-aligned CPD points are yours whenever you're ready. Module 1 takes about 20 minutes and you can pick up where you left off any time.</p>
+    <p>No pressure — Module 1 takes about 20 minutes and you can pick up where you left off any time.</p>
     <div class="callout">
       <strong>What's waiting for you:</strong><br><br>
-      &#8226; 6 modules covering SCAT6 and SCOAT6 administration<br>
-      &#8226; 2 CPD points + certificate upon completion<br>
+      &#8226; 3 modules covering SCAT6 and SCOAT6 essentials<br>
+      &#8226; Clinical case studies and scenario-based quiz<br>
       &#8226; Digital SCAT6 and SCOAT6 forms with PDF export<br><br>
-      Self-paced &middot; ~2 hours total &middot; Free
+      Self-paced &middot; ~1 hour total &middot; Free
     </div>
     <center><a href="${utm(loginLink, 'free_reengagement_day7', 'start_now')}" class="cta-btn">Start Module 1 — It Takes 20 Minutes</a></center>
     <div class="sig">Zac</div>
@@ -773,14 +766,13 @@ export const SCAT_DAY10_ENGAGEMENT = {
   subject: 'Where did you get up to?',
   template: (name: string, loginLink: string, completedCount: number) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-    <p>You've completed ${completedCount} of 6 modules in the SCAT6 Mastery course${completedCount > 0 ? ' — great start' : ''}.</p>
-    <p>The next module picks up right where you left off and takes about 30 minutes. Each one builds on the last, so the course gets more clinically useful as you go.</p>
+    <p>You've completed ${completedCount} of 3 modules in the SCAT6 Mastery course${completedCount > 0 ? ' — great start' : ''}.</p>
+    <p>The next module picks up right where you left off and takes about 20 minutes.</p>
     <div class="callout">
       <strong>Coming up:</strong><br><br>
       &#8226; Red flag recognition and escalation criteria<br>
-      &#8226; When to use SCAT6 vs SCOAT6 — the distinction most clinicians miss<br>
-      &#8226; Clinical case studies with decision-making frameworks<br><br>
-      2 CPD points are waiting at the end.
+      &#8226; SCOAT6 serial monitoring and return-to-play protocols<br>
+      &#8226; Clinical case studies with scenario-based decision-making
     </div>
     <center><a href="${utm(loginLink, 'scat_engagement_day10', 'continue_course')}" class="cta-btn">Continue Your Course</a></center>
     <div class="sig">Zac</div>
@@ -788,15 +780,15 @@ export const SCAT_DAY10_ENGAGEMENT = {
 }
 
 /**
- * FREE_ALMOST_DONE — sent when a preview user has completed 5 of 6 SCAT modules.
- * One-time nudge to finish and earn the free certificate + upsell.
+ * FREE_ALMOST_DONE — sent when a preview user has completed 2 of 3 SCAT modules.
+ * One-time nudge to finish the course + upsell.
  */
 export const FREE_ALMOST_DONE = {
-  subject: "One module left — your CPD certificate is almost ready",
+  subject: "One module left — finish your SCAT6 Mastery course",
   template: (name: string, loginLink: string) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-    <p>You've completed <strong>5 of 6 modules</strong> in the SCAT6 Mastery course. One more and your 2 CPD point certificate is generated automatically.</p>
-    <p>The final module takes about 20 minutes and covers clinical case studies — the practical application of everything you've learned so far.</p>
+    <p>You've completed <strong>2 of 3 modules</strong> in the SCAT6 Mastery course. One more to go &mdash; clinical case studies and a scenario-based final quiz.</p>
+    <p>The final module takes about 15 minutes. It tests everything you've learned with real clinical scenarios.</p>
     <center><a href="${utm(loginLink, 'free_almost_done', 'finish_last_module')}" class="cta-btn">Finish Your Last Module</a></center>
     <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">Once you've earned your SCAT6 Mastery certificate, the full Concussion Management course takes your skills further — 8 modules covering VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype. 8 additional CPD points.</p>
     <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'free_almost_done', 'see_full_course')}" class="cta-secondary">See Full Course &mdash; $${CONFIG.COURSE.PRICE_ONLINE}</a></center>

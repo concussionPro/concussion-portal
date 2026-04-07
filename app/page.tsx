@@ -53,7 +53,7 @@ export default function HomePage() {
                 href="/scat-mastery"
                 className="btn-primary px-8 py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2 shadow-lg"
               >
-                Start Free — 2 CPD Points
+                Start Free SCAT6 Course
                 <ArrowRight className="w-4.5 h-4.5" />
               </Link>
               <Link
@@ -144,7 +144,7 @@ export default function HomePage() {
                     Start with Free SCAT6 Mastery
                   </h2>
                   <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-4">
-                    Master SCAT6 &amp; SCOAT6 in ~2 hours. Red flags, documentation, step-by-step protocols. 2 AHPRA CPD points + certificate.
+                    Master SCAT6 &amp; SCOAT6 in ~1 hour. Red flags, documentation, step-by-step protocols. Free, no credit card required.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2.5">
                     <Link
@@ -167,7 +167,7 @@ export default function HomePage() {
                     'SCAT6 & SCOAT6 deep-dive',
                     'Red flag identification',
                     'Medicolegal documentation',
-                    '2 CPD points + certificate',
+                    'Free — no credit card',
                   ].map(item => (
                     <div key={item} className="flex items-center gap-2.5 text-[13px] text-[var(--foreground)]">
                       <Check className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" strokeWidth={2.5} />

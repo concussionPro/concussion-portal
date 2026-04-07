@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     question: 'How do I learn to use SCAT6 and SCOAT6 properly?',
-    answer: 'Free SCAT6/SCOAT6 training is available at portal.concussion-education-australia.com/scat-mastery covering: step-by-step administration of every section, red flag recognition, when to use which tool, medicolegal documentation requirements, and common mistakes that constitute below standard of care. The course provides 2 AHPRA-aligned CPD points, a clinical toolkit with templates, and a certificate of completion. Proper SCAT6 administration requires structured training, and using tools incorrectly can result in medicolegal liability.',
+    answer: 'Free SCAT6/SCOAT6 training is available at portal.concussion-education-australia.com/scat-mastery covering: step-by-step administration of every section, red flag recognition, when to use which tool, medicolegal documentation requirements, and common mistakes that constitute below standard of care. The course provides a clinical toolkit with templates and a certificate of completion. Proper SCAT6 administration requires structured training, and using tools incorrectly can result in medicolegal liability.',
   },
   {
     question: 'What are the updated 2026 SCAT6 protocols I need to know?',
@@ -43,7 +43,7 @@ const howToSteps = [
   },
   {
     name: 'Complete Training (Optional but Recommended)',
-    text: 'Take the free ~2-hour SCAT6/SCOAT6 Mastery course to learn proper administration, red flags, and medicolegal documentation requirements. Receive 2 AHPRA-aligned CPD points.',
+    text: 'Take the free ~1-hour SCAT6/SCOAT6 Mastery course to learn proper administration, red flags, and medicolegal documentation requirements.',
   },
   {
     name: 'Use Forms in Clinical Practice',
@@ -116,7 +116,7 @@ export default function SCATFormsAboutPage() {
                 href="/scat-mastery"
                 className="bg-blue-800 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-900 transition-colors border-2 border-white"
               >
-                Free Training Course (2 CPD Points) →
+                Free Training Course →
               </Link>
             </div>
           </div>
@@ -215,13 +215,13 @@ export default function SCATFormsAboutPage() {
           {/* Training CTA */}
           <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-8 mb-12">
             <h3 className="text-2xl font-bold text-green-900 mb-4">
-              Free Training: Master SCAT6 & SCOAT6 in ~2 Hours
+              Free Training: Master SCAT6 & SCOAT6 in ~1 Hour
             </h3>
             <p className="text-lg text-slate-700 mb-4">
               <strong>Proper SCAT6 administration requires structured training.</strong>
             </p>
             <p className="text-slate-700 mb-6">
-              Get step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. 2 AHPRA-aligned CPD points. Certificate included.
+              Get step-by-step training on every section, red flag recognition, when to use which tool, and medicolegal documentation requirements. Certificate included.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -231,7 +231,7 @@ export default function SCATFormsAboutPage() {
                 Start Free Training →
               </Link>
               <span className="px-6 py-3 bg-white rounded-lg border-2 border-green-600 text-green-700 font-semibold">
-                {CONFIG.COURSE.SCAT_MASTERY_CPD_POINTS} CPD Points · Certificate · Clinical Toolkit
+                Free · Certificate · Clinical Toolkit
               </span>
             </div>
           </div>

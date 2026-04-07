@@ -116,7 +116,7 @@ export async function GET(request: Request) {
           const { rows: progressRows } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
           if (progressRows.length > 0 && progressRows[0].progress) {
             const progress = progressRows[0].progress
-            for (let i = 101; i <= 106; i++) {
+            for (let i = 101; i <= 103; i++) {
               if (progress[String(i)]?.completed) scatCompletedCount++
             }
           }
@@ -613,7 +613,7 @@ export async function GET(request: Request) {
     }
 
     // ── 8. SCAT6 Mastery Completion Upsell (cron fallback) ──
-    // Catches preview users who completed all 6 modules but didn't trigger upsell
+    // Catches preview users who completed all 3 modules but didn't trigger upsell
     // via the certificate endpoint (e.g. downloaded PDF only, or never clicked certificate)
     for (const user of users) {
       if (user.accessLevel !== 'preview') continue
@@ -625,9 +625,9 @@ export async function GET(request: Request) {
         const progress = progressRows[0].progress
         if (!progress) continue
 
-        // Check if all 6 SCAT modules (101-106) are completed
+        // Check if all 3 SCAT modules (101-103) are completed
         let allScatDone = true
-        for (let i = 101; i <= 106; i++) {
+        for (let i = 101; i <= 103; i++) {
           if (!progress[String(i)]?.completed) {
             allScatDone = false
             break
@@ -668,7 +668,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // ── 9. Free "Almost Done" (preview users with 5/6 SCAT modules) ──
+    // ── 9. Free "Almost Done" (preview users with 2/3 SCAT modules) ──
     for (const user of users) {
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
@@ -679,13 +679,13 @@ export async function GET(request: Request) {
         const progress = progressRows[0].progress
         if (!progress) continue
 
-        // Count completed SCAT modules (101-106)
+        // Count completed SCAT modules (101-103)
         let scatDone = 0
-        for (let i = 101; i <= 106; i++) {
+        for (let i = 101; i <= 103; i++) {
           if (progress[String(i)]?.completed) scatDone++
         }
 
-        if (scatDone === 5) {
+        if (scatDone === 2) {
           const auditKey = `free_almost_done_${user.id}`
           const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
           if (inserted === 0) continue // Already sent
@@ -703,7 +703,7 @@ export async function GET(request: Request) {
             html,
             tags: [
               { name: 'sequence', value: 'free-almost-done' },
-              { name: 'trigger', value: 'progress-5of6' },
+              { name: 'trigger', value: 'progress-2of3' },
             ],
             headers: {
               'List-Unsubscribe': `<${unsubscribeUrl}>`,
@@ -712,7 +712,7 @@ export async function GET(request: Request) {
           })
 
           emailsSent++
-          console.log(`[Free Almost Done] 5/6 SCAT modules → ${user.email}`)
+          console.log(`[Free Almost Done] 2/3 SCAT modules → ${user.email}`)
         }
       } catch (err) {
         console.error(`[Free Almost Done] Failed for ${user.email}:`, err)

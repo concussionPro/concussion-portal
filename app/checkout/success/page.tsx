@@ -357,12 +357,12 @@ function CheckoutSuccessContent() {
         {/* Referral ask */}
         <div className="mt-8 glass rounded-xl p-5 text-center">
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            <strong className="text-foreground">Know a colleague who&apos;d benefit?</strong> Share the free SCAT6 Mastery course with them — no cost, 2 CPD points.
+            <strong className="text-foreground">Know a colleague who&apos;d benefit?</strong> Share the free SCAT6 Mastery course with them — completely free.
           </p>
           <button
             onClick={() => {
               const url = 'https://portal.concussion-education-australia.com/scat-mastery'
-              const text = 'Free SCAT6 Mastery course — 2 AHPRA CPD points. Worth a look:'
+              const text = 'Free SCAT6 Mastery course — worth a look:'
               if (navigator.share) {
                 navigator.share({ title: 'Free SCAT6 Training', text, url })
               } else {

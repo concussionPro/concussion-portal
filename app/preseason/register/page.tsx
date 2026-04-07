@@ -255,7 +255,7 @@ export default function RegisterPage() {
               Free SCAT6/SCOAT6 Mastery Course
             </p>
             <p className="text-xs text-muted-foreground">
-              Learn how to properly administer and interpret every SCAT6 section. 2 AHPRA CPD points, certificate included.
+              Learn how to properly administer and interpret every SCAT6 section. Certificate included.
             </p>
           </div>
           <div className="flex flex-col gap-2">
@@ -263,7 +263,7 @@ export default function RegisterPage() {
               href="/scat-mastery"
               className="w-full btn-primary py-2.5 rounded-lg text-sm font-semibold text-center block"
             >
-              Get Free Course (2 CPD pts) →
+              Get Free Course →
             </Link>
             <Link
               href={CONFIG.SHOP_URL}

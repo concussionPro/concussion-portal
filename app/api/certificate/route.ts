@@ -12,7 +12,7 @@ import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
-const SCAT_MODULE_IDS = [101, 102, 103, 104, 105, 106]
+const SCAT_MODULE_IDS = [101, 102, 103]
 const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
 
 /**
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const courseType = request.nextUrl.searchParams.get('type') || 'scat-mastery'
 
     // The full-course (14 CPD) certificate is issued manually by the workshop instructor.
-    // Only scat-mastery (2 CPD) and online-course (8 CPD) are auto-generated.
+    // scat-mastery has 0 CPD (free lead gen). online-course (8 CPD) is auto-generated.
     if (courseType === 'full-course') {
       return NextResponse.json({ error: 'Full course certificates are issued at your workshop' }, { status: 403 })
     }
@@ -373,15 +373,17 @@ async function sendCertificateEmail(opts: {
                   </div>
                 </div>
 
-                <p>Your CPD certificate is attached to this email as a PDF. Save it for your records.</p>
+                <p>Your certificate is attached to this email as a PDF. Save it for your records.</p>
 
+                ${opts.cpdPoints > 0 ? `
                 <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 4px; margin: 20px 0;">
                   <p style="margin: 0; font-size: 14px; color: #1e40af;">
                     <strong>For AHPRA Audit:</strong> Retain this certificate in your CPD portfolio for at least 5 years. Log this activity as "Educational Activity — Reviewing & Reflecting" with ${opts.cpdPoints} CPD points.
                   </p>
                 </div>
+                ` : ''}
 
-                ${opts.cpdPoints === 2 ? `
+                ${opts.cpdPoints === 0 ? `
                 <div style="background: #faf5ff; border: 1px solid #d8b4fe; border-radius: 12px; padding: 20px; margin: 24px 0;">
                   <h3 style="margin: 0 0 8px 0; color: #7c3aed; font-size: 16px;">Ready for the next level?</h3>
                   <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b21a8;">

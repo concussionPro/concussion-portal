@@ -337,7 +337,7 @@ export default function PreviewPage() {
             <div className="flex-1 text-center sm:text-left">
               <h3 className="text-lg font-bold text-slate-900 mb-1">Not ready to enrol? Start free.</h3>
               <p className="text-sm text-slate-600">
-                SCAT6 Mastery — 6 modules, 2 CPD points, no card required. Experience the course quality before you commit.
+                SCAT6 Mastery — 3 modules, free, no card required. Experience the course quality before you commit.
               </p>
             </div>
             <Link

@@ -72,7 +72,7 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: Ap
                 onClick={() => router.push('/scat-mastery')}
                 className="text-amber-400 hover:text-amber-300 underline font-semibold"
               >
-                Try Our Free SCAT6 Course (2 CPD Points) →
+                Try Our Free SCAT6 Course →
               </button>
             </div>
           </div>
@@ -147,8 +147,8 @@ export default function ModulePage() {
     return <UpgradeOfferScreen moduleId={moduleId} router={router} />
   }
 
-  // If not authenticated and trying to access SCAT module (101-106), redirect to signup
-  if (!isAuthenticated && moduleId >= 101 && moduleId <= 106) {
+  // If not authenticated and trying to access SCAT module (101-103), redirect to signup
+  if (!isAuthenticated && moduleId >= 101 && moduleId <= 103) {
     router.push('/scat-mastery')
     return (
       <div className="flex min-h-screen bg-slate-50 items-center justify-center">
@@ -201,7 +201,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
   // When module has parts, insert part-quiz and part-milestone virtual sections
   const virtualSections: VirtualSection[] = React.useMemo(() => {
     if (!module) return []
-    const isSCATModule = moduleId >= 101 && moduleId <= 106
+    const isSCATModule = moduleId >= 101 && moduleId <= 103
 
     if (module.parts && module.parts.length > 0) {
       // Parts-based layout
@@ -265,7 +265,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
   }, [module, hasFullAccess, moduleId])
 
   // For free/preview users: lock paid modules after section 1, but SCAT modules are fully open
-  const isSCATModule = moduleId >= 101 && moduleId <= 106
+  const isSCATModule = moduleId >= 101 && moduleId <= 103
   const lockedAfterIndex = (hasFullAccess || isSCATModule) ? undefined : 1
 
   // Sync quizSubmitted with persisted progress (skip parts that user is retaking)
@@ -556,9 +556,9 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     if (canMarkModuleComplete(moduleId)) {
       markModuleComplete(moduleId)
 
-      // Check if all 6 SCAT modules (101-106) are now complete
-      if (moduleId >= 101 && moduleId <= 106) {
-        const scatModuleIds = [101, 102, 103, 104, 105, 106]
+      // Check if all 3 SCAT modules (101-103) are now complete
+      if (moduleId >= 101 && moduleId <= 103) {
+        const scatModuleIds = [101, 102, 103]
         const allScatComplete = scatModuleIds.every(
           id => id === moduleId || isModuleComplete(id)
         )
@@ -595,7 +595,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
   const quizResult = getQuizResult()
 
   // Check if ALL SCAT modules are complete (for special completion screen)
-  const allScatComplete = isSCATModule && [101, 102, 103, 104, 105, 106].every(
+  const allScatComplete = isSCATModule && [101, 102, 103].every(
     id => id === moduleId || isModuleComplete(id)
   )
 
@@ -612,7 +612,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
             <>
               <h1 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">SCAT6 Mastery Complete!</h1>
               <p className="text-lg text-slate-600 mb-6">
-                You&apos;ve completed all 6 modules and earned <strong>2 CPD points</strong>. Your certificate is ready on your dashboard.
+                You&apos;ve completed all 3 modules of the free SCAT6 Mastery course. Ready to go deeper?
               </p>
 
               {/* Promo offer */}
@@ -657,9 +657,33 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                   </div>
                 </div>
               )}
+
+              {/* Prominent upgrade CTA after SCAT module 102 (mid-course peak engagement) */}
+              {isSCATModule && moduleId === 102 && (
+                <div className="bg-gradient-to-br from-slate-50 to-teal-50 rounded-xl p-6 border-2 border-teal-200 mb-6 text-left max-w-md mx-auto">
+                  <p className="text-sm font-bold text-slate-900 mb-2">
+                    SCAT6 is just one assessment tool
+                  </p>
+                  <p className="text-sm text-slate-600 mb-4">
+                    Confident concussion management requires VOMS vestibular screening, BESS balance testing, and evidence-based return-to-play decisions. The full course covers all of this — {CONFIG.COURSE.TOTAL_MODULES} modules, up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points.
+                  </p>
+                  <Link
+                    href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
+                    onClick={() => trackEvent('upgrade_cta_click', { source: `module_${moduleId}_completion`, from: 'preview' })}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition-colors"
+                  >
+                    View Full Course — from ${CONFIG.COURSE.PRICE_ONLINE}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <p className="text-xs text-teal-700 font-medium mt-2">
+                    Use code {CONFIG.COURSE.PROMO_CODE} for $50 off
+                  </p>
+                </div>
+              )}
+
               <div className="flex flex-col items-center gap-3">
                 {(() => {
-                  const lastModuleId = isSCATModule ? 106 : 8
+                  const lastModuleId = isSCATModule ? 103 : 8
                   const hasNext = moduleId < lastModuleId
                   return (
                     <button
@@ -671,7 +695,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                     </button>
                   )
                 })()}
-                {isSCATModule && (
+                {isSCATModule && moduleId !== 102 && (
                   <div className="flex flex-col items-center gap-2">
                     <Link
                       href="/pricing"

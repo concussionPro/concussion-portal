@@ -262,7 +262,7 @@ export default function AssessmentPage() {
                 onClick={() => router.push('/scat-mastery')}
                 className="text-sm font-semibold text-accent hover:underline inline-flex items-center gap-1"
               >
-                Free SCAT6/SCOAT6 Mastery Course (2 CPD Points)
+                Free SCAT6/SCOAT6 Mastery Course
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

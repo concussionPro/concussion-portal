@@ -58,7 +58,7 @@ export function WelcomeModal() {
   const firstName = user?.name?.split(' ')[0] || 'there'
   const isPreviewUser = user?.accessLevel === 'preview'
   const isFullCourse = user?.accessLevel === 'full-course'
-  const cpdPoints = isPreviewUser ? '2' : '8'
+  const cpdPoints = isPreviewUser ? '0' : '8'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
@@ -111,7 +111,7 @@ export function WelcomeModal() {
             </h2>
             <p className="text-sm text-slate-500 md:text-base">
               {isPreviewUser
-                ? 'Your free SCAT6 Mastery course is ready — 6 modules, 2 CPD points.'
+                ? 'Your free SCAT6 Mastery course is ready — 3 modules, ~1 hour.'
                 : isFullCourse
                 ? 'Your online modules are ready — complete them before your hands-on workshop.'
                 : 'Your 8 clinical modules are unlocked and ready to go.'}
@@ -170,7 +170,7 @@ export function WelcomeModal() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900">Pass the Module 1 Quiz</p>
-                  <p className="text-xs text-slate-500">{isPreviewUser ? 'Earn your first 0.5 CPD points — takes about 30 minutes' : 'Earn your first AHPRA CPD point — takes about 75 minutes'}</p>
+                  <p className="text-xs text-slate-500">{isPreviewUser ? 'Complete your first module — takes about 25 minutes' : 'Earn your first AHPRA CPD point — takes about 75 minutes'}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-500 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
               </button>
@@ -212,7 +212,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <BookOpen className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '6' : '8'}</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '3' : '8'}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Modules</div>
             </div>
@@ -240,7 +240,7 @@ export function WelcomeModal() {
             >
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <Clock className="h-3.5 w-3.5 text-teal-600" />
-                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~2' : '~8'}</span>
+                <span className="text-xl font-bold" style={{ color: '#0d7377' }}>{isPreviewUser ? '~1' : '~8'}</span>
               </div>
               <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Hours Total</div>
             </div>

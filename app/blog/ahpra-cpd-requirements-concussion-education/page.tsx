@@ -343,7 +343,7 @@ export default function AHPRACPDPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-900 rounded-xl text-sm font-bold hover:bg-white/90 transition-all">
-                Free SCAT6 Training ({CONFIG.COURSE.SCAT_MASTERY_CPD_POINTS} CPD)
+                Free SCAT6 Training
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">

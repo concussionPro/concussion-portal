@@ -46,12 +46,10 @@ function LearningSuiteInner() {
 
   // SCAT progress for preview users
   const scatCompleted = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 106 && p.completed,
+    (p) => p.moduleId >= 101 && p.moduleId <= 103 && p.completed,
   ).length
-  // Modules 101-104 are 0.5 CPD each, Modules 105-106 are 0 CPD
-  const scatCPD = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 104 && p.completed,
-  ).length * 0.5
+  // SCAT modules have 0 CPD (free lead gen course)
+  const scatCPD = 0
 
   const handleModuleClick = (moduleId: number) => {
     router.push(`/modules/${moduleId}`)
@@ -79,7 +77,7 @@ function LearningSuiteInner() {
                 </h1>
                 <p className="text-sm text-muted-foreground">
                   {isPreview
-                    ? '2 Free CPD Points · SCAT6, SCOAT6 & Child SCAT6 Assessment Training'
+                    ? 'Free SCAT6, SCOAT6 & Child SCAT6 Assessment Training'
                     : accessLevel === 'full-course'
                     ? `${CONFIG.COURSE.ONLINE_CPD_POINTS} Online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} In-Person CPD Points (${CONFIG.COURSE.TOTAL_CPD_POINTS} Total) · Evidence-Based Concussion Management`
                     : `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD Points · Evidence-Based Concussion Management`}
@@ -91,13 +89,13 @@ function LearningSuiteInner() {
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">Modules Complete</div>
                   <div className="text-xl font-bold text-gradient">
-                    {isPreview ? `${scatCompleted} / 6` : `${completedModules} / 8`}
+                    {isPreview ? `${scatCompleted} / 3` : `${completedModules} / 8`}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">{isPreview ? 'Free CPD Points' : 'Online CPD Points'}</div>
                   <div className="text-xl font-bold text-gradient">
-                    {isPreview ? `${scatCPD} / 2` : `${cpdPoints} / 8`}
+                    {isPreview ? 'Free' : `${cpdPoints} / 8`}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
@@ -108,7 +106,7 @@ function LearningSuiteInner() {
 
               {/* Overall Progress Bar */}
               {(() => {
-                const totalModules = isPreview ? 6 : 8
+                const totalModules = isPreview ? 3 : 8
                 const done = isPreview ? scatCompleted : completedModules
                 const pct = Math.round((done / totalModules) * 100)
                 return (

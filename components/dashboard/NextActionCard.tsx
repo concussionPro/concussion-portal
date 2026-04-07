@@ -29,7 +29,7 @@ export function NextActionCard() {
   const completedModules = isPreview
     ? scatModules.filter(m => isModuleComplete(m.id)).length
     : getTotalCompletedModules()
-  const totalModules = isPreview ? 6 : 8
+  const totalModules = isPreview ? 3 : 8
 
   const nextModule = modules.find((m) => !isModuleComplete(m.id))
   const progressPercentage = Math.round((completedModules / totalModules) * 100)
@@ -166,12 +166,12 @@ export function NextActionCard() {
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2 tracking-tight">
                 {isPreview
-                  ? "You've Mastered All 6 SCAT Modules"
+                  ? "You've Mastered All 3 SCAT Modules"
                   : "You've Mastered All 8 Online Modules"}
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">
                 {isPreview
-                  ? `Outstanding achievement — you've earned 2 free AHPRA CPD points. Upgrade to unlock ${CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS & return-to-play, plus the Clinical Toolkit — up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points.`
+                  ? `Outstanding achievement — you've completed the SCAT6 Mastery course. Upgrade to unlock ${CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS & return-to-play, plus the Clinical Toolkit — up to ${CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points.`
                   : accessLevel === 'online-only'
                   ? `Outstanding achievement — you've earned all ${CONFIG.COURSE.ONLINE_CPD_POINTS} online AHPRA CPD points. Download your certificate below, or add the workshop for ${CONFIG.COURSE.TOTAL_CPD_POINTS} total.`
                   : `Outstanding achievement — you've earned all ${CONFIG.COURSE.ONLINE_CPD_POINTS} online AHPRA CPD points. Complete the ${CONFIG.COURSE.IN_PERSON_CPD_POINTS}-hour in-person practical to earn your full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point certificate.`}
@@ -182,7 +182,7 @@ export function NextActionCard() {
                 <div className="flex items-center gap-2 mb-2">
                   <Award className="w-4 h-4 text-emerald-600" />
                   <span className="text-sm font-bold text-emerald-900">
-                    {isPreview ? 'Free CPD Certificate (2 points)' : `CPD Certificate (${CONFIG.COURSE.ONLINE_CPD_POINTS} points)`}
+                    {isPreview ? 'Certificate of Completion' : `CPD Certificate (${CONFIG.COURSE.ONLINE_CPD_POINTS} points)`}
                   </span>
                 </div>
                 {certificateStatus === 'sending' && (
@@ -362,83 +362,141 @@ export function NextActionCard() {
   }
 
   /* ── Next Module ────────────────────────────── */
+
+  // Workshop upgrade nudge for online-only users at 25/50/75% milestones
+  const showWorkshopNudge = accessLevel === 'online-only' && progressPercentage >= 25
+  const workshopNudge = (() => {
+    if (!showWorkshopNudge) return null
+    const earlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
+    const price = earlyBird
+      ? CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
+      : CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+    const milestone = progressPercentage >= 75 ? 75 : progressPercentage >= 50 ? 50 : 25
+    const message = milestone >= 75
+      ? "You're nearly done — lock in hands-on skills while the theory is fresh."
+      : milestone >= 50
+      ? 'Halfway through the theory. The workshop turns this knowledge into clinical confidence.'
+      : 'Great start. Add the workshop to practise SCAT6, VOMS & BESS with expert feedback.'
+    return { price, earlyBird, message, milestone }
+  })()
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="glass-premium rounded-2xl p-5 sm:p-7 mb-6 sm:mb-8 border border-accent/10 relative overflow-hidden group hover:border-accent/20 transition-colors"
-    >
-      {/* Subtle accent gradient on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/3 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="glass-premium rounded-2xl p-5 sm:p-7 mb-6 sm:mb-8 border border-accent/10 relative overflow-hidden group hover:border-accent/20 transition-colors"
+      >
+        {/* Subtle accent gradient on hover */}
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/3 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-      <div className="relative z-10 flex items-start gap-4 sm:gap-5">
-        {/* Module number badge */}
-        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent/15">
-          <span className="text-xl sm:text-2xl font-bold text-white">
-            {isPreview ? nextModule.id - 100 : nextModule.id}
-          </span>
-        </div>
-
-        <div className="flex-1 min-w-0">
-          {/* Label */}
-          <div className="flex items-center gap-2 mb-1">
-            <ArrowRight className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-            <span className="text-xs font-bold text-accent uppercase tracking-wider">
-              Your Next Step
+        <div className="relative z-10 flex items-start gap-4 sm:gap-5">
+          {/* Module number badge */}
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent/15">
+            <span className="text-xl sm:text-2xl font-bold text-white">
+              {isPreview ? nextModule.id - 100 : nextModule.id}
             </span>
           </div>
 
-          {/* Title & description */}
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1 tracking-tight">
-            {nextModule.title}
-          </h2>
-          <p className="text-sm text-accent font-semibold mb-1.5">{nextModule.subtitle}</p>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
-            {nextModule.description}
-          </p>
+          <div className="flex-1 min-w-0">
+            {/* Label */}
+            <div className="flex items-center gap-2 mb-1">
+              <ArrowRight className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+              <span className="text-xs font-bold text-accent uppercase tracking-wider">
+                Your Next Step
+              </span>
+            </div>
 
-          {/* Meta chips */}
-          <div className="flex flex-wrap items-center gap-3 mb-5">
-            <span className="action-pill text-xs py-1 px-3">
-              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-              {nextModule.duration}
-            </span>
-            <span className="action-pill text-xs py-1 px-3">
-              <Award className="w-3.5 h-3.5 text-accent" />
-              {nextModule.points} CPD {nextModule.points === 1 ? 'Point' : 'Points'}
-            </span>
-            <span className="action-pill text-xs py-1 px-3">
-              <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-              {progressPercentage}% Complete
+            {/* Title & description */}
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1 tracking-tight">
+              {nextModule.title}
+            </h2>
+            <p className="text-sm text-accent font-semibold mb-1.5">{nextModule.subtitle}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
+              {nextModule.description}
+            </p>
+
+            {/* Meta chips */}
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              <span className="action-pill text-xs py-1 px-3">
+                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                {nextModule.duration}
+              </span>
+              <span className="action-pill text-xs py-1 px-3">
+                <Award className="w-3.5 h-3.5 text-accent" />
+                {nextModule.points} CPD {nextModule.points === 1 ? 'Point' : 'Points'}
+              </span>
+              <span className="action-pill text-xs py-1 px-3">
+                <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
+                {progressPercentage}% Complete
+              </span>
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={() => router.push(`/modules/${nextModule.id}`)}
+              className="px-6 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 hover:bg-accent-dark transition-all flex items-center gap-2 group/btn"
+            >
+              {completedModules === 0
+                ? `Begin Module ${isPreview ? nextModule.id - 100 : nextModule.id}`
+                : `Continue Module ${isPreview ? nextModule.id - 100 : nextModule.id}`}
+              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom progress bar */}
+        <div className="relative z-10 mt-5 pt-4 border-t border-border/30">
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${progressPercentage}%` }} />
+          </div>
+          <div className="flex items-center justify-between text-xs mt-2">
+            <span className="font-medium text-muted-foreground">{isPreview ? 'SCAT Course Progress' : 'Course Progress'}</span>
+            <span className="font-semibold text-accent">
+              {completedModules} / {totalModules} modules ({progressPercentage}%)
             </span>
           </div>
+        </div>
+      </motion.div>
 
-          {/* CTA */}
-          <button
-            onClick={() => router.push(`/modules/${nextModule.id}`)}
-            className="px-6 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 hover:bg-accent-dark transition-all flex items-center gap-2 group/btn"
-          >
-            {completedModules === 0
-              ? `Begin Module ${isPreview ? nextModule.id - 100 : nextModule.id}`
-              : `Continue Module ${isPreview ? nextModule.id - 100 : nextModule.id}`}
-            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
-          </button>
-        </div>
-      </div>
-
-      {/* Bottom progress bar */}
-      <div className="relative z-10 mt-5 pt-4 border-t border-border/30">
-        <div className="progress-track">
-          <div className="progress-fill" style={{ width: `${progressPercentage}%` }} />
-        </div>
-        <div className="flex items-center justify-between text-xs mt-2">
-          <span className="font-medium text-muted-foreground">{isPreview ? 'SCAT Course Progress' : 'Course Progress'}</span>
-          <span className="font-semibold text-accent">
-            {completedModules} / {totalModules} modules ({progressPercentage}%)
-          </span>
-        </div>
-      </div>
-    </motion.div>
+      {/* Workshop upgrade nudge — online-only users at 25/50/75% */}
+      {workshopNudge && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="glass-premium rounded-xl p-4 sm:p-5 mb-6 sm:mb-8 border border-blue-200 bg-gradient-to-br from-blue-50/50 to-white"
+        >
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <MapPin className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-900 mb-0.5">
+                Add the hands-on workshop — ${workshopNudge.price} AUD
+              </p>
+              <p className="text-xs text-slate-600 mb-3">
+                {workshopNudge.message}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => { trackEvent('upgrade_cta_click', { source: `milestone_${workshopNudge.milestone}`, from: 'online-only' }); router.push('/upgrade') }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors"
+                >
+                  Upgrade to Workshop
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                {workshopNudge.earlyBird && (
+                  <span className="text-[11px] text-blue-600 font-medium">
+                    Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </>
   )
 }

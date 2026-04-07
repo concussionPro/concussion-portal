@@ -84,7 +84,7 @@ export default function SCATMasteryPage() {
     'Score and interpret SCOAT6 findings for safe return-to-sport decisions',
     'Apply BESS, tandem gait, and dual-task balance testing with confidence',
     'Identify red-flag symptoms that require emergency referral',
-    'Document assessments to AHPRA standards and satisfy CPD requirements',
+    'Document assessments to AHPRA standards',
   ]
 
   return (
@@ -109,14 +109,14 @@ export default function SCATMasteryPage() {
             <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-6">
               <Zap className="w-3.5 h-3.5 text-[#5b9aa6]" />
               <span className="text-xs font-bold text-[#5b9aa6] uppercase tracking-wide">
-                Free · 2 AHPRA CPD Points · No Credit Card
+                Free · ~1 Hour · No Credit Card
               </span>
             </div>
 
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 mb-5 leading-tight">
               Master SCAT6 Assessment —{' '}
               <span className="bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] bg-clip-text text-transparent">
-                Free ~2 Hour Course
+                Free ~1 Hour Course
               </span>
             </h1>
 
@@ -127,7 +127,7 @@ export default function SCATMasteryPage() {
             {/* Trust pills */}
             <div className="flex flex-wrap gap-3 mb-10">
               {[
-                { icon: Clock, label: '2 CPD Points' },
+                { icon: Clock, label: '~1 Hour' },
                 { icon: Shield, label: 'AHPRA Aligned' },
                 { icon: Award, label: 'Instant Access' },
                 { icon: Star, label: 'No Credit Card' },
@@ -206,7 +206,7 @@ export default function SCATMasteryPage() {
                     Get free instant access
                   </h2>
                   <p className="text-sm text-slate-500">
-                    No credit card · Immediate · 2 CPD points
+                    No credit card · Immediate · ~1 hour
                   </p>
                 </div>
 
@@ -312,8 +312,8 @@ export default function SCATMasteryPage() {
                   <p className="text-xs text-slate-500 mt-0.5">No cost, ever</p>
                 </div>
                 <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/50 p-3.5 text-center">
-                  <p className="text-xl font-black text-slate-900">2 CPD</p>
-                  <p className="text-xs text-slate-500 mt-0.5">AHPRA points</p>
+                  <p className="text-xl font-black text-slate-900">~1 hr</p>
+                  <p className="text-xs text-slate-500 mt-0.5">To complete</p>
                 </div>
               </div>
             )}

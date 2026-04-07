@@ -55,7 +55,7 @@ export async function GET(
       sessionData.accessLevel === 'full-course'
 
     // Get appropriate module based on access level
-    const isSCATModule = moduleId >= 101 && moduleId <= 106
+    const isSCATModule = moduleId >= 101 && moduleId <= 103
     let module
 
     if (hasFullAccess) {
@@ -100,7 +100,7 @@ export async function GET(
     }
 
     // For preview users accessing PAID modules (1-8): truncate content
-    // SCAT modules (101-106) are the free course — preview users get FULL access
+    // SCAT modules (101-103) are the free course — preview users get FULL access
     let responseModule = module
     let allSectionTitles: string[] | undefined
     if (sessionData.accessLevel === 'preview' && !isSCATModule) {

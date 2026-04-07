@@ -158,13 +158,13 @@ export default function FreeSCAT6PDFDownloadPage() {
 
           <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-8 mb-12">
             <h3 className="text-2xl font-bold text-green-900 mb-4">
-              Free Training: Master SCAT6 & SCOAT6 in ~2 Hours
+              Free Training: Master SCAT6 & SCOAT6 in ~1 Hour
             </h3>
             <p className="text-lg text-slate-700 mb-4">
               Downloading the form is step 1. Knowing how to use it correctly is step 2.
             </p>
             <p className="text-slate-700 mb-6">
-              Our free SCAT6/SCOAT6 Mastery course covers step-by-step administration of every section, red flag recognition, medicolegal documentation requirements, and common mistakes that constitute below standard of care. <strong>2 AHPRA-aligned CPD points + certificate included.</strong>
+              Our free SCAT6/SCOAT6 Mastery course covers step-by-step administration of every section, red flag recognition, medicolegal documentation requirements, and common mistakes that constitute below standard of care. <strong>Certificate of completion included.</strong>
             </p>
             <Link
               href="/scat-mastery"

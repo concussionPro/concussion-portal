@@ -55,7 +55,7 @@ export function EmailCaptureInline() {
         </div>
         <div>
           <h3 className="text-base font-bold text-foreground">
-            Get the forms + free SCAT6 Mastery course (2 CPD points)
+            Get the forms + free SCAT6 Mastery course
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">
             Enter your email for instant access to the free course — no card required.

@@ -32,7 +32,7 @@ export function Sidebar() {
   const router = useRouter()
   const completedModules = getTotalCompletedModules()
   const scatCompletedModules = Object.values(progress).filter(
-    (p) => p.moduleId >= 101 && p.moduleId <= 106 && p.completed
+    (p) => p.moduleId >= 101 && p.moduleId <= 103 && p.completed
   ).length
   const { user: sessionUser } = useSession()
   const user = sessionUser ? {

@@ -115,7 +115,7 @@ export default function SCATAssessmentFAQ() {
               Want to Master SCAT-6 Assessment?
             </h3>
             <p className="text-lg text-slate-700 mb-6">
-              Get 100% confident with step-by-step training, clinical toolkit, and 2 CPD points.
+              Get 100% confident with step-by-step training and clinical toolkit.
             </p>
             <Link
               href="/scat-mastery"

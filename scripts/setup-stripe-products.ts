@@ -113,10 +113,10 @@ async function setupProducts() {
     // Product 4: SCAT Mastery Short Course
     const scatProduct = await stripe.products.create({
       name: 'SCAT6/SCOAT6 Mastery + Clinical Toolkit',
-      description: '2-hour short course with clinical toolkit, checklists, and certificate (2 CPD points)',
+      description: '1-hour short course with clinical toolkit, checklists, and certificate (free course)',
       metadata: {
         access_level: 'preview',
-        cpd_hours: '2',
+        cpd_hours: '1',
         short_course: 'true',
       },
     })

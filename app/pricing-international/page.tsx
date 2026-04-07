@@ -342,20 +342,20 @@ function InternationalPricingContent() {
 
             <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">SCAT6 Mastery</h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
-              6 focused modules on SCAT6 — the gold standard sideline assessment. See the course quality first, no commitment.
+              3 focused modules on SCAT6 — the gold standard sideline assessment. See the course quality first, no commitment.
             </p>
 
             <div className="mb-6">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-emerald-700 tracking-tight">Free</span>
               </div>
-              <p className="text-xs text-[var(--muted-foreground)] mt-1">No card required · 2 CE credits · Instant access</p>
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">No card required · Instant access</p>
             </div>
 
             <ul className="space-y-3 mb-6 flex-1">
               {[
-                '6 SCAT6-focused modules',
-                '2 CE credits on completion',
+                '3 SCAT6-focused modules',
+                'Certificate of completion',
                 'No card or payment required',
                 'See the course quality before you commit',
               ].map((feature, i) => (
@@ -479,7 +479,7 @@ function InternationalPricingContent() {
                     ['140+ peer-reviewed references', false, true],
                     ['90 quiz questions', false, true],
                     ['23 video lessons', false, true],
-                    ['CE credits', '2', '8'],
+                    ['CE credits', 'Free', '8'],
                     ['Lifetime access', true, true],
                     ['Certificate of completion', true, true],
                     ['7-day money-back guarantee', false, true],

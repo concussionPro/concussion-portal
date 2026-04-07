@@ -88,10 +88,10 @@ export default function SettingsPage() {
   const completedModules = getTotalCompletedModules()
   const allModulesComplete = completedModules === 8
 
-  // SCAT mastery (preview users): check if all 6 free modules are complete
-  const scatModuleIds = [101, 102, 103, 104, 105, 106]
+  // SCAT mastery (preview users): check if all 3 free modules are complete
+  const scatModuleIds = [101, 102, 103]
   const completedScatModules = scatModuleIds.filter(id => isModuleComplete(id)).length
-  const allScatComplete = completedScatModules === 6
+  const allScatComplete = completedScatModules === 3
   const isPreviewUser = user?.accessLevel === 'preview'
 
   const getCertType = () => {
@@ -635,11 +635,11 @@ export default function SettingsPage() {
                           <div className="flex items-center gap-2 mb-2">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                             <span className="text-sm font-bold text-emerald-900">
-                              Free CPD Certificate (2 points)
+                              Certificate of Completion
                             </span>
                           </div>
                           <p className="text-xs text-emerald-700">
-                            All 6 SCAT6 Mastery modules completed. Download or email your certificate below.
+                            All 3 SCAT6 Mastery modules completed. Download or email your certificate below.
                           </p>
                         </div>
 
@@ -690,15 +690,15 @@ export default function SettingsPage() {
                     ) : (
                       <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
                         <p className="text-sm font-semibold text-slate-700 mb-1">
-                          {completedScatModules}/6 modules completed
+                          {completedScatModules}/3 modules completed
                         </p>
                         <p className="text-xs text-slate-500 mb-3">
-                          Complete all 6 SCAT6 Mastery modules to unlock your certificate.
+                          Complete all 3 SCAT6 Mastery modules to finish the course.
                         </p>
                         <div className="w-full bg-slate-200 rounded-full h-2">
                           <div
                             className="bg-[#5b9aa6] h-2 rounded-full transition-all"
-                            style={{ width: `${(completedScatModules / 6) * 100}%` }}
+                            style={{ width: `${(completedScatModules / 3) * 100}%` }}
                           />
                         </div>
                       </div>

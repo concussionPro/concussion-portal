@@ -128,7 +128,7 @@
     document.querySelectorAll('a[data-sqsp-button]').forEach(function(btn) {
       var t = btn.textContent.trim().toLowerCase();
       if (t === 'cpd education suite') {
-        btn.textContent = 'Start Free SCAT6 Course \u2014 2 CPD Points \u2192';
+        btn.textContent = 'Start Free SCAT6 Course \u2192';
         btn.href = FREE_TRAINING;
       }
     });
@@ -182,7 +182,7 @@
     span.className = 'cea-portal-banner-text';
     span.innerHTML = '<strong>Free SCAT6 Training</strong>';
     span.appendChild(document.createTextNode(
-      ' \u2014 ~2 hours, 2 CPD points, instant access'
+      ' \u2014 ~1 hour, instant access'
     ));
 
     var link = document.createElement('a');

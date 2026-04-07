@@ -602,7 +602,7 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
   doc.setFontSize(9)
   doc.text('Powered by ConcussionPro — concussion-education-australia.com', margin, y)
   y += 6
-  doc.text('Free SCAT6/SCOAT6 Mastery Course (2 CPD pts): portal.concussion-education-australia.com/scat-mastery', margin, y)
+  doc.text('Free SCAT6/SCOAT6 Mastery Course: portal.concussion-education-australia.com/scat-mastery', margin, y)
 
   // Page numbers
   const totalPages = doc.getNumberOfPages()
@@ -754,8 +754,8 @@ export async function POST(request: Request) {
               <p style="font-size: 13px; color: #475569; margin: 20px 0 8px;">You've captured one dimension of baseline data. The SCAT6 protocol covers symptom evaluation, cognitive screening, neurological exam, balance testing, and more. Are you confident interpreting all 7 domains?</p>
 
               <div style="background: #f0f9ff; border: 2px solid #5b9aa6; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
-                <p style="margin: 0 0 8px; font-weight: 700; font-size: 16px; color: #1e293b;">Free: Master the Full SCAT6 Protocol (2 CPD Points)</p>
-                <p style="margin: 0 0 20px; font-size: 13px; color: #475569; line-height: 1.5;">Learn how to properly administer and interpret every SCAT6 section. Fillable forms, clinical toolkit &amp; certificate included. <strong>2 AHPRA CPD points — free.</strong></p>
+                <p style="margin: 0 0 8px; font-weight: 700; font-size: 16px; color: #1e293b;">Free: Master the Full SCAT6 Protocol</p>
+                <p style="margin: 0 0 20px; font-size: 13px; color: #475569; line-height: 1.5;">Learn how to properly administer and interpret every SCAT6 section. Fillable forms, clinical toolkit &amp; certificate included. <strong>Completely free.</strong></p>
                 <a href="${baseUrl}/scat-mastery?utm_source=email&utm_medium=email&utm_campaign=preseason_baseline&utm_content=free_course" style="display: inline-block; padding: 14px 32px; background-color: #5b9aa6; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 15px;">Get Free Course &rarr;</a>
                 <p style="margin: 16px 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">Want deeper training? Our <a href="${baseUrl}/pricing?utm_source=email&utm_medium=email&utm_campaign=preseason_baseline&utm_content=paid_course" style="color: #1e6b73; font-weight: 600; text-decoration: underline; display: inline; background: none; padding: 0; border-radius: 0; border: none;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
               </div>
