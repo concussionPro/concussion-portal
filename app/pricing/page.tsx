@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, Component } from 'react'
+import type { ReactNode, ErrorInfo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -23,6 +24,27 @@ import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
 import { CONFIG } from '@/lib/config'
+
+// ─── Error Boundary (diagnostic) ──────────────────────────────────────────────
+
+class PricingErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[PricingErrorBoundary] CAUGHT ERROR:', error.message, error.stack, info.componentStack)
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ background: 'red', color: 'white', padding: 20, margin: 20 }}>
+          <strong>PricingOptions Error:</strong> {this.state.error.message}
+          <pre style={{ fontSize: 11, marginTop: 10, whiteSpace: 'pre-wrap' }}>{this.state.error.stack}</pre>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -247,17 +269,6 @@ function PricingContent() {
 
       <div className="max-w-6xl mx-auto px-6 pt-[80px] pb-12 md:pb-20">
 
-        {/* ── TEMP DIAGNOSTIC — remove after debugging ── */}
-        <div style={{ background: 'red', color: 'white', padding: 20, margin: 20, textAlign: 'center' }}>
-          <button
-            onClick={() => { alert('React onClick works!'); console.log('[DIAG] React button clicked') }}
-            style={{ background: 'yellow', color: 'black', padding: '10px 20px', fontSize: 18, cursor: 'pointer', border: '3px solid black' }}
-          >
-            DIAGNOSTIC: Click me to test React hydration
-          </button>
-        </div>
-        {/* ── END TEMP DIAGNOSTIC ── */}
-
         {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
         <CanceledBanner />
 
@@ -329,7 +340,9 @@ function PricingContent() {
 
         {/* Pricing Cards — visible within first scroll on mobile */}
         <div id="pricing-cards">
-          <PricingOptions variant="full" />
+          <PricingErrorBoundary>
+            <PricingOptions variant="full" />
+          </PricingErrorBoundary>
         </div>
 
         {/* Regulatory context — reinforces decision after seeing price */}
@@ -616,7 +629,9 @@ function PricingContent() {
               {' '}7-day money-back guarantee.
             </p>
           </div>
-          <PricingOptions variant="compact" />
+          <PricingErrorBoundary>
+            <PricingOptions variant="compact" />
+          </PricingErrorBoundary>
         </div>
 
       </div>

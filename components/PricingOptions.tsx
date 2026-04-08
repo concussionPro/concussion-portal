@@ -26,6 +26,10 @@ export interface PricingOptionsProps {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
+  console.log('[PricingOptions] render, variant:', variant)
+  useEffect(() => {
+    console.log('[PricingOptions] MOUNTED (hydrated), variant:', variant)
+  }, [variant])
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
