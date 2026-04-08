@@ -14,6 +14,7 @@ import { verifySessionToken } from '@/lib/jwt-session'
  *   email?: string (optional, pre-fills checkout — ignored for workshop-upgrade, uses session email)
  */
 export async function POST(request: NextRequest) {
+  console.log('[create-checkout] POST received')
   try {
     const body = await request.json()
     const { courseType, location, email, preferredCity, promoCode, utm } = body

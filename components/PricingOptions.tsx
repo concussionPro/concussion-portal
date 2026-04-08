@@ -58,6 +58,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   }, [])
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
+    console.log('[handleCheckout] ENTERED - courseType:', courseType)
     try {
       setLoading(courseType)
       setError(null)
@@ -159,7 +160,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </ul>
 
             <button
-              onClick={() => handleCheckout('online-only')}
+              onClick={() => { console.log('[btn] compact online-only clicked'); handleCheckout('online-only') }}
               disabled={loading !== null}
               className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
@@ -228,7 +229,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </ul>
 
             <button
-              onClick={() => handleCheckout('full-course')}
+              onClick={() => { console.log('[btn] compact full-course clicked'); handleCheckout('full-course') }}
               disabled={loading !== null}
               className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -324,7 +325,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </ul>
 
           <button
-            onClick={() => handleCheckout('online-only')}
+            onClick={() => { console.log('[btn] full online-only clicked'); handleCheckout('online-only') }}
             disabled={loading !== null}
             className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
           >
@@ -471,7 +472,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           {/* Enroll Button */}
           <button
-            onClick={() => handleCheckout('full-course')}
+            onClick={() => { console.log('[btn] full full-course clicked'); handleCheckout('full-course') }}
             disabled={loading !== null}
             className="w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
           >
