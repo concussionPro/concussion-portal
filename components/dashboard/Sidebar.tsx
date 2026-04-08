@@ -129,7 +129,7 @@ export function Sidebar() {
         <div className="mb-8">
           <ProgressRing
             progress={user?.accessLevel === 'preview' ? scatCompletedModules : completedModules}
-            total={user?.accessLevel === 'preview' ? 6 : 8}
+            total={user?.accessLevel === 'preview' ? 3 : 8}
           />
         </div>
 

@@ -34,11 +34,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // Early bird: check deadline. Server is source of truth at checkout.
   const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
-  // Read pre-selected location, promo code, UTM params, and session email
+  // Read pre-selected location, promo code, and UTM params from URL
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
-  const [sessionEmail, setSessionEmail] = useState<string | null>(null)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
@@ -56,34 +55,33 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       if (val) utm[key] = val
     }
     if (Object.keys(utm).length > 0) setUtmParams(utm)
-
-    // Pre-fill email from session (free users upgrading to paid)
-    fetch('/api/auth/session', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => { if (data.user?.email) setSessionEmail(data.user.email) })
-      .catch(() => {})
   }, [])
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
-    setLoading(courseType)
-    setError(null)
-
-    trackEvent('checkout_start', { courseType, source: 'pricing_page', location: selectedLocation })
-
-    // Fire Google Ads conversion for checkout intent
-    const conversionValue = courseType === 'full-course'
-      ? (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR)
-      : CONFIG.COURSE.PRICE_ONLINE
-    trackLeadConversion(ENROL_CLICK_LABEL, conversionValue)
-
     try {
+      setLoading(courseType)
+      setError(null)
+
+      // Fire analytics in background (non-blocking)
+      trackEvent('checkout_start', { courseType, source: 'pricing_page', location: selectedLocation })
+        .catch(() => {})
+
+      // Fire Google Ads conversion in background (non-blocking)
+      const conversionValue = courseType === 'full-course'
+        ? (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR)
+        : CONFIG.COURSE.PRICE_ONLINE
+      trackLeadConversion(ENROL_CLICK_LABEL, conversionValue)
+        .catch(() => {})
+
+      console.log('[checkout] Creating session for:', courseType)
+
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           courseType,
           ...(courseType === 'full-course' && selectedLocation ? { location: selectedLocation } : {}),
-          ...(sessionEmail ? { email: sessionEmail } : {}),
           ...(promoCode ? { promoCode } : {}),
           ...(Object.keys(utmParams).length > 0 ? { utm: utmParams } : {}),
         }),
@@ -106,8 +104,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         setLoading(null)
       }
     } catch (err) {
-      console.error('[checkout] Network error:', err)
-      setError('Network error. Please check your connection and try again.')
+      console.error('[checkout] Error:', err)
+      setError('Something went wrong. Please try again or contact support.')
       setLoading(null)
     }
   }
