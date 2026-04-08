@@ -247,6 +247,17 @@ function PricingContent() {
 
       <div className="max-w-6xl mx-auto px-6 pt-[80px] pb-12 md:pb-20">
 
+        {/* ── TEMP DIAGNOSTIC — remove after debugging ── */}
+        <div style={{ background: 'red', color: 'white', padding: 20, margin: 20, textAlign: 'center' }}>
+          <button
+            onClick={() => { alert('React onClick works!'); console.log('[DIAG] React button clicked') }}
+            style={{ background: 'yellow', color: 'black', padding: '10px 20px', fontSize: 18, cursor: 'pointer', border: '3px solid black' }}
+          >
+            DIAGNOSTIC: Click me to test React hydration
+          </button>
+        </div>
+        {/* ── END TEMP DIAGNOSTIC ── */}
+
         {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
         <CanceledBanner />
 
