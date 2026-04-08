@@ -58,6 +58,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   }, [])
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
+    alert('CHECKOUT CLICKED: ' + courseType)
     try {
       setLoading(courseType)
       setError(null)
