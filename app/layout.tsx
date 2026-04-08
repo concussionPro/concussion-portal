@@ -107,7 +107,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en-AU">
+    <html lang="en-AU" suppressHydrationWarning>
       <head>
         {/* Preconnect to Google Tag Manager for faster gtag.js loading */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
@@ -134,6 +134,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <script
           type="application/ld+json"
