@@ -63,7 +63,7 @@ export function SiteNav() {
               </Link>
             ))}
             <Link
-              href={CONFIG.SHOP_URL}
+              href={pathname === '/pricing' ? '#pricing-cards' : CONFIG.SHOP_URL}
               className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
             >
               Enrol
@@ -113,7 +113,8 @@ export function SiteNav() {
               </Link>
             ))}
             <Link
-              href={CONFIG.SHOP_URL}
+              href={pathname === '/pricing' ? '#pricing-cards' : CONFIG.SHOP_URL}
+              onClick={() => setMobileMenuOpen(false)}
               className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
             >
               Enrol Now

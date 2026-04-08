@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense, Component } from 'react'
-import type { ReactNode, ErrorInfo } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -24,27 +23,6 @@ import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
 import { CONFIG } from '@/lib/config'
-
-// ─── Error Boundary (diagnostic) ──────────────────────────────────────────────
-
-class PricingErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
-  state: { error: Error | null } = { error: null }
-  static getDerivedStateFromError(error: Error) { return { error } }
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[PricingErrorBoundary] CAUGHT ERROR:', error.message, error.stack, info.componentStack)
-  }
-  render() {
-    if (this.state.error) {
-      return (
-        <div style={{ background: 'red', color: 'white', padding: 20, margin: 20 }}>
-          <strong>PricingOptions Error:</strong> {this.state.error.message}
-          <pre style={{ fontSize: 11, marginTop: 10, whiteSpace: 'pre-wrap' }}>{this.state.error.stack}</pre>
-        </div>
-      )
-    }
-    return this.props.children
-  }
-}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -340,9 +318,7 @@ function PricingContent() {
 
         {/* Pricing Cards — visible within first scroll on mobile */}
         <div id="pricing-cards">
-          <PricingErrorBoundary>
-            <PricingOptions variant="full" />
-          </PricingErrorBoundary>
+          <PricingOptions variant="full" />
         </div>
 
         {/* Regulatory context — reinforces decision after seeing price */}
@@ -629,9 +605,7 @@ function PricingContent() {
               {' '}7-day money-back guarantee.
             </p>
           </div>
-          <PricingErrorBoundary>
-            <PricingOptions variant="compact" />
-          </PricingErrorBoundary>
+          <PricingOptions variant="compact" />
         </div>
 
       </div>

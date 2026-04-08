@@ -26,25 +26,6 @@ export interface PricingOptionsProps {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
-  console.log('[PricingOptions] render, variant:', variant)
-  useEffect(() => {
-    console.log('[PricingOptions] MOUNTED (hydrated), variant:', variant)
-    // DIAGNOSTIC: capture-phase click listener to see what element gets the click
-    const handler = (e: MouseEvent) => {
-      const el = e.target as HTMLElement
-      console.log('[CLICK-CAPTURE]', {
-        tag: el.tagName,
-        text: el.textContent?.substring(0, 50),
-        className: el.className?.substring?.(0, 80),
-        id: el.id,
-        parentTag: el.parentElement?.tagName,
-        zIndex: getComputedStyle(el).zIndex,
-        pointerEvents: getComputedStyle(el).pointerEvents,
-      })
-    }
-    document.addEventListener('click', handler, true)
-    return () => document.removeEventListener('click', handler, true)
-  }, [variant])
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,7 +58,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   }, [])
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
-    console.log('[handleCheckout] ENTERED - courseType:', courseType)
     try {
       setLoading(courseType)
       setError(null)
@@ -92,8 +72,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         : CONFIG.COURSE.PRICE_ONLINE
       trackLeadConversion(ENROL_CLICK_LABEL, conversionValue)
         .catch(() => {})
-
-      console.log('[checkout] Creating session for:', courseType)
 
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
@@ -179,7 +157,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </ul>
 
             <button
-              onClick={() => { console.log('[btn] compact online-only clicked'); handleCheckout('online-only') }}
+              onClick={() => handleCheckout('online-only')}
               disabled={loading !== null}
               className="btn-primary w-full py-2.5 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
@@ -248,7 +226,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </ul>
 
             <button
-              onClick={() => { console.log('[btn] compact full-course clicked'); handleCheckout('full-course') }}
+              onClick={() => handleCheckout('full-course')}
               disabled={loading !== null}
               className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -344,7 +322,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </ul>
 
           <button
-            onClick={() => { console.log('[btn] full online-only clicked'); handleCheckout('online-only') }}
+            onClick={() => handleCheckout('online-only')}
             disabled={loading !== null}
             className="btn-primary w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
           >
@@ -491,7 +469,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           {/* Enroll Button */}
           <button
-            onClick={() => { console.log('[btn] full full-course clicked'); handleCheckout('full-course') }}
+            onClick={() => handleCheckout('full-course')}
             disabled={loading !== null}
             className="w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
           >
