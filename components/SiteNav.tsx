@@ -18,6 +18,7 @@ const NAV_ITEMS = [
 export function SiteNav() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const onPricing = pathname === '/pricing'
 
   return (
     <nav
@@ -62,13 +63,24 @@ export function SiteNav() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href={pathname === '/pricing' ? '#pricing-cards' : CONFIG.SHOP_URL}
-              className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
-            >
-              Enrol
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            {onPricing ? (
+              <button
+                type="button"
+                onClick={() => document.getElementById('pricing-cards')?.scrollIntoView({ behavior: 'smooth' })}
+                className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
+              >
+                Enrol
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <Link
+                href={CONFIG.SHOP_URL}
+                className="btn-primary ml-2 px-4 py-2 rounded-lg text-[13px] inline-flex items-center gap-1.5"
+              >
+                Enrol
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
             {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
               <span className="hidden lg:inline-flex ml-1.5 text-[10px] font-semibold px-2 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 whitespace-nowrap">
                 Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
@@ -112,13 +124,26 @@ export function SiteNav() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href={pathname === '/pricing' ? '#pricing-cards' : CONFIG.SHOP_URL}
-              onClick={() => setMobileMenuOpen(false)}
-              className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
-            >
-              Enrol Now
-            </Link>
+            {onPricing ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  document.getElementById('pricing-cards')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
+              >
+                Enrol Now
+              </button>
+            ) : (
+              <Link
+                href={CONFIG.SHOP_URL}
+                onClick={() => setMobileMenuOpen(false)}
+                className="btn-primary mt-1 py-2.5 px-4 rounded-lg text-sm text-center font-semibold"
+              >
+                Enrol Now
+              </Link>
+            )}
           </div>
         </div>
       )}
