@@ -29,6 +29,21 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   console.log('[PricingOptions] render, variant:', variant)
   useEffect(() => {
     console.log('[PricingOptions] MOUNTED (hydrated), variant:', variant)
+    // DIAGNOSTIC: capture-phase click listener to see what element gets the click
+    const handler = (e: MouseEvent) => {
+      const el = e.target as HTMLElement
+      console.log('[CLICK-CAPTURE]', {
+        tag: el.tagName,
+        text: el.textContent?.substring(0, 50),
+        className: el.className?.substring?.(0, 80),
+        id: el.id,
+        parentTag: el.parentElement?.tagName,
+        zIndex: getComputedStyle(el).zIndex,
+        pointerEvents: getComputedStyle(el).pointerEvents,
+      })
+    }
+    document.addEventListener('click', handler, true)
+    return () => document.removeEventListener('click', handler, true)
   }, [variant])
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
