@@ -7,7 +7,7 @@ import {
   getOnlineCourseCertificateData,
   getFullCourseCertificateData,
 } from '@/lib/certificate'
-import { getResend, sendEmail } from '@/lib/resend-client'
+import { getResend, sendEmail, sendEmailWithAttachment, escapeHtml as sharedEscapeHtml } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -305,10 +305,6 @@ function getLatestCompletionDate(progress: Record<string, any>, moduleIds: numbe
   return latest.getTime() > 0 ? latest : new Date()
 }
 
-function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-}
-
 async function sendCertificateEmail(opts: {
   to: string
   participantName: string
@@ -317,35 +313,16 @@ async function sendCertificateEmail(opts: {
   certificateId: string
   pdfBuffer: Buffer
 }): Promise<boolean> {
-  // Dev mode guard — should not be reached since POST handler checks this first,
-  // but kept as a safety net
-  if (!getResend() || process.env.NODE_ENV === 'development') {
-    console.log('Certificate email skipped (dev mode):', {
-      to: opts.to,
-      subject: `Your CPD Certificate — ${opts.courseTitle}`,
-      certificateId: opts.certificateId,
-    })
-    return false
-  }
-
-  try {
-    const client = getResend()
-    if (!client) {
-      console.error('[Certificate] Resend not configured')
-      return false
-    }
-    const result = await client.emails.send({
-      from: 'Concussion Education Australia <zac@concussion-education-australia.com>',
-      replyTo: 'zac@concussion-education-australia.com',
-      to: opts.to,
-      subject: `Your CPD Certificate — ${opts.courseTitle}`,
-      attachments: [
-        {
-          filename: `CPD-Certificate-${opts.certificateId}.pdf`,
-          content: opts.pdfBuffer,
-        },
-      ],
-      html: `
+  return sendEmailWithAttachment({
+    to: opts.to,
+    subject: `Your CPD Certificate — ${opts.courseTitle}`,
+    attachments: [
+      {
+        filename: `CPD-Certificate-${opts.certificateId}.pdf`,
+        content: opts.pdfBuffer,
+      },
+    ],
+    html: `
         <!DOCTYPE html>
         <html>
           <head>
@@ -362,19 +339,19 @@ async function sendCertificateEmail(opts: {
               </div>
 
               <div style="padding: 32px 24px;">
-                <h2 style="margin-top: 0; color: #1e293b;">Hi ${escapeHtml(opts.participantName)},</h2>
+                <h2 style="margin-top: 0; color: #1e293b;">Hi ${sharedEscapeHtml(opts.participantName)},</h2>
 
                 <p>You've successfully completed:</p>
 
                 <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
                   <div style="font-size: 18px; font-weight: 700; color: #166534; margin-bottom: 8px;">
-                    ${escapeHtml(opts.courseTitle)}
+                    ${sharedEscapeHtml(opts.courseTitle)}
                   </div>
                   <div style="font-size: 32px; font-weight: 800; color: #059669;">
                     ${opts.cpdPoints} CPD Points
                   </div>
                   <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
-                    AHPRA-Aligned · Certificate ID: ${escapeHtml(opts.certificateId)}
+                    AHPRA-Aligned · Certificate ID: ${sharedEscapeHtml(opts.certificateId)}
                   </div>
                 </div>
 
@@ -419,18 +396,7 @@ async function sendCertificateEmail(opts: {
           </body>
         </html>
       `,
-    })
-
-    if (result.data) {
-      console.log('Certificate email sent:', result.data.id)
-      return true
-    }
-    console.error('Certificate email error:', result.error)
-    return false
-  } catch (error) {
-    console.error('Certificate email error:', error)
-    return false
-  }
+  })
 }
 
 /**

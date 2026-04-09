@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { CONFIG } from '@/lib/config'
 
 const VALID_CITIES = ['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa'] as const
 type ValidCity = (typeof VALID_CITIES)[number]
@@ -93,6 +95,11 @@ export async function POST(request: NextRequest) {
     `
     const totalInPool = countRows[0]?.count || 1
 
+    // Generate unsubscribe URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    const unsubToken = generateUnsubscribeToken(session.email)
+    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(session.email)}&token=${unsubToken}`
+
     // Send confirmation email to user (best effort)
     try {
       await sendEmail({
@@ -103,6 +110,10 @@ export async function POST(request: NextRequest) {
           { name: 'type', value: 'ready-to-train-confirmation' },
           { name: 'city', value: city },
         ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       })
     } catch (emailErr) {
       console.error('Failed to send ready-to-train confirmation email:', emailErr)
@@ -111,7 +122,7 @@ export async function POST(request: NextRequest) {
     // Notify Zac (best effort)
     try {
       await sendEmail({
-        to: 'zac@concussion-education-australia.com',
+        to: CONFIG.CONTACT_EMAIL,
         subject: `Ready to Train: ${cityLabel} — ${session.name} (${totalInPool} total)`,
         html: buildNotificationEmail(session.name, session.email, cityLabel, totalInPool),
         tags: [

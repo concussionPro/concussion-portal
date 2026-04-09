@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { CONFIG } from '@/lib/config'
 
 // Rate limiting
@@ -92,6 +93,11 @@ export async function POST(request: NextRequest) {
     `
     const totalCount = countRows[0]?.count || 1
 
+    // Generate unsubscribe URL for confirmation email
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    const unsubToken = generateUnsubscribeToken(cleanEmail)
+    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(cleanEmail)}&token=${unsubToken}`
+
     // Send confirmation email to registrant (best effort)
     try {
       await sendEmail({
@@ -102,6 +108,10 @@ export async function POST(request: NextRequest) {
           { name: 'type', value: 'interest-confirmation' },
           { name: 'city', value: city },
         ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       })
     } catch (emailErr) {
       console.error('Failed to send interest confirmation email:', emailErr)

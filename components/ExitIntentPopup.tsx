@@ -86,7 +86,10 @@ export function ExitIntentPopup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !name.trim()) return
+    if (!email.trim() || !name.trim()) {
+      setError('Please enter both your name and email.')
+      return
+    }
 
     setSubmitting(true)
     setError('')
@@ -172,6 +175,7 @@ export function ExitIntentPopup() {
                 <input
                   type="text"
                   placeholder="Your name"
+                  aria-label="Your name"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0d9488] transition-colors"
@@ -180,6 +184,7 @@ export function ExitIntentPopup() {
                 <input
                   type="email"
                   placeholder="Your email"
+                  aria-label="Your email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0d9488] transition-colors"

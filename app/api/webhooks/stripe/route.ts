@@ -8,6 +8,7 @@ import { createMagicToken } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
+import { escapeHtml } from '@/lib/resend-client'
 import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
 import Stripe from 'stripe'
 /** Redact email for logging — show first 3 chars only */
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest) {
     console.log(`Stripe webhook received: ${event.type} (${event.id})`)
 
     // Idempotency: atomic INSERT — if event already exists, skip processing
+    let idempotencyInserted = false
     try {
       const { rows } = await sql`
         INSERT INTO processed_webhook_events (event_id, event_type, processed_at)
@@ -98,11 +100,18 @@ export async function POST(request: NextRequest) {
         console.log(`Skipping duplicate event: ${event.id}`)
         return NextResponse.json({ received: true, duplicate: true })
       }
-    } catch (idempotencyError) {
-      // If table doesn't exist yet, continue — don't block payments
-      console.warn('Idempotency check failed (table may not exist yet):', idempotencyError)
+      idempotencyInserted = true
+    } catch (idempotencyError: unknown) {
+      // Only skip on "table does not exist" — re-throw on connection/constraint errors
+      const pgCode = (idempotencyError as { code?: string })?.code
+      if (pgCode === '42P01') {
+        console.warn('processed_webhook_events table missing — continuing without idempotency')
+      } else {
+        throw idempotencyError
+      }
     }
 
+    try {
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
@@ -131,6 +140,18 @@ export async function POST(request: NextRequest) {
 
       default:
         console.log(`Unhandled event type: ${event.type}`)
+    }
+    } catch (handlerError) {
+      // If provisioning failed, remove idempotency record so Stripe can retry
+      if (idempotencyInserted) {
+        try {
+          await sql`DELETE FROM processed_webhook_events WHERE event_id = ${event.id}`
+          console.log(`Removed idempotency record for failed event ${event.id} — Stripe will retry`)
+        } catch (cleanupErr) {
+          console.error('Failed to clean up idempotency record:', cleanupErr)
+        }
+      }
+      throw handlerError
     }
 
     return NextResponse.json({ received: true })
@@ -303,7 +324,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         await sendEmail({
           to: CONFIG.CONTACT_EMAIL,
           subject: `ACTION REQUIRED: Login email failed for ${redact(customerEmail)}`,
-          html: `<p>A customer just paid but their login email failed to send.</p><p><strong>Email:</strong> ${customerEmail}<br><strong>Course:</strong> ${courseType}<br><strong>Access:</strong> ${finalAccess}</p><p>They can request a new login link from /login, but you may want to reach out proactively.</p>`,
+          html: `<p>A customer just paid but their login email failed to send.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Course:</strong> ${escapeHtml(courseType)}<br><strong>Access:</strong> ${escapeHtml(finalAccess)}</p><p>They can request a new login link from /login, but you may want to reach out proactively.</p>`,
         })
       } catch { /* best effort */ }
     }
@@ -313,7 +334,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
         subject: `ACTION REQUIRED: Login email failed for ${redact(customerEmail)}`,
-        html: `<p>A customer just paid but their login email threw an error.</p><p><strong>Email:</strong> ${customerEmail}<br><strong>Course:</strong> ${courseType}</p><p>Error: ${emailError}</p>`,
+        html: `<p>A customer just paid but their login email threw an error.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Course:</strong> ${escapeHtml(courseType)}</p><p>Error: ${escapeHtml(emailError instanceof Error ? emailError.message : String(emailError))}</p>`,
       })
     } catch { /* best effort */ }
   }
@@ -485,12 +506,13 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
       console.log(`[Abandoned] Skipped email for ${redact(email)} — unsubscribed`)
     }
 
-    // Store with emails_sent = 1 (or 0 if unsubscribed, so cron won't re-send email 1 either)
+    // Store with emails_sent = 1 (or max if unsubscribed, so cron skips entirely)
+    const emailsSent = unsubscribed ? ABANDONED_CHECKOUT_SEQUENCE.length : 1
     await sql`
       INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered)
-      VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), ${unsubscribed ? 0 : 1}, false)
+      VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), ${emailsSent}, false)
     `
-    console.log(`Stored abandoned checkout for ${redact(email)} (emails_sent: ${unsubscribed ? 0 : 1})`)
+    console.log(`Stored abandoned checkout for ${redact(email)} (emails_sent: ${emailsSent})`)
   } catch (err) {
     console.error('Failed to process abandoned checkout:', err)
   }
@@ -557,7 +579,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   try {
     await sql`
-      UPDATE users SET access_level = ${downgradeLevel} WHERE email = ${email.toLowerCase()}
+      UPDATE users SET access_level = ${downgradeLevel} WHERE LOWER(email) = ${email.toLowerCase()}
     `
     console.log(`Downgraded ${redact(email)} to ${downgradeLevel} access after refund ($${chargeAmount})`)
   } catch (err) {

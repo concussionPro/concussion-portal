@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
 
     // Send welcome email (Day 0 of nurture sequence)
-    await sendEmail({
+    const emailSent = await sendEmail({
       to: email,
       subject: 'Module 1 is ready — 20 minutes to confident SCAT6 use',
       headers: {
@@ -188,6 +188,10 @@ export async function POST(request: NextRequest) {
         { name: 'day', value: '0' },
       ],
     })
+
+    if (!emailSent) {
+      console.warn(`[signup-free] Day 0 email failed for ${email.slice(0, 3)}*** — user has session cookie, can access course`)
+    }
 
     const response = NextResponse.json({
       success: true,

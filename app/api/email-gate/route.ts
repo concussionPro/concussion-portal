@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
         VALUES (
           'scat_export_signup',
-          ${JSON.stringify({ email: normalizedEmail, isExisting: !!existingUser })}::jsonb,
+          ${JSON.stringify({ email: normalizedEmail.slice(0, 3) + '***', isExisting: !!existingUser })}::jsonb,
           ${'server_' + Date.now()},
           ${Date.now()},
           ${request.headers.get('user-agent') || 'unknown'},
@@ -115,6 +115,11 @@ export async function POST(request: NextRequest) {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
       const unsubToken = generateUnsubscribeToken(normalizedEmail)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(normalizedEmail)}&token=${unsubToken}`
+      // Record Day 0 audit BEFORE sending so a crash + re-run won't double-send
+      // (Without this, the cron catch-up would re-send Day 0 the next day)
+      sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+        .catch(err => console.error('Failed to write email-gate audit log:', err))
+
       sendEmail({
         to: normalizedEmail,
         subject: 'Your SCAT6 assessment PDF + free concussion course',

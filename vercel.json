@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/sync-squarespace",
       "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/monitoring",
+      "schedule": "0 20 * * *"
     }
   ]
 }

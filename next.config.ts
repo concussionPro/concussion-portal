@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
       { source: '/ty-page', destination: '/scat-mastery', permanent: false },
       { source: '/blog-1', destination: '/blog', permanent: false },
       { source: '/blog-1/:slug*', destination: '/blog', permanent: false },
+      // Legacy trial page → SCAT Mastery (better UX: instant session vs magic link wall)
+      { source: '/trial', destination: '/scat-mastery', permanent: true },
     ]
   },
 
