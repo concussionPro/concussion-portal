@@ -57,19 +57,28 @@ export function EmailGateModal({ isOpen, onClose, onSuccess, accentColor = 'blue
     }
   }
 
+  // Close on Escape key
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose} onKeyDown={handleKeyDown}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
       {/* Modal */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="email-gate-title"
         className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
+          aria-label="Close dialog"
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors z-10"
         >
           <X className="w-5 h-5" />
@@ -80,7 +89,7 @@ export function EmailGateModal({ isOpen, onClose, onSuccess, accentColor = 'blue
           <div className={`w-14 h-14 rounded-2xl ${colors.bg} flex items-center justify-center mx-auto mb-4`}>
             <Download className="w-7 h-7 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-1">Download Your PDF Report</h3>
+          <h3 id="email-gate-title" className="text-xl font-bold text-slate-900 mb-1">Download Your PDF Report</h3>
           <p className="text-sm text-slate-500 leading-relaxed">
             Enter your email to download a formatted clinical report for your patient records.
           </p>
@@ -91,7 +100,9 @@ export function EmailGateModal({ isOpen, onClose, onSuccess, accentColor = 'blue
           <div className="mb-4">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <label htmlFor="email-gate-input" className="sr-only">Email address</label>
               <input
+                id="email-gate-input"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

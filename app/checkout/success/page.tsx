@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, Mail, BookOpen, ArrowRight, Loader2, AlertTriangle, Award } from 'lucide-react'
+import { CheckCircle2, BookOpen, ArrowRight, Loader2, AlertTriangle, Award } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { trackPurchaseConversion, trackEvent } from '@/lib/analytics'
 

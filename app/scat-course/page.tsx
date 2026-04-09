@@ -128,7 +128,7 @@ export default function SCATCoursePage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <SiteNav />
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-teal-500 text-white pt-[80px]">
+      <div className="bg-gradient-to-r from-blue-600 to-teal-500 text-white pt-[120px]">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-6">
             <div>

@@ -202,7 +202,7 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
     html = html.replace('{{unsubscribe_url}}', unsubscribeUrl)
 
     const action: CatchUpAction = {
-      email: user.email,
+      email: user.email.slice(0, 3) + '***',
       name: user.name || '(no name)',
       accessLevel: user.accessLevel,
       daysSinceSignup,
@@ -238,7 +238,7 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
         })
         sent++
       } catch (err) {
-        console.error(`[Catch-up] Failed to send to ${user.email}:`, err)
+        console.error(`[Catch-up] Failed to send to ${user.email.slice(0, 3)}***:`, err)
         // Remove audit entry so it can be retried
         await sql`DELETE FROM email_audit_log WHERE audit_key = ${auditKey}`
         actions[actions.length - 1].action = `FAILED: ${actionDesc}`

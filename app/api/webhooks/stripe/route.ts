@@ -264,7 +264,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const purchaseAmount = (session.amount_total || 0) / 100
   try {
     await logAnalyticsEvent('purchase_complete', {
-      email: customerEmail,
+      email: redact(customerEmail),
       courseType,
       amount: purchaseAmount,
       currency,
@@ -302,7 +302,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       try {
         await sendEmail({
           to: CONFIG.CONTACT_EMAIL,
-          subject: `ACTION REQUIRED: Login email failed for ${customerEmail}`,
+          subject: `ACTION REQUIRED: Login email failed for ${redact(customerEmail)}`,
           html: `<p>A customer just paid but their login email failed to send.</p><p><strong>Email:</strong> ${customerEmail}<br><strong>Course:</strong> ${courseType}<br><strong>Access:</strong> ${finalAccess}</p><p>They can request a new login link from /login, but you may want to reach out proactively.</p>`,
         })
       } catch { /* best effort */ }
@@ -312,7 +312,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     try {
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
-        subject: `ACTION REQUIRED: Login email failed for ${customerEmail}`,
+        subject: `ACTION REQUIRED: Login email failed for ${redact(customerEmail)}`,
         html: `<p>A customer just paid but their login email threw an error.</p><p><strong>Email:</strong> ${customerEmail}<br><strong>Course:</strong> ${courseType}</p><p>Error: ${emailError}</p>`,
       })
     } catch { /* best effort */ }
@@ -330,7 +330,7 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   // Log to analytics
   try {
     await logAnalyticsEvent('payment_failed', {
-      email: email || 'unknown',
+      email: redact(email),
       error: errorMsg,
       amount: (paymentIntent.amount || 0) / 100,
       currency: paymentIntent.currency,
@@ -422,7 +422,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
   // Log to analytics
   try {
-    await logAnalyticsEvent('checkout_expired', { email, courseType, amount })
+    await logAnalyticsEvent('checkout_expired', { email: redact(email), courseType, amount })
   } catch (err) {
     console.error('Failed to log checkout expired analytics:', err)
   }
@@ -513,7 +513,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   // Log to analytics
   try {
     await logAnalyticsEvent('charge_refunded', {
-      email,
+      email: redact(email),
       amountRefunded: refundAmount,
       amountOriginal: (charge.amount || 0) / 100,
       isFullRefund: charge.amount_refunded >= charge.amount,

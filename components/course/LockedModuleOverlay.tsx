@@ -1,18 +1,16 @@
 'use client'
 
 import { Lock, ArrowRight } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 
 export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
   moduleNumber: number
   moduleTitle: string
 }) {
-  const router = useRouter()
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl p-8">
+      <div role="dialog" aria-modal="true" aria-labelledby="locked-module-title" className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl p-8">
         <div className="text-center">
           {/* Lock Icon */}
           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
@@ -20,7 +18,7 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
           </div>
 
           {/* Content */}
-          <h2 className="text-2xl font-bold text-slate-900 mb-3">
+          <h2 id="locked-module-title" className="text-2xl font-bold text-slate-900 mb-3">
             Module {moduleNumber} is Locked
           </h2>
           <p className="text-base text-slate-600 mb-6 leading-relaxed">
@@ -66,12 +64,12 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
             <p className="text-xs text-slate-500 mt-2 text-center">
               Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} (early bird)
             </p>
-            <button
-              onClick={() => router.push('/dashboard')}
+            <Link
+              href="/dashboard"
               className="block w-full px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-all text-center"
             >
               Return to Dashboard
-            </button>
+            </Link>
           </div>
 
           <p className="text-xs text-slate-500 mt-4">

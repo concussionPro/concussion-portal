@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       const orderTotal = parseFloat(order.grandTotal?.value || 0)
       const orderId = order.id
 
-      console.log(`New order: $${orderTotal} from ${customerEmail}`)
+      console.log(`New order: $${orderTotal} from ${customerEmail.slice(0, 3)}***`)
 
       // Determine access level based on price
       let accessLevel: 'online-only' | 'full-course' = 'online-only'
@@ -68,14 +68,14 @@ export async function POST(request: NextRequest) {
       const existingUser = await findUserByEmail(customerEmail)
 
       if (existingUser) {
-        console.log(`Existing user: ${customerEmail}`)
+        console.log(`Existing user: ${customerEmail.slice(0, 3)}***`)
 
         // FIX: Use createUser() to properly persist the upgrade (it handles save internally)
         if (
           (existingUser.accessLevel === 'preview' || existingUser.accessLevel === 'online-only') &&
           accessLevel === 'full-course'
         ) {
-          console.log(`Upgrading ${customerEmail} to full course`)
+          console.log(`Upgrading ${customerEmail.slice(0, 3)}*** to full course`)
           await createUser({
             email: customerEmail,
             name: customerName,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Create new user
-      console.log(`Creating new user: ${customerEmail} (${accessLevel})`)
+      console.log(`Creating new user: ${customerEmail.slice(0, 3)}*** (${accessLevel})`)
 
       const userId = await createUser({
         email: customerEmail,
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
       // Record audit key so cron won't re-send Day 0
       await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
 
-      console.log(`[Squarespace Form] Created preview user + sent Day 0: ${email}`)
+      console.log(`[Squarespace Form] Created preview user + sent Day 0: ${email.slice(0, 3)}***`)
       return NextResponse.json({ success: true, message: 'User created from form submission' })
     }
 

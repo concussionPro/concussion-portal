@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
 import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useState } from 'react'
 import { CONFIG } from '@/lib/config'
@@ -310,13 +311,13 @@ function LearningSuiteInner() {
                       </div>
 
                       {/* Unlock button — sits above the greyed content */}
-                      <button
-                        onClick={() => router.push('/pricing')}
+                      <Link
+                        href="/pricing"
                         className="absolute bottom-5 right-5 sm:bottom-6 sm:right-6 px-4 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-1.5 z-10"
                       >
                         <Lock className="w-3 h-3" />
                         Unlock
-                      </button>
+                      </Link>
                     </div>
                   ))}
                 </div>
@@ -332,13 +333,13 @@ function LearningSuiteInner() {
                       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                         The full course goes beyond SCAT6 — learn VOMS screening, BESS scoring, return-to-play protocols, and phenotype-based rehabilitation. Add a <strong className="text-foreground">hands-on workshop</strong> to practice these skills with expert feedback. Online: <strong className="text-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD</strong> for ${CONFIG.COURSE.PRICE_ONLINE}. Complete (online + workshop): <strong className="text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD</strong> from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird. 7-day guarantee · Afterpay / Klarna available.
                       </p>
-                      <button
-                        onClick={() => router.push('/pricing')}
+                      <Link
+                        href="/pricing"
                         className="btn-primary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
                       >
                         View Pricing & Enrol
                         <ArrowRight className="w-4 h-4" />
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -357,13 +358,13 @@ function LearningSuiteInner() {
                     <p className="text-xs text-muted-foreground mb-3">
                       Your online modules teach the theory. The full-day workshop is where you practice SCAT6 administration, VOMS testing &amp; BESS scoring with expert feedback — the skills you can&apos;t learn from a screen.
                     </p>
-                    <button
-                      onClick={() => router.push('/upgrade')}
+                    <Link
+                      href="/upgrade"
                       className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5"
                     >
                       Add Workshop
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    </Link>
                     {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
                       <p className="text-[11px] text-orange-600 font-medium mt-2">
                         Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — save ${CONFIG.COURSE.SAVINGS}

@@ -19,7 +19,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 
 /* ──────────────── Micro Progress Ring ──────────────── */
@@ -47,11 +47,42 @@ function MicroRing({ value, max, size = 40 }: { value: number; max: number; size
 interface CardProps {
   children: React.ReactNode
   className?: string
+  href?: string
   onClick?: () => void
   span2?: boolean
 }
 
-function Card({ children, className, onClick, span2 }: CardProps) {
+function Card({ children, className, href, onClick, span2 }: CardProps) {
+  const isInteractive = !!href || !!onClick
+  const inner = (
+    <>
+      {children}
+      {isInteractive && (
+        <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+      )}
+    </>
+  )
+
+  if (href) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        whileHover={{ y: -3 }}
+        className={cn(
+          'glass-premium rounded-2xl relative overflow-hidden group',
+          span2 && 'bento-span-2',
+          className,
+        )}
+      >
+        <Link href={href} className="block p-5 sm:p-6">
+          {inner}
+        </Link>
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -66,10 +97,7 @@ function Card({ children, className, onClick, span2 }: CardProps) {
         className,
       )}
     >
-      {children}
-      {onClick && (
-        <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
-      )}
+      {inner}
     </motion.div>
   )
 }
@@ -80,7 +108,6 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
   workshopLocation?: string | null
   onWorkshopNominated?: (location: string) => void
 }) {
-  const router = useRouter()
   const { user } = useSession()
   const {
     getTotalCompletedModules,
@@ -121,7 +148,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
   return (
     <div className="bento-premium">
       {/* ── 1. Course Progress (wide) ─────────────────── */}
-      <Card onClick={() => router.push('/learning')} span2>
+      <Card href="/learning" span2>
         <div className="flex items-start gap-4">
           <div className="relative flex-shrink-0">
             <MicroRing value={displayModules} max={displayMaxModules} size={56} />
@@ -147,7 +174,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
       </Card>
 
       {/* ── 2. CPD Points ───────────────────────────── */}
-      <Card onClick={() => router.push('/learning')}>
+      <Card href="/learning">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
             <Award className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
@@ -187,7 +214,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
       </Card>
 
       {/* ── 4. Learning Suite ───────────────────────── */}
-      <Card onClick={() => router.push('/learning')}>
+      <Card href="/learning">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
             <BookOpen className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
@@ -203,7 +230,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
       </Card>
 
       {/* ── 5. Clinical Toolkit ─────────────────────── */}
-      <Card onClick={() => router.push('/clinical-toolkit')}>
+      <Card href="/clinical-toolkit">
         <div className="flex items-center gap-3 mb-3">
           <div className={cn(
             'w-9 h-9 rounded-xl flex items-center justify-center',
@@ -230,7 +257,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
       </Card>
 
       {/* ── 6. SCAT Forms ───────────────────────────── */}
-      <Card onClick={() => router.push('/scat-forms')}>
+      <Card href="/scat-forms">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-400/5 flex items-center justify-center">
             <Activity className="w-[18px] h-[18px] text-violet-600/70" strokeWidth={1.8} />
@@ -244,7 +271,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
       </Card>
 
       {/* ── 7. Reference Repository (wide) ──────────── */}
-      <Card onClick={() => router.push('/references')} span2>
+      <Card href="/references" span2>
         <div className="flex items-start gap-4">
           <div className={cn(
             'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
@@ -281,7 +308,6 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
         allModulesComplete={completedModules >= 8}
         workshopLocation={workshopLocation}
         onWorkshopNominated={onWorkshopNominated}
-        onNavigate={(path) => router.push(path)}
       />
     </div>
   )
@@ -294,14 +320,12 @@ function WorkshopCard({
   allModulesComplete,
   workshopLocation,
   onWorkshopNominated,
-  onNavigate,
 }: {
   accessLevel?: string
   isPreview: boolean
   allModulesComplete: boolean
   workshopLocation?: string | null
   onWorkshopNominated?: (location: string) => void
-  onNavigate: (path: string) => void
 }) {
   const isFullCourse = accessLevel === 'full-course'
   const isOnlineOnly = accessLevel === 'online-only'
@@ -390,7 +414,7 @@ function WorkshopCard({
   // Full-course user who has nominated
   if (hasNominated) {
     return (
-      <Card onClick={() => onNavigate('/in-person')}>
+      <Card href="/in-person">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
             <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
@@ -410,7 +434,7 @@ function WorkshopCard({
 
   // Default: preview/online-only/full-course pre-completion
   return (
-    <Card onClick={() => onNavigate(isPreview ? '/pricing' : isOnlineOnly ? '/upgrade' : '/in-person')}>
+    <Card href={isPreview ? '/pricing' : isOnlineOnly ? '/upgrade' : '/in-person'}>
       <div className="flex items-center gap-3 mb-3">
         <div className={cn(
           'w-9 h-9 rounded-xl flex items-center justify-center',

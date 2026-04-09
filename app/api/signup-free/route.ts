@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     let userId: string
     if (existingUser) {
       userId = existingUser.id
-      console.log(`Existing user signed up for free course: ${email}`)
+      console.log(`Existing user signed up for free course: ${email.slice(0, 3)}***`)
     } else {
       // Create new user with preview access
       userId = await createUser({
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         accessLevel: 'preview',
         signupSource: 'free-course',
       })
-      console.log(`New user created for free course: ${email}`)
+      console.log(`New user created for free course: ${email.slice(0, 3)}***`)
     }
 
     // Log analytics event (server-side — client can't track this)
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
         VALUES (
           'free_course_signup',
-          ${JSON.stringify({ email: email.toLowerCase(), name: userName, isExisting: !!existingUser })}::jsonb,
+          ${JSON.stringify({ name: userName, isExisting: !!existingUser })}::jsonb,
           ${'server_' + Date.now()},
           ${Date.now()},
           ${request.headers.get('user-agent') || 'unknown'},

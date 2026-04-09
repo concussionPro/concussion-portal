@@ -79,11 +79,17 @@ export async function GET(request: NextRequest) {
     const customerName = session.customer_details?.name || ''
     const courseType = session.metadata?.courseType || 'online-only'
 
+    // Redact email — show first name and masked email so user can confirm identity
+    // without exposing the full address to unauthenticated requests
+    const maskedEmail = customerEmail
+      ? customerEmail.slice(0, 3) + '***@' + customerEmail.split('@')[1]
+      : ''
+
     const response = NextResponse.json({
       success: true,
       session: {
         customerName,
-        customerEmail,
+        customerEmail: maskedEmail,
         courseType,
         location: session.metadata?.location || '',
         amountPaid: (session.amount_total || 0) / 100,

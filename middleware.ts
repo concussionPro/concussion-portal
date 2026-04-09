@@ -29,6 +29,9 @@ const PAID_DOCS = new Set([
   '/docs/CCM_Complete_Reference_2026.pdf',
   '/docs/SCAT-SCOAT_FillablePDFs.zip',
   '/docs/ClinicalToolkit_Complete.zip',
+  '/docs/SCAT6_Flat.pdf',
+  '/docs/SCOAT6_Flat.pdf',
+  '/docs/Child_SCAT6_Flat.pdf',
 ])
 
 // Edge-compatible session verification using Web Crypto API
@@ -114,6 +117,21 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(intlUrl, 302)
       }
     }
+  }
+
+  // Block direct access to CourseContent brochure — paid content only
+  if (pathname === '/CourseContent_2026.pdf') {
+    const sessionToken = request.cookies.get('session')?.value
+    if (sessionToken) {
+      const session = await verifySessionEdge(sessionToken)
+      if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
+        return NextResponse.next()
+      }
+    }
+    return NextResponse.json(
+      { error: 'Please log in to access this resource.' },
+      { status: 401 }
+    )
   }
 
   // Handle /docs/ file access (PDFs and ZIPs)
@@ -216,6 +234,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/pricing',
+    '/CourseContent_2026.pdf',
     '/docs/:path*.pdf',
     '/docs/:path*.zip',
     '/resources/:path*.pdf',

@@ -83,6 +83,7 @@ export function WelcomeModal() {
         {/* Close button */}
         <button
           onClick={handleClose}
+          aria-label="Close welcome dialog"
           className="absolute top-5 right-5 z-10 flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
           style={{
             background: 'rgba(255,255,255,0.7)',

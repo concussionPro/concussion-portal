@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
     let emailSent = false
     if (certInserted === 0) {
       // Already sent — skip email but still return success (user can download PDF)
-      console.log(`[Certificate] Already emailed ${courseType} cert to ${sessionData.email} — skipping duplicate`)
+      console.log(`[Certificate] Already emailed ${courseType} cert to ${sessionData.email.slice(0, 3)}*** — skipping duplicate`)
     } else {
       // Send email with certificate attached
       emailSent = await sendCertificateEmail({
@@ -442,7 +442,7 @@ async function sendCompletionUpsell(userId: string, email: string, name: string)
   try {
     const { rows } = await sql`SELECT nurture_unsubscribed FROM users WHERE id = ${userId} LIMIT 1`
     if (rows.length > 0 && rows[0].nurture_unsubscribed) {
-      console.log(`[Completion Upsell] Skipped ${email} — unsubscribed`)
+      console.log(`[Completion Upsell] Skipped ${email.slice(0, 3)}*** — unsubscribed`)
       return
     }
   } catch { /* proceed if check fails */ }
@@ -450,7 +450,7 @@ async function sendCompletionUpsell(userId: string, email: string, name: string)
   const auditKey = `scat_completion_upsell_${userId}`
   const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
   if (inserted === 0) {
-    console.log(`[Completion Upsell] Already sent to ${email} — skipping`)
+    console.log(`[Completion Upsell] Already sent to ${email.slice(0, 3)}*** — skipping`)
     return
   }
 
@@ -476,8 +476,8 @@ async function sendCompletionUpsell(userId: string, email: string, name: string)
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
     })
-    console.log(`[Completion Upsell] Sent to ${email}`)
+    console.log(`[Completion Upsell] Sent to ${email.slice(0, 3)}***`)
   } catch (err) {
-    console.error(`[Completion Upsell] Failed to send to ${email}:`, err)
+    console.error(`[Completion Upsell] Failed to send to ${email.slice(0, 3)}***:`, err)
   }
 }

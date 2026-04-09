@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     // Notify Zac (best effort)
     try {
       await sendEmail({
-        to: 'zac@concussion-education-australia.com',
+        to: CONFIG.CONTACT_EMAIL,
         subject: `New Interest: ${cityLabel} Workshop — ${cleanName}`,
         html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, totalCount),
         tags: [
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send interest notification email:', emailErr)
     }
 
-    console.log(`Interest registered: ${cleanEmail} for ${cityLabel} (total: ${totalCount})`)
+    console.log(`Interest registered: ${cleanEmail.slice(0, 3)}*** for ${cityLabel} (total: ${totalCount})`)
 
     return NextResponse.json({
       success: true,

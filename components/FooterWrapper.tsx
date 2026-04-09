@@ -7,6 +7,7 @@ const PUBLIC_ROUTES = [
   '/',
   '/preview',
   '/pricing',
+  '/pricing-international',
   '/in-person',
   '/assessment',
   '/scat-forms',

@@ -6,6 +6,7 @@ import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
@@ -224,7 +225,7 @@ export function Sidebar() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-accent transition-colors"
             >
-              <img src="/logo.png" alt="" className="w-3.5 h-3.5 rounded-sm" />
+              <Image src="/logo.png" alt="" width={14} height={14} className="w-3.5 h-3.5 rounded-sm" />
               Main Site
               <ExternalLink className="w-2.5 h-2.5" />
             </a>

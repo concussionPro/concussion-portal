@@ -274,7 +274,9 @@ export default function InPersonTrainingPage() {
                     <h4 className="text-sm font-bold text-foreground">Get notified when your city confirms</h4>
                   </div>
                   <form onSubmit={handleInterest} className="flex flex-col sm:flex-row gap-2">
+                    <label htmlFor="interest-name" className="sr-only">Your name</label>
                     <input
+                      id="interest-name"
                       type="text"
                       required
                       placeholder="Your name"
@@ -282,7 +284,9 @@ export default function InPersonTrainingPage() {
                       onChange={(e) => setInterestName(e.target.value)}
                       className="flex-1 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                     />
+                    <label htmlFor="interest-email" className="sr-only">Email address</label>
                     <input
+                      id="interest-email"
                       type="email"
                       required
                       placeholder="you@clinic.com.au"
@@ -290,7 +294,9 @@ export default function InPersonTrainingPage() {
                       onChange={(e) => setInterestEmail(e.target.value)}
                       className="flex-1 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                     />
+                    <label htmlFor="interest-city" className="sr-only">Workshop city</label>
                     <select
+                      id="interest-city"
                       value={interestCity}
                       onChange={(e) => setInterestCity(e.target.value)}
                       className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"

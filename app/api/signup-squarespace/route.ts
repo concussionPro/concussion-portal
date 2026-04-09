@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     // Record Day 0 audit so cron won't re-send
     await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${`scat_day0_${userId}`}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
 
-    console.log(`[SS Form] Created + emailed: ${email}`)
+    console.log(`[SS Form] Created + emailed: ${email.slice(0, 3)}***`)
 
     return NextResponse.json({ success: true }, { headers: getCorsHeaders(request) })
   } catch (error) {

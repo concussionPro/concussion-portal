@@ -131,7 +131,9 @@ export default function ResourcesPage() {
                 </div>
               )}
               <div className="flex gap-3">
+                <label htmlFor="resource-email" className="sr-only">Email address</label>
                 <input
+                  id="resource-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

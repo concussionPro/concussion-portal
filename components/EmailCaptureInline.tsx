@@ -64,7 +64,9 @@ export function EmailCaptureInline() {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2.5">
+        <label htmlFor="email-capture-inline" className="sr-only">Email address</label>
         <input
+          id="email-capture-inline"
           type="email"
           required
           placeholder="you@clinic.com.au"

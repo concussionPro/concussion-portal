@@ -188,8 +188,11 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
           return (
             <div
               key={index}
+              role="button"
+              tabIndex={0}
               className="bg-white rounded-xl p-5 border-2 border-slate-200 hover:border-blue-300 transition-all group cursor-pointer"
               onClick={() => handleDownload(resource.downloadUrl, resource.title)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDownload(resource.downloadUrl, resource.title) } }}
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition-colors">
