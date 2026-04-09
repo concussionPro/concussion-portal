@@ -91,3 +91,8 @@ export type LocationKey = keyof typeof CONFIG.LOCATIONS
 export type Location = LocationKey
 export type LocationConfig = typeof CONFIG.LOCATIONS[LocationKey]
 export type LocationStatus = 'collecting' | 'confirmed' | 'completed'
+
+/** Calculate Afterpay/Klarna instalment amount (price / 4, rounded up to cents) */
+export function afterpayInstalment(price: number): string {
+  return (Math.ceil(price / 4 * 100) / 100).toFixed(2)
+}

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       '"What to Expect After a Concussion".pdf',
       'RehabFlow.png',
       'CCM_Complete_Reference_2026.pdf',
-      'SCAT:SCOAT_FIllablePDFs.zip',
+      'SCAT-SCOAT_FillablePDFs.zip',
     ]
 
     if (!allowedFiles.includes(fileName)) {

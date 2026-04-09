@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { CheckCircle2, Mail, BookOpen, ArrowRight, Loader2, AlertTriangle, Award } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { trackPurchaseConversion, trackEvent } from '@/lib/analytics'
@@ -28,6 +29,7 @@ function CheckoutSuccessContent() {
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [copied, setCopied] = useState(false)
   const conversionFiredRef = useRef(false)
 
   useEffect(() => {
@@ -96,18 +98,18 @@ function CheckoutSuccessContent() {
               : 'This page requires a valid checkout session. If you just completed a purchase, check your email for a login link.'}
           </p>
           <div className="flex flex-col gap-3">
-            <button
-              onClick={() => router.push('/login')}
+            <Link
+              href="/login"
               className="btn-primary px-8 py-3 rounded-xl font-semibold"
             >
               Go to Login
-            </button>
-            <button
-              onClick={() => router.push('/')}
+            </Link>
+            <Link
+              href="/"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Go to Homepage
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -125,12 +127,9 @@ function CheckoutSuccessContent() {
       {/* Minimal Nav */}
       <nav className="glass border-b border-border/30">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <button
-            onClick={() => router.push('/')}
-            className="text-xl font-bold"
-          >
+          <Link href="/" className="text-xl font-bold">
             Concussion<span className="text-gradient">Pro</span>
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -143,11 +142,18 @@ function CheckoutSuccessContent() {
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
             Enrolment confirmed{sessionData?.customerName ? `, ${sessionData.customerName.split(' ')[0]}` : ''}.
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground mb-6">
             {isFullCourseType
               ? 'Your concussion management training starts now.'
               : 'You now have lifetime access to all 8 modules.'}
           </p>
+          <Link
+            href={sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1'}
+            className="btn-primary px-8 py-4 rounded-xl font-bold inline-flex items-center gap-2"
+          >
+            {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
+            <ArrowRight className="w-5 h-5" />
+          </Link>
         </div>
 
         {/* Early bird savings callout */}
@@ -297,13 +303,13 @@ function CheckoutSuccessContent() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => router.push(sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1')}
+          <Link
+            href={sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1'}
             className="flex-1 btn-primary px-8 py-4 rounded-xl font-bold text-center flex items-center justify-center gap-2"
           >
             {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
             <ArrowRight className="w-5 h-5" />
-          </button>
+          </Link>
         </div>
 
         {/* Workshop upsell for online-only buyers */}
@@ -337,13 +343,13 @@ function CheckoutSuccessContent() {
                 ))}
               </ul>
               <div className="ml-[52px]">
-                <button
-                  onClick={() => router.push('/upgrade')}
+                <Link
+                  href="/upgrade"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-orange-500 text-white hover:bg-orange-600 transition-colors"
                 >
                   Upgrade from ${upgradePrice} more
                   <ArrowRight className="w-4 h-4" />
-                </button>
+                </Link>
                 {isEarlyBird && (
                   <p className="text-xs text-orange-600 font-medium mt-2">
                     Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -367,7 +373,8 @@ function CheckoutSuccessContent() {
                 navigator.share({ title: 'Free SCAT6 Training', text, url })
               } else {
                 navigator.clipboard.writeText(`${text} ${url}`)
-                alert('Link copied to clipboard!')
+                setCopied(true)
+                setTimeout(() => setCopied(false), 3000)
               }
             }}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-accent/20 text-accent hover:bg-accent/5 transition-colors"
@@ -375,6 +382,11 @@ function CheckoutSuccessContent() {
             Share with a colleague
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
+          {copied && (
+            <p className="text-sm text-emerald-600 font-medium mt-2" role="status" aria-live="polite">
+              Link copied to clipboard
+            </p>
+          )}
         </div>
 
         {/* Personal touch */}

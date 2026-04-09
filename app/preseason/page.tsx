@@ -1,12 +1,11 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { ArrowRight, ArrowLeft, ClipboardList, Share2, FileText, Shield, Brain, Users, CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowRight, ClipboardList, Share2, FileText, Shield, Brain, Users, CheckCircle2 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 
 export default function PreseasonLandingPage() {
-  const router = useRouter()
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -16,7 +15,7 @@ export default function PreseasonLandingPage() {
       <SiteNav />
 
       {/* Hero */}
-      <section className="section-padding pt-[80px] pb-8 relative z-10">
+      <section className="section-padding pt-[120px] pb-8 relative z-10">
         <div className="container-lg px-6 md:px-8 text-center">
           <div className="animate-fade-in max-w-3xl mx-auto">
             <div className="badge mb-5">
@@ -38,21 +37,21 @@ export default function PreseasonLandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
-              <button
-                onClick={() => router.push('/preseason/register')}
+              <Link
+                href="/preseason/register"
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold flex items-center gap-2 w-full sm:w-auto shadow-2xl"
               >
                 Register Your Clinic
                 <ArrowRight className="w-5 h-5" aria-hidden="true" />
-              </button>
+              </Link>
             </div>
 
-            <button
-              onClick={() => router.push('/preseason/b/DEMO00')}
+            <Link
+              href="/preseason/b/DEMO00"
               className="text-sm text-orange-600 font-semibold hover:underline underline-offset-4 transition-colors px-4 py-2 rounded-lg bg-orange-50 border border-orange-200 shadow-[0_0_12px_rgba(249,115,22,0.3)] hover:shadow-[0_0_18px_rgba(249,115,22,0.45)]"
             >
               Try the test yourself first →
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -207,18 +206,18 @@ export default function PreseasonLandingPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => router.push('/scat-mastery')}
+              <Link
+                href="/scat-mastery"
                 className="bg-white text-teal-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-teal-50 transition-all shadow-2xl flex items-center gap-2 w-full sm:w-auto"
               >
                 Get Free Course
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Link>
               <a
                 href={CONFIG.SHOP_URL}
                 className="bg-white/10 backdrop-blur-sm text-white border-2 border-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-white/20 transition-all flex items-center gap-2 w-full sm:w-auto"
               >
-                Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD pts)
+                Explore Full Course
               </a>
             </div>
           </div>
@@ -239,20 +238,20 @@ export default function PreseasonLandingPage() {
               Register your clinic in 30 seconds and start collecting baselines from your sports club athletes today.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => router.push('/preseason/register')}
+              <Link
+                href="/preseason/register"
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 w-full sm:w-auto"
               >
                 Register Your Clinic
                 <ArrowRight className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => router.push('/pricing')}
+              </Link>
+              <Link
+                href="/pricing"
                 className="px-8 py-4 rounded-xl text-base font-semibold text-accent border-2 border-accent/20 hover:bg-accent/5 transition-all inline-flex items-center gap-2 w-full sm:w-auto"
               >
                 View Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD pts)
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Clock, MapPin, Users, Award, CheckCircle2, ArrowRight, Loader2, Mail } from 'lucide-react'
 import Image from 'next/image'
 import { CONFIG } from '@/lib/config'
@@ -9,7 +9,6 @@ import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
 
 export default function InPersonTrainingPage() {
-  const router = useRouter()
   const [interestEmail, setInterestEmail] = useState('')
   const [interestName, setInterestName] = useState('')
   const [interestCity, setInterestCity] = useState('sydney')
@@ -30,6 +29,9 @@ export default function InPersonTrainingPage() {
       const data = await res.json()
       if (data.success) {
         setInterestSuccess(data.message)
+        setInterestEmail('')
+        setInterestName('')
+        setInterestCity('sydney')
       } else {
         setInterestError(data.error || 'Something went wrong.')
       }
@@ -50,7 +52,7 @@ export default function InPersonTrainingPage() {
       <div className="min-h-screen bg-background">
         <SiteNav />
 
-        <div className="max-w-4xl mx-auto px-6 pt-[80px] pb-16">
+        <div className="max-w-4xl mx-auto px-6 pt-[120px] pb-16">
           {/* Hero */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-4">
@@ -326,20 +328,20 @@ export default function InPersonTrainingPage() {
               Complete 8 evidence-based online modules + full-day practical workshop. Walk away ready to confidently assess, phenotype, and manage concussions from day one.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => router.push('/pricing')}
+              <Link
+                href="/pricing"
                 className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
               >
                 <Award className="w-5 h-5" />
                 See Pricing & Options
                 <ArrowRight className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => router.push('/preview')}
+              </Link>
+              <Link
+                href="/preview"
                 className="btn-secondary px-8 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"
               >
                 View Course Preview
-              </button>
+              </Link>
             </div>
             <div className="mt-6 pt-6 border-t border-border/30">
               <p className="text-xs text-muted-foreground">

@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Check, Star } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { ArrowRight, Check, Star, ShieldCheck } from 'lucide-react'
+import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { OrganizationSchema, CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
 import { trackShopClick } from '@/lib/analytics'
@@ -62,14 +62,26 @@ export default function HomePage() {
               >
                 Compare Pricing
               </Link>
+              <Link
+                href="/preview"
+                className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors"
+              >
+                Preview course content
+              </Link>
             </div>
 
-            <p className="text-sm text-muted-foreground mt-2">
-              From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay) · 7-day guarantee
+            <p className="text-sm text-muted-foreground mt-3 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              7-day money-back guarantee — try risk-free
             </p>
-            <p className="text-sm text-slate-500 mt-1">
-              Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
+            <p className="text-sm text-muted-foreground mt-1">
+              From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay)
             </p>
+            {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
+              <p className="text-sm text-slate-500 mt-1">
+                Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            )}
 
             <p className="text-[13px] text-[var(--muted-foreground)] mt-3">
               <Link
@@ -391,7 +403,7 @@ export default function HomePage() {
                   onClick={() => trackShopClick('footer-cta')}
                   className="bg-white text-[var(--foreground)] px-7 py-3.5 rounded-xl text-[15px] font-semibold inline-flex items-center gap-2 hover:bg-white/90 transition-colors shadow-lg"
                 >
-                  Enrol Now
+                  View Plans & Enrol
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link

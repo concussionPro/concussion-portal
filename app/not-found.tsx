@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Home, Search, ArrowLeft } from 'lucide-react'
 
 export default function NotFound() {
@@ -34,13 +35,13 @@ export default function NotFound() {
             Go Back
           </button>
 
-          <button
-            onClick={() => router.push('/')}
+          <Link
+            href="/"
             className="btn-primary px-8 py-4 rounded-xl text-base font-bold flex items-center gap-2"
           >
             <Home className="w-5 h-5" />
             Return Home
-          </button>
+          </Link>
         </div>
 
         <div className="mt-12 pt-8 border-t border-border/30">
@@ -48,33 +49,33 @@ export default function NotFound() {
             Looking for something specific?
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <button
-              onClick={() => router.push('/preview')}
+            <Link
+              href="/preview"
               className="text-sm text-accent hover:underline"
             >
               Course Preview
-            </button>
+            </Link>
             <span className="text-muted-foreground">·</span>
-            <button
-              onClick={() => router.push('/assessment')}
+            <Link
+              href="/assessment"
               className="text-sm text-accent hover:underline"
             >
               Free Assessment
-            </button>
+            </Link>
             <span className="text-muted-foreground">·</span>
-            <button
-              onClick={() => router.push('/pricing')}
+            <Link
+              href="/pricing"
               className="text-sm text-accent hover:underline"
             >
               Enrol Now
-            </button>
+            </Link>
             <span className="text-muted-foreground">·</span>
-            <button
-              onClick={() => router.push('/login')}
+            <Link
+              href="/login"
               className="text-sm text-accent hover:underline"
             >
               Login
-            </button>
+            </Link>
           </div>
         </div>
       </div>

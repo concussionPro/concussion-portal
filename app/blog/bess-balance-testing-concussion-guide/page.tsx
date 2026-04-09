@@ -41,7 +41,7 @@ export default function BESSBalanceTestingPage() {
       <SiteNav />
       <div className="min-h-screen bg-slate-50">
         {/* Hero Section */}
-        <div className="bg-gradient-to-br from-green-500 to-emerald-500 text-white pt-[80px] pb-16">
+        <div className="bg-gradient-to-br from-green-500 to-emerald-500 text-white pt-[120px] pb-16">
           <div className="max-w-4xl mx-auto px-4">
             <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
               Clinical Assessment Guide

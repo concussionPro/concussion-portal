@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { MapPin, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
@@ -9,7 +9,6 @@ import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
 
 export default function SydneyPage() {
-  const router = useRouter()
   const location = CONFIG.LOCATIONS.SYDNEY as typeof CONFIG.LOCATIONS[keyof typeof CONFIG.LOCATIONS]
 
   return (
@@ -23,7 +22,7 @@ export default function SydneyPage() {
       ]} />
 
       <SiteNav />
-      <div className="min-h-screen bg-background pt-[80px] pb-20 px-6">
+      <div className="min-h-screen bg-background pt-[120px] pb-20 px-6">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-12">
@@ -158,23 +157,23 @@ export default function SydneyPage() {
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
               )}
-              <button
-                onClick={() => router.push('/preview')}
+              <Link
+                href="/preview"
                 className="glass px-8 py-4 rounded-xl text-base font-semibold hover:bg-slate-100 transition-colors inline-flex items-center gap-2 border border-slate-200 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
               >
                 Preview Course Content
-              </button>
+              </Link>
             </div>
           </div>
 
           {/* Back Link */}
           <div className="text-center mt-8">
-            <button
-              onClick={() => router.push('/course')}
+            <Link
+              href="/course"
               className="text-sm text-muted-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
             >
               ← View All Locations
-            </button>
+            </Link>
           </div>
         </div>
       </div>

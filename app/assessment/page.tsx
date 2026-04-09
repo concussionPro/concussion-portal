@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
 import { ArrowRight, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
@@ -91,7 +91,6 @@ const questions = [
 ]
 
 export default function AssessmentPage() {
-  const router = useRouter()
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([])
   const [showResults, setShowResults] = useState(false)
@@ -137,7 +136,7 @@ export default function AssessmentPage() {
     return (
       <>
       <SiteNav />
-      <div className="min-h-screen bg-background pt-[80px] px-6 pb-20">
+      <div className="min-h-screen bg-background pt-[120px] px-6 pb-20">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -204,12 +203,12 @@ export default function AssessmentPage() {
                 Complete training: 8 online modules + full-day hands-on practical (SCAT6, VOMS, BESS).
                 Master every assessment you missed above.
               </p>
-              <button
-                onClick={() => router.push('/in-person')}
-                className="text-accent hover:underline text-sm font-semibold mb-5"
+              <Link
+                href="/in-person"
+                className="text-accent hover:underline text-sm font-semibold mb-5 inline-block"
               >
                 View workshop agenda →
-              </button>
+              </Link>
 
               <div className="grid grid-cols-4 gap-2 mb-5 max-w-2xl mx-auto">
                 <div className="glass rounded-lg p-3">
@@ -236,19 +235,19 @@ export default function AssessmentPage() {
                     href={CONFIG.SHOP_URL}
                     className="btn-primary px-8 py-3.5 rounded-xl text-base font-bold text-white inline-flex items-center gap-2 shadow-2xl"
                   >
-                    Enrol — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} Early Bird
+                    Enrol — from ${CONFIG.COURSE.PRICE_ONLINE}
                     <ArrowRight className="w-5 h-5" />
                   </a>
                   <span className="text-muted-foreground text-sm">or</span>
-                  <button
-                    onClick={() => router.push('/preview')}
+                  <Link
+                    href="/preview"
                     className="px-6 py-3.5 rounded-xl text-sm font-semibold border-2 border-accent/30 text-accent hover:bg-accent/5 transition-all inline-flex items-center gap-2"
                   >
                     Preview Course Free
-                  </button>
+                  </Link>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Online only from ${CONFIG.COURSE.PRICE_ONLINE} · Complete course ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird (save ${CONFIG.COURSE.SAVINGS})
+                  Online from ${CONFIG.COURSE.PRICE_ONLINE} · 7-day money-back guarantee
                 </p>
               </div>
             </div>
@@ -258,22 +257,22 @@ export default function AssessmentPage() {
               <p className="text-sm text-muted-foreground mb-3">
                 Not ready to commit? Start with our free training:
               </p>
-              <button
-                onClick={() => router.push('/scat-mastery')}
+              <Link
+                href="/scat-mastery"
                 className="text-sm font-semibold text-accent hover:underline inline-flex items-center gap-1"
               >
                 Free SCAT6/SCOAT6 Mastery Course
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
 
             <div className="text-center mt-8">
-              <button
-                onClick={() => router.push('/')}
+              <Link
+                href="/"
                 className="text-sm text-muted-foreground hover:text-accent transition-colors"
               >
                 ← Back to Home
-              </button>
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -296,7 +295,7 @@ export default function AssessmentPage() {
 
       <SiteNav />
       <div className="min-h-screen bg-background">
-        <div className="px-6 pt-[80px] pb-20">
+        <div className="px-6 pt-[120px] pb-20">
         <div className="max-w-4xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -376,7 +375,7 @@ export default function AssessmentPage() {
           <button
             onClick={handleNext}
             disabled={!hasAnswer}
-            className="btn-primary px-8 py-3 rounded-xl text-sm font-bold text-foreground disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            className="btn-primary px-8 py-3 rounded-xl text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
             {currentQuestion === questions.length - 1 ? 'View Results' : 'Next Question'}
             <ArrowRight className="w-4 h-4" />

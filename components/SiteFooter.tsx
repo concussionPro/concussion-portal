@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
 
 export function SiteFooter() {
@@ -20,7 +21,7 @@ export function SiteFooter() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#5b9aa6] transition-colors"
             >
-              <img src="/logo.png" alt="Concussion Education Australia" className="w-4 h-4 rounded-sm" />
+              <Image src="/logo.png" alt="Concussion Education Australia" width={16} height={16} className="w-4 h-4 rounded-sm" />
               concussion-education-australia.com
               <ExternalLink className="w-3 h-3" />
             </a>
@@ -48,7 +49,7 @@ export function SiteFooter() {
                   zac@concussion-education-australia.com
                 </a>
               </li>
-              <li><Link href="/faq/scat-assessment" className="hover:text-white transition-colors">FAQ</Link></li>
+              <li><Link href="/pricing#faq" className="hover:text-white transition-colors">FAQ</Link></li>
               <li>
                 <a href="https://concussion-education-australia.com/#facilitators" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">
                   Instructor Bios

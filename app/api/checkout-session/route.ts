@@ -66,9 +66,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Only allow retrieval within 1 hour of session creation
+    // Only allow retrieval within 4 hours of session creation (accommodates Afterpay/Klarna delays)
     const createdAt = (session.created || 0) * 1000
-    if (Date.now() - createdAt > 60 * 60 * 1000) {
+    if (Date.now() - createdAt > 4 * 60 * 60 * 1000) {
       return NextResponse.json(
         { success: false, error: 'Session expired' },
         { status: 410 }

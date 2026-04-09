@@ -2,14 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    // CSRF protection: verify request comes from same origin
+    // CSRF protection: verify request comes from same origin (or referer as fallback)
     const origin = request.headers.get('origin')
+    const referer = request.headers.get('referer')
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (origin && appUrl) {
+    const source = origin || referer
+    if (source && appUrl) {
       try {
-        const originHost = new URL(origin).hostname
+        const sourceHost = new URL(source).hostname
         const appHost = new URL(appUrl).hostname
-        if (originHost !== appHost && !originHost.endsWith('.vercel.app')) {
+        if (sourceHost !== appHost && !sourceHost.endsWith('.vercel.app')) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
       } catch {

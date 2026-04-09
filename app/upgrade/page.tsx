@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useSession } from '@/contexts/SessionContext'
 import { CONFIG } from '@/lib/config'
 import { CheckCircle2, ArrowRight, Loader2, MapPin, AlertTriangle } from 'lucide-react'
@@ -48,8 +49,8 @@ function UpgradeContent() {
   }, [user, isLoading, router])
 
   const handleCheckout = async () => {
-    if (!selectedLocation) {
-      setError('Please select a workshop location.')
+    if (!selectedLocation || selectedLocation === 'decide-later') {
+      setError('Please select a workshop location to proceed with checkout.')
       return
     }
     setError('')
@@ -95,15 +96,15 @@ function UpgradeContent() {
       {/* Nav */}
       <nav className="glass border-b border-border/30">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <button onClick={() => router.push('/')} className="text-xl font-bold">
+          <Link href="/" className="text-xl font-bold">
             Concussion<span className="text-gradient">Pro</span>
-          </button>
-          <button
-            onClick={() => router.push('/dashboard')}
+          </Link>
+          <Link
+            href="/dashboard"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Back to Dashboard
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -180,6 +181,9 @@ function UpgradeContent() {
               </button>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Not sure yet? You can change your workshop location later by contacting us — no lock-in.
+          </p>
         </div>
 
         {/* Price + checkout */}

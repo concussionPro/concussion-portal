@@ -273,7 +273,7 @@ export default function BlogIndexPage() {
                     href="/pricing"
                     className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
                   >
-                    Full Course — from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
+                    Full Course — from ${(new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_ONLINE).toLocaleString()}
                   </Link>
                 </div>
               </div>

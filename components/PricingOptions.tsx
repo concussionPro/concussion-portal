@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
@@ -113,7 +113,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
     return (
       <div className="space-y-4">
         {error && (
-          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800">
+          <div role="alert" aria-live="assertive" className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800">
             <AlertCircle className="w-3.5 h-3.5 text-red-600 flex-shrink-0 mt-0.5" />
             {error}
           </div>
@@ -138,7 +138,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</span>
                 <span className="text-[10px] text-slate-400">≈ $320 USD</span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+              <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay or Klarna</p>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
             </div>
 
@@ -196,7 +196,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
                     <span className="text-[10px] text-slate-400">≈ $770 USD</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_EARLY_BIRD)} with Afterpay or Klarna</p>
                   <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
                 </>
               ) : (
@@ -205,7 +205,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
                     <span className="text-[10px] text-slate-400">≈ $910 USD</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_REGULAR)} with Afterpay or Klarna</p>
                 </>
               )}
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>
@@ -270,7 +270,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
       {/* Global error */}
       {error && (
-        <div className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div role="alert" aria-live="assertive" className="max-w-2xl mx-auto mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-800">{error}</p>
         </div>
@@ -302,7 +302,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
               <span className="text-xs text-slate-400">≈ $320 USD</span>
             </div>
-            <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_ONLINE / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+            <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay or Klarna</p>
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
           </div>
 
@@ -380,7 +380,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
                   <span className="text-xs text-slate-400">≈ $770 USD</span>
                 </div>
-                <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_EARLY_BIRD / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+                <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_EARLY_BIRD)} with Afterpay or Klarna</p>
                 <p className="text-xs text-orange-600 font-medium mt-1">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
               </>
             ) : (
@@ -390,7 +390,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
                   <span className="text-xs text-slate-400">≈ $910 USD</span>
                 </div>
-                <p className="text-sm text-slate-500 mt-1">or 4 x ${(Math.ceil(CONFIG.COURSE.PRICE_REGULAR / 4 * 100) / 100).toFixed(2)} with Afterpay or Klarna</p>
+                <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_REGULAR)} with Afterpay or Klarna</p>
               </>
             )}
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · 14 AHPRA CPD points</p>
@@ -465,6 +465,12 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 Choose later
               </button>
             </div>
+            {selectedLocation && (
+              <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                <Check className="w-3 h-3" strokeWidth={2.5} />
+                {selectedLocation === 'byron-bay' ? 'Byron Bay' : selectedLocation.charAt(0).toUpperCase() + selectedLocation.slice(1)} selected — you can change this later
+              </p>
+            )}
           </div>
 
           {/* Enroll Button */}

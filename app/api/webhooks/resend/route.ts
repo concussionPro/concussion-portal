@@ -45,7 +45,11 @@ function verifySvixSignature(
 ): boolean {
   const secret = process.env.RESEND_WEBHOOK_SECRET
   if (!secret) {
-    console.warn('RESEND_WEBHOOK_SECRET not set — skipping signature verification')
+    if (process.env.NODE_ENV === 'production') {
+      console.error('RESEND_WEBHOOK_SECRET not set — rejecting webhook in production')
+      return false
+    }
+    console.warn('RESEND_WEBHOOK_SECRET not set — skipping verification (dev mode)')
     return true
   }
   if (!svixId || !svixTimestamp || !svixSignature) return false
@@ -97,11 +101,8 @@ export async function POST(request: NextRequest) {
     const svixTimestamp = request.headers.get('svix-timestamp')
     const svixSignature = request.headers.get('svix-signature')
 
-    // Verify webhook signature
-    if (
-      process.env.RESEND_WEBHOOK_SECRET &&
-      !verifySvixSignature(rawBody, svixId, svixTimestamp, svixSignature)
-    ) {
+    // Verify webhook signature (always — rejects in production if secret missing)
+    if (!verifySvixSignature(rawBody, svixId, svixTimestamp, svixSignature)) {
       console.error('Resend webhook: invalid Svix signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     // Handle bounces — suppress future emails
     if (eventType === 'bounced') {
-      console.log(`[Resend] Bounce: ${email} — suppressing from nurture`)
+      console.log(`[Resend] Bounce: ${email.slice(0, 3)}*** — suppressing from nurture`)
       await sql`
         UPDATE users SET nurture_unsubscribed = true
         WHERE LOWER(email) = ${email}
@@ -155,14 +156,14 @@ export async function POST(request: NextRequest) {
 
     // Handle complaints — suppress future emails
     if (eventType === 'complained') {
-      console.log(`[Resend] Complaint: ${email} — suppressing from nurture`)
+      console.log(`[Resend] Complaint: ${email.slice(0, 3)}*** — suppressing from nurture`)
       await sql`
         UPDATE users SET nurture_unsubscribed = true
         WHERE LOWER(email) = ${email}
       `
     }
 
-    console.log(`[Resend] ${eventType}: ${email} (${data.subject})`)
+    console.log(`[Resend] ${eventType}: ${email.slice(0, 3)}*** (${data.subject})`)
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('Resend webhook error:', error)

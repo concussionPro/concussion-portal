@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   Award,
   Calendar,
@@ -36,14 +36,12 @@ const included = [
 ]
 
 export default function CoursePage() {
-  const router = useRouter()
-
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
 
       {/* Hero */}
-      <section className="section-padding pt-[80px]">
+      <section className="section-padding pt-[120px]">
         <div className="container-lg px-6 md:px-8 text-center">
           <div className="badge mb-5">
             <Award className="w-3.5 h-3.5 mr-1.5" />
@@ -150,13 +148,13 @@ export default function CoursePage() {
           <p className="text-base text-muted-foreground mb-6">
             Online course from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course with workshop from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD
           </p>
-          <button
-            onClick={() => router.push('/pricing')}
+          <Link
+            href="/pricing"
             className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2"
           >
             View Pricing & Enrol
             <ArrowRight className="w-5 h-5" />
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -263,13 +261,13 @@ export default function CoursePage() {
             <p className="text-lg text-muted-foreground mb-8">
               Start with the online course today, or choose a complete package with hands-on workshop.
             </p>
-            <button
-              onClick={() => router.push('/pricing')}
+            <Link
+              href="/pricing"
               className="btn-primary px-10 py-5 rounded-xl text-lg inline-flex items-center gap-2"
             >
               See Pricing & Enrol
               <ArrowRight className="w-5 h-5" />
-            </button>
+            </Link>
             <p className="text-xs text-muted-foreground mt-4">
               Secure checkout · Multiple payment options available
             </p>

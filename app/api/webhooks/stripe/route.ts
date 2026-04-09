@@ -10,6 +10,12 @@ import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
 import Stripe from 'stripe'
+/** Redact email for logging — show first 3 chars only */
+function redact(email: string | null | undefined): string {
+  if (!email) return 'unknown'
+  return email.slice(0, 3) + '***'
+}
+
 // Server-side analytics — writes to Postgres (same table as client-side tracking)
 async function logAnalyticsEvent(eventType: string, eventData: Record<string, unknown>) {
   try {
@@ -165,14 +171,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const workshopCity = location || preferredCity
   const currency = (session.currency || 'aud').toUpperCase()
-  console.log(`Payment completed: ${customerEmail} — ${courseType}${workshopCity ? ` (${workshopCity})` : ''} — $${(session.amount_total || 0) / 100} ${currency}`)
+  console.log(`Payment completed: ${redact(customerEmail)} — ${courseType}${workshopCity ? ` (${workshopCity})` : ''} — $${(session.amount_total || 0) / 100} ${currency}`)
 
   // Step 1: Create/upgrade user account — MUST succeed or Stripe will retry
   const existingUser = await findUserByEmail(customerEmail)
   let userId: string
 
   if (existingUser) {
-    console.log(`Existing user found: ${customerEmail} (current: ${existingUser.accessLevel})`)
+    console.log(`Existing user found: ${redact(customerEmail)} (current: ${existingUser.accessLevel})`)
     userId = existingUser.id
 
     // Only upgrade access level, never downgrade
@@ -190,10 +196,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         workshopLocation: workshopCity || undefined,
         signupSource: 'purchase',
       })
-      console.log(`Upgraded ${customerEmail} to ${accessLevel}`)
+      console.log(`Upgraded ${redact(customerEmail)} to ${accessLevel}`)
     }
   } else {
-    console.log(`Creating new user: ${customerEmail} (${accessLevel})`)
+    console.log(`Creating new user: ${redact(customerEmail)} (${accessLevel})`)
 
     userId = await createUser({
       email: customerEmail,
@@ -289,23 +295,23 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
     if (emailSent) {
-      console.log(`Login link sent to: ${customerEmail} | Course: ${courseType} | City: ${workshopCity || 'N/A'} | Access: ${finalAccess}`)
+      console.log(`Login link sent to: ${redact(customerEmail)} | Course: ${courseType} | City: ${workshopCity || 'N/A'} | Access: ${finalAccess}`)
     } else {
-      console.error(`Email send FAILED for ${customerEmail} — user account created, they can request a new link from /login`)
+      console.error(`Email send FAILED for ${redact(customerEmail)} — user account created, they can request a new link from /login`)
       // Alert business owner so they can manually send the link
       try {
         await sendEmail({
-          to: 'zac@concussion-education-australia.com',
+          to: CONFIG.CONTACT_EMAIL,
           subject: `ACTION REQUIRED: Login email failed for ${customerEmail}`,
           html: `<p>A customer just paid but their login email failed to send.</p><p><strong>Email:</strong> ${customerEmail}<br><strong>Course:</strong> ${courseType}<br><strong>Access:</strong> ${finalAccess}</p><p>They can request a new login link from /login, but you may want to reach out proactively.</p>`,
         })
       } catch { /* best effort */ }
     }
   } catch (emailError) {
-    console.error(`Email send failed for ${customerEmail} (user account created, they can use /login):`, emailError)
+    console.error(`Email send failed for ${redact(customerEmail)} (user account created, they can use /login):`, emailError)
     try {
       await sendEmail({
-        to: 'zac@concussion-education-australia.com',
+        to: CONFIG.CONTACT_EMAIL,
         subject: `ACTION REQUIRED: Login email failed for ${customerEmail}`,
         html: `<p>A customer just paid but their login email threw an error.</p><p><strong>Email:</strong> ${customerEmail}<br><strong>Course:</strong> ${courseType}</p><p>Error: ${emailError}</p>`,
       })
@@ -319,7 +325,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   const email = paymentIntent.receipt_email || paymentIntent.metadata?.email
   const errorMsg = paymentIntent.last_payment_error?.message || 'Unknown error'
-  console.log(`Payment failed for ${email || 'unknown'}: ${errorMsg}`)
+  console.log(`Payment failed for ${redact(email)}: ${errorMsg}`)
 
   // Log to analytics
   try {
@@ -341,7 +347,7 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
       SELECT nurture_unsubscribed FROM users WHERE LOWER(email) = ${email.toLowerCase()} LIMIT 1
     `
     if (userRows.length > 0 && userRows[0].nurture_unsubscribed) {
-      console.log(`[Payment Failed] Skipped recovery email for ${email} — unsubscribed`)
+      console.log(`[Payment Failed] Skipped recovery email for ${redact(email)} — unsubscribed`)
       return
     }
   } catch { /* user may not exist — proceed */ }
@@ -392,9 +398,9 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
       ],
     })
 
-    console.log(`Payment failure recovery email sent to ${email}`)
+    console.log(`Payment failure recovery email sent to ${redact(email)}`)
   } catch (emailError) {
-    console.error(`[Payment Failed] Failed to send recovery email to ${email}:`, emailError)
+    console.error(`[Payment Failed] Failed to send recovery email to ${redact(email)}:`, emailError)
   }
 }
 
@@ -412,7 +418,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   const courseType = session.metadata?.courseType || 'unknown'
   const amount = (session.amount_total || 0) / 100
 
-  console.log(`Checkout expired: ${email} — ${courseType} ($${amount})`)
+  console.log(`Checkout expired: ${redact(email)} — ${courseType} ($${amount})`)
 
   // Log to analytics
   try {
@@ -430,7 +436,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
       LIMIT 1
     `
     if (recent.length > 0) {
-      console.log(`Skipping duplicate abandoned checkout for ${email} (within 24h)`)
+      console.log(`Skipping duplicate abandoned checkout for ${redact(email)} (within 24h)`)
       return
     }
   } catch (err) {
@@ -474,9 +480,9 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       })
-      console.log(`[Abandoned] Email 1 sent immediately → ${email}`)
+      console.log(`[Abandoned] Email 1 sent immediately → ${redact(email)}`)
     } else {
-      console.log(`[Abandoned] Skipped email for ${email} — unsubscribed`)
+      console.log(`[Abandoned] Skipped email for ${redact(email)} — unsubscribed`)
     }
 
     // Store with emails_sent = 1 (or 0 if unsubscribed, so cron won't re-send email 1 either)
@@ -484,7 +490,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
       INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered)
       VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), ${unsubscribed ? 0 : 1}, false)
     `
-    console.log(`Stored abandoned checkout for ${email} (emails_sent: ${unsubscribed ? 0 : 1})`)
+    console.log(`Stored abandoned checkout for ${redact(email)} (emails_sent: ${unsubscribed ? 0 : 1})`)
   } catch (err) {
     console.error('Failed to process abandoned checkout:', err)
   }
@@ -502,7 +508,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   const refundAmount = (charge.amount_refunded || 0) / 100
   const refundCurrency = (charge.currency || 'aud').toUpperCase()
-  console.log(`Refund processed for ${email} — $${refundAmount} ${refundCurrency}`)
+  console.log(`Refund processed for ${redact(email)} — $${refundAmount} ${refundCurrency}`)
 
   // Log to analytics
   try {
@@ -518,13 +524,13 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   // Only downgrade on full refund — partial refunds keep access
   if (charge.amount_refunded < charge.amount) {
-    console.log(`Partial refund for ${email} — no access change`)
+    console.log(`Partial refund for ${redact(email)} — no access change`)
     return
   }
 
   const user = await findUserByEmail(email)
   if (!user) {
-    console.log(`Refunded user not found: ${email}`)
+    console.log(`Refunded user not found: ${redact(email)}`)
     return
   }
 
@@ -553,8 +559,8 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     await sql`
       UPDATE users SET access_level = ${downgradeLevel} WHERE email = ${email.toLowerCase()}
     `
-    console.log(`Downgraded ${email} to ${downgradeLevel} access after refund ($${chargeAmount})`)
+    console.log(`Downgraded ${redact(email)} to ${downgradeLevel} access after refund ($${chargeAmount})`)
   } catch (err) {
-    console.error(`Failed to downgrade ${email} after refund:`, err)
+    console.error(`Failed to downgrade ${redact(email)} after refund:`, err)
   }
 }

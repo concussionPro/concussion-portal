@@ -20,6 +20,8 @@ import { sql } from '@/lib/db'
 
 export const maxDuration = 60
 
+function redact(e: string) { return e.length > 3 ? e.slice(0, 3) + '***' : '***' }
+
 const SQUARESPACE_API_BASE = 'https://api.squarespace.com/1.0'
 
 interface SquarespaceProfile {
@@ -44,10 +46,10 @@ interface ProfilesResponse {
 
 export async function GET(request: Request) {
   try {
-    // Accept CRON_SECRET (Vercel cron), x-admin-key header, or ?key= query param
+    // Accept CRON_SECRET (Vercel cron) or x-admin-key header
     const url = new URL(request.url)
     const authHeader = request.headers.get('authorization')
-    const adminKey = request.headers.get('x-admin-key') || url.searchParams.get('key')
+    const adminKey = request.headers.get('x-admin-key')
     const cronSecret = process.env.CRON_SECRET
     const adminApiKey = process.env.ADMIN_API_KEY
 
@@ -58,8 +60,10 @@ export async function GET(request: Request) {
         authorized = true
       }
     }
-    if (!authorized && adminApiKey && adminKey === adminApiKey) {
-      authorized = true
+    if (!authorized && adminApiKey && adminKey) {
+      try {
+        authorized = adminKey.length === adminApiKey.length && crypto.timingSafeEqual(Buffer.from(adminKey), Buffer.from(adminApiKey))
+      } catch { authorized = false }
     }
     if (!authorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -70,7 +74,7 @@ export async function GET(request: Request) {
       await sql`SELECT 1`
     } catch (dbErr) {
       console.error('[SS Sync] Database connection failed:', dbErr)
-      return NextResponse.json({ error: 'Database connection failed', detail: String(dbErr) }, { status: 503 })
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 503 })
     }
 
     const apiKey = process.env.SQUARESPACE_API_KEY
@@ -96,7 +100,7 @@ export async function GET(request: Request) {
         return NextResponse.json({
           test: 'pass',
           profileCount: testData.profiles?.length ?? 0,
-          firstProfile: testData.profiles?.[0] ? { email: testData.profiles[0].email, createdOn: testData.profiles[0].createdOn } : null,
+          firstProfile: testData.profiles?.[0] ? { createdOn: testData.profiles[0].createdOn } : null,
           hasNextPage: testData.pagination?.hasNextPage,
           sqUsersInDb: Number(userCount[0].n),
         })
@@ -225,9 +229,9 @@ export async function GET(request: Request) {
             }
           }
 
-          console.log(`[SS Sync] Created${isRecent ? ' + emailed' : ' (silent)'}: ${email}`)
+          console.log(`[SS Sync] Created${isRecent ? ' + emailed' : ' (silent)'}: ${redact(email)}`)
         } catch (err) {
-          console.error(`[SS Sync] Error processing ${email}:`, err)
+          console.error(`[SS Sync] Error processing ${redact(email)}:`, err)
           errors++
         }
       }

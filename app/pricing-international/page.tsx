@@ -70,7 +70,7 @@ const PRICE_USD = CONFIG.COURSE.PRICE_INTERNATIONAL
 // ─── Main Content ────────────────────────────────────────────────────────────
 
 function InternationalPricingContent() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -251,7 +251,7 @@ function InternationalPricingContent() {
       />
       <SiteNav />
 
-      <div className="max-w-6xl mx-auto px-6 pt-[80px] pb-12 md:pb-20">
+      <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-12 md:pb-20">
 
         <CanceledBanner />
 
@@ -595,18 +595,25 @@ function InternationalPricingContent() {
               <div key={i} className="glass rounded-xl overflow-hidden">
                 <button
                   type="button"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  onClick={() => {
+                    setOpenFaqs(prev => {
+                      const next = new Set(prev)
+                      if (next.has(i)) next.delete(i)
+                      else next.add(i)
+                      return next
+                    })
+                  }}
                   className="w-full flex items-center justify-between px-5 py-4 text-left gap-3"
-                  aria-expanded={openFaq === i}
+                  aria-expanded={openFaqs.has(i)}
                 >
                   <span className="font-semibold text-sm text-foreground">{item.q}</span>
-                  {openFaq === i ? (
+                  {openFaqs.has(i) ? (
                     <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   ) : (
                     <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   )}
                 </button>
-                {openFaq === i && (
+                {openFaqs.has(i) && (
                   <div className="px-5 pb-4">
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {item.a}

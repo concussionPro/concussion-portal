@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Monitoring endpoint error:', error)
     return NextResponse.json(
-      { error: String(error) },
+      { error: 'Monitoring endpoint failed' },
       { status: 500 }
     )
   }

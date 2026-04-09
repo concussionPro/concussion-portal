@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Star,
 } from 'lucide-react'
+import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
@@ -100,7 +101,7 @@ export default function SCATMasteryPage() {
 
       <SiteNav />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-[80px] pb-12 md:pb-20">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-[120px] pb-12 md:pb-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
 
           {/* ── Left column: copy ── */}
@@ -297,9 +298,9 @@ export default function SCATMasteryPage() {
                 {/* Login link */}
                 <p className="text-center text-sm text-slate-500 mt-4">
                   Already have an account?{' '}
-                  <a href="/login" className="text-[#5b9aa6] font-semibold hover:text-[#4a8a96] transition-colors">
+                  <Link href="/login" className="text-[#5b9aa6] font-semibold hover:text-[#4a8a96] transition-colors">
                     Login
-                  </a>
+                  </Link>
                 </p>
               </div>
             )}
@@ -347,13 +348,13 @@ export default function SCATMasteryPage() {
             </ul>
 
             <div className="text-center">
-              <a
+              <Link
                 href="/pricing"
                 className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] text-white hover:from-[#4a8a96] hover:to-[#5a8d98] transition-all shadow-lg shadow-teal-200/50"
               >
                 See Complete Course
                 <ArrowRight className="w-5 h-5" />
-              </a>
+              </Link>
               <p className="text-xs text-slate-400 mt-3">
                 7-day satisfaction guarantee
               </p>
@@ -371,14 +372,14 @@ export default function SCATMasteryPage() {
               { title: 'AHPRA CPD Requirements Guide', href: '/blog/ahpra-cpd-requirements-concussion-education' },
               { title: 'NSW Combat Sports Legislation', href: '/blog/nsw-mandatory-concussion-training-combat-sports' },
             ].map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className="group flex items-center gap-2 p-3 rounded-lg bg-white/60 border border-slate-200/50 hover:border-[#5b9aa6]/30 transition-colors"
               >
                 <span className="text-[#5b9aa6] text-sm">→</span>
                 <span className="text-xs font-medium text-slate-600 group-hover:text-[#5b9aa6] transition-colors">{item.title}</span>
-              </a>
+              </Link>
             ))}
           </div>
         </div>

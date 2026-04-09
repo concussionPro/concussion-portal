@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { loadUsers } from '@/lib/users'
+import { sql } from '@/lib/db'
 
 /**
  * GET /api/enrollment-count
@@ -20,12 +20,11 @@ export async function GET() {
       return NextResponse.json({ count: cachedCount })
     }
 
-    const users = await loadUsers()
-    const paidUsers = users.filter(
-      u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
-    )
-
-    cachedCount = paidUsers.length
+    const { rows } = await sql`
+      SELECT COUNT(*) as cnt FROM users
+      WHERE access_level IN ('online-only', 'full-course')
+    `
+    cachedCount = Number(rows[0].cnt)
     cacheTimestamp = now
 
     return NextResponse.json({ count: cachedCount })

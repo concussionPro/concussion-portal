@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { verifyMagicTokenJWT } from '@/lib/magic-link-jwt'
 import { updateLastLogin } from '@/lib/users'
 import { createJWTSession } from '@/lib/jwt-session'
 import { logAuthFailure, logCriticalError } from '@/lib/monitoring'
+import { sql } from '@/lib/db'
+
+/** Ensure the used_magic_tokens table exists (runs once per cold start) */
+let tableEnsured = false
+async function ensureTokenTable() {
+  if (tableEnsured) return
+  await sql`CREATE TABLE IF NOT EXISTS used_magic_tokens (
+    token_hash TEXT PRIMARY KEY,
+    used_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`
+  tableEnsured = true
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,6 +45,21 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Replay protection: hash token and check if already used
+    await ensureTokenTable()
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const { rows: existing } = await sql`SELECT 1 FROM used_magic_tokens WHERE token_hash = ${tokenHash} LIMIT 1`
+    if (existing.length > 0) {
+      await logAuthFailure({
+        endpoint: '/api/auth/verify',
+        reason: 'Magic link already used (replay attempt)',
+      })
+      return NextResponse.json(
+        { error: 'This login link has already been used. Please request a new one.' },
+        { status: 401 }
+      )
+    }
+
     // Update last login (non-critical, async fire-and-forget)
     updateLastLogin(tokenData.userId).catch(err =>
       console.error('Failed to update last login:', err)
@@ -48,6 +76,11 @@ export async function GET(request: NextRequest) {
       tokenData.accessLevel,
       rememberMe
     )
+
+    // Mark token as used (replay protection)
+    await sql`INSERT INTO used_magic_tokens (token_hash) VALUES (${tokenHash}) ON CONFLICT DO NOTHING`
+    // Prune tokens older than 24h (non-blocking best-effort)
+    sql`DELETE FROM used_magic_tokens WHERE used_at < now() - interval '24 hours'`.catch(() => {})
 
     // Set session cookie
     const response = NextResponse.json({

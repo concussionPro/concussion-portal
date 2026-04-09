@@ -74,7 +74,7 @@ async function ensureColumns() {
   columnMigrated = true
 }
 
-// Create new user (or upgrade existing)
+// Create new user (or upgrade existing) — uses upsert to avoid race conditions
 export async function createUser(data: {
   email: string
   name: string
@@ -86,46 +86,13 @@ export async function createUser(data: {
   signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace'
 }): Promise<string> {
   await ensureColumns()
+  await ensureEmailIndex()
 
-  // Check if user already exists
-  const existing = await findUserByEmail(data.email)
-
-  if (existing) {
-    // Update access level if upgrading (never downgrade)
-    if (
-      (existing.accessLevel === 'online-only' || existing.accessLevel === 'preview') &&
-      (data.accessLevel === 'full-course' || data.accessLevel === 'online-only')
-    ) {
-      // Track conversion: save original signup source before overwriting
-      const convertedFrom = existing.signupSource && data.signupSource && existing.signupSource !== data.signupSource
-        ? existing.signupSource : null
-      await sql`
-        UPDATE users SET
-          access_level = ${data.accessLevel},
-          name = COALESCE(NULLIF(${data.name || null}, ''), name),
-          stripe_customer_id = COALESCE(${data.stripeCustomerId || null}, stripe_customer_id),
-          stripe_subscription_id = COALESCE(${data.stripeSubscriptionId || null}, stripe_subscription_id),
-          workshop_location = COALESCE(${data.workshopLocation || null}, workshop_location),
-          signup_source = COALESCE(${data.signupSource || null}, signup_source),
-          converted_from = COALESCE(${convertedFrom}, converted_from)
-        WHERE id = ${existing.id}
-      `
-    } else if (existing.accessLevel === 'full-course' && (data.stripeCustomerId || data.workshopLocation)) {
-      // Update Stripe metadata for existing full-course users (webhook retries, etc.)
-      await sql`
-        UPDATE users SET
-          stripe_customer_id = COALESCE(${data.stripeCustomerId || null}, stripe_customer_id),
-          stripe_subscription_id = COALESCE(${data.stripeSubscriptionId || null}, stripe_subscription_id),
-          workshop_location = COALESCE(${data.workshopLocation || null}, workshop_location)
-        WHERE id = ${existing.id}
-      `
-    }
-    return existing.id
-  }
-
-  // Create new user
   const id = crypto.randomBytes(16).toString('hex')
-  await sql`
+
+  // Atomic upsert: INSERT or update on conflict
+  // ON CONFLICT uses the unique index on LOWER(email)
+  const { rows } = await sql`
     INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, signup_source, converted_from)
     VALUES (
       ${id},
@@ -140,8 +107,38 @@ export async function createUser(data: {
       ${data.signupSource || null},
       ${null}
     )
+    ON CONFLICT (LOWER(email)) DO UPDATE SET
+      access_level = CASE
+        WHEN EXCLUDED.access_level = 'full-course' THEN 'full-course'
+        WHEN EXCLUDED.access_level = 'online-only' AND users.access_level = 'preview' THEN 'online-only'
+        ELSE users.access_level
+      END,
+      name = COALESCE(NULLIF(EXCLUDED.name, ''), users.name),
+      stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, users.stripe_customer_id),
+      stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, users.stripe_subscription_id),
+      workshop_location = COALESCE(EXCLUDED.workshop_location, users.workshop_location),
+      signup_source = COALESCE(EXCLUDED.signup_source, users.signup_source),
+      converted_from = CASE
+        WHEN users.signup_source IS NOT NULL AND EXCLUDED.signup_source IS NOT NULL AND users.signup_source != EXCLUDED.signup_source
+        THEN COALESCE(users.converted_from, users.signup_source)
+        ELSE users.converted_from
+      END
+    RETURNING id
   `
-  return id
+
+  return rows[0].id
+}
+
+/** Ensure unique index on LOWER(email) for upsert support */
+let emailIndexEnsured = false
+async function ensureEmailIndex() {
+  if (emailIndexEnsured) return
+  try {
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (LOWER(email))`
+  } catch {
+    // Index already exists or permissions differ — safe to continue
+  }
+  emailIndexEnsured = true
 }
 
 // Count full-course enrollments for a specific workshop location

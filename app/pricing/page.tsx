@@ -64,7 +64,7 @@ function useCountdown(deadline: string) {
     const target = new Date(deadline + 'T23:59:59').getTime()
     const calc = () => {
       const diff = target - Date.now()
-      setDays(diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0)
+      setDays(diff > 0 ? Math.floor(diff / (1000 * 60 * 60 * 24)) : 0)
     }
     calc()
     const id = setInterval(calc, 60000) // update every minute
@@ -76,8 +76,16 @@ function useCountdown(deadline: string) {
 // ─── Main Pricing Content ────────────────────────────────────────────────────
 
 function PricingContent() {
-  // FAQ accordion
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  // FAQ accordion — allow multiple open
+  const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
+  const toggleFaq = (i: number) => {
+    setOpenFaqs(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
 
   // Sticky mobile CTA — show after scrolling past pricing cards
   const [showStickyCta, setShowStickyCta] = useState(false)
@@ -113,7 +121,7 @@ function PricingContent() {
 
   // Early bird countdown
   const daysLeft = useCountdown(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)
-  const isEarlyBird = daysLeft !== null && daysLeft > 0
+  const isEarlyBird = daysLeft !== null && daysLeft >= 0 && new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
   // Early bird deadline formatted from config
   const earlyBirdDate = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00')
@@ -245,7 +253,7 @@ function PricingContent() {
       />
       <SiteNav />
 
-      <div className="max-w-6xl mx-auto px-6 pt-[80px] pb-12 md:pb-20">
+      <div className="max-w-6xl mx-auto px-6 pt-[120px] pb-12 md:pb-20">
 
         {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
         <CanceledBanner />
@@ -283,7 +291,9 @@ function PricingContent() {
             <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-orange-50 border border-orange-200">
               <Clock className="w-4 h-4 text-orange-600" />
               <span className="text-sm font-semibold text-orange-700">
-                {daysLeft} day{daysLeft !== 1 ? 's' : ''} left at early bird pricing — save ${CONFIG.COURSE.SAVINGS}
+                {daysLeft === 0
+                  ? `Last day to lock in early bird pricing — save $${CONFIG.COURSE.SAVINGS}`
+                  : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left at early bird pricing — save $${CONFIG.COURSE.SAVINGS}`}
               </span>
             </div>
           )}
@@ -303,6 +313,13 @@ function PricingContent() {
           <span className="text-sm font-semibold text-foreground">
             {enrollmentCount >= 100 ? `${enrollmentCount}+ clinicians enrolled` : 'Trusted by clinicians Australia-wide'}
           </span>
+        </div>
+
+        {/* International pricing link */}
+        <div className="text-center mb-4">
+          <Link href="/pricing-international" className="text-sm text-muted-foreground hover:text-accent transition-colors">
+            Outside Australia? See international pricing (USD ${CONFIG.COURSE.PRICE_INTERNATIONAL})
+          </Link>
         </div>
 
         {/* CPD traffic: employer reimbursement callout — #1 objection for CPD-seeking clinicians */}
@@ -529,25 +546,25 @@ function PricingContent() {
         </div>
 
         {/* FAQ */}
-        <div className="max-w-2xl mx-auto mt-16 md:mt-20">
+        <div id="faq" className="max-w-2xl mx-auto mt-16 md:mt-20">
           <h2 className="text-2xl font-bold text-center mb-8 text-foreground">Common Questions</h2>
           <div className="space-y-3">
             {faqs.map((item, i) => (
               <div key={i} className="glass rounded-xl overflow-hidden">
                 <button
                   type="button"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  onClick={() => toggleFaq(i)}
                   className="w-full flex items-center justify-between px-5 py-4 text-left gap-3"
-                  aria-expanded={openFaq === i}
+                  aria-expanded={openFaqs.has(i)}
                 >
                   <span className="font-semibold text-sm text-foreground">{item.q}</span>
-                  {openFaq === i ? (
+                  {openFaqs.has(i) ? (
                     <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   ) : (
                     <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   )}
                 </button>
-                {openFaq === i && (
+                {openFaqs.has(i) && (
                   <div className="px-5 pb-4">
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {item.a}
@@ -591,11 +608,13 @@ function PricingContent() {
         </div>
 
         {/* Final CTA — with urgency */}
-        <div className="mt-16 md:mt-20">
+        <div id="pricing-compact" className="mt-16 md:mt-20">
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold text-foreground mb-2">
               {isEarlyBird
-                ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left — lock in early bird pricing`
+                ? daysLeft === 0
+                  ? 'Last day — lock in early bird pricing'
+                  : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left — lock in early bird pricing`
                 : 'Enrol today — lifetime access included'}
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -621,7 +640,7 @@ function PricingContent() {
             Enrol — from ${CONFIG.COURSE.PRICE_ONLINE}
           </span>
           <a
-            href="#pricing-cards"
+            href="#pricing-compact"
             className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0"
           >
             View Plans

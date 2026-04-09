@@ -25,7 +25,7 @@ export default function TrialPage() {
       await fetch('/api/signup-free', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, name: 'Trial Signup' }),
       })
     } catch {
       // Don't block the trial experience if API fails
@@ -44,7 +44,7 @@ export default function TrialPage() {
       <SiteNav />
 
       {/* Hero */}
-      <div className="max-w-4xl mx-auto px-6 py-16 pt-[80px]">
+      <div className="max-w-4xl mx-auto px-6 py-16 pt-[120px]">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-teal-100 text-[#5b8d96] px-4 py-2 rounded-full text-sm font-semibold mb-6">
             <Play className="w-4 h-4" />

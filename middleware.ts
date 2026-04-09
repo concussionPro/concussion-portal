@@ -27,7 +27,7 @@ const AUTH_DOCS = new Set([
 // Large files MUST be served via CDN to bypass Vercel's 4.5 MB serverless body limit
 const PAID_DOCS = new Set([
   '/docs/CCM_Complete_Reference_2026.pdf',
-  '/docs/SCAT:SCOAT_FIllablePDFs.zip',
+  '/docs/SCAT-SCOAT_FillablePDFs.zip',
   '/docs/ClinicalToolkit_Complete.zip',
 ])
 

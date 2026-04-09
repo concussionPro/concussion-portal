@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Mail, AlertCircle, ArrowLeft, Check, Brain, Shield, Award } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { useSession } from '@/contexts/SessionContext'
@@ -87,13 +88,13 @@ function LoginForm() {
 
       <div className="relative z-10 min-h-screen flex items-center justify-center px-6">
         <div className="w-full max-w-md">
-          <button
-            onClick={() => router.push('/')}
+          <Link
+            href="/"
             className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to home
-          </button>
+          </Link>
 
           {/* Logo */}
           <div className="text-center mb-8">
@@ -210,7 +211,7 @@ function LoginForm() {
                           Don&apos;t see it? Check your spam folder.
                         </p>
                         <p className="text-xs text-slate-400 mt-2">
-                          Not enrolled yet? <a href="/pricing" className="text-[#5b9aa6] hover:underline font-medium">View course options</a> or start with the <a href="/scat-mastery" className="text-[#5b9aa6] hover:underline font-medium">free SCAT course</a>.
+                          Not enrolled yet? <Link href="/pricing" className="text-[#5b9aa6] hover:underline font-medium">View course options</Link> or start with the <Link href="/scat-mastery" className="text-[#5b9aa6] hover:underline font-medium">free SCAT course</Link>.
                         </p>
                       </>
                     )}
@@ -242,12 +243,12 @@ function LoginForm() {
                   </div>
                 </div>
 
-                <a
+                <Link
                   href={CONFIG.SHOP_URL}
                   className="w-full py-3.5 rounded-xl text-base font-semibold inline-block text-center bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200"
                 >
                   View course details
-                </a>
+                </Link>
               </>
             )}
           </div>

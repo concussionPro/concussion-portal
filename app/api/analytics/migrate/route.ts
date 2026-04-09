@@ -58,6 +58,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (err) {
     console.error('[analytics/migrate] Error:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Migration failed' }, { status: 500 });
   }
 }

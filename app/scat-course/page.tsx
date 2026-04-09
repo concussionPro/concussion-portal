@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { CheckCircle, Lock, BookOpen, Award, Clock, FileText, Download, ArrowRight } from 'lucide-react'
 import { trackFreeCourseCompletion } from '@/lib/analytics'
 import { getSCATModulesMeta } from '@/data/module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
 import { CONFIG } from '@/lib/config'
+import { SiteNav } from '@/components/SiteNav'
 
 export default function SCATCoursePage() {
   const router = useRouter()
@@ -124,17 +126,18 @@ export default function SCATCoursePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <SiteNav />
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-teal-500 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-teal-500 text-white pt-[80px]">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <a href="/" className="inline-flex items-center gap-2 text-sm text-blue-100 hover:text-white transition-colors mb-3">
+              <Link href="/" className="inline-flex items-center gap-2 text-sm text-blue-100 hover:text-white transition-colors mb-3">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 ConcussionPro Home
-              </a>
+              </Link>
               <h1 className="text-3xl font-bold mb-2">Free SCAT6/SCOAT6 Mastery Course</h1>
               <p className="text-blue-100">Welcome back! Continue your learning journey.</p>
             </div>
@@ -158,10 +161,10 @@ export default function SCATCoursePage() {
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
               <div className="flex items-center gap-3 mb-2">
                 <Award className="w-5 h-5" />
-                <span className="text-sm font-semibold">CPD Points</span>
+                <span className="text-sm font-semibold">Certificate</span>
               </div>
-              <div className="text-2xl font-bold">{totalCPD} Points</div>
-              <div className="text-sm text-blue-100 mt-1">AHPRA-aligned</div>
+              <div className="text-2xl font-bold">Included</div>
+              <div className="text-sm text-blue-100 mt-1">Certificate of Completion</div>
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
@@ -201,7 +204,7 @@ export default function SCATCoursePage() {
               </div>
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-emerald-900 mb-1">
-                  Course Complete — Your CPD Certificate is Ready!
+                  Course Complete — Your Certificate is Ready!
                 </h2>
                 <p className="text-sm text-emerald-800 mb-4">
                   You've completed the SCAT Mastery course.
@@ -235,13 +238,13 @@ export default function SCATCoursePage() {
                   <p className="text-sm text-emerald-700 mb-3">
                     Unlock {CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS, return-to-play protocols, phenotype-based rehabilitation, and more. Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} (early bird).
                   </p>
-                  <button
-                    onClick={() => router.push('/pricing')}
+                  <Link
+                    href="/pricing"
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors"
                   >
                     See Pricing &amp; Options
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -338,14 +341,14 @@ export default function SCATCoursePage() {
               const completed = isModuleComplete(module.id)
 
               return (
-                <div
+                <Link
                   key={module.id}
-                  className={`bg-white rounded-xl p-6 shadow-sm border-2 transition-all cursor-pointer ${
+                  href={`/modules/${module.id}`}
+                  className={`block bg-white rounded-xl p-6 shadow-sm border-2 transition-all ${
                     completed
                       ? 'border-green-200 hover:border-green-300'
                       : 'border-slate-200 hover:border-blue-300'
                   }`}
-                  onClick={() => router.push(`/modules/${module.id}`)}
                 >
                   <div className="flex items-start gap-4">
                     <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
@@ -366,7 +369,7 @@ export default function SCATCoursePage() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-semibold text-slate-600">{module.duration}</div>
-                          <div className="text-xs text-slate-500">{module.points} CPD points</div>
+                          <div className="text-xs text-slate-500">{module.points > 0 ? `${module.points} CPD points` : 'Free module'}</div>
                         </div>
                       </div>
 
@@ -378,7 +381,7 @@ export default function SCATCoursePage() {
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
@@ -423,13 +426,13 @@ export default function SCATCoursePage() {
                   7-day satisfaction guarantee · Afterpay / Klarna available
                 </p>
               </div>
-              <button
-                onClick={() => router.push('/pricing')}
+              <Link
+                href="/pricing"
                 className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors inline-flex items-center gap-2"
               >
                 View Pricing &amp; Enrol
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>

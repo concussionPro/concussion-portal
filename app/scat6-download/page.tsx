@@ -95,7 +95,7 @@ export default function SCAT6DownloadPage() {
 
       <SiteNav />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-20 pt-[80px]">
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-20 pt-[120px]">
         <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-start">
 
           {/* ── Left column: hero copy (3 cols) ── */}

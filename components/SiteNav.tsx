@@ -1,24 +1,72 @@
 'use client'
 
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { label: 'Free Training', path: '/scat-mastery', accent: true },
   { label: 'Pricing', path: '/pricing', accent: false },
   { label: 'SCAT Forms', path: '/scat-forms', accent: false },
   { label: 'Preseason Baseline', path: '/preseason', accent: false },
   { label: 'Blog', path: '/blog', accent: false },
-  { label: 'Login', path: '/login', accent: false },
 ]
+
+type AuthState = { accessLevel: string } | null // null = loading/unknown
 
 export function SiteNav() {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const onPricing = pathname === '/pricing'
+
+  // Auth-aware nav: detect login state
+  const [auth, setAuth] = useState<AuthState>(null)
+  useEffect(() => {
+    fetch('/api/auth/session', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.success && data.user) {
+          setAuth({ accessLevel: data.user.accessLevel })
+        } else {
+          setAuth({ accessLevel: '' }) // not logged in
+        }
+      })
+      .catch(() => setAuth({ accessLevel: '' }))
+  }, [])
+
+  // Close mobile menu on Escape key
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [mobileMenuOpen])
+
+  // Build nav items based on auth state
+  const navItems = [...BASE_NAV_ITEMS]
+  if (!auth) {
+    // Still loading — show Login (no flash)
+    navItems.push({ label: 'Login', path: '/login', accent: false })
+  } else if (auth.accessLevel === '') {
+    navItems.push({ label: 'Login', path: '/login', accent: false })
+  } else if (auth.accessLevel === 'preview') {
+    navItems.push({ label: 'My Course', path: '/scat-course', accent: false })
+  } else {
+    navItems.push({ label: 'Dashboard', path: '/dashboard', accent: false })
+  }
+
+  const isLoggedIn = auth && auth.accessLevel !== ''
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    setAuth({ accessLevel: '' })
+    router.push('/')
+  }
 
   return (
     <nav
@@ -48,10 +96,11 @@ export function SiteNav() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map(item => (
+            {navItems.map(item => (
               <Link
                 key={item.path}
                 href={item.path}
+                aria-current={pathname === item.path ? 'page' : undefined}
                 className={`text-[13px] font-medium px-3 py-2 rounded-md transition-colors ${
                   pathname === item.path
                     ? 'text-[var(--accent)] bg-[rgba(13,115,119,0.06)]'
@@ -63,6 +112,15 @@ export function SiteNav() {
                 {item.label}
               </Link>
             ))}
+            {isLoggedIn && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-[13px] font-medium px-3 py-2 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)]"
+              >
+                Logout
+              </button>
+            )}
             {onPricing ? (
               <button
                 type="button"
@@ -104,15 +162,25 @@ export function SiteNav() {
         </div>
       </div>
 
+      {/* Mobile menu backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 top-[60px] z-40"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-[rgba(13,115,119,0.06)] bg-[rgba(248,250,251,0.95)] backdrop-blur-xl px-5 pb-4 pt-2">
+        <div className="md:hidden relative z-50 border-t border-[rgba(13,115,119,0.06)] bg-[rgba(248,250,251,0.95)] backdrop-blur-xl px-5 pb-4 pt-2">
           <div className="flex flex-col gap-1">
-            {NAV_ITEMS.map(item => (
+            {navItems.map(item => (
               <Link
                 key={item.path}
                 href={item.path}
                 onClick={() => setMobileMenuOpen(false)}
+                aria-current={pathname === item.path ? 'page' : undefined}
                 className={`text-left text-sm py-2.5 px-3 rounded-md transition-colors ${
                   pathname === item.path
                     ? 'text-[var(--accent)] font-semibold bg-[rgba(13,115,119,0.06)]'
@@ -124,6 +192,15 @@ export function SiteNav() {
                 {item.label}
               </Link>
             ))}
+            {isLoggedIn && (
+              <button
+                type="button"
+                onClick={() => { setMobileMenuOpen(false); handleLogout() }}
+                className="text-left text-sm py-2.5 px-3 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)]"
+              >
+                Logout
+              </button>
+            )}
             {onPricing ? (
               <button
                 type="button"

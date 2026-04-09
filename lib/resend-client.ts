@@ -5,13 +5,28 @@
 
 import { Resend } from 'resend'
 
-if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'YOUR_RESEND_API_KEY_HERE') {
-  console.warn('RESEND_API_KEY not configured - emails will be logged to console only')
+function redactEmail(email: string): string {
+  return email.length > 3 ? email.slice(0, 3) + '***' : '***'
 }
 
-export const resend = process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 'YOUR_RESEND_API_KEY_HERE'
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null
+let _resend: Resend | null | undefined
+let _resendWarned = false
+
+/** Lazy-initialised Resend client (avoids top-level env access that breaks builds) */
+export function getResend(): Resend | null {
+  if (_resend !== undefined) return _resend
+  const key = process.env.RESEND_API_KEY
+  if (!key || key === 'YOUR_RESEND_API_KEY_HERE') {
+    if (!_resendWarned) {
+      console.warn('RESEND_API_KEY not configured - emails will be logged to console only')
+      _resendWarned = true
+    }
+    _resend = null
+    return null
+  }
+  _resend = new Resend(key)
+  return _resend
+}
 
 const FROM_EMAIL = 'zac@concussion-education-australia.com'
 const FROM_NAME = 'Concussion Education Australia'
@@ -28,10 +43,10 @@ interface EmailOptions {
  * Send email via Resend (or log to console in dev)
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
-  // Development mode - just log
-  if (!resend || process.env.NODE_ENV === 'development') {
+  // Development mode - just log (redact PII)
+  if (!getResend() || process.env.NODE_ENV === 'development') {
     console.log('Email would be sent:', {
-      to: options.to,
+      to: redactEmail(options.to),
       subject: options.subject,
       tags: options.tags,
     })
@@ -39,7 +54,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   }
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend()!.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       replyTo: FROM_EMAIL,
       to: options.to,
@@ -66,9 +81,9 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
  * Send email via Resend with attachment support (or log to console in dev)
  */
 export async function sendEmailWithAttachment(options: EmailOptions & { attachments: Array<{ filename: string; content: Buffer }> }): Promise<boolean> {
-  if (!resend || process.env.NODE_ENV === 'development') {
+  if (!getResend() || process.env.NODE_ENV === 'development') {
     console.log('Email (with attachment) would be sent:', {
-      to: options.to,
+      to: redactEmail(options.to),
       subject: options.subject,
       attachments: options.attachments.map(a => a.filename),
     })
@@ -76,7 +91,7 @@ export async function sendEmailWithAttachment(options: EmailOptions & { attachme
   }
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend()!.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       replyTo: FROM_EMAIL,
       to: options.to,

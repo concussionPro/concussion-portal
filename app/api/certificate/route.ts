@@ -7,7 +7,7 @@ import {
   getOnlineCourseCertificateData,
   getFullCourseCertificateData,
 } from '@/lib/certificate'
-import { resend, sendEmail } from '@/lib/resend-client'
+import { getResend, sendEmail } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if we're in dev mode (no actual email will be sent)
-    const isDevMode = !resend || process.env.NODE_ENV === 'development'
+    const isDevMode = !getResend() || process.env.NODE_ENV === 'development'
 
     if (isDevMode) {
       console.log('Certificate email would be sent:', {
@@ -319,7 +319,7 @@ async function sendCertificateEmail(opts: {
 }): Promise<boolean> {
   // Dev mode guard — should not be reached since POST handler checks this first,
   // but kept as a safety net
-  if (!resend || process.env.NODE_ENV === 'development') {
+  if (!getResend() || process.env.NODE_ENV === 'development') {
     console.log('Certificate email skipped (dev mode):', {
       to: opts.to,
       subject: `Your CPD Certificate — ${opts.courseTitle}`,
@@ -329,7 +329,12 @@ async function sendCertificateEmail(opts: {
   }
 
   try {
-    const result = await resend.emails.send({
+    const client = getResend()
+    if (!client) {
+      console.error('[Certificate] Resend not configured')
+      return false
+    }
+    const result = await client.emails.send({
       from: 'Concussion Education Australia <zac@concussion-education-australia.com>',
       replyTo: 'zac@concussion-education-australia.com',
       to: opts.to,

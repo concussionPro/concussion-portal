@@ -1,13 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { FileText, CheckSquare, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 
 export default function ResourcesPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -22,7 +20,7 @@ export default function ResourcesPage() {
       const res = await fetch('/api/signup-free', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, name: 'Resource Download' }),
       })
       if (!res.ok) throw new Error('Signup failed')
       setSubmitted(true)
@@ -71,7 +69,7 @@ export default function ResourcesPage() {
     <div className="min-h-screen bg-slate-50">
       <SiteNav />
 
-      <div className="max-w-4xl mx-auto px-6 py-16 pt-[80px]">
+      <div className="max-w-4xl mx-auto px-6 py-16 pt-[120px]">
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
             Free Clinical Resources
@@ -176,33 +174,33 @@ export default function ResourcesPage() {
               <p className="text-slate-700 mb-4">
                 Want structured training with 14 AHPRA CPD points?
               </p>
-              <button
-                onClick={() => router.push('/trial')}
+              <Link
+                href="/scat-mastery"
                 className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors inline-flex items-center gap-2"
               >
-                Try Module 1 Free
+                Start Free SCAT6 Course
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
           </div>
         )}
 
-        {/* CTA to Trial */}
+        {/* CTA to Free Course */}
         {!submitted && (
           <div className="bg-slate-900 rounded-2xl p-8 text-center">
             <h3 className="text-2xl font-bold text-white mb-3">
-              Ready for the Full Course?
+              Ready for Structured Training?
             </h3>
             <p className="text-slate-300 mb-6">
-              Try Module 1 free. No credit card required.
+              Start with free SCAT6 Mastery — 3 modules, no credit card required.
             </p>
-            <button
-              onClick={() => router.push('/trial')}
+            <Link
+              href="/scat-mastery"
               className="px-6 py-3 bg-[#6b9da8] text-white rounded-xl font-semibold hover:bg-[#5b8d96] transition-colors inline-flex items-center gap-2"
             >
-              Try Module 1 Free
+              Start Free SCAT6 Course
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
         )}
       </div>

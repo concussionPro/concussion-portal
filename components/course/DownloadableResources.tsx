@@ -57,7 +57,7 @@ export function DownloadableResources({ moduleId }: { moduleId: number }) {
         title: 'SCAT/SCOAT Fillable PDFs (ZIP)',
         description: 'All SCAT and SCOAT forms bundled in a single download',
         fileSize: 'ZIP',
-        downloadUrl: '/api/download?file=SCAT:SCOAT_FIllablePDFs.zip',
+        downloadUrl: '/api/download?file=SCAT-SCOAT_FillablePDFs.zip',
         icon: 'checklist'
       }
     ],

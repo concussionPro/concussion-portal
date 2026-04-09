@@ -7,7 +7,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-background">
       <SiteNav />
 
-      <div className="max-w-3xl mx-auto px-6 pt-[80px] pb-16">
+      <div className="max-w-3xl mx-auto px-6 pt-[120px] pb-16">
         <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">
           Terms, Refund Policy &amp; Privacy
         </h1>

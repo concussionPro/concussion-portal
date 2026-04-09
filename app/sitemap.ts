@@ -94,13 +94,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
-    {
-      url: `${baseUrl}/assessment`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
+    // /assessment excluded — requires interaction, not crawlable content
     // /clinical-toolkit excluded — noindex page (authenticated content)
+    {
+      url: `${baseUrl}/terms`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
     {
       url: `${baseUrl}/faq/scat-assessment`,
       lastModified: new Date(),

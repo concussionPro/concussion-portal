@@ -22,6 +22,8 @@ import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 
+function redact(e: string) { return e.length > 3 ? e.slice(0, 3) + '***' : '***' }
+
 export const maxDuration = 120
 
 export async function GET(request: Request) {
@@ -97,9 +99,9 @@ export async function GET(request: Request) {
                 },
               })
               emailsSent++
-              console.log(`[Nurture] Day 0 catch-up → ${user.email}`)
+              console.log(`[Nurture] Day 0 catch-up → ${redact(user.email)}`)
             } catch (err) {
-              console.error(`[Nurture] Failed Day 0 catch-up for ${user.email}:`, err)
+              console.error(`[Nurture] Failed Day 0 catch-up for ${redact(user.email)}:`, err)
             }
           }
         }
@@ -121,7 +123,7 @@ export async function GET(request: Request) {
             }
           }
         } catch (err) {
-          console.error(`[Nurture] Failed to load progress for ${user.email}:`, err)
+          console.error(`[Nurture] Failed to load progress for ${redact(user.email)}:`, err)
         }
       }
 
@@ -152,9 +154,9 @@ export async function GET(request: Request) {
             },
           })
           emailsSent++
-          console.log(`[Nurture] Day 7 (reengagement) → ${user.email}`)
+          console.log(`[Nurture] Day 7 (reengagement) → ${redact(user.email)}`)
         } catch (err) {
-          console.error(`[Nurture] Failed to send Day 7 reengagement to ${user.email}:`, err)
+          console.error(`[Nurture] Failed to send Day 7 reengagement to ${redact(user.email)}:`, err)
         }
         continue
       }
@@ -186,9 +188,9 @@ export async function GET(request: Request) {
             },
           })
           emailsSent++
-          console.log(`[Nurture] Day 10 (engagement, ${scatCompletedCount} modules) → ${user.email}`)
+          console.log(`[Nurture] Day 10 (engagement, ${scatCompletedCount} modules) → ${redact(user.email)}`)
         } catch (err) {
-          console.error(`[Nurture] Failed to send Day 10 engagement to ${user.email}:`, err)
+          console.error(`[Nurture] Failed to send Day 10 engagement to ${redact(user.email)}:`, err)
         }
         continue
       }
@@ -227,9 +229,9 @@ export async function GET(request: Request) {
         })
 
         emailsSent++
-        console.log(`[Nurture] Day ${daysSinceSignup} → ${user.email}`)
+        console.log(`[Nurture] Day ${daysSinceSignup} → ${redact(user.email)}`)
       } catch (err) {
-        console.error(`[Nurture] Failed to send Day ${daysSinceSignup} to ${user.email}:`, err)
+        console.error(`[Nurture] Failed to send Day ${daysSinceSignup} to ${redact(user.email)}:`, err)
       }
     }
 
@@ -275,9 +277,9 @@ export async function GET(request: Request) {
             })
 
             emailsSent++
-            console.log(`[Workshop Reservation] Day 1 → ${user.email} (${locationConfig.city})`)
+            console.log(`[Workshop Reservation] Day 1 → ${redact(user.email)} (${locationConfig.city})`)
           } catch (err) {
-            console.error(`[Workshop Reservation] Failed to send to ${user.email}:`, err)
+            console.error(`[Workshop Reservation] Failed to send to ${redact(user.email)}:`, err)
           }
           continue // Skip generic Day 1 onboarding for this user
         }
@@ -316,9 +318,9 @@ export async function GET(request: Request) {
         })
 
         emailsSent++
-        console.log(`[Onboarding] Day ${daysSinceSignup} → ${user.email}`)
+        console.log(`[Onboarding] Day ${daysSinceSignup} → ${redact(user.email)}`)
       } catch (err) {
-        console.error(`[Onboarding] Failed to send Day ${daysSinceSignup} to ${user.email}:`, err)
+        console.error(`[Onboarding] Failed to send Day ${daysSinceSignup} to ${redact(user.email)}:`, err)
       }
     }
 
@@ -366,9 +368,9 @@ export async function GET(request: Request) {
           })
 
           emailsSent++
-          console.log(`[Workshop Logistics] ${daysUntilWorkshop}d before → ${user.email}`)
+          console.log(`[Workshop Logistics] ${daysUntilWorkshop}d before → ${redact(user.email)}`)
         } catch (err) {
-          console.error(`[Workshop Logistics] Failed to send to ${user.email}:`, err)
+          console.error(`[Workshop Logistics] Failed to send to ${redact(user.email)}:`, err)
         }
         continue
       }
@@ -400,9 +402,9 @@ export async function GET(request: Request) {
         })
 
         emailsSent++
-        console.log(`[Workshop Prep] ${daysUntilWorkshop}d before → ${user.email}`)
+        console.log(`[Workshop Prep] ${daysUntilWorkshop}d before → ${redact(user.email)}`)
       } catch (err) {
-        console.error(`[Workshop Prep] Failed to send to ${user.email}:`, err)
+        console.error(`[Workshop Prep] Failed to send to ${redact(user.email)}:`, err)
       }
     }
 
@@ -455,9 +457,9 @@ export async function GET(request: Request) {
         })
 
         emailsSent++
-        console.log(`[Workshop Momentum] Day ${daysSinceSignup} → ${user.email} (${locationConfig.city}: ${count}/${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD})`)
+        console.log(`[Workshop Momentum] Day ${daysSinceSignup} → ${redact(user.email)} (${locationConfig.city}: ${count}/${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD})`)
       } catch (err) {
-        console.error(`[Workshop Momentum] Failed to send Day ${daysSinceSignup} to ${user.email}:`, err)
+        console.error(`[Workshop Momentum] Failed to send Day ${daysSinceSignup} to ${redact(user.email)}:`, err)
       }
     }
 
@@ -510,9 +512,9 @@ export async function GET(request: Request) {
             })
 
             emailsSent++
-            console.log(`Sent upgrade nudge (Day ${daysSinceSignup}) to ${user.email}`)
+            console.log(`Sent upgrade nudge (Day ${daysSinceSignup}) to ${redact(user.email)}`)
           } catch (err) {
-            console.error(`[Upgrade Nudge] Failed to send to ${user.email}:`, err)
+            console.error(`[Upgrade Nudge] Failed to send to ${redact(user.email)}:`, err)
           }
         }
       }
@@ -548,9 +550,9 @@ export async function GET(request: Request) {
             })
 
             emailsSent++
-            console.log(`Sent re-engagement to ${user.email} (${daysSinceLogin} days since login)`)
+            console.log(`Sent re-engagement to ${redact(user.email)} (${daysSinceLogin} days since login)`)
           } catch (err) {
-            console.error(`[Re-engagement] Failed to send to ${user.email}:`, err)
+            console.error(`[Re-engagement] Failed to send to ${redact(user.email)}:`, err)
           }
         }
       }
@@ -602,13 +604,13 @@ export async function GET(request: Request) {
               },
             })
             emailsSent++
-            console.log(`[Almost Done] Sent to ${user.email}`)
+            console.log(`[Almost Done] Sent to ${redact(user.email)}`)
           } catch (err) {
-            console.error(`[Almost Done] Failed to send to ${user.email}:`, err)
+            console.error(`[Almost Done] Failed to send to ${redact(user.email)}:`, err)
           }
         }
       } catch (err) {
-        console.error(`[Almost Done] Failed to check progress for ${user.email}:`, err)
+        console.error(`[Almost Done] Failed to check progress for ${redact(user.email)}:`, err)
       }
     }
 
@@ -662,9 +664,9 @@ export async function GET(request: Request) {
         })
 
         emailsSent++
-        console.log(`[Completion Upsell] Cron fallback → ${user.email}`)
+        console.log(`[Completion Upsell] Cron fallback → ${redact(user.email)}`)
       } catch (err) {
-        console.error(`[Completion Upsell] Failed for ${user.email}:`, err)
+        console.error(`[Completion Upsell] Failed for ${redact(user.email)}:`, err)
       }
     }
 
@@ -712,10 +714,10 @@ export async function GET(request: Request) {
           })
 
           emailsSent++
-          console.log(`[Free Almost Done] 2/3 SCAT modules → ${user.email}`)
+          console.log(`[Free Almost Done] 2/3 SCAT modules → ${redact(user.email)}`)
         }
       } catch (err) {
-        console.error(`[Free Almost Done] Failed for ${user.email}:`, err)
+        console.error(`[Free Almost Done] Failed for ${redact(user.email)}:`, err)
       }
     }
 
@@ -760,11 +762,11 @@ async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
         if (userRows.length > 0 && userRows[0].nurture_unsubscribed) {
           // Mark as fully sent so we stop processing
           await sql`UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${checkout.id}`
-          console.log(`[Abandoned] Skipped ${checkout.email} — unsubscribed`)
+          console.log(`[Abandoned] Skipped ${redact(checkout.email)} — unsubscribed`)
           continue
         }
       } catch (err) {
-        console.error(`[Abandoned] Unsubscribe check failed for ${checkout.email}, skipping to be safe:`, err)
+        console.error(`[Abandoned] Unsubscribe check failed for ${redact(checkout.email)}, skipping to be safe:`, err)
         continue
       }
 
@@ -793,9 +795,9 @@ async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
         `
 
         emailsSent++
-        console.log(`[Abandoned] Email ${checkout.emails_sent + 1} → ${checkout.email}`)
+        console.log(`[Abandoned] Email ${checkout.emails_sent + 1} → ${redact(checkout.email)}`)
       } catch (err) {
-        console.error(`[Abandoned Checkout] Failed to send to ${checkout.email}:`, err)
+        console.error(`[Abandoned Checkout] Failed to send to ${redact(checkout.email)}:`, err)
       }
     }
   }

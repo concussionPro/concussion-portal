@@ -85,7 +85,7 @@ export default function PreviewPage() {
       <div className="min-h-screen bg-slate-50">
         <SiteNav />
 
-      <div className="max-w-7xl mx-auto px-6 pt-[80px] pb-8">
+      <div className="max-w-7xl mx-auto px-6 pt-[120px] pb-8">
         {/* Hero - Value-First */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-teal-100 text-[#5b8d96] px-4 py-2 rounded-full text-sm font-bold mb-4">
@@ -147,7 +147,11 @@ export default function PreviewPage() {
               >
                 {/* Module Header */}
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
                   onClick={() => toggleModule(module.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleModule(module.id) } }}
                   className="p-6 cursor-pointer hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-start gap-5">
@@ -248,13 +252,13 @@ export default function PreviewPage() {
                                 ))}
                               </div>
                               <div className="p-4 pt-2 border-t border-slate-100">
-                                <button
-                                  onClick={() => router.push('/pricing')}
+                                <Link
+                                  href="/pricing"
                                   className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
                                 >
                                   <Sparkles className="w-4 h-4" />
                                   Enrol to unlock all {preview.totalSections} sections
-                                </button>
+                                </Link>
                               </div>
                             </div>
                           </div>
@@ -263,14 +267,23 @@ export default function PreviewPage() {
                       </div>
                     ) : (
                       <div className="text-center py-8">
-                        <p className="text-sm text-slate-500 mb-4">Preview content loading...</p>
-                        <button
-                          onClick={() => router.push('/pricing')}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
-                        >
-                          <Lock className="w-4 h-4" />
-                          Enrol to access
-                        </button>
+                        <p className="text-sm text-slate-500 mb-2">Preview content couldn&apos;t be loaded.</p>
+                        <p className="text-xs text-slate-400 mb-4">This may be a temporary issue — try refreshing.</p>
+                        <div className="flex items-center justify-center gap-3">
+                          <button
+                            onClick={() => window.location.reload()}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all"
+                          >
+                            Retry
+                          </button>
+                          <Link
+                            href="/pricing"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#64a8b0] to-[#7ba8b0] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+                          >
+                            View Pricing
+                            <ArrowRight className="w-4 h-4" />
+                          </Link>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -317,13 +330,13 @@ export default function PreviewPage() {
             ))}
           </div>
           <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
-            <button
-              onClick={() => router.push('/assessment')}
+            <Link
+              href="/assessment"
               className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl text-sm font-bold hover:shadow-lg transition-all"
             >
               Take the Full Knowledge Test
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
             <span className="text-xs text-slate-500">Free — see where you stand</span>
           </div>
         </div>
@@ -392,13 +405,13 @@ export default function PreviewPage() {
                     View Pricing
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </button>
-                  <button
-                    onClick={() => router.push('/assessment')}
+                  <Link
+                    href="/assessment"
                     className="px-6 py-3.5 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
                   >
                     <PlayCircle className="w-4 h-4" />
                     Free Knowledge Test
-                  </button>
+                  </Link>
                 </div>
               </div>
               <div className="space-y-3">
