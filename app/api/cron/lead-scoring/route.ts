@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
 
   console.log('[lead-scoring] Starting nightly lead scoring...')
 
+  try {
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
   const ninetyDaysAgoMs = Date.now() - 90 * 24 * 60 * 60 * 1000
   const now = Date.now()
@@ -346,6 +347,12 @@ export async function GET(request: NextRequest) {
     warming: warmingUp.length,
     dormant: dormant.length,
   })
+
+  } catch (err) {
+    const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err)
+    console.error('[lead-scoring] Fatal error:', errMsg)
+    return NextResponse.json({ error: 'Lead scoring failed', detail: errMsg.slice(0, 200) }, { status: 500 })
+  }
 }
 
 // ── Email template ──────────────────────────────────

@@ -69,11 +69,23 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // DB health check
-    try {
-      await sql`SELECT 1`
-    } catch (dbErr) {
-      console.error('[SS Sync] Database connection failed:', dbErr)
+    // DB health check with retry (handles Neon cold starts)
+    let dbReady = false
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await sql`SELECT 1`
+        dbReady = true
+        break
+      } catch (dbErr) {
+        const errMsg = dbErr instanceof Error ? dbErr.message : String(dbErr)
+        console.warn(`[SS Sync] DB connect attempt ${attempt}/3 failed: ${errMsg}`)
+        if (attempt < 3) {
+          await new Promise(r => setTimeout(r, 2000 * attempt))
+        }
+      }
+    }
+    if (!dbReady) {
+      console.error('[SS Sync] Database connection failed after 3 attempts')
       return NextResponse.json({ error: 'Database connection failed' }, { status: 503 })
     }
 
