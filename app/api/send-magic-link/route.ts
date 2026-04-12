@@ -6,6 +6,7 @@ import { findUserByEmail } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { logAuthFailure, logCriticalError, measurePerformance } from '@/lib/monitoring'
+import { getClientIp } from '@/lib/get-client-ip'
 
 // In-memory rate limiting (resets on cold start, but sufficient for Vercel serverless)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -32,10 +33,7 @@ function checkRateLimit(key: string, limit: number): boolean {
 
 export async function POST(request: Request) {
   try {
-    // Get IP for rate limiting (cf-connecting-ip = real client IP behind Cloudflare)
-    const ip = request.headers.get('cf-connecting-ip')
-      || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || 'unknown'
+    const ip = getClientIp(request)
     
     let body: Record<string, unknown>
     try {

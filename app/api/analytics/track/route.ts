@@ -2,6 +2,7 @@
 // Analytics event ingestion — stores events in Vercel Postgres (Neon)
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { getClientIp } from '@/lib/get-client-ip';
 
 // Rate limiting (in-memory, per serverless instance)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -67,9 +68,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const ip = request.headers.get('cf-connecting-ip')
-    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || 'unknown';
+  const ip = getClientIp(request);
   if (!checkRateLimit(`ip:${ip}`, 200)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }

@@ -3,6 +3,7 @@ import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { CONFIG } from '@/lib/config'
+import { getClientIp } from '@/lib/get-client-ip'
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -42,9 +43,7 @@ const CITY_LABELS: Record<ValidCity, string> = {
  */
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('cf-connecting-ip')
-      || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || 'unknown'
+    const ip = getClientIp(request)
 
     const body = await request.json()
     const { email, name, city } = body

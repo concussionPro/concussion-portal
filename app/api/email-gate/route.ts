@@ -10,6 +10,7 @@ import { createJWTSession } from '@/lib/jwt-session'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
+import { getClientIp } from '@/lib/get-client-ip'
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -28,9 +29,7 @@ function checkRateLimit(key: string, limit: number): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('cf-connecting-ip')
-      || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || 'unknown'
+    const ip = getClientIp(request)
 
     let body: Record<string, unknown>
     try {
