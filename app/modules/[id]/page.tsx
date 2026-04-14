@@ -646,7 +646,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
             <>
               <h1 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Module Complete!</h1>
               <p className="text-lg text-slate-600 mb-8">
-                You&apos;ve completed <strong>{module.title}</strong> and earned <strong>{module.points} CPD {module.points === 1 ? 'point' : 'points'}</strong>.
+                You&apos;ve completed <strong>{module.title}</strong>{module.points > 0 ? <> and earned <strong>{module.points} CPD {module.points === 1 ? 'point' : 'points'}</strong></> : ''}.
               </p>
               {quizResult && (
                 <div className="bg-white rounded-xl p-5 border border-slate-200 mb-8 inline-block">
@@ -1359,14 +1359,14 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Complete</h3>
                   <p className="text-[15px] text-slate-700 mb-6 leading-relaxed">
-                    Congratulations! You've met all the requirements for this module. Mark it as complete to earn your {module.points} CPD points.
+                    Congratulations! You've met all the requirements for this module.{module.points > 0 ? ` Mark it as complete to earn your ${module.points} CPD points.` : ''}
                   </p>
                   <button
                     onClick={handleCompleteModule}
                     className="px-8 py-3.5 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
                   >
                     <CheckCircle2 className="w-5 h-5" strokeWidth={2.5} />
-                    Complete Module & Earn CPD Points
+                    {module.points > 0 ? 'Complete Module & Earn CPD Points' : 'Complete Module'}
                   </button>
                 </div>
               </div>
