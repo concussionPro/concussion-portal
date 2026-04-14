@@ -2,7 +2,7 @@
  * FREE SCAT6/SCOAT6 Mastery Course Modules
  * For preview/free access users only
  * 3 modules, ~60 minutes total
- * No standalone CPD — content feeds into paid course CPD total
+ * 1 CPD point awarded on completion of all 3 modules
  * Restructured April 2026 for conversion optimisation
  */
 
@@ -677,7 +677,7 @@ export const scatModules: SCATModule[] = [
     title: 'Clinical Scenarios & Final Quiz',
     subtitle: 'Apply Your Knowledge to Real-World Cases',
     duration: '15 min',
-    points: 0,
+    points: 1,
     description: 'Two detailed clinical case studies and a comprehensive scenario-based quiz. Cases cover sideline assessment with concurrent cervical injury and adolescent symptom minimisation. The final quiz tests applied clinical reasoning — some questions extend beyond this course to identify areas for further professional development.',
     sections: [
       {

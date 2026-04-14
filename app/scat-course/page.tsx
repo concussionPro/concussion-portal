@@ -369,7 +369,7 @@ export default function SCATCoursePage() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-semibold text-slate-600">{module.duration}</div>
-                          <div className="text-xs text-slate-500">{module.points > 0 ? `${module.points} CPD points` : 'Free module'}</div>
+                          <div className="text-xs text-slate-500">{module.points > 0 ? `${module.points} CPD ${module.points === 1 ? 'point' : 'points'}` : 'Free module'}</div>
                         </div>
                       </div>
 

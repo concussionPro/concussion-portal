@@ -111,7 +111,7 @@ const scatModules: SCATModuleMeta[] = [
     title: 'Clinical Scenarios & Final Quiz',
     subtitle: 'Apply Your Knowledge to Real-World Cases',
     duration: '15 min',
-    points: 0,
+    points: 1,
     description: 'Two clinical case studies and a comprehensive scenario-based quiz. Tests applied clinical reasoning with questions that extend beyond this course.',
     isFree: true,
   },

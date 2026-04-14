@@ -276,7 +276,7 @@ export function getSCATCertificateData(participantName: string, participantEmail
     participantEmail,
     courseTitle: 'SCAT6/SCOAT6 Mastery Course',
     courseDescription: 'Comprehensive training in Sport Concussion Assessment Tool (SCAT6) and Sport Concussion Office Assessment Tool (SCOAT6) administration, scoring, interpretation, and clinical application for Australian health practitioners.',
-    cpdPoints: 0,
+    cpdPoints: 1,
     completionDate,
     learningOutcomes: [
       'Correctly administer and score the SCAT6 for acute/sideline concussion assessment',

@@ -126,8 +126,8 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
   const scatCompleted = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 103 && p.completed,
   ).length
-  // SCAT modules have 0 CPD (free lead gen course)
-  const scatCPD = 0
+  // SCAT course = 1 CPD point (awarded on completing all 3 modules)
+  const scatCPD = scatCompleted === 3 ? 1 : 0
   const scatInProgress = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 103 && !!p.startedAt && !p.completed,
   ).length

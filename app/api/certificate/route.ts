@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const courseType = request.nextUrl.searchParams.get('type') || 'scat-mastery'
 
     // The full-course (14 CPD) certificate is issued manually by the workshop instructor.
-    // scat-mastery has 0 CPD (free lead gen). online-course (8 CPD) is auto-generated.
+    // scat-mastery (1 CPD). online-course (8 CPD). Both are auto-generated.
     if (courseType === 'full-course') {
       return NextResponse.json({ error: 'Full course certificates are issued at your workshop' }, { status: 403 })
     }
@@ -348,7 +348,7 @@ async function sendCertificateEmail(opts: {
                     ${sharedEscapeHtml(opts.courseTitle)}
                   </div>
                   <div style="font-size: 32px; font-weight: 800; color: #059669;">
-                    ${opts.cpdPoints} CPD Points
+                    ${opts.cpdPoints} CPD ${opts.cpdPoints === 1 ? 'Point' : 'Points'}
                   </div>
                   <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
                     AHPRA-Aligned · Certificate ID: ${sharedEscapeHtml(opts.certificateId)}
