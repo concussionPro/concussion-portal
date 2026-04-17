@@ -286,7 +286,7 @@ export async function exportSCAT6ToFilledPDF(
     link.download = filename
     link.click()
     URL.revokeObjectURL(url)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('PDF export failed:', error)
     alert(`PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     throw error
@@ -302,8 +302,7 @@ function setTextField(form: any, fieldName: string, value: string | number): num
     const field = form.getTextField(fieldName)
     field.setText(String(value))
     return 1
-  } catch (error: any) {
-    // Skip rich text fields (not supported by pdf-lib) and missing fields
+  } catch {
     return 0
   }
 }

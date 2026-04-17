@@ -6,7 +6,7 @@
  * Marketing Brain Dashboard — your command centre for course sales.
  * Tracks channels, funnels, retargeting, IP intent, and session flow.
  *
- * Auth: handled by parent admin layout (reads admin_api_key from sessionStorage).
+ * Auth: handled by middleware (admin_session httpOnly cookie).
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -703,30 +703,18 @@ export default function AnalyticsDashboard() {
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
 
-  const getAdminKey = useCallback((): string => {
-    if (typeof window === 'undefined') return ''
-    return sessionStorage.getItem('admin_api_key') ?? ''
-  }, [])
-
   const fetchData = useCallback(
     async (type: string, extra: Record<string, string> = {}): Promise<any> => {
-      const adminKey = getAdminKey()
-      if (!adminKey) return null
       const apiPeriod = period === '24h' ? '1d' : period
       const params = new URLSearchParams({ type, period: apiPeriod, ...extra })
-      const res = await fetch(`/api/analytics/data?${params}`, {
-        headers: { 'x-admin-key': adminKey },
-        cache: 'no-store',
-      })
+      const res = await fetch(`/api/analytics/data?${params}`, { cache: 'no-store' })
       if (!res.ok) throw new Error(`API error ${res.status}`)
       return await res.json()
     },
-    [getAdminKey, period]
+    [period]
   )
 
   const loadAll = useCallback(async () => {
-    const adminKey = getAdminKey()
-    if (!adminKey) return
     setLoading(true)
     try {
       const results = await Promise.allSettled([
@@ -760,14 +748,19 @@ export default function AnalyticsDashboard() {
       // Fetch additional admin data (separate endpoints)
       try {
         const [poolRes, preseasonRes, usersRes] = await Promise.allSettled([
-          fetch('/api/admin/ready-to-train', { headers: { 'x-admin-key': adminKey }, cache: 'no-store' }),
-          fetch('/api/admin/preseason', { headers: { 'x-admin-key': adminKey }, cache: 'no-store' }),
-          fetch('/api/admin/emails', { headers: { 'x-admin-key': adminKey }, cache: 'no-store' }),
+          fetch('/api/admin/ready-to-train', { cache: 'no-store' }),
+          fetch('/api/admin/preseason', { cache: 'no-store' }),
+          fetch('/api/admin/emails', { cache: 'no-store' }),
         ])
 
         if (poolRes.status === 'fulfilled' && poolRes.value.ok) {
           const poolJson = await poolRes.value.json()
-          if (poolJson.success) setPoolData(poolJson)
+          if (poolJson.success) setPoolData({
+            totalCount: poolJson.readyTotal ?? 0,
+            cities: poolJson.readyToUpgrade ?? [],
+            paidThreshold: poolJson.paidEnrollments,
+            paidTotal: poolJson.paidTotal ?? 0,
+          })
         }
         if (preseasonRes.status === 'fulfilled' && preseasonRes.value.ok) {
           const preseasonJson = await preseasonRes.value.json()
@@ -795,7 +788,7 @@ export default function AnalyticsDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [getAdminKey, fetchData])
+  }, [fetchData])
 
   useEffect(() => { loadAll() }, [period, loadAll])
 
@@ -1852,7 +1845,7 @@ export default function AnalyticsDashboard() {
                         try {
                           const res = await fetch('/api/admin/test-emails', {
                             method: 'POST',
-                            headers: { 'x-admin-key': getAdminKey(), 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ to }),
                           })
                           const data = await res.json()

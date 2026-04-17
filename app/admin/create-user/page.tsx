@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Check, AlertCircle, Loader2, Mail, DollarSign, User, Link2, ClipboardList, Lock } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
@@ -11,33 +11,16 @@ export default function AdminCreateUser() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [magicLink, setMagicLink] = useState('')
-  const [adminKey, setAdminKey] = useState('')
-
-  // Hydrate admin key from sessionStorage (set by admin layout)
-  useEffect(() => {
-    const stored = sessionStorage.getItem('admin_api_key')
-    if (stored) setAdminKey(stored)
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
     setMessage('')
 
-    // Guard: ensure admin key is available
-    if (!adminKey) {
-      setStatus('error')
-      setMessage('Unauthorized \u2014 admin API key required. Please refresh the page and re-enter your admin key.')
-      return
-    }
-
     try {
       const response = await fetch('/api/admin/create-user', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name, amount: parseInt(amount) }),
       })
 
@@ -60,9 +43,9 @@ export default function AdminCreateUser() {
         setMessage('')
         setMagicLink('')
       }, 10000)
-    } catch (error: any) {
+    } catch (error: unknown) {
       setStatus('error')
-      setMessage(error.message || 'Something went wrong')
+      setMessage(error instanceof Error ? error.message : 'Something went wrong')
     }
   }
 

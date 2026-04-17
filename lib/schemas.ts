@@ -1,0 +1,69 @@
+/**
+ * Zod schemas for API request validation.
+ * Keep these central so schema + route stay in sync.
+ */
+
+import { z } from 'zod'
+
+// Shared primitives
+export const emailSchema = z.string().trim().toLowerCase().email().max(254)
+export const nameSchema = z.string().trim().min(1).max(100)
+export const locationSchema = z.enum(['sydney', 'melbourne', 'byron-bay'])
+export const courseTypeSchema = z.enum([
+  'online-only',
+  'full-course',
+  'workshop-upgrade',
+  'international-online',
+])
+
+// UTM payload — accept loose string map, cap size
+export const utmSchema = z
+  .record(z.string().max(64), z.string().max(256))
+  .optional()
+
+// /api/create-checkout
+export const createCheckoutSchema = z.object({
+  courseType: courseTypeSchema,
+  location: locationSchema.optional(),
+  email: emailSchema.optional(),
+  preferredCity: locationSchema.optional(),
+  promoCode: z.string().max(50).optional(),
+  utm: utmSchema,
+})
+
+// /api/send-magic-link
+export const sendMagicLinkSchema = z.object({
+  email: emailSchema,
+})
+
+// /api/signup-free
+export const signupFreeSchema = z.object({
+  email: emailSchema,
+  name: nameSchema,
+  consent: z.boolean().optional(),
+  source: z.string().max(50).optional(),
+})
+
+// /api/register-interest
+export const registerInterestSchema = z.object({
+  email: emailSchema,
+  name: nameSchema.optional(),
+  locations: z.array(locationSchema).max(3).optional(),
+  preferredCity: locationSchema.optional(),
+  source: z.string().max(50).optional(),
+})
+
+// /api/progress — user progress shape.
+// We don't model every module key individually; we cap structure instead so
+// the DB can't be stuffed with arbitrary objects.
+const moduleProgressSchema = z.object({
+  completed: z.boolean().optional(),
+  quizScore: z.number().min(0).max(100).nullable().optional(),
+  quizAttempts: z.number().int().min(0).max(1000).optional(),
+  timeSpent: z.number().min(0).max(1_000_000).optional(),
+  lastAccessedAt: z.string().max(40).optional(),
+}).catchall(z.unknown())
+
+export const progressSchema = z.object({
+  progress: z.record(z.string().max(20), moduleProgressSchema),
+})

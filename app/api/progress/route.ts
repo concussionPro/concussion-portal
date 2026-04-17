@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { sql } from '@/lib/db'
+import { rateLimit } from '@/lib/rate-limit'
+import { progressSchema } from '@/lib/schemas'
 
 // GET - Load user progress
 export async function GET(request: NextRequest) {
@@ -90,16 +92,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { progress } = await request.json()
+    const rl = await rateLimit({ key: `progress:${sessionData.userId}`, limit: 60, windowSec: 60 })
+    if (!rl.ok) {
+      return NextResponse.json({ error: 'Too many progress updates. Please wait.' }, { status: 429 })
+    }
 
-    if (!progress) {
+    let rawBody: unknown
+    try {
+      rawBody = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
+    const parsed = progressSchema.safeParse(rawBody)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Progress data required' },
+        { error: 'Invalid progress payload', details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       )
     }
+    const { progress } = parsed.data
 
-    // Prevent abuse: limit progress data size
+    // Prevent abuse: size cap even after schema validation
     const progressJson = JSON.stringify(progress)
     if (progressJson.length > 100_000) {
       return NextResponse.json(

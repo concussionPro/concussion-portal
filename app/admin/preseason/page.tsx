@@ -35,17 +35,8 @@ export default function AdminPreseasonPage() {
   }, [])
 
   const fetchData = async () => {
-    const adminKey = sessionStorage.getItem('admin_api_key')
-    if (!adminKey) {
-      setError('Admin key not found. Please re-authenticate.')
-      setLoading(false)
-      return
-    }
-
     try {
-      const res = await fetch('/api/admin/preseason', {
-        headers: { 'x-admin-key': adminKey },
-      })
+      const res = await fetch('/api/admin/preseason', { cache: 'no-store' })
       const data = await res.json()
       if (res.ok && data.success) {
         setClinics(data.clinics)

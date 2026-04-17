@@ -34,6 +34,45 @@ const PAID_DOCS = new Set([
   '/docs/Child_SCAT6_Flat.pdf',
 ])
 
+// Edge-compatible HMAC-SHA256 signature verification (base64url)
+async function verifyHmacSig(payloadStr: string, signature: string): Promise<boolean> {
+  const secret = process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET
+  if (!secret) return false
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  const sigBuffer = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payloadStr))
+  const sigBytes = new Uint8Array(sigBuffer)
+  let binary = ''
+  for (let i = 0; i < sigBytes.length; i++) binary += String.fromCharCode(sigBytes[i])
+  const expectedSig = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  return constantTimeEqual(signature, expectedSig)
+}
+
+// Edge-compatible admin cookie verification
+async function verifyAdminCookieEdge(token: string | undefined): Promise<boolean> {
+  if (!token) return false
+  try {
+    const [payloadStr, signature] = token.split('.')
+    if (!payloadStr || !signature) return false
+    if (!(await verifyHmacSig(payloadStr, signature))) return false
+
+    const base64 = payloadStr.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
+    const payload = JSON.parse(atob(padded))
+    if (payload.type !== 'admin') return false
+    if (typeof payload.exp !== 'number' || payload.exp < Date.now()) return false
+    return true
+  } catch {
+    return false
+  }
+}
+
 // Edge-compatible session verification using Web Crypto API
 async function verifySessionEdge(token: string): Promise<{ accessLevel: string; exp: number } | null> {
   try {
@@ -96,8 +135,66 @@ async function verifySessionEdge(token: string): Promise<{ accessLevel: string; 
 // Bot user-agent patterns — don't geo-redirect crawlers
 const BOT_UA_PATTERN = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|linkedinbot|twitterbot|whatsapp|googlebot|gptbot|claude|chatgpt|perplexity/i
 
+// CSRF: same-origin check for state-changing API calls.
+// Stripe webhooks (verified by signature) and Vercel cron (verified by CRON_SECRET
+// or admin key) are exempt because they're server-to-server, not browser-CSRF-susceptible.
+const CSRF_EXEMPT_PREFIXES = [
+  '/api/webhooks/',
+  '/api/cron/',
+]
+const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+
+function isSameOriginRequest(request: NextRequest): boolean {
+  const origin = request.headers.get('origin')
+  const referer = request.headers.get('referer')
+  const host = request.headers.get('host')
+  if (!host) return false
+
+  // Derive candidate origins from Origin or Referer headers
+  const candidate = origin || (referer ? (() => { try { return new URL(referer).origin } catch { return null } })() : null)
+
+  // No Origin/Referer at all → block (modern browsers send Origin on cross-origin POSTs;
+  // absence is suspicious for state-changing calls)
+  if (!candidate) return false
+  if (candidate === 'null') return false
+
+  let candidateUrl: URL
+  try {
+    candidateUrl = new URL(candidate)
+  } catch {
+    return false
+  }
+
+  // Match against the request host (Vercel terminates TLS, so request sees http/https correctly)
+  if (candidateUrl.host === host) return true
+
+  // Allow the configured app URL (handles Cloudflare/proxy host mismatch)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (appUrl) {
+    try {
+      if (candidateUrl.host === new URL(appUrl).host) return true
+    } catch { /* bad env value */ }
+  }
+
+  return false
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // ─── CSRF: reject cross-origin state-changing requests to /api/* ───────────
+  if (
+    pathname.startsWith('/api/') &&
+    UNSAFE_METHODS.has(request.method) &&
+    !CSRF_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p))
+  ) {
+    if (!isSameOriginRequest(request)) {
+      return NextResponse.json(
+        { error: 'Forbidden — cross-origin request rejected' },
+        { status: 403 }
+      )
+    }
+  }
 
   // ─── Geo-routing: /pricing → /pricing-international for non-AU/NZ ─────────
   if (pathname === '/pricing') {
@@ -205,26 +302,43 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Admin API routes require x-admin-key header (except monitoring which handles its own)
-  if (pathname.startsWith('/api/admin/')) {
-    const adminKey = request.headers.get('x-admin-key')
-    const authHeader = request.headers.get('authorization')
-    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-
-    const envKey = process.env.ADMIN_API_KEY
-    if (!envKey) {
-      return NextResponse.json(
-        { error: 'Admin API not configured' },
-        { status: 503 }
-      )
+  // Admin UI pages — require valid admin_session cookie, redirect to /admin/login if missing.
+  // Login endpoints themselves are public.
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    const cookie = request.cookies.get('admin_session')?.value
+    const ok = await verifyAdminCookieEdge(cookie)
+    if (!ok) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/admin/login'
+      if (pathname !== '/admin') loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
     }
-    const keyMatch = adminKey ? constantTimeEqual(adminKey, envKey) : false
-    const bearerMatch = bearerToken ? constantTimeEqual(bearerToken, envKey) : false
-    if (!keyMatch && !bearerMatch) {
-      return NextResponse.json(
-        { error: 'Unauthorized \u2014 admin API key required' },
-        { status: 401 }
-      )
+  }
+
+  // Admin API routes: accept (1) admin_session cookie, (2) x-admin-key header,
+  // or (3) Bearer <ADMIN_API_KEY> for machine-to-machine clients (cron, curl).
+  // Exempt: /api/admin/login (must be callable to get a session).
+  if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/login') {
+    const cookie = request.cookies.get('admin_session')?.value
+    const cookieOk = await verifyAdminCookieEdge(cookie)
+
+    if (!cookieOk) {
+      const adminKey = request.headers.get('x-admin-key')
+      const authHeader = request.headers.get('authorization')
+      const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+
+      const envKey = process.env.ADMIN_API_KEY
+      if (!envKey) {
+        return NextResponse.json({ error: 'Admin API not configured' }, { status: 503 })
+      }
+      const keyMatch = adminKey ? constantTimeEqual(adminKey, envKey) : false
+      const bearerMatch = bearerToken ? constantTimeEqual(bearerToken, envKey) : false
+      if (!keyMatch && !bearerMatch) {
+        return NextResponse.json(
+          { error: 'Unauthorized \u2014 admin API key required' },
+          { status: 401 }
+        )
+      }
     }
   }
 
@@ -238,7 +352,8 @@ export const config = {
     '/docs/:path*.pdf',
     '/docs/:path*.zip',
     '/resources/:path*.pdf',
-    '/api/admin/:path*',
+    '/api/:path*',
+    '/admin/:path*',
     '/learning/:path*',
     '/dashboard/:path*',
     '/settings/:path*',

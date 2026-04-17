@@ -326,7 +326,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           subject: `ACTION REQUIRED: Login email failed for ${redact(customerEmail)}`,
           html: `<p>A customer just paid but their login email failed to send.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Course:</strong> ${escapeHtml(courseType)}<br><strong>Access:</strong> ${escapeHtml(finalAccess)}</p><p>They can request a new login link from /login, but you may want to reach out proactively.</p>`,
         })
-      } catch { /* best effort */ }
+      } catch (alertErr) { console.error('Admin alert email failed:', alertErr) }
     }
   } catch (emailError) {
     console.error(`Email send failed for ${redact(customerEmail)} (user account created, they can use /login):`, emailError)
@@ -336,7 +336,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         subject: `ACTION REQUIRED: Login email failed for ${redact(customerEmail)}`,
         html: `<p>A customer just paid but their login email threw an error.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Course:</strong> ${escapeHtml(courseType)}</p><p>Error: ${escapeHtml(emailError instanceof Error ? emailError.message : String(emailError))}</p>`,
       })
-    } catch { /* best effort */ }
+    } catch (alertErr) { console.error('Admin alert email failed:', alertErr) }
   }
 }
 

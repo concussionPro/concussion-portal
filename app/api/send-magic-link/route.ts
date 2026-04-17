@@ -7,34 +7,16 @@ import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { logAuthFailure, logCriticalError, measurePerformance } from '@/lib/monitoring'
 import { getClientIp } from '@/lib/get-client-ip'
+import { rateLimit } from '@/lib/rate-limit'
 
-// In-memory rate limiting (resets on cold start, but sufficient for Vercel serverless)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const EMAIL_RATE_LIMIT = 3 // max attempts per email per window
 const IP_RATE_LIMIT = 10 // max attempts per IP per window
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
-
-function checkRateLimit(key: string, limit: number): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(key)
-  
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
-    return true
-  }
-  
-  if (entry.count >= limit) {
-    return false
-  }
-  
-  entry.count++
-  return true
-}
+const RATE_LIMIT_WINDOW = 15 * 60 // 15 minutes
 
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request)
-    
+
     let body: Record<string, unknown>
     try {
       body = await request.json()
@@ -61,8 +43,9 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim()
 
-    // Rate limit by IP
-    if (!checkRateLimit(`ip:${ip}`, IP_RATE_LIMIT)) {
+    // Rate limit by IP (shared across instances via Vercel KV)
+    const ipLimit = await rateLimit({ key: `magic:ip:${ip}`, limit: IP_RATE_LIMIT, windowSec: RATE_LIMIT_WINDOW })
+    if (!ipLimit.ok) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again in a few minutes.' },
         { status: 429 }
@@ -70,7 +53,8 @@ export async function POST(request: Request) {
     }
 
     // Rate limit by email
-    if (!checkRateLimit(`email:${normalizedEmail}`, EMAIL_RATE_LIMIT)) {
+    const emailLimit = await rateLimit({ key: `magic:email:${normalizedEmail}`, limit: EMAIL_RATE_LIMIT, windowSec: RATE_LIMIT_WINDOW })
+    if (!emailLimit.ok) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again in a few minutes.' },
         { status: 429 }

@@ -18,25 +18,16 @@ interface EmailEntry {
 export default function AdminEmailsPage() {
   const [emails, setEmails] = useState<EmailEntry[]>([])
   const [loading, setLoading] = useState(true)
+
   const [filter, setFilter] = useState<'all' | 'preview' | 'paid'>('all')
-  const [adminKey, setAdminKey] = useState('')
-  const [authenticated, setAuthenticated] = useState(false)
 
   useEffect(() => {
-    if (authenticated) {
-      fetchEmails()
-    }
-  }, [authenticated])
+    fetchEmails()
+  }, [])
 
   const fetchEmails = async () => {
-    if (!adminKey) return
-
     try {
-      const response = await fetch('/api/admin/emails', {
-        headers: {
-          'x-admin-key': adminKey,
-        },
-      })
+      const response = await fetch('/api/admin/emails', { cache: 'no-store' })
       const data = await response.json()
       if (response.ok && data.success) {
         setEmails(data.emails)
@@ -57,10 +48,7 @@ export default function AdminEmailsPage() {
     try {
       const response = await fetch('/api/admin/unsubscribe', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
       const data = await response.json()
@@ -72,44 +60,6 @@ export default function AdminEmailsPage() {
     } catch {
       alert('Failed to unsubscribe. Please try again.')
     }
-  }
-
-  const handleAuth = (e: React.FormEvent) => {
-    e.preventDefault()
-    setAuthenticated(true)
-    setLoading(true)
-    fetchEmails()
-  }
-
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-slate-900 mb-6">Admin Authentication</h1>
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Admin API Key
-              </label>
-              <input
-                type="password"
-                value={adminKey}
-                onChange={(e) => setAdminKey(e.target.value)}
-                placeholder="Enter admin API key"
-                className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Access Dashboard
-            </button>
-          </form>
-        </div>
-      </div>
-    )
   }
 
   const filteredEmails = emails.filter(email => {

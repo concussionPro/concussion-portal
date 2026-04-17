@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createCourseCheckoutSession, VALID_LOCATIONS, VALID_COURSE_TYPES } from '@/lib/stripe'
 import type { CourseType } from '@/lib/stripe'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { rateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/get-client-ip'
+import { createCheckoutSchema } from '@/lib/schemas'
 
 /**
  * POST /api/create-checkout
@@ -15,11 +18,30 @@ import { verifySessionToken } from '@/lib/jwt-session'
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { courseType, location, email, preferredCity, promoCode, utm } = body
+    const ip = getClientIp(request)
+    const rl = await rateLimit({ key: `checkout:${ip}`, limit: 10, windowSec: 60 })
+    if (!rl.ok) {
+      return NextResponse.json({ error: 'Too many checkout attempts. Please wait a minute.' }, { status: 429 })
+    }
 
-    // Validate course type
-    if (!courseType || !VALID_COURSE_TYPES.includes(courseType)) {
+    let raw: unknown
+    try {
+      raw = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 })
+    }
+    const parsed = createCheckoutSchema.safeParse(raw)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request.', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+    const { courseType, location, email, preferredCity, promoCode, utm } = parsed.data
+
+    // Defense in depth: schema covers enum already, but keep the guard so a schema
+    // drift doesn't accidentally open up new course types without a code review.
+    if (!VALID_COURSE_TYPES.includes(courseType)) {
       return NextResponse.json(
         { error: 'Invalid course type.' },
         { status: 400 }
@@ -57,24 +79,6 @@ export async function POST(request: NextRequest) {
       }
       // Use session email to prevent upgrading a different account
       sessionEmail = session.email
-    }
-
-    // Validate location for full-course (optional — nominated after completing online modules)
-    if (courseType === 'full-course' && location) {
-      if (!VALID_LOCATIONS.includes(location)) {
-        return NextResponse.json(
-          { error: 'Invalid location. Must be "sydney", "melbourne", or "byron-bay".' },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Validate email format if provided
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format.' },
-        { status: 400 }
-      )
     }
 
     // Use server-side env var only — origin header is spoofable

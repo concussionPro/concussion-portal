@@ -11,6 +11,7 @@ import { getResend, sendEmail, sendEmailWithAttachment, escapeHtml as sharedEsca
 import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
+import { rateLimit } from '@/lib/rate-limit'
 
 const SCAT_MODULE_IDS = [101, 102, 103]
 const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -29,6 +30,12 @@ export async function GET(request: NextRequest) {
     const sessionData = verifySessionToken(sessionToken)
     if (!sessionData) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+    }
+
+    // Certificate generation is CPU-heavy (PDF). Limit per-user to stop runaway loops.
+    const rl = await rateLimit({ key: `certificate:${sessionData.userId}`, limit: 10, windowSec: 60 })
+    if (!rl.ok) {
+      return NextResponse.json({ error: 'Too many certificate requests. Please wait.' }, { status: 429 })
     }
 
     const courseType = request.nextUrl.searchParams.get('type') || 'scat-mastery'
