@@ -78,57 +78,6 @@ function emailShell(content: string, unsubscribeUrl?: string): string {
  * Goal: Get them to complete their first module within 48 hours (highest correlation with course completion).
  * Triggered by createdAt on users with accessLevel !== 'preview'.
  */
-/**
- * Purchase confirmation (Day 0).
- * Sent from the Stripe webhook immediately after a successful checkout.
- * Acts as both receipt-of-order AND login link — Stripe emails the formal
- * tax invoice separately.
- */
-export const PURCHASE_CONFIRMATION_EMAIL = {
-  subject: 'Payment received — your ConcussionPro course is ready',
-  template: (opts: {
-    name: string
-    loginLink: string
-    courseLabel: string
-    workshopCity?: string
-    amount: number
-    currency: string
-    transactionId: string
-  }) => {
-    const firstName = escapeHtml(opts.name.split(' ')[0] || 'there')
-    const courseLabel = escapeHtml(opts.courseLabel)
-    const cityLine = opts.workshopCity
-      ? `<li><strong>Workshop city:</strong> ${escapeHtml(
-          opts.workshopCity === 'byron-bay'
-            ? 'Byron Bay'
-            : opts.workshopCity.charAt(0).toUpperCase() + opts.workshopCity.slice(1)
-        )}</li>`
-      : ''
-    const amountStr = `${opts.currency} $${opts.amount.toFixed(2)}`
-    return emailShell(`
-      <h2>Thanks ${firstName} — payment confirmed</h2>
-      <p>Your <strong>${courseLabel}</strong> is now active on your ConcussionPro account. You can start immediately — each module is self-paced and your access is lifetime.</p>
-      <center><a href="${utm(opts.loginLink, 'purchase_confirmation', 'access_course')}" class="cta-btn">Access Your Course →</a></center>
-      <div class="callout">
-        <strong>What you just purchased</strong>
-        <ul style="margin-top: 8px; margin-bottom: 0;">
-          <li><strong>Course:</strong> ${courseLabel}</li>
-          ${cityLine}
-          <li><strong>Amount:</strong> ${escapeHtml(amountStr)}</li>
-          <li><strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(opts.transactionId)}</code></li>
-        </ul>
-      </div>
-      <p style="font-size: 14px; color: #64748b;">A formal tax invoice will arrive separately from Stripe (${escapeHtml(CONFIG.CONTACT_EMAIL)} is on file). Keep it for your CPD / tax records.</p>
-      <p style="font-size: 14px; color: #64748b;">Most clinicians who finish the first module in the first 48 hours go on to complete the whole course — so if you can grab 75 minutes this week, start with Module 1.</p>
-      <p>Any questions, just hit reply — I read every message.</p>
-      <div class="sig">
-        Zac Lewis<br>
-        Concussion Education Australia
-      </div>
-    `)
-  },
-}
-
 export const POST_PURCHASE_SEQUENCE = [
   // DAY 0 - Welcome + First Module Push (sent by webhook magic link, this is the Day 1 follow-up)
   {

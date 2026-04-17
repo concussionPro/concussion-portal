@@ -9,15 +9,15 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
-import { ABANDONED_CHECKOUT_SEQUENCE, PURCHASE_CONFIRMATION_EMAIL } from '@/lib/email-sequences'
+import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
 
 function labelForCourse(courseType: string, accessLevel: string): string {
   switch (courseType) {
-    case 'full-course': return 'Complete Concussion Course (online + workshop) — 14 CPD points'
-    case 'online-only': return 'Online Concussion Course — 8 CPD points'
-    case 'workshop-upgrade': return 'Workshop Upgrade — hands-on training + 6 additional CPD points'
-    case 'international-online': return 'Online Concussion Course (International) — 8 CPD points'
-    default: return accessLevel === 'full-course' ? 'Complete Concussion Course' : 'Online Concussion Course'
+    case 'full-course': return 'Complete Course (online + workshop)'
+    case 'online-only': return 'Online Course'
+    case 'workshop-upgrade': return 'Workshop Upgrade'
+    case 'international-online': return 'Online Course (International)'
+    default: return accessLevel === 'full-course' ? 'Complete Course' : 'Online Course'
   }
 }
 import Stripe from 'stripe'
@@ -315,75 +315,56 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.error('Failed to fire server-side purchase conversion:', err)
   }
 
-  // Step 4: Send purchase confirmation email — contains the login link + receipt details.
-  // Best effort: user account is already provisioned, so they can always request a new
-  // link from /login if delivery fails. Delivery failures generate an admin alert.
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-  let confirmationSent = false
+  // Step 4: Send magic link email to the customer (unchanged — this is what gives them access).
   try {
     // Re-read user to get definitive post-upgrade access level (existingUser is stale)
     const freshUser = await findUserByEmail(customerEmail)
     const finalAccess = (freshUser?.accessLevel || accessLevel) as 'preview' | 'online-only' | 'full-course'
     const userName = freshUser?.name || customerName
     const token = createMagicToken(freshUser?.id || userId, customerEmail, userName, finalAccess)
-    const loginLink = `${baseUrl}/auth/verify?token=${token}`
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+    const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
 
-    confirmationSent = await sendEmail({
-      to: customerEmail,
-      subject: PURCHASE_CONFIRMATION_EMAIL.subject,
-      html: PURCHASE_CONFIRMATION_EMAIL.template({
-        name: userName,
-        loginLink,
-        courseLabel: labelForCourse(courseType, finalAccess),
-        workshopCity: workshopCity || undefined,
-        amount: purchaseAmount,
-        currency,
-        transactionId: session.id,
-      }),
-      tags: [
-        { name: 'type', value: 'purchase-confirmation' },
-        { name: 'courseType', value: courseType },
-      ],
-    })
-
-    if (confirmationSent) {
-      console.log(`Purchase confirmation sent to ${redact(customerEmail)} | Course: ${courseType} | City: ${workshopCity || 'N/A'} | Access: ${finalAccess}`)
+    if (emailSent) {
+      console.log(`Login link sent to: ${redact(customerEmail)} | Course: ${courseType} | City: ${workshopCity || 'N/A'} | Access: ${finalAccess}`)
     } else {
-      // Fallback: try the plain magic-link email (different template path — rules out template issues)
-      console.error(`Confirmation send FAILED for ${redact(customerEmail)} — attempting magic-link fallback`)
-      const fallbackSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
-      if (fallbackSent) {
-        console.log(`Fallback magic link sent to ${redact(customerEmail)}`)
-        confirmationSent = true
-      }
+      console.error(`Email send FAILED for ${redact(customerEmail)} — user account created, they can request a new link from /login`)
+      try {
+        await sendEmail({
+          to: CONFIG.CONTACT_EMAIL,
+          subject: `ACTION REQUIRED: Login email failed for ${redact(customerEmail)}`,
+          html: `<p>A customer just paid but their login email failed to send.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Course:</strong> ${escapeHtml(courseType)}<br><strong>Access:</strong> ${escapeHtml(finalAccess)}</p><p>They can request a new login link from /login, but you may want to reach out proactively.</p>`,
+        })
+      } catch (alertErr) { console.error('Admin alert email failed:', alertErr) }
     }
   } catch (emailError) {
-    console.error(`Purchase confirmation threw for ${redact(customerEmail)}:`, emailError)
+    console.error(`Email send failed for ${redact(customerEmail)} (user account created, they can use /login):`, emailError)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION REQUIRED: Login email failed for ${redact(customerEmail)}`,
+        html: `<p>A customer just paid but their login email threw an error.</p><p><strong>Course:</strong> ${escapeHtml(courseType)}</p><p>Error: ${escapeHtml(emailError instanceof Error ? emailError.message : String(emailError))}</p>`,
+      })
+    } catch (alertErr) { console.error('Admin alert email failed:', alertErr) }
   }
 
-  // Step 5: Notify admin of the sale (separate email so Zac always sees a ping).
+  // Step 5: Simple "new sale" ping to the admin, every time.
   try {
-    const cityLine = workshopCity
-      ? `<li><strong>Workshop:</strong> ${escapeHtml(workshopCity)}</li>`
-      : ''
+    const cityLine = workshopCity ? ` · ${workshopCity}` : ''
     await sendEmail({
       to: CONFIG.CONTACT_EMAIL,
-      subject: confirmationSent
-        ? `New sale: ${labelForCourse(courseType, accessLevel)} — ${currency} $${purchaseAmount.toFixed(2)}`
-        : `ACTION REQUIRED: Sale went through but confirmation email failed — ${redact(customerEmail)}`,
+      subject: `New sale: ${labelForCourse(courseType, accessLevel)}${cityLine} — ${currency} $${purchaseAmount.toFixed(2)}`,
       html: `
-        <p><strong>${confirmationSent ? 'New paid sale' : 'SALE — confirmation email FAILED, customer needs contact'}</strong></p>
+        <p><strong>New paid sale through the portal.</strong></p>
         <ul>
           <li><strong>Customer:</strong> ${escapeHtml(customerEmail)} (${escapeHtml(customerName)})</li>
           <li><strong>Course:</strong> ${escapeHtml(labelForCourse(courseType, accessLevel))}</li>
-          ${cityLine}
+          ${workshopCity ? `<li><strong>Workshop:</strong> ${escapeHtml(workshopCity)}</li>` : ''}
           <li><strong>Amount:</strong> ${escapeHtml(currency)} $${purchaseAmount.toFixed(2)}</li>
-          <li><strong>Stripe session:</strong> ${escapeHtml(session.id)}</li>
-          <li><strong>Customer email delivered:</strong> ${confirmationSent ? 'yes' : 'NO — please reach out'}</li>
+          <li><strong>Stripe session:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code></li>
         </ul>
-        ${confirmationSent ? '' : `<p>The user account has been provisioned. They can request a new login link from /login, but proactive outreach is ideal.</p>`}
       `,
-      tags: [{ name: 'type', value: confirmationSent ? 'admin-sale-notify' : 'admin-sale-email-failed' }],
+      tags: [{ name: 'type', value: 'admin-sale-notify' }],
     })
   } catch (adminErr) {
     console.error('Admin sale notification failed:', adminErr)
