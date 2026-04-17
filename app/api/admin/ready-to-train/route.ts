@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 import { sql } from '@/lib/db'
 import { getEnrollmentsByLocation, getEnrollmentCount } from '@/lib/users'
 import { CONFIG } from '@/lib/config'
+import { isAdminRequest } from '@/lib/require-admin'
 
 const CITY_LABELS: Record<string, string> = {
   sydney: 'Sydney',
@@ -10,23 +10,6 @@ const CITY_LABELS: Record<string, string> = {
   'byron-bay': 'Byron Bay',
   adelaide: 'Adelaide',
   wa: 'Western Australia',
-}
-
-function timingSafeCompare(a: string, b: string): boolean {
-  const aHash = crypto.createHmac('sha256', 'compare').update(a).digest()
-  const bHash = crypto.createHmac('sha256', 'compare').update(b).digest()
-  return crypto.timingSafeEqual(aHash, bHash)
-}
-
-function isAdminAuthorized(request: NextRequest): boolean {
-  const expected = process.env.ADMIN_API_KEY
-  if (!expected) return false
-  const adminKey = request.headers.get('x-admin-key')
-  if (adminKey && timingSafeCompare(adminKey, expected)) return true
-  const authHeader = request.headers.get('authorization')
-  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-  if (bearer && timingSafeCompare(bearer, expected)) return true
-  return false
 }
 
 /**
@@ -38,7 +21,7 @@ function isAdminAuthorized(request: NextRequest): boolean {
  * 3. interest — pre-purchase interest registrations (browsing, not bought yet)
  */
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

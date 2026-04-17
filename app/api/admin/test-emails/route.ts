@@ -1,21 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { isAdminRequest } from '@/lib/require-admin'
 
 export const maxDuration = 60
-
-function timingSafeCompare(a: string, b: string): boolean {
-  const aHash = crypto.createHmac('sha256', 'compare').update(a).digest()
-  const bHash = crypto.createHmac('sha256', 'compare').update(b).digest()
-  return crypto.timingSafeEqual(aHash, bHash)
-}
-
-function isAdminAuthorized(request: NextRequest): boolean {
-  const expected = process.env.ADMIN_API_KEY
-  if (!expected) return false
-  const adminKey = request.headers.get('x-admin-key')
-  if (adminKey && timingSafeCompare(adminKey, expected)) return true
-  return false
-}
 
 // Import sequence templates
 import {
@@ -233,7 +219,7 @@ function welcomeEmail(baseUrl: string): string {
  * Body: { to: "email@example.com" }
  */
 export async function POST(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
+import { isAdminRequest } from '@/lib/require-admin'
 
 export const maxDuration = 120
 
@@ -104,17 +105,7 @@ function buildEmail(firstName: string): string {
 }
 
 export async function POST(request: NextRequest) {
-  // Auth
-  const adminKey = request.headers.get('x-admin-key')
-  const expected = process.env.ADMIN_API_KEY
-  if (!expected || !adminKey) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  try {
-    if (adminKey.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(adminKey), Buffer.from(expected))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-  } catch {
+  if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

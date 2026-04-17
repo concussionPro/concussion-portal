@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { unsubscribeUser } from '@/lib/users'
+import { isAdminRequest } from '@/lib/require-admin'
 
 function timingSafeCompare(a: string, b: string): boolean {
   const aHash = crypto.createHmac('sha256', 'compare').update(a).digest()
@@ -9,13 +10,9 @@ function timingSafeCompare(a: string, b: string): boolean {
 }
 
 function isAuthorized(request: NextRequest): boolean {
-  // Accept ADMIN_API_KEY via x-admin-key header (same as admin emails page)
-  const adminKey = process.env.ADMIN_API_KEY
-  if (adminKey) {
-    const xAdminKey = request.headers.get('x-admin-key')
-    if (xAdminKey && timingSafeCompare(xAdminKey, adminKey)) return true
-  }
-  // Also accept CRON_SECRET via Bearer token
+  // Admin cookie / x-admin-key / Bearer ADMIN_API_KEY — the usual admin paths
+  if (isAdminRequest(request)) return true
+  // Also accept CRON_SECRET via Bearer token for scheduled cleanups
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret) {
     const authHeader = request.headers.get('authorization')

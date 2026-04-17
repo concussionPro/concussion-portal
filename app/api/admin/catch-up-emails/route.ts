@@ -12,8 +12,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
+import { isAdminRequest } from '@/lib/require-admin'
 import { sendEmail } from '@/lib/resend-client'
 import { sql } from '@/lib/db'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -29,12 +29,6 @@ import {
 } from '@/lib/email-sequences'
 
 export const maxDuration = 120
-
-function timingSafeCompare(a: string, b: string): boolean {
-  const aH = crypto.createHmac('sha256', 'cmp').update(a).digest()
-  const bH = crypto.createHmac('sha256', 'cmp').update(b).digest()
-  return crypto.timingSafeEqual(aH, bH)
-}
 
 interface CatchUpAction {
   email: string
@@ -58,8 +52,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCatchUp(request: NextRequest, dryRun: boolean) {
-  const adminKey = request.headers.get('x-admin-key') || request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!process.env.ADMIN_API_KEY || !adminKey || !timingSafeCompare(adminKey, process.env.ADMIN_API_KEY)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

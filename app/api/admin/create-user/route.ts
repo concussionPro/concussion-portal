@@ -1,30 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 import { createUser, findUserById } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
-
-function timingSafeCompare(a: string, b: string): boolean {
-  const aHash = crypto.createHmac('sha256', 'compare').update(a).digest()
-  const bHash = crypto.createHmac('sha256', 'compare').update(b).digest()
-  return crypto.timingSafeEqual(aHash, bHash)
-}
-
-function isAdminAuthorized(request: NextRequest): boolean {
-  const expected = process.env.ADMIN_API_KEY
-  if (!expected) return false
-  const adminKey = request.headers.get('x-admin-key')
-  if (adminKey && timingSafeCompare(adminKey, expected)) return true
-  const authHeader = request.headers.get('authorization')
-  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-  if (bearer && timingSafeCompare(bearer, expected)) return true
-  return false
-}
+import { isAdminRequest } from '@/lib/require-admin'
 
 export async function POST(request: NextRequest) {
   // Require admin authentication
-  if (!isAdminAuthorized(request)) {
+  if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

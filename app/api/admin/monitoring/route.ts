@@ -1,23 +1,14 @@
 // Admin monitoring dashboard endpoint
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 import { sql } from '@/lib/db'
+import { isAdminRequest } from '@/lib/require-admin'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   try {
-    // Admin auth (timing-safe)
-    const adminKey = request.headers.get('x-admin-key')
-    const expected = process.env.ADMIN_API_KEY
-    if (!expected || !adminKey || !crypto.timingSafeEqual(
-      crypto.createHmac('sha256', 'compare').update(adminKey).digest(),
-      crypto.createHmac('sha256', 'compare').update(expected).digest()
-    )) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    if (!isAdminRequest(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Today's event count from Postgres
