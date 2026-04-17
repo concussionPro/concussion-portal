@@ -9,7 +9,6 @@
  * Environment variables required:
  *   STRIPE_SECRET_KEY
  *   STRIPE_WEBHOOK_SECRET
- *   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
  */
 
 import Stripe from 'stripe'

@@ -12,7 +12,6 @@ export async function register() {
   const required = [
     'STRIPE_SECRET_KEY',
     'STRIPE_WEBHOOK_SECRET',
-    'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',
     'RESEND_API_KEY',
     'POSTGRES_URL',
     'ADMIN_API_KEY',
