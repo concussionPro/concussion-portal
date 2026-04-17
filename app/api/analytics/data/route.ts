@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { sql } from '@/lib/db';
+import { isAdminRequest } from '@/lib/require-admin';
 
 // Legacy blob support removed — all data now in Vercel Postgres
 
@@ -51,11 +52,17 @@ type MetricPoint = { x: string; y: number };
 // ---------------------------------------------------------------------------
 
 function isAuthorised(request: NextRequest): boolean {
-  const key = request.headers.get('x-admin-key');
-  const expected = process.env.ANALYTICS_API_KEY || process.env.ADMIN_API_KEY;
-  if (!expected || !key) return false;
-  const aHash = crypto.createHmac('sha256', 'compare').update(key).digest();
-  const bHash = crypto.createHmac('sha256', 'compare').update(expected).digest();
+  // Delegate to shared helper so the cookie-based admin session works here too.
+  // Falls through to x-admin-key / Bearer for cron / CLI clients.
+  // Still honors ANALYTICS_API_KEY as an alternate header if configured.
+  if (isAdminRequest(request)) return true;
+
+  const analyticsKey = process.env.ANALYTICS_API_KEY;
+  if (!analyticsKey) return false;
+  const headerKey = request.headers.get('x-admin-key');
+  if (!headerKey) return false;
+  const aHash = crypto.createHmac('sha256', 'compare').update(headerKey).digest();
+  const bHash = crypto.createHmac('sha256', 'compare').update(analyticsKey).digest();
   return crypto.timingSafeEqual(aHash, bHash);
 }
 
