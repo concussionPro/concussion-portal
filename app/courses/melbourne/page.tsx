@@ -55,14 +55,14 @@ export default function MelbournePage() {
                   <span className="hidden sm:inline text-slate-300">·</span>
                   <div className="flex items-center gap-2 text-slate-700">
                     <MapPin className="w-5 h-5 text-accent" aria-hidden="true" />
-                    <span className="font-semibold">Melbourne CBD</span>
+                    <span className="font-semibold">Rydges Melbourne · Exhibition St</span>
                   </div>
                   <span className="hidden sm:inline text-slate-300">·</span>
                   <SpotsRemaining location="MELBOURNE" />
                 </div>
 
                 <p className="text-sm text-slate-600 mb-6">
-                  Full day (9am–5pm) · morning tea, lunch &amp; afternoon tea included · lifetime online access
+                  Full day (8am–4pm) · morning tea, lunch &amp; afternoon tea included · lifetime online access
                 </p>
 
                 <CountdownTimer className="justify-center mb-8" />
@@ -103,17 +103,15 @@ export default function MelbournePage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                { icon: CheckCircle2, text: 'Full-day hands-on SCAT6 / SCOAT6 training' },
-                { icon: CheckCircle2, text: 'VOMS protocol practice with live partners' },
-                { icon: CheckCircle2, text: 'BESS balance testing certification' },
-                { icon: CheckCircle2, text: 'Return-to-play / return-to-work protocols' },
+                { icon: CheckCircle2, text: `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype` },
+                { icon: CheckCircle2, text: 'Full-day hands-on practice with live partners — SCAT6, SCOAT6, VOMS and mBESS' },
+                { icon: CheckCircle2, text: 'Return-to-play, return-to-school and return-to-work frameworks' },
                 { icon: Infinity, text: `Lifetime access to all ${CONFIG.COURSE.TOTAL_MODULES} online modules — updated as guidelines evolve` },
                 { icon: FileText, text: 'Fillable SCAT6 / SCOAT6 / Child SCAT6 PDFs (yours to keep)' },
                 { icon: BookOpen, text: '140+ evidence-based references &amp; clinical decision aids' },
                 { icon: BookOpen, text: 'Complete Clinical Reference PDF (save offline)' },
-                { icon: CheckCircle2, text: `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points + downloadable certificate` },
                 { icon: Utensils, text: 'Catering included — morning tea, lunch, afternoon tea' },
-                { icon: Clock, text: '9am–5pm, Saturday — finish the course in a single day' },
+                { icon: Clock, text: '8am–4pm, Saturday — finish the course in a single day' },
                 { icon: CheckCircle2, text: '7-day money-back guarantee' },
               ].map(({ icon: Icon, text }, i) => (
                 <div key={i} className="flex items-start gap-3">
@@ -137,7 +135,7 @@ export default function MelbournePage() {
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Full-day intensive, 9:00am–5:00pm. Morning tea, lunch and afternoon tea included. Small group format — capped at {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians for maximum hands-on practice time.
+                Full-day intensive, 8:00am–4:00pm. Morning tea, lunch and afternoon tea included. Small group format — capped at {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians for maximum hands-on practice time.
               </p>
             </div>
 
@@ -148,11 +146,11 @@ export default function MelbournePage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold">Venue</h3>
-                  <p className="text-sm text-muted-foreground">Melbourne CBD, Victoria</p>
+                  <p className="text-sm text-muted-foreground">Rydges Melbourne · Exhibition St, CBD</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Central Melbourne, walking distance from Southern Cross and Flinders Street stations. Exact venue address emailed to registrants 2 weeks before the workshop.
+                Rydges Hotel, 186 Exhibition St, Melbourne CBD. Walking distance from Parliament Station and Flinders Street. Full venue details and parking/transit info emailed 2 weeks before the workshop.
               </p>
             </div>
           </div>

@@ -81,14 +81,14 @@ export default function SydneyPage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                'Full-day hands-on SCAT6 training',
-                'VOMS protocol practice with live patients',
-                'BESS testing certification',
-                'Clinical decision-making frameworks',
-                'Return-to-play protocol training',
-                `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points`,
-                `Lifetime access to ${CONFIG.COURSE.TOTAL_MODULES} online modules`,
-                'Course completion certificate',
+                `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype`,
+                'Full-day hands-on practice with live partners — SCAT6, SCOAT6, VOMS and mBESS',
+                'Return-to-play, return-to-school and return-to-work frameworks',
+                'Clinical decision-making in acute concussion',
+                `Lifetime access to all ${CONFIG.COURSE.TOTAL_MODULES} online modules`,
+                'Fillable SCAT6 / SCOAT6 / Child SCAT6 PDFs',
+                '140+ evidence-based references & Clinical Reference PDF',
+                'Catering included — morning tea, lunch, afternoon tea',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -111,7 +111,7 @@ export default function SydneyPage() {
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Full-day intensive training from 9:00 AM to 5:00 PM. Includes morning tea, lunch, and afternoon tea.
+                Full-day intensive training from 8:00 AM to 4:00 PM. Includes morning tea, lunch, and afternoon tea.
               </p>
             </div>
 

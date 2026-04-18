@@ -90,7 +90,7 @@ export default function HomePage() {
               >
                 <span className="inline-flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
                 <span className="font-semibold text-orange-900">Melbourne workshop confirmed — {CONFIG.LOCATIONS.MELBOURNE.date}</span>
-                <span className="text-orange-800">Melbourne CBD · catering included</span>
+                <span className="text-orange-800">Rydges Melbourne · catering included</span>
                 <ArrowRight className="w-4 h-4 text-orange-700" aria-hidden="true" />
               </Link>
             )}

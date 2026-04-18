@@ -293,7 +293,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
       <p>Your concussion workshop in <strong>${workshopCity}</strong> is tomorrow (<strong>${workshopDate}</strong>).</p>
       <div class="callout">
         <strong>Workshop details:</strong><br><br>
-        &#8226; <strong>Time:</strong> 9:00 AM — 5:00 PM<br>
+        &#8226; <strong>Time:</strong> 8:00 AM — 4:00 PM<br>
         &#8226; <strong>Location:</strong> ${workshopCity} (check your booking confirmation for venue address)<br>
         &#8226; <strong>What to bring:</strong> Laptop/tablet, comfortable clothes, pen<br>
         &#8226; <strong>Lunch:</strong> Provided
@@ -650,7 +650,7 @@ export const WORKSHOP_CONFIRMED_EMAIL = {
     <div class="callout">
       <strong>${city}</strong><br>
       <strong>Date:</strong> ${date}<br>
-      <strong>Time:</strong> 9:00 AM — 5:00 PM<br><br>
+      <strong>Time:</strong> 8:00 AM — 4:00 PM<br><br>
       Venue details will follow in a separate email.
     </div>
     <p>Make sure you've completed your online modules before the workshop — they're the foundation for everything we'll practise hands-on.</p>
@@ -671,7 +671,7 @@ export const WORKSHOP_LOGISTICS_EMAIL = {
     <div class="callout">
       <strong>Workshop details:</strong><br><br>
       &#8226; <strong>Date:</strong> ${date}<br>
-      &#8226; <strong>Time:</strong> 9:00 AM — 5:00 PM<br>
+      &#8226; <strong>Time:</strong> 8:00 AM — 4:00 PM<br>
       ${venue ? `&#8226; <strong>Venue:</strong> ${venue}<br>` : '&#8226; <strong>Venue:</strong> Details to follow<br>'}
       &#8226; <strong>What to bring:</strong> Laptop/tablet, comfortable clothes, pen<br>
       &#8226; <strong>Lunch:</strong> Provided

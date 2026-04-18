@@ -47,7 +47,7 @@ export const CONFIG = {
       city: 'Melbourne',
       slug: 'melbourne',
       date: 'Saturday 13 June 2026',
-      dateObj: new Date('2026-06-13T09:00:00+10:00') as Date | null,
+      dateObj: new Date('2026-06-13T08:00:00+10:00') as Date | null,
       status: 'confirmed' as 'collecting' | 'confirmed' | 'completed',
     },
   },
