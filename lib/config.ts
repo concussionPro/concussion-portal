@@ -46,9 +46,9 @@ export const CONFIG = {
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',
-      date: '',
-      dateObj: null as Date | null,
-      status: 'collecting' as 'collecting' | 'confirmed' | 'completed',
+      date: 'Saturday 13 June 2026',
+      dateObj: new Date('2026-06-13T09:00:00+10:00') as Date | null,
+      status: 'confirmed' as 'collecting' | 'confirmed' | 'completed',
     },
   },
 
@@ -59,8 +59,8 @@ export const CONFIG = {
     LEAD_TIME_WEEKS: 6,           // weeks of notice after threshold hit
     EARLY_BIRD_SEAT_THRESHOLD: 6, // 50% — early bird ends when this many seats sold (for confirmed cities)
     EARLY_BIRD_DAYS_BEFORE: 7,    // Early bird ends this many days before course date
-    EARLY_BIRD_DEADLINE: '2026-06-30', // Hard deadline for early bird pricing
-    NEXT_ROUND: 'Jun–Aug 2026',   // Approximate window for next workshops
+    EARLY_BIRD_DEADLINE: '2026-05-31', // Hard deadline for early bird pricing (Melbourne Jun 13 launch)
+    NEXT_ROUND: 'Melbourne — Sat 13 June 2026',   // Lead with confirmed Melbourne date
     Q1_COMPLETED: true,           // Q1 2026 workshops ran — used for social proof
   },
 

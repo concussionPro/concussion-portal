@@ -167,7 +167,7 @@ function PricingContent() {
     },
     {
       q: 'Where are workshops held and when is the next one?',
-      a: 'Workshops run in Sydney, Melbourne, and Byron Bay. Dates are confirmed once enough clinicians register per city — this ensures a quality small-group experience (max 12 per session). Q1 2026 workshops ran successfully across all three cities. The next round is expected Jun–Aug 2026. You\'ll receive at least 6 weeks\' notice once your city\'s date is locked in.',
+      a: 'The next confirmed workshop is Melbourne — Saturday 13 June 2026, Melbourne CBD, 9am–5pm with morning tea, lunch and afternoon tea included. Workshops also run in Sydney and Byron Bay when each city reaches enough registrations (max 12 per session to keep hands-on practice time high). You\'ll receive at least 6 weeks\' notice once your city\'s date is locked in.',
     },
     {
       q: 'Can I pay in instalments?',

@@ -83,6 +83,18 @@ export default function HomePage() {
               </p>
             )}
 
+            {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+              <Link
+                href="/courses/melbourne"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm hover:bg-orange-100 transition-colors"
+              >
+                <span className="inline-flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
+                <span className="font-semibold text-orange-900">Melbourne workshop confirmed — {CONFIG.LOCATIONS.MELBOURNE.date}</span>
+                <span className="text-orange-800">Melbourne CBD · catering included</span>
+                <ArrowRight className="w-4 h-4 text-orange-700" aria-hidden="true" />
+              </Link>
+            )}
+
             <p className="text-[13px] text-[var(--muted-foreground)] mt-3">
               <Link
                 href="/scat-forms"

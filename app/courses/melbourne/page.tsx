@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { MapPin, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { MapPin, Calendar, ArrowRight, CheckCircle2, Utensils, Clock, BookOpen, FileText, Infinity } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import CountdownTimer from '@/components/CountdownTimer'
@@ -9,7 +9,10 @@ import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
 
 export default function MelbournePage() {
-  const location = CONFIG.LOCATIONS.MELBOURNE as typeof CONFIG.LOCATIONS[keyof typeof CONFIG.LOCATIONS]
+  const location = CONFIG.LOCATIONS.MELBOURNE
+  const earlyBirdDate = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00')
+    .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+  const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
   return (
     <>
@@ -44,13 +47,23 @@ export default function MelbournePage() {
 
             {location.status === 'confirmed' ? (
               <>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-3">
                   <div className="flex items-center gap-2 text-slate-700">
                     <Calendar className="w-5 h-5 text-accent" aria-hidden="true" />
                     <span className="font-semibold">{location.date}</span>
                   </div>
+                  <span className="hidden sm:inline text-slate-300">·</span>
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <MapPin className="w-5 h-5 text-accent" aria-hidden="true" />
+                    <span className="font-semibold">Melbourne CBD</span>
+                  </div>
+                  <span className="hidden sm:inline text-slate-300">·</span>
                   <SpotsRemaining location="MELBOURNE" />
                 </div>
+
+                <p className="text-sm text-slate-600 mb-6">
+                  Full day (9am–5pm) · morning tea, lunch &amp; afternoon tea included · lifetime online access
+                </p>
 
                 <CountdownTimer className="justify-center mb-8" />
 
@@ -59,13 +72,19 @@ export default function MelbournePage() {
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label={`Enrol in Melbourne session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
                 >
-                  Enrol Now - ${CONFIG.COURSE.PRICE_EARLY_BIRD}
+                  Enrol Now — ${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR}
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
 
-                <p className="text-sm text-muted-foreground mt-4">
-                  Early bird pricing — save ${CONFIG.COURSE.SAVINGS} (limited time)
-                </p>
+                {isEarlyBird ? (
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Early bird ${CONFIG.COURSE.PRICE_EARLY_BIRD} — save ${CONFIG.COURSE.SAVINGS} vs regular ${CONFIG.COURSE.PRICE_REGULAR}. Ends {earlyBirdDate}.
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Regular pricing ${CONFIG.COURSE.PRICE_REGULAR}
+                  </p>
+                )}
               </>
             ) : (
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
@@ -77,22 +96,29 @@ export default function MelbournePage() {
 
           {/* What's Included */}
           <div className="glass rounded-2xl p-8 mb-12">
-            <h2 className="text-2xl font-bold mb-6 text-center">What's Included in {location.city}</h2>
+            <h2 className="text-2xl font-bold mb-2 text-center">Everything you get</h2>
+            <p className="text-sm text-center text-muted-foreground mb-6">
+              One price. Online content + a full day of hands-on training in Melbourne. No recurring fees.
+            </p>
 
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                'Full-day hands-on SCAT6 training',
-                'VOMS protocol practice with live patients',
-                'BESS testing certification',
-                'Clinical decision-making frameworks',
-                'Return-to-play protocol training',
-                `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points`,
-                `Lifetime access to ${CONFIG.COURSE.TOTAL_MODULES} online modules`,
-                'Course completion certificate',
-              ].map((item, i) => (
+                { icon: CheckCircle2, text: 'Full-day hands-on SCAT6 / SCOAT6 training' },
+                { icon: CheckCircle2, text: 'VOMS protocol practice with live partners' },
+                { icon: CheckCircle2, text: 'BESS balance testing certification' },
+                { icon: CheckCircle2, text: 'Return-to-play / return-to-work protocols' },
+                { icon: Infinity, text: `Lifetime access to all ${CONFIG.COURSE.TOTAL_MODULES} online modules — updated as guidelines evolve` },
+                { icon: FileText, text: 'Fillable SCAT6 / SCOAT6 / Child SCAT6 PDFs (yours to keep)' },
+                { icon: BookOpen, text: '140+ evidence-based references &amp; clinical decision aids' },
+                { icon: BookOpen, text: 'Complete Clinical Reference PDF (save offline)' },
+                { icon: CheckCircle2, text: `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points + downloadable certificate` },
+                { icon: Utensils, text: 'Catering included — morning tea, lunch, afternoon tea' },
+                { icon: Clock, text: '9am–5pm, Saturday — finish the course in a single day' },
+                { icon: CheckCircle2, text: '7-day money-back guarantee' },
+              ].map(({ icon: Icon, text }, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" aria-hidden="true" />
-                  <span className="text-sm text-slate-700">{item}</span>
+                  <Icon className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" aria-hidden="true" />
+                  <span className="text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: text }} />
                 </div>
               ))}
             </div>
@@ -106,12 +132,12 @@ export default function MelbournePage() {
                   <Calendar className="w-6 h-6 text-accent" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">Training Date</h3>
-                  <p className="text-sm text-muted-foreground">{location.date || CONFIG.WORKSHOP.NEXT_ROUND}</p>
+                  <h3 className="text-lg font-bold">Workshop date</h3>
+                  <p className="text-sm text-muted-foreground">{location.date}</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Full-day intensive training from 9:00 AM to 5:00 PM. Includes morning tea, lunch, and afternoon tea.
+                Full-day intensive, 9:00am–5:00pm. Morning tea, lunch and afternoon tea included. Small group format — capped at {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians for maximum hands-on practice time.
               </p>
             </div>
 
@@ -121,15 +147,27 @@ export default function MelbournePage() {
                   <MapPin className="w-6 h-6 text-accent" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">Location</h3>
-                  <p className="text-sm text-muted-foreground">{location.city}, Victoria</p>
+                  <h3 className="text-lg font-bold">Venue</h3>
+                  <p className="text-sm text-muted-foreground">Melbourne CBD, Victoria</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Exact venue details will be sent via email 1 week before the training date.
+                Central Melbourne, walking distance from Southern Cross and Flinders Street stations. Exact venue address emailed to registrants 2 weeks before the workshop.
               </p>
             </div>
           </div>
+
+          {/* Early bird strip */}
+          {isEarlyBird && (
+            <div className="rounded-2xl border-2 border-orange-200 bg-orange-50 p-6 mb-12 text-center">
+              <p className="text-sm font-semibold text-orange-900 mb-1">
+                Early bird pricing ends {earlyBirdDate}
+              </p>
+              <p className="text-sm text-orange-800">
+                Enrol now for ${CONFIG.COURSE.PRICE_EARLY_BIRD} (save ${CONFIG.COURSE.SAVINGS}). After that, regular pricing is ${CONFIG.COURSE.PRICE_REGULAR}.
+              </p>
+            </div>
+          )}
 
           {/* CTA */}
           <div className="glass rounded-2xl p-8 text-center bg-gradient-to-br from-blue-600/5 to-teal-600/5">
