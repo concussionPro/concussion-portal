@@ -9,6 +9,7 @@ import { getSCATModulesMeta } from '@/data/module-meta'
 import { useProgress } from '@/contexts/ProgressContext'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
+import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
 
 export default function SCATCoursePage() {
   const router = useRouter()
@@ -195,6 +196,16 @@ export default function SCATCoursePage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* Melbourne workshop — persistent callout for free-course users */}
+        {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+          <div className="mb-8">
+            <MelbourneWorkshopCallout
+              variant={allComplete ? 'card' : 'banner'}
+              source={allComplete ? 'scat_course_complete' : 'scat_course_in_progress'}
+            />
+          </div>
+        )}
+
         {/* Certificate Banner — shown when course is complete */}
         {allComplete && (
           <div className="mb-8 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl p-6">

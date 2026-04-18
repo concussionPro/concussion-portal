@@ -211,12 +211,29 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>
             </div>
 
+            {/* Next workshop — Melbourne */}
+            {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+              <div className="mb-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700 mb-0.5">
+                  Next workshop
+                </p>
+                <p className="text-xs font-semibold text-slate-900">
+                  Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
+                </p>
+                <p className="text-[11px] text-orange-800">
+                  Rydges Melbourne · Exhibition St · 8am–4pm · catering included
+                </p>
+              </div>
+            )}
+
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
                 'Everything in Online, plus:',
                 'Full-day workshop (6 CPD points)',
                 'Hands-on SCAT6, VOMS, BESS',
-                'Choose your preferred AU location',
+                CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
+                  ? 'Sydney & Byron Bay added when demand hits'
+                  : 'Choose your preferred AU location',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
@@ -396,13 +413,40 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · 14 AHPRA CPD points</p>
           </div>
 
+          {/* Next workshop card — Melbourne confirmed */}
+          {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+            <div className="mb-5 rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="inline-flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
+                <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                  Next workshop confirmed
+                </p>
+              </div>
+              <p className="text-base font-bold text-slate-900">
+                Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
+              </p>
+              <p className="text-sm text-slate-700 mt-0.5">
+                Rydges Melbourne, Exhibition St · 8am–4pm · catering included
+              </p>
+              {isEarlyBird && (
+                <p className="text-xs text-orange-700 font-semibold mt-2">
+                  Early bird ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+                </p>
+              )}
+            </div>
+          )}
+
           <ul className="space-y-3 mb-6 flex-1">
             {[
               'Everything in Online, plus:',
-              'Full-day hands-on workshop (6 extra CPD)',
+              CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
+                ? 'Full-day workshop in Melbourne (6 extra CPD)'
+                : 'Full-day hands-on workshop (6 extra CPD)',
               'Administer SCAT6, VOMS & BESS with confidence',
               'Expert coaching & 1:1 feedback',
-              'Choose your preferred AU location',
+              CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
+                ? 'Sydney & Byron Bay added when demand hits'
+                : 'Choose your preferred AU location',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
@@ -412,7 +456,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </ul>
 
           {/* Q1 social proof */}
-          {CONFIG.WORKSHOP.Q1_COMPLETED && (
+          {CONFIG.WORKSHOP.Q1_COMPLETED && CONFIG.LOCATIONS.MELBOURNE.status !== 'confirmed' && (
             <div className="mb-4 px-3 py-2.5 rounded-lg bg-emerald-50 border border-emerald-200/60">
               <p className="text-xs text-emerald-800 font-medium">
                 Q1 2026 workshops delivered in Sydney, Melbourne &amp; Byron Bay. Next round: {CONFIG.WORKSHOP.NEXT_ROUND}.

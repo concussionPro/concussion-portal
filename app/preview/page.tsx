@@ -29,6 +29,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { PricingOptions } from '@/components/PricingOptions'
 import { PreviewSectionContent } from '@/components/course/PreviewSectionContent'
+import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
 
 const moduleIcons = [Brain, FileText, Activity, Clock, Users, Target, BookOpen, Scale]
 
@@ -378,6 +379,13 @@ export default function PreviewPage() {
             </p>
           </div>
           <PricingOptions variant="compact" />
+
+          {/* Melbourne workshop — confirmed next workshop */}
+          {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+            <div className="mt-8 max-w-3xl mx-auto">
+              <MelbourneWorkshopCallout source="preview_page" />
+            </div>
+          )}
         </div>
 
         {/* Bottom CTA */}

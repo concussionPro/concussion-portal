@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useRouter } from 'next/navigation'
 import { CONFIG } from '@/lib/config'
+import { MelbourneWorkshopCallout } from '@/components/MelbourneWorkshopCallout'
 
 interface SessionUser {
   email: string
@@ -713,6 +714,13 @@ export default function SettingsPage() {
                         View Full Course &rarr;
                       </button>
                     </div>
+
+                    {/* Melbourne workshop callout for preview users */}
+                    {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+                      <div className="mt-4">
+                        <MelbourneWorkshopCallout source={allScatComplete ? 'settings_scat_complete' : 'settings_scat_progress'} />
+                      </div>
+                    )}
                   </div>
                 )}
 
