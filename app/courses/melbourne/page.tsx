@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { MapPin, Calendar, ArrowRight, CheckCircle2, Utensils, Clock, BookOpen, FileText, Infinity } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
@@ -27,6 +28,20 @@ export default function MelbournePage() {
       <SiteNav />
       <div className="min-h-screen bg-background pt-[120px] pb-20 px-6">
         <div className="max-w-4xl mx-auto">
+          {/* Hero image — Melbourne skyline */}
+          {location.status === 'confirmed' && (
+            <div className="relative w-full aspect-[16/9] sm:aspect-[2/1] max-h-[380px] rounded-2xl overflow-hidden mb-8 shadow-lg">
+              <Image
+                src="/melbourne-workshop.jpg"
+                alt="Concussion Clinical Mastery · Melbourne · June 13 2026"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 900px"
+                className="object-cover"
+              />
+            </div>
+          )}
+
           {/* Hero Section */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-accent/10 px-4 py-2 rounded-full mb-4">

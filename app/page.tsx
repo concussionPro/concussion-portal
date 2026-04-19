@@ -86,12 +86,37 @@ export default function HomePage() {
             {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
               <Link
                 href="/courses/melbourne"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm hover:bg-orange-100 transition-colors"
+                className="mt-5 block rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-orange-300 transition-all group max-w-[560px]"
               >
-                <span className="inline-flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
-                <span className="font-semibold text-orange-900">Melbourne workshop confirmed — {CONFIG.LOCATIONS.MELBOURNE.date}</span>
-                <span className="text-orange-800">Rydges Melbourne · catering included</span>
-                <ArrowRight className="w-4 h-4 text-orange-700" aria-hidden="true" />
+                <div className="flex flex-col sm:flex-row">
+                  <div className="relative w-full sm:w-[200px] h-[140px] sm:h-auto flex-shrink-0 overflow-hidden">
+                    <Image
+                      src="/melbourne-workshop.jpg"
+                      alt="Melbourne skyline at dusk — Concussion Clinical Mastery workshop June 13 2026"
+                      fill
+                      sizes="(max-width: 640px) 100vw, 200px"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="flex-1 p-4 sm:p-5">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="inline-flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-orange-700">
+                        Next workshop confirmed
+                      </span>
+                    </div>
+                    <p className="text-base font-bold text-slate-900 leading-tight">
+                      Melbourne · Sat 13 June 2026
+                    </p>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Rydges Exhibition St · 8am–4pm · catering included
+                    </p>
+                    <p className="text-sm font-semibold text-orange-700 mt-2 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
+                      See the workshop
+                      <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                    </p>
+                  </div>
+                </div>
               </Link>
             )}
 
