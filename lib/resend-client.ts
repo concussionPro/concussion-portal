@@ -120,6 +120,110 @@ export function escapeHtml(str: string): string {
 }
 
 /**
+ * Send post-purchase welcome email — a warmer variant of the magic link.
+ * Still a one-click login, but with context: what they bought, what to do
+ * first, and (for Complete Course) the confirmed workshop details.
+ */
+export async function sendPostPurchaseLoginEmail(opts: {
+  email: string
+  token: string
+  firstName: string
+  courseLabel: string
+  accessLevel: 'online-only' | 'full-course' | 'preview'
+  amount: number
+  currency: string
+  workshopCity?: string
+  workshopDate?: string
+  workshopVenue?: string
+  origin?: string
+}): Promise<boolean> {
+  const baseUrl = opts.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+  const loginUrl = `${baseUrl}/auth/verify?token=${opts.token}&utm_source=email&utm_medium=email&utm_campaign=purchase_welcome`
+
+  const isFullCourse = opts.accessLevel === 'full-course'
+  const firstName = opts.firstName ? escapeHtml(opts.firstName.split(' ')[0]) : 'there'
+  const courseLabel = escapeHtml(opts.courseLabel)
+  const amountLine = `${escapeHtml(opts.currency)} $${opts.amount.toFixed(2)}`
+
+  const workshopBlock = (isFullCourse && opts.workshopCity && opts.workshopDate) ? `
+    <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
+      <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Your workshop</p>
+      <p style="margin: 0; font-size: 15px; font-weight: 600; color: #0f172a;">${escapeHtml(opts.workshopCity === 'byron-bay' ? 'Byron Bay' : opts.workshopCity.charAt(0).toUpperCase() + opts.workshopCity.slice(1))} — ${escapeHtml(opts.workshopDate)}</p>
+      ${opts.workshopVenue ? `<p style="margin: 2px 0 0; font-size: 13px; color: #475569;">${escapeHtml(opts.workshopVenue)} · 8am–4pm · catering included</p>` : ''}
+    </div>
+  ` : ''
+
+  return sendEmail({
+    to: opts.email,
+    subject: isFullCourse ? "You're in — welcome to ConcussionPro" : "You're in — your course is ready",
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to ConcussionPro</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; margin: 0; padding: 0; }
+  .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+  .header-bar { height: 5px; background: linear-gradient(90deg, #0d9488, #0ea5e9); }
+  .content { padding: 36px 28px 28px; }
+  h2 { margin: 0 0 12px; font-size: 22px; font-weight: 700; color: #0f172a; }
+  p { margin: 0 0 14px; font-size: 15px; }
+  .button { display: inline-block; padding: 14px 28px; background: #0d9488; color: #ffffff !important; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  .order { background: #f8fafc; border-radius: 10px; padding: 14px 16px; margin: 20px 0; font-size: 13px; color: #475569; }
+  .order strong { color: #0f172a; }
+  .next { background: #f0fdfa; border-left: 3px solid #0d9488; border-radius: 6px; padding: 12px 16px; margin: 20px 0; font-size: 14px; }
+  .sig { margin-top: 28px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #475569; }
+  .footer { padding: 18px 28px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+  .secondary { color: #64748b; font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-bar"></div>
+    <div class="content">
+      <h2>Welcome, ${firstName} — you're in.</h2>
+      <p>Thanks for backing your clinical practice. Your <strong>${courseLabel}</strong> is live on your account, lifetime access, no deadline.</p>
+
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${loginUrl}" class="button">Access Your Course →</a>
+      </p>
+      <p class="secondary" style="text-align: center;">One-click login — this link expires in 24 hours.</p>
+
+      <div class="order">
+        <strong>What you bought</strong><br>
+        ${courseLabel}${isFullCourse ? '' : ''} · ${amountLine}
+      </div>
+
+      ${workshopBlock}
+
+      <div class="next">
+        <strong>Where to start</strong> — Module 1 (Concussion neuroscience) takes about 75 minutes. Clinicians who finish it in the first 48 hours are 3× more likely to complete the whole course.
+      </div>
+
+      <p style="font-size: 14px; color: #475569;">A formal tax invoice will arrive separately from Stripe — keep it for your CPD / tax records.</p>
+      <p style="font-size: 14px; color: #475569;">Any questions, just hit reply — I read every message.</p>
+
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+    </div>
+    <div class="footer">
+      Concussion Education Australia · Melbourne, VIC, Australia<br>
+      If you didn't expect this email, you can safely ignore it.
+    </div>
+  </div>
+</body>
+</html>`,
+    tags: [
+      { name: 'type', value: 'purchase-welcome' },
+      { name: 'accessLevel', value: opts.accessLevel },
+    ],
+  })
+}
+
+/**
  * Send magic link login email
  */
 export async function sendMagicLinkEmail(email: string, token: string, origin?: string): Promise<boolean> {

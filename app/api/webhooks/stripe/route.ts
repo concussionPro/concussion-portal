@@ -3,7 +3,7 @@ import { constructWebhookEvent } from '@/lib/stripe'
 
 export const maxDuration = 60
 import { createUser, findUserByEmail } from '@/lib/users'
-import { sendMagicLinkEmail, sendEmail } from '@/lib/resend-client'
+import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail } from '@/lib/resend-client'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { sql } from '@/lib/db'
@@ -315,7 +315,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.error('Failed to fire server-side purchase conversion:', err)
   }
 
-  // Step 4: Send magic link email to the customer (unchanged — this is what gives them access).
+  // Step 4: Send post-purchase welcome email (richer than bare magic link — includes
+  // course label, amount, workshop details if applicable, and a "start here" nudge).
   try {
     // Re-read user to get definitive post-upgrade access level (existingUser is stale)
     const freshUser = await findUserByEmail(customerEmail)
@@ -323,7 +324,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const userName = freshUser?.name || customerName
     const token = createMagicToken(freshUser?.id || userId, customerEmail, userName, finalAccess)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-    const emailSent = await sendMagicLinkEmail(customerEmail, token, baseUrl)
+
+    const melConfirmed = workshopCity === 'melbourne' && CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
+    const emailSent = await sendPostPurchaseLoginEmail({
+      email: customerEmail,
+      token,
+      firstName: userName,
+      courseLabel: labelForCourse(courseType, finalAccess),
+      accessLevel: finalAccess,
+      amount: purchaseAmount,
+      currency,
+      workshopCity: workshopCity || undefined,
+      workshopDate: melConfirmed ? CONFIG.LOCATIONS.MELBOURNE.date : undefined,
+      workshopVenue: melConfirmed ? 'Rydges Melbourne, Exhibition St' : undefined,
+      origin: baseUrl,
+    })
 
     if (emailSent) {
       console.log(`Login link sent to: ${redact(customerEmail)} | Course: ${courseType} | City: ${workshopCity || 'N/A'} | Access: ${finalAccess}`)

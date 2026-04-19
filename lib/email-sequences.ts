@@ -45,6 +45,23 @@ const EMAIL_STYLES = `
   a { color: #0d9488; }
 `
 
+/**
+ * Inline HTML callout for the next confirmed workshop.
+ * Returns empty string when no city is confirmed, so it's safe to drop into
+ * any template unconditionally.
+ */
+function nextWorkshopCallout(): string {
+  const mel = CONFIG.LOCATIONS.MELBOURNE
+  if (mel.status !== 'confirmed') return ''
+  return `
+    <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
+      <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Next live workshop</p>
+      <p style="margin: 0; font-size: 15px; font-weight: 600; color: #0f172a;">Melbourne &mdash; ${escapeHtml(mel.date)}</p>
+      <p style="margin: 2px 0 0; font-size: 13px; color: #475569;">Rydges Melbourne, Exhibition St &middot; 8am&ndash;4pm &middot; catering included</p>
+    </div>
+  `
+}
+
 function emailShell(content: string, unsubscribeUrl?: string): string {
   const unsub = unsubscribeUrl || '{{unsubscribe_url}}'
   return `<!DOCTYPE html>
@@ -426,6 +443,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <span class="badge">Endorsed by Osteopathy Australia</span><br>
         Designed for physios, osteopaths, chiropractors, GPs, exercise physiologists, and sports medicine doctors.
       </div>
+      ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'scat_mastery_day14', 'see_course')}" class="cta-btn">See Full Course</a></center>
       <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} &middot; Online + workshop from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</p>
       <div class="sig">Zac</div>
@@ -458,6 +476,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         </tr>
       </table>
       <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day28', 'last_chance')}" class="cta-btn">Claim $50 Off Before It Expires</a></center>
+      ${nextWorkshopCallout()}
       <p class="ps">P.S. You can start with the online course and upgrade to include the workshop later &mdash; you'll only pay the difference.</p>
       <div class="sig">Zac</div>
     `),
@@ -476,6 +495,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}):</strong> Online + full-day workshop, 14 CPD points</li>
       </ul>
       <p>Both include the clinical toolkit, reference repository, and digital certificate.</p>
+      ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'scat_mastery_day42', 'choose_option')}" class="cta-btn">Choose Your Option</a></center>
       <p style="font-size: 14px; color: #475569; margin-top: 20px;">Questions? Just reply &mdash; I read every message.</p>
       <div class="sig">
@@ -513,6 +533,7 @@ export const SCAT_COMPLETION_UPSELL = {
     </div>
     <center><a href="${utm(pricingLink + (pricingLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_completion_upsell', 'upgrade_now')}" class="cta-btn">See the Online Course</a></center>
     <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">$${CONFIG.COURSE.PRICE_ONLINE} &middot; 8 online modules &middot; 8 CPD points &middot; Lifetime access</p>
+    ${nextWorkshopCallout()}
     <p class="ps">P.S. If you want hands-on clinical skills too (VOMS, BESS, SCAT6 administration), you can add the in-person workshop later &mdash; you'll only pay the difference.</p>
     <div class="sig">
       Zac Lewis<br>
@@ -706,7 +727,8 @@ export const ONLINE_UPGRADE_SEQUENCE = [
         <li>Practice VOMS and BESS scoring — the assessments clinicians find hardest to learn from text alone</li>
         <li>Work through clinical scenarios with other clinicians</li>
       </ul>
-      <p>Workshop dates are being finalised now. If you'd like to add the hands-on day, you can upgrade at any time.</p>
+      <p>The next workshop is confirmed &mdash; Melbourne, Saturday 13 June 2026 at Rydges Exhibition St. Add the hands-on day anytime to cap off your 14 CPD points.</p>
+      ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'upgrade_nudge', 'see_workshop')}" class="cta-btn">See Workshop Options</a></center>
       <p style="font-size: 13px; color: #64748b; text-align: center;">6 extra CPD points · Small group (max 12) · Upgrade anytime</p>
       <div class="sig">Zac</div>
