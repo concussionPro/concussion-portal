@@ -32,7 +32,7 @@ export function MelbourneWorkshopCallout({
       >
         <span className="inline-flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
         <span className="font-semibold text-orange-900">Melbourne workshop — {mel.date}</span>
-        <span className="text-orange-800 hidden sm:inline">Rydges CBD · catering included</span>
+        <span className="text-orange-800 hidden sm:inline">Rydges CBD · catered lunch included</span>
         <ArrowRight className="w-4 h-4 text-orange-700" aria-hidden="true" />
       </Link>
     )
@@ -76,7 +76,7 @@ export function MelbourneWorkshopCallout({
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Utensils className="w-4 h-4 text-orange-600" aria-hidden="true" />
-            Catering included
+            Catered lunch
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-3">

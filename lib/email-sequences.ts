@@ -57,7 +57,7 @@ function nextWorkshopCallout(): string {
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
       <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Next live workshop</p>
       <p style="margin: 0; font-size: 15px; font-weight: 600; color: #0f172a;">Melbourne &mdash; ${escapeHtml(mel.date)}</p>
-      <p style="margin: 2px 0 0; font-size: 13px; color: #475569;">Rydges Melbourne, Exhibition St &middot; 8am&ndash;4pm &middot; catering included</p>
+      <p style="margin: 2px 0 0; font-size: 13px; color: #475569;">Rydges Melbourne, Exhibition St &middot; 8am&ndash;4pm &middot; catered lunch included</p>
     </div>
   `
 }

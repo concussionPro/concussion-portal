@@ -77,7 +77,7 @@ export default function MelbournePage() {
                 </div>
 
                 <p className="text-sm text-slate-600 mb-6">
-                  Full day (8am–4pm) · morning tea, lunch &amp; afternoon tea included · lifetime online access
+                  Full day (8am–4pm) · catered lunch included · lifetime online access
                 </p>
 
                 <CountdownTimer className="justify-center mb-8" />
@@ -125,7 +125,7 @@ export default function MelbournePage() {
                 { icon: FileText, text: 'Fillable SCAT6 / SCOAT6 / Child SCAT6 PDFs (yours to keep)' },
                 { icon: BookOpen, text: '140+ evidence-based references &amp; clinical decision aids' },
                 { icon: BookOpen, text: 'Complete Clinical Reference PDF (save offline)' },
-                { icon: Utensils, text: 'Catering included — morning tea, lunch, afternoon tea' },
+                { icon: Utensils, text: 'Catered lunch included — plus morning and afternoon tea' },
                 { icon: Clock, text: '8am–4pm, Saturday — finish the course in a single day' },
                 { icon: CheckCircle2, text: '7-day money-back guarantee' },
               ].map(({ icon: Icon, text }, i) => (
@@ -150,7 +150,7 @@ export default function MelbournePage() {
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Full-day intensive, 8:00am–4:00pm. Morning tea, lunch and afternoon tea included. Small group format — capped at {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians for maximum hands-on practice time.
+                Full-day intensive, 8:00am–4:00pm. Catered lunch included, plus morning and afternoon tea. Small group format — capped at {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} clinicians for maximum hands-on practice time.
               </p>
             </div>
 

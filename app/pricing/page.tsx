@@ -167,7 +167,7 @@ function PricingContent() {
     },
     {
       q: 'Where are workshops held and when is the next one?',
-      a: 'The next confirmed workshop is Melbourne — Saturday 13 June 2026, Rydges Melbourne (Exhibition St), 8am–4pm with morning tea, lunch and afternoon tea included. Workshops also run in Sydney and Byron Bay when each city reaches enough registrations (max 12 per session to keep hands-on practice time high). You\'ll receive at least 6 weeks\' notice once your city\'s date is locked in.',
+      a: 'The next confirmed workshop is Melbourne — Saturday 13 June 2026, Rydges Melbourne (Exhibition St), 8am–4pm with a catered lunch plus morning and afternoon tea included. Workshops also run in Sydney and Byron Bay when each city reaches enough registrations (max 12 per session to keep hands-on practice time high). You\'ll receive at least 6 weeks\' notice once your city\'s date is locked in.',
     },
     {
       q: 'Can I pay in instalments?',

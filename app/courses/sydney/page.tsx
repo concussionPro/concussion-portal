@@ -88,7 +88,7 @@ export default function SydneyPage() {
                 `Lifetime access to all ${CONFIG.COURSE.TOTAL_MODULES} online modules`,
                 'Fillable SCAT6 / SCOAT6 / Child SCAT6 PDFs',
                 '140+ evidence-based references & Clinical Reference PDF',
-                'Catering included — morning tea, lunch, afternoon tea',
+                'Catered lunch included — plus morning and afternoon tea',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" aria-hidden="true" />

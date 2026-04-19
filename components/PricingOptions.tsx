@@ -231,7 +231,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
                   </p>
                   <p className="text-[11px] text-orange-800">
-                    Rydges Exhibition St · 8am–4pm · catering
+                    Rydges Exhibition St · 8am–4pm · catered lunch
                   </p>
                 </div>
               </div>
@@ -447,7 +447,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
                 </p>
                 <p className="text-sm text-slate-700 mt-0.5">
-                  Rydges Melbourne, Exhibition St · 8am–4pm · catering included
+                  Rydges Melbourne, Exhibition St · 8am–4pm · catered lunch included
                 </p>
                 {isEarlyBird && (
                   <p className="text-xs text-orange-700 font-semibold mt-2">

@@ -108,7 +108,7 @@ export default function HomePage() {
                     Melbourne · Sat 13 June 2026
                   </p>
                   <p className="text-sm text-slate-600 mt-1">
-                    Rydges Exhibition St · 8am–4pm · catering included
+                    Rydges Exhibition St · 8am–4pm · catered lunch included
                   </p>
                   <p className="text-sm font-semibold text-orange-700 mt-2 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
                     See the workshop
