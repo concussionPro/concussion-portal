@@ -214,25 +214,27 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             {/* Next workshop — Melbourne */}
             {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
               <div className="mb-3 rounded-lg border border-orange-200 bg-orange-50 overflow-hidden">
-                <div className="relative w-full aspect-[16/9] overflow-hidden">
-                  <Image
-                    src="/melbourne-workshop.jpg"
-                    alt="Concussion Clinical Mastery · Melbourne · June 13 2026"
-                    fill
-                    sizes="(max-width: 640px) 100vw, 300px"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="px-3 py-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700 mb-0.5">
-                    Next workshop
-                  </p>
-                  <p className="text-xs font-semibold text-slate-900">
-                    Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
-                  </p>
-                  <p className="text-[11px] text-orange-800">
-                    Rydges Exhibition St · 8am–4pm · catered lunch
-                  </p>
+                <div className="flex items-stretch">
+                  <div className="relative w-[80px] flex-shrink-0 bg-slate-900">
+                    <Image
+                      src="/melbourne-workshop.jpg"
+                      alt="Melbourne workshop"
+                      fill
+                      sizes="80px"
+                      className="object-contain"
+                    />
+                  </div>
+                  <div className="flex-1 px-2.5 py-2 min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-orange-700 mb-0.5">
+                      Next workshop
+                    </p>
+                    <p className="text-xs font-semibold text-slate-900 leading-tight">
+                      Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
+                    </p>
+                    <p className="text-[10px] text-orange-800 mt-0.5 leading-snug">
+                      Rydges Exhibition St · 8am–4pm · catered lunch
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -427,33 +429,35 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           {/* Next workshop card — Melbourne confirmed */}
           {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
             <div className="mb-5 rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden">
-              <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] overflow-hidden">
-                <Image
-                  src="/melbourne-workshop.jpg"
-                  alt="Concussion Clinical Mastery · Melbourne · June 13 2026"
-                  fill
-                  sizes="(max-width: 640px) 100vw, 400px"
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="inline-flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
-                    Next workshop confirmed
-                  </p>
+              <div className="flex items-stretch">
+                <div className="relative w-[110px] sm:w-[130px] flex-shrink-0 bg-slate-900">
+                  <Image
+                    src="/melbourne-workshop.jpg"
+                    alt="Concussion Clinical Mastery · Melbourne · June 13 2026"
+                    fill
+                    sizes="130px"
+                    className="object-contain"
+                  />
                 </div>
-                <p className="text-base font-bold text-slate-900">
-                  Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
-                </p>
-                <p className="text-sm text-slate-700 mt-0.5">
-                  Rydges Melbourne, Exhibition St · 8am–4pm · catered lunch included
-                </p>
-                {isEarlyBird && (
-                  <p className="text-xs text-orange-700 font-semibold mt-2">
-                    Early bird ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+                <div className="flex-1 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                      Next workshop confirmed
+                    </p>
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 leading-tight">
+                    Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
                   </p>
-                )}
+                  <p className="text-xs text-slate-700 mt-1 leading-snug">
+                    Rydges Melbourne, Exhibition St · 8am–4pm · catered lunch included
+                  </p>
+                  {isEarlyBird && (
+                    <p className="text-[11px] text-orange-700 font-semibold mt-1.5">
+                      Early bird ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
