@@ -296,7 +296,8 @@ export const PRE_WORKSHOP_SEQUENCE = [
         &#8226; Comfortable clothes (you'll be practising physical assessments)<br>
         &#8226; A pen and your favourite clinical notebook
       </div>
-      <p>Venue details and parking info will be in your final reminder email the day before.</p>
+      ${rydgesBenefitsBlock(workshopCity)}
+      <p>Final venue directions and parking entrance details are in your day-before reminder email.</p>
       <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_7d', 'complete_modules')}" class="cta-btn">Complete Your Online Modules</a></center>
       <div class="sig">Zac</div>
     `),
@@ -683,6 +684,24 @@ export const WORKSHOP_CONFIRMED_EMAIL = {
 /**
  * Workshop Logistics Email — 6 weeks before confirmed date
  */
+/**
+ * Inline HTML block for Rydges Melbourne accommodation + parking benefits.
+ * Included in workshop logistics emails for Melbourne attendees. Returns
+ * empty string for other cities.
+ */
+function rydgesBenefitsBlock(city: string): string {
+  if (city.toLowerCase() !== 'melbourne') return ''
+  const r = CONFIG.VENUE_BENEFITS.MELBOURNE
+  return `
+    <div class="callout">
+      <strong>Travelling in? Venue perks at ${escapeHtml(r.hotelName)}:</strong><br><br>
+      &#8226; <strong>${r.accommodationDiscountPct}% off accommodation</strong> — use code <strong>${escapeHtml(r.accommodationCode)}</strong> when booking direct at <a href="${escapeHtml(r.bookingUrl)}">${escapeHtml(r.hotelName.toLowerCase())}</a>. Good for the night before, the night of, or a multi-night stay.<br>
+      &#8226; <strong>Secure on-site parking:</strong> $${r.parkingConferenceRate} conference day rate (enter before 10am, exit by 6pm). Overnight guests $${r.parkingOvernightRate}/night.<br>
+      &#8226; Car park sits below the hotel with direct access to the event space. Subject to availability.
+    </div>
+  `
+}
+
 export const WORKSHOP_LOGISTICS_EMAIL = {
   daysBefore: 42,
   subject: 'Your workshop is 6 weeks away — what to know',
@@ -695,8 +714,9 @@ export const WORKSHOP_LOGISTICS_EMAIL = {
       &#8226; <strong>Time:</strong> 8:00 AM — 4:00 PM<br>
       ${venue ? `&#8226; <strong>Venue:</strong> ${venue}<br>` : '&#8226; <strong>Venue:</strong> Details to follow<br>'}
       &#8226; <strong>What to bring:</strong> Laptop/tablet, comfortable clothes, pen<br>
-      &#8226; <strong>Lunch:</strong> Provided
+      &#8226; <strong>Lunch:</strong> Catered, included
     </div>
+    ${rydgesBenefitsBlock(city)}
     <p><strong>Before the workshop, please complete:</strong></p>
     <ol>
       <li>All 8 online modules (the workshop builds directly on this content)</li>

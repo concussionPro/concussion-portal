@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Calendar, ArrowRight, CheckCircle2, Utensils, Clock, BookOpen, FileText, Infinity } from 'lucide-react'
+import { MapPin, Calendar, ArrowRight, CheckCircle2, Utensils, Clock, BookOpen, FileText, Infinity, BedDouble, Car, Plane } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import CountdownTimer from '@/components/CountdownTimer'
@@ -168,6 +168,46 @@ export default function MelbournePage() {
                 Rydges Hotel, 186 Exhibition St, Melbourne CBD. Walking distance from Parliament Station and Flinders Street. Full venue details and parking/transit info emailed 2 weeks before the workshop.
               </p>
             </div>
+          </div>
+
+          {/* Travel & stay — for out-of-town attendees */}
+          <div className="glass rounded-2xl p-6 md:p-8 mb-12">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Plane className="w-5 h-5 text-accent" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Travelling in? Stay on-site.</h2>
+                <p className="text-sm text-muted-foreground">Partner perks at the venue for interstate and regional attendees.</p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="rounded-xl border border-slate-200 p-4 bg-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <BedDouble className="w-4 h-4 text-accent" aria-hidden="true" />
+                  <h3 className="text-sm font-bold">{CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off accommodation</h3>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Book directly at <strong>{CONFIG.VENUE_BENEFITS.MELBOURNE.hotelName}</strong> and save {CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}%. Your discount code and booking link are sent with your enrolment confirmation — use it for the night before or a multi-night stay.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 p-4 bg-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <Car className="w-4 h-4 text-accent" aria-hidden="true" />
+                  <h3 className="text-sm font-bold">Secure parking on-site</h3>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  <strong>Conference day rate:</strong> ${CONFIG.VENUE_BENEFITS.MELBOURNE.parkingConferenceRate} (enter before 10am, exit by 6pm).<br />
+                  <strong>Overnight guests:</strong> ${CONFIG.VENUE_BENEFITS.MELBOURNE.parkingOvernightRate}/night. Secure car park below the hotel, subject to availability.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 mt-4">
+              Full travel logistics (venue door, parking entrance, nearest trains) are in the 2-weeks-out workshop email.
+            </p>
           </div>
 
           {/* Early bird strip */}

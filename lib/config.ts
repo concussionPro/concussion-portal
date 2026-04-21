@@ -64,6 +64,19 @@ export const CONFIG = {
     Q1_COMPLETED: true,           // Q1 2026 workshops ran — used for social proof
   },
 
+  // Workshop venue partnerships — Rydges Melbourne for the Jun 13 2026 workshop
+  VENUE_BENEFITS: {
+    MELBOURNE: {
+      hotelName: 'Rydges Melbourne',
+      hotelAddress: '186 Exhibition St, Melbourne CBD',
+      bookingUrl: 'https://www.rydges.com/accommodation/melbourne-vic/melbourne/',
+      accommodationDiscountPct: 25,
+      accommodationCode: 'CEA25',            // Update when Rydges confirms the actual code
+      parkingConferenceRate: 45,             // $/day, enter before 10am, exit by 6pm
+      parkingOvernightRate: 60,              // $/night for hotel guests
+    },
+  },
+
   // Social Proof — real numbers only, updated manually
   SOCIAL_PROOF: {
     SCAT_FORM_DOWNLOADS: 500,
