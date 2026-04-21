@@ -4,7 +4,6 @@
  */
 
 import { Resend } from 'resend'
-import { CONFIG } from '@/lib/config'
 
 function redactEmail(email: string): string {
   return email.length > 3 ? email.slice(0, 3) + '***' : '***'
@@ -146,16 +145,11 @@ export async function sendPostPurchaseLoginEmail(opts: {
   const courseLabel = escapeHtml(opts.courseLabel)
   const amountLine = `${escapeHtml(opts.currency)} $${opts.amount.toFixed(2)}`
 
-  const isMelbourne = opts.workshopCity?.toLowerCase() === 'melbourne'
-  const melbourneBenefits = CONFIG.VENUE_BENEFITS.MELBOURNE
   const workshopBlock = (isFullCourse && opts.workshopCity && opts.workshopDate) ? `
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
       <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Your workshop</p>
       <p style="margin: 0; font-size: 15px; font-weight: 600; color: #0f172a;">${escapeHtml(opts.workshopCity === 'byron-bay' ? 'Byron Bay' : opts.workshopCity.charAt(0).toUpperCase() + opts.workshopCity.slice(1))} — ${escapeHtml(opts.workshopDate)}</p>
       ${opts.workshopVenue ? `<p style="margin: 2px 0 0; font-size: 13px; color: #475569;">${escapeHtml(opts.workshopVenue)} · 8am–4pm · catered lunch included</p>` : ''}
-      ${isMelbourne ? `
-        <p style="margin: 10px 0 4px; font-size: 12px; color: #475569;"><strong>Travelling in?</strong> ${melbourneBenefits.accommodationDiscountPct}% off at ${escapeHtml(melbourneBenefits.hotelName)} with code <strong>${escapeHtml(melbourneBenefits.accommodationCode)}</strong>. On-site parking $${melbourneBenefits.parkingConferenceRate}/day or $${melbourneBenefits.parkingOvernightRate}/night for hotel guests. Full logistics email 2 weeks out.</p>
-      ` : ''}
     </div>
   ` : ''
 

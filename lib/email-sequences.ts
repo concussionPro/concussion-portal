@@ -47,17 +47,21 @@ const EMAIL_STYLES = `
 
 /**
  * Inline HTML callout for the next confirmed workshop.
- * Returns empty string when no city is confirmed, so it's safe to drop into
- * any template unconditionally.
+ * Used in promo/nurture emails, not confirmations. The Rydges accommodation
+ * discount is included as a conversion sweetener — hotel perks land as an
+ * incentive before purchase, not a thank-you after.
+ * Returns empty string when no city is confirmed.
  */
 function nextWorkshopCallout(): string {
   const mel = CONFIG.LOCATIONS.MELBOURNE
   if (mel.status !== 'confirmed') return ''
+  const r = CONFIG.VENUE_BENEFITS.MELBOURNE
   return `
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
       <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Next live workshop</p>
       <p style="margin: 0; font-size: 15px; font-weight: 600; color: #0f172a;">Melbourne &mdash; ${escapeHtml(mel.date)}</p>
       <p style="margin: 2px 0 0; font-size: 13px; color: #475569;">Rydges Melbourne, Exhibition St &middot; 8am&ndash;4pm &middot; catered lunch included</p>
+      <p style="margin: 8px 0 0; font-size: 12px; color: #9a3412;"><strong>Travelling in?</strong> Enrolled attendees get ${r.accommodationDiscountPct}% off accommodation at Rydges and access to on-site parking from $${r.parkingConferenceRate}/day.</p>
     </div>
   `
 }
@@ -296,7 +300,6 @@ export const PRE_WORKSHOP_SEQUENCE = [
         &#8226; Comfortable clothes (you'll be practising physical assessments)<br>
         &#8226; A pen and your favourite clinical notebook
       </div>
-      ${rydgesBenefitsBlock(workshopCity)}
       <p>Final venue directions and parking entrance details are in your day-before reminder email.</p>
       <center><a href="${utm('https://portal.concussion-education-australia.com/login', 'workshop_7d', 'complete_modules')}" class="cta-btn">Complete Your Online Modules</a></center>
       <div class="sig">Zac</div>
@@ -716,7 +719,6 @@ export const WORKSHOP_LOGISTICS_EMAIL = {
       &#8226; <strong>What to bring:</strong> Laptop/tablet, comfortable clothes, pen<br>
       &#8226; <strong>Lunch:</strong> Catered, included
     </div>
-    ${rydgesBenefitsBlock(city)}
     <p><strong>Before the workshop, please complete:</strong></p>
     <ol>
       <li>All 8 online modules (the workshop builds directly on this content)</li>
