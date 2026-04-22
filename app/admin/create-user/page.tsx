@@ -14,6 +14,9 @@ export default function AdminCreateUser() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Re-entry guard: disabled on button doesn't block Enter-key submits in
+    // input fields. Without this, rapid keypresses/clicks send duplicate emails.
+    if (status === 'loading') return
     setStatus('loading')
     setMessage('')
 

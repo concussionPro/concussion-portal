@@ -5,6 +5,12 @@ import { sendMagicLinkEmail } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { isAdminRequest } from '@/lib/require-admin'
 
+// In-memory send dedup — prevents duplicate magic-link emails if the admin
+// UI double-submits (Enter key re-fires even when button is disabled).
+// Resets on cold start, which is fine — only protects against rapid retries.
+const recentSends = new Map<string, number>()
+const DEDUP_WINDOW_MS = 30_000
+
 export async function POST(request: NextRequest) {
   // Require admin authentication
   if (!isAdminRequest(request)) {
@@ -19,6 +25,20 @@ export async function POST(request: NextRequest) {
         { error: 'Email, name, and amount are required' },
         { status: 400 }
       )
+    }
+
+    // Dedup by email+amount — same admin call repeated within 30s returns
+    // the previous magic link instead of sending a duplicate email.
+    const dedupKey = `${String(email).toLowerCase()}:${amount}`
+    const now = Date.now()
+    const lastSent = recentSends.get(dedupKey)
+    if (lastSent && now - lastSent < DEDUP_WINDOW_MS) {
+      console.log(`[admin/create-user] Skipping duplicate send for ${email} (last send ${now - lastSent}ms ago)`)
+      return NextResponse.json({
+        success: true,
+        duplicate: true,
+        message: `Duplicate suppressed — email already sent in the last ${Math.round(DEDUP_WINDOW_MS / 1000)}s`,
+      })
     }
 
     const accessLevel = amount >= CONFIG.COURSE.PRICE_EARLY_BIRD ? 'full-course' : 'online-only'
@@ -41,6 +61,9 @@ export async function POST(request: NextRequest) {
     const magicLink = `${baseUrl}/auth/verify?email=${encodeURIComponent(email)}&token=${token}`
 
     const emailSent = await sendMagicLinkEmail(email, token, baseUrl)
+    recentSends.set(dedupKey, now)
+    // Sweep old entries so the map doesn't grow unbounded
+    for (const [k, t] of recentSends) if (now - t > DEDUP_WINDOW_MS * 2) recentSends.delete(k)
 
     console.log(`\u2705 User created via admin: ${email} (${accessLevel})`)
 
