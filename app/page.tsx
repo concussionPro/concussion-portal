@@ -164,28 +164,83 @@ export default function HomePage() {
                     </Link>
                   )}
 
-                  {/* Reference + Toolkit — compact text CTA */}
+                  {/* Reference + Toolkit — richer offer card */}
                   <Link
                     href="/reference"
-                    className="group flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_36px_-8px_rgba(15,23,42,0.2)] hover:border-[rgba(13,115,119,0.35)] transition-all"
+                    className="group relative block rounded-2xl overflow-hidden border border-slate-200 bg-gradient-to-br from-white via-teal-50/40 to-emerald-50/30 p-5 md:p-6 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_36px_-8px_rgba(13,115,119,0.2)] hover:border-[rgba(13,115,119,0.4)] transition-all"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/60 flex-shrink-0">
-                        <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} aria-hidden="true" />
+                    {/* Decorative accent bar */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--accent)] via-emerald-500 to-orange-500" aria-hidden="true" />
+
+                    {/* Decorative corner glow */}
+                    <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-[var(--accent)]/10 blur-2xl pointer-events-none" aria-hidden="true" />
+
+                    <div className="relative flex items-start justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center shadow-md flex-shrink-0">
+                          <BookOpen className="w-4 h-4 text-white" strokeWidth={2.2} aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent)]">
+                            Reference + Toolkit
+                          </p>
+                          <p className="text-[11px] text-slate-600 font-medium">Instant PDF bundle</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--accent)] mb-0.5">
-                          Reference + Toolkit · A$97
-                        </p>
-                        <p className="text-sm font-semibold text-slate-900 leading-snug">
-                          256-page text + 10 clinical tools — applies $100 off course
-                        </p>
+                      <div className="flex-shrink-0 text-right">
+                        <div className="inline-flex items-baseline gap-0.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-sm">
+                          <span className="text-[10px] font-semibold text-slate-500">A$</span>
+                          <span className="text-lg font-bold text-slate-900 leading-none">97</span>
+                        </div>
                       </div>
                     </div>
-                    <span className="text-xs font-semibold text-[var(--accent)] inline-flex items-center gap-1 group-hover:gap-1.5 transition-all flex-shrink-0">
-                      See inside
-                      <ArrowRight className="w-3 h-3" aria-hidden="true" />
-                    </span>
+
+                    <p className="relative text-[15px] font-bold text-slate-900 leading-snug mb-3.5">
+                      256-page reference text + 10 clinical tools
+                    </p>
+
+                    {/* Feature pills */}
+                    <div className="relative flex flex-wrap gap-1.5 mb-4">
+                      {[
+                        'Cheat sheet',
+                        'PPCS flow',
+                        'Referral map',
+                        'RTP ladder',
+                        '+6 more',
+                      ].map((pill) => (
+                        <span
+                          key={pill}
+                          className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700"
+                        >
+                          {pill}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Value props */}
+                    <div className="relative flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-4 text-[11px] text-slate-600">
+                      <span className="inline-flex items-center gap-1">
+                        <Check className="w-3 h-3 text-[var(--accent)]" strokeWidth={3} />
+                        Instant download
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Check className="w-3 h-3 text-[var(--accent)]" strokeWidth={3} />
+                        Lifetime access
+                      </span>
+                      <span className="inline-flex items-center gap-1 font-semibold text-orange-700">
+                        <Check className="w-3 h-3 text-orange-600" strokeWidth={3} />
+                        $100 off course later
+                      </span>
+                    </div>
+
+                    {/* CTA button */}
+                    <div className="relative flex items-center justify-between gap-3 pt-3 border-t border-slate-200/70">
+                      <span className="text-[11px] text-slate-500 italic">Stop here, or stack with the course</span>
+                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] group-hover:gap-2 transition-all">
+                        See what&apos;s inside
+                        <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                      </span>
+                    </div>
                   </Link>
 
                 </div>
