@@ -68,10 +68,36 @@ async function ensureColumns() {
   try {
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS converted_from TEXT`
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false`
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reference_book_purchased_at TIMESTAMPTZ`
   } catch {
     // Column already exists or permissions differ — safe to continue
   }
   columnMigrated = true
+}
+
+/**
+ * Mark a user as having purchased the Clinical Reference Text.
+ * Idempotent — only sets the timestamp the first time, so the purchase
+ * date isn't overwritten by later webhook retries or admin actions.
+ */
+export async function markBookPurchased(email: string): Promise<void> {
+  await ensureColumns()
+  await sql`
+    UPDATE users
+    SET reference_book_purchased_at = COALESCE(reference_book_purchased_at, NOW())
+    WHERE LOWER(email) = LOWER(${email})
+  `
+}
+
+export async function isBookOwner(email: string): Promise<boolean> {
+  await ensureColumns()
+  const { rows } = await sql`
+    SELECT 1 FROM users
+    WHERE LOWER(email) = LOWER(${email})
+      AND reference_book_purchased_at IS NOT NULL
+    LIMIT 1
+  `
+  return rows.length > 0
 }
 
 // Create new user (or upgrade existing) — uses upsert to avoid race conditions

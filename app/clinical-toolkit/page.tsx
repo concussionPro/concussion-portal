@@ -125,7 +125,7 @@ const toolkitResources: ToolkitResource[] = [
     fileSize: '216 KB',
     category: 'flowcharts',
     isFree: false,
-    fileName: 'RehabFlow.png'
+    fileName: 'RehabFlow.pdf'
   },
 ]
 

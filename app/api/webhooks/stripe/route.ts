@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { constructWebhookEvent } from '@/lib/stripe'
 
 export const maxDuration = 60
-import { createUser, findUserByEmail } from '@/lib/users'
+import { createUser, findUserByEmail, markBookPurchased } from '@/lib/users'
 import { sendMagicLinkEmail, sendPostPurchaseLoginEmail, sendEmail } from '@/lib/resend-client'
 import { createMagicToken } from '@/lib/magic-link-jwt'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
@@ -194,6 +194,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     throw new Error(`No customer email in checkout session ${session.id}`)
   }
 
+  // Reference-book purchase path — separate from course checkout. Provisions the
+  // user at 'preview' access, flags them as a book owner, and sends the receipt
+  // + download email. The course upsell happens via a subsequent nurture email.
+  if (session.metadata?.productType === 'reference-book') {
+    await handleBookPurchase(session, customerEmail, customerName)
+    return
+  }
+
   // Extract metadata
   const courseType = session.metadata?.courseType || 'online-only'
   const location = session.metadata?.location || ''
@@ -383,6 +391,112 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     })
   } catch (adminErr) {
     console.error('Admin sale notification failed:', adminErr)
+  }
+}
+
+/**
+ * Handle reference-book purchase.
+ * Creates a preview-level user if none exists, flags them as a book owner,
+ * sends a short receipt + download email, and pings the admin.
+ */
+async function handleBookPurchase(
+  session: Stripe.Checkout.Session,
+  customerEmail: string,
+  customerName: string,
+) {
+  const currency = (session.currency || 'aud').toUpperCase()
+  const amount = (session.amount_total || 0) / 100
+
+  // Ensure the user exists so downloads can be gated by session cookie later.
+  const existing = await findUserByEmail(customerEmail)
+  let userId: string
+  if (existing) {
+    userId = existing.id
+  } else {
+    userId = await createUser({
+      email: customerEmail,
+      name: customerName,
+      accessLevel: 'preview',
+      signupSource: 'purchase',
+    })
+  }
+
+  await markBookPurchased(customerEmail)
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course')
+  const loginUrl = `${baseUrl}/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=reference_purchase`
+  const downloadUrl = `${baseUrl}/api/reference/download`
+
+  try {
+    await sendEmail({
+      to: customerEmail,
+      subject: 'Your ConcussionPro Reference Text is ready',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1e293b;">
+          <div style="height: 4px; background: linear-gradient(90deg, #0d9488, #0ea5e9); border-radius: 2px; margin-bottom: 24px;"></div>
+          <h2 style="margin: 0 0 12px; font-size: 22px; color: #0f172a;">You're in, ${escapeHtml(customerName.split(' ')[0] || 'there')}.</h2>
+          <p style="margin: 0 0 14px; font-size: 15px;">Thanks for backing your clinical practice. The <strong>Concussion Clinical Mastery Reference Text</strong> is yours — 256 pages, lifetime access.</p>
+          <p style="text-align: center; margin: 24px 0;">
+            <a href="${loginUrl}" style="display: inline-block; padding: 14px 28px; background: #0d9488; color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Access Your Account →</a>
+          </p>
+          <p style="margin: 0 0 14px; font-size: 14px; color: #475569;">The reference lives inside your account at <a href="${downloadUrl}" style="color: #0d9488;">portal.concussion-education-australia.com/api/reference/download</a>. Save a local copy for offline use if you like.</p>
+          <div style="background: #f0fdfa; border-left: 3px solid #0d9488; padding: 14px 16px; margin: 20px 0; border-radius: 6px; font-size: 14px;">
+            <strong>What you paid:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}<br>
+            <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>
+          </div>
+          <p style="margin: 20px 0 0; font-size: 14px; color: #475569;">Next — the text pairs with the online course. Book owners get <strong>A$100 off</strong> the full course. I'll send you the details in a few days so you can read before deciding. No pressure.</p>
+          <p style="margin: 14px 0 0; font-size: 14px; color: #475569;">Questions — just reply to this email.</p>
+          <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">Zac Lewis<br>Concussion Education Australia</div>
+        </div>
+      `,
+      tags: [
+        { name: 'type', value: 'reference-purchase' },
+        { name: 'sequence', value: 'book' },
+      ],
+    })
+    console.log(`[book] Reference purchase + email sent to ${redact(customerEmail)} — ${currency} $${amount}`)
+  } catch (err) {
+    console.error(`[book] Receipt email failed for ${redact(customerEmail)}:`, err)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION REQUIRED: Reference receipt email failed — ${redact(customerEmail)}`,
+        html: `<p>Book purchase went through but the receipt email failed.</p><p><strong>Customer:</strong> ${escapeHtml(customerEmail)}<br><strong>Amount:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}<br><strong>Session:</strong> ${escapeHtml(session.id)}</p>`,
+      })
+    } catch (alertErr) { console.error('Admin alert for book email failure also failed:', alertErr) }
+  }
+
+  // Admin "new sale" ping
+  try {
+    await sendEmail({
+      to: CONFIG.CONTACT_EMAIL,
+      subject: `New reference sale — ${currency} $${amount.toFixed(2)}`,
+      html: `
+        <p><strong>New Clinical Reference Text sale.</strong></p>
+        <ul>
+          <li><strong>Customer:</strong> ${escapeHtml(customerEmail)} (${escapeHtml(customerName)})</li>
+          <li><strong>Amount:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}</li>
+          <li><strong>User status:</strong> ${existing ? `existing (${escapeHtml(existing.accessLevel)}) — now flagged as book owner` : 'new preview user, book-owner flagged'}</li>
+          <li><strong>Stripe session:</strong> <code>${escapeHtml(session.id)}</code></li>
+        </ul>
+      `,
+      tags: [{ name: 'type', value: 'admin-reference-sale' }],
+    })
+  } catch (adminErr) {
+    console.error('Admin reference sale notification failed:', adminErr)
+  }
+
+  // Analytics
+  try {
+    await logAnalyticsEvent('reference_purchase', {
+      email: redact(customerEmail),
+      amount,
+      currency,
+      transactionId: session.id,
+    })
+  } catch (err) {
+    console.error('Failed to log reference purchase analytics:', err)
   }
 }
 

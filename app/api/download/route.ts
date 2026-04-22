@@ -3,6 +3,7 @@ import { readFile, access } from 'fs/promises'
 import { join } from 'path'
 import { cookies } from 'next/headers'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { isBookOwner } from '@/lib/users'
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
       'Employer _ School Letter Template.docx',
       'Email Template Pack.docx',
       '"What to Expect After a Concussion".pdf',
+      'RehabFlow.pdf',
       'RehabFlow.png',
       'CCM_Complete_Reference_2026.pdf',
       'SCAT-SCOAT_FillablePDFs.zip',
@@ -56,10 +58,18 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Verify user has paid access (online-only or full-course)
-    if (!sessionData.accessLevel || (sessionData.accessLevel !== 'online-only' && sessionData.accessLevel !== 'full-course')) {
+    // Access: paid course users OR bundle (reference + toolkit) buyers.
+    // Bundle buyers are preview-level in the session cookie but flagged in the
+    // DB via reference_book_purchased_at. DB lookup is fast; this route is
+    // already protected by session verification above.
+    const paidAccess =
+      sessionData.accessLevel === 'online-only' ||
+      sessionData.accessLevel === 'full-course'
+    const bundleOwner = !paidAccess ? await isBookOwner(sessionData.email) : false
+
+    if (!paidAccess && !bundleOwner) {
       return NextResponse.json(
-        { error: 'Premium access required to download resources.' },
+        { error: 'Reference + Toolkit bundle (A$97) or paid course required to download.' },
         { status: 403 }
       )
     }
