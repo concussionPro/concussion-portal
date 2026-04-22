@@ -44,6 +44,21 @@ function defaultAmount(courseType: CourseType): number {
   return CONFIG.COURSE.PRICE_ONLINE
 }
 
+export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const url = new URL(request.url)
+  return handleSend(request, {
+    email: url.searchParams.get('email') || undefined,
+    courseType: url.searchParams.get('courseType') || undefined,
+    workshopCity: url.searchParams.get('workshopCity') || undefined,
+    amount: url.searchParams.get('amount') ? Number(url.searchParams.get('amount')) : undefined,
+    currency: url.searchParams.get('currency') || undefined,
+    upgradeAccess: url.searchParams.get('upgradeAccess') !== 'false',
+  })
+}
+
 export async function POST(request: NextRequest) {
   if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -62,7 +77,17 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
+  return handleSend(request, body)
+}
 
+async function handleSend(_request: NextRequest, body: {
+  email?: string
+  courseType?: string
+  workshopCity?: string
+  amount?: number
+  currency?: string
+  upgradeAccess?: boolean
+}) {
   const email = body.email?.trim().toLowerCase()
   if (!email) return NextResponse.json({ error: 'email is required' }, { status: 400 })
 
