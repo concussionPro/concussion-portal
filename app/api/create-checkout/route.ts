@@ -5,6 +5,11 @@ import { verifySessionToken } from '@/lib/jwt-session'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/get-client-ip'
 import { createCheckoutSchema } from '@/lib/schemas'
+import { isBookOwner } from '@/lib/users'
+
+// Bundle owner discount applied automatically to course purchases.
+// Sales page promises "$100 off the course" for Reference+Toolkit owners.
+const BUNDLE_OWNER_DISCOUNT_AUD = 100
 
 /**
  * POST /api/create-checkout
@@ -81,6 +86,30 @@ export async function POST(request: NextRequest) {
       sessionEmail = session.email
     }
 
+    // Detect bundle-owner discount eligibility. Applies to online-only and
+    // full-course — NOT workshop-upgrade (already discounted) or
+    // international-online (different currency / market).
+    let bundleDiscountAud = 0
+    if (courseType === 'online-only' || courseType === 'full-course') {
+      const sessionCookie = request.cookies.get('session')?.value
+      if (sessionCookie) {
+        const session = verifySessionToken(sessionCookie)
+        if (session && (await isBookOwner(session.email))) {
+          bundleDiscountAud = BUNDLE_OWNER_DISCOUNT_AUD
+          // Prefer the session email over any passed-in email so the discount
+          // can't be applied to a different account
+          sessionEmail = session.email
+        }
+      } else if (email) {
+        // Unauthenticated buyer supplying an email — honour the discount if
+        // the email matches an existing book-owner record. Prevents the
+        // awkward case where a bundle owner forgets to log in before buying.
+        if (await isBookOwner(email)) {
+          bundleDiscountAud = BUNDLE_OWNER_DISCOUNT_AUD
+        }
+      }
+    }
+
     // Use server-side env var only — origin header is spoofable
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
@@ -104,6 +133,7 @@ export async function POST(request: NextRequest) {
       cancelUrl,
       promoCode: typeof promoCode === 'string' ? promoCode : undefined,
       utm: utm && typeof utm === 'object' ? utm : undefined,
+      bundleDiscountAud,
     })
 
     return NextResponse.json({

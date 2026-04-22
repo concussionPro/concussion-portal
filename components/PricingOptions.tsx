@@ -39,6 +39,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
+  const [bookOwner, setBookOwner] = useState(false)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
@@ -56,7 +57,21 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       if (val) utm[key] = val
     }
     if (Object.keys(utm).length > 0) setUtmParams(utm)
+    // Detect bundle-owner status — if true, show discounted course prices
+    fetch('/api/auth/session', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.user?.bookOwner) setBookOwner(true)
+      })
+      .catch(() => { /* not logged in — pricing shows full retail */ })
   }, [])
+
+  // Bundle owners get A$100 off online-only and full-course (applied at checkout)
+  const BUNDLE_DISCOUNT = 100
+  const onlinePrice = bookOwner ? CONFIG.COURSE.PRICE_ONLINE - BUNDLE_DISCOUNT : CONFIG.COURSE.PRICE_ONLINE
+  const fullCoursePrice = bookOwner
+    ? (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD - BUNDLE_DISCOUNT : CONFIG.COURSE.PRICE_REGULAR - BUNDLE_DISCOUNT)
+    : (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR)
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     try {
@@ -68,9 +83,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         .catch(() => {})
 
       // Fire Google Ads conversion in background (non-blocking)
-      const conversionValue = courseType === 'full-course'
-        ? (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR)
-        : CONFIG.COURSE.PRICE_ONLINE
+      const conversionValue = courseType === 'full-course' ? fullCoursePrice : onlinePrice
       trackLeadConversion(ENROL_CLICK_LABEL, conversionValue)
         .catch(() => {})
 
@@ -135,11 +148,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
 
             <div className="mb-3">
+              {bookOwner && (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-xs text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_ONLINE}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
+                </div>
+              )}
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_ONLINE}</span>
+                <span className="text-2xl font-bold text-[var(--foreground)]">${onlinePrice}</span>
                 <span className="text-[10px] text-slate-400">≈ $320 USD</span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay or Klarna</p>
+              <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(onlinePrice)} with Afterpay or Klarna</p>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
             </div>
 
@@ -165,7 +184,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {loading === 'online-only' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Enrol Now — $${CONFIG.COURSE.PRICE_ONLINE}`
+                `Enrol Now — $${onlinePrice}`
               )}
             </button>
             <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
@@ -189,24 +208,32 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <div className="mb-4">
               {isEarlyBird ? (
                 <>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Save ${CONFIG.COURSE.SAVINGS}</span>
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <span className="text-sm text-[var(--muted-foreground)] line-through">${(bookOwner ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                      {bookOwner ? `Bundle −$${BUNDLE_DISCOUNT}` : `Save $${CONFIG.COURSE.SAVINGS}`}
+                    </span>
                   </div>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
+                    <span className="text-2xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
                     <span className="text-[10px] text-slate-400">≈ $770 USD</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_EARLY_BIRD)} with Afterpay or Klarna</p>
+                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
                   <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
                 </>
               ) : (
                 <>
+                  {bookOwner && (
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
+                    </div>
+                  )}
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-2xl font-bold text-[var(--foreground)]">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                    <span className="text-2xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
                     <span className="text-[10px] text-slate-400">≈ $910 USD</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_REGULAR)} with Afterpay or Klarna</p>
+                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
                 </>
               )}
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>
@@ -264,7 +291,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {loading === 'full-course' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                `Enrol Now — $${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}`
+                `Enrol Now — $${fullCoursePrice.toLocaleString()}`
               )}
             </button>
 
@@ -383,13 +410,24 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </p>
 
           <div className="mb-4">
+            {bookOwner && (
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-base text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_ONLINE}</span>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                  Bundle −${BUNDLE_DISCOUNT}
+                </span>
+              </div>
+            )}
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_ONLINE}</span>
+              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${onlinePrice}</span>
               <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
               <span className="text-xs text-slate-400">≈ $320 USD</span>
             </div>
-            <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay or Klarna</p>
-            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · Lifetime access · Content updated regularly · 8 CPD points</p>
+            <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(onlinePrice)} with Afterpay or Klarna</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">
+              One-time payment · Lifetime access · Content updated regularly · 8 CPD points
+              {bookOwner && <span className="text-orange-700 font-medium"> · Reference+Toolkit bundle credit applied</span>}
+            </p>
           </div>
 
           <ul className="space-y-3 mb-7 flex-1">
@@ -416,7 +454,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Enrol Now — ${CONFIG.COURSE.PRICE_ONLINE}
+                Enrol Now — ${onlinePrice}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -455,31 +493,45 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <div className="mb-6">
             {isEarlyBird ? (
               <>
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-base text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                <div className="flex items-center gap-3 mb-1 flex-wrap">
+                  <span className="text-base text-[var(--muted-foreground)] line-through">${(bookOwner ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}</span>
                   <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                    Save ${CONFIG.COURSE.SAVINGS}
+                    {bookOwner ? `Bundle −$${BUNDLE_DISCOUNT}` : `Save $${CONFIG.COURSE.SAVINGS}`}
                   </span>
+                  {bookOwner && (
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Early bird included
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</span>
+                  <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
                   <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
                   <span className="text-xs text-slate-400">≈ $770 USD</span>
                 </div>
-                <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_EARLY_BIRD)} with Afterpay or Klarna</p>
+                <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
                 <p className="text-xs text-orange-600 font-medium mt-1">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
               </>
             ) : (
               <>
+                {bookOwner && (
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-base text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
+                  </div>
+                )}
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                  <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
                   <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
                   <span className="text-xs text-slate-400">≈ $910 USD</span>
                 </div>
-                <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_REGULAR)} with Afterpay or Klarna</p>
+                <p className="text-sm text-slate-500 mt-1">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
               </>
             )}
-            <p className="text-xs text-[var(--muted-foreground)] mt-1">One-time payment · 14 AHPRA CPD points</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">
+              One-time payment · 14 AHPRA CPD points
+              {bookOwner && <span className="text-orange-700 font-medium"> · Reference+Toolkit bundle credit applied</span>}
+            </p>
           </div>
 
           {/* Next workshop card — Melbourne confirmed */}
@@ -609,7 +661,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                Enrol Now — ${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Enrol Now — ${fullCoursePrice.toLocaleString()}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

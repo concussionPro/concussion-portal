@@ -81,6 +81,7 @@ export async function createCourseCheckoutSession({
   cancelUrl,
   promoCode,
   utm,
+  bundleDiscountAud = 0,
 }: {
   courseType: CourseType
   location?: string
@@ -90,6 +91,8 @@ export async function createCourseCheckoutSession({
   cancelUrl: string
   promoCode?: string
   utm?: Record<string, string>
+  /** AUD dollars (not cents) of discount to apply for Reference+Toolkit bundle owners. */
+  bundleDiscountAud?: number
 }) {
   const isEarlyBird = await isEarlyBirdActiveForLocation(location)
   let unitAmount: number
@@ -119,6 +122,22 @@ export async function createCourseCheckoutSession({
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `ConcussionPro — Complete Course (${locationLabel})`
     productDescription = `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD points · AHPRA aligned · All materials included`
+  }
+
+  // Apply bundle-owner discount to AUD course purchases (online-only / full-course).
+  // Stored as metadata so the webhook can reconcile and the finance record is clear.
+  let bundleDiscountApplied = 0
+  if (
+    bundleDiscountAud > 0 &&
+    (courseType === 'online-only' || courseType === 'full-course') &&
+    currency === 'aud'
+  ) {
+    const discountCents = bundleDiscountAud * 100
+    // Never let the discount drive the price below $100 (keep finance sane + matches the $100 floor on the $97 book)
+    const floor = 100 * 100
+    bundleDiscountApplied = Math.min(discountCents, Math.max(0, unitAmount - floor))
+    unitAmount = unitAmount - bundleDiscountApplied
+    productDescription = `${productDescription} · A$${bundleDiscountApplied / 100} Reference+Toolkit bundle credit applied`
   }
 
   // If a promo code was provided, look it up in Stripe to auto-apply
@@ -175,6 +194,7 @@ export async function createCourseCheckoutSession({
       currency,
       source: 'portal',
       timestamp: new Date().toISOString(),
+      bundleDiscountAppliedCents: String(bundleDiscountApplied),
       ...(utm?.utm_source ? { utm_source: utm.utm_source } : {}),
       ...(utm?.utm_medium ? { utm_medium: utm.utm_medium } : {}),
       ...(utm?.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}),
