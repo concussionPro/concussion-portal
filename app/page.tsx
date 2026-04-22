@@ -26,161 +26,214 @@ export default function HomePage() {
 
 
         {/* ── Hero ─────────────────────────────────────────── */}
-        <section className="pt-[140px] md:pt-[180px] pb-12 md:pb-16 px-5 md:px-8 relative z-10">
-          <div className="max-w-[720px] mx-auto animate-fade-in">
+        <section className="pt-[140px] md:pt-[160px] pb-12 md:pb-16 px-5 md:px-8 relative z-10">
+          <div className="max-w-[1200px] mx-auto">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] gap-10 lg:gap-14 items-start animate-fade-in">
 
-            {/* Badge */}
-            <div className="badge mb-6">
-              {CONFIG.COURSE.CPD_BADGE_TEXT}
-            </div>
+              {/* ── LEFT: Copy + CTAs ─────────────────────── */}
+              <div className="min-w-0 max-w-[620px]">
 
-            {/* Headline */}
-            <h1 className="text-[2.25rem] md:text-[3.25rem] leading-[1.1] font-bold tracking-[-0.03em] text-[var(--foreground)] mb-5">
-              Stop guessing.{' '}
-              <span className="text-gradient">
-                Master concussion management.
-              </span>
-            </h1>
-
-            {/* Subhead */}
-            <p className="text-base md:text-lg text-[var(--muted-foreground)] leading-relaxed mb-8 max-w-[560px]">
-              Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points.
-            </p>
-
-            {/* CTAs — primary + secondary buttons; preview link sits on its
-                own line underneath so the button row stays visually tight. */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-              <Link
-                href="/scat-mastery"
-                className="btn-primary px-8 py-4 rounded-xl text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg"
-              >
-                Start Free SCAT6 Course
-                <ArrowRight className="w-4.5 h-4.5" />
-              </Link>
-              <Link
-                href="/pricing"
-                className="px-6 py-4 rounded-xl text-sm font-semibold text-[var(--foreground)] bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                Compare Pricing
-              </Link>
-            </div>
-            <div className="mb-3">
-              <Link
-                href="/preview"
-                className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1"
-              >
-                Preview course content →
-              </Link>
-            </div>
-
-            <p className="text-sm text-muted-foreground mt-3 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              7-day money-back guarantee — try risk-free
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay)
-            </p>
-            {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
-              <p className="text-sm text-slate-500 mt-1">
-                Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-            )}
-
-            {/* Quick-start options: Melbourne workshop + Reference+Toolkit
-                as side-by-side cards. Sized so the thumbs read clearly
-                without dominating the hero. */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px]">
-              {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
-                <Link
-                  href="/courses/melbourne"
-                  className="group flex items-stretch rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-lg hover:border-orange-300 transition-all"
-                >
-                  <div className="relative w-[120px] flex-shrink-0 overflow-hidden">
-                    <Image
-                      src="/melbourne-workshop.jpg"
-                      alt=""
-                      fill
-                      sizes="120px"
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="flex-1 p-4 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
-                        Next workshop
-                      </span>
-                    </div>
-                    <p className="text-sm font-bold text-slate-900 leading-tight mb-1">
-                      Melbourne · 13 Jun 2026
-                    </p>
-                    <p className="text-xs text-slate-600 leading-snug">
-                      Rydges CBD · 8am–4pm · catered
-                    </p>
-                    <p className="text-xs font-semibold text-orange-700 mt-2 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
-                      See workshop
-                      <ArrowRight className="w-3 h-3" aria-hidden="true" />
-                    </p>
-                  </div>
-                </Link>
-              )}
-
-              <Link
-                href="/reference"
-                className="group flex items-stretch rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-lg hover:border-accent/40 transition-all"
-              >
-                <div className="relative w-[120px] flex-shrink-0 overflow-hidden bg-slate-100">
-                  <Image
-                    src="/ccm-cover.png"
-                    alt=""
-                    fill
-                    sizes="120px"
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                {/* Badge */}
+                <div className="badge mb-6">
+                  {CONFIG.COURSE.CPD_BADGE_TEXT}
                 </div>
-                <div className="flex-1 p-4 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <BookOpen className="w-3 h-3 text-accent flex-shrink-0" aria-hidden="true" />
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-accent">
-                      Reference + Toolkit
+
+                {/* Headline */}
+                <h1 className="text-[2.25rem] md:text-[3.25rem] leading-[1.05] font-bold tracking-[-0.03em] text-[var(--foreground)] mb-5">
+                  Stop guessing.{' '}
+                  <span className="text-gradient">
+                    Master concussion management.
+                  </span>
+                </h1>
+
+                {/* Subhead */}
+                <p className="text-base md:text-lg text-[var(--muted-foreground)] leading-relaxed mb-8">
+                  Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points.
+                </p>
+
+                {/* CTAs — primary + secondary buttons; preview link sits on its
+                    own line underneath so the button row stays visually tight. */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
+                  <Link
+                    href="/scat-mastery"
+                    className="btn-primary px-8 py-4 rounded-xl text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    Start Free SCAT6 Course
+                    <ArrowRight className="w-4.5 h-4.5" />
+                  </Link>
+                  <Link
+                    href="/pricing"
+                    className="px-6 py-4 rounded-xl text-sm font-semibold text-[var(--foreground)] bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    Compare Pricing
+                  </Link>
+                </div>
+                <div className="mb-3">
+                  <Link
+                    href="/preview"
+                    className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1"
+                  >
+                    Preview course content →
+                  </Link>
+                </div>
+
+                <p className="text-sm text-muted-foreground mt-3 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  7-day money-back guarantee — try risk-free
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay)
+                </p>
+                {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
+                  <p className="text-sm text-slate-500 mt-1">
+                    Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                )}
+
+                <p className="text-[13px] text-[var(--muted-foreground)] mt-4">
+                  <Link
+                    href="/scat-forms"
+                    className="text-[var(--accent)] font-medium hover:underline"
+                  >
+                    Free SCAT forms →
+                  </Link>
+                </p>
+
+                {/* Social proof strip */}
+                {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 pt-6 border-t border-[rgba(13,115,119,0.08)]">
+                    <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
+                      <span className="font-semibold text-[var(--foreground)]">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded by Australian clinicians
+                    </span>
+                    <span className="text-xs text-[var(--muted-foreground)]">·</span>
+                    <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
+                      <Image src="/osteopathy-australia-endorsed.png" alt="" width={22} height={20} className="h-5 w-auto" aria-hidden="true" />
+                      <span>Endorsed by <span className="font-semibold text-[var(--foreground)]">Osteopathy Australia</span></span>
                     </span>
                   </div>
-                  <p className="text-sm font-bold text-slate-900 leading-tight mb-1">
-                    256-page text + 10 tools
-                  </p>
-                  <p className="text-xs text-slate-600 leading-snug">
-                    A$97 · instant download
-                  </p>
-                  <p className="text-xs font-semibold text-accent mt-2 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
-                    See what&apos;s inside
-                    <ArrowRight className="w-3 h-3" aria-hidden="true" />
-                  </p>
-                </div>
-              </Link>
-            </div>
-
-            <p className="text-[13px] text-[var(--muted-foreground)] mt-3">
-              <Link
-                href="/scat-forms"
-                className="text-[var(--accent)] font-medium hover:underline"
-              >
-                Free SCAT forms
-              </Link>
-            </p>
-
-            {/* Social proof strip */}
-            {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 pt-6 border-t border-[rgba(13,115,119,0.08)]">
-                <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
-                  <span className="font-semibold text-[var(--foreground)]">{CONFIG.SOCIAL_PROOF.SCAT_FORM_DOWNLOADS}+</span> SCAT6 forms downloaded by Australian clinicians
-                </span>
-                <span className="text-xs text-[var(--muted-foreground)]">·</span>
-                <span className="text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
-                  <Image src="/osteopathy-australia-endorsed.png" alt="" width={22} height={20} className="h-5 w-auto" aria-hidden="true" />
-                  <span>Endorsed by <span className="font-semibold text-[var(--foreground)]">Osteopathy Australia</span></span>
-                </span>
+                )}
               </div>
-            )}
+
+              {/* ── RIGHT: Product showcase ───────────────── */}
+              <div className="relative lg:sticky lg:top-[120px]">
+
+                {/* Soft glow behind the showcase */}
+                <div
+                  className="absolute -inset-8 bg-gradient-to-br from-[rgba(13,115,119,0.12)] via-[rgba(255,255,255,0)] to-[rgba(234,88,12,0.08)] blur-2xl rounded-[40px] pointer-events-none"
+                  aria-hidden="true"
+                />
+
+                <div className="relative space-y-4">
+
+                  {/* Next workshop — Melbourne (hero-scale card with large photo) */}
+                  {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+                    <Link
+                      href="/courses/melbourne"
+                      className="group block rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_36px_-8px_rgba(15,23,42,0.2)] hover:border-orange-300 transition-all"
+                    >
+                      <div className="relative aspect-[16/9] bg-slate-900 overflow-hidden">
+                        <Image
+                          src="/melbourne-workshop.jpg"
+                          alt="Concussion Clinical Mastery · Melbourne · 13 June 2026"
+                          fill
+                          sizes="(min-width: 1024px) 460px, 100vw"
+                          className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                          priority
+                        />
+                        <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
+                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                            Next workshop confirmed
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-4 md:p-5">
+                        <div className="flex items-baseline justify-between gap-3 mb-1">
+                          <p className="text-base md:text-lg font-bold text-slate-900 leading-tight">
+                            Melbourne · 13 Jun 2026
+                          </p>
+                          <span className="text-xs font-semibold text-orange-700 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all flex-shrink-0">
+                            See workshop
+                            <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-600 leading-snug">
+                          Rydges Exhibition St · 8am–4pm · catered lunch included
+                        </p>
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Reference + Toolkit (book cover + key inclusions) */}
+                  <Link
+                    href="/reference"
+                    className="group flex items-stretch rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_36px_-8px_rgba(15,23,42,0.2)] hover:border-[rgba(13,115,119,0.35)] transition-all"
+                  >
+                    <div className="relative w-[140px] md:w-[160px] flex-shrink-0 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50">
+                      <Image
+                        src="/ccm-cover.png"
+                        alt="Concussion Clinical Mastery — 256-page reference text"
+                        fill
+                        sizes="160px"
+                        className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="flex-1 p-4 md:p-5 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0" aria-hidden="true" />
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]">
+                          Reference + Toolkit
+                        </span>
+                      </div>
+                      <p className="text-base font-bold text-slate-900 leading-tight mb-1">
+                        256-page text + 10 clinical tools
+                      </p>
+                      <p className="text-xs text-slate-600 leading-snug mb-2">
+                        A$97 · instant download · applies $100 off course
+                      </p>
+                      <span className="text-xs font-semibold text-[var(--accent)] inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
+                        See what&apos;s inside
+                        <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                      </span>
+                    </div>
+                  </Link>
+
+                  {/* Toolkit preview strip — tangible proof of what's inside */}
+                  <Link
+                    href="/reference"
+                    className="group relative block rounded-2xl overflow-hidden border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3 hover:border-[rgba(13,115,119,0.35)] hover:shadow-[0_6px_20px_-8px_rgba(15,23,42,0.15)] transition-all"
+                    aria-label="Preview clinical toolkit"
+                  >
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { src: '/toolkit-previews/01_cheat_sheet.png', label: 'Cheat sheet' },
+                        { src: '/toolkit-previews/04_pcs_flowchart.png', label: 'PPCS flow' },
+                        { src: '/toolkit-previews/05_referral_flowchart.png', label: 'Referral' },
+                        { src: '/toolkit-previews/06_rtp_rtl_ladder.png', label: 'RTP ladder' },
+                      ].map((thumb) => (
+                        <div
+                          key={thumb.src}
+                          className="relative aspect-[3/4] rounded-md overflow-hidden bg-white border border-slate-200 shadow-sm group-hover:-translate-y-0.5 transition-transform"
+                        >
+                          <Image
+                            src={thumb.src}
+                            alt={thumb.label}
+                            fill
+                            sizes="100px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2.5 font-medium">
+                      Cheat sheet · PPCS flow · Referral map · RTP ladder + 6 more
+                    </p>
+                  </Link>
+
+                </div>
+              </div>
+
+            </div>
           </div>
         </section>
 
