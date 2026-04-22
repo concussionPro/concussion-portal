@@ -87,34 +87,39 @@ export default function HomePage() {
             )}
 
             {/* Quick-start options: Melbourne workshop + Reference+Toolkit
-                as compact side-by-side cards with horizontal thumbs. */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[560px]">
+                as side-by-side cards. Sized so the thumbs read clearly
+                without dominating the hero. */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px]">
               {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
                 <Link
                   href="/courses/melbourne"
-                  className="group flex items-stretch rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-orange-300 transition-all"
+                  className="group flex items-stretch rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-lg hover:border-orange-300 transition-all"
                 >
-                  <div className="relative w-20 flex-shrink-0 overflow-hidden">
+                  <div className="relative w-[120px] flex-shrink-0 overflow-hidden">
                     <Image
                       src="/melbourne-workshop.jpg"
                       alt=""
                       fill
-                      sizes="80px"
+                      sizes="120px"
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
-                  <div className="flex-1 p-2.5 min-w-0">
-                    <div className="flex items-center gap-1 mb-0.5">
+                  <div className="flex-1 p-4 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1.5">
                       <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
-                      <span className="text-[9px] font-bold uppercase tracking-wide text-orange-700">
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
                         Next workshop
                       </span>
                     </div>
-                    <p className="text-xs font-bold text-slate-900 leading-tight">
+                    <p className="text-sm font-bold text-slate-900 leading-tight mb-1">
                       Melbourne · 13 Jun 2026
                     </p>
-                    <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
-                      Rydges CBD · 8am–4pm
+                    <p className="text-xs text-slate-600 leading-snug">
+                      Rydges CBD · 8am–4pm · catered
+                    </p>
+                    <p className="text-xs font-semibold text-orange-700 mt-2 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
+                      See workshop
+                      <ArrowRight className="w-3 h-3" aria-hidden="true" />
                     </p>
                   </div>
                 </Link>
@@ -122,29 +127,33 @@ export default function HomePage() {
 
               <Link
                 href="/reference"
-                className="group flex items-stretch rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-accent/40 transition-all"
+                className="group flex items-stretch rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-lg hover:border-accent/40 transition-all"
               >
-                <div className="relative w-20 flex-shrink-0 overflow-hidden bg-slate-100">
+                <div className="relative w-[120px] flex-shrink-0 overflow-hidden bg-slate-100">
                   <Image
                     src="/ccm-cover.png"
                     alt=""
                     fill
-                    sizes="80px"
+                    sizes="120px"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
-                <div className="flex-1 p-2.5 min-w-0">
-                  <div className="flex items-center gap-1 mb-0.5">
-                    <BookOpen className="w-2.5 h-2.5 text-accent flex-shrink-0" aria-hidden="true" />
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-accent">
+                <div className="flex-1 p-4 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <BookOpen className="w-3 h-3 text-accent flex-shrink-0" aria-hidden="true" />
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-accent">
                       Reference + Toolkit
                     </span>
                   </div>
-                  <p className="text-xs font-bold text-slate-900 leading-tight">
+                  <p className="text-sm font-bold text-slate-900 leading-tight mb-1">
                     256-page text + 10 tools
                   </p>
-                  <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                  <p className="text-xs text-slate-600 leading-snug">
                     A$97 · instant download
+                  </p>
+                  <p className="text-xs font-semibold text-accent mt-2 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
+                    See what&apos;s inside
+                    <ArrowRight className="w-3 h-3" aria-hidden="true" />
                   </p>
                 </div>
               </Link>
