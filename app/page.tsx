@@ -164,70 +164,28 @@ export default function HomePage() {
                     </Link>
                   )}
 
-                  {/* Reference + Toolkit (book cover + key inclusions) */}
+                  {/* Reference + Toolkit — compact text CTA */}
                   <Link
                     href="/reference"
-                    className="group flex items-stretch rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_36px_-8px_rgba(15,23,42,0.2)] hover:border-[rgba(13,115,119,0.35)] transition-all"
+                    className="group flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_36px_-8px_rgba(15,23,42,0.2)] hover:border-[rgba(13,115,119,0.35)] transition-all"
                   >
-                    <div className="relative w-[140px] md:w-[160px] flex-shrink-0 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50">
-                      <Image
-                        src="/ccm-cover.png"
-                        alt="Concussion Clinical Mastery — 256-page reference text"
-                        fill
-                        sizes="160px"
-                        className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="flex-1 p-4 md:p-5 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0" aria-hidden="true" />
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]">
-                          Reference + Toolkit
-                        </span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/60 flex-shrink-0">
+                        <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} aria-hidden="true" />
                       </div>
-                      <p className="text-base font-bold text-slate-900 leading-tight mb-1">
-                        256-page text + 10 clinical tools
-                      </p>
-                      <p className="text-xs text-slate-600 leading-snug mb-2">
-                        A$97 · instant download · applies $100 off course
-                      </p>
-                      <span className="text-xs font-semibold text-[var(--accent)] inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
-                        See what&apos;s inside
-                        <ArrowRight className="w-3 h-3" aria-hidden="true" />
-                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--accent)] mb-0.5">
+                          Reference + Toolkit · A$97
+                        </p>
+                        <p className="text-sm font-semibold text-slate-900 leading-snug">
+                          256-page text + 10 clinical tools — applies $100 off course
+                        </p>
+                      </div>
                     </div>
-                  </Link>
-
-                  {/* Toolkit preview strip — tangible proof of what's inside */}
-                  <Link
-                    href="/reference"
-                    className="group relative block rounded-2xl overflow-hidden border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3 hover:border-[rgba(13,115,119,0.35)] hover:shadow-[0_6px_20px_-8px_rgba(15,23,42,0.15)] transition-all"
-                    aria-label="Preview clinical toolkit"
-                  >
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        { src: '/toolkit-previews/01_cheat_sheet.png', label: 'Cheat sheet' },
-                        { src: '/toolkit-previews/04_pcs_flowchart.png', label: 'PPCS flow' },
-                        { src: '/toolkit-previews/05_referral_flowchart.png', label: 'Referral' },
-                        { src: '/toolkit-previews/06_rtp_rtl_ladder.png', label: 'RTP ladder' },
-                      ].map((thumb) => (
-                        <div
-                          key={thumb.src}
-                          className="relative aspect-[3/4] rounded-md overflow-hidden bg-white border border-slate-200 shadow-sm group-hover:-translate-y-0.5 transition-transform"
-                        >
-                          <Image
-                            src={thumb.src}
-                            alt={thumb.label}
-                            fill
-                            sizes="100px"
-                            className="object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-[11px] text-center text-[var(--muted-foreground)] mt-2.5 font-medium">
-                      Cheat sheet · PPCS flow · Referral map · RTP ladder + 6 more
-                    </p>
+                    <span className="text-xs font-semibold text-[var(--accent)] inline-flex items-center gap-1 group-hover:gap-1.5 transition-all flex-shrink-0">
+                      See inside
+                      <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                    </span>
                   </Link>
 
                 </div>
