@@ -8,14 +8,15 @@ import { useRouter } from 'next/navigation'
 export default function CompleteReferencePage() {
   const router = useRouter()
   const [accessLevel, setAccessLevel] = useState<string | null>(null)
+  const [bookOwner, setBookOwner] = useState(false)
   const [loading, setLoading] = useState(true)
   const [pdfLoadError, setPdfLoadError] = useState(false)
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
   const [pdfLoading, setPdfLoading] = useState(false)
 
-  // Serve directly from CDN (bypasses Vercel's 4.5 MB serverless body limit)
-  // Middleware handles auth for /docs/ paths
-  const pdfUrl = '/docs/CCM_Complete_Reference_2026.pdf'
+  // Use the API-gated download route so both paid-course users and bundle
+  // (reference + toolkit) buyers can stream the PDF.
+  const pdfUrl = '/api/reference/download'
 
   useEffect(() => {
     async function checkAccess() {
@@ -27,10 +28,10 @@ export default function CompleteReferencePage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
-            // Preview users see the locked state (builds upgrade desire)
             if (data.user.accessLevel !== 'preview') {
               setAccessLevel(data.user.accessLevel)
             }
+            if (data.user.bookOwner) setBookOwner(true)
           }
         }
       } catch (error) {
@@ -43,9 +44,10 @@ export default function CompleteReferencePage() {
     checkAccess()
   }, [router])
 
+  const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course' || bookOwner
+
   // Fetch PDF as blob to avoid iframe/CDN issues with large files
   useEffect(() => {
-    const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
     if (!hasAccess || pdfBlobUrl) return
 
     setPdfLoading(true)
@@ -68,9 +70,7 @@ export default function CompleteReferencePage() {
       if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessLevel])
-
-  const hasAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
+  }, [hasAccess])
 
   return (
     <ProtectedRoute>

@@ -58,11 +58,12 @@ export default function ReferencePage() {
           </div>
 
           {/* Visual split — BOOK on left, TOOLKIT grid on right.
-              Capped at 880px so the preview thumbnails don't stretch past their native resolution. */}
-          <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-stretch mb-10 max-w-[880px] mx-auto">
+              Capped at 880px so the preview thumbnails don't stretch past their native resolution.
+              pt-6 gives the absolute-positioned PART badges clear space from the headline above. */}
+          <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-stretch mb-10 max-w-[880px] mx-auto pt-6">
             {/* Part 1 — Book */}
             <div className="relative">
-              <div className="absolute -top-3 left-4 z-10 bg-accent text-white text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full shadow-lg">
+              <div className="absolute -top-4 left-4 z-10 bg-accent text-white text-[10px] font-bold tracking-wider uppercase px-3 py-1.5 rounded-full shadow-lg">
                 Part 1 · Reference Text
               </div>
               <div className="aspect-[3/4] rounded-2xl shadow-2xl overflow-hidden relative bg-slate-100 h-full">
@@ -74,16 +75,22 @@ export default function ReferencePage() {
                   className="object-cover"
                   priority
                 />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-5 pt-16">
-                  <p className="text-white text-sm font-bold mb-1">256 pages · Fully referenced</p>
-                  <p className="text-white/80 text-xs">Pathophysiology → assessment → phenotype-directed rehab → RTP/RTW → documentation</p>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-5 pt-20">
+                  <p className="text-white text-sm font-bold mb-2.5">256 pages · Fully referenced · 2026</p>
+                  <ul className="space-y-1 text-white/90 text-[11px] leading-tight">
+                    <li className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-orange-400 flex-shrink-0" />Pathophysiology &amp; phenotypes</li>
+                    <li className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-orange-400 flex-shrink-0" />SCAT6 · SCOAT6 · VOMS · cervical</li>
+                    <li className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-orange-400 flex-shrink-0" />Acute &amp; PPCS management</li>
+                    <li className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-orange-400 flex-shrink-0" />Return to play / school / work</li>
+                    <li className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-orange-400 flex-shrink-0" />Medico-legal documentation</li>
+                  </ul>
                 </div>
               </div>
             </div>
 
             {/* Part 2 — Toolkit grid */}
             <div className="relative">
-              <div className="absolute -top-3 left-4 z-10 bg-orange-500 text-white text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full shadow-lg">
+              <div className="absolute -top-4 left-4 z-10 bg-orange-500 text-white text-[10px] font-bold tracking-wider uppercase px-3 py-1.5 rounded-full shadow-lg">
                 Part 2 · 10-piece Toolkit
               </div>
               <div className="grid grid-cols-2 gap-3 h-full">

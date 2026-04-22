@@ -17,10 +17,28 @@ function SuccessContent() {
       setStatus('error')
       return
     }
-    // Light verification: we trust the Stripe webhook to have marked the user.
-    // Just wait briefly so the webhook has a moment to land, then surface download.
-    const t = setTimeout(() => setStatus('ok'), 1500)
-    return () => clearTimeout(t)
+    // Poll the download endpoint — once it returns 200, the webhook has
+    // flagged the user as book_owner and access is live. Usually lands in
+    // < 2 s. Fall back to a short timeout if polling fails.
+    let cancelled = false
+    const startedAt = Date.now()
+    async function poll() {
+      for (let i = 0; i < 15 && !cancelled; i++) {
+        try {
+          const res = await fetch('/api/reference/download', { method: 'HEAD' })
+          if (res.ok) { setStatus('ok'); return }
+        } catch { /* continue */ }
+        await new Promise((r) => setTimeout(r, 500))
+      }
+      if (!cancelled) {
+        // After ~7.5s without success, still show OK — user has the receipt
+        // email anyway and can retry the download
+        console.warn(`Polling took ${Date.now() - startedAt}ms without 200; showing success UI anyway`)
+        setStatus('ok')
+      }
+    }
+    poll()
+    return () => { cancelled = true }
   }, [sessionId])
 
   return (

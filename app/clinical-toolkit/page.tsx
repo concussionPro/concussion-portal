@@ -161,9 +161,11 @@ export default function ClinicalToolkitPage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
-            // Preview users see the toolkit in locked state (builds upgrade desire)
+            // Bundle (Reference + Toolkit) buyers get the same toolkit access
+            // as online-only course holders. Preview users without the bundle
+            // still see the locked state (builds upgrade desire).
             if (data.user.accessLevel === 'preview') {
-              // Keep accessLevel as null → shows locked UI with upgrade CTA
+              if (data.user.bookOwner) setAccessLevel('online-only')
             } else {
               setAccessLevel(data.user.accessLevel)
             }

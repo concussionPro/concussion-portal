@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, createJWTSession } from '@/lib/jwt-session'
-import { findUserById } from '@/lib/users'
+import { findUserById, isBookOwner } from '@/lib/users'
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
           email: user.email,
           name: user.name,
           accessLevel: user.accessLevel,
+          bookOwner: await isBookOwner(user.email),
           workshopLocation: user.workshopLocation || null,
           createdAt: user.createdAt,
           nurtureUnsubscribed: user.nurtureUnsubscribed || false,

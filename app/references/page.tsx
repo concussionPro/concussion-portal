@@ -25,9 +25,14 @@ export default function ReferencesPage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.user) {
+            // Bundle (Reference + Toolkit) buyers get the same access to the
+            // reference repository as online-only course holders.
             if (data.user.accessLevel === 'preview') {
-              setIsPreview(true)
-              // Keep accessLevel null → show locked state
+              if (data.user.bookOwner) {
+                setAccessLevel('online-only')
+              } else {
+                setIsPreview(true)
+              }
             } else {
               setAccessLevel(data.user.accessLevel)
             }

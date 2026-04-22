@@ -14,6 +14,24 @@ import { BOOK_CONFIG } from '@/lib/book'
 
 export const runtime = 'nodejs'
 
+// HEAD exists so the success page can poll for post-webhook access without
+// downloading the whole PDF every poll. Returns the same auth outcome as GET
+// but no body.
+export async function HEAD(request: NextRequest) {
+  const sessionToken = request.cookies.get('session')?.value
+  if (!sessionToken) return new NextResponse(null, { status: 401 })
+
+  const session = verifySessionToken(sessionToken)
+  if (!session) return new NextResponse(null, { status: 401 })
+
+  const hasAccess =
+    session.accessLevel === 'online-only' ||
+    session.accessLevel === 'full-course' ||
+    (await isBookOwner(session.email))
+
+  return new NextResponse(null, { status: hasAccess ? 200 : 403 })
+}
+
 export async function GET(request: NextRequest) {
   const sessionToken = request.cookies.get('session')?.value
   if (!sessionToken) {
