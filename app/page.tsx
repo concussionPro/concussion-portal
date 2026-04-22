@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Check, Star, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Check, Star, ShieldCheck, BookOpen } from 'lucide-react'
 import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { OrganizationSchema, CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
@@ -47,26 +47,29 @@ export default function HomePage() {
               Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
+            {/* CTAs — primary + secondary buttons; preview link sits on its
+                own line underneath so the button row stays visually tight. */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
               <Link
                 href="/scat-mastery"
-                className="btn-primary px-8 py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2 shadow-lg"
+                className="btn-primary px-8 py-4 rounded-xl text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg"
               >
                 Start Free SCAT6 Course
                 <ArrowRight className="w-4.5 h-4.5" />
               </Link>
               <Link
                 href="/pricing"
-                className="px-6 py-3 rounded-xl text-sm font-semibold text-[var(--foreground)] bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                className="px-6 py-4 rounded-xl text-sm font-semibold text-[var(--foreground)] bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-1.5 shadow-sm"
               >
                 Compare Pricing
               </Link>
+            </div>
+            <div className="mb-3">
               <Link
                 href="/preview"
-                className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors"
+                className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1"
               >
-                Preview course content
+                Preview course content →
               </Link>
             </div>
 
@@ -83,40 +86,69 @@ export default function HomePage() {
               </p>
             )}
 
-            {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+            {/* Quick-start options: Melbourne workshop + Reference+Toolkit
+                as compact side-by-side cards with horizontal thumbs. */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[560px]">
+              {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+                <Link
+                  href="/courses/melbourne"
+                  className="group flex items-stretch rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-orange-300 transition-all"
+                >
+                  <div className="relative w-20 flex-shrink-0 overflow-hidden">
+                    <Image
+                      src="/melbourne-workshop.jpg"
+                      alt=""
+                      fill
+                      sizes="80px"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="flex-1 p-2.5 min-w-0">
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-orange-700">
+                        Next workshop
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-slate-900 leading-tight">
+                      Melbourne · 13 Jun 2026
+                    </p>
+                    <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                      Rydges CBD · 8am–4pm
+                    </p>
+                  </div>
+                </Link>
+              )}
+
               <Link
-                href="/courses/melbourne"
-                className="mt-5 block rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-orange-300 transition-all group max-w-[560px]"
+                href="/reference"
+                className="group flex items-stretch rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-accent/40 transition-all"
               >
-                <div className="relative w-full aspect-[16/9] overflow-hidden">
+                <div className="relative w-20 flex-shrink-0 overflow-hidden bg-slate-100">
                   <Image
-                    src="/melbourne-workshop.jpg"
-                    alt="Concussion Clinical Mastery · Melbourne · June 13 2026"
+                    src="/ccm-cover.png"
+                    alt=""
                     fill
-                    sizes="(max-width: 640px) 100vw, 560px"
-                    className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                    sizes="80px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="inline-flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" aria-hidden="true" />
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-orange-700">
-                      Next workshop confirmed
+                <div className="flex-1 p-2.5 min-w-0">
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <BookOpen className="w-2.5 h-2.5 text-accent flex-shrink-0" aria-hidden="true" />
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-accent">
+                      Reference + Toolkit
                     </span>
                   </div>
-                  <p className="text-base font-bold text-slate-900 leading-tight">
-                    Melbourne · Sat 13 June 2026
+                  <p className="text-xs font-bold text-slate-900 leading-tight">
+                    256-page text + 10 tools
                   </p>
-                  <p className="text-sm text-slate-600 mt-1">
-                    Rydges Exhibition St · 8am–4pm · catered lunch included
-                  </p>
-                  <p className="text-sm font-semibold text-orange-700 mt-2 inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
-                    See the workshop
-                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                    A$97 · instant download
                   </p>
                 </div>
               </Link>
-            )}
+            </div>
 
             <p className="text-[13px] text-[var(--muted-foreground)] mt-3">
               <Link

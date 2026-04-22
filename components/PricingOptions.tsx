@@ -8,6 +8,7 @@ import {
   AlertCircle,
   BookOpen,
   Award,
+  FileText,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -306,11 +307,66 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Cards — Online Course first (primary conversion target), Complete Course as upgrade */}
-      <div className="grid md:grid-cols-2 gap-6 pt-5">
+      {/* Pricing Cards — 3-tier ladder: entry (Reference + Toolkit) → Online Course → Complete Course */}
+      <div className="grid md:grid-cols-3 gap-5 pt-5">
+
+        {/* Reference + Toolkit — entry tier (lowest price, no CPD) */}
+        <div className="card card-visible rounded-2xl p-6 md:p-7 flex flex-col relative" style={{ borderWidth: '1.5px', borderColor: 'rgba(194, 65, 12, 0.2)' }}>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+              <FileText className="w-5 h-5 text-orange-600" strokeWidth={2} />
+            </div>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+              Start here
+            </span>
+          </div>
+
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Reference + Toolkit</h3>
+          <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
+            256-page reference text plus the 2026 Clinical Toolkit. Everything you need to apply concussion care in clinic — without the CPD course.
+          </p>
+
+          <div className="mb-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">$97</span>
+              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+              <span className="text-xs text-slate-400">≈ $62 USD</span>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">one-time · lifetime access</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">Instant PDF download · No CPD points · Upgrade to course later for $100 off</p>
+          </div>
+
+          <ul className="space-y-3 mb-7 flex-1">
+            {[
+              '256-page Clinical Reference Text (PDF)',
+              'Clinical Cheat Sheet + PPCS Flowchart + Referral Map',
+              'Patient handouts + fillable letter templates',
+              'RehabFlow + RTP/RTL/RTW Ladder',
+              '12-email clinical template pack',
+              '$100 off Online Course when you upgrade',
+            ].map((feature, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <Check className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-[var(--muted-foreground)]">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          <Link
+            href="/reference"
+            className="w-full py-3.5 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm bg-orange-600 text-white hover:bg-orange-700 transition-colors"
+          >
+            Get Reference + Toolkit — $97
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+
+          <p className="text-[11px] text-[var(--muted-foreground)] mt-3 text-center italic">
+            Lowest barrier entry · Ships instantly
+          </p>
+        </div>
 
         {/* Online Course — Most Popular (primary conversion target) */}
-        <div className="card card-visible rounded-2xl p-7 md:p-8 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+        <div className="card card-visible rounded-2xl p-6 md:p-7 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
           {/* Icon + Badge */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
