@@ -368,6 +368,32 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             256-page reference text + 2026 Clinical Toolkit. Apply concussion care in clinic — without the CPD course.
           </p>
 
+          {/* Visual: reference cover + Clinical Toolkit cover */}
+          <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50/60 border border-orange-100 mb-4 h-[120px] flex items-center justify-center gap-3">
+            <div className="relative w-[72px] h-[96px] rounded-md overflow-hidden shadow-[0_6px_16px_-6px_rgba(15,23,42,0.25)] ring-1 ring-slate-200 -rotate-[5deg]">
+              <Image
+                src="/ccm-cover.png"
+                alt="Reference text cover"
+                fill
+                sizes="72px"
+                className="object-cover"
+              />
+            </div>
+            <div
+              className="relative w-[72px] h-[96px] rounded-md overflow-hidden shadow-[0_6px_16px_-6px_rgba(15,23,42,0.3)] ring-1 ring-orange-200/60 rotate-[5deg] flex flex-col items-center justify-center px-1.5"
+              style={{
+                background:
+                  'linear-gradient(135deg, #fb923c 0%, #f97316 40%, #e11d48 100%)',
+              }}
+              aria-label="Clinical Toolkit 2026 cover"
+            >
+              <p className="text-[11px] font-black tracking-wider text-white leading-[1.05] text-center">CLINICAL</p>
+              <p className="text-[11px] font-black tracking-wider text-white leading-[1.05] text-center">TOOLKIT</p>
+              <div className="w-6 h-px bg-white/70 my-1.5" />
+              <p className="text-[9px] font-semibold text-white/90 tracking-wide">2026</p>
+            </div>
+          </div>
+
           <ul className="space-y-1.5 mb-4">
             {[
               '256-page Clinical Reference',
@@ -428,6 +454,18 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
             8 comprehensive modules at your own pace. Upgrade to add hands-on training anytime.
           </p>
+
+          {/* Visual: course interface preview */}
+          <div className="relative rounded-xl overflow-hidden border border-teal-100 mb-4 h-[120px] bg-white">
+            <Image
+              src="/online-course-preview.jpg"
+              alt="Online course interface preview"
+              fill
+              sizes="(min-width: 1024px) 340px, 100vw"
+              className="object-cover object-top"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/40 pointer-events-none" aria-hidden="true" />
+          </div>
 
           {/* 2-col feature bento */}
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-5">
