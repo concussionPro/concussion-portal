@@ -334,16 +334,12 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Cards — 3 side-by-side bento tiles.
-          Controlled staircase: top-aligned with a fixed margin-top step
-          on each card (mt-16 / mt-8 / mt-0) so the tops step up
-          left→right in even increments regardless of card content height.
-          Column widths staircase subtly too (5:6:7). */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)_minmax(0,7fr)] gap-5 pt-5 items-start">
+      {/* Pricing Cards — 3 equal-width bento tiles, top-aligned. */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-start">
 
-        {/* ── Reference + Toolkit — entry tier (bottom step) ── */}
+        {/* ── Reference + Toolkit — entry tier ────────────── */}
         <div
-          className="card rounded-2xl p-5 md:p-6 flex flex-col relative lg:mt-16"
+          className="card rounded-2xl p-5 md:p-6 flex flex-col relative"
           style={{ borderWidth: '1.5px', borderColor: 'rgba(194, 65, 12, 0.2)' }}
         >
           {/* Header row: badge left, price right */}
@@ -394,9 +390,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </Link>
         </div>
 
-        {/* ── Online Course — Most Popular (middle step) ── */}
+        {/* ── Online Course — Most Popular ────────────────── */}
         <div
-          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative lg:mt-8"
+          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
           style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}
         >
           {/* Header row: badge left, price right */}
@@ -471,7 +467,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </Link>
         </div>
 
-        {/* ── Complete Course — + Hands-on Workshop (top step) ── */}
+        {/* ── Complete Course — + Hands-on Workshop ────────── */}
         <div className="card rounded-2xl p-5 md:p-6 flex flex-col relative">
           {/* Header row: badge left, price right */}
           <div className="flex items-start justify-between gap-3 mb-4">
