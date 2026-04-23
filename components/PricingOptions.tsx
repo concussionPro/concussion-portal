@@ -334,14 +334,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Cards — 3 side-by-side bento tiles, marginally
-          different widths (5:6:7 ratio) so cheapest is subtly smaller
-          and most expensive subtly larger. Heights are natural. */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)_minmax(0,7fr)] gap-5 pt-5 items-start">
+      {/* Pricing Cards — 3 side-by-side bento tiles.
+          Staircase UP left→right via self-alignment: cheapest bottom,
+          middle centered, most expensive top. Column widths staircase
+          subtly too (5:6:7). Children set self-end / self-center /
+          self-start so the tops of the cards step up. */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)_minmax(0,7fr)] gap-5 pt-5 items-stretch">
 
-        {/* ── Reference + Toolkit — entry tier ────────────── */}
+        {/* ── Reference + Toolkit — entry tier (bottom of staircase) ── */}
         <div
-          className="card rounded-2xl p-5 md:p-6 flex flex-col relative"
+          className="card rounded-2xl p-5 md:p-6 flex flex-col relative lg:self-end"
           style={{ borderWidth: '1.5px', borderColor: 'rgba(194, 65, 12, 0.2)' }}
         >
           {/* Header row: badge left, price right */}
@@ -392,9 +394,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </Link>
         </div>
 
-        {/* ── Online Course — Most Popular ────────────────── */}
+        {/* ── Online Course — Most Popular (middle of staircase) ── */}
         <div
-          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
+          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative lg:self-center"
           style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}
         >
           {/* Header row: badge left, price right */}
@@ -469,8 +471,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </Link>
         </div>
 
-        {/* ── Complete Course — + Hands-on Workshop ────────── */}
-        <div className="card rounded-2xl p-5 md:p-6 flex flex-col relative">
+        {/* ── Complete Course — + Hands-on Workshop (top of staircase) ── */}
+        <div className="card rounded-2xl p-5 md:p-6 flex flex-col relative lg:self-start">
           {/* Header row: badge left, price right */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-2.5 min-w-0">
