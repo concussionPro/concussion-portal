@@ -6,6 +6,7 @@ import { ArrowRight, Check, Star, ShieldCheck, BookOpen } from 'lucide-react'
 import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { OrganizationSchema, CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
+import { OtherCityInterest } from '@/components/OtherCityInterest'
 import { trackShopClick } from '@/lib/analytics'
 
 export default function HomePage() {
@@ -163,6 +164,9 @@ export default function HomePage() {
                       </div>
                     </Link>
                   )}
+
+                  {/* Register interest for other cities */}
+                  <OtherCityInterest />
 
                   {/* Reference + Toolkit — richer offer card */}
                   <Link
