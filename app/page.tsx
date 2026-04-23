@@ -234,12 +234,14 @@ export default function HomePage() {
                     </div>
 
                     {/* CTA button */}
-                    <div className="relative flex items-center justify-between gap-3 pt-3 border-t border-slate-200/70">
-                      <span className="text-[11px] text-slate-500 italic">Stop here, or stack with the course</span>
-                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] group-hover:gap-2 transition-all">
-                        See what&apos;s inside
-                        <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                      </span>
+                    <div className="relative pt-3 border-t border-slate-200/70">
+                      <div className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-bold shadow-sm group-hover:bg-[#0b6165] group-hover:shadow-md transition-all">
+                        Get Reference + Toolkit — A$97
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                      </div>
+                      <p className="text-[11px] text-slate-500 italic text-center mt-2">
+                        Start here · stack the course anytime
+                      </p>
                     </div>
                   </Link>
 
