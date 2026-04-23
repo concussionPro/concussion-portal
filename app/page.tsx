@@ -176,9 +176,16 @@ export default function HomePage() {
                     <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-[var(--accent)]/10 blur-2xl pointer-events-none" aria-hidden="true" />
 
                     <div className="relative flex items-start justify-between gap-3 mb-4">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#0b6165] flex items-center justify-center shadow-md flex-shrink-0">
-                          <BookOpen className="w-4 h-4 text-white" strokeWidth={2.2} aria-hidden="true" />
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* PDF cover thumbnail */}
+                        <div className="relative w-[44px] h-[60px] rounded-md overflow-hidden bg-slate-100 shadow-[0_4px_12px_-4px_rgba(15,23,42,0.25)] ring-1 ring-slate-200 flex-shrink-0">
+                          <Image
+                            src="/ccm-cover.png"
+                            alt="Concussion Clinical Mastery reference text cover"
+                            fill
+                            sizes="44px"
+                            className="object-cover"
+                          />
                         </div>
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent)]">
