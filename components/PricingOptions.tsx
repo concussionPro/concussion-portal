@@ -335,9 +335,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       )}
 
       {/* Pricing Cards — 3 side-by-side bento tiles.
-          items-start so tops align and bottoms staircase down left→right
-          (entry tier is shortest at bottom-left, Complete Course is tallest). */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-start">
+          Columns use a 3:4:5 ratio so cards scale with price: Reference+Toolkit
+          smallest (cheapest), Online Course medium, Complete Course widest. */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,5fr)] gap-5 pt-5 items-start">
 
         {/* ── Reference + Toolkit — entry tier ────────────── */}
         <div
@@ -368,15 +368,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             256-page reference text + 2026 Clinical Toolkit. Apply concussion care in clinic — without the CPD course.
           </p>
 
-          {/* 2-col feature bento */}
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-5 flex-1">
+          {/* Single-column features (narrow column) */}
+          <ul className="space-y-1.5 mb-5 flex-1">
             {[
-              '256-page reference',
-              'Cheat Sheet · PPCS',
-              'Referral Map',
-              'RehabFlow + RTP ladder',
-              'Patient handouts',
-              '$100 off course later',
+              '256-page Clinical Reference',
+              'Cheat Sheet · PPCS · Referral Map',
+              'RehabFlow + RTP/RTL/RTW ladder',
+              'Patient handouts + templates',
+              '$100 off course on upgrade',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">
                 <Check className="w-3 h-3 text-orange-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
