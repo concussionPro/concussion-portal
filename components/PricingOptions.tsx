@@ -335,9 +335,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       )}
 
       {/* Pricing Cards — 3 side-by-side bento tiles.
-          items-end so cards staircase up left→right: entry tier is
-          shortest, Complete Course is tallest. */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-end">
+          items-start so tops align and bottoms staircase down left→right
+          (entry tier is shortest at bottom-left, Complete Course is tallest). */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-start">
 
         {/* ── Reference + Toolkit — entry tier ────────────── */}
         <div
