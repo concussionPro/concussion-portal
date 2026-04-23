@@ -51,24 +51,27 @@ export async function POST(request: NextRequest) {
 
   try {
     // Candidates: email_ids that were delivered in the window but don't yet
-    // have an opened/clicked row. Ordered newest first so a partial run
-    // prioritises the freshest data.
+    // have an opened/clicked row. Newest first so partial runs hit the most
+    // recent emails (most likely to carry open/click data, especially when
+    // tracking was only recently enabled).
     const { rows: candidates } = await sql<{ email_id: string; recipient: string; subject: string | null; sequence: string | null; day: string | null }>`
-      SELECT DISTINCT ON (d.email_id)
-        d.email_id,
-        d.recipient,
-        d.subject,
-        d.sequence,
-        d.day
-      FROM email_events d
-      WHERE d.event_type = 'delivered'
-        AND d.created_at >= NOW() - (${days} || ' days')::INTERVAL
+      SELECT
+        email_id,
+        (ARRAY_AGG(recipient ORDER BY created_at DESC))[1] AS recipient,
+        (ARRAY_AGG(subject   ORDER BY created_at DESC))[1] AS subject,
+        (ARRAY_AGG(sequence  ORDER BY created_at DESC))[1] AS sequence,
+        (ARRAY_AGG(day       ORDER BY created_at DESC))[1] AS day,
+        MAX(created_at) AS latest_at
+      FROM email_events
+      WHERE event_type = 'delivered'
+        AND created_at >= NOW() - (${days} || ' days')::INTERVAL
         AND NOT EXISTS (
           SELECT 1 FROM email_events e
-          WHERE e.email_id = d.email_id
+          WHERE e.email_id = email_events.email_id
             AND e.event_type IN ('opened', 'clicked')
         )
-      ORDER BY d.email_id, d.created_at DESC
+      GROUP BY email_id
+      ORDER BY latest_at DESC
       LIMIT ${MAX_EMAILS_PER_RUN}
     `
 
