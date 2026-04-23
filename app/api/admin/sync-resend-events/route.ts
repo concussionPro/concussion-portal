@@ -22,8 +22,14 @@ import { getResend } from '@/lib/resend-client'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-const SLEEP_MS = 400
-const MAX_EMAILS_PER_RUN = 300
+// Process N calls in parallel per batch, then pause BATCH_PAUSE_MS.
+// Resend's API limit is 2 rps on the write path but much higher on reads
+// (emails.get). 5 parallel × 500ms pause ≈ 10 rps, well-behaved.
+const BATCH_SIZE = 5
+const BATCH_PAUSE_MS = 500
+// Cap at a size that comfortably fits under Vercel's 60s maxDuration even with
+// network latency. (150/5)*500ms = 15s of sleeps + ~15s of parallel network.
+const MAX_EMAILS_PER_RUN = 150
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms))
@@ -71,9 +77,11 @@ export async function POST(request: NextRequest) {
     let skipped = 0
     let errors = 0
 
-    for (const c of candidates) {
+    type Candidate = typeof candidates[number]
+
+    async function processOne(c: Candidate) {
       try {
-        const res = await resend.emails.get(c.email_id)
+        const res = await resend!.emails.get(c.email_id)
         const last = res.data?.last_event
         if (last === 'clicked') {
           await sql`
@@ -99,7 +107,12 @@ export async function POST(request: NextRequest) {
         errors++
         console.error(`[sync-resend-events] failed for ${c.email_id}:`, e)
       }
-      await sleep(SLEEP_MS)
+    }
+
+    for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+      const batch = candidates.slice(i, i + BATCH_SIZE)
+      await Promise.all(batch.map(processOne))
+      if (i + BATCH_SIZE < candidates.length) await sleep(BATCH_PAUSE_MS)
     }
 
     return NextResponse.json({

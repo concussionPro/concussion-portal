@@ -113,10 +113,22 @@ export default function EmailAnalyticsPage() {
     setSyncing(true)
     setSyncMsg(null)
     try {
-      const r = await fetch(`/api/admin/sync-resend-events?days=${days}`, {
+      const resp = await fetch(`/api/admin/sync-resend-events?days=${days}`, {
         method: 'POST',
         cache: 'no-store',
-      }).then((r) => r.json())
+      })
+      const text = await resp.text()
+      // Vercel returns an HTML error page on 504/timeout — parse defensively
+      if (text.startsWith('<')) {
+        if (resp.status === 504) {
+          setSyncMsg('Sync timed out — click Sync again to process the next batch.')
+          await load()
+        } else {
+          setSyncMsg(`Sync failed (HTTP ${resp.status}). Check server logs.`)
+        }
+        return
+      }
+      const r = JSON.parse(text)
       if (r.error) {
         setSyncMsg(`Sync failed: ${r.error}`)
       } else {
