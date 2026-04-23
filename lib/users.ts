@@ -17,6 +17,7 @@ export interface User {
   signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace'
   convertedFrom?: string  // original signup source before upgrade
   isTest?: boolean
+  referenceBookPurchasedAt?: string
 }
 
 /** Map a snake_case DB row to a camelCase User object */
@@ -39,6 +40,9 @@ function rowToUser(row: any): User {
     signupSource: row.signup_source || undefined,
     convertedFrom: row.converted_from || undefined,
     isTest: row.is_test || undefined,
+    referenceBookPurchasedAt: row.reference_book_purchased_at
+      ? (row.reference_book_purchased_at instanceof Date ? row.reference_book_purchased_at.toISOString() : row.reference_book_purchased_at)
+      : undefined,
   }
 }
 

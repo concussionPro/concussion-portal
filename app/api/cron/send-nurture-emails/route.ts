@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE } from '@/lib/email-sequences'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE } from '@/lib/email-sequences'
 import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
@@ -718,6 +718,54 @@ export async function GET(request: Request) {
         }
       } catch (err) {
         console.error(`[Free Almost Done] Failed for ${redact(user.email)}:`, err)
+      }
+    }
+
+    // ── 10. Reference+Toolkit → Course Upgrade Funnel ──
+    // Users who bought the book but haven't bought the course. The A$100
+    // bundle credit is already auto-applied server-side at checkout — these
+    // emails just surface the offer. Stops automatically if they upgrade
+    // (accessLevel changes) or unsubscribe.
+    for (const user of users) {
+      if (user.accessLevel !== 'preview') continue // upgraded → stop
+      if (user.nurtureUnsubscribed) continue
+      if (!user.referenceBookPurchasedAt) continue
+
+      const purchaseDate = new Date(user.referenceBookPurchasedAt)
+      const daysSincePurchase = Math.floor((now.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24))
+
+      const candidate = REFERENCE_UPGRADE_SEQUENCE.find((e) => e.day === daysSincePurchase)
+      if (!candidate) continue
+
+      const auditKey = `ref_upgrade_day${candidate.day}_${user.id}`
+      const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+      if (!inserted || inserted === 0) continue
+
+      const pricingLink = `${baseUrl}/pricing`
+      const unsubToken = generateUnsubscribeToken(user.email)
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+      try {
+        const html = candidate.template(user.name || 'there', pricingLink)
+          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+        await sendEmail({
+          to: user.email,
+          subject: candidate.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'reference-upgrade' },
+            { name: 'day', value: String(candidate.day) },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        })
+        emailsSent++
+        console.log(`[Reference Upgrade] Day ${candidate.day} → ${redact(user.email)}`)
+      } catch (err) {
+        console.error(`[Reference Upgrade] Failed for ${redact(user.email)}:`, err)
+        errors.push(`ref-upgrade day${candidate.day}: ${(err as Error).message}`)
       }
     }
 

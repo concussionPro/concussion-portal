@@ -844,6 +844,95 @@ export const FREE_ALMOST_DONE = {
  * "Almost Done" Email — sent when a user has completed 7 of 8 modules.
  * One-time nudge to finish the last module and earn their certificate.
  */
+// ─── Reference+Toolkit owners → course upgrade funnel ───────────────────────
+// Applies to users with reference_book_purchased_at set AND accessLevel='preview'
+// (i.e. they own the book but haven't bought the course). They already get
+// A$100 off the course auto-applied at checkout — these emails just remind
+// them it's sitting there. Sequence stops if they upgrade to online-only or
+// full-course.
+export const REFERENCE_UPGRADE_SEQUENCE = [
+  {
+    day: 2,
+    subject: 'Getting the most out of your reference text',
+    template: (name: string, pricingLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>Hope you've had a chance to open the reference. Most clinicians who buy it tell me the same thing — it's denser than they expected. A quick map of where to start:</p>
+      <ul>
+        <li><strong>Ch. 1–3</strong> — neuroscience, presentation, red flags. Read first if you see acute injuries.</li>
+        <li><strong>Ch. 5 + Clinical Toolkit cheat sheet</strong> — SCAT6 / VOMS in under 15 minutes. Print it.</li>
+        <li><strong>Ch. 8 + Toolkit RTP/RTL/RTW ladder</strong> — when you have to write a clearance letter today.</li>
+        <li><strong>Ch. 11 (PPCS)</strong> — the chapter I get the most reply-emails about.</li>
+      </ul>
+      <p>The text was written to stand alone — use it, apply it, see what happens in clinic.</p>
+      <p class="ps">P.S. No pitch in this one. Read the book first. I'll check in again in a week.</p>
+      <div class="sig">Zac</div>
+    `),
+  },
+
+  {
+    day: 9,
+    subject: "You have A$100 credit sitting on your account",
+    template: (name: string, pricingLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>A week in. Quick heads-up — because you bought the Reference + Toolkit, there's an <strong>A$100 credit</strong> automatically waiting for you on the full course.</p>
+      <p>No code to remember. Log in with this email and the discount is already applied at the checkout screen — you'll see the strike-through.</p>
+      <div class="callout">
+        <strong>What the course adds on top of the text:</strong><br>
+        &#8226; 8 video modules with clinical demonstrations (the VOMS and cervical screens especially)<br>
+        &#8226; Case-based walkthroughs — watch me reason through real patient presentations<br>
+        &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD points and a certificate<br>
+        &#8226; Optional Melbourne workshop for hands-on practice (6 more CPD points)
+      </div>
+      <center><a href="${utm(pricingLink, 'ref_upgrade_d9', 'bundle_credit')}" class="cta-btn">See Your Discounted Price</a></center>
+      <p class="ps">P.S. The credit doesn't expire — but early-bird workshop pricing does (${escapeHtml(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)}).</p>
+      <div class="sig">Zac</div>
+    `),
+  },
+
+  {
+    day: 21,
+    subject: 'Book vs. course — honest comparison',
+    template: (name: string, pricingLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>Clinicians ask me this weekly: "I have the book. Do I still need the course?"</p>
+      <p>Honest answer — depends on how you learn.</p>
+      <p><strong>You're fine with just the reference if:</strong></p>
+      <ul>
+        <li>You're already confident assessing and happy applying from written protocols</li>
+        <li>You don't need CPD points this cycle</li>
+        <li>You rarely see concussion cases — the text is a reliable desk reference</li>
+      </ul>
+      <p><strong>The course pays back quickly if:</strong></p>
+      <ul>
+        <li>You've read the VOMS chapter and still aren't sure if you're <em>doing</em> it right (most common)</li>
+        <li>You need CPD points and want them in one structured block</li>
+        <li>You want the confidence of watching it done before attempting it yourself</li>
+      </ul>
+      <p>With the A$100 bundle credit, the online course is <strong>A$${CONFIG.COURSE.PRICE_ONLINE - 100}</strong> — about the cost of one private consult. Full course (online + Melbourne workshop) drops to <strong>A$${CONFIG.COURSE.PRICE_EARLY_BIRD - 100}</strong> at early-bird pricing.</p>
+      <center><a href="${utm(pricingLink, 'ref_upgrade_d21', 'comparison')}" class="cta-btn">View Course Options</a></center>
+      <div class="sig">Zac</div>
+    `),
+  },
+
+  {
+    day: 35,
+    subject: "Last reminder — your A$100 credit is still there",
+    template: (name: string, pricingLink: string) => emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+      <p>Five weeks since you picked up the reference text. Final note from me on the upgrade path, then I'll leave you alone.</p>
+      <p>Your A$100 Reference+Toolkit credit is still auto-applied if you ever decide to pick up the course — log in with this email, the discount appears at checkout.</p>
+      ${nextWorkshopCallout()}
+      <center><a href="${utm(pricingLink, 'ref_upgrade_d35', 'last_reminder')}" class="cta-btn">See Course Options</a></center>
+      <p>No more sales emails from me after this one. Happy to keep sending clinical updates if you find them useful.</p>
+      <p>If the book's served you and you don't need the course, that's a great outcome too.</p>
+      <div class="sig">
+        Zac Lewis<br>
+        Concussion Education Australia
+      </div>
+    `),
+  },
+]
+
 export const ALMOST_DONE_EMAIL = {
   subject: "You're one module away from your certificate",
   template: (name: string, loginLink: string) => emailShell(`
