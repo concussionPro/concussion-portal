@@ -334,285 +334,279 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Rows — 3-tier ladder as horizontal wide panels */}
-      <div className="space-y-4 pt-5">
+      {/* Pricing Cards — 3 side-by-side bento tiles */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-stretch">
 
         {/* ── Reference + Toolkit — entry tier ────────────── */}
         <div
-          className="card card-visible rounded-2xl overflow-hidden flex flex-col lg:flex-row"
+          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
           style={{ borderWidth: '1.5px', borderColor: 'rgba(194, 65, 12, 0.2)' }}
         >
-          {/* Left: identity */}
-          <div className="lg:w-[30%] p-5 md:p-6 lg:border-r border-b lg:border-b-0 border-slate-100">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+          {/* Header row: badge left, price right */}
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
                 <FileText className="w-4.5 h-4.5 text-orange-600" strokeWidth={2} />
               </div>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
                 Start here
               </span>
             </div>
-            <h3 className="text-xl font-bold text-[var(--foreground)] mb-1">Reference + Toolkit</h3>
-            <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">
-              256-page reference text + 2026 Clinical Toolkit. Apply concussion care in clinic — without the CPD course.
-            </p>
-          </div>
-
-          {/* Middle: what's included */}
-          <div className="lg:w-[42%] p-5 md:p-6 lg:border-r border-b lg:border-b-0 border-slate-100">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-3">Includes</p>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-              {[
-                '256-page Clinical Reference',
-                'Cheat Sheet · PPCS Flow',
-                'Referral Map + RehabFlow',
-                'RTP / RTL / RTW Ladder',
-                'Patient handouts + templates',
-                '$100 off course on upgrade',
-              ].map((feature, i) => (
-                <li key={i} className="flex items-start gap-2 text-[13px]">
-                  <Check className="w-3.5 h-3.5 text-orange-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span className="text-[var(--muted-foreground)]">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Right: price + CTA */}
-          <div className="lg:w-[28%] p-5 md:p-6 bg-gradient-to-br from-orange-50/40 to-amber-50/30 flex flex-col justify-center">
-            <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">$97</span>
-              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
+            <div className="text-right flex-shrink-0">
+              <div className="flex items-baseline gap-1 justify-end">
+                <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">$97</span>
+                <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+              </div>
+              <p className="text-[10px] text-[var(--muted-foreground)]">Instant PDF</p>
             </div>
-            <p className="text-[11px] text-[var(--muted-foreground)] mb-4">Instant PDF · Lifetime access</p>
-            <Link
-              href="/reference"
-              className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm bg-orange-600 text-white hover:bg-orange-700 transition-colors"
-            >
-              Get Reference + Toolkit
-              <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
+
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-1.5">Reference + Toolkit</h3>
+          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
+            256-page reference text + 2026 Clinical Toolkit. Apply concussion care in clinic — without the CPD course.
+          </p>
+
+          {/* 2-col feature bento */}
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-5 flex-1">
+            {[
+              '256-page reference',
+              'Cheat Sheet · PPCS',
+              'Referral Map',
+              'RehabFlow + RTP ladder',
+              'Patient handouts',
+              '$100 off course later',
+            ].map((feature, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[12px]">
+                <Check className="w-3 h-3 text-orange-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-[var(--muted-foreground)]">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          <Link
+            href="/reference"
+            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm bg-orange-600 text-white hover:bg-orange-700 transition-colors"
+          >
+            Get Reference + Toolkit
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
 
         {/* ── Online Course — Most Popular ────────────────── */}
         <div
-          className="card card-visible rounded-2xl overflow-hidden flex flex-col lg:flex-row relative"
+          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
           style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}
         >
-          {/* Left: identity */}
-          <div className="lg:w-[30%] p-5 md:p-6 lg:border-r border-b lg:border-b-0 border-slate-100">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
+          {/* Header row: badge left, price right */}
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50 flex-shrink-0">
                 <BookOpen className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
               </div>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
                 Most Popular
               </span>
             </div>
-            <h3 className="text-xl font-bold text-[var(--foreground)] mb-1">Online Course</h3>
-            <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">
-              8 comprehensive modules at your own pace. Upgrade to add hands-on training anytime.
-            </p>
-            <Link
-              href="/preview"
-              className="inline-flex items-center gap-1 text-[12px] text-[var(--accent)] hover:underline font-medium mt-3"
-            >
-              Preview course content →
-            </Link>
-          </div>
-
-          {/* Middle: what's included */}
-          <div className="lg:w-[42%] p-5 md:p-6 lg:border-r border-b lg:border-b-0 border-slate-100">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-3">Includes</p>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-              {[
-                '8 online modules · 8 CPD points',
-                'Pathophysiology & phenotypes',
-                'VOMS, BESS & SCAT6 in depth',
-                'Clinical Toolkit + downloads',
-                'Lifetime access · content updates',
-                'Upgrade to add workshop anytime',
-              ].map((feature, i) => (
-                <li key={i} className="flex items-start gap-2 text-[13px]">
-                  <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span className="text-[var(--muted-foreground)]">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Right: price + CTA */}
-          <div className="lg:w-[28%] p-5 md:p-6 bg-gradient-to-br from-teal-50/40 to-emerald-50/30 flex flex-col justify-center">
-            {bookOwner && (
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_ONLINE}</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                  Bundle −${BUNDLE_DISCOUNT}
-                </span>
-              </div>
-            )}
-            <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${onlinePrice}</span>
-              <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
-            </div>
-            <p className="text-[11px] text-slate-500 mb-0.5">or 4 x ${afterpayInstalment(onlinePrice)} with Afterpay / Klarna</p>
-            <p className="text-[11px] text-[var(--muted-foreground)] mb-4">
-              Lifetime · 8 CPD points
-              {bookOwner && <span className="text-orange-700 font-medium"> · Bundle credit applied</span>}
-            </p>
-            <button
-              onClick={() => handleCheckout('online-only')}
-              disabled={loading !== null}
-              className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
-            >
-              {loading === 'online-only' ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  Enrol Now — ${onlinePrice}
-                  <ArrowRight className="w-4 h-4" />
-                </>
+            <div className="text-right flex-shrink-0">
+              {bookOwner && (
+                <div className="flex items-center gap-1.5 justify-end mb-0.5">
+                  <span className="text-[11px] text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_ONLINE}</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                    −${BUNDLE_DISCOUNT}
+                  </span>
+                </div>
               )}
-            </button>
+              <div className="flex items-baseline gap-1 justify-end">
+                <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${onlinePrice}</span>
+                <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+              </div>
+              <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(onlinePrice)}</p>
+            </div>
           </div>
+
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-1.5">Online Course</h3>
+          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
+            8 comprehensive modules at your own pace. Upgrade to add hands-on training anytime.
+          </p>
+
+          {/* 2-col feature bento */}
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-5 flex-1">
+            {[
+              '8 modules · 8 CPD',
+              'VOMS, BESS & SCAT6',
+              'Pathophysiology',
+              'Clinical Toolkit',
+              'Lifetime access',
+              'Workshop upgrade',
+            ].map((feature, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[12px]">
+                <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-[var(--muted-foreground)]">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            onClick={() => handleCheckout('online-only')}
+            disabled={loading !== null}
+            className="btn-primary w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+          >
+            {loading === 'online-only' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                Enrol Now — ${onlinePrice}
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+
+          <Link
+            href="/preview"
+            className="text-[12px] text-[var(--muted-foreground)] hover:text-[var(--accent)] font-medium text-center mt-2.5 transition-colors"
+          >
+            Preview course content →
+          </Link>
         </div>
 
         {/* ── Complete Course — + Hands-on Workshop ────────── */}
-        <div className="card rounded-2xl overflow-hidden flex flex-col lg:flex-row">
-          {/* Left: identity */}
-          <div className="lg:w-[30%] p-5 md:p-6 lg:border-r border-b lg:border-b-0 border-slate-100">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+        <div className="card rounded-2xl p-5 md:p-6 flex flex-col relative">
+          {/* Header row: badge left, price right */}
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
                 <Award className="w-4.5 h-4.5 text-orange-500" strokeWidth={2} />
               </div>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                + Hands-On Workshop
+                + Workshop
               </span>
             </div>
-            <h3 className="text-xl font-bold text-[var(--foreground)] mb-1">Complete Course</h3>
-            <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">
-              Online course + full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback.
-            </p>
-            {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
-              <div className="mt-3 rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-2.5">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
-                    Next workshop confirmed
-                  </p>
-                </div>
-                <p className="text-[12px] font-bold text-slate-900 leading-tight">
-                  Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
-                </p>
-                <p className="text-[11px] text-slate-700 leading-snug">
-                  Rydges Exhibition St · 8am–4pm · catered
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Middle: what's included + location picker */}
-          <div className="lg:w-[42%] p-5 md:p-6 lg:border-r border-b lg:border-b-0 border-slate-100">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-3">Includes</p>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mb-4">
-              {[
-                'Everything in Online',
-                'Full-day workshop · +6 CPD',
-                'SCAT6, VOMS & BESS hands-on',
-                'Expert coaching · 1:1 feedback',
-                '14 AHPRA CPD points total',
-                'Sydney & Byron Bay on demand',
-              ].map((feature, i) => (
-                <li key={i} className="flex items-start gap-2 text-[13px]">
-                  <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span className="text-[var(--muted-foreground)]">{feature}</span>
-                </li>
-              ))}
-            </ul>
-            <div>
-              <p className="text-[11px] font-semibold text-[var(--foreground)] mb-1.5">Preferred workshop city</p>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { slug: 'sydney', label: 'Sydney' },
-                  { slug: 'melbourne', label: 'Melbourne' },
-                  { slug: 'byron-bay', label: 'Byron Bay' },
-                ].map(city => (
-                  <button
-                    key={city.slug}
-                    type="button"
-                    onClick={() => setSelectedLocation(selectedLocation === city.slug ? null : city.slug)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
-                      selectedLocation === city.slug
-                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                        : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
-                    }`}
-                  >
-                    {city.label}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setSelectedLocation(null)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
-                    selectedLocation === null
-                      ? 'bg-slate-100 text-[var(--foreground)] border-slate-300'
-                      : 'bg-white text-[var(--muted-foreground)] border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  Choose later
-                </button>
-              </div>
+            <div className="text-right flex-shrink-0">
+              {isEarlyBird ? (
+                <>
+                  <div className="flex items-center gap-1.5 justify-end mb-0.5">
+                    <span className="text-[11px] text-[var(--muted-foreground)] line-through">${(bookOwner ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                      {bookOwner ? `−$${BUNDLE_DISCOUNT}` : `−$${CONFIG.COURSE.SAVINGS}`}
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1 justify-end">
+                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
+                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+                  </div>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
+                </>
+              ) : (
+                <>
+                  {bookOwner && (
+                    <div className="flex items-center gap-1.5 justify-end mb-0.5">
+                      <span className="text-[11px] text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">−${BUNDLE_DISCOUNT}</span>
+                    </div>
+                  )}
+                  <div className="flex items-baseline gap-1 justify-end">
+                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
+                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+                  </div>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Right: price + CTA */}
-          <div className="lg:w-[28%] p-5 md:p-6 bg-gradient-to-br from-orange-50/40 to-amber-50/30 flex flex-col justify-center">
-            {isEarlyBird ? (
-              <>
-                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                  <span className="text-sm text-[var(--muted-foreground)] line-through">${(bookOwner ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                    {bookOwner ? `Bundle −$${BUNDLE_DISCOUNT}` : `Save $${CONFIG.COURSE.SAVINGS}`}
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-1.5 mb-1">
-                  <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
-                  <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
-                </div>
-                <p className="text-[11px] text-slate-500 mb-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay / Klarna</p>
-                <p className="text-[11px] text-orange-600 font-medium mb-4">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
-              </>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-1.5">Complete Course</h3>
+          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
+            Online course + full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback.
+          </p>
+
+          {/* Melbourne workshop mini-tile */}
+          {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
+            <div className="rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-2.5 mb-4">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
+                <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                  Next workshop confirmed
+                </p>
+              </div>
+              <p className="text-[12px] font-bold text-slate-900 leading-tight">
+                Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date} · Rydges CBD
+              </p>
+            </div>
+          )}
+
+          {/* 2-col feature bento */}
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4 flex-1">
+            {[
+              'Everything in Online',
+              'Full-day workshop',
+              'SCAT6, VOMS, BESS',
+              '1:1 expert feedback',
+              '14 AHPRA CPD',
+              'AU locations',
+            ].map((feature, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[12px]">
+                <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-[var(--muted-foreground)]">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Compact location picker */}
+          <div className="mb-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">City</p>
+            <div className="flex flex-wrap gap-1">
+              {[
+                { slug: 'sydney', label: 'Sydney' },
+                { slug: 'melbourne', label: 'Melbourne' },
+                { slug: 'byron-bay', label: 'Byron' },
+              ].map(city => (
+                <button
+                  key={city.slug}
+                  type="button"
+                  onClick={() => setSelectedLocation(selectedLocation === city.slug ? null : city.slug)}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                    selectedLocation === city.slug
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
+                  }`}
+                >
+                  {city.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSelectedLocation(null)}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                  selectedLocation === null
+                    ? 'bg-slate-100 text-[var(--foreground)] border-slate-300'
+                    : 'bg-white text-[var(--muted-foreground)] border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                Later
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleCheckout('full-course')}
+            disabled={loading !== null}
+            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
+          >
+            {loading === 'full-course' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                {bookOwner && (
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
-                  </div>
-                )}
-                <div className="flex items-baseline gap-1.5 mb-1">
-                  <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
-                  <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
-                </div>
-                <p className="text-[11px] text-slate-500 mb-4">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay / Klarna</p>
+                Enrol Now — ${fullCoursePrice.toLocaleString()}
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
-            <button
-              onClick={() => handleCheckout('full-course')}
-              disabled={loading !== null}
-              className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
-            >
-              {loading === 'full-course' ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  Enrol Now — ${fullCoursePrice.toLocaleString()}
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </div>
+          </button>
+
+          {isEarlyBird && (
+            <p className="text-[10px] text-orange-600 font-medium text-center mt-2">
+              Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — then ${CONFIG.COURSE.PRICE_REGULAR}
+            </p>
+          )}
         </div>
       </div>
 
