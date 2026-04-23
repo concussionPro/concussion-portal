@@ -177,21 +177,32 @@ export default function HomePage() {
 
                     <div className="relative flex items-start justify-between gap-3 mb-4">
                       <div className="flex items-center gap-3 min-w-0">
-                        {/* PDF cover thumbnail */}
-                        <div className="relative w-[44px] h-[60px] rounded-md overflow-hidden bg-slate-100 shadow-[0_4px_12px_-4px_rgba(15,23,42,0.25)] ring-1 ring-slate-200 flex-shrink-0">
-                          <Image
-                            src="/ccm-cover.png"
-                            alt="Concussion Clinical Mastery reference text cover"
-                            fill
-                            sizes="44px"
-                            className="object-cover"
-                          />
+                        {/* Stacked thumbnails: reference cover + toolkit cheat sheet */}
+                        <div className="relative w-[62px] h-[60px] flex-shrink-0">
+                          <div className="absolute left-0 top-0 w-[44px] h-[60px] rounded-md overflow-hidden bg-slate-100 shadow-[0_4px_12px_-4px_rgba(15,23,42,0.25)] ring-1 ring-slate-200 -rotate-[4deg] origin-bottom-left">
+                            <Image
+                              src="/ccm-cover.png"
+                              alt="Reference text cover"
+                              fill
+                              sizes="44px"
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="absolute left-[16px] top-0 w-[44px] h-[60px] rounded-md overflow-hidden bg-white shadow-[0_4px_12px_-4px_rgba(15,23,42,0.25)] ring-1 ring-slate-200 rotate-[4deg] origin-bottom-right">
+                            <Image
+                              src="/toolkit-previews/01_cheat_sheet.png"
+                              alt="Clinical toolkit cheat sheet"
+                              fill
+                              sizes="44px"
+                              className="object-cover object-top"
+                            />
+                          </div>
                         </div>
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent)]">
                             Reference + Toolkit
                           </p>
-                          <p className="text-[11px] text-slate-600 font-medium">Instant PDF bundle</p>
+                          <p className="text-[11px] text-slate-600 font-medium">Book + Clinical Toolkit</p>
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-right">

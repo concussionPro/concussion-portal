@@ -334,8 +334,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Cards — 3 equal-width bento tiles, top-aligned. */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-start">
+      {/* Pricing Cards — 3 equal-sized bento tiles. items-stretch forces
+          all three cells to the same height so cards match regardless of
+          content length. */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-stretch">
 
         {/* ── Reference + Toolkit — entry tier ────────────── */}
         <div
