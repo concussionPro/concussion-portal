@@ -334,50 +334,50 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Cards — 3 side-by-side bento tiles.
-          Columns use a 3:4:5 ratio so cards scale with price: Reference+Toolkit
-          smallest (cheapest), Online Course medium, Complete Course widest. */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,5fr)] gap-5 pt-5 items-start">
+      {/* Pricing Cards — 3 side-by-side tiles, sized small/medium/large
+          by price tier. Columns scale 3:4:6; padding, typography, and
+          border weight also scale so each card feels a physical size step. */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,6fr)] gap-5 pt-5 items-stretch">
 
-        {/* ── Reference + Toolkit — entry tier ────────────── */}
+        {/* ── Reference + Toolkit — SMALL (entry tier) ─────── */}
         <div
-          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
-          style={{ borderWidth: '1.5px', borderColor: 'rgba(194, 65, 12, 0.2)' }}
+          className="card rounded-xl p-4 flex flex-col relative"
+          style={{ borderWidth: '1px', borderColor: 'rgba(194, 65, 12, 0.2)' }}
         >
           {/* Header row: badge left, price right */}
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
-                <FileText className="w-4.5 h-4.5 text-orange-600" strokeWidth={2} />
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
+                <FileText className="w-4 h-4 text-orange-600" strokeWidth={2} />
               </div>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
                 Start here
               </span>
             </div>
             <div className="text-right flex-shrink-0">
               <div className="flex items-baseline gap-1 justify-end">
-                <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">$97</span>
-                <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+                <span className="text-xl font-bold text-[var(--foreground)] tracking-tight">$97</span>
+                <span className="text-[10px] text-[var(--muted-foreground)]">AUD</span>
               </div>
-              <p className="text-[10px] text-[var(--muted-foreground)]">Instant PDF</p>
+              <p className="text-[9px] text-[var(--muted-foreground)]">Instant PDF</p>
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-1.5">Reference + Toolkit</h3>
-          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            256-page reference text + 2026 Clinical Toolkit. Apply concussion care in clinic — without the CPD course.
+          <h3 className="text-base font-bold text-[var(--foreground)] mb-1">Reference + Toolkit</h3>
+          <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed mb-3">
+            256-page reference text + 2026 Clinical Toolkit. Apply care in clinic — without the CPD course.
           </p>
 
-          {/* Single-column features (narrow column) */}
-          <ul className="space-y-1.5 mb-5 flex-1">
+          {/* Single-column features — compact */}
+          <ul className="space-y-1 mb-4 flex-1">
             {[
               '256-page Clinical Reference',
               'Cheat Sheet · PPCS · Referral Map',
-              'RehabFlow + RTP/RTL/RTW ladder',
+              'RehabFlow + RTP ladder',
               'Patient handouts + templates',
               '$100 off course on upgrade',
             ].map((feature, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[12px]">
+              <li key={i} className="flex items-start gap-1.5 text-[11px]">
                 <Check className="w-3 h-3 text-orange-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                 <span className="text-[var(--muted-foreground)]">{feature}</span>
               </li>
@@ -386,10 +386,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           <Link
             href="/reference"
-            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm bg-orange-600 text-white hover:bg-orange-700 transition-colors"
+            className="w-full py-2.5 px-4 rounded-lg font-semibold flex items-center justify-center gap-1.5 text-xs bg-orange-600 text-white hover:bg-orange-700 transition-colors"
           >
             Get Reference + Toolkit
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
@@ -470,15 +470,18 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </Link>
         </div>
 
-        {/* ── Complete Course — + Hands-on Workshop ────────── */}
-        <div className="card rounded-2xl p-5 md:p-6 flex flex-col relative">
+        {/* ── Complete Course — LARGE (+ Hands-on Workshop) ── */}
+        <div
+          className="card rounded-3xl p-6 md:p-8 flex flex-col relative shadow-[0_12px_40px_-12px_rgba(15,23,42,0.15)]"
+          style={{ borderWidth: '2px', borderColor: 'rgba(234, 88, 12, 0.25)' }}
+        >
           {/* Header row: badge left, price right */}
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
-                <Award className="w-4.5 h-4.5 text-orange-500" strokeWidth={2} />
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0 shadow-sm">
+                <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
               </div>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
                 + Workshop
               </span>
             </div>
@@ -486,102 +489,102 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {isEarlyBird ? (
                 <>
                   <div className="flex items-center gap-1.5 justify-end mb-0.5">
-                    <span className="text-[11px] text-[var(--muted-foreground)] line-through">${(bookOwner ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                    <span className="text-sm text-[var(--muted-foreground)] line-through">${(bookOwner ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
                       {bookOwner ? `−$${BUNDLE_DISCOUNT}` : `−$${CONFIG.COURSE.SAVINGS}`}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
-                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+                  <div className="flex items-baseline gap-1.5 justify-end">
+                    <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
+                    <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
                   </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
                 </>
               ) : (
                 <>
                   {bookOwner && (
                     <div className="flex items-center gap-1.5 justify-end mb-0.5">
-                      <span className="text-[11px] text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">−${BUNDLE_DISCOUNT}</span>
+                      <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">−${BUNDLE_DISCOUNT}</span>
                     </div>
                   )}
-                  <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
-                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+                  <div className="flex items-baseline gap-1.5 justify-end">
+                    <span className="text-4xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
+                    <span className="text-sm text-[var(--muted-foreground)]">AUD</span>
                   </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
                 </>
               )}
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-1.5">Complete Course</h3>
-          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            Online course + full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback.
+          <h3 className="text-2xl font-bold text-[var(--foreground)] mb-2 tracking-tight">Complete Course</h3>
+          <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-5">
+            Online course + full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback in a small-group setting.
           </p>
 
           {/* Melbourne workshop mini-tile — thumbnail + date */}
           {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
-            <div className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden mb-4">
+            <div className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden mb-5">
               <div className="flex items-stretch">
-                <div className="relative w-[90px] flex-shrink-0 bg-slate-900">
+                <div className="relative w-[110px] flex-shrink-0 bg-slate-900">
                   <Image
                     src="/melbourne-workshop.jpg"
                     alt="Melbourne workshop · 13 June 2026"
                     fill
-                    sizes="90px"
+                    sizes="110px"
                     className="object-cover"
                   />
                 </div>
-                <div className="flex-1 p-2.5 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="flex-1 p-3 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
                     <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
                     <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
                       Next workshop confirmed
                     </p>
                   </div>
-                  <p className="text-[12px] font-bold text-slate-900 leading-tight">
+                  <p className="text-sm font-bold text-slate-900 leading-tight">
                     Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
                   </p>
-                  <p className="text-[11px] text-slate-700 leading-snug mt-0.5">
-                    Rydges CBD · 8am–4pm · catered
+                  <p className="text-xs text-slate-700 leading-snug mt-0.5">
+                    Rydges CBD · 8am–4pm · catered lunch
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 2-col feature bento */}
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4 flex-1">
+          {/* 2-col feature grid */}
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-2 mb-5 flex-1">
             {[
               'Everything in Online',
-              'Full-day workshop',
-              'SCAT6, VOMS, BESS',
-              '1:1 expert feedback',
-              '14 AHPRA CPD',
-              'AU locations',
+              'Full-day workshop · +6 CPD',
+              'SCAT6, VOMS & BESS hands-on',
+              'Expert coaching · 1:1 feedback',
+              '14 AHPRA CPD points total',
+              'Sydney & Byron Bay on demand',
             ].map((feature, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[12px]">
-                <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+              <li key={i} className="flex items-start gap-2 text-[13px]">
+                <Check className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                 <span className="text-[var(--muted-foreground)]">{feature}</span>
               </li>
             ))}
           </ul>
 
-          {/* Compact location picker */}
-          <div className="mb-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">City</p>
-            <div className="flex flex-wrap gap-1">
+          {/* Location picker */}
+          <div className="mb-5">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-2">Preferred city</p>
+            <div className="flex flex-wrap gap-1.5">
               {[
                 { slug: 'sydney', label: 'Sydney' },
                 { slug: 'melbourne', label: 'Melbourne' },
-                { slug: 'byron-bay', label: 'Byron' },
+                { slug: 'byron-bay', label: 'Byron Bay' },
               ].map(city => (
                 <button
                   key={city.slug}
                   type="button"
                   onClick={() => setSelectedLocation(selectedLocation === city.slug ? null : city.slug)}
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                  className={`px-3 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                     selectedLocation === city.slug
                       ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                       : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
@@ -593,13 +596,13 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               <button
                 type="button"
                 onClick={() => setSelectedLocation(null)}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                className={`px-3 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                   selectedLocation === null
                     ? 'bg-slate-100 text-[var(--foreground)] border-slate-300'
                     : 'bg-white text-[var(--muted-foreground)] border-slate-200 hover:border-slate-300'
                 }`}
               >
-                Later
+                Choose later
               </button>
             </div>
           </div>
@@ -607,10 +610,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           <button
             onClick={() => handleCheckout('full-course')}
             disabled={loading !== null}
-            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
+            className="w-full py-4 px-6 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-base bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors shadow-lg"
           >
             {loading === 'full-course' ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <>
                 Enrol Now — ${fullCoursePrice.toLocaleString()}
@@ -620,7 +623,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </button>
 
           {isEarlyBird && (
-            <p className="text-[10px] text-orange-600 font-medium text-center mt-2">
+            <p className="text-[11px] text-orange-600 font-medium text-center mt-2.5">
               Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — then ${CONFIG.COURSE.PRICE_REGULAR}
             </p>
           )}
