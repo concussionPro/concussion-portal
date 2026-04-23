@@ -334,8 +334,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         </div>
       )}
 
-      {/* Pricing Cards — 3 side-by-side bento tiles */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-stretch">
+      {/* Pricing Cards — 3 side-by-side bento tiles.
+          items-end so cards staircase up left→right: entry tier is
+          shortest, Complete Course is tallest. */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-end">
 
         {/* ── Reference + Toolkit — entry tier ────────────── */}
         <div
@@ -519,18 +521,34 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             Online course + full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback.
           </p>
 
-          {/* Melbourne workshop mini-tile */}
+          {/* Melbourne workshop mini-tile — thumbnail + date */}
           {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
-            <div className="rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-2.5 mb-4">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
-                <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
-                  Next workshop confirmed
-                </p>
+            <div className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden mb-4">
+              <div className="flex items-stretch">
+                <div className="relative w-[90px] flex-shrink-0 bg-slate-900">
+                  <Image
+                    src="/melbourne-workshop.jpg"
+                    alt="Melbourne workshop · 13 June 2026"
+                    fill
+                    sizes="90px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1 p-2.5 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" aria-hidden="true" />
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                      Next workshop confirmed
+                    </p>
+                  </div>
+                  <p className="text-[12px] font-bold text-slate-900 leading-tight">
+                    Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date}
+                  </p>
+                  <p className="text-[11px] text-slate-700 leading-snug mt-0.5">
+                    Rydges CBD · 8am–4pm · catered
+                  </p>
+                </div>
               </div>
-              <p className="text-[12px] font-bold text-slate-900 leading-tight">
-                Melbourne · {CONFIG.LOCATIONS.MELBOURNE.date} · Rydges CBD
-              </p>
             </div>
           )}
 
