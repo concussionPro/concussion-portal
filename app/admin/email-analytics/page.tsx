@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Mail, MousePointerClick, Eye, AlertCircle, TrendingUp, Users, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
+import { Mail, MousePointerClick, Eye, AlertCircle, TrendingUp, Users, Loader2, RefreshCw, ExternalLink, Download } from 'lucide-react'
 
 interface Totals {
   emails: number
@@ -83,6 +83,8 @@ export default function EmailAnalyticsPage() {
   const [stats, setStats] = useState<StatsResp | null>(null)
   const [retarget, setRetarget] = useState<RetargetingResp | null>(null)
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('hotClickers')
   const [err, setErr] = useState<string | null>(null)
 
@@ -106,6 +108,30 @@ export default function EmailAnalyticsPage() {
   }, [days])
 
   useEffect(() => { load() }, [load])
+
+  const syncFromResend = useCallback(async () => {
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      const r = await fetch(`/api/admin/sync-resend-events?days=${days}`, {
+        method: 'POST',
+        cache: 'no-store',
+      }).then((r) => r.json())
+      if (r.error) {
+        setSyncMsg(`Sync failed: ${r.error}`)
+      } else {
+        const { checked, inserted, capped } = r
+        setSyncMsg(
+          `Checked ${checked} email${checked === 1 ? '' : 's'} — backfilled ${inserted.opened} open${inserted.opened === 1 ? '' : 's'}, ${inserted.clicked} click${inserted.clicked === 1 ? '' : 's'}${capped ? ' (capped — run again for more).' : '.'}`
+        )
+        await load()
+      }
+    } catch (e) {
+      setSyncMsg(`Sync failed: ${(e as Error).message}`)
+    } finally {
+      setSyncing(false)
+    }
+  }, [days, load])
 
   const bucket = retarget ? retarget[tab] : []
 
@@ -135,8 +161,24 @@ export default function EmailAnalyticsPage() {
               {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
               Refresh
             </button>
+            <button
+              onClick={syncFromResend}
+              disabled={syncing || loading}
+              title="Poll Resend API for opens/clicks missing from webhook feed"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+            >
+              {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              Sync from Resend
+            </button>
           </div>
         </div>
+
+        {syncMsg && (
+          <div className="mb-6 rounded-lg bg-slate-900 text-white p-3 text-sm flex items-center justify-between gap-3">
+            <span>{syncMsg}</span>
+            <button onClick={() => setSyncMsg(null)} className="text-white/60 hover:text-white text-xs">dismiss</button>
+          </div>
+        )}
 
         {err && (
           <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-900">
