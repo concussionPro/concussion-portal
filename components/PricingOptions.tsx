@@ -347,8 +347,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           {/* Header row: badge left, price right */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
-                <FileText className="w-4.5 h-4.5 text-orange-600" strokeWidth={2} />
+              <div
+                className="w-10 h-10 rounded-xl flex flex-col items-center justify-center border border-orange-300/50 flex-shrink-0 shadow-[0_4px_12px_-4px_rgba(234,88,12,0.4)]"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #fb923c 0%, #f97316 40%, #e11d48 100%)',
+                }}
+                aria-label="Clinical Toolkit"
+              >
+                <p className="text-[8px] font-black tracking-wider text-white leading-[1] text-center">CLINICAL</p>
+                <p className="text-[8px] font-black tracking-wider text-white leading-[1] text-center mt-[1px]">TOOLKIT</p>
               </div>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
                 Start here
