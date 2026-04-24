@@ -453,7 +453,24 @@ function buildSessionFlow(sessions: SessionSummary[]) {
   };
 }
 
-function buildRetargeting(sessions: SessionSummary[]) {
+/**
+ * Count verified purchases in the window from server-side events.
+ *
+ * Why this exists: the client-side `hasConversion` flag was set on any
+ * session that hit /checkout/success — so refreshes, bookmarks, and stale
+ * URL revisits all inflated the number. The Stripe webhook writes
+ * `purchase_complete` events to the same table with a `server_` session_id
+ * (filtered out of session-level analysis), so counting those events in
+ * the window gives us a DB-of-record truth number immune to pageview noise.
+ */
+function countVerifiedPurchases(rawEvents: StoredEvent[]): number {
+  return rawEvents.filter(
+    (e) =>
+      e.eventType === 'purchase_complete' || e.eventType === 'reference_purchase'
+  ).length;
+}
+
+function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[]) {
   // Group sessions by IP to find returning high-intent visitors
   const ipData = new Map<string, {
     ip: string; sessions: SessionSummary[]; totalPageviews: number;
@@ -516,7 +533,10 @@ function buildRetargeting(sessions: SessionSummary[]) {
   const totalVisitors = ipData.size;
   const returningVisitors = Array.from(ipData.values()).filter((d) => d.sessions.length > 1).length;
   const pricingViewers = Array.from(ipData.values()).filter((d) => d.pricingViews > 0).length;
-  const converters = Array.from(ipData.values()).filter((d) => d.converted).length;
+  // Authoritative: count server-side purchase_complete events in the window,
+  // not client-side /checkout/success pageviews. Stale URL refreshes inflated
+  // the old number (saw 2 "conversions" on days with 0 Stripe payments).
+  const converters = countVerifiedPurchases(rawEvents);
 
   // Geography breakdown
   const countryCounts = new Map<string, number>();
@@ -538,7 +558,9 @@ function buildRetargeting(sessions: SessionSummary[]) {
       returningVisitors,
       returningRate: totalVisitors > 0 ? returningVisitors / totalVisitors : 0,
       pricingViewers,
-      pricingToConversion: pricingViewers > 0 ? converters / pricingViewers : 0,
+      // Clamp ratio to [0,1] — verified purchases may come from users who
+      // never registered pricing page views in this window
+      pricingToConversion: pricingViewers > 0 ? Math.min(1, converters / pricingViewers) : 0,
       converters,
     },
   };
@@ -1046,7 +1068,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (type === 'retargeting') {
     const currentEvents = await getEventsForDateRange(currentDates);
     const sessions = buildSessionSummaries(currentEvents);
-    const retargeting = buildRetargeting(sessions);
+    const retargeting = buildRetargeting(sessions, currentEvents);
     return NextResponse.json(retargeting, {
       headers: { 'Cache-Control': 'no-store' },
     });
