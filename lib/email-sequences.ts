@@ -849,7 +849,7 @@ export const SCAT_COMPLETER_PERSONAL_FOLLOWUP = {
       ${surveyButton(userId, baseUrl, 'D', 'Timing', "Interested but not this month")}
       ${surveyButton(userId, baseUrl, 'E', 'Something else', "Tell me — opens a reply")}
     </table>
-    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">No pitch follows. No automated sequence is triggered by this. Just trying to understand where the gap is.</p>
+    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">No pitch follows. No automated sequence is triggered by this &mdash; we&rsquo;re optimising how we help clinicians upskill, and your answer shapes what we build next.</p>
     <p style="font-size: 14px; margin: 18px 0 0;">Thanks,<br>Zac</p>
     <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">Concussion Education Australia &middot; Melbourne, VIC</p>
   `),
