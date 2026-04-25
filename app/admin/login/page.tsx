@@ -24,10 +24,15 @@ function AdminLoginForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: key.trim() }),
+        credentials: 'include',
       })
       if (res.ok) {
-        router.push(redirect)
-        router.refresh()
+        // Hard navigation, not router.push — App Router's RSC navigation
+        // can race with cookie commit, so middleware sometimes saw no
+        // admin_session cookie and bounced back to /admin/login. Full
+        // browser nav guarantees the Set-Cookie header is committed
+        // before the next request fires.
+        window.location.href = redirect
         return
       }
       const data = await res.json().catch(() => ({}))

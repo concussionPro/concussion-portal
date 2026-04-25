@@ -55,13 +55,17 @@ function VerifyContent() {
             return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && !path.includes('\n')
           }
 
+          // Hard navigation, not router.push — App Router's RSC navigation
+          // can race with the Set-Cookie commit, leaving middleware seeing
+          // no session and bouncing back to /login. Full browser nav avoids
+          // the race entirely.
+          let target = '/dashboard'
           if (savedRedirect && isValidRedirect(savedRedirect) && data.user.accessLevel !== 'preview') {
-            router.push(savedRedirect)
+            target = savedRedirect
           } else if (data.user.accessLevel === 'preview') {
-            router.push('/modules/101')
-          } else {
-            router.push('/dashboard')
+            target = '/modules/101'
           }
+          window.location.href = target
         }, 500)
       })
       .catch((error) => {
