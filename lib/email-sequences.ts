@@ -15,6 +15,7 @@
 
 import { CONFIG } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
+import { signSurveyAnswer } from '@/lib/survey-token'
 
 /** Append UTM params to a URL. Handles existing query strings. */
 function utm(url: string, campaign: string, content?: string): string {
@@ -818,23 +819,37 @@ export const FREE_USER_REENGAGEMENT = {
  *
  * Cadence: ~14 days after SCAT completion, only if still on preview.
  */
+function surveyButton(userId: string, baseUrl: string, answer: string, label: string, sublabel: string): string {
+  const t = signSurveyAnswer('scat_completer_followup_v1', userId, answer)
+  const href = `${baseUrl}/s/scat-followup?u=${encodeURIComponent(userId)}&a=${answer}&t=${t}`
+  return `
+    <tr>
+      <td style="padding: 6px 0;">
+        <a href="${href}" style="display: block; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; text-decoration: none; color: #0f172a;">
+          <span style="font-weight: 700; color: #0d9488; font-size: 14px;">${label}</span>
+          <span style="font-size: 14px; color: #475569;"> &mdash; ${sublabel}</span>
+        </a>
+      </td>
+    </tr>
+  `
+}
+
 export const SCAT_COMPLETER_PERSONAL_FOLLOWUP = {
   subject: 'Quick one — what stopped you?',
-  template: (name: string) => emailShell(`
+  template: (name: string, userId: string, baseUrl: string) => emailShell(`
     <p style="font-size: 15px; margin: 0 0 14px;">Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p style="font-size: 15px; margin: 0 0 14px;">You finished the free SCAT6 Mastery course a couple of weeks ago &mdash; thanks for working through it.</p>
+    <p style="font-size: 15px; margin: 0 0 14px;">You finished the free SCAT6 Mastery course recently &mdash; thanks for working through it.</p>
     <p style="font-size: 15px; margin: 0 0 14px;">I wanted to ask you one thing directly, because the answer helps me make the rest of the course actually useful for clinicians like you.</p>
-    <p style="font-size: 15px; margin: 0 0 14px;"><strong>You finished the free part. What stopped you taking the next step?</strong></p>
-    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">If any of these are close, just hit reply with the letter:</p>
-    <ol style="font-size: 14px; color: #475569; margin: 0 0 16px; padding-left: 20px;">
-      <li style="margin-bottom: 6px;"><strong>A</strong> &mdash; Price. Course is more than I want to spend right now.</li>
-      <li style="margin-bottom: 6px;"><strong>B</strong> &mdash; Not sure I need it. SCAT was useful, but the rest doesn&rsquo;t feel relevant to my practice.</li>
-      <li style="margin-bottom: 6px;"><strong>C</strong> &mdash; Want the workshop. Online alone isn&rsquo;t enough &mdash; need the hands-on part, but no date in my city yet.</li>
-      <li style="margin-bottom: 6px;"><strong>D</strong> &mdash; Timing. Interested but not this month.</li>
-      <li style="margin-bottom: 6px;"><strong>E</strong> &mdash; Something else. Tell me.</li>
-    </ol>
-    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">A one-letter reply is a real help. If you&rsquo;ve got 30 seconds for context, even better.</p>
-    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">No pitch. No follow-up sequence triggered by this. Just trying to understand where the gap is.</p>
+    <p style="font-size: 15px; margin: 0 0 18px;"><strong>You finished the free part. What stopped you taking the next step?</strong></p>
+    <p style="font-size: 14px; color: #475569; margin: 0 0 10px;">Tap the closest one &mdash; one click, no form to fill in:</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; margin: 0 0 18px;">
+      ${surveyButton(userId, baseUrl, 'A', 'Price', 'Course is more than I want to spend right now')}
+      ${surveyButton(userId, baseUrl, 'B', 'Not sure I need it', "SCAT was useful but the rest doesn't feel relevant to my practice")}
+      ${surveyButton(userId, baseUrl, 'C', 'Want the workshop', "Online alone isn't enough — need hands-on, but no date in my city yet")}
+      ${surveyButton(userId, baseUrl, 'D', 'Timing', "Interested but not this month")}
+      ${surveyButton(userId, baseUrl, 'E', 'Something else', "Tell me — opens a reply")}
+    </table>
+    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">No pitch follows. No automated sequence is triggered by this. Just trying to understand where the gap is.</p>
     <p style="font-size: 14px; margin: 18px 0 0;">Thanks,<br>Zac</p>
     <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">Concussion Education Australia &middot; Melbourne, VIC</p>
   `),

@@ -60,7 +60,9 @@ async function handle(request: NextRequest, dryRun: boolean) {
   let skipped = 0
   let errors = 0
   for (const t of targets) {
-    const auditKey = `scat_completer_personal_${t.id}`
+    // v2 audit key — switched to click-tracked button format. v1 entries
+    // (reply-with-letter) stay in the log but don't dedup the new send.
+    const auditKey = `scat_completer_personal_v2_${t.id}`
     const { rowCount: inserted } = await sql`
       INSERT INTO email_audit_log (audit_key, sent_at)
       VALUES (${auditKey}, NOW())
@@ -74,7 +76,7 @@ async function handle(request: NextRequest, dryRun: boolean) {
     try {
       const unsubToken = generateUnsubscribeToken(t.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(t.email)}&token=${unsubToken}`
-      const html = SCAT_COMPLETER_PERSONAL_FOLLOWUP.template(t.name)
+      const html = SCAT_COMPLETER_PERSONAL_FOLLOWUP.template(t.name, t.id, baseUrl)
         .replace('{{unsubscribe_url}}', unsubscribeUrl)
       await sendEmail({
         to: t.email,
