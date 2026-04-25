@@ -802,6 +802,45 @@ export const FREE_USER_REENGAGEMENT = {
 }
 
 /**
+ * SCAT_COMPLETER_PERSONAL_FOLLOWUP — second-touch email for preview users
+ * who completed all 3 SCAT modules but didn't convert.
+ *
+ * SCAT_COMPLETION_UPSELL fires immediately on completion and is overtly
+ * promotional. It works for same-day converters (Brandyn) but every one
+ * of the 9 other completers received it and didn't buy. Sending the
+ * same pitch again won't move them.
+ *
+ * This is a different angle: short, plain-text feel, from Zac directly,
+ * single question ('what stopped you?') framed as feedback request rather
+ * than another sales push. Replies route directly to Zac and surface the
+ * real friction (price, content fit, workshop city, etc.) so we can
+ * actually fix the funnel instead of guessing.
+ *
+ * Cadence: ~14 days after SCAT completion, only if still on preview.
+ */
+export const SCAT_COMPLETER_PERSONAL_FOLLOWUP = {
+  subject: 'Quick one — what stopped you?',
+  template: (name: string) => emailShell(`
+    <p style="font-size: 15px; margin: 0 0 14px;">Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p style="font-size: 15px; margin: 0 0 14px;">You finished the free SCAT6 Mastery course a couple of weeks ago &mdash; thanks for working through it.</p>
+    <p style="font-size: 15px; margin: 0 0 14px;">I wanted to ask you one thing directly, because the answer helps me make the rest of the course actually useful for clinicians like you.</p>
+    <p style="font-size: 15px; margin: 0 0 14px;"><strong>You finished the free part. What stopped you taking the next step?</strong></p>
+    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">If any of these are close, just hit reply with the letter:</p>
+    <ol style="font-size: 14px; color: #475569; margin: 0 0 16px; padding-left: 20px;">
+      <li style="margin-bottom: 6px;"><strong>A</strong> &mdash; Price. Course is more than I want to spend right now.</li>
+      <li style="margin-bottom: 6px;"><strong>B</strong> &mdash; Not sure I need it. SCAT was useful, but the rest doesn&rsquo;t feel relevant to my practice.</li>
+      <li style="margin-bottom: 6px;"><strong>C</strong> &mdash; Want the workshop. Online alone isn&rsquo;t enough &mdash; need the hands-on part, but no date in my city yet.</li>
+      <li style="margin-bottom: 6px;"><strong>D</strong> &mdash; Timing. Interested but not this month.</li>
+      <li style="margin-bottom: 6px;"><strong>E</strong> &mdash; Something else. Tell me.</li>
+    </ol>
+    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">A one-letter reply is a real help. If you&rsquo;ve got 30 seconds for context, even better.</p>
+    <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">No pitch. No follow-up sequence triggered by this. Just trying to understand where the gap is.</p>
+    <p style="font-size: 14px; margin: 18px 0 0;">Thanks,<br>Zac</p>
+    <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">Concussion Education Australia &middot; Melbourne, VIC</p>
+  `),
+}
+
+/**
  * FREE_LOGGED_IN_NO_PROGRESS — Day 7 for preview users who logged in
  * at least once but completed zero SCAT modules.
  *
