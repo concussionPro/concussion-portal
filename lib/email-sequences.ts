@@ -933,6 +933,37 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
   },
 ]
 
+/**
+ * Paid customer hasn't done any modules yet.
+ *
+ * Triggers when a user is paid (online-only / full-course) and has
+ * completed 0 of the 8 main course modules N days after purchase. The
+ * existing POST_PURCHASE_SEQUENCE assumes they've started — sends
+ * "Keep going!" / "You're halfway!" emails to people who never opened
+ * Module 1. This is the activation variant: explicit, doesn't pretend
+ * they've started, leads with WHY Module 1 specifically matters.
+ *
+ * Day 3 cadence (chosen empirically: every paid customer in the system
+ * right now is at 0/8 progress, average 12 days post-purchase, never
+ * activated. Day 3 catches them before momentum dies completely).
+ */
+export const PAID_NO_PROGRESS_NUDGE = {
+  subject: "Quick one — have you opened Module 1 yet?",
+  template: (name: string, loginLink: string) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <p>You picked up the course a few days ago and your account shows you haven't opened Module 1 yet. No judgment — life gets busy. But quick reason to prioritise it:</p>
+    <p><strong>Module 1 is the only module that's a hard prerequisite for the other seven.</strong> It's the neuroscience framework everything else hangs off — the bit where the diagnostic distinctions, the rehab phenotypes, the RTP protocols all start to make sense as one connected system rather than a bunch of unrelated rules.</p>
+    <p>It's 75 minutes. You can do it across two sittings. Skip it and Module 2 reads like a different language.</p>
+    <center><a href="${utm(loginLink, 'paid_no_progress_d3', 'start_module_1')}" class="cta-btn">Open Module 1</a></center>
+    <p>If something's stopping you — login link not working, content too dense, or you bought it and now aren't sure where to start — just reply. I'll sort it.</p>
+    <div class="sig">
+      Zac Lewis<br>
+      Concussion Education Australia
+    </div>
+    <p class="ps">P.S. Lifetime access means there's no expiry, but momentum compounds — clinicians who finish Module 1 in week 1 are 3× more likely to finish the whole course.</p>
+  `),
+}
+
 export const ALMOST_DONE_EMAIL = {
   subject: "You're one module away from your certificate",
   template: (name: string, loginLink: string) => emailShell(`

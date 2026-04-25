@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE } from '@/lib/email-sequences'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE } from '@/lib/email-sequences'
 import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
@@ -294,22 +294,49 @@ export async function GET(request: Request) {
       )
       if (!email) continue
 
-      // Dedup via email_audit_log (INSERT-first to avoid TOCTOU race)
-      const onboardAuditKey = `onboard_day${email.day}_${user.id}`
+      // Activation override: Day 3 + Day 7 emails assume the user has started
+      // the course ("Continue your course", "You're halfway"). For paid users
+      // who have NOT opened Module 1 yet, swap in PAID_NO_PROGRESS_NUDGE so
+      // we don't tell someone "keep going" when they haven't started. Every
+      // paid user in the system is currently at 0/8 progress — this is the
+      // single biggest engagement leak.
+      let useEmail: { day: number; subject: string; template: (n: string, l: string) => string } = email
+      if (email.day === 3 || email.day === 7) {
+        try {
+          const { rows: pr } = await sql`SELECT progress FROM user_progress WHERE user_id = ${user.id} LIMIT 1`
+          let mainModulesDone = 0
+          if (pr.length > 0 && pr[0].progress) {
+            for (let i = 1; i <= 8; i++) if (pr[0].progress[String(i)]?.completed) mainModulesDone++
+          }
+          if (mainModulesDone === 0) {
+            useEmail = PAID_NO_PROGRESS_NUDGE as typeof useEmail
+          }
+        } catch (err) {
+          console.error(`[Onboarding] Progress check failed for ${redact(user.email)}, defaulting to standard email:`, err)
+        }
+      }
+
+      // Dedup via email_audit_log. Use a different audit key for the
+      // activation variant so users who later progress can still get
+      // the regular email if appropriate (avoids accidental dedup
+      // collisions across variants).
+      const variantSuffix = useEmail === email ? '' : '_activation'
+      const onboardAuditKey = `onboard_day${email.day}${variantSuffix}_${user.id}`
       const { rowCount: onboardInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${onboardAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
       if (onboardInserted === 0) continue // Already sent
 
-      const html = email.template(user.name, loginLink)
+      const html = useEmail.template(user.name, loginLink)
         .replace('{{unsubscribe_url}}', unsubscribeUrl)
 
       try {
         await sendEmail({
           to: user.email,
-          subject: email.subject,
+          subject: useEmail.subject,
           html,
           tags: [
             { name: 'sequence', value: 'post-purchase' },
             { name: 'day', value: String(daysSinceSignup) },
+            ...(useEmail !== email ? [{ name: 'variant', value: 'activation' }] : []),
           ],
           headers: {
             'List-Unsubscribe': `<${unsubscribeUrl}>`,
@@ -318,7 +345,7 @@ export async function GET(request: Request) {
         })
 
         emailsSent++
-        console.log(`[Onboarding] Day ${daysSinceSignup} → ${redact(user.email)}`)
+        console.log(`[Onboarding] Day ${daysSinceSignup}${useEmail !== email ? ' (activation)' : ''} → ${redact(user.email)}`)
       } catch (err) {
         console.error(`[Onboarding] Failed to send Day ${daysSinceSignup} to ${redact(user.email)}:`, err)
       }
