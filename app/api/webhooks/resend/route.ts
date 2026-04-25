@@ -103,7 +103,19 @@ export async function POST(request: NextRequest) {
 
     // Verify webhook signature (always — rejects in production if secret missing)
     if (!verifySvixSignature(rawBody, svixId, svixTimestamp, svixSignature)) {
-      console.error('Resend webhook: invalid Svix signature')
+      // Log enough detail to diagnose secret drift without leaking the secret.
+      // Last incident: signing secret rotated in Resend dashboard ~Apr 14 2026,
+      // RESEND_WEBHOOK_SECRET in Vercel wasn't updated → 17 days of silently
+      // dropped events. Next time we want this to be obviously diagnosable.
+      const secretSet = !!process.env.RESEND_WEBHOOK_SECRET
+      const secretPrefix = process.env.RESEND_WEBHOOK_SECRET?.slice(0, 6) || '(none)'
+      console.error('[Resend webhook] Invalid Svix signature', {
+        svixId: svixId || '(none)',
+        svixTimestamp: svixTimestamp || '(none)',
+        secretConfigured: secretSet,
+        secretPrefix, // 'whsec_' if a real Resend key, otherwise something is off
+        bodySize: rawBody.length,
+      })
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
