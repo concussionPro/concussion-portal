@@ -92,6 +92,14 @@ export function verifySessionToken(token: string): SessionData | null {
   }
 }
 
+// Long-lived session: once a user logs in, they stay logged in for a year.
+// Was 30 days for rememberMe / 7 days otherwise — too short, paying customers
+// were logging out and getting stuck on the magic-link round-trip every
+// month. The token is HMAC-signed and httpOnly so leaking it would still
+// require XSS, and the auth check stays cheap.
+const REMEMBER_ME_DURATION_MS = 365 * 24 * 60 * 60 * 1000
+const DEFAULT_SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000
+
 // Create session token with appropriate duration
 export function createJWTSession(
   userId: string,
@@ -100,6 +108,6 @@ export function createJWTSession(
   accessLevel: 'online-only' | 'full-course' | 'preview',
   rememberMe: boolean = false
 ): string {
-  const duration = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
+  const duration = rememberMe ? REMEMBER_ME_DURATION_MS : DEFAULT_SESSION_DURATION_MS
   return createSessionToken(userId, email, name, accessLevel, duration)
 }

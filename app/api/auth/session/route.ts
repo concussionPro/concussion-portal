@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
           progressEmailsOptedOut: user.progressEmailsOptedOut || false,
         },
       })
-      const maxAge = wasRememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60
+      const maxAge = wasRememberMe ? 365 * 24 * 60 * 60 : 30 * 24 * 60 * 60
       response.cookies.set('session', newToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

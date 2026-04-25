@@ -93,8 +93,9 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Set httpOnly cookie for security
-    const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60 // 30 days or 7 days
+    // Set httpOnly cookie for security — match session token TTL (1 year
+    // for rememberMe). Once a user verifies, they stay signed in.
+    const maxAge = rememberMe ? 365 * 24 * 60 * 60 : 30 * 24 * 60 * 60 // 1 year or 30 days
 
     // SECURITY: Always use secure cookies (even in dev with warning)
     const isProduction = process.env.NODE_ENV === 'production'

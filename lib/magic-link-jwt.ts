@@ -26,8 +26,17 @@ interface TokenPayload {
   exp: number
 }
 
-// Create a signed token
-// ttlMs defaults to 24 hours for login links; nurture email CTAs use 7 days
+// Default TTL for transactional links (request-from-/login, post-purchase
+// welcome, admin resend). Tight window for security on user-initiated flows.
+const TRANSACTIONAL_TTL_MS = 24 * 60 * 60 * 1000
+
+// Default TTL for nurture / welcome / catch-up emails sent by the cron.
+// 7 days because subscribers don't always check email same-day, and a
+// 24h-expired link was the dominant failure mode (74% of imported preview
+// users never logged in — most landed too late).
+const NURTURE_TTL_MS = 7 * 24 * 60 * 60 * 1000
+
+// Create a signed token. ttlMs default = 24h for transactional links.
 export function createMagicToken(userId: string, email: string, name: string, accessLevel: 'online-only' | 'full-course' | 'preview', ttlMs?: number): string {
   const payload: TokenPayload = {
     type: 'magic-link',
@@ -35,7 +44,7 @@ export function createMagicToken(userId: string, email: string, name: string, ac
     email,
     name,
     accessLevel,
-    exp: Date.now() + (ttlMs ?? 24 * 60 * 60 * 1000),
+    exp: Date.now() + (ttlMs ?? TRANSACTIONAL_TTL_MS),
   }
 
   const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64url')
@@ -93,7 +102,10 @@ function verifyToken(token: string): TokenPayload | null {
   }
 }
 
-// Generate magic link
+// Generate magic link for nurture / welcome / catch-up emails.
+// Uses the longer NURTURE_TTL_MS (7 days) — these are pushed by us, the
+// recipient hasn't asked for it, so the link needs to survive a few days
+// of inbox neglect.
 export function generateMagicLinkJWT(
   userId: string,
   email: string,
@@ -101,7 +113,7 @@ export function generateMagicLinkJWT(
   accessLevel: 'online-only' | 'full-course' | 'preview',
   baseUrl: string
 ): string {
-  const token = createMagicToken(userId, email, name, accessLevel)
+  const token = createMagicToken(userId, email, name, accessLevel, NURTURE_TTL_MS)
   return `${baseUrl}/auth/verify?token=${token}`
 }
 
