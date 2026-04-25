@@ -154,6 +154,38 @@ export async function GET(request: Request) {
       if (!response.ok) {
         const errorText = await response.text()
         console.error(`[SS Sync] API error ${response.status}: ${errorText}`)
+
+        // Auth failures silently broke the import for ~3 weeks before being
+        // noticed (404 contacts ended up in Squarespace but not the portal,
+        // never received nurture). Email Zac on every cron auth failure so
+        // the next breakage is loud, with dedup so retries don't spam.
+        if (response.status === 401 || response.status === 403) {
+          try {
+            const auditKey = `ss_sync_auth_fail_${new Date().toISOString().slice(0, 10)}` // dedup per day
+            const { rowCount } = await sql`
+              INSERT INTO email_audit_log (audit_key, sent_at)
+              VALUES (${auditKey}, NOW())
+              ON CONFLICT (audit_key) DO NOTHING
+            `
+            if (rowCount && rowCount > 0) {
+              await sendEmail({
+                to: 'zac@concussion-education-australia.com',
+                subject: `[ALERT] Squarespace sync ${response.status} — nurture pipeline broken`,
+                html: `<p>The Squarespace sync cron just failed with HTTP ${response.status}. New email subscribers from Squarespace are NOT being imported into the portal users table and therefore are NOT receiving the SCAT Mastery nurture sequence.</p>
+                  <p><strong>Likely cause:</strong> Squarespace API key missing the <code>Profiles - Read</code> scope, or the key was revoked.</p>
+                  <p><strong>Fix:</strong> Squarespace dashboard → Settings → Developer Tools → API Keys → ensure <code>Profiles</code> permission is granted, then update <code>SQUARESPACE_API_KEY</code> in Vercel env if rotated.</p>
+                  <p><strong>Squarespace response:</strong></p>
+                  <pre style="background:#f1f5f9;padding:12px;border-radius:6px;font-size:12px;">${escapeHtml(errorText.slice(0, 500))}</pre>
+                  <p style="font-size:12px;color:#64748b;">One alert per day. Re-fires tomorrow if still broken.</p>`,
+                tags: [{ name: 'type', value: 'admin-alert' }, { name: 'subject', value: 'ss-sync-auth-fail' }],
+              })
+              console.log('[SS Sync] Sent auth-failure alert to admin')
+            }
+          } catch (alertErr) {
+            console.error('[SS Sync] Alert email failed:', alertErr)
+          }
+        }
+
         return NextResponse.json(
           { error: `Squarespace API error: ${response.status}` },
           { status: 502 }
