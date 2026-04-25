@@ -802,6 +802,33 @@ export const FREE_USER_REENGAGEMENT = {
 }
 
 /**
+ * FREE_LOGGED_IN_NO_PROGRESS — Day 7 for preview users who logged in
+ * at least once but completed zero SCAT modules.
+ *
+ * The existing FREE_USER_REENGAGEMENT targets ghosts (never logged in)
+ * with copy that assumes "you signed up but haven't started" — wrong
+ * tone for someone who DID get past the magic-link round-trip and
+ * landed in the dashboard. They cleared the auth hurdle but bounced
+ * before opening Module 1, which is a different problem (UX confusion,
+ * intimidation, distraction, etc.) and warrants different copy.
+ */
+export const FREE_LOGGED_IN_NO_PROGRESS = {
+  subject: 'You opened the door — Module 1 is one click in',
+  template: (name: string, loginLink: string) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
+    <p>I noticed you logged in but didn&rsquo;t end up starting Module 1. Curious — was it the right time, or did something stop you?</p>
+    <p>If it was just &ldquo;I&rsquo;ll come back later and forgot&rdquo;, that&rsquo;s normal. Most clinicians who finish the SCAT6 Mastery course end up doing it across two short sittings. Here&rsquo;s the easiest re-entry:</p>
+    <div class="callout">
+      <strong>Module 1 (20 min):</strong> SCAT6 vs SCOAT6 &mdash; which tool to use, when, and the medicolegal reasons it matters. Most clinicians haven&rsquo;t been taught this distinction explicitly.<br><br>
+      You&rsquo;ll come away with: the rule for which tool, three red-flag triggers for immediate referral, and the documentation pattern that protects you.
+    </div>
+    <center><a href="${utm(loginLink, 'free_logged_in_no_progress_d7', 'open_module1')}" class="cta-btn">Open Module 1 (20 minutes)</a></center>
+    <p>If you tried to start it and something didn&rsquo;t work &mdash; broken video, page that wouldn&rsquo;t load, login that bounced &mdash; reply to this email. I&rsquo;ll fix it.</p>
+    <div class="sig">Zac</div>
+  `),
+}
+
+/**
  * SCAT_DAY10_ENGAGEMENT — sent at Day 10 instead of promo code
  * for preview users with fewer than 3 SCAT modules completed.
  * Encourages them to keep going rather than selling too early.

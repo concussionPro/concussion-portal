@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE } from '@/lib/email-sequences'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE } from '@/lib/email-sequences'
 import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
@@ -127,26 +127,30 @@ export async function GET(request: Request) {
         }
       }
 
-      // ── Day 7: Route based on login activity ──
-      // Ghosters (never logged in) → FREE_USER_REENGAGEMENT
-      // Active users → clinical case study + full-price CTA (default sequence)
-      if (daysSinceSignup === 7 && !user.lastLoginAt) {
-        const auditKey = `scat_day7_reengagement_${user.id}`
+      // ── Day 7: Three-way route based on login + progress ──
+      //   never logged in       → FREE_USER_REENGAGEMENT (door-not-opened copy)
+      //   logged in, 0 modules  → FREE_LOGGED_IN_NO_PROGRESS (door-opened-but-no-step copy)
+      //   1+ SCAT modules done  → clinical case study (default sequence — handled below)
+      if (daysSinceSignup === 7 && (!user.lastLoginAt || scatCompletedCount === 0)) {
+        const ghoster = !user.lastLoginAt
+        const variant = ghoster ? 'reengagement' : 'logged_in_no_progress'
+        const tpl = ghoster ? FREE_USER_REENGAGEMENT : FREE_LOGGED_IN_NO_PROGRESS
+        const auditKey = `scat_day7_${variant}_${user.id}`
         const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         if (inserted === 0) continue
 
-        const html = FREE_USER_REENGAGEMENT.template(user.name, loginLink)
+        const html = tpl.template(user.name, loginLink)
           .replace('{{unsubscribe_url}}', unsubscribeUrl)
 
         try {
           await sendEmail({
             to: user.email,
-            subject: FREE_USER_REENGAGEMENT.subject,
+            subject: tpl.subject,
             html,
             tags: [
               { name: 'sequence', value: 'scat-mastery' },
               { name: 'day', value: '7' },
-              { name: 'variant', value: 'reengagement' },
+              { name: 'variant', value: variant },
             ],
             headers: {
               'List-Unsubscribe': `<${unsubscribeUrl}>`,
@@ -154,9 +158,9 @@ export async function GET(request: Request) {
             },
           })
           emailsSent++
-          console.log(`[Nurture] Day 7 (reengagement) → ${redact(user.email)}`)
+          console.log(`[Nurture] Day 7 (${variant}) → ${redact(user.email)}`)
         } catch (err) {
-          console.error(`[Nurture] Failed to send Day 7 reengagement to ${redact(user.email)}:`, err)
+          console.error(`[Nurture] Failed to send Day 7 ${variant} to ${redact(user.email)}:`, err)
         }
         continue
       }
