@@ -136,7 +136,7 @@ export const POST_PURCHASE_SEQUENCE = [
         <li><strong>Module 3:</strong> Practical assessment and acute concussion management</li>
       </ol>
       <p>Each module takes about 60–90 minutes. By the end of Module 3, you'll have a solid clinical framework for concussion recognition, diagnosis, and acute management.</p>
-      <center><a href="${utm(loginLink, 'post_purchase_day3', 'continue_course')}" class="cta-btn">Continue Your Course</a></center>
+      <center><a href="${utm(loginLink, 'post_purchase_day3', 'continue_course')}" class="cta-btn">Open Module 1: Concussion Neuroscience</a></center>
       <p class="ps">P.S. Your course has lifetime access — no pressure, but momentum matters. Clinicians who finish within the first two weeks report the highest confidence gains.</p>
       <div class="sig">Zac</div>
     `),
@@ -156,7 +156,7 @@ export const POST_PURCHASE_SEQUENCE = [
         <li><strong>Module 7 — Rehabilitation by Phenotype:</strong> Targeted treatment strategies for each concussion subtype</li>
       </ul>
       <p>Complete all 8 modules and you'll earn your <strong>8 CPD point certificate</strong> — automatically generated and ready to download.</p>
-      <center><a href="${utm(loginLink, 'post_purchase_day7', 'keep_going')}" class="cta-btn">Keep Going</a></center>
+      <center><a href="${utm(loginLink, 'post_purchase_day7', 'keep_going')}" class="cta-btn">Open Module 5: Multidisciplinary Management</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -176,7 +176,7 @@ export const POST_PURCHASE_SEQUENCE = [
         <li><strong>Migraine:</strong> Acute and preventive management strategies</li>
       </ul>
       <p>It's the bridge between understanding concussion and actually treating it.</p>
-      <center><a href="${utm(loginLink, 'post_purchase_day14', 'continue_course')}" class="cta-btn">Continue Your Course</a></center>
+      <center><a href="${utm(loginLink, 'post_purchase_day14', 'continue_course')}" class="cta-btn">Open Module 7: Phenotype Rehab</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -363,7 +363,7 @@ export const SCAT_MASTERY_SEQUENCE = [
   // WEEK 1 (Day 3) - Module 1 nudge (not "did you finish the course")
   {
     day: 3,
-    subject: 'Have you tried Module 1 yet?',
+    subject: 'The SCAT6-vs-SCOAT6 distinction most clinicians get wrong',
     template: (name: string, loginLink: string) => emailShell(`
       <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
       <p>Quick check &mdash; have you had a chance to start Module 1?</p>
@@ -412,7 +412,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <strong>Expires: ${expiryDate || 'in 72 hours'}</strong>
       </div>
       <p>The full course picks up where SCAT6 Mastery leaves off &mdash; 8 modules covering concussion pathophysiology, VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype. Plus the option to add a hands-on workshop day.</p>
-      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day10', 'promo_code')}" class="cta-btn">Claim Your $50 Off &mdash; $${CONFIG.COURSE.PRICE_ONLINE - 50}</a></center>
+      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day10', 'promo_code')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - 50} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
       <div class="sig">
         Zac Lewis<br>
         Concussion Education Australia
@@ -458,7 +458,7 @@ export const SCAT_MASTERY_SEQUENCE = [
   // WEEK 5 (Day 28) - Last chance promo with hard 72h deadline
   {
     day: 28,
-    subject: 'Last chance — $50 off expires this week',
+    subject: '$50 SCAT discount — closes Friday',
     template: (name: string, upgradeLink: string, expiryDate?: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
       <p>This is the last time I'll send this offer.</p>
@@ -480,7 +480,7 @@ export const SCAT_MASTERY_SEQUENCE = [
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</td>
         </tr>
       </table>
-      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day28', 'last_chance')}" class="cta-btn">Claim $50 Off Before It Expires</a></center>
+      <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day28', 'last_chance')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - 50} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
       ${nextWorkshopCallout()}
       <p class="ps">P.S. You can start with the online course and upgrade to include the workshop later &mdash; you'll only pay the difference.</p>
       <div class="sig">Zac</div>
@@ -501,7 +501,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       </ul>
       <p>Both include the clinical toolkit, reference repository, and digital certificate.</p>
       ${nextWorkshopCallout()}
-      <center><a href="${utm(upgradeLink, 'scat_mastery_day42', 'choose_option')}" class="cta-btn">Choose Your Option</a></center>
+      <center><a href="${utm(upgradeLink, 'scat_mastery_day42', 'choose_option')}" class="cta-btn">Compare online vs. workshop</a></center>
       <p style="font-size: 14px; color: #475569; margin-top: 20px;">Questions? Just reply &mdash; I read every message.</p>
       <div class="sig">
         Zac Lewis<br>
@@ -785,7 +785,7 @@ export const REENGAGEMENT_EMAIL = {
  * for preview users who never logged in after signup (ghosters).
  */
 export const FREE_USER_REENGAGEMENT = {
-  subject: 'Your free SCAT6 training is still waiting',
+  subject: 'The 20-min module on SCAT6 vs SCOAT6',
   template: (name: string, loginLink: string) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
     <p>You signed up for the free SCAT6 Mastery course a week ago but haven't started yet.</p>
@@ -867,7 +867,7 @@ export const SCAT_COMPLETER_PERSONAL_FOLLOWUP = {
  * intimidation, distraction, etc.) and warrants different copy.
  */
 export const FREE_LOGGED_IN_NO_PROGRESS = {
-  subject: 'You opened the door — Module 1 is one click in',
+  subject: 'Module 1 is 20 min — here\'s the easiest path back',
   template: (name: string, loginLink: string) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
     <p>I noticed you logged in but didn&rsquo;t end up starting Module 1. Curious — was it the right time, or did something stop you?</p>
