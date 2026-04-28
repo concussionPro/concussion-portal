@@ -104,14 +104,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'contacts array is required' }, { status: 400 })
     }
 
-    // Skip contacts who explicitly did NOT consent to marketing (e.g. an
-    // unticked Squarespace 'Accepts Marketing' box). Auto-creating portal
-    // accounts for these people produced the bulk of the 'never logged in'
-    // cohort — they only wanted the SCAT PDF, not a portal account or
-    // nurture sequence. acceptsMarketing === undefined is permissive
-    // (legacy callers don't pass the field).
-    const filteredContacts = contacts.filter((c) => c.acceptsMarketing !== false)
-    const skippedNoConsent = contacts.length - filteredContacts.length
+    // All contacts enter the nurture funnel — the 'Accepts Marketing' flag
+    // is preserved on the contact for transparency but doesn't filter the
+    // import. Per-recipient unsubscribe is the safety valve via
+    // List-Unsubscribe headers on every nurture email.
+    const filteredContacts = contacts
+    const skippedNoConsent = 0
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const preseasonLink = `${baseUrl}/preseason`

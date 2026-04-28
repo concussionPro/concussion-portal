@@ -216,13 +216,9 @@ export async function GET(request: Request) {
           skipped++
           continue
         }
-        // Skip non-consented contacts. Most form-fillers want the SCAT PDF
-        // not a portal account; auto-creating preview users for them
-        // produced 63 of 81 'never logged in' ghosts in the prior dataset.
-        if (!profile.acceptsMarketing) {
-          skipped++
-          continue
-        }
+        // All non-customer contacts enter the nurture — the legacy
+        // Squarespace site is a zero-ad-spend acquisition source, every
+        // form-fill is a real lead. List-Unsubscribe handles per-user opt-out.
 
         // Check if already in portal
         const existing = await findUserByEmail(email)
