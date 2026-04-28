@@ -371,7 +371,16 @@ function buildUserInsights(
   }
 
   // --- Free-to-paid conversion rate ---
-  const freeUsers = users.filter(u => u.accessLevel === 'preview')
+  // 'engagedFreeUsers' = preview users who actually intended to use the
+  // portal: signed up via free-course / scat-export / preseason flows, OR
+  // imported from Squarespace AND have at least logged in once. Excludes
+  // SCAT-PDF-only downloaders auto-imported as preview accounts. Without
+  // this filter, the engagement stats are dominated by 60+ Squarespace
+  // ghosts who only wanted the form, not a course.
+  const allFreeUsers = users.filter(u => u.accessLevel === 'preview')
+  const freeUsers = allFreeUsers.filter(u =>
+    u.signupSource !== 'squarespace' || !!u.lastLogin
+  )
   const paidUsers = users.filter(u => u.accessLevel === 'online-only' || u.accessLevel === 'full-course')
   if (users.length > 5) {
     const convRate = users.length > 0 ? paidUsers.length / users.length : 0
@@ -413,11 +422,14 @@ function buildUserInsights(
     const zeroPct = (zeroModules / freeUsers.length) * 100
 
     if (zeroPct > 60) {
+      const ghostNote = (allFreeUsers.length - freeUsers.length) > 0
+        ? ` (${allFreeUsers.length - freeUsers.length} non-consented Squarespace contacts excluded — they only downloaded the SCAT form).`
+        : ''
       insights.push({
         type: 'warning',
         category: 'users',
-        title: `${zeroPct.toFixed(0)}% of free users completed 0 modules`,
-        detail: `Of ${freeUsers.length} free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 3 SCAT modules.`,
+        title: `${zeroPct.toFixed(0)}% of engaged free users completed 0 modules`,
+        detail: `Of ${freeUsers.length} engaged free users: ${zeroModules} completed 0, ${someModules} completed some, ${allModules} completed all 3 SCAT modules.${ghostNote}`,
         metric: `${zeroPct.toFixed(0)}% inactive`,
         action: 'Send a reminder email to users who signed up but never started. Add onboarding nudges. Check if the first module is too intimidating.',
       })

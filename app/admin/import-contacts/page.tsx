@@ -8,6 +8,7 @@ interface Contact {
   email: string
   name?: string
   date?: string
+  acceptsMarketing?: boolean
 }
 
 interface ImportResult {
@@ -16,6 +17,7 @@ interface ImportResult {
   emailed?: number
   skipped?: number
   errors?: number
+  skippedNoConsent?: number
   total?: number
   error?: string
 }
@@ -56,6 +58,9 @@ function parseCsv(raw: string): Contact[] {
   const firstIdx = header.findIndex((h) => h === 'first name' || h === 'firstname' || h.startsWith('first'))
   const lastIdx = header.findIndex((h) => h === 'last name' || h === 'lastname' || h.startsWith('last'))
   const dateIdx = header.findIndex((h) => h.includes('created') || h.includes('date') || h.includes('signed up'))
+  // Squarespace export: 'Accepts Marketing' column. Truthy values like
+  // 'yes' / 'true' / '1' / '✓' = consented. Anything else (including empty) = not consented.
+  const acceptsMarketingIdx = header.findIndex((h) => h.includes('accepts marketing') || h === 'marketing' || h.includes('subscribed'))
 
   if (emailIdx < 0) return []
 
@@ -68,7 +73,17 @@ function parseCsv(raw: string): Contact[] {
     const last = lastIdx >= 0 ? cells[lastIdx]?.trim() : ''
     const name = [first, last].filter(Boolean).join(' ')
     const date = dateIdx >= 0 ? cells[dateIdx]?.trim() : undefined
-    contacts.push({ email: email.toLowerCase(), ...(name ? { name } : {}), ...(date ? { date } : {}) })
+    let acceptsMarketing: boolean | undefined = undefined
+    if (acceptsMarketingIdx >= 0) {
+      const v = (cells[acceptsMarketingIdx] || '').trim().toLowerCase()
+      acceptsMarketing = v === 'yes' || v === 'true' || v === '1' || v === '✓' || v === 'y'
+    }
+    contacts.push({
+      email: email.toLowerCase(),
+      ...(name ? { name } : {}),
+      ...(date ? { date } : {}),
+      ...(acceptsMarketing !== undefined ? { acceptsMarketing } : {}),
+    })
   }
   return contacts
 }
@@ -83,6 +98,13 @@ export default function ImportContactsPage() {
     const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000
     return parsed.filter((c) => c.date && new Date(c.date).getTime() >= cutoff).length
   }, [parsed])
+  // How many rows have an explicit Accepts Marketing column AND it's NOT ticked.
+  // We'll skip these on import — they only wanted the SCAT PDF, not a portal account.
+  const noConsentCount = useMemo(
+    () => parsed.filter((c) => c.acceptsMarketing === false).length,
+    [parsed],
+  )
+  const willImport = parsed.length - noConsentCount
 
   async function handleImport() {
     if (parsed.length === 0 || loading) return
@@ -156,11 +178,19 @@ export default function ImportContactsPage() {
           />
 
           {parsed.length > 0 && (
-            <div className="mt-3 rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-700">
-              <strong>{parsed.length}</strong> valid email{parsed.length === 1 ? '' : 's'} parsed.
-              {recentCount > 0 && (
-                <> <strong>{recentCount}</strong> signed up in the last 30 days will receive the welcome email; older ones are imported silently.</>
+            <div className="mt-3 rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-700 space-y-1">
+              <p><strong>{parsed.length}</strong> valid email{parsed.length === 1 ? '' : 's'} parsed.</p>
+              {noConsentCount > 0 && (
+                <p className="text-amber-800">
+                  <strong>{noConsentCount}</strong> will be skipped — &ldquo;Accepts Marketing&rdquo; column is unticked or empty (they downloaded the form but didn&rsquo;t consent to portal/nurture emails).
+                </p>
               )}
+              <p>
+                <strong>{willImport}</strong> will be imported as preview accounts.
+                {recentCount > 0 && (
+                  <> <strong>{recentCount}</strong> signed up in the last 30 days will receive the Day 0 welcome email; older ones are imported silently.</>
+                )}
+              </p>
             </div>
           )}
 
@@ -190,7 +220,11 @@ export default function ImportContactsPage() {
                     <p className="font-semibold text-emerald-900 mb-1">Import complete</p>
                     <p className="text-emerald-800">
                       {result.created} created, {result.emailed} welcome email{result.emailed === 1 ? '' : 's'} sent,{' '}
-                      {result.skipped} skipped (already existed), {result.errors} errors — {result.total} total processed.
+                      {result.skipped} skipped (already existed), {result.errors} errors
+                      {typeof result.skippedNoConsent === 'number' && result.skippedNoConsent > 0 && (
+                        <>, <strong>{result.skippedNoConsent}</strong> skipped (no marketing consent)</>
+                      )}
+                      {' '}— {result.total} total processed.
                     </p>
                   </>
                 ) : (

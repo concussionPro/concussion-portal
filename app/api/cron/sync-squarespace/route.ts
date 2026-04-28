@@ -216,6 +216,13 @@ export async function GET(request: Request) {
           skipped++
           continue
         }
+        // Skip non-consented contacts. Most form-fillers want the SCAT PDF
+        // not a portal account; auto-creating preview users for them
+        // produced 63 of 81 'never logged in' ghosts in the prior dataset.
+        if (!profile.acceptsMarketing) {
+          skipped++
+          continue
+        }
 
         // Check if already in portal
         const existing = await findUserByEmail(email)

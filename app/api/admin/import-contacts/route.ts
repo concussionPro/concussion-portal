@@ -98,11 +98,20 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { contacts } = await request.json() as { contacts: Array<{ email: string; name?: string; date?: string }> }
+    const { contacts } = await request.json() as { contacts: Array<{ email: string; name?: string; date?: string; acceptsMarketing?: boolean }> }
 
     if (!Array.isArray(contacts) || contacts.length === 0) {
       return NextResponse.json({ error: 'contacts array is required' }, { status: 400 })
     }
+
+    // Skip contacts who explicitly did NOT consent to marketing (e.g. an
+    // unticked Squarespace 'Accepts Marketing' box). Auto-creating portal
+    // accounts for these people produced the bulk of the 'never logged in'
+    // cohort — they only wanted the SCAT PDF, not a portal account or
+    // nurture sequence. acceptsMarketing === undefined is permissive
+    // (legacy callers don't pass the field).
+    const filteredContacts = contacts.filter((c) => c.acceptsMarketing !== false)
+    const skippedNoConsent = contacts.length - filteredContacts.length
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const preseasonLink = `${baseUrl}/preseason`
@@ -115,8 +124,8 @@ export async function POST(request: NextRequest) {
     let errors = 0
 
     // Process in batches of 5 with 1s delay between batches
-    for (let i = 0; i < contacts.length; i++) {
-      const contact = contacts[i]
+    for (let i = 0; i < filteredContacts.length; i++) {
+      const contact = filteredContacts[i]
       const email = contact.email?.trim()?.toLowerCase()
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -184,7 +193,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`[Import] Done: ${created} created, ${emailed} emailed, ${skipped} skipped, ${errors} errors`)
+    console.log(`[Import] Done: ${created} created, ${emailed} emailed, ${skipped} skipped, ${errors} errors, ${skippedNoConsent} no-consent`)
 
     return NextResponse.json({
       success: true,
@@ -192,6 +201,7 @@ export async function POST(request: NextRequest) {
       emailed,
       skipped,
       errors,
+      skippedNoConsent,
       total: contacts.length,
     })
   } catch (error) {
