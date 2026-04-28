@@ -37,6 +37,9 @@ interface EmailOptions {
   html: string
   tags?: Array<{ name: string; value: string }>
   headers?: Record<string, string>
+  /** ISO 8601 datetime — Resend holds the send and dispatches at this time.
+   *  Used by cron loops to stagger batches and protect sender reputation. */
+  scheduledAt?: string
 }
 
 /**
@@ -62,10 +65,11 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       html: options.html,
       tags: options.tags,
       headers: options.headers,
+      ...(options.scheduledAt ? { scheduledAt: options.scheduledAt } : {}),
     })
 
     if (result.data) {
-      console.log('Email sent via Resend:', result.data.id)
+      console.log('Email sent via Resend:', result.data.id, options.scheduledAt ? `(scheduled ${options.scheduledAt})` : '')
       return true
     } else {
       console.error('Resend email error:', result.error)

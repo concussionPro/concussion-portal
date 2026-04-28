@@ -21,6 +21,7 @@ import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
+import { EmailScheduler } from '@/lib/email-scheduler'
 
 function redact(e: string) { return e.length > 3 ? e.slice(0, 3) + '***' : '***' }
 
@@ -57,6 +58,11 @@ export async function GET(request: Request) {
     const errors: string[] = []
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
+    // Stagger nurture sends across ~30-45 min with per-domain throttling so
+    // the daily batch doesn't read as a marketing blast to inbox providers.
+    // Resend holds each send until its scheduledAt timestamp.
+    const scheduler = new EmailScheduler()
+
     // ── 1. SCAT6 Mastery Nurture Sequence (preview users) ──
     // Routes Day 7 and Day 10 to variant emails based on user activity/progress
     for (const user of users) {
@@ -86,6 +92,7 @@ export async function GET(request: Request) {
               const html = day0Email.template(user.name, loginLink).replace('{{unsubscribe_url}}', unsubscribeUrl)
               await sendEmail({
                 to: user.email,
+                scheduledAt: scheduler.next(user.email),
                 subject: day0Email.subject,
                 html,
                 tags: [
@@ -145,6 +152,7 @@ export async function GET(request: Request) {
         try {
           await sendEmail({
             to: user.email,
+            scheduledAt: scheduler.next(user.email),
             subject: tpl.subject,
             html,
             tags: [
@@ -179,6 +187,7 @@ export async function GET(request: Request) {
         try {
           await sendEmail({
             to: user.email,
+            scheduledAt: scheduler.next(user.email),
             subject: SCAT_DAY10_ENGAGEMENT.subject,
             html,
             tags: [
@@ -220,6 +229,7 @@ export async function GET(request: Request) {
       try {
         await sendEmail({
           to: user.email,
+          scheduledAt: scheduler.next(user.email),
           subject: email.subject,
           html,
           tags: [
@@ -268,6 +278,7 @@ export async function GET(request: Request) {
           try {
             await sendEmail({
               to: user.email,
+              scheduledAt: scheduler.next(user.email),
               subject: WORKSHOP_RESERVATION_EMAIL.subject,
               html,
               tags: [
@@ -335,6 +346,7 @@ export async function GET(request: Request) {
       try {
         await sendEmail({
           to: user.email,
+          scheduledAt: scheduler.next(user.email),
           subject: useEmail.subject,
           html,
           tags: [
@@ -386,6 +398,7 @@ export async function GET(request: Request) {
         try {
           await sendEmail({
             to: user.email,
+            scheduledAt: scheduler.next(user.email),
             subject: WORKSHOP_LOGISTICS_EMAIL.subject,
             html,
             tags: [
@@ -420,6 +433,7 @@ export async function GET(request: Request) {
       try {
         await sendEmail({
           to: user.email,
+          scheduledAt: scheduler.next(user.email),
           subject: prepEmail.subject,
           html,
           tags: [
@@ -475,6 +489,7 @@ export async function GET(request: Request) {
       try {
         await sendEmail({
           to: user.email,
+          scheduledAt: scheduler.next(user.email),
           subject,
           html,
           tags: [
@@ -496,7 +511,7 @@ export async function GET(request: Request) {
 
     // ── 5. Abandoned Checkout Recovery Emails ──
     try {
-      const abandonedEmailsSent = await processAbandonedCheckouts(baseUrl)
+      const abandonedEmailsSent = await processAbandonedCheckouts(baseUrl, scheduler)
       emailsSent += abandonedEmailsSent
     } catch (err) {
       // Log but don't fail the entire cron — other sequences already sent
@@ -530,6 +545,7 @@ export async function GET(request: Request) {
               .replace('{{unsubscribe_url}}', unsubscribeUrl)
             await sendEmail({
               to: user.email,
+              scheduledAt: scheduler.next(user.email),
               subject: upgradeEmail.subject,
               html,
               tags: [
@@ -568,6 +584,7 @@ export async function GET(request: Request) {
               .replace('{{unsubscribe_url}}', unsubscribeUrl)
             await sendEmail({
               to: user.email,
+              scheduledAt: scheduler.next(user.email),
               subject: REENGAGEMENT_EMAIL.subject,
               html,
               tags: [
@@ -623,6 +640,7 @@ export async function GET(request: Request) {
               .replace('{{unsubscribe_url}}', unsubscribeUrl)
             await sendEmail({
               to: user.email,
+              scheduledAt: scheduler.next(user.email),
               subject: ALMOST_DONE_EMAIL.subject,
               html: almostDoneHtml,
               tags: [
@@ -682,6 +700,7 @@ export async function GET(request: Request) {
 
         await sendEmail({
           to: user.email,
+          scheduledAt: scheduler.next(user.email),
           subject: SCAT_COMPLETION_UPSELL.subject,
           html,
           tags: [
@@ -732,6 +751,7 @@ export async function GET(request: Request) {
 
           await sendEmail({
             to: user.email,
+            scheduledAt: scheduler.next(user.email),
             subject: FREE_ALMOST_DONE.subject,
             html,
             tags: [
@@ -781,6 +801,7 @@ export async function GET(request: Request) {
           .replace('{{unsubscribe_url}}', unsubscribeUrl)
         await sendEmail({
           to: user.email,
+          scheduledAt: scheduler.next(user.email),
           subject: candidate.subject,
           html,
           tags: [
@@ -815,7 +836,7 @@ export async function GET(request: Request) {
 /**
  * Process abandoned checkout recovery emails via Postgres
  */
-async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
+async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailScheduler): Promise<number> {
   let emailsSent = 0
 
   const { rows } = await sql`
@@ -857,6 +878,7 @@ async function processAbandonedCheckouts(baseUrl: string): Promise<number> {
       try {
         await sendEmail({
           to: checkout.email,
+          scheduledAt: scheduler.next(checkout.email),
           subject: nextEmail.subject,
           html,
           tags: [
