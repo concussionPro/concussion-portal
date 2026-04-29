@@ -40,6 +40,8 @@ interface EmailOptions {
   /** ISO 8601 datetime — Resend holds the send and dispatches at this time.
    *  Used by cron loops to stagger batches and protect sender reputation. */
   scheduledAt?: string
+  /** Optional file attachments — used for tax invoice PDFs on real purchases. */
+  attachments?: Array<{ filename: string; content: Buffer }>
 }
 
 /**
@@ -66,6 +68,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       tags: options.tags,
       headers: options.headers,
       ...(options.scheduledAt ? { scheduledAt: options.scheduledAt } : {}),
+      ...(options.attachments && options.attachments.length > 0 ? { attachments: options.attachments } : {}),
     })
 
     if (result.data) {
@@ -140,6 +143,8 @@ export async function sendPostPurchaseLoginEmail(opts: {
   workshopDate?: string
   workshopVenue?: string
   origin?: string
+  /** Optional attachments — used for tax invoice PDF on real purchases. */
+  attachments?: Array<{ filename: string; content: Buffer }>
 }): Promise<boolean> {
   const baseUrl = opts.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   const loginUrl = `${baseUrl}/auth/verify?token=${opts.token}&utm_source=email&utm_medium=email&utm_campaign=purchase_welcome`
@@ -205,7 +210,7 @@ export async function sendPostPurchaseLoginEmail(opts: {
         <strong>Where to start</strong> — Module 1 (Concussion neuroscience) takes about 75 minutes. Clinicians who finish it in the first 48 hours are 3× more likely to complete the whole course.
       </div>
 
-      <p style="font-size: 14px; color: #475569;">A formal tax invoice will arrive separately from Stripe — keep it for your CPD / tax records.</p>
+      <p style="font-size: 14px; color: #475569;">${opts.attachments && opts.attachments.length > 0 ? 'Your tax invoice is attached to this email — keep it for your CPD / tax records or forward to your employer for reimbursement.' : 'A formal tax invoice will arrive separately from Stripe — keep it for your CPD / tax records.'}</p>
       <p style="font-size: 14px; color: #475569;">Any questions, just hit reply — I read every message.</p>
 
       <div class="sig">
@@ -224,6 +229,7 @@ export async function sendPostPurchaseLoginEmail(opts: {
       { name: 'type', value: 'purchase-welcome' },
       { name: 'accessLevel', value: opts.accessLevel },
     ],
+    ...(opts.attachments && opts.attachments.length > 0 ? { attachments: opts.attachments } : {}),
   })
 }
 

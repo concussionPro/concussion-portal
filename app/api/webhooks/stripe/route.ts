@@ -334,6 +334,35 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
     const melConfirmed = workshopCity === 'melbourne' && CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
+
+    // Generate the tax invoice PDF as an attachment to the welcome email.
+    // Best-effort — if PDF generation throws, the welcome email still goes
+    // out (just without the attachment) and we log the failure for follow-up.
+    let invoiceAttachment: { filename: string; content: Buffer } | undefined
+    try {
+      const { generateTaxInvoicePdf, invoiceNumberFromSession } = await import('@/lib/tax-invoice')
+      const issueDate = new Date()
+      const invNumber = invoiceNumberFromSession(session.id, issueDate)
+      const pdf = generateTaxInvoicePdf({
+        invoiceNumber: invNumber,
+        issueDate,
+        buyer: { name: userName, email: customerEmail },
+        lineItems: [{
+          description: labelForCourse(courseType, finalAccess) + (workshopCity ? ` — workshop: ${workshopCity}` : ''),
+          quantity: 1,
+          unitPriceCents: session.amount_total || 0,
+          totalCents: session.amount_total || 0,
+        }],
+        totalCents: session.amount_total || 0,
+        currency,
+        paidAt: issueDate,
+        paymentReference: session.id,
+      })
+      invoiceAttachment = { filename: `${invNumber}.pdf`, content: pdf }
+    } catch (invErr) {
+      console.error(`[invoice] PDF generation failed for ${redact(customerEmail)}:`, invErr)
+    }
+
     const emailSent = await sendPostPurchaseLoginEmail({
       email: customerEmail,
       token,
@@ -346,6 +375,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       workshopDate: melConfirmed ? CONFIG.LOCATIONS.MELBOURNE.date : undefined,
       workshopVenue: melConfirmed ? 'Rydges Melbourne, Exhibition St' : undefined,
       origin: baseUrl,
+      ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
     })
 
     if (emailSent) {
@@ -428,6 +458,32 @@ async function handleBookPurchase(
   const loginUrl = `${baseUrl}/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=reference_purchase`
   const downloadUrl = `${baseUrl}/api/reference/download`
 
+  // Generate tax invoice — same best-effort policy as course purchase.
+  let bookInvoice: { filename: string; content: Buffer } | undefined
+  try {
+    const { generateTaxInvoicePdf, invoiceNumberFromSession } = await import('@/lib/tax-invoice')
+    const issueDate = new Date()
+    const invNumber = invoiceNumberFromSession(session.id, issueDate)
+    const pdf = generateTaxInvoicePdf({
+      invoiceNumber: invNumber,
+      issueDate,
+      buyer: { name: customerName, email: customerEmail },
+      lineItems: [{
+        description: 'Concussion Clinical Mastery — Reference Text + Clinical Toolkit 2026 (256-page digital PDF, lifetime access)',
+        quantity: 1,
+        unitPriceCents: session.amount_total || 0,
+        totalCents: session.amount_total || 0,
+      }],
+      totalCents: session.amount_total || 0,
+      currency,
+      paidAt: issueDate,
+      paymentReference: session.id,
+    })
+    bookInvoice = { filename: `${invNumber}.pdf`, content: pdf }
+  } catch (invErr) {
+    console.error(`[book] Invoice PDF generation failed for ${redact(customerEmail)}:`, invErr)
+  }
+
   try {
     await sendEmail({
       to: customerEmail,
@@ -443,7 +499,7 @@ async function handleBookPurchase(
           <p style="margin: 0 0 14px; font-size: 14px; color: #475569;">The reference lives inside your account at <a href="${downloadUrl}" style="color: #0d9488;">portal.concussion-education-australia.com/api/reference/download</a>. Save a local copy for offline use if you like.</p>
           <div style="background: #f0fdfa; border-left: 3px solid #0d9488; padding: 14px 16px; margin: 20px 0; border-radius: 6px; font-size: 14px;">
             <strong>What you paid:</strong> ${escapeHtml(currency)} $${amount.toFixed(2)}<br>
-            <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>
+            <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>${bookInvoice ? '<br><strong>Tax invoice:</strong> attached to this email' : ''}
           </div>
           <p style="margin: 20px 0 0; font-size: 14px; color: #475569;">Next — the text pairs with the online course. Book owners get <strong>A$100 off</strong> the full course. I'll send you the details in a few days so you can read before deciding. No pressure.</p>
           <p style="margin: 14px 0 0; font-size: 14px; color: #475569;">Questions — just reply to this email.</p>
@@ -454,8 +510,9 @@ async function handleBookPurchase(
         { name: 'type', value: 'reference-purchase' },
         { name: 'sequence', value: 'book' },
       ],
+      ...(bookInvoice ? { attachments: [bookInvoice] } : {}),
     })
-    console.log(`[book] Reference purchase + email sent to ${redact(customerEmail)} — ${currency} $${amount}`)
+    console.log(`[book] Reference purchase + email sent to ${redact(customerEmail)} — ${currency} $${amount}${bookInvoice ? ' (with invoice)' : ''}`)
   } catch (err) {
     console.error(`[book] Receipt email failed for ${redact(customerEmail)}:`, err)
     try {
