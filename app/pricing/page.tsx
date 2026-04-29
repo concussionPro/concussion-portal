@@ -109,15 +109,30 @@ function PricingContent() {
       .catch(() => {})
   }, [])
 
-  // UTM-aware messaging: swap hero for CPD-deadline ad traffic (campaign 2C)
-  const [isCpdTraffic, setIsCpdTraffic] = useState(false)
+  // UTM-aware hero — match the headline to the search intent that brought
+  // them. Default 'Hands-On Concussion CPD' headline was misleading for
+  // online-course paid traffic (which is 50%+ of mobile users) and for
+  // SCAT6-specific search intent. Pricing page bounce is highest from
+  // these mismatched-headline cohorts.
+  type HeroVariant = 'default' | 'cpd' | 'online' | 'scat6'
+  const [heroVariant, setHeroVariant] = useState<HeroVariant>('default')
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const utmCampaign = params.get('utm_campaign')
-    if (utmCampaign && utmCampaign.toLowerCase().includes('cpd')) {
-      setIsCpdTraffic(true)
-    }
+    const haystack = [
+      params.get('utm_campaign'),
+      params.get('utm_content'),
+      params.get('utm_term'),
+    ].filter(Boolean).join(' ').toLowerCase()
+    if (haystack.includes('cpd')) setHeroVariant('cpd')
+    else if (haystack.includes('scat')) setHeroVariant('scat6')
+    else if (
+      haystack.includes('online') ||
+      haystack.includes('direct') ||
+      haystack.includes('2a') ||
+      haystack.includes('course-direct')
+    ) setHeroVariant('online')
   }, [])
+  const isCpdTraffic = heroVariant === 'cpd'
 
   // Early bird countdown
   const daysLeft = useCountdown(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)
@@ -258,9 +273,10 @@ function PricingContent() {
         {/* Canceled notice — own Suspense boundary so it doesn't block SSR */}
         <CanceledBanner />
 
-        {/* Page Header — CPD variant for ad group 2C traffic */}
+        {/* Page Header — variant matched to ad-group search intent
+            (utm_campaign / utm_content / utm_term). */}
         <div className="text-center mb-8">
-          {isCpdTraffic ? (
+          {heroVariant === 'cpd' ? (
             <>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
                 Earn 14 AHPRA CPD Points{' '}
@@ -269,6 +285,26 @@ function PricingContent() {
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Concussion assessment training for physiotherapists &amp; osteopaths.
                 Certificate on completion. Most employers reimburse — we provide the tax invoice.
+              </p>
+            </>
+          ) : heroVariant === 'scat6' ? (
+            <>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+                Master <span className="text-gradient">SCAT6 &amp; SCOAT6</span>{' '}
+                — for clinicians, not just sideline staff
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Beyond the form: when to use SCAT6 vs SCOAT6, red-flag triage, and how the assessment fits into a defensible return-to-play decision. Includes the full 8-module concussion management course.
+              </p>
+            </>
+          ) : heroVariant === 'online' ? (
+            <>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+                Online Concussion Training{' '}
+                <span className="text-gradient">for Australian Clinicians</span>
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                8 modules · 8 AHPRA-aligned CPD points · self-paced with lifetime access. Workshop optional. Most employers reimburse — we provide the tax invoice.
               </p>
             </>
           ) : (
@@ -322,8 +358,11 @@ function PricingContent() {
           </Link>
         </div>
 
-        {/* CPD traffic: employer reimbursement callout — #1 objection for CPD-seeking clinicians */}
-        {isCpdTraffic && (
+        {/* Paid-traffic objection killer: employer-reimbursement callout.
+            Fires for cpd / online variants (paid intent searchers).
+            #1 reason ad clickers leave is sticker shock — this addresses
+            it before they reach the pricing cards. */}
+        {(heroVariant === 'cpd' || heroVariant === 'online') && (
           <div className="max-w-3xl mx-auto mb-8 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
             <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
