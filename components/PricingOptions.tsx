@@ -318,8 +318,31 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // FULL VARIANT
   return (
     <div className="max-w-[1200px] mx-auto">
-      {/* Promo code banner */}
-      {promoCode && (
+      {/* Promo code banner — concrete numbers, not vague reassurance.
+          The Day 28 / Day 42 promo emails drove 100% bounce on /pricing
+          arrivals: clinicians clicked, didn't see the discount visibly
+          applied, didn't trust it, left. */}
+      {promoCode === CONFIG.COURSE.PROMO_CODE && (
+        <div className="max-w-3xl mx-auto mb-6 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 px-5 py-4 shadow-sm">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 text-white">
+              <Check className="w-4.5 h-4.5" strokeWidth={3} />
+            </span>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-emerald-900 leading-tight">
+                <span className="font-bold">$50 off applied</span> &middot; Online Course is{' '}
+                <span className="font-bold">A${(CONFIG.COURSE.PRICE_ONLINE - 50).toLocaleString()}</span>
+                <span className="text-emerald-700/80 font-normal"> (was <s>A${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()}</s>)</span>
+              </p>
+              <p className="text-xs text-emerald-800/80 mt-0.5">
+                Code <code className="font-mono font-semibold bg-emerald-100 px-1 rounded">{promoCode}</code> auto-fills at checkout. No need to enter anything.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Generic banner for unknown promo codes — fallback */}
+      {promoCode && promoCode !== CONFIG.COURSE.PROMO_CODE && (
         <div className="max-w-2xl mx-auto mb-6 flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-200 text-sm">
           <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" strokeWidth={2.5} />
           <span className="text-emerald-800 font-semibold">Promo code {promoCode} will be applied at checkout</span>
