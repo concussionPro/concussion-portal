@@ -14,7 +14,13 @@
  *   BUSINESS_GST_REGISTERED   'true' if the business is GST-registered.
  *                             When true, prices are treated as GST-inclusive
  *                             and a GST line is shown.
- *   BUSINESS_ADDRESS          default: 'Melbourne, VIC, Australia'
+ *   BUSINESS_GST_EFFECTIVE_DATE  ISO date (YYYY-MM-DD). If set, sales with
+ *                             paidAt before this date are treated as
+ *                             pre-registration (no GST, "Invoice" not "Tax
+ *                             Invoice"). Lets the cutover happen at the
+ *                             ATO-registered effective date without
+ *                             incorrectly retro-GSTing past sales.
+ *   BUSINESS_ADDRESS          default: '2 Wordsworth St, Byron Bay NSW 2481'
  *   BUSINESS_EMAIL            default: 'zac@concussion-education-australia.com'
  *   BUSINESS_WEBSITE          default: 'portal.concussion-education-australia.com'
  *
@@ -45,24 +51,51 @@ export interface InvoiceInput {
   paymentReference?: string     // stripe session id
 }
 
+// Concussion Education Australia Pty Ltd — incorporated 18 June 2025,
+// ACN 688 155 508. Business address shown on invoices is 2 Wordsworth St,
+// Byron Bay NSW 2481 (operating address — note this differs from the ASIC
+// registered office at 40 Shirley In; we show the operating address on
+// customer-facing invoices). Override via Vercel env vars if anything
+// changes.
 const ENV_DEFAULTS = {
-  name: 'Concussion Education Australia',
-  abn: '[ABN — set BUSINESS_ABN env var]',
+  name: 'Concussion Education Australia Pty Ltd',
+  abn: '74 688 155 508',
+  acn: '688 155 508',
   gstRegistered: false,
-  address: 'Melbourne, VIC, Australia',
+  address: '2 Wordsworth St, Byron Bay NSW 2481',
   email: 'zac@concussion-education-australia.com',
   website: 'portal.concussion-education-australia.com',
 }
 
-function getBusinessDetails() {
+function getBusinessDetails(supplyDate?: Date) {
+  // GST registered iff the env says so AND the supply happened on/after the
+  // effective date. Pre-registration sales (e.g. Patrick paid 22 Apr 2026,
+  // GST registered 1 May 2026) must keep showing as plain Invoice.
+  let gstRegistered = process.env.BUSINESS_GST_REGISTERED === 'true'
+  if (gstRegistered && supplyDate) {
+    const effectiveStr = process.env.BUSINESS_GST_EFFECTIVE_DATE
+    if (effectiveStr) {
+      const effective = new Date(effectiveStr + 'T00:00:00+10:00') // AEST
+      if (supplyDate < effective) gstRegistered = false
+    }
+  }
   return {
     name: process.env.BUSINESS_NAME || ENV_DEFAULTS.name,
     abn: process.env.BUSINESS_ABN || ENV_DEFAULTS.abn,
-    gstRegistered: process.env.BUSINESS_GST_REGISTERED === 'true',
+    acn: process.env.BUSINESS_ACN || ENV_DEFAULTS.acn,
+    gstRegistered,
     address: process.env.BUSINESS_ADDRESS || ENV_DEFAULTS.address,
     email: process.env.BUSINESS_EMAIL || ENV_DEFAULTS.email,
     website: process.env.BUSINESS_WEBSITE || ENV_DEFAULTS.website,
   }
+}
+
+/** Compact a Stripe session id for display on the invoice — full ids are
+ *  ~70 chars and too long to read. Last 12 alnum chars is plenty for any
+ *  reconciliation lookup. */
+function shortenPaymentRef(ref: string): string {
+  const tail = ref.replace(/[^A-Za-z0-9]/g, '').slice(-12).toUpperCase()
+  return `…${tail}`
 }
 
 function formatCents(cents: number, currency: string): string {
@@ -75,7 +108,7 @@ function formatDate(d: Date): string {
 
 /** Generate a tax-invoice PDF as a Buffer. */
 export function generateTaxInvoicePdf(input: InvoiceInput): Buffer {
-  const biz = getBusinessDetails()
+  const biz = getBusinessDetails(input.paidAt || input.issueDate)
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
 
   const PAGE_W = 595
@@ -87,10 +120,12 @@ export function generateTaxInvoicePdf(input: InvoiceInput): Buffer {
   doc.rect(0, 0, PAGE_W, 6, 'F')
 
   // ── Title ──────────────────────────────────────────────────────
+  // ATO: only GST-registered entities may title a document "Tax Invoice"
+  // (s29-70 GST Act). Unregistered businesses must use plain "Invoice".
   doc.setFontSize(28)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(15, 23, 42)
-  doc.text('Tax Invoice', MARGIN_X, 60)
+  doc.text(biz.gstRegistered ? 'Tax Invoice' : 'Invoice', MARGIN_X, 60)
 
   // ── Seller (top right) ─────────────────────────────────────────
   doc.setFontSize(10)
@@ -99,12 +134,15 @@ export function generateTaxInvoicePdf(input: InvoiceInput): Buffer {
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(71, 85, 105)
   doc.text(`ABN: ${biz.abn}`, COL_RIGHT, 65, { align: 'right' })
-  doc.text(biz.address, COL_RIGHT, 78, { align: 'right' })
-  doc.text(biz.email, COL_RIGHT, 91, { align: 'right' })
-  doc.text(biz.website, COL_RIGHT, 104, { align: 'right' })
+  doc.text(`ACN: ${biz.acn}`, COL_RIGHT, 78, { align: 'right' })
+  doc.text(biz.address, COL_RIGHT, 91, { align: 'right' })
+  doc.text(biz.email, COL_RIGHT, 104, { align: 'right' })
+  doc.text(biz.website, COL_RIGHT, 117, { align: 'right' })
 
   // ── Invoice meta block ─────────────────────────────────────────
-  let y = 140
+  // Bumped down to clear the 5-line seller block above (name + ABN + ACN
+  // + address + email + website).
+  let y = 158
   doc.setTextColor(15, 23, 42)
   doc.setFontSize(9)
   doc.setFont('helvetica', 'bold')
@@ -200,7 +238,7 @@ export function generateTaxInvoicePdf(input: InvoiceInput): Buffer {
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(8)
       doc.setTextColor(148, 163, 184)
-      doc.text(`Payment reference: ${input.paymentReference}`, COL_RIGHT, y, { align: 'right' })
+      doc.text(`Payment ref: ${shortenPaymentRef(input.paymentReference)}`, COL_RIGHT, y, { align: 'right' })
     }
   }
 

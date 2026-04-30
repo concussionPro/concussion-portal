@@ -47,7 +47,7 @@ async function main() {
 
   if (!session) throw new Error(`No paid Stripe session found for ${explicitSession || emailFilter}`)
 
-  const customerName = session.customer_details?.name || '(no name)'
+  const customerName = arg('name') || session.customer_details?.name || '(no name)'
   const customerEmail = session.customer_details?.email || session.customer_email || ''
   const amountCents = session.amount_total || 0
   const currency = (session.currency || 'aud').toUpperCase()
@@ -85,11 +85,10 @@ async function main() {
   console.log(`  amount:   ${currency} $${(amountCents / 100).toFixed(2)}`)
   console.log(`  desc:     ${description}`)
   console.log(`  session:  ${session.id}`)
-  if (!process.env.BUSINESS_ABN) {
+  if (!process.env.BUSINESS_GST_REGISTERED) {
     console.log()
-    console.log('⚠️  BUSINESS_ABN not set in .env.local — placeholder text is on the PDF.')
-    console.log('    Set BUSINESS_ABN, BUSINESS_GST_REGISTERED, BUSINESS_ADDRESS in Vercel env')
-    console.log('    before this goes to real customers.')
+    console.log('ℹ️  BUSINESS_GST_REGISTERED not set — invoice shows "No GST has been charged".')
+    console.log('   Set BUSINESS_GST_REGISTERED=true in Vercel env if registered for GST.')
   }
 }
 
