@@ -48,11 +48,14 @@ export async function GET(request: NextRequest) {
   console.log('[monitoring] Starting daily health checks...')
   const findings: Finding[] = []
 
-  // ── CHECK 1: Checkout ratio ──────────────────────
+  // ── CHECK 1: Checkout funnel ─────────────────────
+  // Three-stage funnel: pricing view → Enrol click (checkout_start event) →
+  // Stripe session created. Splitting clicks from sessions lets us distinguish
+  // "button broken" (clicks but no sessions = real bug) from "traffic not
+  // clicking" (CRO problem, not a code bug).
   try {
     const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000
 
-    // Count pricing page views in analytics
     const { rows: viewRows } = await sql`
       SELECT COUNT(*)::int AS count FROM analytics_events
       WHERE event_type = 'page_view'
@@ -61,32 +64,53 @@ export async function GET(request: NextRequest) {
     `
     const pricingViews = viewRows[0]?.count || 0
 
-    // Count Stripe checkout sessions created in last 24h
+    // Enrol-button clicks — fired client-side from PricingOptions before the
+    // /api/create-checkout fetch. Excludes server-side rows by sessionId prefix.
+    const { rows: clickRows } = await sql`
+      SELECT COUNT(*)::int AS count FROM analytics_events
+      WHERE event_type = 'checkout_start'
+        AND timestamp_ms > ${twentyFourHoursAgo}
+        AND session_id NOT LIKE 'server_%'
+    `
+    const checkoutStarts = clickRows[0]?.count || 0
+
     let stripeSessions = 0
     try {
       const sessions = await getStripe().checkout.sessions.list({
         created: { gte: Math.floor(twentyFourHoursAgo / 1000) },
         limit: 1,
       })
-      // Use total_count if available, otherwise count returned items
       stripeSessions = sessions.data.length
-      if (sessions.has_more) stripeSessions = 2 // At least 2 — enough to clear the alert
+      if (sessions.has_more) stripeSessions = 2
     } catch (stripeErr) {
       console.warn('[monitoring] Stripe API check failed:', stripeErr)
     }
 
-    if (pricingViews > 5 && stripeSessions === 0) {
+    // Real bug: clicks fired but no sessions created. Threshold of 1 — every
+    // failed click is meaningful at this revenue scale. This is the alert
+    // we actually want to wake up to.
+    if (checkoutStarts > 0 && stripeSessions === 0) {
       findings.push({
         severity: 'alert',
-        title: 'Enrol button may be broken',
-        detail: `${pricingViews} pricing page views in the last 24h, but 0 Stripe checkout sessions created.`,
-        suggestion: 'Test the Enrol button on /pricing. Check the browser console for JS errors. Verify /api/create-checkout is responding.',
+        title: 'Enrol button is broken — clicks not reaching Stripe',
+        detail: `${checkoutStarts} Enrol click${checkoutStarts > 1 ? 's' : ''} fired in the last 24h, but 0 Stripe checkout sessions created. ${pricingViews} pricing page view${pricingViews === 1 ? '' : 's'} in the same window.`,
+        suggestion: 'Test the Enrol button on /pricing. Check browser console + Vercel runtime logs for /api/create-checkout errors. Likely causes: middleware CSRF rejecting same-origin requests, Stripe key invalid, schema validation failure.',
+      })
+    }
+    // Traffic-quality problem: lots of views, nobody clicking. Info-level,
+    // not alert — code's fine, the page or audience isn't converting.
+    else if (pricingViews >= 20 && checkoutStarts === 0) {
+      findings.push({
+        severity: 'info',
+        title: 'Pricing page not converting to clicks',
+        detail: `${pricingViews} pricing page views in the last 24h, 0 Enrol clicks. Code is healthy — visitors are bouncing before clicking.`,
+        suggestion: 'Check channel breakdown — paid traffic with intent mismatch, or organic traffic landing on the wrong hero variant. Review CRO: button visibility above the fold, hero copy match to source, workshop-city anxiety on full-course cards.',
       })
     }
 
-    console.log(`[monitoring] Check 1: ${pricingViews} pricing views, ${stripeSessions}+ Stripe sessions`)
+    console.log(`[monitoring] Check 1: ${pricingViews} pricing views → ${checkoutStarts} Enrol clicks → ${stripeSessions}+ Stripe sessions`)
   } catch (err) {
-    console.error('[monitoring] Check 1 (checkout ratio) failed:', err)
+    console.error('[monitoring] Check 1 (checkout funnel) failed:', err)
   }
 
   // ── CHECK 2: Email delivery ──────────────────────
