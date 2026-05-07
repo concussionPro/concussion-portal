@@ -374,6 +374,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       workshopCity: workshopCity || undefined,
       workshopDate: melConfirmed ? CONFIG.LOCATIONS.MELBOURNE.date : undefined,
       workshopVenue: melConfirmed ? 'Rydges Melbourne, Exhibition St' : undefined,
+      accommodationPerkLine: melConfirmed ? `${CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off ${CONFIG.VENUE_BENEFITS.MELBOURNE.hotelName} accommodation — booking link and code in your follow-up email` : undefined,
       origin: baseUrl,
       ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
     })

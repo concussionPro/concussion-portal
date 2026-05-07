@@ -142,6 +142,7 @@ export async function sendPostPurchaseLoginEmail(opts: {
   workshopCity?: string
   workshopDate?: string
   workshopVenue?: string
+  accommodationPerkLine?: string
   origin?: string
   /** Optional attachments — used for tax invoice PDF on real purchases. */
   attachments?: Array<{ filename: string; content: Buffer }>
@@ -154,13 +155,28 @@ export async function sendPostPurchaseLoginEmail(opts: {
   const courseLabel = escapeHtml(opts.courseLabel)
   const amountLine = `${escapeHtml(opts.currency)} $${opts.amount.toFixed(2)}`
 
-  const workshopBlock = (isFullCourse && opts.workshopCity && opts.workshopDate) ? `
+  const cityLabel = opts.workshopCity
+    ? (opts.workshopCity === 'byron-bay' ? 'Byron Bay' : opts.workshopCity.charAt(0).toUpperCase() + opts.workshopCity.slice(1))
+    : ''
+
+  const workshopBlock = (isFullCourse && opts.workshopCity)
+    ? (opts.workshopDate
+        ? `
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
-      <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Your workshop</p>
-      <p style="margin: 0; font-size: 15px; font-weight: 600; color: #0f172a;">${escapeHtml(opts.workshopCity === 'byron-bay' ? 'Byron Bay' : opts.workshopCity.charAt(0).toUpperCase() + opts.workshopCity.slice(1))} — ${escapeHtml(opts.workshopDate)}</p>
-      ${opts.workshopVenue ? `<p style="margin: 2px 0 0; font-size: 13px; color: #475569;">${escapeHtml(opts.workshopVenue)} · 8am–4pm · catered lunch included</p>` : ''}
+      <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Your seat is secured</p>
+      <p style="margin: 0; font-size: 15px; font-weight: 600; color: #0f172a;">${escapeHtml(cityLabel)} — ${escapeHtml(opts.workshopDate)}</p>
+      ${opts.workshopVenue ? `<p style="margin: 2px 0 0; font-size: 13px; color: #475569;">${escapeHtml(opts.workshopVenue)} · 8am–4pm · buffet lunch included, please let us know of any dietary needs</p>` : ''}
+      ${opts.accommodationPerkLine ? `<p style="margin: 8px 0 0; font-size: 13px; color: #0f766e; font-weight: 600;">🛏 ${escapeHtml(opts.accommodationPerkLine)}</p>` : ''}
     </div>
-  ` : ''
+  `
+        : `
+    <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; margin: 20px 0;">
+      <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase; letter-spacing: 0.05em;">Your seat is secured</p>
+      <p style="margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #0f172a;">${escapeHtml(cityLabel)} workshop — date to be confirmed</p>
+      <p style="margin: 0; font-size: 13px; color: #475569;">Your spot at the ${escapeHtml(cityLabel)} workshop is locked in. We'll confirm the exact date once registrations hit the minimum to run, and you'll get at least 6 weeks' notice before the day.</p>
+    </div>
+  `)
+    : ''
 
   return sendEmail({
     to: opts.email,

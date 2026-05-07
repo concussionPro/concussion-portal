@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Check, Star, ShieldCheck, BookOpen } from 'lucide-react'
+import { ArrowRight, Check, Star, ShieldCheck, BookOpen, BedDouble } from 'lucide-react'
 import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { OrganizationSchema, CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
@@ -149,7 +149,7 @@ export default function HomePage() {
                         </div>
                       </div>
                       <div className="p-4 md:p-5">
-                        <div className="flex items-baseline justify-between gap-3 mb-1">
+                        <div className="flex items-baseline justify-between gap-3 mb-1.5">
                           <p className="text-base md:text-lg font-bold text-slate-900 leading-tight">
                             Melbourne · 13 Jun 2026
                           </p>
@@ -161,6 +161,12 @@ export default function HomePage() {
                         <p className="text-sm text-slate-600 leading-snug">
                           Rydges Exhibition St · 8am–4pm · catered lunch included
                         </p>
+                        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[rgba(13,115,119,0.25)] bg-[rgba(13,115,119,0.06)] px-2.5 py-1">
+                          <BedDouble className="w-3.5 h-3.5 text-[var(--accent)]" aria-hidden="true" />
+                          <span className="text-[11px] font-semibold tracking-tight text-[var(--accent)]">
+                            {CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off Rydges accommodation for attendees
+                          </span>
+                        </div>
                       </div>
                     </Link>
                   )}

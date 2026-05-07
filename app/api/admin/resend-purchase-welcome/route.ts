@@ -155,6 +155,7 @@ async function handleSend(_request: NextRequest, body: {
     workshopCity,
     workshopDate: melConfirmed ? CONFIG.LOCATIONS.MELBOURNE.date : undefined,
     workshopVenue: melConfirmed ? 'Rydges Melbourne, Exhibition St' : undefined,
+    accommodationPerkLine: melConfirmed ? `${CONFIG.VENUE_BENEFITS.MELBOURNE.accommodationDiscountPct}% off ${CONFIG.VENUE_BENEFITS.MELBOURNE.hotelName} accommodation — booking link and code in your follow-up email` : undefined,
   })
 
   return NextResponse.json({
