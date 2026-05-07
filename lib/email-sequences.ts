@@ -1045,6 +1045,39 @@ export const PAID_NO_PROGRESS_NUDGE = {
   `),
 }
 
+/**
+ * MELBOURNE_WORKSHOP_PUSH — one-off broadcast to warming preview leads.
+ *
+ * Sent via /api/admin/melbourne-warming-push. NOT part of the automated
+ * nurture cron — fires only on admin trigger. Idempotent via email_audit_log
+ * key `melbourne_push_v1_${userId}`.
+ *
+ * Audience: preview users with 2+ SCAT modules done, signed up within 90
+ * days, not unsubscribed. Goal: convert warming free-completers into
+ * Melbourne 13 June 2026 paid attendees while early-bird is live.
+ */
+export const MELBOURNE_WORKSHOP_PUSH = {
+  subject: 'Concussion Clinical Mastery — Melbourne 13 June 2026',
+  template: (name: string, pricingLink: string) => emailShell(`
+    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>The next Concussion Clinical Mastery workshop in Melbourne is confirmed for <strong>Saturday 13 June 2026</strong> at Rydges Exhibition St (CBD).</p>
+    <ul>
+      <li>14 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
+      <li>Full day 8am&ndash;4pm</li>
+      <li>Buffet lunch included &mdash; please let me know any dietary needs</li>
+      <li>25% off Rydges accommodation for attendees if you&rsquo;re travelling in</li>
+      <li>Capped at 12 clinicians for hands-on practice time</li>
+    </ul>
+    <center><a href="${utm(pricingLink, 'melbourne_push_v1', 'enrol')}" class="cta-btn">Full details + enrol</a></center>
+    <p>Early-bird pricing of <strong>$1,190</strong> closes 31 May (regular $1,400 after that).</p>
+    <p>Any questions, just reply.</p>
+    <div class="sig">
+      Zac<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
 export const ALMOST_DONE_EMAIL = {
   subject: "You're one module away from your certificate",
   template: (name: string, loginLink: string) => emailShell(`
