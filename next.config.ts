@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  experimental: {
+    turbopackFileSystemCacheForDev: false,
+  },
+
   // Redirects
   async redirects() {
     return [
