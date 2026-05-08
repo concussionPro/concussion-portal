@@ -85,7 +85,7 @@ export const CONFIG = {
 
   // SEO Metadata
   SEO: {
-    SITE_NAME: 'ConcussionPro - Concussion Education Australia',
+    SITE_NAME: 'Concussion Education Australia',
     SITE_URL: 'https://portal.concussion-education-australia.com',
     TWITTER_HANDLE: '@ConcussionEduAU',
     OG_IMAGE: 'https://portal.concussion-education-australia.com/og-image.jpg',
