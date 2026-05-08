@@ -35,11 +35,21 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // Early bird: check deadline. Server is source of truth at checkout.
   const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
-  // Read pre-selected location, promo code, and UTM params from URL
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
+  // Read pre-selected location, promo code, and UTM params from URL.
+  //
+  // Default to Melbourne — it's the only confirmed workshop, so any user
+  // clicking the Complete Course button without an explicit choice is
+  // overwhelmingly going to want Melbourne. Defaulting prevents the
+  // "Enrol Now with no location" footgun that previously sent a full-course
+  // checkout to Stripe with location=undefined. URL ?location= still wins.
+  const [selectedLocation, setSelectedLocation] = useState<string>('melbourne')
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
   const [bookOwner, setBookOwner] = useState(false)
+  // Per-city paid enrollment counts for scarcity language on the workshop
+  // tile. Fed by /api/enrollment-counts (60s server cache). Keys are city
+  // slugs; threshold is the count needed to confirm a date.
+  const [enrollmentCounts, setEnrollmentCounts] = useState<Record<string, number>>({})
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
@@ -64,7 +74,28 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         if (data?.user?.bookOwner) setBookOwner(true)
       })
       .catch(() => { /* not logged in — pricing shows full retail */ })
+    // Fetch per-city enrollment counts for scarcity messaging
+    fetch('/api/enrollment-counts')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.counts && typeof data.counts === 'object') {
+          setEnrollmentCounts(data.counts)
+        }
+      })
+      .catch(() => { /* fail silently — show no scarcity rather than wrong scarcity */ })
   }, [])
+
+  // Melbourne seats — derived from enrollmentCounts. capacity defaults to
+  // 12 per CONFIG. Show only when we have a real number > 0; otherwise the
+  // tile shows "Confirmed" without a count, never a fabricated scarcity.
+  const melbourneCount = enrollmentCounts['melbourne']
+  const melbourneCapacity = CONFIG.WORKSHOP.CAPACITY_PER_COURSE
+  const melbourneSeatsLeft =
+    typeof melbourneCount === 'number' && melbourneCount >= 0
+      ? Math.max(0, melbourneCapacity - melbourneCount)
+      : null
+  const showMelbourneScarcity =
+    melbourneSeatsLeft !== null && melbourneCount > 0 && melbourneSeatsLeft <= melbourneCapacity
 
   // Bundle owners get A$100 off online-only and full-course (applied at checkout)
   const BUNDLE_DISCOUNT = 100
@@ -262,6 +293,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <p className="text-[10px] text-orange-800 mt-0.5 leading-snug">
                       Rydges Exhibition St · 8am–4pm · catered lunch
                     </p>
+                    {showMelbourneScarcity && (
+                      <p className={`text-[10px] font-semibold leading-snug mt-0.5 ${
+                        melbourneSeatsLeft !== null && melbourneSeatsLeft <= 4
+                          ? 'text-red-700'
+                          : 'text-orange-800'
+                      }`}>
+                        {melbourneSeatsLeft !== null && melbourneSeatsLeft <= 4
+                          ? `Only ${melbourneSeatsLeft} of ${melbourneCapacity} seats left`
+                          : `${melbourneCount} of ${melbourneCapacity} seats secured`}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -614,6 +656,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   <p className="text-[11px] text-slate-700 leading-snug mt-0.5">
                     Rydges CBD · 8am–4pm · catered
                   </p>
+                  {showMelbourneScarcity && (
+                    <p className={`text-[11px] font-semibold leading-snug mt-1 ${
+                      melbourneSeatsLeft !== null && melbourneSeatsLeft <= 4
+                        ? 'text-red-700'
+                        : 'text-orange-800'
+                    }`}>
+                      {melbourneSeatsLeft !== null && melbourneSeatsLeft <= 4
+                        ? `Only ${melbourneSeatsLeft} of ${melbourneCapacity} seats left`
+                        : `${melbourneCount} of ${melbourneCapacity} seats secured`}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -636,39 +689,33 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             ))}
           </ul>
 
-          {/* Compact location picker */}
+          {/* Compact location picker. "Later" button removed — it let users
+              click Enrol with no city, sending location=undefined to Stripe
+              and creating an ops mess (admin had to chase up city later).
+              Default selection is Melbourne (the only confirmed workshop).
+              Click a city to switch; no deselect — the choice is always set. */}
           <div className="mb-4">
             <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">City</p>
             <div className="flex flex-wrap gap-1">
               {[
-                { slug: 'sydney', label: 'Sydney' },
                 { slug: 'melbourne', label: 'Melbourne' },
+                { slug: 'sydney', label: 'Sydney' },
                 { slug: 'byron-bay', label: 'Byron' },
               ].map(city => (
                 <button
                   key={city.slug}
                   type="button"
-                  onClick={() => setSelectedLocation(selectedLocation === city.slug ? null : city.slug)}
+                  onClick={() => setSelectedLocation(city.slug)}
                   className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
                     selectedLocation === city.slug
                       ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                       : 'bg-white text-[var(--foreground)] border-slate-200 hover:border-[var(--accent)]/50'
                   }`}
+                  aria-pressed={selectedLocation === city.slug}
                 >
                   {city.label}
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => setSelectedLocation(null)}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
-                  selectedLocation === null
-                    ? 'bg-slate-100 text-[var(--foreground)] border-slate-300'
-                    : 'bg-white text-[var(--muted-foreground)] border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                Later
-              </button>
             </div>
           </div>
 

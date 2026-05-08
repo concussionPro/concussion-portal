@@ -33,6 +33,38 @@ describe('createCheckoutSchema', () => {
     })
     expect(r.success).toBe(false)
   })
+
+  it('rejects full-course without a location (the Chien bug)', () => {
+    const r = createCheckoutSchema.safeParse({ courseType: 'full-course' })
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      const issues = r.error.flatten().fieldErrors
+      expect(issues.location?.[0]).toMatch(/Workshop city is required/)
+    }
+  })
+
+  it('rejects workshop-upgrade without a location', () => {
+    const r = createCheckoutSchema.safeParse({ courseType: 'workshop-upgrade' })
+    expect(r.success).toBe(false)
+  })
+
+  it('accepts full-course with a valid location', () => {
+    const r = createCheckoutSchema.safeParse({
+      courseType: 'full-course',
+      location: 'melbourne',
+    })
+    expect(r.success).toBe(true)
+  })
+
+  it('accepts online-only with no location (workshop irrelevant)', () => {
+    const r = createCheckoutSchema.safeParse({ courseType: 'online-only' })
+    expect(r.success).toBe(true)
+  })
+
+  it('accepts international-online with no location', () => {
+    const r = createCheckoutSchema.safeParse({ courseType: 'international-online' })
+    expect(r.success).toBe(true)
+  })
 })
 
 describe('progressSchema', () => {

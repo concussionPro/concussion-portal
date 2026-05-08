@@ -22,14 +22,34 @@ export const utmSchema = z
   .optional()
 
 // /api/create-checkout
-export const createCheckoutSchema = z.object({
-  courseType: courseTypeSchema,
-  location: locationSchema.optional(),
-  email: emailSchema.optional(),
-  preferredCity: locationSchema.optional(),
-  promoCode: z.string().max(50).optional(),
-  utm: utmSchema,
-})
+//
+// `location` is required for course types that include a workshop seat
+// (full-course, workshop-upgrade). Online-only and international-online
+// don't have a workshop, so location is irrelevant — leaving it optional
+// for those paths keeps the API simple.
+//
+// Without this refine, a buyer could click "Enrol Now" on the Complete
+// Course before picking a city and reach Stripe with no location set, which
+// previously caused a silent checkout-with-no-workshop-seat bug.
+export const createCheckoutSchema = z
+  .object({
+    courseType: courseTypeSchema,
+    location: locationSchema.optional(),
+    email: emailSchema.optional(),
+    preferredCity: locationSchema.optional(),
+    promoCode: z.string().max(50).optional(),
+    utm: utmSchema,
+  })
+  .superRefine((val, ctx) => {
+    const needsLocation = val.courseType === 'full-course' || val.courseType === 'workshop-upgrade'
+    if (needsLocation && !val.location) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['location'],
+        message: `Workshop city is required for ${val.courseType}.`,
+      })
+    }
+  })
 
 // /api/send-magic-link
 export const sendMagicLinkSchema = z.object({
