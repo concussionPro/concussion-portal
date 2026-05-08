@@ -8,12 +8,22 @@
  *  - signed up within the last 90 days (filters out long-dormant ghosts)
  *  - haven't already received this push (audit key `melbourne_push_v1_{userId}`)
  *
- * GET ?dryRun=1   → preview targets, no sends (default for GET)
- * GET ?dryRun=0   → actually send (use POST instead in normal flow)
- * POST            → actually send
+ * GET ?dryRun=1                       → preview targets, no sends (default for GET)
+ * GET ?dryRun=0                       → actually send (use POST instead in normal flow)
+ * POST                                → actually send
+ * POST ?retry=foo@bar.com,baz@qux.com → DELETE the audit-keys for those emails first,
+ *                                       so the next pass re-attempts the send. Used to
+ *                                       recover from prior silent failures (e.g. Resend
+ *                                       suppression-list rejection where the audit-key
+ *                                       was written but no send fired).
  *
  * Auth: x-admin-key / Bearer / admin cookie (via isAdminRequest).
  * Idempotent — re-runs skip anyone already in email_audit_log.
+ *
+ * Failure semantics: if sendEmail returns false (Resend API rejected — suppression
+ * list, validation error, transient API failure) the audit-key is rolled back so a
+ * future POST can retry. Same for thrown exceptions. Without this rollback, a silent
+ * Resend rejection would mark the user "sent" forever and lock them out of the push.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -75,6 +85,40 @@ async function findTargets(): Promise<Target[]> {
   return targets
 }
 
+/**
+ * Parse a comma-separated `retry` query param into a lowercased Set.
+ * Strips whitespace; ignores empty entries.
+ */
+function parseRetrySet(url: string): Set<string> {
+  const raw = new URL(url).searchParams.get('retry')
+  if (!raw) return new Set()
+  return new Set(
+    raw
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter((s) => s.length > 0)
+  )
+}
+
+/**
+ * Delete audit-key rows for the given user IDs so a subsequent INSERT will succeed.
+ * Returns the count actually deleted (for logging).
+ */
+async function clearAuditKeys(userIds: string[]): Promise<number> {
+  if (userIds.length === 0) return 0
+  // Vercel's sql template tag doesn't accept arrays as parameters, so loop.
+  // Volumes here are tiny (≤20 retries at a time) — sequential is fine.
+  let total = 0
+  for (const id of userIds) {
+    const auditKey = `melbourne_push_v1_${id}`
+    const { rowCount } = await sql`
+      DELETE FROM email_audit_log WHERE audit_key = ${auditKey}
+    `
+    total += rowCount ?? 0
+  }
+  return total
+}
+
 async function handle(request: NextRequest, dryRun: boolean) {
   if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -83,6 +127,16 @@ async function handle(request: NextRequest, dryRun: boolean) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   const pricingLink = `${baseUrl}/pricing`
   const targets = await findTargets()
+  const retryEmails = parseRetrySet(request.url)
+
+  // Resolve which target user IDs match the retry list, then clear their audit-keys.
+  // Only relevant on POST — dryRun has no side effects.
+  let retryCleared: string[] = []
+  if (!dryRun && retryEmails.size > 0) {
+    const matched = targets.filter((t) => retryEmails.has(t.email.toLowerCase()))
+    retryCleared = matched.map((t) => t.email)
+    await clearAuditKeys(matched.map((t) => t.id))
+  }
 
   if (dryRun) {
     return NextResponse.json({
@@ -101,7 +155,9 @@ async function handle(request: NextRequest, dryRun: boolean) {
   const scheduler = new EmailScheduler()
   let sent = 0
   let skipped = 0
+  let failed = 0
   let errors = 0
+  const failures: Array<{ email: string; reason: string }> = []
 
   for (const t of targets) {
     const auditKey = `melbourne_push_v1_${t.id}`
@@ -115,13 +171,14 @@ async function handle(request: NextRequest, dryRun: boolean) {
       continue
     }
 
+    let ok = false
     try {
       const unsubToken = generateUnsubscribeToken(t.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(t.email)}&token=${unsubToken}`
       const html = MELBOURNE_WORKSHOP_PUSH.template(t.name, pricingLink)
         .replace('{{unsubscribe_url}}', unsubscribeUrl)
 
-      await sendEmail({
+      ok = await sendEmail({
         to: t.email,
         scheduledAt: scheduler.next(t.email),
         subject: MELBOURNE_WORKSHOP_PUSH.subject,
@@ -135,14 +192,37 @@ async function handle(request: NextRequest, dryRun: boolean) {
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       })
-      sent++
     } catch (err) {
-      console.error(`[melbourne-warming-push] Failed for ${t.email}:`, err)
+      console.error(`[melbourne-warming-push] Threw for ${t.email}:`, err)
       errors++
+      failures.push({ email: t.email, reason: err instanceof Error ? err.message : String(err) })
+      // Roll back the audit-key so a future POST can retry
+      await clearAuditKeys([t.id])
+      continue
+    }
+
+    if (ok) {
+      sent++
+    } else {
+      // Resend API returned an error response (e.g. suppression list, validation
+      // error). sendEmail logs the detail to console.error. Surface the failure
+      // and roll back the audit-key.
+      failed++
+      failures.push({ email: t.email, reason: 'sendEmail returned false (see Vercel runtime logs for Resend API error detail)' })
+      await clearAuditKeys([t.id])
     }
   }
 
-  return NextResponse.json({ ok: true, found: targets.length, sent, skipped, errors })
+  return NextResponse.json({
+    ok: true,
+    found: targets.length,
+    sent,
+    skipped,
+    failed,
+    errors,
+    retryCleared,
+    failures,
+  })
 }
 
 export async function GET(request: NextRequest) {
