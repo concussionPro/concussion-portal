@@ -33,6 +33,15 @@ interface Target {
   scatCompleted: number
 }
 
+// Manual exclusions for the v1 push:
+//  - info@evergreenosteopathy.com.au  → clinic-shared inbox, prefer direct outreach
+//  - bronwyn.claassen@disney.com      → corporate Disney domain, aggressive spam filtering
+// Stored as a Set of lowercased emails so the comparison is case-insensitive.
+const EXCLUDED_EMAILS = new Set<string>([
+  'info@evergreenosteopathy.com.au',
+  'bronwyn.claassen@disney.com',
+])
+
 async function findTargets(): Promise<Target[]> {
   const { rows } = await sql`
     SELECT u.id, u.email, u.name, up.progress
@@ -51,7 +60,7 @@ async function findTargets(): Promise<Target[]> {
         if (r.progress[String(m)]?.completed) scat++
       }
     }
-    if (scat >= 2) {
+    if (scat >= 2 && !EXCLUDED_EMAILS.has(r.email.toLowerCase())) {
       targets.push({
         id: r.id,
         email: r.email,
