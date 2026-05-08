@@ -124,6 +124,36 @@ Available via `/<skill>`:
 - `doctor`, `simplify`, `review`, `security-review`, `init`
 - `loop`, `schedule`, `update-config`, `fewer-permission-prompts`
 
+## Project subagents (in `.claude/agents/`)
+
+Auto-discovered by Claude Code, invokable via the Task tool with the
+matching `subagent_type`. Adapted from Garry Tan's gstack patterns,
+filtered to what actually fits a solo healthcare-CPD operator (most of
+gstack — design-shotgun, retro, freeze, codex — does not).
+
+- **`product-reframe`** — forcing-question CEO/founder review BEFORE code
+  is written. Use when the request sounds like an implementation but the
+  underlying goal or revenue path isn't clear. Returns SHIP / REFRAME /
+  DEFER / KILL.
+- **`eng-architecture-review`** — staff-engineer pre-implementation
+  review. Surfaces hidden assumptions before they ship (e.g. the
+  full-course-without-location bug). Use AFTER `product-reframe` greenlights
+  a change and BEFORE editing any file.
+- **`investigate-root-cause`** — Iron Law: no fixes without investigation.
+  Use when something is reported as "broken" or "killing X" — produces a
+  trace-based root-cause report that distinguishes claimed bug from actual
+  bug. Required before any fix to billing / workshop-assignment / PII /
+  email-delivery code.
+- **`cea-compliance-review`** — TGA / AHPRA / Australian Privacy Principles
+  / GST / Google bulk-sender review. Use on any change that touches
+  customer-facing copy, email content, billing, or PII handling. Returns
+  MERGE-OK / MERGE-BLOCKED / MERGE-AT-OWN-RISK with citations.
+
+When to chain them:
+1. Feature request → `product-reframe` → `eng-architecture-review` → write code → `review` skill → `cea-compliance-review` if customer-facing → ship.
+2. Bug report → `investigate-root-cause` → confirm fix shape → write fix → `review` skill → ship.
+3. Engineering tax (refactor / cleanup) → `product-reframe` first to check whether to defer entirely.
+
 ## Pending / known issues
 
 - Existing users have `signupSource: undefined` (display as "Unknown" in admin)
