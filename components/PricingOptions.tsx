@@ -9,6 +9,7 @@ import {
   BookOpen,
   Award,
   FileText,
+  Bell,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -18,10 +19,187 @@ import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
 
+// ─── City catalogue ──────────────────────────────────────────────────────────
+//
+// Cities offered on the Complete Course tile. Slugs must match what
+// /api/register-interest accepts (sydney | melbourne | byron-bay | adelaide |
+// wa). Melbourne status comes from CONFIG.LOCATIONS so admin date changes
+// flow through automatically. The other four are interest-capture only —
+// no live workshops, so clicking them swaps the Enrol button for the
+// notify-me form below.
+const CITY_OPTIONS = [
+  { slug: 'melbourne', label: 'Melbourne' },
+  { slug: 'sydney', label: 'Sydney' },
+  { slug: 'byron-bay', label: 'Byron' },
+  { slug: 'adelaide', label: 'Adelaide' },
+  { slug: 'wa', label: 'Perth (WA)' },
+] as const
+
+/**
+ * True when the selected city has a confirmed workshop date. Currently only
+ * Melbourne can hit this branch — Sydney/Byron/Adelaide/WA are all in
+ * collecting status.
+ */
+function isCityConfirmed(slug: string | null | undefined): boolean {
+  if (!slug) return false
+  const config = Object.values(CONFIG.LOCATIONS).find((loc) => loc.slug === slug)
+  return config?.status === 'confirmed'
+}
+
+function cityLabel(slug: string): string {
+  const opt = CITY_OPTIONS.find((c) => c.slug === slug)
+  return opt?.label ?? slug
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface PricingOptionsProps {
   variant?: 'full' | 'compact'
+}
+
+// ─── Workshop interest form ──────────────────────────────────────────────────
+
+interface WorkshopInterestFormProps {
+  citySlug: string
+  variant: 'full' | 'compact'
+}
+
+function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const label = cityLabel(citySlug)
+  const isCompact = variant === 'compact'
+
+  // Reset success/error when the city changes — feedback should belong to
+  // the current selection, not a previous click
+  useEffect(() => {
+    setSuccess(null)
+    setError(null)
+  }, [citySlug])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSuccess(null)
+
+    if (!name.trim() || name.trim().length < 2) {
+      setError('Please enter your name.')
+      return
+    }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Please enter a valid email.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      // Background analytics — non-blocking
+      trackEvent('workshop_interest_submit', {
+        city: citySlug,
+        source: `pricing_${variant}`,
+      }).catch(() => {})
+
+      const res = await fetch('/api/register-interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          name: name.trim(),
+          city: citySlug,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.success) {
+        setError(data?.error || 'Could not submit — please try again.')
+      } else {
+        setSuccess(data.message || `Thanks — we'll email you when ${label} is confirmed.`)
+        setName('')
+        setEmail('')
+      }
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // Confirmed-state success view — show only the message, no form
+  if (success) {
+    return (
+      <div className={`rounded-xl bg-emerald-50 border border-emerald-200 ${isCompact ? 'p-3' : 'p-4'}`}>
+        <div className="flex items-start gap-2">
+          <Check className={`text-emerald-600 flex-shrink-0 mt-0.5 ${isCompact ? 'w-4 h-4' : 'w-5 h-5'}`} strokeWidth={2.5} />
+          <p className={`text-emerald-900 leading-snug ${isCompact ? 'text-xs' : 'text-sm'}`}>{success}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`rounded-xl border border-slate-200 bg-slate-50/60 ${isCompact ? 'p-3' : 'p-4'}`}>
+      <div className={`flex items-start gap-2 ${isCompact ? 'mb-2' : 'mb-3'}`}>
+        <Bell className={`text-[var(--accent)] flex-shrink-0 mt-0.5 ${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+        <div>
+          <p className={`font-semibold text-foreground leading-tight ${isCompact ? 'text-xs' : 'text-sm'}`}>
+            {label} workshop isn&apos;t confirmed yet
+          </p>
+          <p className={`text-muted-foreground leading-snug mt-0.5 ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
+            We run workshops once a city reaches {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians. Drop your details — you&apos;ll get {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice as soon as the date is locked in.
+          </p>
+        </div>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-2" noValidate>
+        <input
+          type="text"
+          name="name"
+          placeholder="Your name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          disabled={submitting}
+          autoComplete="name"
+          className={`w-full rounded-lg border border-slate-300 bg-white px-3 ${isCompact ? 'py-1.5 text-xs' : 'py-2 text-sm'} text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] disabled:opacity-50`}
+          aria-label="Your name"
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="you@clinic.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={submitting}
+          autoComplete="email"
+          inputMode="email"
+          className={`w-full rounded-lg border border-slate-300 bg-white px-3 ${isCompact ? 'py-1.5 text-xs' : 'py-2 text-sm'} text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] disabled:opacity-50`}
+          aria-label="Your email"
+        />
+        {error && (
+          <p role="alert" className={`text-red-700 leading-snug ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
+            {error}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={submitting}
+          className={`w-full rounded-lg font-semibold flex items-center justify-center gap-2 bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isCompact ? 'py-2 px-4 text-xs' : 'py-2.5 px-5 text-sm'}`}
+        >
+          {submitting ? (
+            <Loader2 className={`animate-spin ${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+          ) : (
+            <>
+              <Bell className={`${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+              Notify me when {label} opens
+            </>
+          )}
+        </button>
+        <p className={`text-center text-muted-foreground leading-snug ${isCompact ? 'text-[10px]' : 'text-[11px]'}`}>
+          Or <Link href="/pricing#pricing-cards" className="text-[var(--accent)] underline underline-offset-2 hover:text-[var(--accent)]/80">enrol in the online course (${CONFIG.COURSE.PRICE_ONLINE})</Link> and add the workshop later.
+        </p>
+      </form>
+    </div>
+  )
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -53,7 +231,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
-    if (loc && ['sydney', 'melbourne', 'byron-bay'].includes(loc)) {
+    if (loc && CITY_OPTIONS.some((c) => c.slug === loc)) {
       setSelectedLocation(loc)
     }
     const promo = params.get('promo')
@@ -325,21 +503,27 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               ))}
             </ul>
 
-            <button
-              onClick={() => handleCheckout('full-course')}
-              disabled={loading !== null}
-              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading === 'full-course' ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                `Enrol Now — $${fullCoursePrice.toLocaleString()}`
-              )}
-            </button>
+            {isCityConfirmed(selectedLocation) ? (
+              <>
+                <button
+                  onClick={() => handleCheckout('full-course')}
+                  disabled={loading !== null}
+                  className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading === 'full-course' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    `Enrol Now — $${fullCoursePrice.toLocaleString()}`
+                  )}
+                </button>
 
-            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
-              &ldquo;Hands on component was invaluable&rdquo; — Amelia
-            </p>
+                <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
+                  &ldquo;Hands on component was invaluable&rdquo; — Amelia
+                </p>
+              </>
+            ) : (
+              <WorkshopInterestForm citySlug={selectedLocation} variant="compact" />
+            )}
 
           </div>
         </div>
@@ -689,19 +873,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             ))}
           </ul>
 
-          {/* Compact location picker. "Later" button removed — it let users
-              click Enrol with no city, sending location=undefined to Stripe
-              and creating an ops mess (admin had to chase up city later).
-              Default selection is Melbourne (the only confirmed workshop).
-              Click a city to switch; no deselect — the choice is always set. */}
+          {/* City picker. "Later" button removed — it let users click Enrol
+              with no city, sending location=undefined to Stripe and creating
+              an ops mess. Default selection is Melbourne (only confirmed
+              workshop). Cities without a confirmed date show a notify-me
+              form below instead of the Enrol button. */}
           <div className="mb-4">
             <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">City</p>
             <div className="flex flex-wrap gap-1">
-              {[
-                { slug: 'melbourne', label: 'Melbourne' },
-                { slug: 'sydney', label: 'Sydney' },
-                { slug: 'byron-bay', label: 'Byron' },
-              ].map(city => (
+              {CITY_OPTIONS.map((city) => (
                 <button
                   key={city.slug}
                   type="button"
@@ -719,25 +899,31 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           </div>
 
-          <button
-            onClick={() => handleCheckout('full-course')}
-            disabled={loading !== null}
-            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
-          >
-            {loading === 'full-course' ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                Enrol Now — ${fullCoursePrice.toLocaleString()}
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          {isCityConfirmed(selectedLocation) ? (
+            <>
+              <button
+                onClick={() => handleCheckout('full-course')}
+                disabled={loading !== null}
+                className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
+              >
+                {loading === 'full-course' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    Enrol Now — ${fullCoursePrice.toLocaleString()}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
 
-          {isEarlyBird && (
-            <p className="text-[10px] text-orange-600 font-medium text-center mt-2">
-              Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — then ${CONFIG.COURSE.PRICE_REGULAR}
-            </p>
+              {isEarlyBird && (
+                <p className="text-[10px] text-orange-600 font-medium text-center mt-2">
+                  Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — then ${CONFIG.COURSE.PRICE_REGULAR}
+                </p>
+              )}
+            </>
+          ) : (
+            <WorkshopInterestForm citySlug={selectedLocation} variant="full" />
           )}
         </div>
       </div>
