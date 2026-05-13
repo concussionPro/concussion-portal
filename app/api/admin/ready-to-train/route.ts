@@ -82,11 +82,26 @@ export async function GET(request: NextRequest) {
     }
     readyToUpgrade.sort((a, b) => b.count - a.count)
 
-    // 3. Interest registrations (pre-purchase browsing)
+    // 3. Interest registrations (pre-purchase browsing).
+    //
+    // Auto-promote: anyone who later buys the full-course (access_level=
+    // 'full-course' in users) is no longer a pure interest lead — they show
+    // in section 1 (paidEnrollments) instead. We filter them out here at
+    // display time so the audit record stays in workshop_interest, but the
+    // analytics view doesn't double-count.
+    //
+    // Filter is "any full-course purchase" not "same city", because someone
+    // who registered WA interest and then bought Melbourne workshop has
+    // converted — they're not waiting on WA anymore.
     const { rows: interestRows } = await sql`
-      SELECT city, email, name, source, created_at
-      FROM workshop_interest
-      ORDER BY city, created_at DESC
+      SELECT wi.city, wi.email, wi.name, wi.source, wi.created_at
+      FROM workshop_interest wi
+      WHERE NOT EXISTS (
+        SELECT 1 FROM users u
+        WHERE LOWER(u.email) = LOWER(wi.email)
+          AND u.access_level = 'full-course'
+      )
+      ORDER BY wi.city, wi.created_at DESC
     `
 
     const interestByCity = new Map<string, Array<{ email: string; name: string; source: string; createdAt: string }>>()

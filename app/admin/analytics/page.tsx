@@ -44,6 +44,7 @@ import {
   DollarSign,
   ExternalLink,
   Search,
+  Bell,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -704,6 +705,8 @@ export default function AnalyticsDashboard() {
     cities: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; city: string; registeredAt: string; completedAt: string }> }>
     paidThreshold?: Array<{ city: string; label: string; count: number; threshold: number; registrants: Array<{ name: string; email: string; createdAt: string }> }>
     paidTotal?: number
+    interest?: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; source: string; createdAt: string }> }>
+    interestTotal?: number
   } | null>(null)
 
   // Preseason data
@@ -772,6 +775,8 @@ export default function AnalyticsDashboard() {
             cities: poolJson.readyToUpgrade ?? [],
             paidThreshold: poolJson.paidEnrollments,
             paidTotal: poolJson.paidTotal ?? 0,
+            interest: poolJson.interest ?? [],
+            interestTotal: poolJson.interestTotal ?? 0,
           })
         }
         if (preseasonRes.status === 'fulfilled' && preseasonRes.value.ok) {
@@ -1504,8 +1509,92 @@ export default function AnalyticsDashboard() {
                       </>
                     )}
 
-                    {/* Interest-based pool (legacy) */}
-                    <SectionTitle title="Interest Pool (Unpaid)" subtitle="Clinicians who registered interest — potential conversions" />
+                    {/* Interest Registrations (workshop_interest table).
+                        Auto-filters out anyone who's converted to full-course
+                        paid — they appear in "Workshop Threshold (Paid)" above
+                        instead. So this section is always "still waiting." */}
+                    {poolData.interest && poolData.interest.length > 0 && (
+                      <>
+                        <SectionTitle
+                          title="Interest Registrations (Unpaid)"
+                          subtitle="Pre-purchase signups via /pricing form or Squarespace. Auto-removed when they buy the full course."
+                        />
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                          {poolData.interest.map((city) => {
+                            const progress = Math.min((city.count / 8) * 100, 100)
+                            const isReady = city.count >= 8
+                            return (
+                              <div
+                                key={`interest-${city.city}`}
+                                className={`glass rounded-xl p-4 ${isReady ? 'border-2 border-emerald-400' : ''}`}
+                              >
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Bell size={14} className={isReady ? 'text-emerald-600' : 'text-[var(--accent)]'} />
+                                  <span className="text-xs font-bold text-[var(--foreground)]">{city.label}</span>
+                                </div>
+                                <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">
+                                  {city.count}<span className="text-sm font-normal text-[var(--muted-foreground)]"> / 8</span>
+                                </p>
+                                <div className="mt-2 w-full bg-[rgba(13,115,119,0.08)] rounded-full h-1.5">
+                                  <div
+                                    className={`h-1.5 rounded-full transition-all ${isReady ? 'bg-emerald-500' : 'bg-[var(--accent)]'}`}
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                </div>
+                                <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                                  {isReady ? 'Ready to schedule!' : `${8 - city.count} more to threshold`}
+                                </p>
+                              </div>
+                            )
+                          })}
+                          <div className="glass rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Users size={14} className="text-[var(--accent)]" />
+                              <span className="text-xs font-bold text-[var(--foreground)]">Total Unpaid Interest</span>
+                            </div>
+                            <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{poolData.interestTotal ?? 0}</p>
+                            <p className="text-xs text-[var(--muted-foreground)] mt-3">Across all cities</p>
+                          </div>
+                        </div>
+
+                        {/* Per-city interest tables */}
+                        {poolData.interest.map((city) => (
+                          <div key={`interest-table-${city.city}`}>
+                            <SectionTitle
+                              title={`${city.label} — Interest (${city.count})`}
+                              subtitle={`Source: pricing form or Squarespace. ${city.count >= 8 ? 'Threshold reached.' : `${8 - city.count} more for threshold.`}`}
+                            />
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                                    <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Name</th>
+                                    <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
+                                    <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Source</th>
+                                    <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Registered</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {city.registrations.map((r, i) => (
+                                    <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                                      <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
+                                      <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
+                                      <td className="py-2.5 px-2 text-xs text-[var(--muted-foreground)]">{r.source}</td>
+                                      <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">
+                                        {new Date(r.createdAt).toLocaleDateString('en-AU')}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Online completers — Ready to Upgrade (workshop_ready_to_train table) */}
+                    <SectionTitle title="Online Completers — Ready to Upgrade" subtitle="Online-only buyers who finished all modules and selected a workshop city" />
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                       {poolData.cities.map((city: { city: string; label: string; count: number }) => {
                         const progress = Math.min((city.count / 8) * 100, 100)
