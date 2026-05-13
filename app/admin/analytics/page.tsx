@@ -1656,52 +1656,18 @@ export default function AnalyticsDashboard() {
                         } catch { /* silent */ }
                       }}
                     />
-                    {poolData.interest && poolData.interest.length > 0 && (
+                    {poolData.interest && poolData.interest.length > 0 ? (
                       <>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                          {poolData.interest.map((city) => {
-                            const progress = Math.min((city.count / 8) * 100, 100)
-                            const isReady = city.count >= 8
-                            return (
-                              <div
-                                key={`interest-${city.city}`}
-                                className={`glass rounded-xl p-4 ${isReady ? 'border-2 border-emerald-400' : ''}`}
-                              >
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Bell size={14} className={isReady ? 'text-emerald-600' : 'text-[var(--accent)]'} />
-                                  <span className="text-xs font-bold text-[var(--foreground)]">{city.label}</span>
-                                </div>
-                                <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">
-                                  {city.count}<span className="text-sm font-normal text-[var(--muted-foreground)]"> / 8</span>
-                                </p>
-                                <div className="mt-2 w-full bg-[rgba(13,115,119,0.08)] rounded-full h-1.5">
-                                  <div
-                                    className={`h-1.5 rounded-full transition-all ${isReady ? 'bg-emerald-500' : 'bg-[var(--accent)]'}`}
-                                    style={{ width: `${progress}%` }}
-                                  />
-                                </div>
-                                <p className="text-xs text-[var(--muted-foreground)] mt-1">
-                                  {isReady ? 'Ready to schedule!' : `${8 - city.count} more to threshold`}
-                                </p>
-                              </div>
-                            )
-                          })}
-                          <div className="glass rounded-xl p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Users size={14} className="text-[var(--accent)]" />
-                              <span className="text-xs font-bold text-[var(--foreground)]">Total Unpaid Interest</span>
-                            </div>
-                            <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{poolData.interestTotal ?? 0}</p>
-                            <p className="text-xs text-[var(--muted-foreground)] mt-3">Across all cities</p>
-                          </div>
-                        </div>
+                        <p className="text-xs text-[var(--muted-foreground)] mb-4">
+                          {poolData.interestTotal ?? 0} unpaid interest registrations across {poolData.interest.length} {poolData.interest.length === 1 ? 'city' : 'cities'}. Bento tiles above show <strong>paid</strong> full-course registrants per city; the lists below show <strong>unpaid</strong> interest. Anyone who buys the full course auto-disappears from the list and is counted in the bento above.
+                        </p>
 
-                        {/* Per-city interest tables */}
+                        {/* Per-city interest tables (no duplicate bento — paid count is already shown above) */}
                         {poolData.interest.map((city) => (
                           <div key={`interest-table-${city.city}`}>
                             <SectionTitle
-                              title={`${city.label} — Interest (${city.count})`}
-                              subtitle={`Source: pricing form or Squarespace. ${city.count >= 8 ? 'Threshold reached.' : `${8 - city.count} more for threshold.`}`}
+                              title={`${city.label} — Unpaid Interest (${city.count})`}
+                              subtitle="Pre-purchase signups via /pricing form, Squarespace, or admin manual entry."
                             />
                             <div className="overflow-x-auto">
                               <table className="w-full text-sm">
@@ -1730,6 +1696,10 @@ export default function AnalyticsDashboard() {
                           </div>
                         ))}
                       </>
+                    ) : (
+                      <p className="text-xs text-[var(--muted-foreground)] mb-4">
+                        No unpaid interest registrations yet. Bento tiles above show <strong>paid</strong> full-course registrants per city; once you add unpaid interest entries (via the form above, or as they sync from Squarespace), they&apos;ll appear here as per-city lists.
+                      </p>
                     )}
 
                     {/* Online completers — Ready to Upgrade (workshop_ready_to_train table) */}
