@@ -73,6 +73,13 @@ export const registerInterestSchema = z.object({
   source: z.string().max(50).optional(),
 })
 
+// /api/admin/import-interest — workshop_interest table covers 5 cities, not 3
+export const importInterestSchema = z.object({
+  email: emailSchema,
+  name: nameSchema,
+  city: z.enum(['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa']),
+})
+
 // /api/progress — user progress shape.
 // We don't model every module key individually; we cap structure instead so
 // the DB can't be stuffed with arbitrary objects.

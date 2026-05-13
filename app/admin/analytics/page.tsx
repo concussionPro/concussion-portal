@@ -641,6 +641,125 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
   )
 }
 
+/**
+ * Inline add-form for the Interest Registrations section. Lets Zac paste a
+ * Squarespace form-submission email's contents directly into the analytics
+ * page — name, email, city → /api/admin/import-interest → row inserted →
+ * onAdded() refreshes the pool data so the new entry appears immediately.
+ */
+function InterestAddForm({ onAdded }: { onAdded: () => Promise<void> | void }) {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [city, setCity] = useState<'melbourne' | 'sydney' | 'byron-bay' | 'adelaide' | 'wa'>('melbourne')
+  const [submitting, setSubmitting] = useState(false)
+  const [feedback, setFeedback] = useState<{ kind: 'success' | 'error' | 'duplicate'; message: string } | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFeedback(null)
+
+    if (!name.trim() || name.trim().length < 2) {
+      setFeedback({ kind: 'error', message: 'Name must be at least 2 characters.' })
+      return
+    }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFeedback({ kind: 'error', message: 'Enter a valid email.' })
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/admin/import-interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email.trim().toLowerCase(), name: name.trim(), city }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.success) {
+        setFeedback({ kind: 'error', message: data?.error || 'Could not add registration.' })
+      } else if (data.duplicate) {
+        setFeedback({ kind: 'duplicate', message: data.message || 'Already registered for this city.' })
+        setName('')
+        setEmail('')
+      } else {
+        setFeedback({ kind: 'success', message: `Added ${data.email} → ${data.city}` })
+        setName('')
+        setEmail('')
+        await onAdded()
+      }
+    } catch {
+      setFeedback({ kind: 'error', message: 'Network error — try again.' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-[rgba(13,115,119,0.12)] bg-[rgba(255,255,255,0.6)] backdrop-blur-sm p-4 mb-4">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_160px_auto] gap-2 items-start">
+        <input
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          disabled={submitting}
+          autoComplete="off"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-[var(--foreground)] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] disabled:opacity-50"
+          aria-label="Name"
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="email@clinic.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={submitting}
+          autoComplete="off"
+          inputMode="email"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-[var(--foreground)] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] disabled:opacity-50"
+          aria-label="Email"
+        />
+        <select
+          value={city}
+          onChange={(e) => setCity(e.target.value as typeof city)}
+          disabled={submitting}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] disabled:opacity-50"
+          aria-label="City"
+        >
+          <option value="melbourne">Melbourne</option>
+          <option value="sydney">Sydney</option>
+          <option value="byron-bay">Byron Bay</option>
+          <option value="adelaide">Adelaide (SA)</option>
+          <option value="wa">Perth / WA</option>
+        </select>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="rounded-lg bg-[var(--foreground)] text-white px-4 py-2 text-sm font-semibold hover:bg-[var(--foreground)]/90 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {submitting ? 'Adding…' : 'Add'}
+        </button>
+      </form>
+      {feedback && (
+        <p
+          role="status"
+          className={`text-xs mt-2 ${
+            feedback.kind === 'success'
+              ? 'text-emerald-700'
+              : feedback.kind === 'duplicate'
+                ? 'text-amber-700'
+                : 'text-red-700'
+          }`}
+        >
+          {feedback.message}
+        </p>
+      )}
+    </div>
+  )
+}
+
 function FunnelStepRow({ step, index, total, isLast }: { step: FunnelStep; index: number; total: number; isLast: boolean }) {
   const convRate = total > 0 ? (step.count / total) * 100 : 0
   return (
@@ -1512,13 +1631,33 @@ export default function AnalyticsDashboard() {
                     {/* Interest Registrations (workshop_interest table).
                         Auto-filters out anyone who's converted to full-course
                         paid — they appear in "Workshop Threshold (Paid)" above
-                        instead. So this section is always "still waiting." */}
+                        instead. Inline form lets admin add Squarespace email
+                        submissions manually without leaving the page. */}
+                    <SectionTitle
+                      title="Interest Registrations (Unpaid)"
+                      subtitle="Pre-purchase signups. Auto-removed when they buy the full course. Add new entries below as Squarespace submissions land in your inbox."
+                    />
+                    <InterestAddForm
+                      onAdded={async () => {
+                        // Refresh pool data after adding so the new entry shows
+                        try {
+                          const res = await fetch('/api/admin/ready-to-train', { cache: 'no-store' })
+                          if (res.ok) {
+                            const j = await res.json()
+                            if (j.success) setPoolData({
+                              totalCount: j.readyTotal ?? 0,
+                              cities: j.readyToUpgrade ?? [],
+                              paidThreshold: j.paidEnrollments,
+                              paidTotal: j.paidTotal ?? 0,
+                              interest: j.interest ?? [],
+                              interestTotal: j.interestTotal ?? 0,
+                            })
+                          }
+                        } catch { /* silent */ }
+                      }}
+                    />
                     {poolData.interest && poolData.interest.length > 0 && (
                       <>
-                        <SectionTitle
-                          title="Interest Registrations (Unpaid)"
-                          subtitle="Pre-purchase signups via /pricing form or Squarespace. Auto-removed when they buy the full course."
-                        />
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                           {poolData.interest.map((city) => {
                             const progress = Math.min((city.count / 8) * 100, 100)

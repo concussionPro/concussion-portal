@@ -4,6 +4,7 @@ import {
   progressSchema,
   sendMagicLinkSchema,
   registerInterestSchema,
+  importInterestSchema,
 } from '@/lib/schemas'
 
 describe('createCheckoutSchema', () => {
@@ -120,5 +121,54 @@ describe('registerInterestSchema', () => {
       locations: ['sydney', 'sydney', 'sydney', 'sydney'],
     })
     expect(r.success).toBe(false)
+  })
+})
+
+describe('importInterestSchema (admin manual insert)', () => {
+  it('accepts a complete record for each of the 5 supported cities', () => {
+    for (const city of ['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa']) {
+      const r = importInterestSchema.safeParse({
+        email: 'test@example.com',
+        name: 'Test User',
+        city,
+      })
+      expect(r.success, `city ${city} should validate`).toBe(true)
+    }
+  })
+
+  it('rejects cities outside the 5-city set', () => {
+    const r = importInterestSchema.safeParse({
+      email: 'test@example.com',
+      name: 'Test User',
+      city: 'hobart',
+    })
+    expect(r.success).toBe(false)
+  })
+
+  it('rejects missing name', () => {
+    const r = importInterestSchema.safeParse({
+      email: 'test@example.com',
+      city: 'sydney',
+    })
+    expect(r.success).toBe(false)
+  })
+
+  it('rejects malformed email', () => {
+    const r = importInterestSchema.safeParse({
+      email: 'not-an-email',
+      name: 'Test User',
+      city: 'sydney',
+    })
+    expect(r.success).toBe(false)
+  })
+
+  it('normalises email to lowercase', () => {
+    const r = importInterestSchema.safeParse({
+      email: 'CAPS@Example.COM',
+      name: 'Caps User',
+      city: 'melbourne',
+    })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.email).toBe('caps@example.com')
   })
 })
