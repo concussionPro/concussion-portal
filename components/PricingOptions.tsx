@@ -224,10 +224,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
   const [bookOwner, setBookOwner] = useState(false)
-  // Per-city paid enrollment counts for scarcity language on the workshop
-  // tile. Fed by /api/enrollment-counts (60s server cache). Keys are city
-  // slugs; threshold is the count needed to confirm a date.
-  const [enrollmentCounts, setEnrollmentCounts] = useState<Record<string, number>>({})
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const loc = params.get('location')
@@ -252,28 +248,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         if (data?.user?.bookOwner) setBookOwner(true)
       })
       .catch(() => { /* not logged in — pricing shows full retail */ })
-    // Fetch per-city enrollment counts for scarcity messaging
-    fetch('/api/enrollment-counts')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.counts && typeof data.counts === 'object') {
-          setEnrollmentCounts(data.counts)
-        }
-      })
-      .catch(() => { /* fail silently — show no scarcity rather than wrong scarcity */ })
   }, [])
 
-  // Melbourne seats — derived from enrollmentCounts. capacity defaults to
-  // 12 per CONFIG. Show only when we have a real number > 0; otherwise the
-  // tile shows "Confirmed" without a count, never a fabricated scarcity.
-  const melbourneCount = enrollmentCounts['melbourne']
-  const melbourneCapacity = CONFIG.WORKSHOP.CAPACITY_PER_COURSE
-  const melbourneSeatsLeft =
-    typeof melbourneCount === 'number' && melbourneCount >= 0
-      ? Math.max(0, melbourneCapacity - melbourneCount)
-      : null
-  const showMelbourneScarcity =
-    melbourneSeatsLeft !== null && melbourneCount > 0 && melbourneSeatsLeft <= melbourneCapacity
 
   // Bundle owners get A$100 off online-only and full-course (applied at checkout)
   const BUNDLE_DISCOUNT = 100
@@ -471,17 +447,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <p className="text-[10px] text-orange-800 mt-0.5 leading-snug">
                       Rydges Exhibition St · 8am–4pm · catered lunch
                     </p>
-                    {showMelbourneScarcity && (
-                      <p className={`text-[10px] font-semibold leading-snug mt-0.5 ${
-                        melbourneSeatsLeft !== null && melbourneSeatsLeft <= 4
-                          ? 'text-red-700'
-                          : 'text-orange-800'
-                      }`}>
-                        {melbourneSeatsLeft !== null && melbourneSeatsLeft <= 4
-                          ? `Only ${melbourneSeatsLeft} of ${melbourneCapacity} seats left`
-                          : `${melbourneCount} of ${melbourneCapacity} seats secured`}
-                      </p>
-                    )}
+                    <p className="text-[10px] font-semibold text-orange-800 mt-0.5 leading-snug">
+                      {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats max
+                    </p>
                   </div>
                 </div>
               </div>
@@ -840,17 +808,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   <p className="text-[11px] text-slate-700 leading-snug mt-0.5">
                     Rydges CBD · 8am–4pm · catered
                   </p>
-                  {showMelbourneScarcity && (
-                    <p className={`text-[11px] font-semibold leading-snug mt-1 ${
-                      melbourneSeatsLeft !== null && melbourneSeatsLeft <= 4
-                        ? 'text-red-700'
-                        : 'text-orange-800'
-                    }`}>
-                      {melbourneSeatsLeft !== null && melbourneSeatsLeft <= 4
-                        ? `Only ${melbourneSeatsLeft} of ${melbourneCapacity} seats left`
-                        : `${melbourneCount} of ${melbourneCapacity} seats secured`}
-                    </p>
-                  )}
+                  <p className="text-[11px] font-semibold text-orange-800 mt-1 leading-snug">
+                    {CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats max
+                  </p>
                 </div>
               </div>
             </div>
