@@ -1,4 +1,7 @@
 ---
+
+**Author:** Zac Lewis — Osteopath, AHPRA-registered (OST), Founder, Concussion Education Australia
+**Last reviewed:** 2026-05-22
 title: "Module 6 — The AI Practice Hub & Your Certification"
 duration: "10 min read"
 order: 6

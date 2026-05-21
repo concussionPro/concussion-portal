@@ -60,7 +60,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(100, 116, 139)
   doc.text(
-    "Aligned with AHPRA's 2025 AI Code of Conduct, Australian Privacy Principles, and TGA Therapeutic Goods Advertising Code",
+    "Aligned with AHPRA's 2025 AI guidance, Australian Privacy Principles, and TGA Therapeutic Goods Advertising Code",
     pageWidth / 2,
     68,
     { align: 'center', maxWidth: pageWidth - 60 }

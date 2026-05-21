@@ -1,5 +1,8 @@
 # Module 5c — GP & Primary Care
 
+**Author:** Zac Lewis — Osteopath, AHPRA-registered (OST), Founder, Concussion Education Australia
+**Last reviewed:** 2026-05-22
+
 **Reading time:** ~7 minutes
 **Prerequisites:** Modules 1–4
 

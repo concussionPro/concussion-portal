@@ -1,5 +1,8 @@
 # Module 4 — Patient Communication & Documents
 
+**Author:** Zac Lewis — Osteopath, AHPRA-registered (OST), Founder, Concussion Education Australia
+**Last reviewed:** 2026-05-22
+
 **Reading time:** ~20 minutes
 **Prerequisites:** Modules 1 (legal framework), 2 (tool selection), and 3 (documentation workflows)
 

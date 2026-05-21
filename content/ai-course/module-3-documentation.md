@@ -1,5 +1,8 @@
 # Module 3 — Documentation Workflows (Compliant by Design)
 
+**Author:** Zac Lewis — Osteopath, AHPRA-registered (OST), Founder, Concussion Education Australia
+**Last reviewed:** 2026-05-22
+
 *AI in Clinical Practice — Concussion Education Australia*
 
 **Reading time:** ~20 minutes

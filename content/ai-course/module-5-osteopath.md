@@ -1,5 +1,8 @@
 # Module 5d — Osteopathy
 
+**Author:** Zac Lewis — Osteopath, AHPRA-registered (OST), Founder, Concussion Education Australia
+**Last reviewed:** 2026-05-22
+
 **Reading time:** ~6 minutes
 **Prerequisites:** Modules 1–4
 

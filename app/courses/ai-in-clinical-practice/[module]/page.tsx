@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { findModule, loadModuleContent, MODULES } from '@/lib/ai-course/content'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
-import { MarkdownContent } from '@/components/ai-course/MarkdownContent'
+import { ModuleViewer } from '@/components/ai-course/ModuleViewer'
+import { parseModuleSections } from '@/lib/ai-course/module-sections'
 
 interface PageParams {
   params: Promise<{ module: string }>
@@ -29,8 +30,9 @@ export default async function ModulePage({ params }: PageParams) {
   try {
     content = await loadModuleContent(module)
   } catch {
-    content = `# ${meta.title}\n\n_Content not yet available. Check back soon._`
+    content = `## Coming soon\n\n_Content not yet available._`
   }
+  const { header, sections } = parseModuleSections(module, content)
 
   // Find prev/next for navigation
   const idx = MODULES.findIndex((m) => m.slug === module)
@@ -64,7 +66,7 @@ export default async function ModulePage({ params }: PageParams) {
 
         <h1 className="text-3xl font-bold tracking-tight mb-8">{meta.title}</h1>
 
-        <MarkdownContent source={content} />
+        <ModuleViewer header={header} sections={sections} />
 
         <hr className="my-12 border-slate-200" />
 

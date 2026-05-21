@@ -2,6 +2,8 @@
 
 **Course:** AI in Clinical Practice
 **Provider:** Concussion Education Australia (CEA)
+**Author:** Zac Lewis — Osteopath (B.Clin.Sci., M.Ost.Med), AHPRA-registered (OST), Founder, Concussion Education Australia
+**Last reviewed:** 2026-05-22
 **Estimated reading time:** 40 minutes
 **Module weight:** Load-bearing — every later module assumes you have read this one
 
