@@ -36,12 +36,12 @@ const STOPS: TourStop[] = [
   {
     step: 2,
     estMin: 3,
-    title: 'The insight you can\'t see from inside Heidi',
-    why: 'Every Scribe session is documented clinical reasoning. Every Evidence search is literature review. AHPRA already counts both as Educational Activities CPD — your AU clinicians earn 20-30 hours per year inside Heidi and write none of it down. This is the kind of insight a clinician-who-codes spots that a generalist product team misses.',
+    title: 'Heidi\'s Evidence tool is already a CPD engine',
+    why: 'The Evidence product is the moat. Every guideline review inside Evidence is literature-review CPD — an AHPRA Educational Activity by the regulator\'s own definition. Scribe sessions add clinical-reasoning documentation on top. Scribe-only competitors (Abridge, Nabla, DeepScribe) have nothing equivalent — no literature search, no CPD signal. This is the insight a clinician-who-codes spots that a generalist product team misses.',
     whatToLookAt: [
       'The non-blocking confirmation prompt — one tap, categorised, logged',
       'Per-Board honest ceiling: 50-100% depending on profession (not a flat overclaim)',
-      'Event timeline showing Scribe + Evidence events becoming audit-ready CPD entries',
+      'Event timeline showing Evidence + Scribe events becoming audit-ready CPD entries',
     ],
     href: '/courses/cpd-record/passive',
     ctaLabel: 'Passive-CPD demo',
@@ -50,7 +50,7 @@ const STOPS: TourStop[] = [
     step: 3,
     estMin: 3,
     title: 'De-risked execution + three distribution channels',
-    why: 'CCM at A$1,190 (live, OA-endorsed, AU clinician subscriber base). AHPRA-aligned AI compliance course launching publicly this month — Heidi is the recommended AU scribe in the course, every student gets hands-on Heidi exposure. Upcoming Australian osteopathy conference presentation where Heidi will be demoed live in front of the room. Per-Board CPD reference encoded. Marketplace shell + working /api/cpd/events endpoint shipped. 12 months of solo build = three live distribution channels into the AU AHPRA segment you don\'t reach directly.',
+    why: 'CCM at A$1,190 (live, OA-endorsed, AU clinician subscriber base). AHPRA-aligned AI compliance course launching publicly on the CEA portal — Heidi is the CEA-recommended AU scribe throughout, every student gets hands-on Heidi exposure. Confirmed clinical presentation at the Osteopathy Australia Conference 2026 (Sea World Resort, Gold Coast · 16–17 October) — concussion assessment and management, with Heidi demoed live as the recommended workflow. Per-Board CPD reference encoded. Marketplace shell + working /api/cpd/events endpoint shipped.',
     whatToLookAt: [
       'Build-status — 12 shipped capabilities with clickable evidence',
       'AI compliance course — 9 modules with Heidi as the recommended scribe throughout',
@@ -103,10 +103,10 @@ export default async function HeidiTourPage() {
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
           OA-endorsed CPD platform.{' '}
           <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">AHPRA AI course launching with Heidi as recommended scribe.</span>{' '}
-          Osteopathy conference presentation lined up.
+          Confirmed speaker at OA 2026.
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mb-3 leading-relaxed">
-          You&apos;re not being pitched a market opportunity. You&apos;re being pitched <strong className="text-foreground">de-risked execution plus three live distribution channels into the AU AHPRA segment</strong>: the CCM subscriber base, the public-launch AI compliance course (every student gets hands-on Heidi exposure), and an upcoming Australian osteopathy conference presentation where Heidi gets demoed live.
+          You&apos;re not being pitched a market opportunity. You&apos;re being pitched <strong className="text-foreground">de-risked execution plus three live distribution channels into the AU AHPRA segment</strong>: the CCM subscriber base, the public-launch AI compliance course (every student gets hands-on Heidi exposure), and a confirmed clinical presentation at the <strong className="text-foreground">Osteopathy Australia Conference 2026</strong> (Sea World Resort, Gold Coast · 16–17 October) — concussion assessment and management, with Heidi demoed live as the recommended workflow.
         </p>
         <p className="text-sm text-muted-foreground max-w-2xl mb-6 leading-relaxed">
           Tour below — {totalMin} minutes, five stops. Built for your team to audit the operator, not for a prospect.
@@ -138,7 +138,7 @@ export default async function HeidiTourPage() {
                 <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700">2 · Acqui-hire</p>
               </div>
               <p className="text-sm font-bold text-foreground leading-tight mb-1">Acquire CEA tech + course IP, I join</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">Heidi acquires the CEA platform, course IP, and the AU clinician subscriber base. I join as Medical Lead to scale it. Head start in the AU CPD vertical from day one.</p>
+              <p className="text-xs text-muted-foreground leading-relaxed"><strong>Sold:</strong> CPD platform code, AI course IP, marketplace shell, /api/cpd/events service, AU subscriber relationship. <strong>Stays mine:</strong> CCM (separate concussion clinical product). Terms TBD on the call.</p>
             </div>
             <div className="p-4">
               <div className="flex items-center gap-2 mb-2">
