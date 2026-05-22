@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { COURSES, PROVIDERS, findProvider } from '@/lib/ai-course/provider-catalogue'
-import { Check, AlertCircle, ShieldCheck, FileBarChart, BookOpenCheck } from 'lucide-react'
+import { Check, AlertCircle, ShieldCheck, FileBarChart, BookOpenCheck, Award, Stethoscope, Users, Building2 } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Courses — Concussion Education Australia',
@@ -59,8 +59,63 @@ export default async function CoursesIndexPage() {
               <BookOpenCheck className="w-4 h-4" />
               How we vet providers
             </Link>
+            <Link
+              href="/courses/integration"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors"
+            >
+              Integration spec
+            </Link>
+            <Link
+              href="/courses/build-status"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors"
+            >
+              Shipped vs roadmap
+            </Link>
           </div>
         </div>
+
+        {/* Traction strip — real CEA assets. Closes the "is this a business or a deck?" gap. */}
+        <section className="mb-10 rounded-2xl border border-slate-200 bg-white">
+          <div className="px-6 py-3 border-b border-slate-100">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+              The provider behind the platform
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100">
+            <div className="px-4 py-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Award className="w-4 h-4 text-emerald-700" />
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Endorsement</p>
+              </div>
+              <p className="text-sm font-bold text-foreground leading-tight">Osteopathy Australia</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Endorsed CPD provider (CCM)</p>
+            </div>
+            <div className="px-4 py-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Building2 className="w-4 h-4 text-accent" />
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Shipping product</p>
+              </div>
+              <p className="text-sm font-bold text-foreground leading-tight">CCM at A$1,190</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Concussion Clinical Mastery</p>
+            </div>
+            <div className="px-4 py-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="w-4 h-4 text-blue-700" />
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Audience</p>
+              </div>
+              <p className="text-sm font-bold text-foreground leading-tight">600+ subscribers</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Australian clinicians</p>
+            </div>
+            <div className="px-4 py-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Stethoscope className="w-4 h-4 text-orange-700" />
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Founder</p>
+              </div>
+              <p className="text-sm font-bold text-foreground leading-tight">Zac Lewis</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Osteopath · AHPRA-registered</p>
+            </div>
+          </div>
+        </section>
 
         {/* Trust strip — three problems the marketplace solves */}
         <div className="grid sm:grid-cols-3 gap-3 mb-10">

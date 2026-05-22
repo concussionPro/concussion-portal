@@ -37,6 +37,13 @@ export function SiteNav() {
       .catch(() => setAuth({ accessLevel: '' }))
   }, [])
 
+  // Demo watermark sits at top:0 z-[100]; if present, push nav below it.
+  const [hasDemoBar, setHasDemoBar] = useState(false)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    setHasDemoBar(/(?:^|;\s*)demo_org=/.test(document.cookie))
+  }, [pathname])
+
   // Close mobile menu on Escape key
   useEffect(() => {
     if (!mobileMenuOpen) return
@@ -70,7 +77,7 @@ export function SiteNav() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 glass"
+      className={`fixed left-0 right-0 z-50 glass ${hasDemoBar ? 'top-7' : 'top-0'}`}
       role="navigation"
       aria-label="Main navigation"
     >
@@ -165,7 +172,7 @@ export function SiteNav() {
       {/* Mobile menu backdrop */}
       {mobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 top-[60px] z-40"
+          className={`md:hidden fixed inset-0 z-40 ${hasDemoBar ? 'top-[88px]' : 'top-[60px]'}`}
           onClick={() => setMobileMenuOpen(false)}
           aria-hidden="true"
         />
