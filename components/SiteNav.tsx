@@ -128,6 +128,11 @@ export function SiteNav() {
                 Logout
               </button>
             )}
+            {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
+              <span className="hidden lg:inline-flex ml-2 text-[10px] font-semibold px-2 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 whitespace-nowrap">
+                Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
+              </span>
+            )}
             {onPricing ? (
               <button
                 type="button"
@@ -145,11 +150,6 @@ export function SiteNav() {
                 Enrol
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-            )}
-            {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
-              <span className="hidden lg:inline-flex ml-1.5 text-[10px] font-semibold px-2 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 whitespace-nowrap">
-                Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
-              </span>
             )}
           </div>
 
