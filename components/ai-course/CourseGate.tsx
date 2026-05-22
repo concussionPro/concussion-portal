@@ -68,6 +68,9 @@ export async function requireAiCourseAccess(redirectTo?: string): Promise<GateRe
 
 export function AdminPreviewBadge({ access }: { access: GateResult }) {
   if (!access.ok) return null
+  // Demo-key viewers see the DemoWatermark globally — no need for a
+  // separate badge. Admin viewers still see the preview marker.
+  if (access.reason === 'demo-key') return null
   return (
     <div className="mb-6 flex items-center gap-2">
       <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">

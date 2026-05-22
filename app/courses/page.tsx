@@ -27,33 +27,34 @@ export default async function CoursesIndexPage() {
       <div className="max-w-5xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
 
-        {/* Hero */}
-        <div className="mb-10 rounded-2xl bg-gradient-to-br from-accent/10 via-emerald-50/40 to-background border border-accent/20 p-8">
-          <div className="flex items-start gap-2 mb-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-accent">
-              CPD Marketplace
-            </p>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-              Pilot · Admin preview
-            </span>
-          </div>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 max-w-3xl">
-            Trusted CPD for Australian clinicians. Audit-ready by default.
+        {/* Hero — confident, restrained, outcome-focused */}
+        <div className="mb-14">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-3">
+            CPD Marketplace
+          </p>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
+            Trusted CPD. <span className="text-muted-foreground">Audit-ready by default.</span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mb-6">
-            Every course on the platform passes a six-criterion review. Hours auto-log to one dashboard. Audit export in one click — RACGP / ACRRM CPD Home integration on roadmap.
+          <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mb-8">
+            Every course on the platform passes a six-criterion review. Hours auto-log to one dashboard. Audit export in a click. The passive layer captures the 100-400 hours of research clinicians already do but never log.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
+              href="/courses/cpd-record/passive"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-foreground text-white font-semibold text-sm hover:bg-foreground/90 transition-colors"
+            >
+              See the passive-CPD demo
+            </Link>
+            <Link
               href="/courses/cpd-record"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-foreground text-white font-semibold text-sm hover:bg-foreground/90"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors"
             >
               <FileBarChart className="w-4 h-4" />
-              See the CPD dashboard
+              CPD dashboard
             </Link>
             <Link
               href="/courses/how-we-vet"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors"
             >
               <BookOpenCheck className="w-4 h-4" />
               How we vet providers
