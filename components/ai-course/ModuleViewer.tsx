@@ -5,6 +5,47 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Check, X, ChevronRight, ChevronLeft, Lightbulb, AlertCircle } from 'lucide-react'
 import type { ParsedSection, SectionQuizCheck } from '@/lib/ai-course/module-sections'
+import { InfographicRenderer } from './Infographics'
+
+const INFOGRAPHIC_REGEX = /\[INFOGRAPHIC:\s*([\w-]+)\s*\]/g
+
+/**
+ * Splits markdown content on `[INFOGRAPHIC: <slug>]` markers and renders
+ * alternating markdown and React infographic components.
+ */
+function SectionBody({ body }: { body: string }) {
+  const parts: Array<{ kind: 'md' | 'infographic'; value: string }> = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  INFOGRAPHIC_REGEX.lastIndex = 0
+  while ((match = INFOGRAPHIC_REGEX.exec(body)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ kind: 'md', value: body.slice(lastIndex, match.index) })
+    }
+    parts.push({ kind: 'infographic', value: match[1] })
+    lastIndex = match.index + match[0].length
+  }
+  if (lastIndex < body.length) {
+    parts.push({ kind: 'md', value: body.slice(lastIndex) })
+  }
+  if (parts.length === 0) {
+    parts.push({ kind: 'md', value: body })
+  }
+
+  return (
+    <article className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-base prose-p:text-[15px] prose-p:leading-relaxed prose-li:text-[15px] prose-li:leading-relaxed prose-strong:text-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-blockquote:border-accent prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-md prose-blockquote:not-italic prose-code:bg-slate-100 prose-code:text-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden prose-table:text-sm prose-th:bg-slate-50 prose-th:text-left">
+      {parts.map((p, i) =>
+        p.kind === 'md' ? (
+          <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>
+            {p.value}
+          </ReactMarkdown>
+        ) : (
+          <InfographicRenderer key={i} slug={p.value} />
+        )
+      )}
+    </article>
+  )
+}
 
 interface ModuleViewerProps {
   /** Optional module header (rendered above the section stepper) */
@@ -63,9 +104,7 @@ export function ModuleViewer({ header, sections }: ModuleViewerProps) {
           </span>
         </div>
 
-        <article className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-base prose-p:text-[15px] prose-p:leading-relaxed prose-li:text-[15px] prose-li:leading-relaxed prose-strong:text-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-blockquote:border-accent prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-md prose-blockquote:not-italic prose-code:bg-slate-100 prose-code:text-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden prose-table:text-sm prose-th:bg-slate-50 prose-th:text-left">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{active.body}</ReactMarkdown>
-        </article>
+        <SectionBody body={active.body} />
 
         {active.quizCheck && (
           <QuizCheck key={active.id} check={active.quizCheck} />

@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyCertificate } from '@/lib/ai-course/certificate'
+import { checkAiCourseAccess } from '@/lib/ai-course/access'
 
 /**
  * GET /api/ai-course/certificate/verify/:id
  *
- * Public endpoint. Given a certificate ID, returns the holder's name,
- * issue date, expiry, and validity status. No PII beyond first/last name
- * is exposed (the email stored is hashed/redacted in response).
+ * Admin-gated during preview. Once AI_COURSE_PUBLIC is set this becomes
+ * public so third parties can verify a certificate ID. Until then the
+ * verifier is locked down with the rest of the course surface.
  */
 
 interface RouteParams {
   params: Promise<{ id: string }>
 }
 
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  const access = await checkAiCourseAccess(request)
+  if (!access.ok) {
+    return NextResponse.json({ error: 'Admin key required during preview.' }, { status: 401 })
+  }
+
   const { id } = await params
 
   // Basic format check — defends against pointless DB hits

@@ -264,6 +264,8 @@ For complex presentations (suicidality, eating disorders, complex trauma, psycho
 
 ## 8. The Review-and-Sign Workflow
 
+[INFOGRAPHIC: review-and-sign]
+
 Every AI-generated clinical document, regardless of tier or task, passes through the same final workflow:
 
 1. **Generate** — the LLM produces a draft

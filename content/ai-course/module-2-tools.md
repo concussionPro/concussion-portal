@@ -16,6 +16,8 @@ The decisions you make here are not abstract. Choosing the wrong tool for a clin
 
 ## 1. The Three Tiers of LLM Tools for Clinical Use
 
+[INFOGRAPHIC: tier-ladder]
+
 Not all large language model (LLM) tools are equivalent. They differ in where data is stored, who can see it, whether the vendor will sign a data-handling agreement, and whether the product was designed for healthcare in the first place. The cleanest way to think about this is a three-tier model.
 
 ### Tier A — Healthcare-purpose-built, Australian data residency

@@ -1,21 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyCertificate } from '@/lib/ai-course/certificate'
+import { checkAiCourseAccess } from '@/lib/ai-course/access'
 import { jsPDF } from 'jspdf'
 import { CONFIG } from '@/lib/config'
 
 /**
  * GET /api/ai-course/certificate/pdf/:id
  *
- * Generate the certificate as a single-page A4 PDF. No auth required —
- * the ID is the bearer token. ID is high-entropy (16 bytes / 22 chars) so
- * guessing is not viable.
+ * Admin-gated during preview. The certificate ID alone is no longer
+ * enough — even a leaked URL doesn't expose the PDF. Once
+ * AI_COURSE_PUBLIC=true, the bearer-token model resumes (high-entropy
+ * ID guards guessing).
  */
 
 interface RouteParams {
   params: Promise<{ id: string }>
 }
 
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  const access = await checkAiCourseAccess(request)
+  if (!access.ok) {
+    return NextResponse.json({ error: 'Admin key required during preview.' }, { status: 401 })
+  }
+
   const { id } = await params
   if (!id || id.length < 8 || !/^[A-Za-z0-9_-]+$/.test(id)) {
     return NextResponse.json({ error: 'Invalid certificate ID' }, { status: 400 })

@@ -45,6 +45,8 @@ AHPRA does not certify, accredit, or endorse individual AI products. Any vendor 
 
 ## 2. Australian Privacy Principles Applied to LLM Workflows
 
+[INFOGRAPHIC: data-flow]
+
 The *Privacy Act 1988* (Cth) and its thirteen Australian Privacy Principles (APPs) apply to most healthcare providers in Australia regardless of size — the small-business exemption does not apply to organisations that provide a health service and hold health information (see s 6D(4)(b) of the Act). The Office of the Australian Information Commissioner (OAIC) publishes the authoritative APP Guidelines: <https://www.oaic.gov.au/privacy/australian-privacy-principles>.
 
 The OAIC has also published specific guidance on generative AI and privacy obligations: <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/hands-on-guides/guidance-on-privacy-and-the-use-of-commercially-available-ai-products>.
@@ -215,6 +217,8 @@ Always pull the current version directly from your carrier; do not rely on secon
 ---
 
 ## 7. Documentation Requirement — Recording AI Use in the Clinical Record
+
+[INFOGRAPHIC: documentation-do-dont]
 
 AHPRA's 2025 guidance is clear that AI use should be transparent and traceable. In practice, this means the patient record itself must reflect when AI was used in producing or supporting the record.
 

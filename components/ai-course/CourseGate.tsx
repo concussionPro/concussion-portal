@@ -15,11 +15,17 @@ export interface GateResult {
   email?: string
 }
 
+/**
+ * Admin-only during preview. The enrolled-user path is dormant until
+ * AI_COURSE_PUBLIC=true is set. The user wants every part of the
+ * AI-course surface behind the admin key (no public verify URL, no
+ * public certificate PDF, no enrolled-user path until launch).
+ */
 export async function checkServerAccess(): Promise<GateResult> {
-  if (process.env.AI_COURSE_PUBLIC === 'true') return { ok: true, reason: 'public-launch' }
   const cookieStore = await cookies()
   const headerList = await headers()
 
+  // Admin always allowed
   const adminSession = cookieStore.get('admin_session')?.value
   if (adminSession) return { ok: true, reason: 'admin-cookie' }
   const adminKey = headerList.get('x-admin-key')
@@ -27,6 +33,12 @@ export async function checkServerAccess(): Promise<GateResult> {
     return { ok: true, reason: 'admin-header' }
   }
 
+  // Preview mode (default): admin-only. No enrolled-user path active.
+  if (process.env.AI_COURSE_PUBLIC !== 'true') {
+    return { ok: false, reason: 'admin-required' }
+  }
+
+  // Post-launch mode: enrolled users pass.
   const sessionCookie = cookieStore.get('session')?.value
   if (!sessionCookie) return { ok: false, reason: 'no-session' }
   const session = verifySessionToken(sessionCookie)

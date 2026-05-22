@@ -20,33 +20,42 @@ export type AccessResult =
   | { ok: false; reason: 'not-admin-not-enrolled' | 'unauthenticated' }
 
 /**
- * Server-side access check for AI course routes and APIs. Admin always
- * passes. Enrolled users pass when their users.ai_course_enrolled flag is
- * true. Public launch flag (env) bypasses both.
+ * Server-side access check for AI course routes and APIs.
+ *
+ * Until AI_COURSE_PUBLIC=true is set in the environment, this is
+ * ADMIN-ONLY. The enrolled-user path is wired but dormant during preview
+ * — even an enrolled user can't access the course unless they also carry
+ * an admin session cookie or x-admin-key header. This is deliberate:
+ * the user (Zac) wants the entire course catalogue hidden behind the
+ * admin key while it's being demoed to partners (Heidi) and is not yet
+ * being publicly sold.
+ *
+ * When Zac flips AI_COURSE_PUBLIC=true:
+ *   - Admin still passes (unchanged)
+ *   - Enrolled users (users.ai_course_enrolled=true) start passing
+ *   - Unauthenticated users still rejected (the course is paid, not free)
  */
 export async function checkAiCourseAccess(request: NextRequest): Promise<AccessResult> {
-  // Public-launch override — set AI_COURSE_PUBLIC=true to flip the gate off
-  if (process.env.AI_COURSE_PUBLIC === 'true') {
-    const session = readSessionEmail(request)
-    return { ok: true, reason: 'public-launch', email: session?.email, userId: session?.userId }
-  }
-
-  // Admin always allowed
+  // Admin always allowed — uses httpOnly admin_session cookie OR
+  // x-admin-key header (see lib/require-admin.ts).
   if (isAdminRequest(request)) {
     return { ok: true, reason: 'admin' }
   }
 
-  // Enrolled-user check
+  // Preview mode (default): admin-only. Enrolled users blocked too.
+  if (process.env.AI_COURSE_PUBLIC !== 'true') {
+    return { ok: false, reason: 'not-admin-not-enrolled' }
+  }
+
+  // Post-launch mode (AI_COURSE_PUBLIC=true): enrolled users pass.
   const session = readSessionEmail(request)
   if (!session) {
     return { ok: false, reason: 'unauthenticated' }
   }
-
   const enrolled = await isUserEnrolled(session.email)
   if (enrolled) {
     return { ok: true, reason: 'enrolled', email: session.email, userId: session.userId }
   }
-
   return { ok: false, reason: 'not-admin-not-enrolled' }
 }
 
