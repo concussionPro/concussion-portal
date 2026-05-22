@@ -16,7 +16,7 @@ import { verifySessionToken } from '@/lib/jwt-session'
 import { sql } from '@/lib/db'
 
 export type AccessResult =
-  | { ok: true; reason: 'admin' | 'enrolled' | 'public-launch'; userId?: string; email?: string }
+  | { ok: true; reason: 'admin' | 'enrolled' | 'public-launch' | 'demo-key'; userId?: string; email?: string }
   | { ok: false; reason: 'not-admin-not-enrolled' | 'unauthenticated' }
 
 /**
@@ -42,7 +42,20 @@ export async function checkAiCourseAccess(request: NextRequest): Promise<AccessR
     return { ok: true, reason: 'admin' }
   }
 
-  // Preview mode (default): admin-only. Enrolled users blocked too.
+  // Demo-key path — a scoped, course-only key for sharing with partners
+  // (e.g. Heidi pitch). Setting HEIDI_DEMO_KEY=<random> in Vercel env
+  // grants AI course access to anyone supplying that exact key via the
+  // x-demo-key header OR the ?demo= query string. NOT a full admin key —
+  // does not unlock /api/admin/* routes elsewhere in the portal.
+  const demoKey = process.env.HEIDI_DEMO_KEY
+  if (demoKey) {
+    const supplied = request.headers.get('x-demo-key') || new URL(request.url).searchParams.get('demo')
+    if (supplied && supplied === demoKey) {
+      return { ok: true, reason: 'demo-key' }
+    }
+  }
+
+  // Preview mode (default): admin or demo-key only. Enrolled users blocked.
   if (process.env.AI_COURSE_PUBLIC !== 'true') {
     return { ok: false, reason: 'not-admin-not-enrolled' }
   }

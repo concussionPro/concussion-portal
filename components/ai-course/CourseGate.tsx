@@ -33,7 +33,17 @@ export async function checkServerAccess(): Promise<GateResult> {
     return { ok: true, reason: 'admin-header' }
   }
 
-  // Preview mode (default): admin-only. No enrolled-user path active.
+  // Demo-key path — partner-pitch access without sharing the main admin key.
+  // Set HEIDI_DEMO_KEY in Vercel env and share via x-demo-key header or
+  // ?demo= query string. Course pages only — does not unlock /api/admin/*.
+  const demoKey = process.env.HEIDI_DEMO_KEY
+  const demoHeader = headerList.get('x-demo-key')
+  const demoCookie = cookieStore.get('demo_key')?.value
+  if (demoKey && ((demoHeader && demoHeader === demoKey) || (demoCookie && demoCookie === demoKey))) {
+    return { ok: true, reason: 'demo-key' }
+  }
+
+  // Preview mode (default): admin or demo-key only. No enrolled-user path active.
   if (process.env.AI_COURSE_PUBLIC !== 'true') {
     return { ok: false, reason: 'admin-required' }
   }

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { COURSES, PROVIDERS, findProvider } from '@/lib/ai-course/provider-catalogue'
-import { Check, AlertCircle, ShieldCheck } from 'lucide-react'
+import { Check, AlertCircle, ShieldCheck, FileBarChart, BookOpenCheck } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Courses — Concussion Education Australia',
@@ -27,30 +27,57 @@ export default async function CoursesIndexPage() {
       <div className="max-w-5xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
 
-        <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-wide text-accent mb-2">
-            CPD Marketplace · Admin preview
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            Trusted CPD for Australian clinicians
+        {/* Hero */}
+        <div className="mb-10 rounded-2xl bg-gradient-to-br from-accent/10 via-emerald-50/40 to-background border border-accent/20 p-8">
+          <div className="flex items-start gap-2 mb-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-accent">
+              CPD Marketplace
+            </p>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+              Pilot · Admin preview
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 max-w-3xl">
+            Trusted CPD for Australian clinicians. Audit-ready by default.
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Every course on the platform is vetted by the listing provider and reviewed against AHPRA and college standards before going live. Completions auto-track for AHPRA audit defensibility.
+          <p className="text-lg text-muted-foreground max-w-2xl mb-6">
+            Every course on the platform passes a six-criterion review. Hours auto-log to one dashboard. Audit export in one click — RACGP / ACRRM CPD Home integration on roadmap.
           </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/courses/cpd-record"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-foreground text-white font-semibold text-sm hover:bg-foreground/90"
+            >
+              <FileBarChart className="w-4 h-4" />
+              See the CPD dashboard
+            </Link>
+            <Link
+              href="/courses/how-we-vet"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50"
+            >
+              <BookOpenCheck className="w-4 h-4" />
+              How we vet providers
+            </Link>
+          </div>
         </div>
 
         {/* Trust strip — three problems the marketplace solves */}
-        <div className="grid sm:grid-cols-3 gap-3 mb-12">
+        <div className="grid sm:grid-cols-3 gap-3 mb-10">
           {[
-            { title: 'Trusted curation', body: 'Every provider vetted. No random Google-found courses. If it&apos;s listed, it&apos;s legitimate.', icon: ShieldCheck },
-            { title: 'Auto-logged hours', body: 'CPD hours tracked across providers in one dashboard. No spreadsheets, no email confirmations.', icon: Check },
-            { title: 'Audit-ready export', body: 'One-click export when AHPRA asks. Direct integration to RACGP / ACRRM CPD Homes (roadmap).', icon: AlertCircle },
+            { title: 'Trusted curation', body: 'Every provider vetted. No random Google-found courses. If it&apos;s listed, it&apos;s legitimate.', icon: ShieldCheck, color: 'emerald' },
+            { title: 'Auto-logged hours', body: 'CPD hours tracked across providers in one dashboard. No spreadsheets, no email confirmations.', icon: Check, color: 'blue' },
+            { title: 'Audit-ready export', body: 'One-click export when AHPRA asks. RACGP / ACRRM CPD Home integration on roadmap.', icon: AlertCircle, color: 'amber' },
           ].map((t) => {
             const Icon = t.icon
+            const colorClass = t.color === 'emerald' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+              t.color === 'blue' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+              'bg-amber-50 text-amber-700 border-amber-200'
             return (
-              <div key={t.title} className="card rounded-xl p-4">
-                <Icon className="w-5 h-5 text-accent mb-2" />
-                <p className="text-sm font-bold text-foreground mb-1">{t.title}</p>
+              <div key={t.title} className="card rounded-xl p-5">
+                <div className={`w-10 h-10 rounded-lg ${colorClass} border flex items-center justify-center mb-3`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <p className="text-sm font-bold text-foreground mb-1.5">{t.title}</p>
                 <p className="text-xs text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: t.body }} />
               </div>
             )
@@ -89,10 +116,10 @@ export default async function CoursesIndexPage() {
                     <span className="text-accent font-semibold">View →</span>
                   </div>
                   {c.cpdRecognition.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1">
+                    <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-x-2 gap-y-0.5">
                       {c.cpdRecognition.map((r) => (
-                        <span key={r} className="text-[10px] text-muted-foreground">{r}</span>
-                      )).reduce((prev, curr, i) => i === 0 ? [curr] : [...prev, <span key={'sep' + i} className="text-[10px] text-slate-300">·</span>, curr], [] as React.ReactNode[])}
+                        <span key={r} className="text-[10px] text-muted-foreground">· {r}</span>
+                      ))}
                     </div>
                   )}
                 </Link>
