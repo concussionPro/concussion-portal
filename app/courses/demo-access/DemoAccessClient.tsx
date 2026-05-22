@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Eye, Clock, ShieldCheck, AlertCircle, Loader2, Check } from 'lucide-react'
+import { ShieldCheck, Eye, Clock, AlertCircle, Loader2, Check, ArrowRight } from 'lucide-react'
 
 const NDA_VERSION = '2026-05-22-v1'
 
@@ -25,7 +25,7 @@ The preview is provided without warranty. Any final commercial arrangement requi
 This agreement is governed by Australian law. Any dispute is heard in the courts of New South Wales.
 
 7. RECORD OF ACCEPTANCE
-This is a click-through agreement under the Electronic Transactions Act 1999 (Cth). The recipient's acceptance is logged with email, organisation, timestamp, IP address, and the version of these terms shown above.
+This is a click-through agreement under the Electronic Transactions Act 1999 (Cth). The recipient's acceptance is logged with organisation, timestamp, IP address, and the version of these terms shown above. Email is optional — provide it if you would like a copy of this agreement sent for your records.
 
 By proceeding, the recipient confirms they are authorised to bind their organisation to the terms above and have read each clause.`
 
@@ -33,8 +33,15 @@ export function DemoAccessClient() {
   const params = useSearchParams()
   const router = useRouter()
   const keyFromUrl = params.get('key') || ''
+  const suggestedOrg = params.get('org') || ''
+  const suggestedName = params.get('name') || ''
+
+  // Slug-prefilled mode = no form inputs visible. Falls back to manual
+  // entry only when the URL didn't come from a /d/<slug> short link.
+  const isPrefilled = !!suggestedOrg
+
   const [email, setEmail] = useState('')
-  const [organisation, setOrganisation] = useState('')
+  const [organisation, setOrganisation] = useState(suggestedOrg)
   const [hasScrolled, setHasScrolled] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [authorised, setAuthorised] = useState(false)
@@ -43,8 +50,6 @@ export function DemoAccessClient() {
   const [accepted, setAccepted] = useState<{ id: number } | null>(null)
   const ndaRef = useRef<HTMLDivElement>(null)
 
-  // Scroll enforcement — checkboxes only become enabled after the user
-  // reaches the bottom of the NDA scroll area
   useEffect(() => {
     const el = ndaRef.current
     if (!el) return
@@ -53,23 +58,22 @@ export function DemoAccessClient() {
       if (reachedBottom && !hasScrolled) setHasScrolled(true)
     }
     el.addEventListener('scroll', onScroll)
-    // Also handle the case where the NDA text fits without scrolling
     if (el.scrollHeight <= el.clientHeight) setHasScrolled(true)
     return () => el.removeEventListener('scroll', onScroll)
   }, [hasScrolled])
 
-  const orgPlaceholder = organisation.trim() || '[Organisation]'
-  const canSubmit = !!email.trim() && !!organisation.trim() && hasScrolled && agreed && authorised && !submitting
+  const orgLabel = organisation.trim() || '[your organisation]'
+  const canSubmit = !!organisation.trim() && hasScrolled && agreed && authorised && !submitting
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Valid work email required.')
-      return
-    }
     if (!organisation.trim()) {
       setError('Organisation required.')
+      return
+    }
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Email looks invalid — leave blank or fix.')
       return
     }
     if (!hasScrolled) {
@@ -91,20 +95,18 @@ export function DemoAccessClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           key: keyFromUrl,
-          email: email.trim().toLowerCase(),
+          email: email.trim() ? email.trim().toLowerCase() : `anon@${organisation.trim().toLowerCase().replace(/\s+/g, '')}.preview`,
           organisation: organisation.trim(),
           ndaVersion: NDA_VERSION,
         }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) {
-        setError(data?.error || 'Could not grant access. Please contact zac@concussion-education-australia.com.')
+        setError(data?.error || 'Could not grant access. Contact zac@concussion-education-australia.com.')
         setSubmitting(false)
         return
       }
       setAccepted({ id: data.acceptanceId || 0 })
-      // Brief confirmation pause so the recipient sees the agreement ID,
-      // then redirect to the marketplace
       setTimeout(() => router.push('/courses'), 1800)
     } catch {
       setError('Network error. Try again.')
@@ -114,21 +116,18 @@ export function DemoAccessClient() {
 
   if (accepted) {
     return (
-      <div className="text-center py-12">
-        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center">
-          <Check className="w-7 h-7 text-emerald-700" />
+      <div className="text-center py-16">
+        <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center">
+          <Check className="w-8 h-8 text-emerald-700" />
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
           Access granted
         </h1>
         <p className="text-sm text-muted-foreground mb-1">
-          Agreement ID <span className="font-mono">DEM-2026-{String(accepted.id).padStart(4, '0')}</span>
+          Agreement <span className="font-mono">DEM-2026-{String(accepted.id).padStart(4, '0')}</span>
         </p>
-        <p className="text-sm text-muted-foreground mb-6">
-          Logged at {new Date().toLocaleString('en-AU', { dateStyle: 'long', timeStyle: 'short' })}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Redirecting to the demo…
+        <p className="text-xs text-muted-foreground">
+          Logged {new Date().toLocaleString('en-AU', { dateStyle: 'long', timeStyle: 'short' })} · Redirecting…
         </p>
       </div>
     )
@@ -136,30 +135,60 @@ export function DemoAccessClient() {
 
   return (
     <div>
-      {/* Hero — Heidi-style: short, confident, outcome-focused */}
-      <div className="mb-12">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-3">
-          Concussion Education Australia · Partner preview
-        </p>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-tight">
-          A clinical-education platform, by your side.
-        </h1>
-        <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
-          Preview the AHPRA-aligned course, the CPD marketplace shell, and the passive-CPD layer that captures the 100-400 hours of research clinicians already do but never log.
-        </p>
+      {/* Hero — confident, presence, clear partnership signal */}
+      <div className="relative mb-12">
+        {/* Subtle background accent */}
+        <div
+          aria-hidden="true"
+          className="absolute -top-12 -left-12 w-72 h-72 rounded-full bg-gradient-to-br from-accent/15 via-emerald-100/40 to-transparent blur-3xl pointer-events-none"
+        />
+        <div className="relative">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-4">
+            Confidential preview · Partner-only
+          </p>
+
+          {isPrefilled ? (
+            <>
+              <div className="flex items-center gap-3 mb-5 flex-wrap">
+                <CoBrand orgName={organisation} />
+              </div>
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
+                Curated for{' '}
+                <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">
+                  {organisation}
+                </span>
+              </h1>
+            </>
+          ) : (
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
+              A clinical-education platform, by your side.
+            </h1>
+          )}
+
+          <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mb-1">
+            Preview the AHPRA-aligned course, the multi-provider CPD marketplace shell, and the passive-CPD layer that captures the 100-400 hours of research clinicians already do but never log.
+          </p>
+          {suggestedName && (
+            <p className="text-sm text-muted-foreground mt-3 italic">
+              Prepared specifically for {suggestedName}.
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Three quick context cards */}
+      {/* Three context cards — premium */}
       <div className="grid sm:grid-cols-3 gap-3 mb-12">
         {[
-          { icon: Eye, label: 'Read-only', body: 'Browse the full experience — courses, certification flow, passive-CPD mockup, marketplace shell.' },
-          { icon: Clock, label: '7-day access', body: 'Your cookie expires automatically. Re-enter via the link to extend.' },
+          { icon: Eye, label: 'Read-only', body: 'Course, certification flow, passive-CPD mockup, marketplace shell.' },
+          { icon: Clock, label: '7-day access', body: 'Auto-expires. Re-enter via the link to extend.' },
           { icon: ShieldCheck, label: 'Watermarked', body: 'Every page carries a confidentiality stripe with your organisation name.' },
         ].map((c) => {
           const Icon = c.icon
           return (
-            <div key={c.label} className="rounded-2xl border border-slate-200 bg-white p-5">
-              <Icon className="w-5 h-5 text-accent mb-3" />
+            <div key={c.label} className="group relative rounded-2xl border border-slate-200 bg-white p-5 hover:border-accent/40 hover:shadow-md transition-all">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/10 to-emerald-50 border border-accent/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Icon className="w-5 h-5 text-accent" />
+              </div>
               <p className="text-sm font-bold text-foreground mb-1">{c.label}</p>
               <p className="text-xs text-muted-foreground leading-relaxed">{c.body}</p>
             </div>
@@ -168,37 +197,57 @@ export function DemoAccessClient() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">
-              Work email
-            </label>
+        {/* Pre-filled mode: show acceptance context, no form fields */}
+        {isPrefilled ? (
+          <div className="rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 to-emerald-50/30 p-5">
+            <p className="text-xs font-bold uppercase tracking-wide text-accent mb-2">
+              Accepting on behalf of
+            </p>
+            <p className="text-2xl font-bold text-foreground mb-3">{organisation}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Your IP and timestamp will be logged with the agreement. If you&apos;d like a copy of the agreement emailed to you, add your work email below — optional.
+            </p>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={submitting}
-              placeholder="ben.condon@heidihealth.com"
+              placeholder="Optional · your work email for a copy of the agreement"
               autoComplete="email"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50 transition-colors"
+              className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50 transition-colors"
             />
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">
-              Organisation
-            </label>
-            <input
-              type="text"
-              value={organisation}
-              onChange={(e) => setOrganisation(e.target.value)}
-              disabled={submitting}
-              placeholder="Heidi Health"
-              autoComplete="organization"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50 transition-colors"
-            />
+        ) : (
+          // Fallback (manual access — direct URL without slug)
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Work email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={submitting}
+                placeholder="your work email"
+                autoComplete="email"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Organisation</label>
+              <input
+                type="text"
+                value={organisation}
+                onChange={(e) => setOrganisation(e.target.value)}
+                disabled={submitting}
+                placeholder="Your organisation"
+                autoComplete="organization"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
+        {/* NDA */}
         <div>
           <div className="flex items-baseline justify-between mb-2">
             <label className="text-sm font-semibold text-foreground">
@@ -210,7 +259,7 @@ export function DemoAccessClient() {
           </div>
           <div
             ref={ndaRef}
-            className="rounded-xl border border-slate-200 bg-slate-50 p-5 max-h-64 overflow-y-auto text-xs text-foreground leading-relaxed whitespace-pre-line"
+            className="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-5 max-h-64 overflow-y-auto text-xs text-foreground leading-relaxed whitespace-pre-line shadow-inner"
           >
             {NDA_TEXT}
           </div>
@@ -219,29 +268,30 @@ export function DemoAccessClient() {
           </p>
         </div>
 
-        <div className="space-y-3">
-          <label className={`flex items-start gap-3 cursor-pointer ${!hasScrolled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        {/* Two checkboxes */}
+        <div className="space-y-2.5 rounded-xl border border-slate-200 bg-white p-5">
+          <label className={`flex items-start gap-3 cursor-pointer rounded-lg p-2 -m-2 hover:bg-slate-50 transition-colors ${!hasScrolled ? 'opacity-50 cursor-not-allowed' : ''}`}>
             <input
               type="checkbox"
               checked={agreed}
               onChange={(e) => hasScrolled && setAgreed(e.target.checked)}
               disabled={!hasScrolled || submitting}
-              className="mt-1"
+              className="mt-1 w-4 h-4 accent-accent"
             />
             <span className="text-sm text-foreground leading-relaxed">
-              I agree to the confidentiality and non-development terms above. My acceptance is logged with my email, IP, and timestamp.
+              I agree to the confidentiality and non-development terms above.
             </span>
           </label>
-          <label className={`flex items-start gap-3 cursor-pointer ${!hasScrolled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+          <label className={`flex items-start gap-3 cursor-pointer rounded-lg p-2 -m-2 hover:bg-slate-50 transition-colors ${!hasScrolled ? 'opacity-50 cursor-not-allowed' : ''}`}>
             <input
               type="checkbox"
               checked={authorised}
               onChange={(e) => hasScrolled && setAuthorised(e.target.checked)}
               disabled={!hasScrolled || submitting}
-              className="mt-1"
+              className="mt-1 w-4 h-4 accent-accent"
             />
             <span className="text-sm text-foreground leading-relaxed">
-              I am authorised to bind <strong>{orgPlaceholder}</strong> to this agreement.
+              I am authorised to bind <strong>{orgLabel}</strong> to this agreement.
             </span>
           </label>
         </div>
@@ -256,7 +306,7 @@ export function DemoAccessClient() {
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full px-6 py-3.5 rounded-xl bg-foreground text-white font-semibold text-sm hover:bg-foreground/90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          className="group w-full px-6 py-4 rounded-xl bg-gradient-to-r from-foreground to-slate-700 text-white font-semibold text-base hover:shadow-lg hover:shadow-slate-900/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
         >
           {submitting ? (
             <>
@@ -264,7 +314,10 @@ export function DemoAccessClient() {
               Recording acceptance…
             </>
           ) : (
-            'Agree and open the demo'
+            <>
+              Agree and open the preview
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </>
           )}
         </button>
 
@@ -272,6 +325,35 @@ export function DemoAccessClient() {
           Questions before accepting? <a href="mailto:zac@concussion-education-australia.com" className="text-accent hover:underline">zac@concussion-education-australia.com</a>
         </p>
       </form>
+    </div>
+  )
+}
+
+/**
+ * Co-brand visual: shows CEA's mark next to a neutral partner-organisation
+ * label. Deliberately NO partner logo — using a competitor's registered
+ * mark on your own page without written consent is trademark / misleading-
+ * conduct risk. The organisation NAME prominently displayed is the
+ * partnership signal; that's legally safe and visually direct.
+ */
+function CoBrand({ orgName }: { orgName: string }) {
+  return (
+    <div className="inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5">
+      {/* CEA mark — diamond geometry, neutral */}
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-emerald-600 flex items-center justify-center">
+          <span className="text-white text-[10px] font-black tracking-tight">CEA</span>
+        </div>
+        <span className="text-xs font-bold text-foreground">Concussion Education Australia</span>
+      </div>
+      {/* Co-mark divider */}
+      <div className="w-px h-6 bg-slate-200" />
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
+          <span className="text-slate-500 text-[10px] font-bold">×</span>
+        </div>
+        <span className="text-xs font-bold text-slate-700">{orgName}</span>
+      </div>
     </div>
   )
 }

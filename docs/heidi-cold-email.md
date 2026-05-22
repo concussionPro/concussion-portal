@@ -1,144 +1,135 @@
 # Heidi Cold Email — Paul Williamson (CRO), Primary
 
 **Recipient:** Paul Williamson, Chief Revenue Officer, Heidi Health
-**Trigger:** Send only AFTER 20-30 paying customers + initial OA-review-for-AI-course signal
-**Subject options** (pick one):
-- A: "$1.5M ARR CPD vertical — Heidi already runs the workflow"
-- B: "CPD marketplace inside Heidi — 20 min?"
-- C: "Marketplace partnership for Heidi — quick note"
-
-Recommended: **Option A** — leads with the dollar number and the structural advantage.
+**Scope:** This pitch is for an **AI compliance course + CPD marketplace platform** that CEA has built. CCM (Concussion Clinical Mastery) is **not** part of the deal — it stays an independent CEA product. CCM is referenced only as proof that CEA can ship OA-endorsed clinical content at quality.
 
 ---
 
-## 🟢 SHORT version (~110 words) — recommended for the actual cold send
+## What's real (do not fabricate beyond this)
 
-This is the version Paul Williamson will actually read. Inbox-clean, three numbers, one ask, one link.
+| Real today | Aspirational / not yet |
+|---|---|
+| CEA is Osteopathy Australia–endorsed (for the existing CCM concussion course) | AI course is OA-endorsed (would need separate review) |
+| 600+ subscribers on the CEA email list | 50+ paying AI course customers |
+| Concussion Clinical Mastery course is shipping, has paying customers | AI course has paying customers (not launched) |
+| Working multi-provider marketplace shell built | Multi-provider supply (only CEA today) |
+| Passive-CPD demo mockup live | Passive CPD actually integrated with a partner |
+| AHPRA-aligned AI course content + certification infrastructure | AI course in production with traction |
+| Monthly content-refresh pipeline running | RACGP / ACRRM CPD Home integration |
+
+Whenever you cite a number in the pitch, it must come from the "real today" column. Period.
+
+---
+
+## Decision matrix — which version to send
+
+| State of AI course | Version to send |
+|---|---|
+| **No launch yet** (pre-retail) | **PRE-LAUNCH** version — leads with the platform-economics insight + CEA's existing OA-endorsement-via-CCM as the credibility signal. Asks for a 20-minute call to walk through the demo. No fabricated customer numbers. |
+| **Retail launched, ≥30 paying customers, real ARR figure** | **POST-TRACTION** version — leads with the actual numbers + competitive urgency + three-option proposal preview. Demands a real response. |
+
+The post-traction version only works when reality matches the words. Until then, the pre-launch version is the honest one — and it's still strong because of CEA's real OA-endorsed credibility.
+
+---
+
+## 🟢 PRE-LAUNCH version (~110 words) — send this today
 
 ```text
 Hi Paul,
 
-Quick partnership note. I run Concussion Education Australia (OA-endorsed CPD provider, 600 practitioners).
+Quick partnership note. I run Concussion Education Australia — Osteopathy Australia–endorsed CPD provider, 600+ subscribers, shipping the CCM concussion course.
 
-Heidi's users do 100–400 hours of CPD-qualifying research per year inside the platform — literature searches, guideline reviews — but never log it. If Heidi captured those hours automatically (one-tap confirmation, AHPRA-ready), it solves the audit-tracking pain and unlocks a curated CPD marketplace for the 10–20h gap. ~$1.5M ARR vertical at 15k AU users, $5M+ at 50k. No scribe competitor can copy it (workflow-dependent).
+I've now built a separate product: an AHPRA-aligned AI compliance course plus a curated CPD marketplace shell with passive-CPD tracking. The insight: Heidi's users already do 100–400 hrs/yr of CPD-qualifying research inside the platform (literature searches via Evidence, guideline reviews) that never gets logged. Capture those automatically + curated marketplace for the residual gap = a $1.5M–5M ARR vertical at Heidi's current and target scale. No scribe competitor can copy it.
 
-I've built the platform. 30 paying customers, $9k ARR, OA reviewing for endorsement.
-
-20 minutes? Demo (NDA-gated): https://portal.concussion-education-australia.com/courses/demo-access?key=<KEY>
-
-— Zac
-zac@concussion-education-australia.com
-```
-
-Word count: ~110. Six sentences. Single ask, single link.
-
-## 🟡 EVEN-SHORTER version (~60 words) — LinkedIn DM fallback
-
-If email bounces or no reply after 12 days, send this via LinkedIn DM:
-
-```text
-Paul — quick partnership note. Heidi's users do 100–400 hrs/yr of CPD-qualifying research inside the platform (literature searches, guideline reviews) that never gets logged. Capture those passively + a curated marketplace for the gap = ~$1.5M ARR vertical at current scale. 30 customers, OA-endorsed, $9k ARR. 20 min? Demo: [URL]
-```
-
-Word count: ~60. One paragraph, one ask, one link.
-
-## 🔵 LONG version (~280 words) — depth-of-pitch for when Paul replies "tell me more"
-
-Hi Paul,
-
-I'm Zac Lewis — Australian osteopath, founder of Concussion Education Australia (Osteopathy Australia–endorsed, 600+ practitioners). Congrats on the CRO role.
-
-I've identified a recurring-revenue vertical that maps tightly to Heidi's structural advantage: research already happens in your platform.
-
-**The opportunity.** Australian clinicians do 100-400 hours of CPD-qualifying activity per year inside their daily workflow — literature searches via Evidence, guideline reviews, case research. None of it gets logged because manual CPD tracking has too much friction. End of year, they panic-buy formal courses.
-
-Heidi can capture those hours automatically. One discreet prompt after a session: *"You spent 45 min researching diabetes — log as CPD?"* One tap, AHPRA-ready. 60-80% of an AHPRA clinician's 50-hour annual requirement, earned passively. The 10-20h gap they still need is the monetisation surface — a curated CPD marketplace.
-
-**The economics.** 15,000 AU users × $400/year avg CPD spend = **$6M GMV. At 25% marketplace commission: $1.5M ARR.** At your 50k 2027-28 target, $5M ARR. Improves ARPU + retention + competitive moat (passive tracking requires in-platform workflow — Lyrebird and Medcast can't copy).
-
-**The traction.** 30 paying customers in the first three weeks at $297 (course + 12-month CPD record), $9k ARR growing ~20%/month, OA reviewing for endorsement. Compliance angle (AHPRA's 2025 AI guidance) is the wedge for enterprise sales — solves "how do we ensure compliant AI use?" objection.
-
-I've built the platform: passive-CPD demo, curated marketplace shell, certification infrastructure, monthly content-refresh pipeline. Live and partner-gated.
-
-**The ask.** 20 minutes to walk through the model. If commercial fit is there, happy to loop in Ben for clinical validation as a next step.
+20 minutes to walk through the demo?
 
 — Zac
 zac@concussion-education-australia.com
 
-**Demo (NDA-gated):** portal.concussion-education-australia.com/courses/demo-access?key=[insert one-time key]
-**Attached:** 1-pager covering passive-CPD economics, three commercial paths, pilot scope
+Demo (NDA-gated): https://portal.concussion-education-australia.com/courses/demo-access?key=<KEY>
+```
+
+Word count: ~110. Six sentences. One ask, one link. The CEA-is-OA-endorsed credibility is the structural signal (separate from AI-course traction which doesn't exist yet).
 
 ---
 
-## Why this version of the email works for a CRO
+## 🟡 EVEN-SHORTER version (~70 words) — LinkedIn DM fallback
 
-| Lever | Effect |
-|---|---|
-| Opens with traction (30 customers, $9k ARR, growing 20%/mo) | Signals "this isn't theory — there's already a revenue pattern." CROs respond to revenue signals. |
-| Names a specific number ($1.5M ARR at 25% commission) | Gives him a concrete figure to anchor against his own bookings target. |
-| Frames Heidi's existing infrastructure as the moat | Doesn't ask him to build anything — just to capture what's already happening. |
-| Anti-Medcast / anti-Lyrebird framing | Pre-empts the "why doesn't an incumbent do this?" question. |
-| Specific KPI improvements (ARPU + retention + moat) | Maps directly to CRO OKRs without being explicit about it. |
-| "Loop in Ben for clinical validation" | Signals you understand Heidi's org structure. Implies you're not trying to bypass clinical governance. |
-| 20-minute call ask | Lowest-commitment yes. CROs measure their day in 15-min blocks. |
-| Demo URL inline | Lets him verify the build is real before deciding to reply. |
+If email gets no reply after 12 days, send via LinkedIn DM:
 
-## What this email does NOT do
+```text
+Paul — quick partnership note. I run Concussion Education Australia (OA-endorsed, 600 practitioners). Built a separate product: AHPRA-aligned AI compliance course + curated CPD marketplace + passive-CPD tracking. Heidi's users do 100–400 hrs/yr of CPD-qualifying research inside the platform that never gets logged. Capture that + marketplace for the gap = $1.5M–5M ARR vertical. 20 min? Demo: [URL]
+```
 
-| Avoids | Why |
-|---|---|
-| Lead with "fourth act of Care Partner strategy" | That's strategic / product framing — Dr Condon's territory, not Paul's. Leading there signals you don't know his job. |
-| Mention the AHPRA Code of Conduct in para 1 | Compliance is the wedge, not the lede. Paul cares about revenue; clinical validation is the secondary check. |
-| Use words like "vision," "alignment," "strategic fit" | These slow a CRO down. Use "opportunity," "ARR," "commission," "traction." |
-| Ask for a "strategic discussion" | Ask for "20 minutes to walk through the model" — operationally specific, low commitment. |
-| Multi-party pressure framing | Don't say "I'm talking to 2-3 partners" in the first email. It can read as shopped if not done carefully. Save for the follow-up if needed. |
+---
+
+## 🔴 POST-TRACTION version (~200 words) — use ONLY after retail launch hits real numbers
+
+**Replace `<N>`, `<ARR>`, `<MoM>` with actual figures before sending. If you can't, you're not post-traction. Use the pre-launch version.**
+
+```text
+Hi Paul,
+
+Congrats on the CRO role. I'm running Concussion Education Australia (Osteopathy Australia–endorsed, shipping CCM at scale). I've now built a separate AI compliance + CPD marketplace platform that I think Heidi should partner on — or compete against.
+
+The insight: Heidi's users already do 100–400 hours/year of CPD-qualifying research inside the platform (literature searches via Evidence, guideline reviews, case research) that never gets logged. Capture those passively + curated marketplace for the residual gap.
+
+The opportunity: At your 15k AU users today, ~$6M GMV → $1.5M ARR to Heidi at 25%. At your 50k 2027-28 target, $20M GMV → $5M ARR. Plus a retention moat — once a clinician has 30+ logged hours via Heidi, they can't switch without losing their audit record.
+
+The traction: <N> paying customers on the AI course, $<ARR> ARR, <MoM>% MoM growth. The compliance angle (AHPRA's 2025 AI guidance) is closing enterprise sales objections.
+
+The competitive read: Abridge, Nabla, DeepScribe don't have CPD strategy. First-mover captures the category.
+
+20 minutes this week? Demo (NDA-gated): https://portal.concussion-education-australia.com/courses/demo-access?key=<KEY>
+
+— Zac
+P.S. I'm running this either way. Heidi is my first-preference partner for fit and timing, not necessity.
+```
+
+Word count: ~200. Adds traction signal + competitive urgency + the leverage tag in the P.S. Designed for a CRO inbox.
+
+---
+
+## Why the pre-launch version is still strong without fake AI-course traction
+
+Three real assets that carry the pitch:
+
+1. **CEA is OA-endorsed**. Osteopathy Australia is one of the 15 AHPRA National Boards' peak bodies. OA endorsement on CCM is a real, verifiable credibility marker — the AI course is built by the same provider that earned that endorsement. A scribe-vendor "AI compliance" product can't say this.
+
+2. **600+ subscriber list**. Real distribution. Real audience. Means CEA is a working business, not a deck.
+
+3. **Working demo + marketplace shell**. Anything Paul clicks through is real software. The pitch shows execution capability before any number is referenced.
+
+The pitch leads with these. Numbers (customer count, ARR) are deferred until they exist.
 
 ---
 
 ## Send-day checklist
 
-1. **Generate one-time `HEIDI_DEMO_KEY`** (32-byte random hex) and set in Vercel env
-2. **Verify demo flow** — `/courses/demo-access?key=<KEY>` → NDA accept → `/courses` with watermark
-3. **Render `docs/heidi-onepager.md`** → PDF
-4. **Confirm Paul Williamson's email** via LinkedIn (sales-navigator-style verification or RocketReach)
-5. **Cross-check his title is still CRO at Heidi** (people change roles)
-6. **Send window:** Tuesday-Thursday 8-10am US-Pacific or AEST evening (he's in SF per public profile)
-7. **CC:** no one. **BCC:** yourself.
-8. **Follow-up cadence:** 5 days (CRO inboxes move fast — don't wait 7 like with clinical), 12 days (one new data point — e.g. "ARR up to $14k since I emailed"), then drop.
+1. Confirm `HEIDI_DEMO_KEY` is set in Vercel env (it is)
+2. Verify demo URL renders the NDA page in incognito
+3. Confirm Paul Williamson's current title via LinkedIn (he was CRO as of Oct 2025 — roles change)
+4. Find his work email (LinkedIn / RocketReach / Apollo)
+5. Send window: Tuesday-Thursday 9am-11am US-Pacific (his timezone) or 11pm-1am AEST
+6. CC: no one. BCC: yourself for record.
+7. Watch `/admin/demo-activity` for his access events
+8. Follow-up cadence: 5 days, 12 days, then drop
 
-## Demo prep (15 min)
+## Demo prep (15 min before sending)
 
-1. Confirm `/courses/cpd-record/passive` (the killer feature) renders correctly
-2. Confirm `/courses` marketplace catalogue with 2 verified + 2 placeholder providers
-3. Confirm `/courses/cpd-record` audit-export dashboard
-4. Confirm `/courses/ai-in-clinical-practice` Module 1 loads with infographics + quizzes
-5. Confirm CCM access via demo cookie: `/dashboard` + `/modules/1` + `/reference`
-6. Take the AI quiz, generate a certificate, confirm PDF export works
-7. Have `docs/heidi-dr-condon-strategic-brief.md` and `docs/heidi-contact-strategy.md` open for follow-ups
+1. `/courses` — marketplace catalogue renders, two live + two placeholder providers
+2. `/courses/cpd-record/passive` — the killer feature mockup
+3. `/courses/ai-in-clinical-practice` — Module 1 visual density + Knowledge Check
+4. `/courses/how-we-vet` — six-criterion curation policy
+5. Quiz + cert flow end-to-end
+6. (Optional) Confirm CCM access via demo cookie if you want to show the OA-endorsed product as credibility
 
-## Call-day walkthrough (20 min, CRO-paced)
+## What to do if Paul replies "interesting"
 
-1. **1 min** — Recap the $1.5M ARR opportunity at current scale; $5M at 50k users.
-2. **3 min** — `/courses/cpd-record/passive` demo. The one-tap prompt + event timeline + moat panel. *"This is what no scribe competitor can copy."*
-3. **2 min** — `/courses` marketplace shell + `/courses/how-we-vet` curation policy. *"This is the supply side — we vet, you distribute."*
-4. **2 min** — `/courses/ai-in-clinical-practice` Module 1 (proof of content quality — show one section).
-5. **2 min** — Certification flow + verifiable URL. *"Cert renewal is the recurring layer."*
-6. **3 min** — CCM dashboard quick tour (`/dashboard`, `/modules/1`). *"We have an existing $1,190 product that's OA-endorsed — proof we can deliver clinical content at this quality."*
-7. **3 min** — Commercial models: white-label licensing ($150-300k/yr + bounty), endorse-and-distribute (30% rev share), build-it-together (hire-Zac).
-8. **4 min** — Discuss next step. If yes: scope a 100-user pilot, agree timeline, agree what success looks like. If maybe: agree on what data he needs to see in 30 days.
+Send `docs/heidi-proposal.md` — the three-option proposal (licensing / white-label / employment + equity). Frame the employment option as the recommended path. Don't lead with equity ask; let him see the licensing and white-label options as cheaper-but-smaller alternatives that anchor the discussion.
 
----
+## What to do if Paul ghosts after 12 days
 
-## If Paul declines
-
-If Paul says "not us, talk to X" — that's a routed referral, treat as a warm intro. If X is Dr Condon, the original email frame (strategic-vision Dr Condon track) becomes the right one.
-
-If Paul says "interesting, not now" — drop into a 30-day nurture. Send one update per month (new ARR milestone, new partner signed, OA endorsement confirmed). Reopen the conversation at month 4-6 with new traction.
-
-If Paul ghosts after 12 days — pivot to Dr Condon. Subject: "Following up on a partnership note I sent Paul Williamson — Zac Lewis, CEA." Reference the same demo URL.
-
----
-
-## The Dr Condon fallback email
-
-Saved at `docs/heidi-cold-email-condon-fallback.md` — the original strategic-vision version. Use only if Paul Williamson declines or ghosts, OR if you have a warm intro to Dr Condon via a mutual contact.
+1. Send the LinkedIn DM (the 70-word version) as a soft follow-up
+2. If still no reply at 30 days: pivot to Dr Condon with a warmer "I tried Paul, would value 20 min for the clinical-fit angle" framing
+3. In parallel: run the Guild Insurance track via the OA warm intro (non-competing)
