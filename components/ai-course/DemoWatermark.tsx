@@ -30,25 +30,14 @@ export function DemoWatermark() {
   if (!org) return null
 
   return (
-    <>
-      {/* Top stripe */}
-      <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 text-[11px] font-semibold px-4 py-1.5 flex items-center justify-between gap-3 shadow-sm">
-        <span>
-          CONFIDENTIAL DEMO · Issued to <strong>{org}</strong> · Not for redistribution
-        </span>
-        <span className="hidden sm:inline">
-          NDA-bound preview · Access expires 7 days from acceptance
-        </span>
-      </div>
-      {/* Diagonal large-text watermark — subtle */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 z-[99] pointer-events-none flex items-center justify-center"
-        style={{
-          background:
-            'repeating-linear-gradient(-45deg, transparent 0 200px, rgba(217, 119, 6, 0.04) 200px 400px)',
-        }}
-      />
-    </>
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-slate-900 text-slate-100 text-[11px] font-medium px-4 py-1.5 flex items-center justify-between gap-3 shadow-sm">
+      <span className="flex items-center gap-2">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400" aria-hidden="true" />
+        Confidential preview · Issued to <strong className="text-white">{org}</strong>
+      </span>
+      <span className="hidden sm:inline text-slate-400">
+        NDA-bound · 7-day access
+      </span>
+    </div>
   )
 }
