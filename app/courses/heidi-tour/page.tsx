@@ -37,7 +37,7 @@ const STOPS: TourStop[] = [
     step: 2,
     estMin: 3,
     title: 'Heidi\'s Evidence tool is already a CPD engine',
-    why: 'The Evidence product is the moat. Every guideline review inside Evidence is literature-review CPD — an AHPRA Educational Activity by the regulator\'s own definition. Scribe sessions add clinical-reasoning documentation on top. Scribe-only competitors (Abridge, Nabla, DeepScribe) have nothing equivalent — no literature search, no CPD signal. This is the insight a clinician-who-codes spots that a generalist product team misses.',
+    why: 'The Evidence product is the moat. Every guideline review inside Evidence is literature-review CPD — an AHPRA Educational Activity by the regulator\'s own definition. Scribe sessions add clinical-reasoning documentation on top. Scribe-only competitors (Abridge, Nabla, DeepScribe) have nothing equivalent — no literature search, no CPD signal. Not a new user cohort — monetization depth on existing Heidi usage. Marginal cost to Heidi: near-zero. This is the insight a clinician-who-codes spots that a generalist product team misses.',
     whatToLookAt: [
       'The non-blocking confirmation prompt — one tap, categorised, logged',
       'Per-Board honest ceiling: 50-100% depending on profession (not a flat overclaim)',
