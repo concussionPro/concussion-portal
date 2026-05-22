@@ -48,9 +48,30 @@ export default async function IntegrationPage() {
         <p className="text-lg text-muted-foreground max-w-2xl mb-4 leading-relaxed">
           If you bring me on as clinical product lead, this is week 1 to week 13. If we partner instead, this is the joint MVP. Either way: ~2 engineer-weeks on Heidi side, the rest of the 12+ months of CPD-vertical groundwork already done at CEA.
         </p>
-        <p className="text-sm text-muted-foreground max-w-2xl mb-12 leading-relaxed">
+        <p className="text-sm text-muted-foreground max-w-2xl mb-8 leading-relaxed">
           One event per qualifying Scribe session or Evidence search, fired to <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded">POST /api/cpd/events</code>. CEA returns categorisation + audit-ready log entry. No replatforming. No clinician-facing UX changes beyond a non-blocking confirmation prompt.
         </p>
+
+        {/* CFO-friendly callout — the line Paul takes to the board */}
+        <div className="mb-12 rounded-2xl bg-gradient-to-br from-foreground to-slate-800 text-white p-6">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-3">
+            Why this is a CFO-friendly bet
+          </p>
+          <div className="grid sm:grid-cols-3 gap-5">
+            <div>
+              <p className="text-sm font-bold mb-1">Zero net CAC</p>
+              <p className="text-xs text-white/75 leading-relaxed">Every CPD user is already a Heidi user. No acquisition spend. Monetization depth, not a new cohort.</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold mb-1">Near-zero marginal cost</p>
+              <p className="text-xs text-white/75 leading-relaxed">Categoriser runs on event metadata only. Export PDF is templated. Gross margin sits structurally above scribe-only ARPU.</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold mb-1">Retention surface</p>
+              <p className="text-xs text-white/75 leading-relaxed">30+ logged CPD hours = 12-month behavioural lock-in. Improves net dollar retention without a price increase.</p>
+            </div>
+          </div>
+        </div>
 
         {/* Architecture diagram */}
         <section className="mb-12">
