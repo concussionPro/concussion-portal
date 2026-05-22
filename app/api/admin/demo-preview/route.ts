@@ -14,11 +14,20 @@ import { lookupSlug, resolveKeyForSlug } from '@/lib/ai-course/demo-slugs'
  * or an active admin session.
  */
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) {
+  const url = new URL(request.url)
+  const adminKeyParam = url.searchParams.get('adminKey')
+  const adminKeyEnv = process.env.ADMIN_API_KEY
+
+  // Accept admin auth via x-admin-key header, admin_session cookie, OR
+  // ?adminKey= query param. The query-param path is for one-shot URL
+  // access (e.g. clicking a link in a chat). It's logged in browser
+  // history, so don't share these URLs anywhere persistent.
+  const queryAuthed = adminKeyParam && adminKeyEnv && adminKeyParam === adminKeyEnv
+  if (!queryAuthed && !isAdminRequest(request)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 401 })
   }
 
-  const slug = new URL(request.url).searchParams.get('slug') || 'heidi'
+  const slug = url.searchParams.get('slug') || 'heidi'
   const meta = lookupSlug(slug)
   if (!meta) {
     return NextResponse.json({ error: `Unknown demo slug: ${slug}` }, { status: 404 })
