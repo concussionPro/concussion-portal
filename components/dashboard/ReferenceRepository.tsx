@@ -218,12 +218,15 @@ const references: Reference[] = [
     category: 'Assessment'
   },
   {
+    // 2026-05-22: DOI 10.1136/bjsports-2022-106391 was misattributed (resolved to Kroshus et al. on
+    // collegiate athletes' mental health). Replaced with the actual SCAT6 instrument paper —
+    // verified via PubMed PMID 37316203 and Crossref.
     id: 'echemendia2023',
-    authors: 'Echemendia, R. J., Meehan, W. P., McCrea, M. A., Broglio, S. P., Kutcher, J. S., & Giza, C. C.',
+    authors: 'Echemendia, R. J., Brett, B. L., Broglio, S., Davis, G. A., Giza, C. C., Guskiewicz, K. M., Harmon, K. G., Herring, S., Howell, D. R., Master, C. L., McCrea, M., Naidu, D., Patricios, J. S., Putukian, M., Walton, S. R., Schneider, K. J., Burma, J. S., & Bruce, J. M.',
     year: '2023',
-    title: 'The SCAT/SCOAT6: A standardized approach to assessing concussions',
-    journal: 'British Journal of Sports Medicine, 57(6), 369-376',
-    doi: '10.1136/bjsports-2022-106391',
+    title: 'Sport Concussion Assessment Tool 6 (SCAT6)',
+    journal: 'British Journal of Sports Medicine, 57(11), 622-631',
+    doi: '10.1136/bjsports-2023-107036',
     category: 'Assessment'
   },
   {
@@ -1222,13 +1225,23 @@ const references: Reference[] = [
   },
 
   // ─── NEW & EVOLVING EVIDENCE (March 2026 update) ───────────────────────────
+  //
+  // Re-verified 2026-05-22 — all entries below confirmed via doi.org / Crossref / PubMed.
+  // Removed in this sweep:
+  //   - langevin2025, mayer2026, obrien2026 (DOIs returned 404 — appeared AI-hallucinated)
+  //   - iverson2025 "Umbrella Meta-Analysis" (misattributed authors: the actual paper at
+  //     10.3390/brainsci15060581 is Mavroudis et al., re-added below under mavroudis2025)
+  // Fixed in this sweep:
+  //   - broglio2024_bridge DOI corrected (0135.22 -> 0046.22; the 0135 form 404s)
+  //   - weaver2025 journal article number corrected (4138 -> 6885)
+  // Recent additions verified via doi.org and Crossref on 2026-05-22.
   {
     id: 'broglio2024_bridge',
     authors: 'Broglio, S. P., Register-Mihalik, J. K., Guskiewicz, K. M., Leddy, J. J., Merriman, A., & Valovich McLeod, T. C.',
     year: '2024',
     title: 'National Athletic Trainers\' Association Bridge Statement: Management of Sport-Related Concussion',
     journal: 'Journal of Athletic Training, 59(3), 225–242',
-    doi: '10.4085/1062-6050-0135.22',
+    doi: '10.4085/1062-6050-0046.22',
     category: 'Assessment',
     isNew: true,
   },
@@ -1243,36 +1256,100 @@ const references: Reference[] = [
     isNew: true,
   },
   {
-    id: 'iverson2025',
-    authors: 'Iverson, G. L., et al.',
+    id: 'mavroudis2025',
+    authors: 'Mavroudis, I., Petridis, F., Kazis, D., Ciobica, A., & Dăscălescu, G.',
     year: '2025',
     title: 'The Diagnostic and Prognostic Role of Biomarkers in Mild Traumatic Brain Injury: An Umbrella Meta-Analysis',
-    journal: 'Diagnostics',
-    // DOI removed — original DOI 10.3390/diagnostics15121509 resolves to an unrelated qEEG/dementia paper. Needs human review to locate correct DOI.
+    journal: 'Brain Sciences, 15(6), 581',
+    doi: '10.3390/brainsci15060581',
     category: 'Biomarkers',
     isNew: true,
   },
   {
     id: 'herman2025',
-    authors: 'Herman, C., et al.',
+    authors: 'Herman, C., Zynda, A. J., Makwana Mehmel, B., Jasper, H. A., Todd, M. G., Holland, C. L., Trbovich, A. M., Mucha, A., Collins, M. W., & Kontos, A. P.',
     year: '2025',
     title: 'Sex and age-related differences in vestibular/ocular motor screening (VOMS) symptom provocation following concussion',
-    journal: 'The Clinical Neuropsychologist',
+    journal: 'The Clinical Neuropsychologist (Advance online publication)',
     doi: '10.1080/13854046.2025.2500617',
     category: 'Vestibular & Oculomotor',
     isNew: true,
   },
-  // Removed: langevin2025, mayer2026, obrien2026 — DOIs were unresolvable (10.1136/bjsports-2024-108765,
-  // 10.1016/j.smhs.2025.100757, 10.1136/bjsports-2025-109412 all 404). Entries flagged for human re-verification
-  // before re-adding. See audit notes 2026-05-22.
   {
     id: 'weaver2025',
-    authors: 'Weaver, L. K., et al.',
+    authors: 'Weaver, L. K., Ziemnik, R., Deru, K., & Russo, A. A.',
     year: '2025',
     title: 'A double-blind randomized trial of hyperbaric oxygen for persistent symptoms after brain injury',
-    journal: 'Scientific Reports, 15, 4138',
+    journal: 'Scientific Reports, 15, Article 6885',
     doi: '10.1038/s41598-025-86631-6',
     category: 'Treatment',
+    isNew: true,
+  },
+
+  // ─── INSTRUMENT PAPERS (added 2026-05-22) ─────────────────────────────────
+  // Companion to echemendia2023 above — the matched SCOAT6 instrument publication.
+  {
+    id: 'patricios2023_scoat6',
+    authors: 'Patricios, J. S., Davis, G. A., Ahmed, O. H., Blauwet, C., Schneider, G. M., Purcell, L. K., Echemendia, R. J., Fremont, P., Fuller, G. W., Herring, S. A., Harmon, K. G., Loosemore, M., Makdissi, M., O\'Halloran, P., Putukian, M., Turner, M., Webborn, N., Yeates, K. O., van Ierssel, J., & Schneider, K. J.',
+    year: '2023',
+    title: 'Sport Concussion Office Assessment Tool 6 (SCOAT6)',
+    journal: 'British Journal of Sports Medicine, 57(11), 648-650',
+    doi: '10.1136/bjsports-2023-106860',
+    category: 'Assessment',
+    isNew: true,
+  },
+
+  // ─── AUSTRALIAN GUIDELINES & REGULATORY (added 2026-05-22) ─────────────────
+  // AU-specific sources — partnership/positioning priority. All URLs verified live 2026-05-22.
+  {
+    // Landing page is stable; direct PDF on ASC is a time-signed Azure URL that expires every 8h.
+    id: 'ais_cbhps_2024',
+    authors: 'Australian Institute of Sport, Australian Medical Association, Australasian College of Sport and Exercise Physicians, Sports Medicine Australia, & Australian Physiotherapy Association',
+    year: '2024',
+    title: 'Concussion and Brain Health Position Statement 2024 (CBHPS24)',
+    journal: 'Australian Sports Commission / Australian Institute of Sport',
+    url: 'https://www.ausport.gov.au/concussion',
+    category: 'Return to Activity',
+    isNew: true,
+  },
+  {
+    id: 'asc_youth_community_2024',
+    authors: 'Australian Sports Commission',
+    year: '2024',
+    title: 'Australian Concussion Guidelines for Youth and Community Sport',
+    journal: 'Australian Sports Commission',
+    url: 'https://www.ausport.gov.au/concussion',
+    category: 'Return to Activity',
+    isNew: true,
+  },
+  {
+    id: 'afl_concussion_2024',
+    authors: 'Australian Football League',
+    year: '2024',
+    title: 'The Management of Sport-Related Concussion in Australian Football',
+    journal: 'AFL (play.afl)',
+    url: 'https://play.afl/sites/default/files/2024-03/The-Management-of-Sport-Related-Concussion-in-Australian-Football-Mar-24.pdf',
+    category: 'Return to Activity',
+    isNew: true,
+  },
+  {
+    id: 'ahpra_ai_2024',
+    authors: 'Australian Health Practitioner Regulation Agency (AHPRA)',
+    year: '2024',
+    title: 'Meeting your professional obligations when using Artificial Intelligence in healthcare',
+    journal: 'AHPRA (published 22 August 2024)',
+    url: 'https://www.ahpra.gov.au/Resources/Artificial-Intelligence-in-healthcare.aspx',
+    category: 'Legal & Regulatory',
+    isNew: true,
+  },
+  {
+    id: 'tga_advertising_code',
+    authors: 'Therapeutic Goods Administration',
+    year: '2021',
+    title: 'Therapeutic Goods (Therapeutic Goods Advertising Code) Instrument 2021 — including prohibited and restricted representations',
+    journal: 'Therapeutic Goods Administration (Australian Government)',
+    url: 'https://www.tga.gov.au/resources/legislation/therapeutic-goods-therapeutic-goods-advertising-code-instrument-2021',
+    category: 'Legal & Regulatory',
     isNew: true,
   },
 ]
@@ -1294,6 +1371,7 @@ const categories = [
   { id: 'EEG & Neurophysiology', label: 'EEG & Neurophysiology', count: references.filter(r => r.category === 'EEG & Neurophysiology').length },
   { id: 'Nutrition', label: 'Nutrition & Supplementation', count: references.filter(r => r.category === 'Nutrition').length },
   { id: 'Return to Activity', label: 'Return to Activity', count: references.filter(r => r.category === 'Return to Activity').length },
+  { id: 'Legal & Regulatory', label: 'Legal & Regulatory', count: references.filter(r => r.category === 'Legal & Regulatory').length },
 ]
 
 interface ReferenceRepositoryProps {
