@@ -6,7 +6,36 @@ export async function GET(request: NextRequest) {
   try {
     const sessionToken = request.cookies.get('session')?.value
 
+    // Demo-access path. When the partner-preview demo_key cookie is set
+    // (via /api/ai-course/demo-access/accept after NDA acceptance) AND no
+    // real session is present, return a synthetic read-only "demo viewer"
+    // user with full-course access. This lets a partner browsing the AI
+    // course also explore the Concussion Clinical Mastery course and its
+    // dashboard without provisioning a real user account.
+    //
+    // The synthetic user has a fixed `demo-viewer` id that no real user
+    // can collide with. Downstream code that mutates user records (e.g.
+    // progress writes) must skip when id startsWith 'demo-viewer'.
     if (!sessionToken) {
+      const demoKey = request.cookies.get('demo_key')?.value
+      const demoOrg = request.cookies.get('demo_org')?.value
+      if (demoKey && process.env.HEIDI_DEMO_KEY && demoKey === process.env.HEIDI_DEMO_KEY) {
+        return NextResponse.json({
+          success: true,
+          user: {
+            id: `demo-viewer-${demoOrg || 'unknown'}`,
+            email: 'demo@partner-preview.local',
+            name: `${demoOrg || 'Partner'} Demo Viewer`,
+            accessLevel: 'full-course',
+            bookOwner: false,
+            workshopLocation: null,
+            createdAt: new Date().toISOString(),
+            nurtureUnsubscribed: true, // never enrol demo viewers in nurture
+            progressEmailsOptedOut: true,
+            isDemo: true,
+          },
+        })
+      }
       return NextResponse.json(
         { error: 'No session found' },
         { status: 401 }
