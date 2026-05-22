@@ -47,7 +47,7 @@ export default async function AboutFounderPage() {
               Zac Lewis
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-4 max-w-2xl">
-              AHPRA-registered osteopath, Osteopathy Australia–endorsed CPD provider, and the solo developer of the platform you&apos;re looking at. The combination of clinical credibility, vertical-CPD expertise, and ship-it velocity that a clinical product lead role at Heidi needs.
+              AHPRA-registered osteopath, Osteopathy Australia–endorsed CPD provider, and the solo developer of the platform you&apos;re looking at. The triple-expertise profile (practitioner + provider + developer) and the solo-built distribution (600 paying clinicians + AHPRA AI course launching) that a Medical Lead role at Heidi needs.
             </p>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">

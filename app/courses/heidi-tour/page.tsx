@@ -49,12 +49,12 @@ const STOPS: TourStop[] = [
   {
     step: 3,
     estMin: 3,
-    title: 'What\'s already built (12 months of solo execution)',
-    why: 'Proof of velocity. CCM at A$1,190 with ~600 paying clinicians (live). AHPRA-aligned AI compliance course (launching publicly on CEA portal this month). Per-Board CPD reference data (encoded). Marketplace shell + provider vetting policy (shipped). Working /api/cpd/events endpoint (live, curlable). 12 capabilities shipped with clickable evidence — what one clinician-founder ships in a year with no team.',
+    title: 'De-risked execution + built-in distribution',
+    why: 'CCM at A$1,190 with ~600 paying clinicians (live, OA-endorsed). AHPRA-aligned AI compliance course (launching publicly this month) — features Heidi prominently among AU scribes. Per-Board CPD reference data (encoded). Marketplace shell + provider vetting policy (shipped). Working /api/cpd/events endpoint (live, curlable). 12 months of solo build. The AI course becomes a distribution channel into AU AHPRA clinicians — every student gets hands-on Heidi exposure.',
     whatToLookAt: [
-      'Build-status page — 12 shipped, 1 in-progress, 1 mockup honestly labelled, 5 roadmap',
-      'Flagship AI compliance course (9 modules, KEYPOINT/REDFLAG cards, mid-module quizzes, certification)',
-      'About-the-founder — AHPRA register link, ABR lookup, direct contact',
+      'Build-status — 12 shipped capabilities with clickable evidence',
+      'AI compliance course — 9 modules, certification, hub (40 prompts + 14 templates + literature search)',
+      'About-the-founder — proof of the triple-expertise profile (practitioner + provider + developer)',
     ],
     href: '/courses/build-status',
     ctaLabel: 'See the shipped list',
@@ -76,11 +76,11 @@ const STOPS: TourStop[] = [
     step: 5,
     estMin: 3,
     title: 'Three shapes that work',
-    why: 'In my preferred order. The call decides which fits Heidi\'s shape. (1) Bring me on as the clinical product lead for the CPD vertical — ideal because Heidi owns the IP, the team, and the moat. (2) Integrate Heidi into the AI compliance course CEA is launching to AU AHPRA clinicians — light touch, free distribution for you. (3) Commission partnership where Heidi pushes CEA\'s formal CPD to your clinician users — lightest, fastest, lowest commitment.',
+    why: 'In my preferred order. The call decides which fits Heidi\'s shape and timing. (1) Hire me as Medical Lead — ideal because Heidi owns the IP, the team, and the CPD vertical P&L. (2) Acquire CEA tech + 600 clinicians, I join — for an instant 600-clinician head start. (3) Partnership cross-promo — my AI course features Heidi prominently, Heidi pushes CEA\'s formal CPD to your users. Zero cash up front, fastest to ship.',
     whatToLookAt: [
-      'About-the-founder — what you\'d actually be hiring',
-      'Build-status — 12 months of execution at one-clinician-founder pace',
-      'How-we-vet — the marketplace credibility process that scales the vertical',
+      'About-the-founder — the triple-expertise profile you\'d be hiring',
+      'Build-status — 12 months of solo execution at the rate-of-shipping a Medical Lead role gets you',
+      'How-we-vet — the marketplace credibility process that scales the CPD vertical',
     ],
     href: '/courses/about-the-founder',
     ctaLabel: 'About the founder',
@@ -98,17 +98,18 @@ export default async function HeidiTourPage() {
         <AdminPreviewBadge access={access} />
 
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          CEA × Heidi · Three shapes that work
+          CEA × Heidi · De-risked execution + built-in distribution
         </p>
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
-          You have the clinicians.{' '}
-          <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">I have the vertical.</span>
+          600 paying clinicians.{' '}
+          <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">A working CPD platform.</span>{' '}
+          And an AHPRA AI course launching that puts Heidi in front of every student.
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mb-3 leading-relaxed">
-          A$480M Australian CPD market. ~900k AHPRA practitioners. No central authority, no quality bar, no platform with product-led distribution into the daily clinician workflow. <strong className="text-foreground">Heidi has the distribution. CEA has 12 months of vertical groundwork already shipped.</strong>
+          You&apos;re not being pitched a market opportunity. You&apos;re being pitched <strong className="text-foreground">de-risked execution with a built-in distribution channel into the AU AHPRA segment</strong>. CEA is a working business: ~600 paying clinicians on the CCM product (OA-endorsed), an AHPRA-aligned AI compliance course launching publicly this month, and the per-Board CPD calibration encoded against the regulator&rsquo;s registration standards.
         </p>
         <p className="text-sm text-muted-foreground max-w-2xl mb-6 leading-relaxed">
-          Tour below — {totalMin} minutes, five stops. Built for your team to audit the vertical and the operator, not for a prospect.
+          Tour below — {totalMin} minutes, five stops. Built for your team to audit the operator, not for a prospect.
         </p>
 
         {/* TL;DR band — the three shapes upfront */}
@@ -126,28 +127,28 @@ export default async function HeidiTourPage() {
                 </div>
                 <p className="text-[10px] font-bold uppercase tracking-wide text-accent">1 · Ideal</p>
               </div>
-              <p className="text-sm font-bold text-foreground leading-tight mb-1">Hire me</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">Bring me on as clinical product lead for the CPD vertical. Heidi owns the IP, the team, the moat. Equity + salary; CCM stays as my side project.</p>
+              <p className="text-sm font-bold text-foreground leading-tight mb-1">Hire me as Medical Lead</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">Bring me on to own the CPD vertical inside Heidi. I build using the proven CEA model, the AI course becomes Heidi&apos;s education offering. Salary + equity; CCM stays mine as a side project.</p>
             </div>
             <div className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center">
                   <Share2 className="w-3.5 h-3.5 text-blue-700" />
                 </div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700">2 · Light</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700">2 · Acqui-hire</p>
               </div>
-              <p className="text-sm font-bold text-foreground leading-tight mb-1">Integrate Heidi into the AI course</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">CEA&apos;s AHPRA-aligned AI compliance course (launching publicly this month) recommends Heidi as the preferred scribe. Free distribution into the AU AHPRA clinician segment.</p>
+              <p className="text-sm font-bold text-foreground leading-tight mb-1">Acquire CEA tech + 600 clinicians, I join</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">Heidi acquires the CEA platform, course IP, and ~600 paying clinicians. I join as Medical Lead to scale it. Instant 600-clinician head start in the CPD vertical.</p>
             </div>
             <div className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
                   <Handshake className="w-3.5 h-3.5 text-slate-600" />
                 </div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">3 · Lightest</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">3 · Partnership</p>
               </div>
-              <p className="text-sm font-bold text-foreground leading-tight mb-1">Commission partnership</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">Heidi pushes CEA&apos;s formal CPD courses to your clinician users. Revenue share on each enrolment. Lowest commitment, fastest to ship.</p>
+              <p className="text-sm font-bold text-foreground leading-tight mb-1">Cross-promotion (fastest)</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">CEA&apos;s AI course features Heidi prominently; Heidi pushes CEA&apos;s formal CPD to your users for CPD credits. My platform drives Heidi adoption, your platform drives my revenue. Zero cash up front.</p>
             </div>
           </div>
         </div>
@@ -215,9 +216,9 @@ export default async function HeidiTourPage() {
 
         <section className="mt-12 rounded-2xl bg-foreground text-white p-7">
           <p className="text-xs font-bold uppercase tracking-wide text-accent mb-2">The ask · 15 minutes</p>
-          <h2 className="text-2xl font-bold mb-3">A call about whether you bring me on to own this vertical at Heidi.</h2>
+          <h2 className="text-2xl font-bold mb-3">A call about whether you hire me, acquire CEA + hire me, or partner.</h2>
           <p className="text-sm text-white/80 mb-5 leading-relaxed">
-            Ideal end-state: clinical product lead role inside Heidi. The two fallbacks (integrate Heidi into the AI course, or commission partnership) are real options if the hire is wrong shape or wrong timing — but they are fallbacks, not the headline. The call decides. If the answer is no on all three, a 5-minute &ldquo;here&apos;s why not&rdquo; would help me sharpen the next conversation.
+            I&apos;ve de-risked the concept (600 paying clinicians, OA endorsement, working platform). I&apos;m bringing the distribution (AI course launching to AHPRA clinicians, every student gets Heidi exposure). The triple-expertise profile (practitioner + provider + developer) is the unicorn shape a Medical Lead role needs. Three commercial shapes already mapped — the call decides which fits. If the answer is no on all three, a 5-minute &ldquo;here&apos;s why not&rdquo; would help sharpen the next conversation.
           </p>
           <a
             href="mailto:zac@concussion-education-australia.com?subject=Heidi%20%C3%97%20CEA%20%E2%80%94%2015-min%20call"
