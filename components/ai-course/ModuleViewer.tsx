@@ -5,24 +5,44 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Check, X, ChevronRight, ChevronLeft, Lightbulb, AlertCircle } from 'lucide-react'
 import type { ParsedSection, SectionQuizCheck } from '@/lib/ai-course/module-sections'
-import { InfographicRenderer } from './Infographics'
+import {
+  InfographicRenderer,
+  KeyPointCard,
+  RedFlagCard,
+  DefinitionCard,
+  TryThisCard,
+} from './Infographics'
 
-const INFOGRAPHIC_REGEX = /\[INFOGRAPHIC:\s*([\w-]+)\s*\]/g
+// Match all five marker types in a single pass. The marker body runs until
+// the closing `]` on the same paragraph (no nested brackets supported).
+const MARKER_REGEX =
+  /\[(INFOGRAPHIC|KEYPOINT|REDFLAG|DEFINITION|TRYTHIS):\s*([^\]]+)\]/g
+
+type MarkerKind = 'INFOGRAPHIC' | 'KEYPOINT' | 'REDFLAG' | 'DEFINITION' | 'TRYTHIS'
+type Part =
+  | { kind: 'md'; value: string }
+  | { kind: 'marker'; type: MarkerKind; value: string }
 
 /**
- * Splits markdown content on `[INFOGRAPHIC: <slug>]` markers and renders
- * alternating markdown and React infographic components.
+ * Splits markdown content on inline marker patterns and renders an
+ * interleaved sequence of markdown chunks and styled React cards.
+ * Supports:
+ *   [INFOGRAPHIC: <slug>]
+ *   [KEYPOINT: <text>]
+ *   [REDFLAG: <text>]
+ *   [DEFINITION: <term> | <definition>]
+ *   [TRYTHIS: <text>]
  */
 function SectionBody({ body }: { body: string }) {
-  const parts: Array<{ kind: 'md' | 'infographic'; value: string }> = []
+  const parts: Part[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
-  INFOGRAPHIC_REGEX.lastIndex = 0
-  while ((match = INFOGRAPHIC_REGEX.exec(body)) !== null) {
+  MARKER_REGEX.lastIndex = 0
+  while ((match = MARKER_REGEX.exec(body)) !== null) {
     if (match.index > lastIndex) {
       parts.push({ kind: 'md', value: body.slice(lastIndex, match.index) })
     }
-    parts.push({ kind: 'infographic', value: match[1] })
+    parts.push({ kind: 'marker', type: match[1] as MarkerKind, value: match[2].trim() })
     lastIndex = match.index + match[0].length
   }
   if (lastIndex < body.length) {
@@ -30,6 +50,29 @@ function SectionBody({ body }: { body: string }) {
   }
   if (parts.length === 0) {
     parts.push({ kind: 'md', value: body })
+  }
+
+  const renderMarker = (i: number, type: MarkerKind, value: string) => {
+    switch (type) {
+      case 'INFOGRAPHIC':
+        return <InfographicRenderer key={i} slug={value} />
+      case 'KEYPOINT':
+        return <KeyPointCard key={i} text={value} />
+      case 'REDFLAG':
+        return <RedFlagCard key={i} text={value} />
+      case 'TRYTHIS':
+        return <TryThisCard key={i} text={value} />
+      case 'DEFINITION': {
+        // Definition uses `term | text` split
+        const pipe = value.indexOf('|')
+        if (pipe === -1) {
+          return <DefinitionCard key={i} term="" definition={value} />
+        }
+        const term = value.slice(0, pipe).trim()
+        const def = value.slice(pipe + 1).trim()
+        return <DefinitionCard key={i} term={term} definition={def} />
+      }
+    }
   }
 
   return (
@@ -40,7 +83,7 @@ function SectionBody({ body }: { body: string }) {
             {p.value}
           </ReactMarkdown>
         ) : (
-          <InfographicRenderer key={i} slug={p.value} />
+          renderMarker(i, p.type, p.value)
         )
       )}
     </article>

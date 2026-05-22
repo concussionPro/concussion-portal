@@ -12,6 +12,8 @@
 
 Osteopathic practice combines manual therapy, exercise prescription, and patient education. This sub-module covers the four highest-volume AI-assisted documentation tasks. Refer to Module 5a (Physio) for deeper exercise-prescription detail — most of the principles transfer directly. The de-identification preamble from Module 3 is assumed throughout.
 
+[KEYPOINT: The LLM structures the note; you provide the findings. Palpation, special-test results, and technique selection are clinical judgements — never accept them in a note unless you actually performed and observed them.]
+
 ---
 
 ## 1. Treatment notes templates
@@ -65,6 +67,8 @@ Osteopathic patients frequently leave with a short, focused home program — typ
 - Red-flag escalation present.
 - No fabricated biomechanical claims (e.g. "this will realign your spine" — neither true nor TGA-friendly).
 
+[REDFLAG: Mechanistic claim language — "realigns the spine", "removes blockages", "resets the nervous system" — does not survive AHPRA or TGA scrutiny on patient-facing material. The LLM produces it by default; strip every instance before publishing.]
+
 ---
 
 ## 3. Patient progress reports
@@ -103,6 +107,10 @@ Osteopaths are not authorised to issue medical certificates under all schemes �
 - No over-reach into medical certification.
 - AI-attestation line present.
 - Signed and dated.
+
+[KEYPOINT: Osteopaths are not authorised to issue medical certificates under every scheme. Where you can contribute (supporting letters, allied-health input forms), frame as advisory — never let the LLM produce certificate-style language outside your scope.]
+
+[TRYTHIS: Build one master SOAP template with your standard red-flag screen baked in, then save it as the default in your Tier A tool. Every consult inherits the screen — no more "I'll add red-flag check next time".]
 
 ---
 

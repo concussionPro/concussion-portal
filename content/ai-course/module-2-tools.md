@@ -10,7 +10,11 @@
 
 Module 1 set out the legal framework you operate under. This module is about applying it to a practical question every clinician now faces: *which AI tool should I use, for which task, and where does the data go?*
 
-The decisions you make here are not abstract. Choosing the wrong tool for a clinical task can amount to a notifiable data breach under the Privacy Act, an APP 8 violation if data leaves Australia inappropriately, or an AHPRA-relevant conduct issue if patient information is handled carelessly. The good news: once you understand the three tiers below, most tool decisions become routine.
+The decisions you make here are not abstract. Choosing the wrong tool for a clinical task can amount to a notifiable data breach under the Privacy Act, an APP 8 violation if data leaves Australia inappropriately, or an AHPRA-relevant conduct issue if patient information is handled carelessly.
+
+[KEYPOINT: The same underlying model can be Tier C or Tier B depending on routing. Claude on claude.ai is Tier C. Claude on AWS Bedrock (ap-southeast-2) is Tier B. The model isn't the question — the contract and the route are.]
+
+The good news: once you understand the three tiers below, most tool decisions become routine.
 
 ---
 
@@ -32,6 +36,8 @@ Tier A tools are built specifically for clinical use. They typically offer:
 
 Tier A tools are the only tier where you can routinely process identifiable patient information (PII) without de-identifying it first.
 
+[KEYPOINT: Tier A is the only tier where you can routinely process identifiable patient information without de-identifying first. Everything else is conditional or off-limits for PII.]
+
 Representative tools as of May 2026:
 
 | Tool | Focus | Australian entity |
@@ -44,6 +50,10 @@ Representative tools as of May 2026:
 A tool being "Australian" in marketing copy is not enough. Tier A requires both Australian data residency *and* an agreement that puts the vendor on the hook for how they handle the data. See section 7 for how to verify this.
 
 ### Tier B — General-purpose enterprise LLMs in Australian regions
+
+[DEFINITION: BAA | Business Associate Agreement — the US HIPAA contract between a covered entity and a service provider that processes protected health information. Australia has no direct HIPAA equivalent, but a contractually comparable DPA with Australian data residency, no-training commitment, and breach notification is the equivalent posture for Tier B.]
+
+[DEFINITION: Data residency | The contractual and technical commitment that data is stored and processed in a specified geographic region. Australian data residency means at-rest storage and routine processing happen in Australian regions — but it does not automatically mean no overseas staff can access the data. Check the DPA, not the marketing.]
 
 Tier B is enterprise-grade general AI infrastructure deployed in an Australian region, under a contract that gives you data-handling commitments roughly equivalent to a US Business Associate Agreement (BAA) under HIPAA. Australia has no direct HIPAA equivalent, but the contractual posture is comparable: the vendor agrees not to train on your data, to keep it in-region, and to give you breach notification.
 
@@ -63,6 +73,8 @@ Tier B can handle PII *if* the contract is in place and the data flow has been r
 ### Tier C — Consumer LLMs (de-identified inputs only — never PII)
 
 Tier C is the consumer-facing chatbots most clinicians have used personally. They are powerful, cheap, fast, and absolutely not appropriate for identifiable patient data.
+
+[REDFLAG: Never paste identifiable patient information into a Tier C consumer chatbot — including "the case with the name removed". Removing the name does not de-identify the record; the surrounding clinical detail almost always re-identifies it.]
 
 Representative Tier C tools:
 
@@ -90,6 +102,8 @@ Tier C is genuinely useful — for generic drafting, learning, ideation, and pat
 ---
 
 ## 2. Decision Tree — Which Tier for Which Task
+
+[INFOGRAPHIC: decision-tree]
 
 The following decision tree resolves about 90% of day-to-day questions.
 
@@ -123,6 +137,8 @@ A few worked examples:
 
 "Data residency" is one of the most misused terms in healthcare AI marketing. Understanding it precisely is part of professional competence now.
 
+[KEYPOINT: For APP 8 purposes, what matters is whether information is *disclosed* to an overseas recipient — not just where the bytes sit. A US-parented vendor with Sydney data centres can still trigger cross-border disclosure if their California support staff can read your data.]
+
 **What Australian data residency does mean:**
 
 - Your data is stored at rest in Australian data centres
@@ -152,6 +168,8 @@ For APP 8 purposes (cross-border disclosure), what matters is whether personal i
 
 Some tools should not enter a clinical environment at all, regardless of the de-identification of inputs.
 
+[REDFLAG: ByteDance-owned products and any tool that routes traffic through Chinese mainland infrastructure do not belong in a clinical workflow. The PRC's National Intelligence Law obliges domestic entities to assist state intelligence requests, which is incompatible with APP obligations regardless of vendor assurances.]
+
 **Hard avoid:**
 
 - **ByteDance-owned products** (Doubao, certain TikTok-adjacent AI features) — data routing and Chinese-jurisdiction concerns make these inappropriate for any clinical context
@@ -159,6 +177,10 @@ Some tools should not enter a clinical environment at all, regardless of the de-
 - **"Free unlimited" consumer products with opaque processing** — if there is no clear business model, the business model is your data
 - **Browser extensions that "read your screen"** — these often exfiltrate clinical interface content to vendor servers without your awareness
 - **AI features bolted onto consumer note-taking apps** (consumer Notion AI, consumer Evernote AI, etc.) when not on enterprise plans with explicit DPAs
+
+[REDFLAG: Browser extensions that "read your screen" can exfiltrate everything on the page — including the open record of the next patient — to vendor servers without you noticing. Audit your browser extensions and uninstall anything you cannot explain.]
+
+[TRYTHIS: Right now, open chrome://extensions or your browser's equivalent and list every extension that has "read and change data on websites" permission. Remove any you cannot explain in one sentence.]
 
 **Caution:**
 
@@ -187,6 +209,8 @@ Some tools should not enter a clinical environment at all, regardless of the de-
 | AWS Bedrock (Sydney) | Consumption-based | Per-token; similar profile |
 
 Tier A tools are more expensive per seat than Tier C consumer tools, but the comparison is misleading. You are paying for the contract, the data handling, and the workflow integration — not just the model.
+
+[KEYPOINT: The contract is the product. A Tier A tool without a real DPA is a Tier C tool with better marketing.]
 
 ---
 
@@ -223,6 +247,8 @@ A common mistake is paying for three overlapping Tier C subscriptions personally
 
 Most clinicians have never read a DPA. You don't need to read every clause. You need to find the answers to three specific questions.
 
+[TRYTHIS: Pull the DPA for whichever AI tool you use most. Search the document for "sub-processor", "training", and "breach notification". If any of the three returns nothing useful, raise it with the vendor before your next session.]
+
 ### Question 1: Where is the data, and who can touch it?
 
 Look for sections titled "Data storage," "Sub-processors," "International transfers," or "Hosting." You are looking for:
@@ -248,6 +274,8 @@ Look for "Breach notification," "Incident response," and "Liability." You want:
 - A liability cap that isn't laughable relative to the harm a breach could cause
 
 If a vendor will not tell you within 72 hours that your patients' data has been exposed, they are not a clinical vendor.
+
+[KEYPOINT: A clinical vendor will commit to breach notification within 72 hours and assist with your NDB obligations. If they will not, they are not a clinical vendor — they are a consumer vendor with a healthcare landing page.]
 
 > **Self-check (DPA reading):**
 > You're evaluating a new Australian-marketed AI scribe. Their website says "secure, private, Australian." Their DPA says: "Data may be processed by sub-processors in the United States and India for support purposes." What do you do?

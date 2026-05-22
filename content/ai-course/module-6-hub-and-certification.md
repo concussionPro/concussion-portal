@@ -11,6 +11,8 @@ order: 6
 
 You've worked through compliance, tooling, documentation, patient communication, and specialty applications. This final module is about what happens **after** the course — and how the Hub keeps your AI workflow safe, current, and audit-ready, long after you've forgotten the detail of Module 1.
 
+[KEYPOINT: AI tooling moves faster than continuing-education cycles. A static course goes stale in six months. The Hub is the part that doesn't — that's where your knowledge stays current.]
+
 ---
 
 ## 1. Welcome to the AI Practice Hub
@@ -42,6 +44,8 @@ A few things to know:
 - **Each certificate carries a unique verifiable URL.** Employers, insurers, and professional indemnity providers can click that URL and confirm the certificate is current — useful when an insurer asks "can you demonstrate AI competency training?"
 
 The certificate is not an AHPRA-issued credential. It's a continuing-education record. Treat it that way in your CPD log.
+
+[KEYPOINT: The certificate is a CPD record, not an AHPRA credential. Log it that way and check the verifiable URL still resolves before any audit or insurer request.]
 
 **Next step:** Once issued, save the verifiable URL to your CPD folder.
 
@@ -144,5 +148,7 @@ You've finished the AI course. A few directions from here:
 - **Consider Concussion Clinical Mastery** — our flagship 14-CPD-hour course (Osteopathy Australia endorsed) on concussion assessment and management. AI workflows accelerate documentation; clinical mastery accelerates outcomes. The two stack. Many clinicians who finish this course go straight into Concussion Clinical Mastery as the next step.
 
 Thanks for working through the course. The work doesn't end at the certificate — it ends every time a patient gets better care because your documentation, communication, and reasoning are sharper. That's the whole point.
+
+[TRYTHIS: Block a 30-minute slot in your calendar for next month, titled "AI Hub review". Use it to skim the monthly update, re-confirm your tool's Tier A status, and run the compliance checklist generator. Habit beats heroics.]
 
 **Next step:** Sit the quiz, claim your certificate, and check back in the Hub next month.

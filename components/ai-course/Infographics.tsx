@@ -11,6 +11,10 @@ import {
   Check,
   X,
   ArrowRight,
+  AlertOctagon,
+  BookOpen,
+  Sparkles,
+  Lightbulb,
 } from 'lucide-react'
 
 /**
@@ -245,6 +249,159 @@ export function InfoSheet({ title, items }: { title: string; items: string[] }) 
   )
 }
 
+export function DecisionTree() {
+  const branches: Array<{ question: string; outcomes: Array<{ answer: string; goTo: string; tier?: 'A' | 'B' | 'C'; final?: boolean }> }> = [
+    {
+      question: 'Does the input or output contain identifiable patient information?',
+      outcomes: [
+        { answer: 'No — generic education, public-source summary, clinic policy draft', goTo: 'Tier C is fine', tier: 'C', final: true },
+        { answer: 'Yes — clinical facts, identifiers, or anything re-identifiable', goTo: 'Next question →', tier: undefined },
+      ],
+    },
+    {
+      question: 'Do you have a Tier A tool with AU residency + DPA in place for this task?',
+      outcomes: [
+        { answer: 'Yes', goTo: 'Use Tier A', tier: 'A', final: true },
+        { answer: 'No — but your practice has a Tier B contract (Azure/Bedrock/Vertex Sydney with DPA)', goTo: 'Use Tier B with documented data flow', tier: 'B', final: true },
+        { answer: 'No to both', goTo: 'De-identify completely → Tier C, or stop and acquire Tier A', tier: 'C', final: true },
+      ],
+    },
+  ]
+  return (
+    <div className="my-8 not-prose">
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-3">
+        Decision tree — which tier for which task
+      </p>
+      <div className="space-y-3">
+        {branches.map((b, i) => (
+          <div key={i} className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-sm font-semibold text-foreground mb-3">{i + 1}. {b.question}</p>
+            <div className="space-y-2">
+              {b.outcomes.map((o, j) => (
+                <div key={j} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
+                  <ArrowRight className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs text-foreground mb-1">{o.answer}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-semibold text-foreground">{o.goTo}</p>
+                      {o.tier && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                          o.tier === 'A' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                          o.tier === 'B' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                          'bg-red-50 text-red-700 border border-red-200'
+                        }`}>Tier {o.tier}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function ConsentScript() {
+  return (
+    <div className="my-8 not-prose rounded-xl border-2 border-purple-200 bg-purple-50 p-5">
+      <p className="text-xs font-bold uppercase tracking-wide text-purple-900 mb-3">
+        AI scribe — verbal consent script (the minimum)
+      </p>
+      <div className="rounded-lg bg-white border border-purple-100 p-4 mb-3">
+        <p className="text-sm text-foreground italic leading-relaxed">
+          &ldquo;Before we start — I use an AI tool to help me write notes. It listens to our conversation and produces a draft note that I review and edit. It&apos;s an Australian tool, your data stays in Australia, and the audio isn&apos;t kept after the note is made. You can ask me to turn it off at any time, no questions asked. Are you OK with me using it today?&rdquo;
+        </p>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3 mb-3">
+        <div className="rounded-lg bg-white border border-purple-100 p-3">
+          <p className="text-xs font-bold text-purple-900 mb-1">If yes</p>
+          <p className="text-[11px] text-muted-foreground">Record in the note: <em>&ldquo;Verbal consent obtained for AI scribe use. Patient informed of data handling and right to decline.&rdquo;</em></p>
+        </div>
+        <div className="rounded-lg bg-white border border-purple-100 p-3">
+          <p className="text-xs font-bold text-purple-900 mb-1">If no</p>
+          <p className="text-[11px] text-muted-foreground">Turn off the scribe immediately. No consequence to the patient. Document in note: <em>&ldquo;Patient declined AI scribe; manual notes only.&rdquo;</em></p>
+        </div>
+      </div>
+      <p className="text-[11px] text-purple-900 italic">
+        Written consent at booking is better. Verbal consent at the start of the consult is the minimum. Silent assumption of consent is not consent.
+      </p>
+    </div>
+  )
+}
+
+export function DpaChecklist() {
+  const items = [
+    {
+      q: 'Where is the data stored, technically and contractually?',
+      look: 'Australian region (e.g. ap-southeast-2 Sydney, australiaeast). NOT "available globally" or "regions vary by tier."',
+    },
+    {
+      q: 'Will the vendor train on your data?',
+      look: 'Explicit no-training clause covering your prompts, outputs, and any extracted metadata. "Aggregated and anonymous" is not no-training.',
+    },
+    {
+      q: 'What is the breach notification timeline?',
+      look: '72 hours to your practice is the minimum. Anything &gt; 7 days is a problem under the NDB scheme.',
+    },
+  ]
+  return (
+    <div className="my-8 not-prose">
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-3">
+        Three questions to ask every vendor before signing
+      </p>
+      <ol className="space-y-3">
+        {items.map((item, i) => (
+          <li key={i} className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-sm font-bold text-foreground mb-2">
+              <span className="text-accent">{i + 1}.</span> {item.q}
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <strong>Look for:</strong> {item.look}
+            </p>
+          </li>
+        ))}
+      </ol>
+      <p className="text-[11px] text-muted-foreground mt-3 italic">
+        Marketing pages are not contracts. Read the DPA (or its equivalent — DPA, data-processing addendum, BAA-equivalent, or a Schedule to the master services agreement).
+      </p>
+    </div>
+  )
+}
+
+export function AhpraDocFlow() {
+  const stages = [
+    { num: 1, title: 'AI generates draft', detail: 'Whether scribe, refinement, or template — output is unsigned, unattested.' },
+    { num: 2, title: 'Clinician reviews', detail: 'Read line-by-line. Verify clinical facts, dosages, findings. Edit or delete anything inaccurate.' },
+    { num: 3, title: 'Clinician signs', detail: 'Signing = clinician attestation. From this moment, you own the record.' },
+    { num: 4, title: 'Notation in record', detail: 'Add: "Drafted with AI assistance, reviewed by [name], [AHPRA reg], [date]." Defensible at audit.' },
+  ]
+  return (
+    <div className="my-8 not-prose">
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-3">
+        AHPRA documentation flow — every AI-assisted record
+      </p>
+      <div className="relative">
+        <div className="absolute left-4 top-6 bottom-6 w-px bg-accent/30" aria-hidden="true" />
+        <ol className="space-y-3">
+          {stages.map((s) => (
+            <li key={s.num} className="relative flex gap-4 rounded-xl bg-white border border-slate-200 p-4 ml-0">
+              <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm shrink-0 z-10">
+                {s.num}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-foreground">{s.title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{s.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  )
+}
+
 /**
  * Renders an infographic by slug. Used by the markdown parser when it
  * encounters a `[INFOGRAPHIC: <slug>]` marker.
@@ -259,6 +416,14 @@ export function InfographicRenderer({ slug }: { slug: string }) {
       return <ReviewAndSignWorkflow />
     case 'documentation-do-dont':
       return <DocumentationDoDont />
+    case 'decision-tree':
+      return <DecisionTree />
+    case 'consent-script':
+      return <ConsentScript />
+    case 'dpa-checklist':
+      return <DpaChecklist />
+    case 'ahpra-doc-flow':
+      return <AhpraDocFlow />
     default:
       return (
         <div className="my-4 p-3 rounded-md bg-slate-50 text-xs text-muted-foreground italic">
@@ -266,4 +431,56 @@ export function InfographicRenderer({ slug }: { slug: string }) {
         </div>
       )
   }
+}
+
+// ─── Inline marker cards (KEYPOINT / REDFLAG / DEFINITION / TRYTHIS) ───────
+
+export function KeyPointCard({ text }: { text: string }) {
+  return (
+    <div className="my-5 not-prose rounded-lg border-l-4 border-accent bg-accent/5 px-4 py-3 flex gap-3">
+      <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+      <div className="flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-accent mb-1">Key point</p>
+        <p className="text-sm text-foreground leading-relaxed">{text}</p>
+      </div>
+    </div>
+  )
+}
+
+export function RedFlagCard({ text }: { text: string }) {
+  return (
+    <div className="my-5 not-prose rounded-lg border-2 border-red-300 bg-red-50 px-4 py-3 flex gap-3">
+      <AlertOctagon className="w-5 h-5 text-red-700 shrink-0 mt-0.5" />
+      <div className="flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-red-900 mb-1">Red flag — non-negotiable</p>
+        <p className="text-sm text-red-900 leading-relaxed">{text}</p>
+      </div>
+    </div>
+  )
+}
+
+export function DefinitionCard({ term, definition }: { term: string; definition: string }) {
+  return (
+    <div className="my-5 not-prose rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 flex gap-3">
+      <BookOpen className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+      <div className="flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-blue-900 mb-1">Definition</p>
+        <p className="text-sm text-foreground leading-relaxed">
+          <strong className="text-blue-900">{term}.</strong> {definition}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export function TryThisCard({ text }: { text: string }) {
+  return (
+    <div className="my-5 not-prose rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 flex gap-3">
+      <Lightbulb className="w-4 h-4 text-teal-700 shrink-0 mt-0.5" />
+      <div className="flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-teal-900 mb-1">Try this tomorrow</p>
+        <p className="text-sm text-foreground leading-relaxed">{text}</p>
+      </div>
+    </div>
+  )
 }

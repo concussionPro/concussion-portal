@@ -10,7 +10,11 @@
 
 ## Scope
 
-General practice generates more clinical documentation per FTE than any other discipline. AI assistance has the largest time-recovery potential here — and the largest medicolegal exposure if misused. This sub-module covers six high-volume documentation tasks. Refer to Module 1 for the AHPRA, Privacy Act, and Medicare Benefits Schedule context, and Module 2 for tool-tier classification.
+General practice generates more clinical documentation per FTE than any other discipline. AI assistance has the largest time-recovery potential here — and the largest medicolegal exposure if misused.
+
+[KEYPOINT: GPs have the highest documentation volume in healthcare, which means the largest AI time-recovery upside — and the largest exposure if misused. The framework is the same; the volume just amplifies both.]
+
+This sub-module covers six high-volume documentation tasks. Refer to Module 1 for the AHPRA, Privacy Act, and Medicare Benefits Schedule context, and Module 2 for tool-tier classification.
 
 **Critical tool-tier reminder:** Mental Health Care Plans and Chronic Disease Management plans contain extensive Personally Identifiable Information and sensitive health data. **Tier A tools only** (Australian-data-residency, enterprise contracts, no training on inputs). See Module 2.
 
@@ -60,7 +64,11 @@ GPs generate more referral letters than any other clinician type. The prompt str
 - Patient consent for the plan and any sharing is documented.
 - MBS item criteria are met (time, content, patient eligibility).
 
+[REDFLAG: Never let an LLM draft suicide/self-harm risk content on a Mental Health Care Plan. If the patient comes to harm, a coroner will read that section line-by-line — every word must be your considered clinical judgement, not the model's interpolation.]
+
 **Why this is high-stakes:** MHCPs are reviewed by Services Australia, allied health providers, and (in adverse events) coroners. Generic LLM-generated risk language is a liability.
+
+[KEYPOINT: A specific question in a referral letter produces a specific answer from the specialist. "Please assess" is wasted ink — name the question you actually want answered.]
 
 ---
 
@@ -110,6 +118,8 @@ LLMs can help structure a medication review but they are **not** a drug interact
 - Patient preference and quality of life weighted.
 - Deprescribing follows a structured approach (e.g. NPS MedicineWise tools).
 - Documented review and rationale in the notes.
+
+[TRYTHIS: Take one upcoming GPMP, draft the narrative through your Tier A tool, then sit with the output for five minutes and rewrite the patient-goals section in plain patient language. The clinical lift compounds when the goals are actually the patient's.]
 
 ---
 

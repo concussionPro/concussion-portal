@@ -12,6 +12,10 @@
 
 Of all the specialties in this course, naturopathy carries the sharpest TGA exposure when using AI. LLMs are trained on global content that includes therapeutic claims that are *illegal* in Australia. Anything the model produces about a supplement, herb, or nutrient must be reviewed against the TGA's prohibited/restricted representation rules before it goes to a patient.
 
+[REDFLAG: LLMs default to therapeutic claim language ("treats", "cures", "boosts immunity") that breaches the TGA Advertising Code. Every supplement-related output must be reviewed sentence-by-sentence for claim language before it leaves the clinic.]
+
+[KEYPOINT: Educational, not prescriptive. Every supplement, herb, and nutrient output is framed as "has been studied in the context of" — never as a treatment recommendation.]
+
 The rule of this sub-module: **educational, not prescriptive.** Every prompt below enforces this framing.
 
 The de-identification preamble from Module 3 is assumed throughout.
@@ -69,6 +73,10 @@ Diet plans are lower-risk than supplements but still attract TGA and AHPRA scrut
 
 **Highest-risk use case in this sub-module.** LLMs are confident-sounding but unreliable on interaction data. Use them as a starting point, never as a source of truth.
 
+[REDFLAG: Never act on an LLM-generated herb-drug interaction without verifying against AMH, eTG, Stockley's, or the Natural Medicines Database. The LLM will hallucinate plausible-sounding mechanisms and citations with full confidence.]
+
+[KEYPOINT: If you would not stake your registration on the answer, do not act on it. Interaction lookups are starting points, never conclusions.]
+
 **Mandatory verification sources (check at least one):**
 - Australian Medicines Handbook (AMH)
 - Therapeutic Guidelines (eTG)
@@ -94,6 +102,8 @@ Diet plans are lower-risk than supplements but still attract TGA and AHPRA scrut
 - You have documented the verification step in the patient record.
 
 If you would not stake your registration on the answer, do not act on it.
+
+[TRYTHIS: Bookmark AMH and eTG in your browser today. Set up a saved-search shortcut. When a patient asks "is this herb okay with my medication?", you should be in the authoritative source inside 30 seconds.]
 
 ---
 

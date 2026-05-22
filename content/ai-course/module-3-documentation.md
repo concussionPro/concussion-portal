@@ -8,11 +8,19 @@
 **Reading time:** ~20 minutes
 **Prerequisites:** Module 1 (legal framework — AHPRA, Privacy Act, APPs, TGA) and Module 2 (the three-tier tool model)
 
-Documentation is where most clinicians will first feel the productivity lift of AI. It is also where the legal, ethical, and clinical risks concentrate. This module walks through seven concrete documentation workflows, each paired with a tier recommendation (Module 2), a medicolegal note, a risk flag, and a before/after example.
+Documentation is where most clinicians will first feel the productivity lift of AI. It is also where the legal, ethical, and clinical risks concentrate.
+
+[DEFINITION: AI scribe | A clinical tool that listens to a consultation (in-person or telehealth), transcribes the audio, and produces a structured clinical note — typically a SOAP, problem-oriented, or specialty-specific template. Modern scribes also extract referral letters, billing codes, and patient-facing summaries.]
+
+This module walks through seven concrete documentation workflows, each paired with a tier recommendation (Module 2), a medicolegal note, a risk flag, and a before/after example.
 
 The unifying principle: **every AI-generated clinical document is a draft until a human clinician has reviewed, edited, and explicitly attested to its accuracy.** AHPRA's expectations on record-keeping (Module 1) do not soften because the first draft came from a model. If anything, they tighten.
 
+[KEYPOINT: Review-and-sign is non-negotiable. Every AI-generated clinical document is a draft until a clinician has read it line-by-line, edited for accuracy, and attested to it with their signature.]
+
 A second refrain runs through this module: **de-identification first** for any workflow that touches a Tier C tool. Module 2 made the case; here you'll see it applied.
+
+[INFOGRAPHIC: ahpra-doc-flow]
 
 ---
 
@@ -47,6 +55,8 @@ Both clinician and patient consent matter here.
 - Written or click-through consent at the appointment-booking stage is better
 - The patient should be told: (1) AI is recording and transcribing the consult, (2) raw audio is or is not retained, (3) the generated note becomes part of their record, (4) they can decline at any time without consequence
 
+[REDFLAG: Running an AI scribe without explicit patient consent is the consent gap most likely to surface in a complaint. Verbal consent at the start of the consult is the minimum; silent assumption of consent is not consent.]
+
 **Clinician obligations under AHPRA** (see Module 1): the record remains the clinician's responsibility. The scribe is a tool, not the author. You sign the note; you own its accuracy.
 
 ### Before / After
@@ -62,6 +72,8 @@ Net lift: 8–12 minutes per consult, and — clinically more important — undi
 ### Medicolegal note
 
 The AHPRA expectation is that the record reflects what occurred. If the scribe hallucinates a finding (e.g. invents a negative neurological exam that you did not perform), and you sign the note, *you* have falsified the record. Scribes are reliable but not infallible. The review step is not optional.
+
+[KEYPOINT: A hallucinated finding signed without review is a falsified record — and you, not the scribe vendor, are the falsifier. AHPRA expectations and the legal position are unchanged by the tool.]
 
 For workers compensation, mental health, and high-stakes documentation, treat the scribe output as a first draft that needs more, not less, scrutiny.
 
@@ -98,6 +110,8 @@ If you use a Tier A scribe or a Tier A note-refinement tool, the de-identificati
 ### Medicolegal note
 
 LLMs sometimes add detail that wasn't in your input — a phenomenon often called confabulation. Read every refined note line-by-line against your raw notes before signing. If the LLM invented a finding, delete it.
+
+[KEYPOINT: If the polished output contains a finding that wasn't in your raw notes, delete it or only retain it if you separately confirm you actually did the thing. LLMs interpolate from context; the record must reflect what you actually did.]
 
 For Tier C usage specifically: keep a copy of the de-identified input you pasted, in case a question arises later about what the model was actually asked to do.
 
@@ -150,6 +164,8 @@ For these reasons:
 - Never use a Tier C tool for workers compensation drafting, even with "de-identification" — the combination of injury date, employer, and clinical history is highly re-identifying within a claim ecosystem
 - Use Tier A only, and prefer scribes or note-refinement tools with explicit workers-compensation workflows
 - Apply double-review: the LLM draft is reviewed by you, and the final document should ideally be re-read by you after a gap (e.g. the next day) before signing
+
+[REDFLAG: Never draft workers compensation documents in Tier C, even after "de-identification". Injury date + employer + clinical history is uniquely identifying within a single claim ecosystem.]
 
 ### Before / After
 
@@ -241,6 +257,10 @@ For mental health care plans (MHCPs) and any documentation containing risk asses
 - Tier A only, with an explicit DPA covering sensitive health information
 - Double-verification recommended: the AI-generated document is reviewed once at generation, then re-read after a gap before being signed and shared
 - Risk-assessment content should ideally not be drafted by the LLM at all — it is your clinical judgement, recorded in your words
+
+[REDFLAG: Never let an LLM draft the risk-assessment section of a mental health care plan. Risk content must be written in your own words from your own clinical impression — not the model's plausible-sounding default.]
+
+[TRYTHIS: Write your standard AI-use attestation line and paste it into your practice-management system as a snippet. One keystroke, every consult — no more "I'll add it later".]
 
 ### Before / After
 

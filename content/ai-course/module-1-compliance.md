@@ -11,7 +11,13 @@
 
 > **Important — this module is education, not legal advice.** It summarises the publicly available regulatory position on AI use by Australian registered health practitioners as of 2026. It does not replace case-specific guidance from your indemnity carrier, professional association, or solicitor. Where a question turns on the specifics of your patient, practice, or jurisdiction, contact your medical defence organisation (MDO) before acting. If in doubt, the safer interpretation is the one this module recommends.
 
-The use of large language models (LLMs), AI scribes, and AI-assisted decision-support tools in Australian healthcare has moved from novelty to baseline expectation in the space of roughly twenty-four months. Patients now reasonably assume that clinicians have access to these tools; medical defence organisations have published position statements; and the Australian Health Practitioner Regulation Agency (AHPRA) has issued formal guidance for registered practitioners. What has not changed is the underlying legal and ethical scaffolding: the clinician remains professionally responsible for every clinical decision, every patient record, and every disclosure of identifiable health information, regardless of whether an AI tool was involved.
+The use of large language models (LLMs), AI scribes, and AI-assisted decision-support tools in Australian healthcare has moved from novelty to baseline expectation in the space of roughly twenty-four months. Patients now reasonably assume that clinicians have access to these tools; medical defence organisations have published position statements; and the Australian Health Practitioner Regulation Agency (AHPRA) has issued formal guidance for registered practitioners.
+
+[DEFINITION: AHPRA | The Australian Health Practitioner Regulation Agency — the national body that, with the fifteen National Boards, registers and regulates health practitioners in Australia. AHPRA does not certify, accredit, or endorse individual AI products.]
+
+What has not changed is the underlying legal and ethical scaffolding: the clinician remains professionally responsible for every clinical decision, every patient record, and every disclosure of identifiable health information, regardless of whether an AI tool was involved.
+
+[KEYPOINT: The clinician owns every clinical decision; the AI tool is an input to that decision, never the decision-maker.]
 
 This module sets out that scaffolding. Read it carefully — every subsequent module of this course (clinical use cases, prompt design, documentation, scribe selection) assumes you are operating inside the framework described here.
 
@@ -32,9 +38,17 @@ The guidance does not prohibit AI use. It instead clarifies that existing profes
 - **Be transparent with patients.** Where appropriate (and particularly for AI scribes that record consultations), patients should be informed that AI is being used.
 - **Document AI use.** Use of AI in clinical decision-making or record-keeping should be documented in the patient's record.
 
+[REDFLAG: "The AI said so" is never a defence. Signing an AI-generated note without reading it makes you — not the vendor — the falsifier of the record.]
+
 ### "Aligned with AHPRA's 2025 guidance" — wording matters
 
-AHPRA does not certify, accredit, or endorse individual AI products. Any vendor or course (including this one) that describes itself as "AHPRA-certified" or "AHPRA-approved" is misusing AHPRA's name. The accurate phrasing is *"aligned with AHPRA's 2025 AI guidance"* or *"designed to support compliance with AHPRA's AI guidance"*. If a vendor pitches their tool to you as AHPRA-approved, treat that as a red flag about the vendor's general claims-handling.
+AHPRA does not certify, accredit, or endorse individual AI products. Any vendor or course (including this one) that describes itself as "AHPRA-certified" or "AHPRA-approved" is misusing AHPRA's name.
+
+[REDFLAG: A vendor claiming "AHPRA-approved" or "AHPRA-certified" is a vendor red flag. AHPRA does not approve, certify, or endorse AI products — full stop.]
+
+The accurate phrasing is *"aligned with AHPRA's 2025 AI guidance"* or *"designed to support compliance with AHPRA's AI guidance"*. If a vendor pitches their tool to you as AHPRA-approved, treat that as a red flag about the vendor's general claims-handling.
+
+[KEYPOINT: AHPRA's guidance does not prohibit AI use. It requires you to understand the tool, verify outputs, retain clinical responsibility, protect privacy, be transparent with patients, and document AI use in the record.]
 
 ### Self-check
 
@@ -47,7 +61,13 @@ AHPRA does not certify, accredit, or endorse individual AI products. Any vendor 
 
 [INFOGRAPHIC: data-flow]
 
-The *Privacy Act 1988* (Cth) and its thirteen Australian Privacy Principles (APPs) apply to most healthcare providers in Australia regardless of size — the small-business exemption does not apply to organisations that provide a health service and hold health information (see s 6D(4)(b) of the Act). The Office of the Australian Information Commissioner (OAIC) publishes the authoritative APP Guidelines: <https://www.oaic.gov.au/privacy/australian-privacy-principles>.
+The *Privacy Act 1988* (Cth) and its thirteen Australian Privacy Principles (APPs) apply to most healthcare providers in Australia regardless of size — the small-business exemption does not apply to organisations that provide a health service and hold health information (see s 6D(4)(b) of the Act).
+
+[DEFINITION: APP | Australian Privacy Principles — the thirteen principles in Schedule 1 of the *Privacy Act 1988* (Cth) that govern how APP entities (including most health providers) handle personal information.]
+
+[DEFINITION: OAIC | The Office of the Australian Information Commissioner — the federal regulator that enforces the *Privacy Act 1988*, publishes the APP Guidelines, and investigates privacy complaints and data breaches.]
+
+The OAIC publishes the authoritative APP Guidelines: <https://www.oaic.gov.au/privacy/australian-privacy-principles>.
 
 The OAIC has also published specific guidance on generative AI and privacy obligations: <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/hands-on-guides/guidance-on-privacy-and-the-use-of-commercially-available-ai-products>.
 
@@ -71,15 +91,25 @@ This is the principle that catches most clinicians using US-hosted LLMs.
 
 Under APP 8, before disclosing personal information to an overseas recipient, the APP entity must take reasonable steps to ensure the overseas recipient does not breach the APPs in relation to that information. If you do not take those steps, you may be **accountable for the overseas recipient's acts as if you had done them yourself** (s 16C of the Act).
 
-Most major LLM providers — OpenAI, Anthropic, Google, Microsoft — host primary inference infrastructure in the United States. Even where an "Australian region" is offered, the contractual terms, sub-processors, or training-data flows may still involve US entities. Before disclosing identifiable health information to any cloud AI service, you should:
+[DEFINITION: DPA | Data Processing Agreement (sometimes called a Data Processing Addendum) — a contract between you and an AI vendor that sets out how they handle your data, who their sub-processors are, where data is stored, and what happens in a breach. The DPA, not the marketing page, is the legal commitment.]
+
+[KEYPOINT: APP 8 is the principle that catches US-hosted LLMs. Cross-border disclosure to overseas AI endpoints is regulated even where the vendor promises not to train on your inputs.]
+
+Most major LLM providers — OpenAI, Anthropic, Google, Microsoft — host primary inference infrastructure in the United States. Even where an "Australian region" is offered, the contractual terms, sub-processors, or training-data flows may still involve US entities.
+
+Before disclosing identifiable health information to any cloud AI service, you should:
 
 - Confirm the data residency of the inference endpoint in the vendor's data processing addendum (DPA).
 - Confirm that the vendor's terms exclude your inputs from being used to train models.
 - Confirm whether the disclosure is captured by an APP 8.2 exception (for example, the patient has consented to the disclosure after being expressly informed of the consequences).
 
+[INFOGRAPHIC: dpa-checklist]
+
 ### APP 11 — Security of personal information
 
 You must take reasonable steps to protect personal information from misuse, interference, loss, unauthorised access, modification or disclosure. For AI workflows this includes: vendor security posture (SOC 2 Type II, ISO 27001), encryption in transit and at rest, access controls on the AI tool, audit logging, and a written incident response plan that explicitly contemplates AI-tool data breaches.
+
+[TRYTHIS: This week, open your practice's current privacy policy and search it for the word "AI" or "artificial intelligence". If neither appears and you are using any AI tool, your APP 1 disclosure is out of date.]
 
 ### APP 6 vs APP 8 — at a glance
 
@@ -100,6 +130,8 @@ You must take reasonable steps to protect personal information from misuse, inte
 
 ## 3. The TGA Therapeutic Goods Advertising Code
 
+[DEFINITION: TGA | The Therapeutic Goods Administration — the federal regulator of medicines, medical devices, and biologicals in Australia under the *Therapeutic Goods Act 1989* (Cth). The TGA also enforces the Therapeutic Goods Advertising Code.]
+
 The Therapeutic Goods Administration (TGA) regulates the advertising of therapeutic goods in Australia under the *Therapeutic Goods Act 1989* (Cth) and the *Therapeutic Goods Advertising Code 2021*. The Code is enforced strictly; the TGA publishes its compliance approach at <https://www.tga.gov.au/products/advertising-therapeutic-goods>.
 
 ### When AI-generated patient material becomes "therapeutic advertising"
@@ -118,7 +150,11 @@ Common LLM failure modes that can stray into Code breaches include:
 
 If you cannot personally verify and stand behind every therapeutic claim in a piece of AI-generated content, do not publish it. The fact that an LLM produced the wording does not transfer liability to the LLM vendor — the entity that publishes the content carries the regulatory risk.
 
+[REDFLAG: Never publish an AI-generated patient-facing piece containing therapeutic claims without verifying each claim against an evidence source you would defend before the TGA. The LLM is not the publisher — you are.]
+
 A practical rule: AI is acceptable as a *drafting assistant* for patient-facing material, but every clinical and therapeutic claim must be reviewed by a human clinician against an evidence source you would be willing to defend before the TGA.
+
+[KEYPOINT: The publisher of a therapeutic claim — not the model that drafted it — carries the regulatory risk under the TGA Advertising Code.]
 
 ### Self-check
 
@@ -129,6 +165,8 @@ A practical rule: AI is acceptable as a *drafting assistant* for patient-facing 
 
 ## 4. The OAIC De-identification Standard
 
+[DEFINITION: PII | Personally Identifiable Information — any information, alone or in combination, that identifies or could reasonably identify an individual. Health information that retains contextual identifiers (rare diagnosis + small region + age) is still PII even after the name is removed.]
+
 A common workaround clinicians reach for is: "I'll just strip the patient's name and date of birth, then it's fine to paste into a chatbot." This is usually wrong.
 
 The OAIC's guidance on de-identification is published at <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/handling-personal-information/de-identification-and-the-privacy-act>. The OAIC distinguishes between:
@@ -137,6 +175,10 @@ The OAIC's guidance on de-identification is published at <https://www.oaic.gov.a
 - **De-identified data** — the risk of re-identification has been reduced to a level that is "very low" in the relevant context. Information is only de-identified when it is no longer about an identifiable individual or an individual who is reasonably identifiable.
 
 Removing the name and date of birth is pseudonymisation, not de-identification.
+
+[KEYPOINT: Stripping name and date of birth is pseudonymisation. True de-identification under OAIC guidance requires re-identification risk to be "very low" in context — which rare diagnoses, small regions, and free-text notes routinely defeat.]
+
+[REDFLAG: Pasting "de-identified" PII into a consumer chatbot (Tier C) is the single most common AI compliance error. If the patient could be re-identified by anyone with access to the rest of the record, it is still PII.]
 
 ### The re-identification risk for rare diagnoses and small regions
 
@@ -156,6 +198,8 @@ For the purposes of LLM workflows, the conservative position is: **assume your d
 ---
 
 ## 5. The Notifiable Data Breaches (NDB) Scheme
+
+[DEFINITION: NDB | The Notifiable Data Breaches scheme — Part IIIC of the *Privacy Act 1988* (introduced by the 2017 amendment), which requires APP entities to notify affected individuals and the OAIC of "eligible data breaches" likely to result in serious harm.]
 
 The *Privacy Amendment (Notifiable Data Breaches) Act 2017* introduced Part IIIC of the *Privacy Act 1988*, which requires APP entities to notify affected individuals and the OAIC of "eligible data breaches". The OAIC's NDB guidance is at <https://www.oaic.gov.au/privacy/notifiable-data-breaches>.
 
@@ -178,7 +222,11 @@ LLM-related scenarios that may meet this threshold include:
 
 Once an entity has reasonable grounds to *suspect* an eligible data breach has occurred, it must carry out a reasonable and expeditious assessment to decide whether the breach is in fact an eligible data breach. That assessment must be completed within **30 calendar days** (s 26WH of the Act). If the assessment confirms an eligible breach, notification to affected individuals and the OAIC must occur as soon as practicable.
 
+[KEYPOINT: The 30-day NDB assessment clock starts at *suspicion*, not confirmation. Staff member tells you on Monday they think they pasted patient data into a chatbot — your assessment window starts Monday.]
+
 The clock starts at *suspicion*, not at confirmation. If a staff member tells you on Monday they may have pasted patient information into a chatbot, your 30-day assessment window starts Monday.
+
+[TRYTHIS: Write a one-page AI-incident response procedure for your practice. Include: who to notify internally, how to preserve evidence, how to assess whether the threshold is met, and when to notify the OAIC. Five minutes now saves you a panicked 30 days later.]
 
 ### Self-check
 
@@ -208,6 +256,10 @@ Each of the major Australian medical defence organisations (MDOs) and indemnity 
 - Guild Insurance: <https://www.guildinsurance.com.au> — Risk Management resources for allied health.
 
 Always pull the current version directly from your carrier; do not rely on second-hand summaries (including this one).
+
+[KEYPOINT: Your indemnity carrier's current AI position is the document that matters in a claim. A course summary (including this one) is not a substitute — confirm the wording with your carrier directly.]
+
+[TRYTHIS: Log into your MDO member portal today and search "artificial intelligence". Save the current position statement to your practice's policies folder, dated. Re-pull every six months.]
 
 ### Self-check
 
@@ -251,6 +303,8 @@ The discipline behind these lines is more important than the exact wording. The 
 - Do not allow AI scribes to write directly into the medical record without a "draft" or "pending review" state — every note must be actively signed off.
 - Do not document AI use only in a separate operational log; it should appear in the clinical record itself.
 
+[KEYPOINT: AI use must appear in the clinical record itself, not only in a separate operations log. A future reviewer must be able to see which tool was used, by whom, and that the clinician verified the output.]
+
 ### Self-check
 
 1. Your AI scribe writes a consultation note that you sign without alteration. What single line should appear in the note?
@@ -274,6 +328,8 @@ This hierarchy is not aspirational. It is the legal and professional default pos
 ### The inverse hierarchy is dangerous
 
 Treating the LLM as the decision-maker and the clinician as the verifier is professionally unsafe. The cognitive bias here is well documented (automation bias): humans verifying machine output tend to under-detect errors compared to humans producing output from scratch. A clinician who treats the AI output as the default and themselves as the editor will, over time, miss errors that a clinician working in the reverse direction would catch.
+
+[KEYPOINT: Automation bias is the failure mode to design against. You are the author with AI as an input — never the editor with AI as the author.]
 
 ### Self-check
 
@@ -305,6 +361,10 @@ Consent in the AI context sits on a spectrum from *no specific consent required*
 - **High-sensitivity contexts** — mental health, sexual health, child protection, family violence.
 - **Where the patient is likely to object** if not asked — many patients have strong views on AI use in their healthcare and should be given the chance to express them.
 
+[REDFLAG: Running an AI scribe without express patient consent may breach state surveillance devices legislation, irrespective of APP requirements. Recording is a separate consent issue from AI processing.]
+
+[INFOGRAPHIC: consent-script]
+
 ### What counts as informed consent
 
 For express informed consent to AI use, the patient should be told, in plain language:
@@ -317,6 +377,8 @@ For express informed consent to AI use, the patient should be told, in plain lan
 
 A signed form is not magic. A signed form that the patient has not understood is not informed consent. The conversation is the consent; the form is the evidence.
 
+[KEYPOINT: The conversation is the consent; the signed form is the evidence. A form the patient hasn't understood is not informed consent, regardless of signature.]
+
 ### Self-check
 
 1. A patient declines to have their consultation recorded by your AI scribe. What is your obligation?
@@ -327,6 +389,8 @@ A signed form is not magic. A signed form that the patient has not understood is
 ## 10. High-Risk Populations — Stricter Rules Apply
 
 Three categories of patient warrant a stricter approach to AI use. The conservative default for all three is: **do not use cloud-hosted, US-located, or training-on-input AI tools with these populations without specific carrier-confirmed approval.**
+
+[REDFLAG: For minors, mental health, sexual health, and sensitive populations: no AI tool without contractual certainty about Australian data residency, no training on inputs, and end-to-end encryption. The default is stricter, not the same.]
 
 ### Minors
 
@@ -353,6 +417,8 @@ The Privacy Act defines "sensitive information" to include health information, b
 - Information about communicable diseases that may attract notification obligations under state public health law.
 
 For these categories, the default position should be: no AI tool that does not give you contractual certainty about Australian data residency, no training on inputs, and end-to-end encryption.
+
+[TRYTHIS: List the high-risk populations you actually see. For each, write a one-line rule for AI use ("no scribe with paediatric consults under 16 without guardian + child consent", "no Tier C for any mental health content, ever"). Pin it next to your monitor.]
 
 ### Self-check
 

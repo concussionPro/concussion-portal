@@ -18,6 +18,8 @@ This sub-module covers the highest-volume AI-assisted outputs in a physio or MSK
 
 The single highest-leverage use case in MSK practice. You assess; the LLM formats and progresses.
 
+[KEYPOINT: The LLM formats and progresses. You assess. Confusing those two roles is the most common physio AI failure — and the easiest one to avoid.]
+
 **Inputs the model needs:**
 - Diagnosis or working hypothesis
 - Stage (acute / subacute / chronic / return-to-sport)
@@ -33,6 +35,8 @@ The single highest-leverage use case in MSK practice. You assess; the LLM format
 **What the model does well:** structure, progression logic, dosage scaffolding, formatting.
 
 **What the model does poorly:** matching to the actual tissue irritability, knowing your patient's prior injury history, choosing exercises the patient will actually do. You fix this in review.
+
+[REDFLAG: "Fully recovered" or "complete resolution" in a return-to-sport letter is legally risky. If the patient re-injures, those phrases become the focus of a complaint. Use "clearance for the activity described, assuming no new symptoms develop" instead.]
 
 **Review checklist:**
 - Dosage is appropriate to stage (not overcooked, not under-dosed).
@@ -57,6 +61,8 @@ For coaches, schools, sporting bodies, and insurers.
 - The letter does not over-claim ("fully recovered" is risky language).
 - AI-attestation line is present.
 - Addressed to the correct recipient.
+
+[KEYPOINT: LLMs hallucinate outcome measures and session counts. Every number in a treatment summary or return-to-sport letter must match your actual notes — re-check before sending.]
 
 ---
 
@@ -91,6 +97,10 @@ Patient education is one of the highest-impact interventions in persistent pain.
 - The model has not invented neuroscience claims.
 - Patient's specific presentation is reflected (not a generic template).
 - Sources, if cited, are real (LLMs hallucinate citations — strip any you cannot verify).
+
+[KEYPOINT: Pain education prompts must include explicit "avoid" language. The LLM will minimise ("pain is in your head") by default unless you forbid it in the prompt.]
+
+[TRYTHIS: Pick one patient you'll see this week and pre-generate their exercise program before they arrive — fully customised to their baseline. Time the difference vs. your usual post-consult drafting. The lift is usually 10–15 minutes per patient.]
 
 ---
 

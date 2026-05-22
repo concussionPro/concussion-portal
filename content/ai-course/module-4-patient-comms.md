@@ -10,9 +10,15 @@
 
 ## Overview
 
-Module 4 covers the eight most common patient-facing outputs you can draft with an LLM in Australian clinical practice. Every example below assumes you have already classified your tool tier (Module 2) and applied a de-identification preamble (Module 3). The recurring rule: the LLM produces a *draft*. You produce the *clinical communication*. Nothing leaves your clinic without your name on it and your eyes across it.
+Module 4 covers the eight most common patient-facing outputs you can draft with an LLM in Australian clinical practice. Every example below assumes you have already classified your tool tier (Module 2) and applied a de-identification preamble (Module 3).
 
-Patient-facing documents are the most visible output of any practice. They are also the documents most often subpoenaed, audited, or shared without your knowledge. A discharge instruction that omits a red flag, a referral letter with a fabricated investigation, a supplement sheet with a therapeutic claim — each carries professional, legal, and reputational consequences. AI accelerates the drafting of these documents tenfold; it also accelerates the propagation of errors at the same rate. This module's job is to make the speed safe.
+The recurring rule: the LLM produces a *draft*. You produce the *clinical communication*. Nothing leaves your clinic without your name on it and your eyes across it.
+
+[KEYPOINT: Every patient-facing document must be reviewed before sending. The LLM drafts; you sign. Your name on the document is the signal that clinical judgement has been applied.]
+
+Patient-facing documents are the most visible output of any practice. They are also the documents most often subpoenaed, audited, or shared without your knowledge.
+
+A discharge instruction that omits a red flag, a referral letter with a fabricated investigation, a supplement sheet with a therapeutic claim — each carries professional, legal, and reputational consequences. AI accelerates the drafting of these documents tenfold; it also accelerates the propagation of errors at the same rate. This module's job is to make the speed safe.
 
 The de-identification preamble used throughout this module is:
 
@@ -39,6 +45,8 @@ The risk tier is not academic. It governs how much of your own time the document
 **Goal:** A plain-English explainer for a specific condition, pitched at a defined literacy level, with optional translation.
 
 **Risk tier:** Low to Medium (rises if condition is high-acuity or rare).
+
+[DEFINITION: Literacy levels | The grade-equivalent reading age of a piece of text, commonly measured via Flesch-Kincaid. Australian patient-facing health material is typically pitched at Year 8 (age 13–14) reading age unless the audience is known to be higher-literacy. Plain-language summaries should sit at Year 6–8.]
 
 **Prompt example:**
 
@@ -91,6 +99,8 @@ Specialty deep-dive lives in Module 5a (Physio) and Module 5d (Osteo).
 **Goal:** Educational handout describing what a supplement is, common uses described in the literature, and known interactions.
 
 **Risk tier:** High — TGA territory.
+
+[REDFLAG: Therapeutic verbs — "treats", "cures", "prevents", "heals", "fixes", "boosts" — on a supplement sheet are TGA Code breaches. The LLM will reach for them by default. Strip every one, every time.]
 
 **Critical framing:** Supplement sheets generated under this workflow are **educational only**. They do not constitute prescription, recommendation, or therapeutic advice unless you, the clinician, sign off and that is within your scope. Avoid the words "treats," "cures," "prevents," or "fixes." Use "has been studied for," "is traditionally used for," or "patients sometimes ask about."
 
@@ -182,7 +192,11 @@ Specialty deep-dive lives in Module 5b (Naturopathy).
 
 **Failure mode to watch:** LLMs sometimes drop critical safety info when asked to "make it shorter" or "more friendly." Always review the full version before any rewrite. A useful safeguard is to keep a master list of red flags for each intervention type and physically check each item against the generated discharge instruction before approval.
 
+[KEYPOINT: Every "shorten this" or "make it friendlier" prompt risks losing the red-flag list. Always review the full version against a master red-flag list before allowing the LLM to compress it.]
+
 **Specific risk for high-velocity manual therapy, injection procedures, and invasive interventions:** the LLM has no awareness of post-procedure complication patterns specific to your technique. It will produce plausible-sounding but generic discharge advice. Augment every prompt with the specific complication signs you want listed (e.g. for a cervical HVLA: vertebrobasilar symptoms — vertigo, visual disturbance, drop attacks, ataxia — present until proven otherwise as red flags).
+
+[TRYTHIS: For each procedure you regularly perform, write a one-line red-flag checklist now. Save it as a snippet you paste into every discharge-instruction prompt. Five minutes once, every patient forever.]
 
 ---
 
@@ -240,6 +254,8 @@ If you take one structural lesson from this module, take this: every patient-fac
 1. **Brief the LLM tightly.** Specify the audience, the reading level, the tone, the constraints, the forbidden phrases, and the required elements. Vague prompts produce generic, often unsafe output.
 2. **Review against a fixed checklist.** Each use case above has one. The checklist exists to catch what your eye misses when you're reading at speed.
 3. **Sign and date.** Your name on the document is the signal that clinical judgement has been applied. It is also the basis on which AHPRA, the Office of the Australian Information Commissioner, the TGA, or a court will hold you to account.
+
+[KEYPOINT: The investment is in the prompt library and the checklist, not in the individual document. Slow on the first; fast on the hundredth.]
 
 This pattern is slow on the first document of any new type and fast on the hundredth. The investment is in the template, the checklist, and the prompt library — not in the individual document.
 
