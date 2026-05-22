@@ -1,64 +1,41 @@
 /**
- * Per-profession AHPRA CPD requirements.
+ * Per-profession AHPRA CPD requirements — canonical data.
  *
- * Each AHPRA National Board sets its own CPD registration standard.
- * Hour minimums, categories, and recording requirements vary
- * substantially. This module is the canonical reference used by:
- * - the CPD record dashboard (shows per-profession requirements)
- * - the passive-CPD demo (categorises activity per profession)
- * - the pitch documents (claims calibrated to specific profession)
+ * Verified 2026-05-22 against each Board's published registration
+ * standard. Full sourcing in docs/ahpra-cpd-requirements.md.
  *
- * Numbers verified against each Board's published registration
- * standard as of 2026-05-22. See docs/ahpra-cpd-requirements.md
- * for full sources and detail. Re-verify quarterly via the
- * /api/cron/ai-course-content-refresh cron.
+ * Used by:
+ * - CPD record dashboard (per-profession requirements view)
+ * - Passive-CPD demo (per-profession honest ceiling)
+ * - Pitch artefacts (calibrated claims per audience)
+ *
+ * Re-verify quarterly via /api/cron/ai-course-content-refresh.
  */
 
 export interface CpdCategory {
-  /** Category name (e.g. "Educational Activities", "Reviewing Performance") */
   name: string
-  /** Whether this category is "formal/structured" or "self-directed/independent" */
-  type: 'formal' | 'self-directed' | 'practice-based' | 'mixed'
-  /** Minimum hours required in this category, if any */
+  type: 'formal' | 'self-directed' | 'interactive' | 'practice-based' | 'mixed'
   minHours?: number
-  /** Plain-language description of what counts */
   examples: string
-  /** Does typical passive workflow activity (literature search, guideline review) count here? */
   passiveActivityRecognised: 'yes' | 'partial' | 'no'
 }
 
 export interface AhpraBoard {
-  /** Slug — URL-safe identifier */
   slug: string
-  /** Display name */
   name: string
-  /** Profession noun (e.g. "Osteopath", "Physiotherapist") */
   profession: string
-  /** Annual hours requirement */
-  annualHours: number
-  /** If the requirement is per cycle (not annual), state cycle length in years */
+  annualHours: number | null
   cycleYears?: number
-  /** Total hours per cycle (if cycle-based) */
   cycleHours?: number
-  /** Categories recognised by this Board */
   categories: CpdCategory[]
-  /** Does the Board explicitly allow self-directed CPD without a cap? */
-  selfDirectedAllowance: 'unrestricted' | 'capped' | 'minimum-formal-required'
-  /** Estimated % of total hours that could realistically be earned via passive workflow activity */
+  selfDirectedAllowance: 'unrestricted' | 'capped' | 'minimum-interactive-required'
   passiveCeilingPercent: number
-  /** Recording requirements summary */
+  hardMinNonPassiveHours: number
   recordingRequirements: string
-  /** Official Board CPD standard URL */
   standardUrl: string
-  /** Audit frequency commentary */
   auditNotes?: string
 }
 
-/**
- * RACGP and ACRRM are not Boards but operate the CPD Homes that
- * Medical Board registrants use. Their category structure is the
- * most detailed and is the de-facto standard the platform maps to.
- */
 export interface CpdHome {
   slug: string
   name: string
@@ -73,73 +50,33 @@ export const CPD_HOMES: CpdHome[] = [
   {
     slug: 'racgp',
     name: 'RACGP CPD Program',
-    forProfession: 'GP (Royal Australian College of General Practitioners CPD Home)',
+    forProfession: 'GP (RACGP CPD Home)',
     cycleYears: 1,
     totalCycleHours: 50,
     categories: [
-      {
-        name: 'Educational Activities',
-        type: 'formal',
-        minHours: 12.5,
-        examples: 'Accredited courses, conferences, structured online modules, college webinars',
-        passiveActivityRecognised: 'no',
-      },
-      {
-        name: 'Reviewing Performance',
-        type: 'practice-based',
-        minHours: 5,
-        examples: 'Case review, peer review, supervision, audit, clinical case discussion',
-        passiveActivityRecognised: 'partial',
-      },
-      {
-        name: 'Measuring Outcomes',
-        type: 'practice-based',
-        minHours: 5,
-        examples: 'Clinical audit, patient outcome measurement, practice improvement projects',
-        passiveActivityRecognised: 'no',
-      },
+      { name: 'Educational Activities (EA)', type: 'formal', minHours: 12.5, examples: 'Reading, lectures, conferences, podcasts, structured online modules.', passiveActivityRecognised: 'yes' },
+      { name: 'Reviewing Performance (RP)', type: 'practice-based', minHours: 5, examples: 'Case review, peer review, supervision, case-based discussion.', passiveActivityRecognised: 'partial' },
+      { name: 'Measuring Outcomes (MO)', type: 'practice-based', minHours: 5, examples: 'Clinical audit, patient outcome measurement, practice improvement.', passiveActivityRecognised: 'no' },
+      { name: 'Free choice', type: 'mixed', minHours: 12.5, examples: '12.5 hrs across any of the three categories above.', passiveActivityRecognised: 'yes' },
     ],
     url: 'https://www.racgp.org.au/education/professional-development/cpd',
   },
   {
     slug: 'acrrm',
     name: 'ACRRM CPD Program',
-    forProfession: 'Rural GP (Australian College of Rural and Remote Medicine CPD Home)',
+    forProfession: 'Rural GP (ACRRM CPD Home)',
     cycleYears: 1,
     totalCycleHours: 50,
     categories: [
-      {
-        name: 'Educational Activities',
-        type: 'formal',
-        minHours: 12.5,
-        examples: 'Accredited courses, conferences, structured online modules',
-        passiveActivityRecognised: 'no',
-      },
-      {
-        name: 'Performance Review',
-        type: 'practice-based',
-        minHours: 5,
-        examples: 'Case-based discussion, peer review, professional supervision',
-        passiveActivityRecognised: 'partial',
-      },
-      {
-        name: 'Outcome Measurement',
-        type: 'practice-based',
-        minHours: 5,
-        examples: 'Clinical audit, outcome measurement, quality improvement',
-        passiveActivityRecognised: 'no',
-      },
+      { name: 'Educational Activities', type: 'formal', minHours: 12.5, examples: 'Reading, courses, lectures, workshops, conferences.', passiveActivityRecognised: 'yes' },
+      { name: 'Performance Review', type: 'practice-based', minHours: 5, examples: 'Case-based discussion, peer review, supervision.', passiveActivityRecognised: 'partial' },
+      { name: 'Outcome Measurement', type: 'practice-based', minHours: 5, examples: 'Clinical audit, outcome measurement, QI.', passiveActivityRecognised: 'no' },
+      { name: 'Free choice', type: 'mixed', minHours: 12.5, examples: '12.5 hrs flex across the three.', passiveActivityRecognised: 'yes' },
     ],
     url: 'https://www.acrrm.org.au/training-and-cpd/cpd-program',
   },
 ]
 
-/**
- * The 15 AHPRA National Boards. Hour requirements and category
- * structures verified 2026-05-22. The passiveCeilingPercent figure
- * is CEA's estimate of what an honest auto-tracker could capture
- * for a typical clinician — conservative.
- */
 export const AHPRA_BOARDS: AhpraBoard[] = [
   {
     slug: 'medical',
@@ -147,324 +84,237 @@ export const AHPRA_BOARDS: AhpraBoard[] = [
     profession: 'Medical Practitioner',
     annualHours: 50,
     categories: [
-      {
-        name: 'Educational Activities',
-        type: 'formal',
-        minHours: 12.5,
-        examples: 'Via CPD Home (RACGP, ACRRM, or specialist college). Courses, conferences, structured online modules.',
-        passiveActivityRecognised: 'no',
-      },
-      {
-        name: 'Reviewing Performance',
-        type: 'practice-based',
-        minHours: 5,
-        examples: 'Case review, peer review, supervision, case-based discussion. Some literature review supporting a specific case may count.',
-        passiveActivityRecognised: 'partial',
-      },
-      {
-        name: 'Measuring Outcomes',
-        type: 'practice-based',
-        minHours: 5,
-        examples: 'Clinical audit, patient outcome measurement, practice improvement projects.',
-        passiveActivityRecognised: 'no',
-      },
+      { name: 'Educational Activities', type: 'formal', minHours: 12.5, examples: 'Reading, lectures, conferences, podcasts. Passive activity recognised.', passiveActivityRecognised: 'yes' },
+      { name: 'Reviewing Performance + Measuring Outcomes', type: 'practice-based', minHours: 25, examples: 'Min 5 hrs each in RP and MO. Requires feedback/data on own practice.', passiveActivityRecognised: 'partial' },
+      { name: 'Free choice', type: 'mixed', minHours: 12.5, examples: 'Distributed across the three above.', passiveActivityRecognised: 'yes' },
     ],
-    selfDirectedAllowance: 'minimum-formal-required',
-    passiveCeilingPercent: 20,
-    recordingRequirements: 'CPD Home logs all activity. Reflection on Reviewing Performance and Measuring Outcomes activities required. Evidence must be retained for audit.',
-    standardUrl: 'https://www.medicalboard.gov.au/Registration/Continuing-Professional-Development.aspx',
-    auditNotes: 'Annual random audit of approximately 5% of registrants.',
-  },
-  {
-    slug: 'osteopathy',
-    name: 'Osteopathy Board of Australia',
-    profession: 'Osteopath',
-    annualHours: 25,
-    categories: [
-      {
-        name: 'Active learning',
-        type: 'formal',
-        minHours: 15,
-        examples: 'Structured courses, conferences, workshops, seminars, formal online modules with assessment',
-        passiveActivityRecognised: 'no',
-      },
-      {
-        name: 'Self-directed learning',
-        type: 'self-directed',
-        examples: 'Reading peer-reviewed journals, literature review, case research, reflective practice. Up to 10 hours of the 25-hour annual requirement.',
-        passiveActivityRecognised: 'yes',
-      },
-    ],
-    selfDirectedAllowance: 'capped',
-    passiveCeilingPercent: 40,
-    recordingRequirements: 'CPD logbook with description, hours, learning outcomes for each activity. Self-directed must include reflection on application to practice.',
-    standardUrl: 'https://www.osteopathyboard.gov.au/Registration-Standards.aspx',
-    auditNotes: 'Random audit of approximately 5% of registrants annually.',
-  },
-  {
-    slug: 'physiotherapy',
-    name: 'Physiotherapy Board of Australia',
-    profession: 'Physiotherapist',
-    annualHours: 20,
-    categories: [
-      {
-        name: 'CPD activities',
-        type: 'mixed',
-        examples: 'Any activity that develops or maintains the practitioner\'s knowledge, skills, behaviour and competence. Includes formal courses, conferences, journal reading, case-based learning, peer discussion, supervision.',
-        passiveActivityRecognised: 'yes',
-      },
-    ],
-    selfDirectedAllowance: 'unrestricted',
-    passiveCeilingPercent: 60,
-    recordingRequirements: 'CPD record with date, activity, hours, learning outcome. Reflection encouraged but not mandatory for all activities.',
-    standardUrl: 'https://www.physiotherapyboard.gov.au/Registration-Standards.aspx',
-    auditNotes: 'Random audit of approximately 5% of registrants annually.',
+    selfDirectedAllowance: 'minimum-interactive-required',
+    passiveCeilingPercent: 50,
+    hardMinNonPassiveHours: 25,
+    recordingRequirements: 'CPD Home (RACGP, ACRRM, or specialist college) tracks activity. PDP + reflection required for RP/MO. Retain evidence 3+ years.',
+    standardUrl: 'https://www.medicalboard.gov.au/Codes-Guidelines-Policies/FAQ/FAQ-general-registration-CPD.aspx',
+    auditNotes: 'AMC audits CPD Homes; Homes audit individual members. ~5% of cohort annually.',
   },
   {
     slug: 'nursing-midwifery',
-    name: 'Nursing and Midwifery Board of Australia',
+    name: 'Nursing and Midwifery Board',
     profession: 'Nurse / Midwife',
     annualHours: 20,
     categories: [
-      {
-        name: 'CPD activities',
-        type: 'mixed',
-        examples: 'Any activity relevant to the registrant\'s context of practice. Includes formal study, professional reading, attending presentations, mentoring, work-based learning.',
-        passiveActivityRecognised: 'yes',
-      },
+      { name: 'CPD activities', type: 'mixed', examples: 'No mandated categories. Any activity relevant to context of practice. Reading, online modules, mentoring, work-based learning all count.', passiveActivityRecognised: 'yes' },
     ],
     selfDirectedAllowance: 'unrestricted',
-    passiveCeilingPercent: 70,
-    recordingRequirements: 'Portfolio of evidence including learning need identification, learning plan, activities undertaken, reflection. Strongly evidence-based recording standard.',
-    standardUrl: 'https://www.nursingmidwiferyboard.gov.au/Registration-Standards.aspx',
-    auditNotes: 'Random audit annually. The reflection requirement is the strictest of the major Boards.',
+    passiveCeilingPercent: 100,
+    hardMinNonPassiveHours: 0,
+    recordingRequirements: 'Written documentation of all 20 hrs. Reflection encouraged. Retain 5 years.',
+    standardUrl: 'https://www.nursingmidwiferyboard.gov.au/Codes-Guidelines-Statements/FAQ/CPD-FAQ-for-nurses-and-midwives.aspx',
+    auditNotes: '~5% of registrants annually. Evidence within 28 days.',
+  },
+  {
+    slug: 'physiotherapy',
+    name: 'Physiotherapy Board',
+    profession: 'Physiotherapist',
+    annualHours: 20,
+    categories: [
+      { name: 'CPD activities', type: 'mixed', examples: 'No prescribed categories. Board expects a mix. Reading, online modules, peer discussion, structured learning all count.', passiveActivityRecognised: 'yes' },
+    ],
+    selfDirectedAllowance: 'unrestricted',
+    passiveCeilingPercent: 100,
+    hardMinNonPassiveHours: 0,
+    recordingRequirements: 'CPD portfolio retained 5 years.',
+    standardUrl: 'https://www.physiotherapyboard.gov.au/Codes-Guidelines/CPD-guidelines.aspx',
+    auditNotes: 'Random audit at renewal.',
+  },
+  {
+    slug: 'osteopathy',
+    name: 'Osteopathy Board',
+    profession: 'Osteopath',
+    annualHours: 25,
+    categories: [
+      { name: 'Mandatory topics', type: 'formal', minHours: 4, examples: 'Topics specified annually by the Board.', passiveActivityRecognised: 'partial' },
+      { name: 'Open choice', type: 'mixed', examples: 'Up to 21 hrs of free choice. Reading, research, case-based learning, courses all count.', passiveActivityRecognised: 'yes' },
+    ],
+    selfDirectedAllowance: 'unrestricted',
+    passiveCeilingPercent: 84,
+    hardMinNonPassiveHours: 4,
+    recordingRequirements: 'CPD logbook with hours and outcomes per activity.',
+    standardUrl: 'https://www.osteopathyboard.gov.au/Registration-Standards.aspx',
+    auditNotes: 'Random audit annually. First-aid cert is separate from the 25-hr requirement.',
   },
   {
     slug: 'chiropractic',
-    name: 'Chiropractic Board of Australia',
+    name: 'Chiropractic Board',
     profession: 'Chiropractor',
     annualHours: 25,
     categories: [
-      {
-        name: 'Formal learning',
-        type: 'formal',
-        minHours: 12.5,
-        examples: 'Accredited courses, structured workshops, conferences',
-        passiveActivityRecognised: 'no',
-      },
-      {
-        name: 'Self-directed',
-        type: 'self-directed',
-        examples: 'Literature review, case-based learning, reading journals, professional reflection',
-        passiveActivityRecognised: 'yes',
-      },
+      { name: 'Mandatory topics', type: 'formal', minHours: 4, examples: 'Topics specified annually by the Board.', passiveActivityRecognised: 'partial' },
+      { name: 'Open choice', type: 'mixed', examples: 'Up to 21 hrs free choice. Must improve patient outcomes; must be evidence-based.', passiveActivityRecognised: 'yes' },
     ],
-    selfDirectedAllowance: 'capped',
-    passiveCeilingPercent: 50,
-    recordingRequirements: 'Logbook with activity, hours, outcomes. Reflection on self-directed required.',
+    selfDirectedAllowance: 'unrestricted',
+    passiveCeilingPercent: 84,
+    hardMinNonPassiveHours: 4,
+    recordingRequirements: 'CPD records retained 5 years.',
     standardUrl: 'https://www.chiropracticboard.gov.au/Registration-Standards.aspx',
   },
   {
     slug: 'psychology',
-    name: 'Psychology Board of Australia',
+    name: 'Psychology Board',
     profession: 'Psychologist',
     annualHours: 30,
     categories: [
-      {
-        name: 'Active CPD',
-        type: 'formal',
-        minHours: 10,
-        examples: 'Courses, conferences, structured peer supervision',
-        passiveActivityRecognised: 'no',
-      },
-      {
-        name: 'Peer consultation',
-        type: 'practice-based',
-        minHours: 10,
-        examples: 'Structured peer consultation, supervision discussion',
-        passiveActivityRecognised: 'no',
-      },
-      {
-        name: 'Self-directed',
-        type: 'self-directed',
-        examples: 'Literature review, journal reading, case research',
-        passiveActivityRecognised: 'yes',
-      },
+      { name: 'Peer consultation (interactive)', type: 'interactive', minHours: 10, examples: 'Structured peer consultation, supervision. Hard minimum 10 hrs.', passiveActivityRecognised: 'no' },
+      { name: 'General CPD', type: 'mixed', examples: 'Up to 20 hrs across reading, courses, case research.', passiveActivityRecognised: 'yes' },
     ],
-    selfDirectedAllowance: 'capped',
-    passiveCeilingPercent: 30,
-    recordingRequirements: 'CPD log with reflection on each activity. Higher recording standard than most Boards.',
+    selfDirectedAllowance: 'minimum-interactive-required',
+    passiveCeilingPercent: 67,
+    hardMinNonPassiveHours: 10,
+    recordingRequirements: 'CPD log with reflection on each activity.',
     standardUrl: 'https://www.psychologyboard.gov.au/Standards-and-Guidelines/Registration-Standards.aspx',
-  },
-  {
-    slug: 'pharmacy',
-    name: 'Pharmacy Board of Australia',
-    profession: 'Pharmacist',
-    annualHours: 40,
-    categories: [
-      {
-        name: 'Group 1 / 2 / 3 activities',
-        type: 'mixed',
-        examples: 'Group 1: information-based (reading, lectures). Group 2: knowledge-application. Group 3: practice change with measured outcomes.',
-        passiveActivityRecognised: 'yes',
-      },
-    ],
-    selfDirectedAllowance: 'capped',
-    passiveCeilingPercent: 50,
-    recordingRequirements: 'Plan + record + reflection for each activity. Groups 2 and 3 require demonstrated learning application.',
-    standardUrl: 'https://www.pharmacyboard.gov.au/Registration-Standards.aspx',
-  },
-  {
-    slug: 'optometry',
-    name: 'Optometry Board of Australia',
-    profession: 'Optometrist',
-    annualHours: 20,
-    categories: [
-      {
-        name: 'Therapeutically-endorsed',
-        type: 'mixed',
-        examples: 'Includes clinically-relevant reading, conference attendance, peer review.',
-        passiveActivityRecognised: 'partial',
-      },
-    ],
-    selfDirectedAllowance: 'unrestricted',
-    passiveCeilingPercent: 50,
-    recordingRequirements: 'CPD log with activity, hours, outcomes.',
-    standardUrl: 'https://www.optometryboard.gov.au/Registration-Standards.aspx',
-  },
-  {
-    slug: 'podiatry',
-    name: 'Podiatry Board of Australia',
-    profession: 'Podiatrist',
-    annualHours: 20,
-    categories: [
-      {
-        name: 'CPD activities',
-        type: 'mixed',
-        examples: 'Reading, courses, conferences, peer learning, self-directed reflection.',
-        passiveActivityRecognised: 'yes',
-      },
-    ],
-    selfDirectedAllowance: 'unrestricted',
-    passiveCeilingPercent: 60,
-    recordingRequirements: 'CPD log with activity description, hours, outcomes.',
-    standardUrl: 'https://www.podiatryboard.gov.au/Registration-Standards.aspx',
-  },
-  {
-    slug: 'occupational-therapy',
-    name: 'Occupational Therapy Board of Australia',
-    profession: 'Occupational Therapist',
-    annualHours: 30,
-    categories: [
-      {
-        name: 'CPD activities',
-        type: 'mixed',
-        examples: 'Range of formal and informal learning. Includes literature review, case-based learning.',
-        passiveActivityRecognised: 'yes',
-      },
-    ],
-    selfDirectedAllowance: 'unrestricted',
-    passiveCeilingPercent: 55,
-    recordingRequirements: 'CPD record with learning outcomes documented per activity.',
-    standardUrl: 'https://www.occupationaltherapyboard.gov.au/Registration-Standards.aspx',
+    auditNotes: '~10% of registrants annually — highest audit rate of all Boards.',
   },
   {
     slug: 'dental',
-    name: 'Dental Board of Australia',
+    name: 'Dental Board',
     profession: 'Dental Practitioner',
     annualHours: 20,
     cycleYears: 3,
     cycleHours: 60,
     categories: [
-      {
-        name: 'Clinical CPD',
-        type: 'formal',
-        examples: 'Structured clinical learning relevant to scope of practice.',
-        passiveActivityRecognised: 'partial',
-      },
-      {
-        name: 'Non-clinical CPD',
-        type: 'mixed',
-        examples: 'Professional practice topics, ethics, communication. Reading recognised.',
-        passiveActivityRecognised: 'yes',
-      },
+      { name: 'Clinical / scientific', type: 'mixed', minHours: 48, examples: '≥80% of the 60-hr cycle must be clinical or scientific.', passiveActivityRecognised: 'partial' },
+      { name: 'Non-scientific', type: 'mixed', examples: '≤20% (12 hrs across the cycle) can be non-clinical: ethics, practice management.', passiveActivityRecognised: 'yes' },
     ],
     selfDirectedAllowance: 'capped',
-    passiveCeilingPercent: 35,
+    passiveCeilingPercent: 65,
+    hardMinNonPassiveHours: 21,
     recordingRequirements: 'CPD record per activity. CPR currency required separately.',
     standardUrl: 'https://www.dentalboard.gov.au/Registration-Standards.aspx',
   },
   {
+    slug: 'pharmacy',
+    name: 'Pharmacy Board',
+    profession: 'Pharmacist',
+    annualHours: 40,
+    categories: [
+      { name: 'Group 1 — Information/knowledge', type: 'self-directed', examples: 'Reading, lectures, podcasts. 1 credit per hour. Capped at 50% of total.', passiveActivityRecognised: 'yes' },
+      { name: 'Group 2 — Knowledge + assessment', type: 'mixed', examples: 'Structured learning with assessment. 2 credits per hour.', passiveActivityRecognised: 'partial' },
+      { name: 'Group 3 — Practice improvement', type: 'practice-based', examples: 'QI projects with measured outcomes. 3 credits per hour.', passiveActivityRecognised: 'no' },
+    ],
+    selfDirectedAllowance: 'capped',
+    passiveCeilingPercent: 50,
+    hardMinNonPassiveHours: 20,
+    recordingRequirements: 'Plan + record + reflection per activity. Groups 2 and 3 require application of learning.',
+    standardUrl: 'https://www.pharmacyboard.gov.au/Registration-Standards.aspx',
+    auditNotes: 'Pharmacy uses CPD CREDITS not hours. 40 credits ≈ 20-40 hours depending on mix.',
+  },
+  {
+    slug: 'optometry',
+    name: 'Optometry Board',
+    profession: 'Optometrist',
+    annualHours: 30,
+    categories: [
+      { name: 'Interactive', type: 'interactive', minHours: 5, examples: 'Live or interactive activities. 2 of 5 must be therapeutic if endorsed.', passiveActivityRecognised: 'no' },
+      { name: 'General CPD', type: 'mixed', examples: 'Reading, research, case-based learning, online modules.', passiveActivityRecognised: 'yes' },
+    ],
+    selfDirectedAllowance: 'minimum-interactive-required',
+    passiveCeilingPercent: 83,
+    hardMinNonPassiveHours: 5,
+    recordingRequirements: 'Portfolio + Learning Plan. Therapeutic-endorsed need 10 hrs therapeutic content.',
+    standardUrl: 'https://www.optometryboard.gov.au/Registration-Standards.aspx',
+    auditNotes: 'Non-therapeutic endorsed = 20 hrs/yr requirement.',
+  },
+  {
+    slug: 'podiatry',
+    name: 'Podiatry Board',
+    profession: 'Podiatrist',
+    annualHours: 20,
+    categories: [
+      { name: 'Interactive', type: 'interactive', minHours: 5, examples: 'Live, peer-led or interactive activities.', passiveActivityRecognised: 'no' },
+      { name: 'General CPD', type: 'mixed', examples: 'Reading, research, online modules, case discussion.', passiveActivityRecognised: 'yes' },
+    ],
+    selfDirectedAllowance: 'minimum-interactive-required',
+    passiveCeilingPercent: 75,
+    hardMinNonPassiveHours: 5,
+    recordingRequirements: 'CPD log with hours and outcomes per activity.',
+    standardUrl: 'https://www.podiatryboard.gov.au/Registration-Standards.aspx',
+    auditNotes: 'Scheduled medicines endorsement adds 10 hrs. Surgeons add 20 hrs.',
+  },
+  {
+    slug: 'occupational-therapy',
+    name: 'Occupational Therapy Board',
+    profession: 'Occupational Therapist',
+    annualHours: 20,
+    categories: [
+      { name: 'Interactive', type: 'interactive', minHours: 5, examples: 'Peer learning, structured group activity, supervision.', passiveActivityRecognised: 'no' },
+      { name: 'Portfolio CPD', type: 'mixed', examples: 'Self-directed learning with goals documented. Reading, online modules, case research.', passiveActivityRecognised: 'yes' },
+    ],
+    selfDirectedAllowance: 'minimum-interactive-required',
+    passiveCeilingPercent: 75,
+    hardMinNonPassiveHours: 5,
+    recordingRequirements: 'Portfolio with learning goals and outcomes per activity.',
+    standardUrl: 'https://www.occupationaltherapyboard.gov.au/Registration-Standards.aspx',
+  },
+  {
     slug: 'paramedicine',
-    name: 'Paramedicine Board of Australia',
+    name: 'Paramedicine Board',
     profession: 'Paramedic',
     annualHours: 30,
     categories: [
-      {
-        name: 'CPD activities',
-        type: 'mixed',
-        examples: 'Clinical CPD relevant to scope. Includes structured learning, peer review, reading.',
-        passiveActivityRecognised: 'yes',
-      },
+      { name: 'Interactive', type: 'interactive', minHours: 8, examples: 'Live, peer-led or interactive activities.', passiveActivityRecognised: 'no' },
+      { name: 'General CPD', type: 'mixed', examples: 'Reading, online modules, case research.', passiveActivityRecognised: 'yes' },
     ],
-    selfDirectedAllowance: 'unrestricted',
-    passiveCeilingPercent: 55,
+    selfDirectedAllowance: 'minimum-interactive-required',
+    passiveCeilingPercent: 73,
+    hardMinNonPassiveHours: 8,
     recordingRequirements: 'CPD log with reflection on each activity.',
     standardUrl: 'https://www.paramedicineboard.gov.au/Registration-Standards.aspx',
+    auditNotes: 'Annual random audit.',
   },
   {
     slug: 'medical-radiation',
-    name: 'Medical Radiation Practice Board of Australia',
+    name: 'Medical Radiation Practice Board',
     profession: 'Medical Radiation Practitioner',
-    annualHours: 20,
+    annualHours: 10,
     cycleYears: 3,
     cycleHours: 60,
     categories: [
-      {
-        name: 'CPD activities',
-        type: 'mixed',
-        examples: 'Clinical CPD relevant to scope. Mix of formal courses and self-directed.',
-        passiveActivityRecognised: 'partial',
-      },
+      { name: 'Substantive CPD', type: 'mixed', minHours: 35, examples: '≥35 hrs over 3-yr cycle must be substantive (directly clinically relevant).', passiveActivityRecognised: 'partial' },
+      { name: 'General CPD', type: 'mixed', examples: 'Up to 25 hrs broader practitioner development.', passiveActivityRecognised: 'yes' },
     ],
     selfDirectedAllowance: 'capped',
-    passiveCeilingPercent: 40,
+    passiveCeilingPercent: 60,
+    hardMinNonPassiveHours: 0,
     recordingRequirements: 'CPD log retained for at least one cycle (3 years).',
     standardUrl: 'https://www.medicalradiationpracticeboard.gov.au/Registration-Standards.aspx',
   },
   {
     slug: 'chinese-medicine',
-    name: 'Chinese Medicine Board of Australia',
+    name: 'Chinese Medicine Board',
     profession: 'Chinese Medicine Practitioner',
     annualHours: 20,
     categories: [
-      {
-        name: 'CPD activities',
-        type: 'mixed',
-        examples: 'Structured CPD, journal reading, conferences, peer learning.',
-        passiveActivityRecognised: 'yes',
-      },
+      { name: 'Interactive', type: 'interactive', minHours: 5, examples: 'Live or webinar-based activities.', passiveActivityRecognised: 'no' },
+      { name: 'Ethics / regulatory', type: 'formal', minHours: 4, examples: 'Professional ethics and regulatory content.', passiveActivityRecognised: 'partial' },
+      { name: 'General CPD', type: 'mixed', examples: 'Reading, research, case-based learning. ~11 hrs.', passiveActivityRecognised: 'yes' },
     ],
-    selfDirectedAllowance: 'unrestricted',
+    selfDirectedAllowance: 'minimum-interactive-required',
     passiveCeilingPercent: 55,
-    recordingRequirements: 'CPD log with hours and outcomes per activity.',
+    hardMinNonPassiveHours: 9,
+    recordingRequirements: 'Portfolio retained 5 years.',
     standardUrl: 'https://www.chinesemedicineboard.gov.au/Registration-Standards.aspx',
+    auditNotes: 'Scheduled herbs endorsement adds 2 hrs.',
   },
   {
     slug: 'atsi-health',
-    name: 'Aboriginal and Torres Strait Islander Health Practice Board of Australia',
-    profession: 'Aboriginal and Torres Strait Islander Health Practitioner',
+    name: 'Aboriginal and Torres Strait Islander Health Practice Board',
+    profession: 'ATSI Health Practitioner',
     annualHours: 20,
     categories: [
-      {
-        name: 'CPD activities',
-        type: 'mixed',
-        examples: 'Includes culturally-relevant learning, community of practice, formal training.',
-        passiveActivityRecognised: 'yes',
-      },
+      { name: 'Interactive', type: 'interactive', minHours: 5, examples: 'Live or peer-led activities.', passiveActivityRecognised: 'no' },
+      { name: 'General CPD', type: 'mixed', examples: 'Culturally-relevant learning, formal training, reading.', passiveActivityRecognised: 'yes' },
     ],
-    selfDirectedAllowance: 'unrestricted',
-    passiveCeilingPercent: 60,
+    selfDirectedAllowance: 'minimum-interactive-required',
+    passiveCeilingPercent: 75,
+    hardMinNonPassiveHours: 5,
     recordingRequirements: 'CPD log with reflection.',
     standardUrl: 'https://www.atsihealthpracticeboard.gov.au/Registration-Standards.aspx',
   },
@@ -478,14 +328,30 @@ export function findCpdHome(slug: string): CpdHome | undefined {
   return CPD_HOMES.find((h) => h.slug === slug)
 }
 
+export interface PassiveCeiling {
+  board: AhpraBoard
+  annualHours: number
+  passiveHours: number
+  passivePercent: number
+  formalHours: number
+}
+
 /**
- * The "honest passive CPD ceiling" for a given profession. Used in the
- * passive-CPD demo to show realistic numbers per profession rather than
- * the GP-centric 60-80% headline.
+ * Realistic passive-CPD ceiling for a given profession. Calibrated per
+ * Board's specific interactive / formal / outcome-measurement minimums.
+ * Conservative — use these numbers in pitch artefacts, not the GP-centric
+ * 60-80% headline.
  */
-export function passiveCeilingHours(boardSlug: string): { board: AhpraBoard; hours: number; percent: number } | null {
+export function passiveCeiling(boardSlug: string): PassiveCeiling | null {
   const board = findBoard(boardSlug)
   if (!board) return null
-  const hours = Math.round((board.annualHours * board.passiveCeilingPercent) / 100)
-  return { board, hours, percent: board.passiveCeilingPercent }
+  const annual = board.annualHours ?? (board.cycleHours && board.cycleYears ? board.cycleHours / board.cycleYears : 0)
+  const passiveHours = Math.round((annual * board.passiveCeilingPercent) / 100)
+  return {
+    board,
+    annualHours: annual,
+    passiveHours,
+    passivePercent: board.passiveCeilingPercent,
+    formalHours: annual - passiveHours,
+  }
 }
