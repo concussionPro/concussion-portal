@@ -19,7 +19,6 @@ export const metadata: Metadata = {
 export default async function CoursesIndexPage() {
   const access = await requireAiCourseAccess()
   const liveCourses = COURSES.filter((c) => c.status === 'live')
-  const upcomingCourses = COURSES.filter((c) => c.status !== 'live')
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,6 +38,12 @@ export default async function CoursesIndexPage() {
             Every course on the platform passes a six-criterion review. Hours auto-log to one dashboard. Audit export in a click. The passive layer captures the 100-400 hours of research clinicians already do but never log.
           </p>
           <div className="flex flex-wrap gap-3">
+            <Link
+              href="/courses/heidi-tour"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors"
+            >
+              15-min guided tour →
+            </Link>
             <Link
               href="/courses/cpd-record/passive"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-foreground text-white font-semibold text-sm hover:bg-foreground/90 transition-colors"
@@ -106,14 +111,14 @@ export default async function CoursesIndexPage() {
               <p className="text-sm font-bold text-foreground leading-tight">600+ subscribers</p>
               <p className="text-xs text-muted-foreground mt-0.5">Australian clinicians</p>
             </div>
-            <div className="px-4 py-4">
+            <Link href="/courses/about-the-founder" className="px-4 py-4 hover:bg-slate-50 transition-colors group">
               <div className="flex items-center gap-2 mb-1">
                 <Stethoscope className="w-4 h-4 text-orange-700" />
                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Founder</p>
               </div>
-              <p className="text-sm font-bold text-foreground leading-tight">Zac Lewis</p>
+              <p className="text-sm font-bold text-foreground leading-tight group-hover:underline">Zac Lewis</p>
               <p className="text-xs text-muted-foreground mt-0.5">Osteopath · AHPRA-registered</p>
-            </div>
+            </Link>
           </div>
         </section>
 
@@ -184,36 +189,34 @@ export default async function CoursesIndexPage() {
           </div>
         </section>
 
-        {/* Marketplace placeholders */}
-        <section className="mb-12">
-          <h2 className="text-xl font-bold text-foreground mb-2">Marketplace expansion</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Slots reserved for partnered providers. Each represents a candidate provider whose courses would be vetted and listed once partnership is in place. Demonstrates marketplace shape — not a current offering.
-          </p>
-          <div className="grid md:grid-cols-2 gap-4">
-            {upcomingCourses.map((c) => {
-              const provider = findProvider(c.providerId)
-              return (
-                <div
-                  key={c.id}
-                  className="card rounded-xl p-5 flex flex-col opacity-70 border-dashed"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                      {provider?.shortName || c.providerId}
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                      Awaiting onboarding
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground mb-1">{c.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3 leading-relaxed flex-1">{c.description}</p>
-                  <p className="text-xs text-muted-foreground">
-                    <strong>{c.cpdHours} CPD hours</strong> when live
-                  </p>
-                </div>
-              )
-            })}
+        {/* Open for provider applications — replaces the placeholder card grid */}
+        <section className="mb-12 rounded-2xl bg-gradient-to-br from-foreground to-slate-800 text-white p-7">
+          <div className="grid md:grid-cols-[1fr_auto] gap-6 items-center">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
+                Marketplace · open
+              </p>
+              <h2 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
+                Clinician-led CPD provider? You belong on this shelf.
+              </h2>
+              <p className="text-sm text-white/80 max-w-xl leading-relaxed">
+                Six-criterion vetting. Two-week onboarding. Audit-ready CPD logging built in. We share marketing surface and the platform-curator endorsement — you keep the IP and the customer relationship.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              <a
+                href="mailto:zac@concussion-education-australia.com?subject=CPD%20provider%20application"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
+              >
+                Apply to be a provider
+              </a>
+              <Link
+                href="/courses/how-we-vet"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-semibold transition-colors"
+              >
+                Read the vetting policy
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -221,7 +224,7 @@ export default async function CoursesIndexPage() {
         <section>
           <h2 className="text-xl font-bold text-foreground mb-2">Providers</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Two verified, two placeholders. The marketplace model scales by onboarding additional vetted providers under platform-curator (e.g. Heidi) endorsement.
+            One verified, two in invited-candidate pipeline. The marketplace model scales by onboarding additional vetted providers under platform-curator endorsement.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">
             {PROVIDERS.map((p) => (

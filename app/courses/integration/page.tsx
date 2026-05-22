@@ -259,7 +259,7 @@ export default async function IntegrationPage() {
               'Does Heidi want CPD-prompt UI inline in the existing notifications stream, or a separate dashboard tab?',
               'Branding: "Heidi Academy powered by CEA" or "CEA inside Heidi" — which positions the partnership correctly?',
               'Data-residency constraint: where do CPD log records live — Heidi infrastructure (AU residency already confirmed) or CEA-hosted with Heidi data-processing agreement?',
-              'Pricing on the marketplace residual-gap formal courses — Heidi takes 25% commission, CEA splits with content provider 70/30. Need to confirm Heidi is comfortable with this share.',
+              'Commercial structure — licensing / white-label / equity-employment shapes outlined in the proposal doc; not pre-committed to any. Open to scoping in the first call.',
             ].map((q, i) => (
               <li key={i} className="flex items-start gap-3 text-sm text-foreground">
                 <ShieldCheck className="w-4 h-4 text-accent shrink-0 mt-0.5" />
