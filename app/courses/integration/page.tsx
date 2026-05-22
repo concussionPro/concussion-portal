@@ -40,13 +40,13 @@ export default async function IntegrationPage() {
         </Link>
 
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          The 90-day build plan · cost-of-yes
+          Integration architecture · 6-week MVP
         </p>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-tight max-w-3xl">
-          What I&apos;d ship in 90 days. With or without an employment offer.
+          Scribe + Evidence events → CPD log. Live API.
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mb-4 leading-relaxed">
-          If you bring me on as clinical product lead, this is week 1 to week 13. If we partner instead, this is the joint MVP. Either way: ~2 engineer-weeks on Heidi side, the rest of the 12+ months of CPD-vertical groundwork already done at CEA.
+          ~2 engineer-weeks on Heidi side. Six-week joint MVP. The categoriser, per-Board reference data, and export PDF are already shipped at CEA.
         </p>
         <p className="text-sm text-muted-foreground max-w-2xl mb-8 leading-relaxed">
           One event per qualifying Scribe session or Evidence search, fired to <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded">POST /api/cpd/events</code>. CEA returns categorisation + audit-ready log entry. No replatforming. No clinician-facing UX changes beyond a non-blocking confirmation prompt.

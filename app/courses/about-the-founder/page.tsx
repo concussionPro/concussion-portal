@@ -34,7 +34,7 @@ export default async function AboutFounderPage() {
         </Link>
 
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          The person you&apos;d be hiring · or partnering with
+          About
         </p>
 
         {/* Hero */}
@@ -47,7 +47,7 @@ export default async function AboutFounderPage() {
               Zac Lewis
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-4 max-w-2xl">
-              AHPRA-registered osteopath, Osteopathy Australia–endorsed CPD provider, and the solo developer of the platform you&apos;re looking at. The triple-expertise profile (practitioner + provider + developer) plus three live distribution channels into AU AHPRA clinicians (CCM subscriber base · AI compliance course launching · Australian osteopathy conference presentation featuring Heidi) — the unicorn-shape a Medical Lead role at Heidi needs.
+              AHPRA-registered osteopath, Osteopathy Australia–endorsed CPD provider, and the solo developer of the platform you&apos;re looking at. Clinician, provider, and engineer in one person — built CEA over the last 12 months.
             </p>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
