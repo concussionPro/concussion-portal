@@ -8,7 +8,6 @@ import {
   Briefcase,
   Handshake,
   Share2,
-  Play,
   TrendingUp,
   Lock,
   ShieldCheck,
@@ -211,17 +210,6 @@ export default async function HeidiTourPage() {
               )
             })}
           </div>
-        </div>
-
-        {/* LOOM PLACEHOLDER — drop a 90-second walkthrough here */}
-        <div className="mb-8 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center">
-          <div className="w-12 h-12 rounded-xl bg-white border border-slate-300 mx-auto mb-3 flex items-center justify-center">
-            <Play className="w-5 h-5 text-slate-500" />
-          </div>
-          <p className="text-sm font-bold text-foreground mb-1">90-second founder walkthrough</p>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            Drop the Loom URL here when ready. Watching beats reading for cold-pitch conversion 2–3× per BD-research data.
-          </p>
         </div>
 
         {/* ROADMAP FIT — maps to Heidi's likely current goals */}
