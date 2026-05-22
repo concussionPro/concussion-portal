@@ -148,17 +148,12 @@ export function DemoAccessClient() {
           </p>
 
           {isPrefilled ? (
-            <>
-              <div className="flex items-center gap-3 mb-5 flex-wrap">
-                <CoBrand orgName={organisation} />
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
-                Curated for{' '}
-                <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">
-                  {organisation}
-                </span>
-              </h1>
-            </>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
+              Curated for{' '}
+              <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">
+                {organisation}
+              </span>
+            </h1>
           ) : (
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
               A clinical-education platform, by your side.
@@ -329,31 +324,3 @@ export function DemoAccessClient() {
   )
 }
 
-/**
- * Co-brand visual: shows CEA's mark next to a neutral partner-organisation
- * label. Deliberately NO partner logo — using a competitor's registered
- * mark on your own page without written consent is trademark / misleading-
- * conduct risk. The organisation NAME prominently displayed is the
- * partnership signal; that's legally safe and visually direct.
- */
-function CoBrand({ orgName }: { orgName: string }) {
-  return (
-    <div className="inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5">
-      {/* CEA mark — diamond geometry, neutral */}
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-emerald-600 flex items-center justify-center">
-          <span className="text-white text-[10px] font-black tracking-tight">CEA</span>
-        </div>
-        <span className="text-xs font-bold text-foreground">Concussion Education Australia</span>
-      </div>
-      {/* Co-mark divider */}
-      <div className="w-px h-6 bg-slate-200" />
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
-          <span className="text-slate-500 text-[10px] font-bold">×</span>
-        </div>
-        <span className="text-xs font-bold text-slate-700">{orgName}</span>
-      </div>
-    </div>
-  )
-}
