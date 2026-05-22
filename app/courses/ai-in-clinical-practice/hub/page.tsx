@@ -107,9 +107,16 @@ export default async function HubPage() {
                 {TOOLS.map((t) => (
                   <tr key={t.name} className="border-t border-slate-100">
                     <td className="px-3 py-2">
-                      <a href={t.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">
-                        {t.name}
-                      </a>
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <a href={t.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-medium">
+                          {t.name}
+                        </a>
+                        {t.ceaRecommended && (
+                          <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            CEA recommended
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{t.notes}</p>
                     </td>
                     <td className="px-3 py-2">

@@ -108,8 +108,8 @@ export default async function CoursesIndexPage() {
                 <Users className="w-4 h-4 text-blue-700" />
                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Audience</p>
               </div>
-              <p className="text-sm font-bold text-foreground leading-tight">600+ subscribers</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Australian clinicians</p>
+              <p className="text-sm font-bold text-foreground leading-tight">AU clinicians</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Direct subscriber base</p>
             </div>
             <Link href="/courses/about-the-founder" className="px-4 py-4 hover:bg-slate-50 transition-colors group">
               <div className="flex items-center gap-2 mb-1">

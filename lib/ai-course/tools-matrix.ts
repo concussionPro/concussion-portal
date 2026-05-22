@@ -21,6 +21,7 @@ export interface ToolEntry {
   primaryUse: string
   notes: string
   url: string
+  ceaRecommended?: boolean
 }
 
 export const TOOLS: ToolEntry[] = [
@@ -32,8 +33,9 @@ export const TOOLS: ToolEntry[] = [
     pricingFromAUD: 50,
     pricingNote: '~A$50-100/clinician/mo at standard tiers',
     primaryUse: 'AI scribe — voice-to-note in consult',
-    notes: 'Australian company. Healthcare-purpose-built. Most-used AI scribe in AU primary care 2026.',
+    notes: 'CEA-recommended Australian AI scribe. Healthcare-purpose-built, AU residency, most-used AI scribe in AU primary care 2026. Reference implementation used throughout this course.',
     url: 'https://www.heidihealth.com',
+    ceaRecommended: true,
   },
   {
     name: 'Lyrebird Health',

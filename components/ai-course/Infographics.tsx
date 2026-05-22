@@ -33,7 +33,7 @@ export function TierLadder() {
       sub: 'Healthcare-purpose-built · AU residency · DPA',
       color: 'emerald',
       icon: ShieldCheck,
-      examples: 'Heidi Health · Lyrebird Health · Halo Health · Dragon Copilot for Healthcare',
+      examples: 'Heidi Health (CEA-recommended AU scribe) · also: Lyrebird Health · Halo Health · Dragon Copilot for Healthcare',
       use: 'Identifiable patient data. AI scribes. Clinical documentation with PHI.',
     },
     {
