@@ -3,15 +3,46 @@
 **Recipient:** Paul Williamson, Chief Revenue Officer, Heidi Health
 **Trigger:** Send only AFTER 20-30 paying customers + initial OA-review-for-AI-course signal
 **Subject options** (pick one):
-- A: "$6M GMV opportunity — Heidi already runs the workflow"
-- B: "CPD marketplace inside Heidi — $1.5M ARR vertical, 30 customers proven"
-- C: "Marketplace partnership for Heidi — recurring revenue from an existing workflow"
+- A: "$1.5M ARR CPD vertical — Heidi already runs the workflow"
+- B: "CPD marketplace inside Heidi — 20 min?"
+- C: "Marketplace partnership for Heidi — quick note"
 
 Recommended: **Option A** — leads with the dollar number and the structural advantage.
 
 ---
 
-## Body (~280 words)
+## 🟢 SHORT version (~110 words) — recommended for the actual cold send
+
+This is the version Paul Williamson will actually read. Inbox-clean, three numbers, one ask, one link.
+
+```text
+Hi Paul,
+
+Quick partnership note. I run Concussion Education Australia (OA-endorsed CPD provider, 600 practitioners).
+
+Heidi's users do 100–400 hours of CPD-qualifying research per year inside the platform — literature searches, guideline reviews — but never log it. If Heidi captured those hours automatically (one-tap confirmation, AHPRA-ready), it solves the audit-tracking pain and unlocks a curated CPD marketplace for the 10–20h gap. ~$1.5M ARR vertical at 15k AU users, $5M+ at 50k. No scribe competitor can copy it (workflow-dependent).
+
+I've built the platform. 30 paying customers, $9k ARR, OA reviewing for endorsement.
+
+20 minutes? Demo (NDA-gated): https://portal.concussion-education-australia.com/courses/demo-access?key=<KEY>
+
+— Zac
+zac@concussion-education-australia.com
+```
+
+Word count: ~110. Six sentences. Single ask, single link.
+
+## 🟡 EVEN-SHORTER version (~60 words) — LinkedIn DM fallback
+
+If email bounces or no reply after 12 days, send this via LinkedIn DM:
+
+```text
+Paul — quick partnership note. Heidi's users do 100–400 hrs/yr of CPD-qualifying research inside the platform (literature searches, guideline reviews) that never gets logged. Capture those passively + a curated marketplace for the gap = ~$1.5M ARR vertical at current scale. 30 customers, OA-endorsed, $9k ARR. 20 min? Demo: [URL]
+```
+
+Word count: ~60. One paragraph, one ask, one link.
+
+## 🔵 LONG version (~280 words) — depth-of-pitch for when Paul replies "tell me more"
 
 Hi Paul,
 

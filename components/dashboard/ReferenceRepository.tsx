@@ -148,9 +148,9 @@ const references: Reference[] = [
   {
     id: 'galetta2015',
     authors: 'Galetta, K. M., Liu, M., Leong, D. F., Ventura, R. E., Galetta, S. L., & Balcer, L. J.',
-    year: '2015',
+    year: '2016',
     title: 'The King-Devick test of rapid number naming for concussion detection: Meta-analysis and systematic review',
-    journal: 'Concussion, 1(1), 37-49',
+    journal: 'Concussion, 1(2), cnc.15.8',
     doi: '10.2217/cnc.15.8',
     category: 'Assessment'
   },
@@ -368,7 +368,7 @@ const references: Reference[] = [
     year: '2013',
     title: 'Autonomic nervous system dysfunction in concussion (P01.265)',
     journal: 'Neurology, 80(7 Supplement), P01.265',
-    doi: '10.1212/WNL.80.7_supplement.P01.26',
+    doi: '10.1212/WNL.80.7_supplement.P01.265',
     category: 'Autonomic'
   },
   {
@@ -418,12 +418,12 @@ const references: Reference[] = [
 
   // SLEEP & CIRCADIAN
   {
-    id: 'ayalon2016',
+    id: 'ayalon2007',
     authors: 'Ayalon, L., Borodkin, K., Dishon, L., Kanety, H., & Dagan, Y.',
-    year: '2016',
+    year: '2007',
     title: 'Circadian rhythm sleep disorders following mild traumatic brain injury',
-    journal: 'Journal of Clinical Sleep Medicine, 12(10), 1373–1379',
-    doi: '10.5664/jcsm.6160',
+    journal: 'Neurology, 68(14), 1136–1140',
+    doi: '10.1212/01.wnl.0000258672.52836.30',
     category: 'Sleep & Circadian'
   },
   {
@@ -603,11 +603,11 @@ const references: Reference[] = [
     category: 'Biomarkers'
   },
   {
-    id: 'spitz2023',
+    id: 'spitz2024',
     authors: 'Spitz, G., Hicks, A. J., McDonald, S. J., Dore, V., Krishnadas, N., O\'Brien, T. J., O\'Brien, W. T., Vivash, L., Law, M., Ponsford, J. L., Rowe, C., & Shultz, S. R.',
-    year: '2023',
+    year: '2024',
     title: 'Plasma biomarkers in chronic single moderate-severe traumatic brain injury',
-    journal: 'Brain, 146(3), 1030-1039',
+    journal: 'Brain, 147(11), 3690-3701',
     doi: '10.1093/brain/awae255',
     category: 'Biomarkers'
   },
@@ -1164,7 +1164,7 @@ const references: Reference[] = [
     year: '2023',
     title: 'Returning to Sports and Activities',
     journal: 'CDC Resources',
-    url: 'https://www.cdc.gov/headsup/basics/return_to_sports.html',
+    url: 'https://www.cdc.gov/heads-up/guidelines/returning-to-sports.html',
     category: 'Return to Activity'
   },
   {
@@ -1233,28 +1233,28 @@ const references: Reference[] = [
     isNew: true,
   },
   {
-    id: 'eckner2025',
-    authors: 'Eckner, J. T., Albano, E., Grooms, D. R., Schussler, E., Broglio, S. P., McAllister, T., ... & McCrea, M.',
+    id: 'kontos2025_scoat6',
+    authors: 'Kontos, A. P., Zynda, A. J., Trbovich, A. M., French, J., Kegel, N., Burley, C., Patel, S., Mucha, A., Womble, M. N., Jennings, S., Dollar, C. M., Elbin, R. J., & Collins, M. W.',
     year: '2025',
     title: 'Clinical Utility of the Sport Concussion Office Assessment Tool 6 (SCOAT6) and Other Select Multidomain Assessments for Subacute Sport-Related Concussion',
-    journal: 'Sports Medicine, 55, 2915–2932',
+    journal: 'Sports Medicine, 55(11), 2915–2932',
     doi: '10.1007/s40279-025-02256-9',
     category: 'Assessment',
     isNew: true,
   },
   {
     id: 'iverson2025',
-    authors: 'Iverson, G. L., Castellani, R. J., Cassidy, J. D., Dvorak, J., Hayden, K. A., Echemendia, R. J., ... & Bhatti, J. A.',
+    authors: 'Iverson, G. L., et al.',
     year: '2025',
     title: 'The Diagnostic and Prognostic Role of Biomarkers in Mild Traumatic Brain Injury: An Umbrella Meta-Analysis',
-    journal: 'Diagnostics, 15(12), 1509',
-    doi: '10.3390/diagnostics15121509',
+    journal: 'Diagnostics',
+    // DOI removed — original DOI 10.3390/diagnostics15121509 resolves to an unrelated qEEG/dementia paper. Needs human review to locate correct DOI.
     category: 'Biomarkers',
     isNew: true,
   },
   {
-    id: 'kontos2025',
-    authors: 'Kontos, A. P., Mucha, A., Broglio, S. P., Eckner, J. T., Guskiewicz, K. M., McAllister, T., ... & McCrea, M.',
+    id: 'herman2025',
+    authors: 'Herman, C., et al.',
     year: '2025',
     title: 'Sex and age-related differences in vestibular/ocular motor screening (VOMS) symptom provocation following concussion',
     journal: 'The Clinical Neuropsychologist',
@@ -1262,39 +1262,12 @@ const references: Reference[] = [
     category: 'Vestibular & Oculomotor',
     isNew: true,
   },
+  // Removed: langevin2025, mayer2026, obrien2026 — DOIs were unresolvable (10.1136/bjsports-2024-108765,
+  // 10.1016/j.smhs.2025.100757, 10.1136/bjsports-2025-109412 all 404). Entries flagged for human re-verification
+  // before re-adding. See audit notes 2026-05-22.
   {
-    id: 'langevin2025',
-    authors: 'Langevin, P., Bherer, L., Bhatt, T., Bhimani, R., Bhatt, P., & Bhatt, S.',
-    year: '2025',
-    title: 'Effects of aerobic exercise on concussion-related symptoms: a systematic review of randomized controlled trials',
-    journal: 'British Journal of Sports Medicine, 59(5), 296–305',
-    doi: '10.1136/bjsports-2024-108765',
-    category: 'Treatment',
-    isNew: true,
-  },
-  {
-    id: 'mayer2026',
-    authors: 'Mayer, A. R., Ling, J. M., Dodd, A. B., Meier, T. B., Broglio, S. P., & McAllister, T.',
-    year: '2026',
-    title: 'Mapping the acute trajectory of sport-related concussion outcomes across symptoms, cognition, and blood biomarkers',
-    journal: 'Sports Medicine and Health Science, 8(1), 45–54',
-    doi: '10.1016/j.smhs.2025.100757',
-    category: 'Biomarkers',
-    isNew: true,
-  },
-  {
-    id: 'obrien2026',
-    authors: 'O\'Brien, J., Causer, J., Sheridan, E., & Jones, B.',
-    year: '2026',
-    title: 'Concussion recovery time, return-to-play protocols, and mandated sit-out periods among adult amateur contact field sports: A systematic review',
-    journal: 'British Journal of Sports Medicine, 60(3), 178–187',
-    doi: '10.1136/bjsports-2025-109412',
-    category: 'Return to Activity',
-    isNew: true,
-  },
-  {
-    id: 'hadanny2025',
-    authors: 'Hadanny, A., Catalogna, M., Yaniv, S., Bechor, Y., Efrati, S., Lang, E., & Bhatt, D. L.',
+    id: 'weaver2025',
+    authors: 'Weaver, L. K., et al.',
     year: '2025',
     title: 'A double-blind randomized trial of hyperbaric oxygen for persistent symptoms after brain injury',
     journal: 'Scientific Reports, 15, 4138',
