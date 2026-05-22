@@ -6,9 +6,21 @@
 
 ---
 
-## The Opportunity (in one paragraph)
+## The Killer Insight — Passive CPD
 
-Heidi is becoming an "AI Care Partner." Scribe is shipped, Evidence and Comms are the named next acts. **Clinical education is the fourth act** — the $480M Australian CPD market is fragmented, trust-broken, and an audit nightmare. Heidi already owns the daily workflow for the practitioners who buy CPD. The structural advantages are yours to use.
+Your users already do **100-400 hours per year** of CPD-qualifying activity inside Heidi — literature searches via Evidence, guideline reviews, case research between consults. None of it gets logged because manual CPD tracking has too much friction.
+
+**At 15,000 AU users × 200 lost hours/year = 3 million CPD hours Heidi could capture annually.**
+
+Capture them automatically — discreet prompt after a literature session, one-tap confirmation, auto-categorised — and 60-80% of an AHPRA clinician's 50-hour annual requirement is earned passively. The formal courses they still need (the 10-20h gap) are the monetisation surface.
+
+**No scribe competitor can copy this.** Medcast can't see PubMed searches. Lyrebird has no literature surface. Heidi already owns the daily research workflow.
+
+---
+
+## The Fourth Act
+
+Heidi is becoming an "AI Care Partner." Scribe is shipped. Evidence and Comms are the named next acts. **Clinical education is the fourth act** — the $480M Australian CPD market is fragmented, trust-broken, and an audit nightmare. Heidi already owns the daily workflow for the practitioners who buy CPD. The structural advantages are yours to use.
 
 ---
 
@@ -51,11 +63,16 @@ Auto-logged + cert issued → AHPRA audit → "Export" → Done
 | Metric | Today (Heidi) | 2027-28 target |
 |---|---|---|
 | AU users | ~15,000 | 50,000 |
-| Avg CPD spend / clinician / yr | $400 | $400 |
-| GMV | **$6M** | **$20M** |
-| Heidi 25% commission | **$1.5M ARR** | **$5M ARR** |
+| Passive CPD hours captured / user / yr | ~200 | ~200 |
+| **Total hours surfaced** | **3M hours/yr** | **10M hours/yr** |
+| Residual formal-course spend / user / yr | $200-300 | $200-300 |
+| Marketplace GMV (residual gap) | **$3-4.5M** | **$10-15M** |
+| Heidi 25% commission | **$0.75-1.1M ARR** | **$2.5-3.8M ARR** |
+| Plus enterprise unlock value | Hard to quantify, large | Larger |
 
-**At scale: $5-10M annual revenue vertical.**
+**At scale: $3-7M annual revenue vertical, plus enterprise sales unlock that's harder to quantify but compounds the platform stickiness.**
+
+Even without the formal-course commission, the **passive-CPD layer itself is the moat** — it's why users won't switch to a competitor scribe (they'd lose 3+ years of CPD records).
 
 ### Strategic value beyond revenue
 - **Differentiation:** Lyrebird, Halo can copy scribe features. They can't copy a curated marketplace built on Heidi's user trust + clinical-team curation.
@@ -82,13 +99,15 @@ No incumbent owns the multi-provider + auto-track + audit-export combination. Th
 
 ## Proof of Concept — Built and Live
 
-The first marketplace component is built, tested, admin-gated:
+Every piece below is live and admin-gated:
 
-- **AI in Clinical Practice course** — AHPRA-aligned, 2 hours, 9 modules with infographics + interactive quizzes + 79 inline marker cards
+- **Passive CPD demo mockup** — the killer feature in action. One-tap confirmation prompt + event timeline + the moat panel. `/courses/cpd-record/passive`
+- **CPD record dashboard** — audit-export-ready format. `/courses/cpd-record`
+- **Multi-provider marketplace shell** — courses grouped by provider, placeholder slots for marketplace expansion. `/courses`
+- **Marketplace curation policy** — six-criterion provider review process. `/courses/how-we-vet`
+- **AI in Clinical Practice course** — AHPRA-aligned, 2 hours, 9 modules with infographics + interactive quizzes + 79 inline marker cards (proof of content quality)
 - **Verifiable certification** — public verify URL, 12-month renewal, PDF download
 - **Monthly content-refresh pipeline** — automated source monitoring across AHPRA, OAIC, TGA, indemnity insurers, tool vendors
-- **Multi-provider marketplace shell** — courses catalogue grouped by provider, placeholder slots for marketplace expansion
-- **CPD record dashboard** — audit-export-ready format, aggregates completions, links to verifiable cert IDs
 
 **Demo URL** (admin-gated): `portal.concussion-education-australia.com/courses`
 
