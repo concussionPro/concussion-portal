@@ -5,11 +5,9 @@ import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course
 import {
   Headphones,
   BookOpen,
-  MessageSquare,
   ArrowRight,
   Database,
   ListChecks,
-  FileSearch,
   ShieldCheck,
   Download,
   Sparkles,
@@ -23,8 +21,8 @@ export const metadata: Metadata = {
 /**
  * Integration architecture page. Turns the passive-CPD mockup into a
  * concrete engineering proposal: where CEA's service plugs into Heidi's
- * existing product surface (Scribe / Evidence / Comms), what the API
- * contract looks like, and what a 6-week MVP costs.
+ * existing product surface (Scribe + Evidence), what the API contract
+ * looks like, and what a 6-week MVP costs.
  *
  * Closes the "is this a deck or a build?" gap a CRO would flag.
  */
@@ -48,7 +46,7 @@ export default async function IntegrationPage() {
           Where CEA plugs into Heidi.
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mb-12 leading-relaxed">
-          The passive-CPD layer is not a parallel product. It rides on top of Heidi&apos;s existing event surface (Scribe sessions, Evidence searches, Comms interactions) and writes to a CPD log that exposes one-click audit export. No replatforming, no UX changes for clinicians.
+          Two engineer-weeks on Heidi&apos;s side. One event per qualifying Scribe session or Evidence search, fired to <code className="text-sm font-mono bg-slate-100 px-1.5 py-0.5 rounded">POST /api/cpd/events</code>. CEA returns categorisation + audit-ready log entry. No replatforming. No clinician-facing UX changes beyond a non-blocking confirmation prompt.
         </p>
 
         {/* Architecture diagram */}
@@ -61,9 +59,8 @@ export default async function IntegrationPage() {
                 <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700 mb-3">Heidi product surface</p>
                 <div className="space-y-2">
                   {[
-                    { icon: Headphones, label: 'Scribe', detail: 'Voice-to-note session events' },
-                    { icon: BookOpen, label: 'Evidence', detail: 'Literature search + read events' },
-                    { icon: MessageSquare, label: 'Comms', detail: 'Patient comms drafts' },
+                    { icon: Headphones, label: 'Scribe', detail: 'Session metadata — duration, complexity flags, topic tags. Dominant signal.' },
+                    { icon: BookOpen, label: 'Evidence', detail: 'Literature search + read events. Secondary signal.' },
                   ].map((item) => {
                     const Icon = item.icon
                     return (

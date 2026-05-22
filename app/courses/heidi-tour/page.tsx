@@ -23,11 +23,11 @@ const STOPS: TourStop[] = [
   {
     step: 1,
     estMin: 2,
-    title: 'The provider behind the platform',
-    why: 'CEA is already a shipping company with an OA-endorsed product and ~600 paying clinicians. This is not a deck — it is a partnership with a live business.',
+    title: 'Real provider, real revenue, real clinicians',
+    why: 'CEA is already shipping. OA-endorsed CCM at A$1,190 with ~600 paying clinicians. Founder is a practising osteopath who codes the platform himself. Partnership with a live business, not a deck.',
     whatToLookAt: [
-      'Traction strip — Osteopathy Australia endorsement, CCM at A$1,190, subscriber count',
-      'Live courses card grid — currently 1 verified (CEA), marketplace shape demonstrated',
+      'Traction strip — OA endorsement, CCM price, subscriber count',
+      'About-the-founder page — AHPRA register link, ABR lookup, direct email',
     ],
     href: '/courses',
     ctaLabel: 'Marketplace home',
@@ -61,11 +61,11 @@ const STOPS: TourStop[] = [
     step: 4,
     estMin: 4,
     title: 'The passive-CPD insight (the game-changer)',
-    why: 'The strategic case for Heidi: every Scribe session, every Evidence search, every clinical-context interaction is unlogged CPD. 100-400 hours per clinician per year. Currently invisible.',
+    why: 'The strategic case. Every Scribe session is documented clinical reasoning. Every Evidence search is literature review. AHPRA already counts both — clinicians just never log them. 100-400 unlogged hours per clinician per year, currently invisible.',
     whatToLookAt: [
-      'Visual demo of "log this 45-min session as CPD?" prompt',
-      'Per-Board honest ceiling (NOT a flat 100% claim — calibrated 50-100% per profession)',
-      'Event timeline mockup showing how Heidi events become CPD records',
+      'The non-blocking confirmation prompt — one tap, categorised, logged',
+      'Per-Board honest ceiling: 50-100% depending on profession (NOT a flat overclaim)',
+      'Event timeline showing how Scribe + Evidence events become audit-ready CPD entries',
     ],
     href: '/courses/cpd-record/passive',
     ctaLabel: 'Passive-CPD demo',
@@ -74,10 +74,10 @@ const STOPS: TourStop[] = [
     step: 5,
     estMin: 3,
     title: 'The integration spec',
-    why: 'The bit a CRO actually needs: concrete API contract, 6-week MVP timeline, effort estimate. This is the cost-of-yes calculation.',
+    why: 'The cost-of-yes calculation. Two engineer-weeks on Heidi side. Six-week joint MVP. The /api/cpd/events endpoint is already live — curl it from this page.',
     whatToLookAt: [
-      'Architecture diagram — Heidi surface → POST /api/cpd/events → CEA categoriser',
-      'Request and response JSON shapes (the endpoint is live; try a POST)',
+      'Architecture: Heidi (Scribe + Evidence) → POST /api/cpd/events → CEA categoriser',
+      'Request + response JSON shapes — the endpoint is live, try a POST',
       'Open questions to resolve in the first call',
     ],
     href: '/courses/integration',
@@ -96,13 +96,17 @@ export default async function HeidiTourPage() {
         <AdminPreviewBadge access={access} />
 
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          15-minute guided tour · CEA × Heidi
+          CEA × Heidi · Partnership preview
         </p>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-tight">
-          Start here.
+        <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
+          Your clinicians do 100-400 hrs of unlogged CPD per year.{' '}
+          <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">All of it inside Heidi.</span>
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mb-6 leading-relaxed">
-          Five stops, {totalMin} minutes. Each stop has a clear &ldquo;why this matters for Heidi&rdquo; framing and the specific things to look at. Built for a CRO/product-lead audit, not a sales prospect.
+        <p className="text-lg text-muted-foreground max-w-2xl mb-3 leading-relaxed">
+          Every Scribe session is clinical reasoning. Every Evidence search is literature review. AHPRA already counts these — clinicians just never log them. We turn one event into one audit-ready hour. <strong className="text-foreground">No new UX. No new behaviour. Two engineer-weeks on your side.</strong>
+        </p>
+        <p className="text-sm text-muted-foreground max-w-2xl mb-6 leading-relaxed">
+          Tour below — {totalMin} minutes, five stops, each with a clear &ldquo;why this matters for Heidi&rdquo; framing. Built for a CRO/product audit, not a prospect.
         </p>
 
         <div className="flex flex-wrap gap-2 mb-10">
@@ -168,15 +172,15 @@ export default async function HeidiTourPage() {
 
         <section className="mt-12 rounded-2xl bg-foreground text-white p-7">
           <p className="text-xs font-bold uppercase tracking-wide text-accent mb-2">After the tour</p>
-          <h2 className="text-2xl font-bold mb-3">If the case is interesting, the next step is a 30-minute call.</h2>
+          <h2 className="text-2xl font-bold mb-3">The ask: 15 minutes to talk through the data signals + commercial shape.</h2>
           <p className="text-sm text-white/80 mb-5 leading-relaxed">
-            Three partnership shapes are pre-drafted (licensing / white-label / equity-employment) in the proposal doc. None are pre-committed; the call decides which fits.
+            Three commercial shapes pre-drafted (licensing / white-label / equity-employment). None pre-committed — the call decides which fits. If the answer is no, a 5-minute &ldquo;here&apos;s why not&rdquo; would help me sharpen the next one.
           </p>
           <a
-            href="mailto:zac@concussion-education-australia.com?subject=Heidi%20%C3%97%20CEA%20partnership%20call"
+            href="mailto:zac@concussion-education-australia.com?subject=Heidi%20%C3%97%20CEA%20%E2%80%94%2015-min%20partnership%20call"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
           >
-            Email Zac to schedule
+            Email Zac · 15-min call
             <ArrowRight className="w-4 h-4" />
           </a>
         </section>

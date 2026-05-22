@@ -27,17 +27,18 @@ interface PassiveEvent {
 }
 
 // Mock data — illustrative of what a real passive-CPD timeline would
-// show. In production, events come from Heidi's literature/evidence
-// activity stream + scribe session metadata.
+// show. In production: Scribe-session metadata (dominant signal) +
+// Evidence literature events (secondary). Clinician confirms via the
+// non-blocking prompt.
 const EVENTS: PassiveEvent[] = [
-  { date: '2026-05-22', kind: 'literature-search', description: 'PubMed: type 2 diabetes outcomes post-GLP-1', minutes: 47, category: 'Pharmacotherapy update', status: 'awaiting-confirmation' },
-  { date: '2026-05-21', kind: 'guideline-review', description: 'RACGP red book — cardiovascular risk assessment', minutes: 22, category: 'Preventive care', status: 'logged' },
-  { date: '2026-05-21', kind: 'case-research', description: 'Concussion in adolescent athlete — return to learn', minutes: 35, category: 'Sports medicine', status: 'logged' },
-  { date: '2026-05-20', kind: 'literature-search', description: 'Semantic Scholar: SSRI discontinuation guidance', minutes: 28, category: 'Mental health', status: 'logged' },
-  { date: '2026-05-20', kind: 'scribe-reflection', description: 'Complex case — atypical chest pain workup', minutes: 18, category: 'Clinical reasoning', status: 'logged' },
-  { date: '2026-05-19', kind: 'literature-search', description: 'PubMed: BPPV diagnosis Dix-Hallpike sensitivity', minutes: 41, category: 'Vestibular medicine', status: 'logged' },
+  { date: '2026-05-22', kind: 'scribe-reflection', description: 'Complex consult — atypical chest pain workup + clinical reasoning notes', minutes: 47, category: 'Clinical reasoning', status: 'awaiting-confirmation' },
+  { date: '2026-05-21', kind: 'scribe-reflection', description: 'Multi-morbidity geriatric review — polypharmacy reconciliation', minutes: 38, category: 'Geriatric medicine', status: 'logged' },
+  { date: '2026-05-21', kind: 'case-research', description: 'Concussion in adolescent athlete — return to learn protocol', minutes: 35, category: 'Sports medicine', status: 'logged' },
+  { date: '2026-05-20', kind: 'scribe-reflection', description: 'Mental health session — risk assessment + safety planning', minutes: 42, category: 'Mental health', status: 'logged' },
+  { date: '2026-05-20', kind: 'literature-search', description: 'Evidence search — SSRI discontinuation guidance', minutes: 18, category: 'Pharmacotherapy', status: 'logged' },
+  { date: '2026-05-19', kind: 'guideline-review', description: 'RACGP red book — cardiovascular risk assessment', minutes: 22, category: 'Preventive care', status: 'logged' },
   { date: '2026-05-18', kind: 'guideline-review', description: 'AHPRA — AI use in clinical practice update', minutes: 33, category: 'Regulatory / compliance', status: 'logged' },
-  { date: '2026-05-17', kind: 'literature-search', description: 'NEJM: SGLT2 inhibitors in heart failure', minutes: 52, category: 'Cardiology', status: 'declined' },
+  { date: '2026-05-17', kind: 'literature-search', description: 'Evidence search — SGLT2 inhibitors in heart failure', minutes: 28, category: 'Cardiology', status: 'declined' },
 ]
 
 function kindIcon(kind: PassiveEvent['kind']) {
@@ -65,9 +66,13 @@ export default async function PassiveCpdPage() {
   const totalLoggedHours = (totalLoggedMin / 60).toFixed(1)
   const awaitingCount = EVENTS.filter((e) => e.status === 'awaiting-confirmation').length
 
-  // Annualised projection from the past 7 days of activity
+  // Projection: a working-week of capture extrapolated conservatively
+  // to 44 working weeks (accounts for leave, conferences, lighter
+  // caseload weeks). Renders as a range with the conservative number
+  // shown — not a single optimistic point estimate.
   const weeklyHours = totalLoggedMin / 60
-  const projectedAnnualHours = Math.round(weeklyHours * 52)
+  const projectedAnnualLow = Math.round(weeklyHours * 36)
+  const projectedAnnualHigh = Math.round(weeklyHours * 44)
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,13 +90,17 @@ export default async function PassiveCpdPage() {
             Passive CPD · The killer feature
           </p>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 max-w-3xl">
-            CPD earned while you work
+            Heidi sessions are CPD. We make them count.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mb-6">
-            Heidi already runs your literature searches, guideline reviews, and case research. We track the time, you confirm what counts, and it auto-logs to your CPD record. <strong className="text-foreground">60-80% of your annual hours accumulate passively.</strong>
+            Every complex Scribe session and Evidence search is already CPD-qualifying activity — clinicians just never log it. CEA reads the session metadata, the clinician confirms with one tap, and it auto-categorises against their AHPRA Board.{' '}
+            <Link href="/courses/cpd-record/requirements" className="text-foreground font-semibold underline decoration-accent/40 hover:decoration-accent">
+              Honest ceiling: 50-100% of annual hours depending on Board
+            </Link>
+            .
           </p>
           <div className="text-xs text-muted-foreground">
-            <em>Demo mockup. In production, events come from Heidi&apos;s literature / Evidence activity stream + scribe session metadata. CEA&apos;s formal courses fill the residual gap.</em>
+            <em>Demo mockup. In production: Scribe-session metadata (dominant signal) + Evidence literature events (secondary). CEA&apos;s formal courses fill the per-Board mandatory minimum the passive layer cannot.</em>
           </div>
         </div>
 
@@ -99,18 +108,18 @@ export default async function PassiveCpdPage() {
         <div className="grid sm:grid-cols-4 gap-3 mb-10">
           <div className="card rounded-xl p-4 sm:col-span-2 bg-gradient-to-br from-emerald-50 to-white border-emerald-200">
             <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-1">Projected passive CPD / year</p>
-            <p className="text-4xl font-bold text-foreground">{projectedAnnualHours}h</p>
-            <p className="text-xs text-muted-foreground mt-1">at your past-7-day pace</p>
+            <p className="text-4xl font-bold text-foreground">{projectedAnnualLow}–{projectedAnnualHigh}h</p>
+            <p className="text-xs text-muted-foreground mt-1">extrapolated from this week × 36-44 working weeks</p>
           </div>
           <div className="card rounded-xl p-4">
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">AHPRA requirement</p>
             <p className="text-3xl font-bold text-foreground">50h</p>
-            <p className="text-xs text-muted-foreground mt-1">/ year, varies by board</p>
+            <p className="text-xs text-muted-foreground mt-1">/ year, varies by Board</p>
           </div>
           <div className="card rounded-xl p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Formal courses still needed</p>
-            <p className="text-3xl font-bold text-foreground">{Math.max(0, 50 - projectedAnnualHours)}h</p>
-            <p className="text-xs text-muted-foreground mt-1">covered by Heidi&apos;s curated marketplace</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Formal-CPD gap to fill</p>
+            <p className="text-3xl font-bold text-foreground">{Math.max(0, 50 - projectedAnnualLow)}h</p>
+            <p className="text-xs text-muted-foreground mt-1">covered by the curated marketplace</p>
           </div>
         </div>
 
@@ -208,27 +217,26 @@ export default async function PassiveCpdPage() {
           <h2 className="text-2xl font-bold mb-4">The behavioural moat</h2>
           <div className="grid sm:grid-cols-2 gap-6 text-sm leading-relaxed">
             <div>
-              <p className="font-semibold mb-2">What Heidi can see:</p>
+              <p className="font-semibold mb-2">What Heidi already sees:</p>
               <ul className="space-y-1 text-white/80">
-                <li>· Literature searches (already in Evidence product)</li>
-                <li>· Guideline reviews</li>
-                <li>· Case research time</li>
-                <li>· Scribe sessions with complex reasoning</li>
-                <li>· The 100-400 hrs/yr of CPD-qualifying activity already happening</li>
+                <li>· Every Scribe session — duration, complexity, topic tags</li>
+                <li>· Evidence literature searches + guideline reads</li>
+                <li>· Time spent on clinical reasoning post-consult</li>
+                <li>· 100-400 hrs/year of CPD-qualifying activity already happening</li>
               </ul>
             </div>
             <div>
-              <p className="font-semibold mb-2">What Medcast / Lyrebird / RACGP cannot see:</p>
+              <p className="font-semibold mb-2">What no other CPD platform can see:</p>
               <ul className="space-y-1 text-white/80">
-                <li>· What clinicians research on PubMed</li>
-                <li>· What guidelines they read on RACGP, AIS, CISG sites</li>
-                <li>· What they spend time thinking through after a complex consult</li>
-                <li>· Anything outside their own product</li>
+                <li>· What clinicians actually do session-by-session</li>
+                <li>· The reasoning they document in real notes</li>
+                <li>· The literature they touch outside a fixed course</li>
+                <li>· Anything that happens outside their own walled product</li>
               </ul>
             </div>
           </div>
           <p className="text-sm text-white/90 mt-6 italic">
-            To copy, a competitor would need clinicians to do all research inside their product. Heidi already owns that surface.
+            To copy this, a competitor would need clinicians to do all their day-to-day work inside their product. Heidi already owns that surface in Australian primary care.
           </p>
         </section>
 
