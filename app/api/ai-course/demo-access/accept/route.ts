@@ -70,6 +70,41 @@ export async function POST(request: NextRequest) {
   `
   const acceptanceId = inserted[0]?.id ?? 0
 
+  // Server-side analytics event so the NDA-accept is captured even if
+  // the client-side tracker fails (ad-blockers, JS off, etc.). Schema
+  // matches /api/analytics/track.
+  try {
+    const eventData = JSON.stringify({
+      acceptanceId,
+      organisation,
+      email,
+      ndaVersion,
+      demoOrg: organisation,
+      isDemo: true,
+    })
+    await sql`
+      INSERT INTO analytics_events (
+        event_type, event_data, session_id, timestamp_ms, user_agent,
+        referrer, path, search, ip, country
+      ) VALUES (
+        'demo_nda_accepted',
+        ${eventData}::jsonb,
+        ${'server-nda-' + acceptanceId},
+        ${Date.now()},
+        ${userAgent},
+        ${null},
+        '/api/ai-course/demo-access/accept',
+        ${null},
+        ${ip},
+        ${null}
+      )
+    `
+  } catch (err) {
+    // Don't fail the NDA accept if analytics insert fails — table
+    // ownership is /api/analytics/track. Just log.
+    console.error('[demo-access/accept] Failed to write analytics event:', err)
+  }
+
   const response = NextResponse.json({
     success: true,
     acceptanceId,
