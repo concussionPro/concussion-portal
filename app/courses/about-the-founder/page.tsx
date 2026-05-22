@@ -34,7 +34,7 @@ export default async function AboutFounderPage() {
         </Link>
 
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          About the founder
+          The person you&apos;d be hiring · or partnering with
         </p>
 
         {/* Hero */}
@@ -47,7 +47,7 @@ export default async function AboutFounderPage() {
               Zac Lewis
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-4 max-w-2xl">
-              Osteopath, AHPRA-registered. Founder of Concussion Education Australia. Builds the platform solo — the clinical content, the code, and the partnerships.
+              AHPRA-registered osteopath, Osteopathy Australia–endorsed CPD provider, and the solo developer of the platform you&apos;re looking at. The combination of clinical credibility, vertical-CPD expertise, and ship-it velocity that a clinical product lead role at Heidi needs.
             </p>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">

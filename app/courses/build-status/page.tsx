@@ -85,13 +85,16 @@ export default async function BuildStatusPage() {
         </Link>
 
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          Build status · 2026-05-22
+          12 months of solo execution · proof of velocity
         </p>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-tight">
-          What&apos;s shipped, what&apos;s next.
+          What one clinician-founder shipped solo in a year.
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mb-10 leading-relaxed">
-          Honest split between live capability and roadmap. The demo mixes both; this page draws the line.
+        <p className="text-lg text-muted-foreground max-w-2xl mb-3 leading-relaxed">
+          Honest split between what&apos;s live, in progress, mockup, or roadmap. Twelve capabilities shipped with clickable evidence — the rate-of-shipping a clinical product lead role gets you. Imagine the same operator with Heidi&apos;s engineering team and runway.
+        </p>
+        <p className="text-sm text-muted-foreground max-w-2xl mb-10 leading-relaxed">
+          The demo mixes shipped + roadmap; this page draws the line so you know exactly what you&apos;d be getting.
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">

@@ -29,13 +29,13 @@ export default async function CoursesIndexPage() {
         {/* Hero — confident, restrained, outcome-focused */}
         <div className="mb-14">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-3">
-            CPD Marketplace
+            CPD Marketplace · the shell that fixes a A$480M fragmented vertical
           </p>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
             Trusted CPD. <span className="text-muted-foreground">Audit-ready by default.</span>
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mb-8">
-            Every course on the platform passes a six-criterion review. Hours auto-log to one dashboard. Audit export in a click. The passive layer captures the 100-400 hours of research clinicians already do but never log.
+            ~900k AHPRA clinicians, 20-50 mandatory hours/year, no platform holds &gt;30% share, no quality authority. The shell here is the answer: every course passes a six-criterion review, hours auto-log across providers, audit export in a click. The passive layer captures the 100-400 hrs of research clinicians already do but never log.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
