@@ -12,13 +12,15 @@ import {
   DefinitionCard,
   TryThisCard,
 } from './Infographics'
+import { PromptCard } from './PromptCard'
+import { findPromptCard } from '@/lib/ai-course/prompt-cards'
 
-// Match all five marker types in a single pass. The marker body runs until
+// Match all six marker types in a single pass. The marker body runs until
 // the closing `]` on the same paragraph (no nested brackets supported).
 const MARKER_REGEX =
-  /\[(INFOGRAPHIC|KEYPOINT|REDFLAG|DEFINITION|TRYTHIS):\s*([^\]]+)\]/g
+  /\[(INFOGRAPHIC|KEYPOINT|REDFLAG|DEFINITION|TRYTHIS|PROMPT-CARD):\s*([^\]]+)\]/g
 
-type MarkerKind = 'INFOGRAPHIC' | 'KEYPOINT' | 'REDFLAG' | 'DEFINITION' | 'TRYTHIS'
+type MarkerKind = 'INFOGRAPHIC' | 'KEYPOINT' | 'REDFLAG' | 'DEFINITION' | 'TRYTHIS' | 'PROMPT-CARD'
 type Part =
   | { kind: 'md'; value: string }
   | { kind: 'marker'; type: MarkerKind; value: string }
@@ -71,6 +73,17 @@ function SectionBody({ body }: { body: string }) {
         const term = value.slice(0, pipe).trim()
         const def = value.slice(pipe + 1).trim()
         return <DefinitionCard key={i} term={term} definition={def} />
+      }
+      case 'PROMPT-CARD': {
+        const data = findPromptCard(value)
+        if (!data) {
+          return (
+            <p key={i} className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 my-4 not-prose">
+              Prompt card not found: <code className="font-mono">{value}</code>
+            </p>
+          )
+        }
+        return <PromptCard key={i} data={data} />
       }
     }
   }

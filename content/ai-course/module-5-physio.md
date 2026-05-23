@@ -49,18 +49,7 @@ The single highest-leverage use case in MSK practice. You assess; the LLM format
 
 ## 2. Return-to-sport letters
 
-For coaches, schools, sporting bodies, and insurers.
-
-**Prompt:**
-
-> [De-id preamble]
-> Draft a return-to-sport clearance letter for a 17-year-old amateur rugby player, 4 weeks post-concussion, having completed a graded return-to-play protocol (AFL/World Rugby framework). Symptom-free at rest and on exertion. Successfully completed Stages 1–5. Recommend full return at Stage 6. Address to the head coach at [CLUB NAME]. Include a single line: "This clearance applies to the activity described and assumes no new symptoms develop." Add the AI-attestation line from Module 4.
-
-**Review checklist:**
-- Stage progression matches your clinical notes.
-- The letter does not over-claim ("fully recovered" is risky language).
-- AI-attestation line is present.
-- Addressed to the correct recipient.
+[PROMPT-CARD: return-to-sport-letter]
 
 [KEYPOINT: LLMs hallucinate outcome measures and session counts. Every number in a treatment summary or return-to-sport letter must match your actual notes — re-check before sending.]
 
