@@ -74,8 +74,8 @@ const DISTRIBUTION = [
   },
   {
     icon: BookOpen,
-    label: 'AI compliance course (launching)',
-    detail: 'Launching publicly on the CEA portal · Heidi recommended throughout',
+    label: 'AI compliance course',
+    detail: 'Launches publicly 1 June 2026 on the CEA portal · Heidi recommended throughout',
   },
   {
     icon: Mic,
@@ -118,9 +118,14 @@ export default async function HeidiTourPage() {
 
         {/* TWO-COURSE BENTO — the prominent visual feature */}
         <div className="mb-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-700 mb-3">
-            Two courses, one platform · click any to open the learning dashboard
-          </p>
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-700">
+              Two courses, one platform · click any to open the learning dashboard
+            </p>
+            <p className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+              Demo access · A$497 value · 7-day cookie
+            </p>
+          </div>
           <div className="grid md:grid-cols-2 gap-4 items-stretch">
             {/* AI in Clinical Practice + Heidi Scribe — left, slightly emphasised */}
             <Link
@@ -131,7 +136,7 @@ export default async function HeidiTourPage() {
               <div className="px-5 pt-5 pb-4">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-accent text-white mb-3">
                   <Sparkles className="w-3 h-3" />
-                  Launching · Heidi recommended
+                  Launches Jun 1 · Heidi recommended
                 </span>
                 <h2 className="text-xl font-bold text-foreground leading-tight mb-1.5">
                   AI in Clinical Practice

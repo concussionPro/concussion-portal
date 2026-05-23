@@ -2,40 +2,51 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, createJWTSession } from '@/lib/jwt-session'
 import { findUserById, isBookOwner } from '@/lib/users'
 
+/**
+ * Synthetic "demo viewer" user — returned when the partner-preview
+ * demo_key cookie is set (via /api/ai-course/demo-access/accept after
+ * NDA acceptance, or /api/admin/demo-preview shortcut). Gives a partner
+ * full-course access to browse CCM + AI course + learning dashboard
+ * without provisioning a real user account.
+ *
+ * Used as a fallback for ANY session-failure path so a partner can land
+ * on /learning even when there's a stale/invalid `session` cookie from
+ * a prior visit.
+ *
+ * The synthetic user has id `demo-viewer-<org>` so downstream code that
+ * mutates user records (e.g. progress writes) must skip when id starts
+ * with `demo-viewer`.
+ */
+function getDemoViewerResponse(request: NextRequest): NextResponse | null {
+  const demoKey = request.cookies.get('demo_key')?.value
+  const demoOrg = request.cookies.get('demo_org')?.value
+  if (demoKey && process.env.HEIDI_DEMO_KEY && demoKey === process.env.HEIDI_DEMO_KEY) {
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: `demo-viewer-${demoOrg || 'unknown'}`,
+        email: 'demo@partner-preview.local',
+        name: `${demoOrg || 'Partner'} Demo Viewer`,
+        accessLevel: 'full-course',
+        bookOwner: false,
+        workshopLocation: null,
+        createdAt: new Date().toISOString(),
+        nurtureUnsubscribed: true,
+        progressEmailsOptedOut: true,
+        isDemo: true,
+      },
+    })
+  }
+  return null
+}
+
 export async function GET(request: NextRequest) {
   try {
     const sessionToken = request.cookies.get('session')?.value
 
-    // Demo-access path. When the partner-preview demo_key cookie is set
-    // (via /api/ai-course/demo-access/accept after NDA acceptance) AND no
-    // real session is present, return a synthetic read-only "demo viewer"
-    // user with full-course access. This lets a partner browsing the AI
-    // course also explore the Concussion Clinical Mastery course and its
-    // dashboard without provisioning a real user account.
-    //
-    // The synthetic user has a fixed `demo-viewer` id that no real user
-    // can collide with. Downstream code that mutates user records (e.g.
-    // progress writes) must skip when id startsWith 'demo-viewer'.
     if (!sessionToken) {
-      const demoKey = request.cookies.get('demo_key')?.value
-      const demoOrg = request.cookies.get('demo_org')?.value
-      if (demoKey && process.env.HEIDI_DEMO_KEY && demoKey === process.env.HEIDI_DEMO_KEY) {
-        return NextResponse.json({
-          success: true,
-          user: {
-            id: `demo-viewer-${demoOrg || 'unknown'}`,
-            email: 'demo@partner-preview.local',
-            name: `${demoOrg || 'Partner'} Demo Viewer`,
-            accessLevel: 'full-course',
-            bookOwner: false,
-            workshopLocation: null,
-            createdAt: new Date().toISOString(),
-            nurtureUnsubscribed: true, // never enrol demo viewers in nurture
-            progressEmailsOptedOut: true,
-            isDemo: true,
-          },
-        })
-      }
+      const demoResponse = getDemoViewerResponse(request)
+      if (demoResponse) return demoResponse
       return NextResponse.json(
         { error: 'No session found' },
         { status: 401 }
@@ -46,6 +57,11 @@ export async function GET(request: NextRequest) {
     const sessionData = verifySessionToken(sessionToken)
 
     if (!sessionData) {
+      // Stale or invalid session — fall back to demo viewer if a valid
+      // demo_key cookie is present. Avoids locking out a partner who
+      // happens to have an old session cookie from a different visit.
+      const demoResponse = getDemoViewerResponse(request)
+      if (demoResponse) return demoResponse
       return NextResponse.json(
         { error: 'Invalid or expired session' },
         { status: 401 }
