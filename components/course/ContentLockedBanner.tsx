@@ -137,7 +137,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
           )}
 
           <p className="text-muted-foreground text-xs mt-2">
-            8 CPD points (online) &middot; 14 CPD points (complete with workshop)
+            8 CPD hours (online) &middot; 14 CPD hours (complete with workshop)
           </p>
         </div>
       </div>

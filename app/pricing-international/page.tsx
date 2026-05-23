@@ -166,7 +166,7 @@ function InternationalPricingContent() {
     },
     {
       q: 'How much time does the course take?',
-      a: 'The 8 online modules take approximately 8 hours total (8 CPD points), completed at your own pace with no deadline. Most clinicians complete the course over 2–4 weeks alongside their clinical workload.',
+      a: 'The 8 online modules take approximately 8 hours total (8 CPD hours), completed at your own pace with no deadline. Most clinicians complete the course over 2–4 weeks alongside their clinical workload.',
     },
     {
       q: 'What is your refund policy?',
@@ -516,7 +516,7 @@ function InternationalPricingContent() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
             {[
-              { flag: '\ud83c\udde6\ud83c\uddfa', country: 'Australia', detail: 'Endorsed by Osteopathy Australia \u00b7 AHPRA-aligned \u00b7 8 CPD points' },
+              { flag: '\ud83c\udde6\ud83c\uddfa', country: 'Australia', detail: 'Endorsed by Osteopathy Australia \u00b7 AHPRA-aligned \u00b7 8 CPD hours' },
               { flag: '\ud83c\uddec\ud83c\udde7', country: 'United Kingdom', detail: 'Accepted for HCPC CPD portfolios \u00b7 Outcomes-based learning' },
               { flag: '\ud83c\uddf3\ud83c\uddff', country: 'New Zealand', detail: 'Claimable for Physiotherapy Board NZ CPD' },
               { flag: '\ud83c\uddee\ud83c\uddea', country: 'Ireland', detail: 'Accepted for CORU CPD requirements' },

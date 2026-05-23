@@ -6,7 +6,7 @@
  * - Participant's full name
  * - Activity/course title
  * - Date of completion
- * - CPD points awarded
+ * - CPD hours awarded
  * - Provider organisation name
  * - Unique certificate ID
  * - Activity type (Educational Activity)
@@ -166,7 +166,7 @@ export function generateCertificatePDF(data: CertificateData): CertificateResult
   doc.setFontSize(8)
   doc.setTextColor(100, 116, 139)
 
-  // Column 1 — CPD Points (or completion badge for free course)
+  // Column 1 — CPD Hours (or completion badge for free course)
   if (data.cpdPoints > 0) {
     doc.text('CPD POINTS AWARDED', col1X, gridY, { align: 'center' })
     doc.setFont('helvetica', 'bold')
@@ -289,7 +289,7 @@ export function getSCATCertificateData(participantName: string, participantEmail
   }
 }
 
-// Paid online course certificate data (8 CPD points)
+// Paid online course certificate data (8 CPD hours)
 export function getOnlineCourseCertificateData(participantName: string, participantEmail: string, completionDate: Date): CertificateData {
   return {
     participantName,
@@ -309,7 +309,7 @@ export function getOnlineCourseCertificateData(participantName: string, particip
   }
 }
 
-// Full course certificate data (14 CPD points — online + in-person workshop)
+// Full course certificate data (14 CPD hours — online + in-person workshop)
 export function getFullCourseCertificateData(participantName: string, participantEmail: string, completionDate: Date): CertificateData {
   return {
     participantName,

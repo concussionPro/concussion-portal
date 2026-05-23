@@ -339,7 +339,7 @@ export default function ReferencePage() {
                   Already own the reference + toolkit? Save A$100 on the course.
                 </h2>
                 <p className="text-sm text-slate-700 leading-relaxed mb-4">
-                  Once you&apos;ve bought the reference and toolkit, you already own the clinical framework. The online course adds 8 comprehensive modules with interactive quizzes, a curated clinical video library, a CPD-accredited certificate, and {CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD points. Bundle owners get A$100 off automatically at checkout — effective price A${CONFIG.COURSE.PRICE_ONLINE - 100}.
+                  Once you&apos;ve bought the reference and toolkit, you already own the clinical framework. The online course adds 8 comprehensive modules with interactive quizzes, a curated clinical video library, a CPD-accredited certificate, and {CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD hours. Bundle owners get A$100 off automatically at checkout — effective price A${CONFIG.COURSE.PRICE_ONLINE - 100}.
                 </p>
                 <Link
                   href="/pricing"

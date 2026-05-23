@@ -161,7 +161,7 @@ function PricingContent() {
     },
     {
       q: 'How much time does the course take?',
-      a: 'The online modules take approximately 8 hours total (8 CPD points), completed at your own pace with no deadline. The hands-on workshop is a single full day (6 hours, 6 CPD points). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
+      a: 'The online modules take approximately 8 hours total (8 CPD hours), completed at your own pace with no deadline. The hands-on workshop is a single full day (6 hours, 6 CPD hours). Most clinicians complete the online content over 2–4 weeks alongside their clinical workload.',
     },
     {
       q: 'Is this course only for osteopaths?',
@@ -279,7 +279,7 @@ function PricingContent() {
           {heroVariant === 'cpd' ? (
             <>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                Earn 14 AHPRA CPD Points{' '}
+                Earn 14 AHPRA CPD Hours{' '}
                 <span className="text-gradient">Online</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -304,7 +304,7 @@ function PricingContent() {
                 <span className="text-gradient">for Australian Clinicians</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                8 modules · 8 AHPRA-aligned CPD points · self-paced with lifetime access. Workshop optional. Most employers reimburse — we provide the tax invoice.
+                8 modules · 8 AHPRA-aligned CPD hours · self-paced with lifetime access. Workshop optional. Most employers reimburse — we provide the tax invoice.
               </p>
             </>
           ) : (
@@ -342,7 +342,7 @@ function PricingContent() {
             <span className="text-sm font-semibold text-foreground">Endorsed by Osteopathy Australia</span>
           </div>
           <span className="hidden sm:inline text-slate-300">|</span>
-          <span className="text-sm text-muted-foreground">AHPRA Aligned · 14 CPD Points (8 online + 6 workshop)</span>
+          <span className="text-sm text-muted-foreground">AHPRA Aligned · 14 CPD Hours (8 online + 6 workshop)</span>
           <span className="hidden sm:inline text-slate-300">|</span>
           <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
           <span className="hidden sm:inline text-slate-300">|</span>
@@ -501,7 +501,7 @@ function PricingContent() {
                   ['Expert coaching & 1:1 feedback', false, true],
                   ['Supervised clinical practice', false, true],
                   ['Workshop CPD certificate', false, '6 pts'],
-                  ['Total CPD points', '8', '14'],
+                  ['Total CPD hours', '8', '14'],
                   ['Afterpay / Klarna available', true, true],
                 ] as [string, boolean | string, boolean | string][]).map(([feature, online, workshop], i) => (
                   <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>

@@ -49,7 +49,7 @@ function LearningSuiteInner() {
   const scatCompleted = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 103 && p.completed,
   ).length
-  // SCAT course = 1 CPD point (awarded on completing all 3 modules)
+  // SCAT course = 1 CPD hour (awarded on completing all 3 modules)
   const scatCPD = scatCompleted === 3 ? 1 : 0
 
   const handleModuleClick = (moduleId: number) => {
@@ -80,8 +80,8 @@ function LearningSuiteInner() {
                   {isPreview
                     ? 'Free SCAT6, SCOAT6 & Child SCAT6 Assessment Training'
                     : accessLevel === 'full-course'
-                    ? `${CONFIG.COURSE.ONLINE_CPD_POINTS} Online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} In-Person CPD Points (${CONFIG.COURSE.TOTAL_CPD_POINTS} Total) · Evidence-Based Concussion Management`
-                    : `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD Points · Evidence-Based Concussion Management`}
+                    ? `${CONFIG.COURSE.ONLINE_CPD_POINTS} Online + ${CONFIG.COURSE.IN_PERSON_CPD_POINTS} In-Person CPD Hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} Total) · Evidence-Based Concussion Management`
+                    : `${CONFIG.COURSE.ONLINE_CPD_POINTS} CPD Hours · Evidence-Based Concussion Management`}
                 </p>
               </div>
 
@@ -94,7 +94,7 @@ function LearningSuiteInner() {
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
-                  <div className="text-xs font-medium text-muted-foreground mb-1">{isPreview ? 'Free CPD Points' : 'Online CPD Points'}</div>
+                  <div className="text-xs font-medium text-muted-foreground mb-1">{isPreview ? 'Free CPD Hours' : 'Online CPD Hours'}</div>
                   <div className="text-xl font-bold text-gradient">
                     {isPreview ? 'Free' : `${cpdPoints} / 8`}
                   </div>
@@ -354,7 +354,7 @@ function LearningSuiteInner() {
                     <Award className="w-5 h-5 text-orange-500" strokeWidth={2} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold text-foreground mb-1">Complete your 14 CPD points — add the workshop</h3>
+                    <h3 className="text-sm font-bold text-foreground mb-1">Complete your 14 CPD hours — add the workshop</h3>
                     <p className="text-xs text-muted-foreground mb-3">
                       Your online modules teach the theory. The full-day workshop is where you practice SCAT6 administration, VOMS testing &amp; BESS scoring with expert feedback — the skills you can&apos;t learn from a screen.
                     </p>

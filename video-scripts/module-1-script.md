@@ -3,7 +3,7 @@
 
 **Duration:** 15 minutes
 **Target Audience:** Australian health practitioners (physiotherapists, doctors, sports medicine professionals)
-**CPD Points:** 5
+**CPD Hours:** 5
 
 ---
 
@@ -14,7 +14,7 @@
 **NARRATOR:**
 "Welcome to Module 1 of the Concussion Clinical Mastery course. I'm [Your Name], and over the next 15 minutes, we'll explore the fundamental science behind concussion injuries—from the biomechanical forces that cause them, to the complex neurometabolic cascade that occurs at the cellular level.
 
-This module forms the foundation for your clinical practice and is accredited for 5 AHPRA CPD points. By the end, you'll understand not just what a concussion is, but why it behaves the way it does in your patients."
+This module forms the foundation for your clinical practice and is accredited for 5 AHPRA CPD hours. By the end, you'll understand not just what a concussion is, but why it behaves the way it does in your patients."
 
 ---
 
@@ -128,7 +128,7 @@ Concussion is a functional brain injury caused by rotational and linear forces t
 
 This foundational knowledge underpins everything we'll cover in subsequent modules—from diagnosis and assessment tools, to rehabilitation protocols, to return-to-play decisions.
 
-Before moving to Module 2, complete the knowledge check to test your understanding. You'll need to score at least 2 out of 3 to progress and earn your CPD points.
+Before moving to Module 2, complete the knowledge check to test your understanding. You'll need to score at least 2 out of 3 to progress and earn your CPD hours.
 
 Thank you for watching, and I'll see you in Module 2 where we dive into diagnostic criteria and assessment tools."
 

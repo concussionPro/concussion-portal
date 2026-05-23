@@ -57,7 +57,7 @@ export default function MelbournePage() {
 
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
               Master SCAT6, VOMS, and BESS protocols in Melbourne's premier concussion management course.
-              Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points.
+              Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours.
             </p>
 
             {location.status === 'confirmed' ? (
@@ -118,7 +118,7 @@ export default function MelbournePage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                { icon: CheckCircle2, text: `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype` },
+                { icon: CheckCircle2, text: `${CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours — one certificate covering SCAT6, SCOAT6, VOMS, mBESS, return-to-play and rehabilitation by phenotype` },
                 { icon: CheckCircle2, text: 'Full-day hands-on practice with live partners — SCAT6, SCOAT6, VOMS and mBESS' },
                 { icon: CheckCircle2, text: 'Return-to-play, return-to-school and return-to-work frameworks' },
                 { icon: Infinity, text: `Lifetime access to all ${CONFIG.COURSE.TOTAL_MODULES} online modules — updated as guidelines evolve` },

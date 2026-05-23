@@ -4339,7 +4339,7 @@ export const modules: Module[] = [
           '✅ Module 7: Rehabilitation — phenotype-specific treatment with exercise prescription and targeted therapy',
           '✅ Module 8: Professional practice — legal responsibilities, documentation, ethics, and communication',
           '💡 YOUR NEXT STEPS:',
-          '• Complete the end-of-module quiz to finalise your CPD points',
+          '• Complete the end-of-module quiz to finalise your CPD hours',
           '• Download the Complete Clinical Reference for your clinic',
           '• Use the Clinical Toolkit resources in your practice this week',
           '• If enrolled in the full course, your hands-on workshop will put these skills into practice with real patients',

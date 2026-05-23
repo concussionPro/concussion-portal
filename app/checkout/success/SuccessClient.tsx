@@ -208,7 +208,7 @@ function CheckoutSuccessContent() {
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
               <span className="text-sm font-medium flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-                {isFullCourseType ? CONFIG.COURSE.TOTAL_CPD_POINTS : CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points
+                {isFullCourseType ? CONFIG.COURSE.TOTAL_CPD_POINTS : CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours
               </span>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
@@ -326,14 +326,14 @@ function CheckoutSuccessContent() {
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground">Add the hands-on workshop</h3>
-                  <p className="text-sm text-muted-foreground">Upgrade to the Complete Course for {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points</p>
+                  <p className="text-sm text-muted-foreground">Upgrade to the Complete Course for {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD hours</p>
                 </div>
               </div>
               <ul className="space-y-1.5 mb-4 ml-[52px]">
                 {[
                   'Full-day practical workshop (SCAT6, VOMS, BESS)',
                   'Supervised assessment practice with expert feedback',
-                  `6 additional CPD points (${CONFIG.COURSE.TOTAL_CPD_POINTS} total)`,
+                  `6 additional CPD hours (${CONFIG.COURSE.TOTAL_CPD_POINTS} total)`,
                   'Small group — max 12 participants',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">

@@ -174,7 +174,7 @@ export default function ResourcesPage() {
 
             <div className="text-center pt-6 border-t border-teal-200">
               <p className="text-slate-700 mb-4">
-                Want structured training with 14 AHPRA CPD points?
+                Want structured training with 14 AHPRA CPD hours?
               </p>
               <Link
                 href="/scat-mastery"

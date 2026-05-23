@@ -13,7 +13,7 @@ export const CONFIG = {
     TOTAL_CPD_POINTS: 14,
     ONLINE_CPD_POINTS: 8,
     IN_PERSON_CPD_POINTS: 6,
-    CPD_BADGE_TEXT: 'Up to 14 CPD points - AHPRA Aligned, Endorsed by Osteopathy Australia',
+    CPD_BADGE_TEXT: 'Up to 14 CPD hours - AHPRA Aligned, Endorsed by Osteopathy Australia',
     PRICE_ONLINE: 497,
     PRICE_REGULAR: 1400,
     PRICE_EARLY_BIRD: 1190,
@@ -89,7 +89,7 @@ export const CONFIG = {
     SITE_URL: 'https://portal.concussion-education-australia.com',
     TWITTER_HANDLE: '@ConcussionEduAU',
     OG_IMAGE: 'https://portal.concussion-education-australia.com/og-image.jpg',
-    DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules + practical training. 14 CPD points, endorsed by Osteopathy Australia.',
+    DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules + practical training. 14 CPD hours, endorsed by Osteopathy Australia.',
   },
 
   // Feature Flags

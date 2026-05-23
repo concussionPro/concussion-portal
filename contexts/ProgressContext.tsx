@@ -320,7 +320,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }
 
   const getTotalCPDPoints = () => {
-    // 1 CPD point per completed online module (8 total online)
+    // 1 CPD hour per completed online module (8 total online)
     return getTotalCompletedModules()
   }
 

@@ -213,7 +213,7 @@ export default function SCATFormsLayout({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-lg font-bold text-slate-900">Confident using this form clinically?</h3>
-                    <span className="badge text-xs">14 CPD Points</span>
+                    <span className="badge text-xs">14 CPD Hours</span>
                   </div>
                   <p className="text-sm text-slate-700 mb-2 leading-relaxed">
                     Beyond the form: VOMS interpretation, vestibular assessment, BESS scoring, and evidence-based RTP decision-making. AHPRA-aligned with hands-on practice.

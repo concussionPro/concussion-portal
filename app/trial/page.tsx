@@ -153,7 +153,7 @@ export default function TrialPage() {
             Ready for More?
           </h3>
           <p className="text-slate-300 mb-6">
-            After completing your free SCAT6 course, unlock the full 8-module professional course and earn all 14 CPD points (8 online + 6 in-person workshop). Covers VOMS protocols, return-to-play frameworks, and advanced rehabilitation pathways.
+            After completing your free SCAT6 course, unlock the full 8-module professional course and earn all 14 CPD hours (8 online + 6 in-person workshop). Covers VOMS protocols, return-to-play frameworks, and advanced rehabilitation pathways.
           </p>
           <div className="grid md:grid-cols-3 gap-4 text-center">
             <div className="bg-slate-800 rounded-xl p-4">
@@ -162,7 +162,7 @@ export default function TrialPage() {
             </div>
             <div className="bg-slate-800 rounded-xl p-4">
               <div className="text-3xl font-bold text-teal-400 mb-1">14</div>
-              <div className="text-sm text-slate-400">CPD Points (Complete)</div>
+              <div className="text-sm text-slate-400">CPD Hours (Complete)</div>
             </div>
             <div className="bg-slate-800 rounded-xl p-4">
               <div className="text-3xl font-bold text-teal-400 mb-1">~8</div>

@@ -141,7 +141,7 @@ function UpgradeContent() {
             {[
               { title: 'Hands-on practice', desc: 'SCAT6, VOMS, and BESS assessment under supervision' },
               { title: 'Expert feedback', desc: 'Real-time correction from experienced clinicians' },
-              { title: '6 more CPD points', desc: `${CONFIG.COURSE.TOTAL_CPD_POINTS} total with online + workshop` },
+              { title: '6 more CPD hours', desc: `${CONFIG.COURSE.TOTAL_CPD_POINTS} total with online + workshop` },
               { title: 'Small groups', desc: `Max ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} participants for quality training` },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-accent/5">

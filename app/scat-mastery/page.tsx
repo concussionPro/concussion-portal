@@ -326,7 +326,7 @@ export default function SCATMasteryPage() {
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#5b9aa6]/20 p-8 md:p-10 shadow-lg shadow-teal-100/30">
             <div className="text-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-2">
-                Want more than SCAT6? Get the full 14 CPD points.
+                Want more than SCAT6? Get the full 14 CPD hours.
               </h2>
               <p className="text-sm text-slate-500">
                 The complete course covers everything the free training doesn&apos;t.

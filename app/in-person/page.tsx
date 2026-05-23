@@ -57,7 +57,7 @@ export default function InPersonTrainingPage() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-4">
               <Award className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold text-accent">6 CPD points - AHPRA Aligned · Limited Spots</span>
+              <span className="text-sm font-semibold text-accent">6 CPD hours - AHPRA Aligned · Limited Spots</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
               Master Clinical Assessment <span className="text-gradient">You Can't Learn Online</span>
@@ -231,7 +231,7 @@ export default function InPersonTrainingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent mt-1">•</span>
-                  <span>Certificate of completion (14 CPD points total after workshop)</span>
+                  <span>Certificate of completion (14 CPD hours total after workshop)</span>
                 </li>
               </ul>
             </div>
@@ -351,7 +351,7 @@ export default function InPersonTrainingPage() {
             </div>
             <div className="mt-6 pt-6 border-t border-border/30">
               <p className="text-xs text-muted-foreground">
-                {CONFIG.COURSE.TOTAL_CPD_POINTS} total AHPRA CPD points ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person)<br/>
+                {CONFIG.COURSE.TOTAL_CPD_POINTS} total AHPRA CPD hours ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} in-person)<br/>
                 Lifetime access to all online modules and clinical toolkit — content updated regularly<br/>
                 Small group sizes (max 12) for personalized feedback
               </p>

@@ -30,7 +30,7 @@ async function setupProducts() {
     // Product 1: Individual Professional
     const individualProduct = await stripe.products.create({
       name: 'Individual Professional',
-      description: 'Comprehensive concussion education with 10 CPD points, lifetime access, and clinical toolkit',
+      description: 'Comprehensive concussion education with 10 CPD hours, lifetime access, and clinical toolkit',
       metadata: {
         access_level: 'online-only',
         cpd_hours: '10',

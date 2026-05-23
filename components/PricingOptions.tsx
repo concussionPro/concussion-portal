@@ -349,7 +349,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
-                '8 online modules (8 CPD points)',
+                '8 online modules (8 CPD hours)',
                 'Own pace — no deadlines',
                 'Clinical Toolkit & resources',
                 'Upgrade to add workshop anytime',
@@ -421,7 +421,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                   <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
                 </>
               )}
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD points</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD hours</p>
             </div>
 
             {/* Next workshop — Melbourne */}
@@ -458,7 +458,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
                 'Everything in Online, plus:',
-                'Full-day workshop (6 CPD points)',
+                'Full-day workshop (6 CPD hours)',
                 'Hands-on SCAT6, VOMS, BESS',
                 CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
                   ? 'Sydney & Byron Bay added when demand hits'

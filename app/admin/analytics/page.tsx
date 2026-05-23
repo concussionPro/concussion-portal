@@ -410,7 +410,7 @@ function buildUserInsights(
         title: `${(convRate * 100).toFixed(1)}% free-to-paid conversion`,
         detail: `${paidUsers.length} paid, ${freeUsers.length} free users. Room to improve upsell.`,
         metric: `${(convRate * 100).toFixed(1)}% conversion`,
-        action: 'Test stronger upgrade CTAs after SCAT module completion. Highlight paid-only content and CPD points.',
+        action: 'Test stronger upgrade CTAs after SCAT module completion. Highlight paid-only content and CPD hours.',
       })
     }
   }
@@ -1938,7 +1938,7 @@ export default function AnalyticsDashboard() {
                         if (usersFilter === 'paid') return u.accessLevel === 'online-only' || u.accessLevel === 'full-course'
                         return true
                       })
-                      const csv = ['Email,Name,Access Level,Modules Completed,SCAT Modules,CPD Points,Created,Last Login', ...filtered.map(u =>
+                      const csv = ['Email,Name,Access Level,Modules Completed,SCAT Modules,CPD Hours,Created,Last Login', ...filtered.map(u =>
                         `${u.email},${u.name},${u.accessLevel},${u.completedModules || 0}/8,${u.completedScatModules || 0}/3,${u.totalCPDPoints || 0},${new Date(u.createdAt).toLocaleDateString()},${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}`
                       )].join('\n')
                       const blob = new Blob([csv], { type: 'text/csv' })

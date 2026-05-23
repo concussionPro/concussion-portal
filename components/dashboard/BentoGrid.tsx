@@ -126,7 +126,7 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
   const scatCompleted = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 103 && p.completed,
   ).length
-  // SCAT course = 1 CPD point (awarded on completing all 3 modules)
+  // SCAT course = 1 CPD hour (awarded on completing all 3 modules)
   const scatCPD = scatCompleted === 3 ? 1 : 0
   const scatInProgress = Object.values(progress).filter(
     (p) => p.moduleId >= 101 && p.moduleId <= 103 && !!p.startedAt && !p.completed,
@@ -173,13 +173,13 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
         </div>
       </Card>
 
-      {/* ── 2. CPD Points ───────────────────────────── */}
+      {/* ── 2. CPD Hours ───────────────────────────── */}
       <Card href="/learning">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
             <Award className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
           </div>
-          <p className="stat-label mb-0">{isPreview ? 'Free CPD Points' : 'Online CPD Points'}</p>
+          <p className="stat-label mb-0">{isPreview ? 'Free CPD Hours' : 'Online CPD Hours'}</p>
         </div>
         <p className="stat-value-accent">
           {displayCPD}<span className="text-base text-muted-foreground font-medium"> / {displayMaxCPD}</span>
@@ -424,7 +424,7 @@ function WorkshopCard({
             <Check className="w-2.5 h-2.5 inline mr-0.5" />{cityLabel(workshopLocation!)}
           </span>
         </div>
-        <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Points</p>
+        <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Hours</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
           Nominated for {cityLabel(workshopLocation!)}. You&apos;ll be notified {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop date.
         </p>
@@ -464,12 +464,12 @@ function WorkshopCard({
           </span>
         )}
       </div>
-      <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Points</p>
+      <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Hours</p>
       <p className="text-xs text-muted-foreground leading-relaxed">
         {isFullCourse && !allModulesComplete
           ? 'Complete your online modules to nominate your workshop city.'
           : isOnlineOnly
-          ? 'Add the hands-on workshop to earn all 14 CPD points. SCAT6, VOMS & BESS with expert feedback.'
+          ? 'Add the hands-on workshop to earn all 14 CPD hours. SCAT6, VOMS & BESS with expert feedback.'
           : 'Hands-on training with standardised assessments, sideline protocols, and case studies.'}
       </p>
     </Card>

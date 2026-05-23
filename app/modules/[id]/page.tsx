@@ -38,7 +38,7 @@ function UpgradeOfferScreen({ moduleId, router }: { moduleId: number; router: Ap
               Professional CPD Course
             </h1>
             <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 14 AHPRA CPD points</strong>.
+              Module {moduleId} is part of our <strong className="text-white">complete 8-module professional course</strong>. Get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 14 AHPRA CPD hours</strong>.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -405,7 +405,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                 Unlock Full Course Access
               </h1>
               <p className="text-slate-300 text-lg mb-6 leading-relaxed">
-                This module is part of the <strong className="text-white">complete 8-module course</strong>. Upgrade to get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 14 CPD points</strong>.
+                This module is part of the <strong className="text-white">complete 8-module course</strong>. Upgrade to get instant access to all modules, downloadable resources, and earn <strong className="text-white">up to 14 CPD hours</strong>.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -665,7 +665,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                     SCAT6 is just one assessment tool
                   </p>
                   <p className="text-sm text-slate-600 mb-4">
-                    Confident concussion management requires VOMS vestibular screening, BESS balance testing, and evidence-based return-to-play decisions. The full course covers all of this — {CONFIG.COURSE.TOTAL_MODULES} modules, up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points.
+                    Confident concussion management requires VOMS vestibular screening, BESS balance testing, and evidence-based return-to-play decisions. The full course covers all of this — {CONFIG.COURSE.TOTAL_MODULES} modules, up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.
                   </p>
                   <Link
                     href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
@@ -701,7 +701,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                       href="/pricing"
                       className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-accent border-2 border-accent rounded-xl hover:bg-accent/5 transition-colors"
                     >
-                      Unlock all 8 modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD points
+                      Unlock all 8 modules · {CONFIG.COURSE.ONLINE_CPD_POINTS} CPD hours
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                     <p className="text-xs text-slate-500 max-w-sm text-center mt-1">
@@ -758,7 +758,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
               <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <Award className="w-4 h-4 text-teal-600" />
-                  <span className="font-semibold text-slate-700">{module.points} CPD Points</span>
+                  <span className="font-semibold text-slate-700">{module.points} CPD Hours</span>
                 </div>
                 <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
                 <div className="flex items-center gap-2">
@@ -1116,14 +1116,14 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                         <div className="flex-1">
                           <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Complete</h3>
                           <p className="text-[15px] text-slate-700 mb-6 leading-relaxed">
-                            Congratulations! You&apos;ve met all the requirements for this module. Mark it as complete to earn your {module.points} CPD points.
+                            Congratulations! You&apos;ve met all the requirements for this module. Mark it as complete to earn your {module.points} CPD hours.
                           </p>
                           <button
                             onClick={handleCompleteModule}
                             className="px-8 py-3.5 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
                           >
                             <CheckCircle2 className="w-5 h-5" strokeWidth={2.5} />
-                            Complete Module & Earn CPD Points
+                            Complete Module & Earn CPD Hours
                           </button>
                         </div>
                       </div>
@@ -1185,7 +1185,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">Knowledge Check</h2>
                 <p className="text-[15px] text-slate-600 leading-relaxed">
-                  Test your understanding of the clinical content. You need at least {Math.ceil(module.quiz.length * 0.75)} out of {module.quiz.length} questions correct to pass and earn your CPD points.
+                  Test your understanding of the clinical content. You need at least {Math.ceil(module.quiz.length * 0.75)} out of {module.quiz.length} questions correct to pass and earn your CPD hours.
                 </p>
               </div>
             </div>
@@ -1319,7 +1319,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                     )}
                     {!quizResult?.passed && isSCATModule && (
                       <p className="text-sm text-amber-700 mb-4">
-                        These clinical scenarios are covered in depth in the <Link href="/pricing" className="font-semibold underline hover:no-underline">full concussion management course</Link> — 8 modules, 14 CPD points.
+                        These clinical scenarios are covered in depth in the <Link href="/pricing" className="font-semibold underline hover:no-underline">full concussion management course</Link> — 8 modules, 14 CPD hours.
                       </p>
                     )}
                     {!quizResult?.passed && (
@@ -1359,14 +1359,14 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Complete</h3>
                   <p className="text-[15px] text-slate-700 mb-6 leading-relaxed">
-                    Congratulations! You've met all the requirements for this module.{module.points > 0 ? ` Mark it as complete to earn your ${module.points} CPD points.` : ''}
+                    Congratulations! You've met all the requirements for this module.{module.points > 0 ? ` Mark it as complete to earn your ${module.points} CPD hours.` : ''}
                   </p>
                   <button
                     onClick={handleCompleteModule}
                     className="px-8 py-3.5 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
                   >
                     <CheckCircle2 className="w-5 h-5" strokeWidth={2.5} />
-                    {module.points > 0 ? 'Complete Module & Earn CPD Points' : 'Complete Module'}
+                    {module.points > 0 ? 'Complete Module & Earn CPD Hours' : 'Complete Module'}
                   </button>
                 </div>
               </div>

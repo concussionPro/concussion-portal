@@ -91,7 +91,7 @@ function SuccessContent() {
                       We&apos;ve sent a confirmation + login link. The PDF also lives inside your ConcussionPro account for lifetime access across devices.
                     </p>
                     <p className="text-sm text-teal-800 leading-relaxed">
-                      <strong>Next step:</strong> book owners get A$100 off the full online course (8 CPD points, interactive quizzes, curated clinical video library, CPD certificate). The reference is Part 1; the course is Part 2.
+                      <strong>Next step:</strong> book owners get A$100 off the full online course (8 CPD hours, interactive quizzes, curated clinical video library, CPD certificate). The reference is Part 1; the course is Part 2.
                     </p>
                     <Link
                       href="/pricing"

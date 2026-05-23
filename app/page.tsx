@@ -49,7 +49,7 @@ export default function HomePage() {
 
                 {/* Subhead */}
                 <p className="text-base md:text-lg text-[var(--muted-foreground)] leading-relaxed mb-8">
-                  Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD points.
+                  Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.
                 </p>
 
                 {/* CTAs — primary + secondary buttons; preview link sits on its
@@ -290,7 +290,7 @@ export default function HomePage() {
           <div className="max-w-[760px] mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-delay-1">
               {[
-                { value: 'Up to 14', label: 'AHPRA CPD Points', sub: '8 online + 6 workshop' },
+                { value: 'Up to 14', label: 'AHPRA CPD Hours', sub: '8 online + 6 workshop' },
                 { value: '8', label: 'Online Modules', sub: 'Interactive quizzes' },
                 { value: '140+', label: 'References', sub: 'Evidence-based' },
               ].map((stat) => (
@@ -393,7 +393,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-[var(--foreground)]">Online Modules</h3>
-                    <p className="text-xs text-[var(--accent)] font-medium">8 CPD Points</p>
+                    <p className="text-xs text-[var(--accent)] font-medium">8 CPD Hours</p>
                   </div>
                 </div>
                 <ul className="space-y-2.5">
@@ -423,7 +423,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-[var(--foreground)]">Full-Day Practical</h3>
-                    <p className="text-xs text-[var(--accent)] font-medium">6 CPD Points</p>
+                    <p className="text-xs text-[var(--accent)] font-medium">6 CPD Hours</p>
                   </div>
                 </div>
                 <ul className="space-y-2.5">
@@ -571,7 +571,7 @@ export default function HomePage() {
                 Ready to master evidence-based concussion management?
               </h2>
               <p className="text-sm text-white/60 mb-6 max-w-md mx-auto relative z-10">
-                Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD points · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE} · Early bird pricing available
+                Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours · Lifetime access · From ${CONFIG.COURSE.PRICE_ONLINE} · Early bird pricing available
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
                 <Link

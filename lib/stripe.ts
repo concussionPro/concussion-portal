@@ -110,18 +110,18 @@ export async function createCourseCheckoutSession({
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `ConcussionPro — Workshop Upgrade (${locationLabel})`
-    productDescription = `Full-day in-person workshop (${locationLabel}) · 6 additional CPD points (14 total) · AHPRA aligned · All materials included`
+    productDescription = `Full-day in-person workshop (${locationLabel}) · 6 additional CPD hours (14 total) · AHPRA aligned · All materials included`
   } else if (courseType === 'online-only') {
     unitAmount = COURSE_PRICING.ONLINE_ONLY
     currency = 'aud'
     productName = 'ConcussionPro — Online Course'
-    productDescription = '8 online modules (8 CPD points) · Lifetime access · Clinical Toolkit · Reference Repository · Digital certificate'
+    productDescription = '8 online modules (8 CPD hours) · Lifetime access · Clinical Toolkit · Reference Repository · Digital certificate'
   } else {
     unitAmount = isEarlyBird ? COURSE_PRICING.FULL_COURSE_EARLY : COURSE_PRICING.FULL_COURSE_REGULAR
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `ConcussionPro — Complete Course (${locationLabel})`
-    productDescription = `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD points · AHPRA aligned · All materials included`
+    productDescription = `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD hours · AHPRA aligned · All materials included`
   }
 
   // Apply bundle-owner discount to AUD course purchases (online-only / full-course).

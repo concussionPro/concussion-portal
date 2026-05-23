@@ -312,7 +312,7 @@ export default function ClinicalToolkitPage() {
                         Upgrade to Full Course + Practical Skills Training
                       </h3>
                       <p className="text-sm text-slate-700 mb-4">
-                        You have full access to all online modules and clinical toolkit. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA-aligned CPD points certificate (8 online + 6 in-person).
+                        You have full access to all online modules and clinical toolkit. Upgrade to include the full-day hands-on workshop to earn your complete 14 AHPRA-aligned CPD hours certificate (8 online + 6 in-person).
                       </p>
                       <div className="flex flex-col sm:flex-row gap-3">
                         <button

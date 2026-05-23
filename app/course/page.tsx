@@ -29,7 +29,7 @@ const locations = Object.values(CONFIG.LOCATIONS)
 const included = [
   { icon: BookOpen, title: '8 Online Modules', desc: 'Self-paced expert training' },
   { icon: Calendar, title: 'Full-Day Skills Training', desc: 'Full-day practical SCAT6, VOMS, BESS' },
-  { icon: Award, title: '14 CPD Points', desc: 'AHPRA aligned' },
+  { icon: Award, title: '14 CPD Hours', desc: 'AHPRA aligned' },
   { icon: FileText, title: 'Clinical Resources', desc: 'Templates & frameworks' },
   { icon: Users, title: 'Expert Support', desc: 'Direct instructor access' },
   { icon: Brain, title: 'Lifetime Access', desc: 'Content updated regularly' },
@@ -72,7 +72,7 @@ export default function CoursePage() {
             <div className="h-12 w-px bg-border" />
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">14</div>
-              <div className="text-xs text-muted-foreground font-medium">CPD Points</div>
+              <div className="text-xs text-muted-foreground font-medium">CPD Hours</div>
             </div>
           </div>
         </div>

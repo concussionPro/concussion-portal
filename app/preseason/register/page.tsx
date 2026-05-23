@@ -269,7 +269,7 @@ export default function RegisterPage() {
               href={CONFIG.SHOP_URL}
               className="text-xs text-muted-foreground hover:text-accent text-center font-medium transition-colors block"
             >
-              Or view our full {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course →
+              Or view our full {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hour course →
             </Link>
           </div>
         </div>

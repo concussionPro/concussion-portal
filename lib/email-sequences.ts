@@ -144,7 +144,7 @@ export const POST_PURCHASE_SEQUENCE = [
   // DAY 7 - Midpoint Motivation
   {
     day: 7,
-    subject: 'You\'re halfway to 8 CPD points',
+    subject: 'You\'re halfway to 8 CPD hours',
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
@@ -155,7 +155,7 @@ export const POST_PURCHASE_SEQUENCE = [
         <li><strong>Module 6 — Return to Play, Work & School:</strong> Staged progression protocols and clearance criteria</li>
         <li><strong>Module 7 — Rehabilitation by Phenotype:</strong> Targeted treatment strategies for each concussion subtype</li>
       </ul>
-      <p>Complete all 8 modules and you'll earn your <strong>8 CPD point certificate</strong> — automatically generated and ready to download.</p>
+      <p>Complete all 8 modules and you'll earn your <strong>8 CPD hour certificate</strong> — automatically generated and ready to download.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day7', 'keep_going')}" class="cta-btn">Open Module 5: Multidisciplinary Management</a></center>
       <div class="sig">Zac</div>
     `),
@@ -187,7 +187,7 @@ export const POST_PURCHASE_SEQUENCE = [
     accessLevels: ['online-only', 'full-course'] as const,
     template: (name: string, loginLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-      <p>Quick reminder: once you complete all 8 modules, your <strong>8 CPD point certificate</strong> is automatically generated and ready to download from your dashboard.</p>
+      <p>Quick reminder: once you complete all 8 modules, your <strong>8 CPD hour certificate</strong> is automatically generated and ready to download from your dashboard.</p>
       <p>Each module takes 45-60 minutes. Most clinicians finish over a few sittings — and you have lifetime access, so there's no deadline.</p>
       <p>But if you're close, finishing this week means the material is fresh and ready to apply in clinic.</p>
       <center><a href="${utm(loginLink, 'post_purchase_day21', 'finish_course')}" class="cta-btn">Finish Your Course</a></center>
@@ -235,7 +235,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       <div class="callout">
         <strong>What you'll get:</strong><br><br>
         &#8226; 8 online modules with lifetime access<br>
-        &#8226; 8 AHPRA-aligned CPD points (14 with workshop)<br>
+        &#8226; 8 AHPRA-aligned CPD hours (14 with workshop)<br>
         &#8226; Clinical Toolkit: referral templates, RTP forms, clearance letters<br>
         &#8226; Endorsed by Osteopathy Australia
       </div>
@@ -267,7 +267,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
     template: (name: string) => emailShell(`
       <h2>Hi${name ? ` ${escapeHtml(name.split(' ')[0])}` : ''},</h2>
       <p>This is the last email I'll send about this. I don't want to be pushy — but I also don't want you to miss out if the timing just wasn't right.</p>
-      <p>If cost is a factor: the <strong>online-only option at $${CONFIG.COURSE.PRICE_ONLINE}</strong> gives you the full 8-module course with 8 CPD points. You can always add the workshop later.</p>
+      <p>If cost is a factor: the <strong>online-only option at $${CONFIG.COURSE.PRICE_ONLINE}</strong> gives you the full 8-module course with 8 CPD hours. You can always add the workshop later.</p>
       <p>If you have specific questions, just reply — I'm happy to chat.</p>
       <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'enrol_now')}" class="cta-btn">Enrol Now</a></center>
       <p class="ps">P.S. If you decided this course isn't for you, no hard feelings. The free SCAT6 Mastery course and SCAT6 forms are yours to keep.</p>
@@ -327,7 +327,7 @@ export const PRE_WORKSHOP_SEQUENCE = [
         <li>BESS (Balance Error Scoring System) — scoring calibration exercises</li>
         <li>Clinical case studies — group discussion and decision-making frameworks</li>
       </ul>
-      <p>You'll earn <strong>6 additional CPD points</strong> (for a total of 14) upon completion.</p>
+      <p>You'll earn <strong>6 additional CPD hours</strong> (for a total of 14) upon completion.</p>
       <p>Questions? Reply to this email or text me on the day.</p>
       <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
     `),
@@ -391,7 +391,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p>What would you do? Clear him? Bench him? What documentation protects you if something goes wrong?</p>
       <p>This exact scenario comes up in the SCAT6 Mastery course &mdash; and the clinical reasoning behind the right decision is worth the 8 minutes it takes to work through.</p>
       <center><a href="${utm(loginLink, 'scat_mastery_day7', 'case_study')}" class="cta-btn">Work Through This Case</a></center>
-      <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">If you're finding the free course useful, the full Concussion Management course covers VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype &mdash; 8 modules, 8 CPD points.</p>
+      <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">If you're finding the free course useful, the full Concussion Management course covers VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype &mdash; 8 modules, 8 CPD hours.</p>
       <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'scat_mastery_day7', 'see_course')}" class="cta-secondary">See Full Course &mdash; $${CONFIG.COURSE.PRICE_ONLINE}</a></center>
       <div class="sig">Zac</div>
     `),
@@ -420,14 +420,14 @@ export const SCAT_MASTERY_SEQUENCE = [
     `),
   },
 
-  // WEEK 3 (Day 14) - Introduce full course: 14 CPD points breakdown
+  // WEEK 3 (Day 14) - Introduce full course: 14 CPD hours breakdown
   {
     day: 14,
-    subject: '14 CPD points — here\'s the full breakdown',
+    subject: '14 CPD hours — here\'s the full breakdown',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
       <p>The free SCAT6 Mastery course covers the essentials. If you want to go deeper, here's what the full Concussion Management course covers:</p>
-      <p><strong>8 online modules (8 CPD points):</strong></p>
+      <p><strong>8 online modules (8 CPD hours):</strong></p>
       <ol>
         <li>Concussion pathophysiology &mdash; the neurometabolic cascade and mechanisms</li>
         <li>Diagnosis &amp; initial assessment &mdash; SCAT6 and clinical tools</li>
@@ -438,7 +438,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         <li>Rehabilitation pathways by phenotype &mdash; targeted treatment strategies</li>
         <li>Legal, ethical, communication &amp; documentation</li>
       </ol>
-      <p><strong>+ Full-day hands-on workshop (6 CPD points):</strong></p>
+      <p><strong>+ Full-day hands-on workshop (6 CPD hours):</strong></p>
       <ul>
         <li>Administer SCAT6, VOMS, and BESS on real subjects with expert feedback</li>
         <li>Clinical case discussions with other practitioners</li>
@@ -472,11 +472,11 @@ export const SCAT_MASTERY_SEQUENCE = [
           <td style="padding: 12px 16px; font-weight: 700; text-align: right;">Price</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
-          <td style="padding: 14px 16px;"><strong>Online Course</strong><br><span style="font-size: 13px; color: #64748b;">8 modules &middot; 8 CPD points &middot; Lifetime access</span></td>
+          <td style="padding: 14px 16px;"><strong>Online Course</strong><br><span style="font-size: 13px; color: #64748b;">8 modules &middot; 8 CPD hours &middot; Lifetime access</span></td>
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;"><s style="color:#94a3b8;">$${CONFIG.COURSE.PRICE_ONLINE}</s> $${CONFIG.COURSE.PRICE_ONLINE - 50}</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
-          <td style="padding: 14px 16px;"><strong>Complete Course</strong><br><span style="font-size: 13px; color: #64748b;">Online + workshop &middot; 14 CPD points</span></td>
+          <td style="padding: 14px 16px;"><strong>Complete Course</strong><br><span style="font-size: 13px; color: #64748b;">Online + workshop &middot; 14 CPD hours</span></td>
           <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</td>
         </tr>
       </table>
@@ -496,8 +496,8 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p>This is the last email in this series. I hope the SCAT forms and free course have been useful in your practice.</p>
       <p>If you're still considering the full course, here's the summary:</p>
       <ul>
-        <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD points, lifetime access</li>
-        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}):</strong> Online + full-day workshop, 14 CPD points</li>
+        <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD hours, lifetime access</li>
+        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}):</strong> Online + full-day workshop, 14 CPD hours</li>
       </ul>
       <p>Both include the clinical toolkit, reference repository, and digital certificate.</p>
       ${nextWorkshopCallout()}
@@ -537,36 +537,19 @@ export const SCAT_COMPLETION_UPSELL = {
       Use code <strong>${CONFIG.COURSE.PROMO_CODE}</strong> at checkout for $50 off the online modules.
     </div>
     <center><a href="${utm(pricingLink + (pricingLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_completion_upsell', 'upgrade_now')}" class="cta-btn">See the Online Course</a></center>
-    <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">$${CONFIG.COURSE.PRICE_ONLINE} &middot; 8 online modules &middot; 8 CPD points &middot; Lifetime access</p>
+    <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">$${CONFIG.COURSE.PRICE_ONLINE} &middot; 8 online modules &middot; 8 CPD hours &middot; Lifetime access</p>
     ${nextWorkshopCallout()}
 
-    <!-- Shorter alternatives — for clinicians who want incremental CPD, not the full clinical course -->
+    <!-- Short specialty courses are launching — capture intent via the poll until they ship -->
     <div style="margin: 32px 0 16px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
       <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
-        Or — short courses if you want incremental CPD
+        Or — short specialty courses are launching soon
       </p>
       <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
-        We run short specialty drops every 6 weeks at A$97-147. Two are live this month:
+        We're rolling out short courses (60-90 min, A$97-147) on the topics clinicians ask for most. Vote on what gets built first — voters get 40% off the winner at launch.
       </p>
-
-      <div style="background: #f0fdfa; border: 1px solid #5eead4; border-radius: 10px; padding: 14px; margin-bottom: 10px;">
-        <strong style="color: #0f172a;">AI in Clinical Practice</strong>
-        <span style="font-size: 12px; color: #64748b;">&middot; 3 CPD hrs &middot; A$147 (A$97 for you with code SCAT40)</span>
-        <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
-          AHPRA-aligned compliance for clinicians using AI scribes + LLM tools. Privacy Act, TGA, indemnity. Fillable consent templates included.
-        </p>
-      </div>
-
-      <div style="background: #f0fdfa; border: 1px solid #5eead4; border-radius: 10px; padding: 14px;">
-        <strong style="color: #0f172a;">The Vagus Nerve in Clinical Practice</strong>
-        <span style="font-size: 12px; color: #64748b;">&middot; 1.25 CPD hrs &middot; A$97</span>
-        <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
-          Evidence-based assessment + defensible interventions for autonomic dysfunction (POTS, post-concussion, long COVID). Honest evidence ranking — no polyvagal-marketing fluff.
-        </p>
-      </div>
-
-      <p style="margin: 16px 0 0 0; font-size: 13px; color: #475569; text-align: center;">
-        <a href="${utm('https://portal.concussion-education-australia.com/courses', 'scat_completion_upsell', 'browse_short_courses')}" style="color: #0d9488; font-weight: 600;">Browse all CEA courses →</a>
+      <p style="margin: 0; font-size: 13px; color: #475569; text-align: center;">
+        <a href="${utm('https://portal.concussion-education-australia.com/courses/poll', 'scat_completion_upsell', 'vote_next_course')}" style="color: #0d9488; font-weight: 600;">Vote on the next CEA course →</a>
       </p>
     </div>
 
@@ -781,10 +764,10 @@ export const ONLINE_UPGRADE_SEQUENCE = [
         <li>Practice VOMS and BESS scoring — the assessments clinicians find hardest to learn from text alone</li>
         <li>Work through clinical scenarios with other clinicians</li>
       </ul>
-      <p>The next workshop is confirmed &mdash; Melbourne, Saturday 13 June 2026 at Rydges Exhibition St. Add the hands-on day anytime to cap off your 14 CPD points.</p>
+      <p>The next workshop is confirmed &mdash; Melbourne, Saturday 13 June 2026 at Rydges Exhibition St. Add the hands-on day anytime to cap off your 14 CPD hours.</p>
       ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'upgrade_nudge', 'see_workshop')}" class="cta-btn">See Workshop Options</a></center>
-      <p style="font-size: 13px; color: #64748b; text-align: center;">6 extra CPD points · Small group (max 12) · Upgrade anytime</p>
+      <p style="font-size: 13px; color: #64748b; text-align: center;">6 extra CPD hours · Small group (max 12) · Upgrade anytime</p>
       <div class="sig">Zac</div>
       <p class="ps">P.S. Reply if you have any questions about the modules — I'm always happy to help.</p>
     `),
@@ -946,7 +929,7 @@ export const FREE_ALMOST_DONE = {
     <p>You've completed <strong>2 of 3 modules</strong> in the SCAT6 Mastery course. One more to go &mdash; clinical case studies and a scenario-based final quiz.</p>
     <p>The final module takes about 15 minutes. It tests everything you've learned with real clinical scenarios.</p>
     <center><a href="${utm(loginLink, 'free_almost_done', 'finish_last_module')}" class="cta-btn">Finish Your Last Module</a></center>
-    <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">Once you've earned your SCAT6 Mastery certificate, the full Concussion Management course takes your skills further — 8 modules covering VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype. 8 additional CPD points.</p>
+    <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">Once you've earned your SCAT6 Mastery certificate, the full Concussion Management course takes your skills further — 8 modules covering VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype. 8 additional CPD hours.</p>
     <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'free_almost_done', 'see_full_course')}" class="cta-secondary">See Full Course &mdash; $${CONFIG.COURSE.PRICE_ONLINE}</a></center>
     <div class="sig">Zac</div>
   `),
@@ -992,8 +975,8 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
         <strong>What the course adds on top of the text:</strong><br>
         &#8226; 8 video modules with clinical demonstrations (the VOMS and cervical screens especially)<br>
         &#8226; Case-based walkthroughs — watch me reason through real patient presentations<br>
-        &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD points and a certificate<br>
-        &#8226; Optional Melbourne workshop for hands-on practice (6 more CPD points)
+        &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD hours and a certificate<br>
+        &#8226; Optional Melbourne workshop for hands-on practice (6 more CPD hours)
       </div>
       <center><a href="${utm(pricingLink, 'ref_upgrade_d9', 'bundle_credit')}" class="cta-btn">See Your Discounted Price</a></center>
       <p class="ps">P.S. The credit doesn't expire — but early-bird workshop pricing does (${escapeHtml(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)}).</p>
@@ -1011,13 +994,13 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
       <p><strong>You're fine with just the reference if:</strong></p>
       <ul>
         <li>You're already confident assessing and happy applying from written protocols</li>
-        <li>You don't need CPD points this cycle</li>
+        <li>You don't need CPD hours this cycle</li>
         <li>You rarely see concussion cases — the text is a reliable desk reference</li>
       </ul>
       <p><strong>The course pays back quickly if:</strong></p>
       <ul>
         <li>You've read the VOMS chapter and still aren't sure if you're <em>doing</em> it right (most common)</li>
-        <li>You need CPD points and want them in one structured block</li>
+        <li>You need CPD hours and want them in one structured block</li>
         <li>You want the confidence of watching it done before attempting it yourself</li>
       </ul>
       <p>With the A$100 bundle credit, the online course is <strong>A$${CONFIG.COURSE.PRICE_ONLINE - 100}</strong> — about the cost of one private consult. Full course (online + Melbourne workshop) drops to <strong>A$${CONFIG.COURSE.PRICE_EARLY_BIRD - 100}</strong> at early-bird pricing.</p>
@@ -1113,7 +1096,7 @@ export const ALMOST_DONE_EMAIL = {
   subject: "You're one module away from your certificate",
   template: (name: string, loginLink: string) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-    <p>You've completed <strong>7 of 8 modules</strong> — you're one module away from earning your 8 CPD point certificate.</p>
+    <p>You've completed <strong>7 of 8 modules</strong> — you're one module away from earning your 8 CPD hour certificate.</p>
     <p>You've already done the hard work. The final module takes about 60 minutes, and once you finish, your certificate is generated automatically and ready to download from your dashboard.</p>
     <div class="callout">
       <strong>What you've achieved so far:</strong><br><br>
@@ -1121,7 +1104,7 @@ export const ALMOST_DONE_EMAIL = {
       &#8226; SCAT6 administration and clinical assessment tools<br>
       &#8226; Return-to-play, work, and school protocols<br>
       &#8226; Rehabilitation strategies by concussion phenotype<br><br>
-      <strong>One module left</strong> — finish it and your 8 AHPRA-aligned CPD points are locked in.
+      <strong>One module left</strong> — finish it and your 8 AHPRA-aligned CPD hours are locked in.
     </div>
     <center><a href="${utm(loginLink, 'almost_done', 'finish_last_module')}" class="cta-btn">Finish Your Last Module</a></center>
     <p>You're so close. Don't leave your certificate on the table.</p>

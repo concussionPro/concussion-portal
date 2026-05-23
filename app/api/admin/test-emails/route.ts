@@ -62,7 +62,7 @@ function preseasonRegisterEmail(baseUrl: string): string {
               <p style="margin: 0 0 8px; font-weight: 700; font-size: 16px; color: #1e293b;">Free: Master the Full SCAT6 Protocol</p>
               <p style="margin: 0 0 20px; font-size: 14px; color: #475569; line-height: 1.5;">Learn how to properly administer and interpret every SCAT6 &amp; SCOAT6 section. Includes fillable forms, clinical toolkit, and certificate. <strong>Completely free.</strong></p>
               <a href="${baseUrl}/scat-mastery" style="display: inline-block; padding: 14px 32px; background-color: #5b9aa6; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 15px;">Get Free Course &rarr;</a>
-              <p style="margin: 16px 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">Want deeper training? Our <a href="${baseUrl}/pricing" style="color: #1e6b73; font-weight: 600; text-decoration: underline; display: inline; background: none; padding: 0; border-radius: 0; border: none;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
+              <p style="margin: 16px 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">Want deeper training? Our <a href="${baseUrl}/pricing" style="color: #1e6b73; font-weight: 600; text-decoration: underline; display: inline; background: none; padding: 0; border-radius: 0; border: none;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hour course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
             </div>
           </div>
           <div class="footer">
@@ -126,7 +126,7 @@ function preseasonSubmitEmail(baseUrl: string): string {
               <p style="margin: 0 0 8px; font-weight: 700; font-size: 16px; color: #1e293b;">Free: Master the Full SCAT6 Protocol</p>
               <p style="margin: 0 0 20px; font-size: 13px; color: #475569; line-height: 1.5;">Learn how to properly administer and interpret every SCAT6 section. Fillable forms, clinical toolkit &amp; certificate included. <strong>Completely free.</strong></p>
               <a href="${baseUrl}/scat-mastery" style="display: inline-block; padding: 14px 32px; background-color: #5b9aa6; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 15px;">Get Free Course &rarr;</a>
-              <p style="margin: 16px 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">Want deeper training? Our <a href="${baseUrl}/pricing" style="color: #1e6b73; font-weight: 600; text-decoration: underline; display: inline; background: none; padding: 0; border-radius: 0; border: none;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD point course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
+              <p style="margin: 16px 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">Want deeper training? Our <a href="${baseUrl}/pricing" style="color: #1e6b73; font-weight: 600; text-decoration: underline; display: inline; background: none; padding: 0; border-radius: 0; border: none;">full ${CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hour course</a> covers VOMS, BESS, return-to-play &amp; more.</p>
             </div>
           </div>
           <div class="footer">
@@ -197,7 +197,7 @@ function welcomeEmail(baseUrl: string): string {
           <div class="content">
             <h2 style="margin-top: 0;">Hi Zac,</h2>
             <p>Your course is ready. Here's how to get started.</p>
-            <h3>Start earning CPD points today:</h3>
+            <h3>Start earning CPD hours today:</h3>
             <div style="background: #f1f5f9; border-radius: 12px; padding: 20px; margin: 24px 0;">
               <div style="display: flex; align-items: start; margin: 12px 0;"><div style="background: #5b9aa6; color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">1</div><div><strong>Click below to log in</strong><br><span style="color: #64748b; font-size: 14px;">No password — just click the secure link</span></div></div>
               <div style="display: flex; align-items: start; margin: 12px 0;"><div style="background: #5b9aa6; color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">2</div><div><strong>Start Module 1: What is a Concussion?</strong><br><span style="color: #64748b; font-size: 14px;">Concussion pathophysiology (~45 min)</span></div></div>

@@ -38,7 +38,7 @@ Tier 2 — secondary:
 - Athletic trainers / strength & conditioning coaches working in clinical settings
 - Occupational therapists (rehab settings)
 
-**NOT the audience:** parents, athletes, lay public, general "concussion education" audience. CEA sells to clinicians who need CPD points and clinical competence.
+**NOT the audience:** parents, athletes, lay public, general "concussion education" audience. CEA sells to clinicians who need CPD hours and clinical competence.
 
 ---
 

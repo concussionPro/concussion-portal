@@ -9,7 +9,7 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 export const metadata: Metadata = {
   title: 'AHPRA CPD Requirements for Allied Health: Where Concussion Education Fits',
   description: 'A practical guide to annual CPD requirements for physiotherapists, osteopaths, chiropractors, and exercise physiologists — and how concussion management training counts toward your obligations.',
-  keywords: 'AHPRA CPD requirements, physiotherapy CPD hours, osteopathy CPD requirements, chiropractic CPD australia, ESSA CPD points, concussion CPD australia, allied health CPD, AHPRA audit CPD',
+  keywords: 'AHPRA CPD requirements, physiotherapy CPD hours, osteopathy CPD requirements, chiropractic CPD australia, ESSA CPD hours, concussion CPD australia, allied health CPD, AHPRA audit CPD',
   openGraph: {
     title: 'AHPRA CPD Requirements for Allied Health: Where Concussion Education Fits',
     description: 'Annual CPD requirements for physios, osteos, chiros, and EPs — and how concussion education counts toward your obligations.',
@@ -172,7 +172,7 @@ export default function AHPRACPDPage() {
               <div className="space-y-3 text-slate-700">
                 <div className="flex items-start gap-3 p-3 bg-rose-50 rounded-lg">
                   <Award className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
-                  <span><strong>Minimum:</strong> 20 CPD points per calendar year (1 hour = 1 point). At least 15 points must be from the Further Education category.</span>
+                  <span><strong>Minimum:</strong> 20 CPD hours per calendar year (1 hour = 1 point). At least 15 points must be from the Further Education category.</span>
                 </div>
                 <p>
                   <strong>Important distinction:</strong> Exercise physiologists are <strong>not AHPRA-regulated</strong>. They are self-regulated through ESSA, which is part of the National Alliance of Self-Regulating Health Professions (NASRHP). ESSA uses standards closely modelled on AHPRA&apos;s framework. The registration period runs on a calendar year (January to December), not the December&ndash;November AHPRA cycle.
@@ -327,7 +327,7 @@ export default function AHPRACPDPage() {
                 <a href="https://www.chiropracticboard.gov.au/Codes-guidelines/FAQ/Continuing-professional-development.aspx" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">chiropracticboard.gov.au</a>
               </li>
               <li>
-                ESSA. CPD Points Guidelines.{' '}
+                ESSA. CPD Hours Guidelines.{' '}
                 <a href="https://www.essa.org.au/Public/Public/PROFESSIONAL_DEVELOPMENT/Continuing_Professional_Development__CPD__Points_Guidelines.aspx" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">essa.org.au</a>
               </li>
             </ul>

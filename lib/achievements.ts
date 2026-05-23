@@ -41,7 +41,7 @@ export const ACHIEVEMENTS: Record<string, Achievement> = {
   allComplete: {
     id: 'allComplete',
     title: 'Clinical Mastery',
-    description: 'All 8 online modules completed - 8 online CPD points earned',
+    description: 'All 8 online modules completed - 8 online CPD hours earned',
     icon: 'award',
     earned: false
   }

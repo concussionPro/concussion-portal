@@ -22,7 +22,7 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
             Module {moduleNumber} is Locked
           </h2>
           <p className="text-base text-slate-600 mb-6 leading-relaxed">
-            <span className="font-semibold">{moduleTitle}</span> is part of the full course. Unlock all {CONFIG.COURSE.TOTAL_MODULES} online modules and earn your CPD points.
+            <span className="font-semibold">{moduleTitle}</span> is part of the full course. Unlock all {CONFIG.COURSE.TOTAL_MODULES} online modules and earn your CPD hours.
           </p>
 
           {/* Stats */}

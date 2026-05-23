@@ -494,7 +494,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div>
                         <div className="text-sm font-semibold text-slate-900">In-Person Workshop</div>
-                        <div className="text-xs text-slate-600 mt-1">Full-day practical training (6 CPD points)</div>
+                        <div className="text-xs text-slate-600 mt-1">Full-day practical training (6 CPD hours)</div>
                       </div>
                       {isFullCourse ? (
                         <div className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -547,7 +547,7 @@ export default function SettingsPage() {
                             </span>
                           </div>
                           <p className="text-xs text-emerald-700 mb-1">
-                            Online Course — {CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD points
+                            Online Course — {CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA CPD hours
                             {isFullCourse && (
                               <span className="block text-emerald-500 mt-0.5">
                                 Workshop CPD ({CONFIG.COURSE.TOTAL_CPD_POINTS - CONFIG.COURSE.ONLINE_CPD_POINTS} points) awarded at your workshop
@@ -706,7 +706,7 @@ export default function SettingsPage() {
                     )}
 
                     <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
-                      <p className="text-sm text-purple-800 font-medium mb-2">Ready for more? Earn up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points with the full course.</p>
+                      <p className="text-sm text-purple-800 font-medium mb-2">Ready for more? Earn up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD hours with the full course.</p>
                       <button
                         onClick={() => router.push('/pricing')}
                         className="text-sm text-purple-600 hover:text-purple-800 font-semibold"

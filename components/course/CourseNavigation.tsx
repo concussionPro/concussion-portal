@@ -168,7 +168,7 @@ export function CourseNavigation({
                       {module.title}
                     </div>
                     <div className="text-xs text-slate-500">
-                      {module.duration} • {module.points} CPD points
+                      {module.duration} • {module.points} CPD hours
                     </div>
                   </div>
                 </button>

@@ -190,7 +190,7 @@ export default function PreviewPage() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Award className="w-4 h-4" />
-                          <span className="font-medium">1 CPD Point</span>
+                          <span className="font-medium">1 CPD Hour</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <FileText className="w-4 h-4" />
@@ -424,7 +424,7 @@ export default function PreviewPage() {
               </div>
               <div className="space-y-3">
                 {[
-                  { label: '14 CPD Points', desc: '8 online + 6 workshop' },
+                  { label: '14 CPD Hours', desc: '8 online + 6 workshop' },
                   { label: 'Lifetime Access', desc: 'Content updated regularly' },
                   { label: 'Clinical Toolkit', desc: 'Flowcharts, templates, forms' },
                   { label: 'Flexible Dates', desc: `Next workshops ${CONFIG.WORKSHOP.NEXT_ROUND}` },

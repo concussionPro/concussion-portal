@@ -2,7 +2,7 @@
  * FREE SCAT6/SCOAT6 Mastery Course Modules
  * For preview/free access users only
  * 3 modules, ~60 minutes total
- * 1 CPD point awarded on completion of all 3 modules
+ * 1 CPD hour awarded on completion of all 3 modules
  * Restructured April 2026 for conversion optimisation
  */
 

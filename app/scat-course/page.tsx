@@ -448,7 +448,7 @@ export default function SCATCoursePage() {
                 Unlock the Full {CONFIG.COURSE.TOTAL_MODULES}-Module Course
               </h3>
               <p className="text-slate-700 mb-4">
-                Go deeper with advanced concussion management — phenotype-based rehabilitation, BESS testing, VOMS protocols, return-to-play frameworks, and clinical case studies. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD points ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop).
+                Go deeper with advanced concussion management — phenotype-based rehabilitation, BESS testing, VOMS protocols, return-to-play frameworks, and clinical case studies. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} total CPD hours ({CONFIG.COURSE.ONLINE_CPD_POINTS} online + {CONFIG.COURSE.IN_PERSON_CPD_POINTS} workshop).
               </p>
               <ul className="grid md:grid-cols-2 gap-2 mb-4">
                 <li className="flex items-center gap-2 text-sm text-slate-700">

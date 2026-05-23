@@ -3,7 +3,7 @@
 
 **Duration:** 15 minutes
 **Target Audience:** Australian health practitioners
-**CPD Points:** 5
+**CPD Hours:** 5
 
 ---
 
@@ -16,7 +16,7 @@
 
 Over the next 15 minutes, we'll master the essential diagnostic tools you'll use daily—SCAT6, VOMS, BESS, cranial nerve screening, and cervical evaluation. By the end, you'll have a systematic approach to assess any suspected concussion across all age groups.
 
-This module is worth 5 AHPRA CPD points. Let's begin."
+This module is worth 5 AHPRA CPD hours. Let's begin."
 
 ---
 
@@ -211,7 +211,7 @@ This systematic approach ensures you don't miss critical findings and allows you
 
 In Module 3, we'll put this into practice with case-based scenarios and acute concussion management protocols.
 
-Complete the knowledge check now—you'll need 2 out of 7 correct to progress and earn your CPD points.
+Complete the knowledge check now—you'll need 2 out of 7 correct to progress and earn your CPD hours.
 
 Thank you for watching."
 

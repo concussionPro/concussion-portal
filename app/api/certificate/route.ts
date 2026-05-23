@@ -367,34 +367,19 @@ async function sendCertificateEmail(opts: {
                 ${opts.cpdPoints > 0 ? `
                 <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 4px; margin: 20px 0;">
                   <p style="margin: 0; font-size: 14px; color: #1e40af;">
-                    <strong>For AHPRA Audit:</strong> Retain this certificate in your CPD portfolio for at least 5 years. Log this activity as "Educational Activity — Reviewing & Reflecting" with ${opts.cpdPoints} CPD points.
+                    <strong>For AHPRA Audit:</strong> Retain this certificate in your CPD portfolio for at least 5 years. Log this activity as "Educational Activity — Reviewing & Reflecting" with ${opts.cpdPoints} CPD hours.
                   </p>
                 </div>
                 ` : ''}
 
-                <!-- What's next — multi-course upsell, framed as continuation not sales pitch -->
+                <!-- What's next — flagship + poll. Short courses surface here only after they actually launch. -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
                     What's next on your CPD plan
                   </p>
                   <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
-                    You've earned ${opts.cpdPoints} point. Most AHPRA boards need 20–50 hours per registration cycle. Here's where to go next.
+                    You've earned ${opts.cpdPoints} CPD ${opts.cpdPoints === 1 ? 'hour' : 'hours'}. Most AHPRA boards need 20–50 hours per registration cycle. Here's the next step.
                   </p>
-
-                  <!-- Short course — entry-friendly -->
-                  <div style="background: #f0fdfa; border: 1px solid #5eead4; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
-                    <div style="font-size: 11px; font-weight: 700; color: #0d9488; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
-                      Short course · 3 CPD hours · A$97 for you
-                    </div>
-                    <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 17px;">AI in Clinical Practice</h3>
-                    <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569; line-height: 1.5;">
-                      AHPRA-aligned compliance for AI use — Privacy Act, APP 6/8/11, TGA, indemnity carrier positions. Includes fillable consent templates, de-identification checklists, and a per-Board CPD reference for all 15 AHPRA Boards. Launches 1 June.
-                    </p>
-                    <a href="https://portal.concussion-education-australia.com/courses/ai-in-clinical-practice?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=ai-course" style="display: inline-block; padding: 9px 18px; background: #0d9488; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
-                      View course →
-                    </a>
-                    <span style="margin-left: 6px; font-size: 11px; color: #64748b;">A$147 retail · A$97 for SCAT graduates</span>
-                  </div>
 
                   <!-- Flagship -->
                   <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
@@ -411,9 +396,9 @@ async function sendCertificateEmail(opts: {
                     <span style="margin-left: 6px; font-size: 11px; color: #64748b;">A$1,190 · early bird ends 31 May</span>
                   </div>
 
-                  <!-- Poll — soft engagement -->
+                  <!-- Poll — capture intent for upcoming short courses -->
                   <p style="margin: 16px 0 0 0; font-size: 13px; color: #475569;">
-                    Or shape what gets built next — <a href="https://portal.concussion-education-australia.com/courses/poll?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=poll" style="color: #0d9488; font-weight: 600;">vote on the next CEA course</a>. Voters get 40% off the winner at launch.
+                    Short specialty courses launching from June — <a href="https://portal.concussion-education-australia.com/courses/poll?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=poll" style="color: #0d9488; font-weight: 600;">vote on what gets built first</a>. Voters get 40% off the winner at launch.
                   </p>
                 </div>
 
