@@ -109,80 +109,110 @@ export default async function HeidiTourPage() {
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-700 mb-3">
             Two courses, one platform · click any to open the learning dashboard
           </p>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4 items-stretch">
             {/* AI in Clinical Practice + Heidi Scribe — left, slightly emphasised */}
             <Link
               href="/courses/ai-in-clinical-practice"
-              className="group rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/5 via-white to-white p-6 hover:border-accent/50 hover:shadow-lg transition-all flex flex-col"
+              className="group rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/5 via-white to-white hover:border-accent/50 hover:shadow-lg transition-all flex flex-col overflow-hidden"
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-accent text-white">
+              {/* Header */}
+              <div className="px-5 pt-5 pb-4">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-accent text-white mb-3">
                   <Sparkles className="w-3 h-3" />
-                  Launching · Heidi recommended throughout
+                  Launching · Heidi recommended
                 </span>
+                <h2 className="text-xl font-bold text-foreground leading-tight mb-1.5">
+                  AI in Clinical Practice
+                </h2>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  AHPRA-aligned AI compliance for AU clinicians. <strong className="text-foreground">Heidi is the CEA-recommended AU scribe</strong> throughout every documentation module and specialty deep-dive.
+                </p>
               </div>
-              <h2 className="text-2xl font-bold text-foreground leading-tight mb-2">
-                AI in Clinical Practice
-              </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                AHPRA-aligned AI compliance for AU clinicians. <strong className="text-foreground">Heidi is the CEA-recommended AU scribe</strong> in every documentation module and specialty deep-dive. Every student touches Heidi as part of the curriculum.
-              </p>
-              <div className="rounded-lg bg-white/60 border border-slate-200 p-3 mb-4">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Modules</p>
-                <ul className="space-y-1">
-                  {AI_COURSE_MODULES.map((m) => (
-                    <li key={m} className="text-xs text-foreground/85 leading-snug">{m}</li>
+
+              {/* Module list — product-chrome style */}
+              <div className="border-t border-accent/15 bg-white/40">
+                <div className="px-5 py-2 border-b border-accent/10 flex items-center justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Curriculum</p>
+                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">9 modules</p>
+                </div>
+                <ul>
+                  {AI_COURSE_MODULES.map((m, i) => (
+                    <li
+                      key={m}
+                      className={`px-5 py-1.5 text-xs text-foreground/80 leading-snug flex items-baseline gap-2 ${i < AI_COURSE_MODULES.length - 1 ? 'border-b border-accent/5' : ''}`}
+                    >
+                      <span>{m}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {['9 modules', '40 prompts', '14 templates', 'Certification', '17 Boards calibrated'].map((s) => (
-                  <span key={s} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
-                    {s}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-auto text-sm font-bold text-accent group-hover:underline inline-flex items-center gap-1">
-                Open the course
-                <ArrowRight className="w-4 h-4" />
+
+              {/* Stat pills + CTA */}
+              <div className="mt-auto px-5 py-4 border-t border-accent/15 bg-white/60">
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {['40 prompts', '14 templates', '17 Boards', 'Certification'].map((s) => (
+                    <span key={s} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+                <div className="text-sm font-bold text-accent group-hover:underline inline-flex items-center gap-1">
+                  Open the course
+                  <ArrowRight className="w-4 h-4" />
+                </div>
               </div>
             </Link>
 
             {/* Concussion Clinical Mastery — right */}
             <Link
               href="/learning"
-              className="group rounded-2xl border border-slate-200 bg-white p-6 hover:border-accent/40 hover:shadow-md transition-all flex flex-col"
+              className="group rounded-2xl border-2 border-slate-200 bg-white hover:border-accent/40 hover:shadow-md transition-all flex flex-col overflow-hidden"
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+              {/* Header */}
+              <div className="px-5 pt-5 pb-4">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200 mb-3">
                   <Award className="w-3 h-3" />
                   Live · OA-endorsed · A$1,190
                 </span>
+                <h2 className="text-xl font-bold text-foreground leading-tight mb-1.5">
+                  Concussion Clinical Mastery
+                </h2>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Flagship 14-CPD-hour clinical course. Assessment, acute management, return-to-play protocols, persistent symptoms, SCAT6 + SCOAT6 instruments. Live AU clinician subscriber base.
+                </p>
               </div>
-              <h2 className="text-2xl font-bold text-foreground leading-tight mb-2">
-                Concussion Clinical Mastery
-              </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                Flagship 14-CPD-hour clinical course covering assessment, acute management, return-to-play protocols, persistent symptoms, and the SCAT6 + SCOAT6 instruments. Trading platform with AU clinician subscriber base.
-              </p>
-              <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 mb-4">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Modules</p>
-                <ul className="space-y-1">
-                  {CCM_MODULES.map((m) => (
-                    <li key={m} className="text-xs text-foreground/85 leading-snug">{m}</li>
+
+              {/* Module list */}
+              <div className="border-t border-slate-200 bg-slate-50/60">
+                <div className="px-5 py-2 border-b border-slate-200 flex items-center justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Curriculum</p>
+                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">11 modules</p>
+                </div>
+                <ul>
+                  {CCM_MODULES.map((m, i) => (
+                    <li
+                      key={m}
+                      className={`px-5 py-1.5 text-xs text-foreground/80 leading-snug flex items-baseline gap-2 ${i < CCM_MODULES.length - 1 ? 'border-b border-slate-100' : ''}`}
+                    >
+                      <span>{m}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {['11 modules', '14 CPD hours', 'OA-endorsed', 'SCAT6 + SCOAT6', 'Certification'].map((s) => (
-                  <span key={s} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
-                    {s}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-auto text-sm font-bold text-accent group-hover:underline inline-flex items-center gap-1">
-                Open the course
-                <ArrowRight className="w-4 h-4" />
+
+              {/* Stat pills + CTA */}
+              <div className="mt-auto px-5 py-4 border-t border-slate-200 bg-white">
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {['14 CPD hours', 'OA-endorsed', 'SCAT6 + SCOAT6', 'Certification'].map((s) => (
+                    <span key={s} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+                <div className="text-sm font-bold text-accent group-hover:underline inline-flex items-center gap-1">
+                  Open the course
+                  <ArrowRight className="w-4 h-4" />
+                </div>
               </div>
             </Link>
           </div>
