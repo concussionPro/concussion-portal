@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { ShieldCheck, Eye, Clock, AlertCircle, Loader2, Check, ArrowRight } from 'lucide-react'
 
@@ -42,7 +42,6 @@ export function DemoAccessClient() {
 
   const [email, setEmail] = useState('')
   const [organisation, setOrganisation] = useState(suggestedOrg)
-  const [hasScrolled, setHasScrolled] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [authorised, setAuthorised] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -50,20 +49,11 @@ export function DemoAccessClient() {
   const [accepted, setAccepted] = useState<{ id: number } | null>(null)
   const ndaRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const el = ndaRef.current
-    if (!el) return
-    const onScroll = () => {
-      const reachedBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 8
-      if (reachedBottom && !hasScrolled) setHasScrolled(true)
-    }
-    el.addEventListener('scroll', onScroll)
-    if (el.scrollHeight <= el.clientHeight) setHasScrolled(true)
-    return () => el.removeEventListener('scroll', onScroll)
-  }, [hasScrolled])
-
   const orgLabel = organisation.trim() || '[your organisation]'
-  const canSubmit = !!organisation.trim() && hasScrolled && agreed && authorised && !submitting
+  // Email is genuinely optional. Only blocker for submit: org filled,
+  // both consents checked, not currently submitting. Scroll-to-read is
+  // encouraged via the box height + page layout, not enforced.
+  const canSubmit = !!organisation.trim() && agreed && authorised && !submitting
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,11 +63,7 @@ export function DemoAccessClient() {
       return
     }
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Email looks invalid — leave blank or fix.')
-      return
-    }
-    if (!hasScrolled) {
-      setError('Please read to the bottom of the agreement before proceeding.')
+      setError('Email format looks invalid — leave blank or fix.')
       return
     }
     if (!agreed || !authorised) {
@@ -193,7 +179,7 @@ export function DemoAccessClient() {
         })}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         {/* Pre-filled mode: show acceptance context, no form fields */}
         {isPrefilled ? (
           <div className="rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 to-emerald-50/30 p-5">
@@ -205,7 +191,8 @@ export function DemoAccessClient() {
               Your IP and timestamp will be logged with the agreement. If you&apos;d like a copy of the agreement emailed to you, add your work email below — optional.
             </p>
             <input
-              type="email"
+              type="text"
+              inputMode="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={submitting}
@@ -220,7 +207,8 @@ export function DemoAccessClient() {
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Work email</label>
               <input
-                type="email"
+                type="text"
+              inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={submitting}
@@ -246,14 +234,9 @@ export function DemoAccessClient() {
 
         {/* NDA */}
         <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <label className="text-sm font-semibold text-foreground">
-              Confidentiality &amp; non-development agreement
-            </label>
-            <span className={`text-[11px] font-medium ${hasScrolled ? 'text-emerald-700' : 'text-slate-400'}`}>
-              {hasScrolled ? '✓ Read' : 'Scroll to read'}
-            </span>
-          </div>
+          <label className="text-sm font-semibold text-foreground block mb-2">
+            Confidentiality &amp; non-development agreement
+          </label>
           <div
             ref={ndaRef}
             className="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-5 max-h-64 overflow-y-auto text-xs text-foreground leading-relaxed whitespace-pre-line shadow-inner"
@@ -261,30 +244,30 @@ export function DemoAccessClient() {
             {NDA_TEXT}
           </div>
           <p className="text-[11px] text-muted-foreground mt-2">
-            Agreement version <span className="font-mono">{NDA_VERSION}</span>. Both checkboxes below unlock once you scroll to the bottom.
+            Agreement version <span className="font-mono">{NDA_VERSION}</span>. Read the terms above before checking both boxes.
           </p>
         </div>
 
         {/* Two checkboxes */}
         <div className="space-y-2.5 rounded-xl border border-slate-200 bg-white p-5">
-          <label className={`flex items-start gap-3 cursor-pointer rounded-lg p-2 -m-2 hover:bg-slate-50 transition-colors ${!hasScrolled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+          <label className="flex items-start gap-3 cursor-pointer rounded-lg p-2 -m-2 hover:bg-slate-50 transition-colors">
             <input
               type="checkbox"
               checked={agreed}
-              onChange={(e) => hasScrolled && setAgreed(e.target.checked)}
-              disabled={!hasScrolled || submitting}
+              onChange={(e) => setAgreed(e.target.checked)}
+              disabled={submitting}
               className="mt-1 w-4 h-4 accent-accent"
             />
             <span className="text-sm text-foreground leading-relaxed">
               I agree to the confidentiality and non-development terms above.
             </span>
           </label>
-          <label className={`flex items-start gap-3 cursor-pointer rounded-lg p-2 -m-2 hover:bg-slate-50 transition-colors ${!hasScrolled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+          <label className="flex items-start gap-3 cursor-pointer rounded-lg p-2 -m-2 hover:bg-slate-50 transition-colors">
             <input
               type="checkbox"
               checked={authorised}
-              onChange={(e) => hasScrolled && setAuthorised(e.target.checked)}
-              disabled={!hasScrolled || submitting}
+              onChange={(e) => setAuthorised(e.target.checked)}
+              disabled={submitting}
               className="mt-1 w-4 h-4 accent-accent"
             />
             <span className="text-sm text-foreground leading-relaxed">
