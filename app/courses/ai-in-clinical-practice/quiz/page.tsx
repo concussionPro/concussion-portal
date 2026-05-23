@@ -21,7 +21,7 @@ export default async function QuizPage() {
     <div className="min-h-screen bg-background">
       <SiteNav />
       <CourseSidebar />
-      <main className="md:pl-64">
+      <main className="md:pl-72">
       <div className="max-w-3xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
         <h1 className="text-3xl font-bold tracking-tight mb-2">Certification Quiz</h1>

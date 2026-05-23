@@ -24,7 +24,7 @@ export default async function ReferencesPage() {
     <div className="min-h-screen bg-background">
       <SiteNav />
       <CourseSidebar />
-      <main className="md:pl-64">
+      <main className="md:pl-72">
         <div className="max-w-4xl mx-auto px-6 pt-[120px] pb-20">
           <AdminPreviewBadge access={access} />
 
@@ -50,7 +50,7 @@ export default async function ReferencesPage() {
             </h2>
             <div className="grid gap-3">
               {foundational.map((r) => (
-                <ReferenceCard key={r.id} ref={r} foundational />
+                <ReferenceCard key={r.id} reference={r} foundational />
               ))}
             </div>
           </section>
@@ -66,7 +66,7 @@ export default async function ReferencesPage() {
               </div>
               <div className="grid gap-2.5">
                 {g.refs.map((r) => (
-                  <ReferenceCard key={r.id} ref={r} />
+                  <ReferenceCard key={r.id} reference={r} />
                 ))}
               </div>
             </section>
@@ -89,33 +89,33 @@ export default async function ReferencesPage() {
 }
 
 function ReferenceCard({
-  ref,
+  reference,
   foundational,
 }: {
-  ref: typeof AI_REFERENCES[0]
+  reference: typeof AI_REFERENCES[0]
   foundational?: boolean
 }) {
   return (
     <div className={`rounded-lg border p-4 ${foundational ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-white'}`}>
       <div className="flex items-baseline gap-2 mb-1.5 flex-wrap">
         {foundational && <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />}
-        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{ref.category}</span>
+        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{reference.category}</span>
         <span className="text-[10px] text-slate-400">·</span>
-        <span className="text-[10px] text-slate-500 tabular-nums">{ref.year}</span>
+        <span className="text-[10px] text-slate-500 tabular-nums">{reference.year}</span>
       </div>
       <p className="text-sm font-bold text-foreground leading-snug mb-1">
-        {ref.title}
+        {reference.title}
       </p>
       <p className="text-xs text-muted-foreground mb-2 leading-snug">
-        {ref.authors} · <em>{ref.source}</em>
+        {reference.authors} · <em>{reference.source}</em>
       </p>
       <p className="text-xs text-foreground/75 leading-relaxed mb-2.5">
         <span className="font-semibold text-foreground">Why it matters: </span>
-        {ref.relevance}
+        {reference.relevance}
       </p>
-      {ref.url && (
+      {reference.url && (
         <a
-          href={ref.url}
+          href={reference.url}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:underline"

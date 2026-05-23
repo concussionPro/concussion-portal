@@ -38,45 +38,53 @@ export function CourseSidebar() {
   const totalMin = MODULES.reduce((sum, m) => sum + m.durationMin, 0)
 
   return (
-    <aside className="hidden md:flex fixed left-0 top-[60px] bottom-0 w-64 flex-col border-r border-slate-200 bg-white z-30 overflow-y-auto">
-      {/* Course header */}
+    <aside className="hidden md:flex fixed left-0 top-[60px] bottom-0 w-72 flex-col border-r border-slate-200 bg-white z-30 overflow-y-auto">
+      {/* Course header — generous spacing, no border crush */}
       <Link
         href="/courses/ai-in-clinical-practice"
-        className={`px-5 py-4 border-b border-slate-200 block transition-colors ${
+        className={`px-5 pt-6 pb-5 border-b border-slate-200 block transition-colors ${
           isOnCourseLanding ? 'bg-accent/[0.04]' : 'hover:bg-slate-50'
         }`}
       >
-        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-accent mb-1">CEA Learning</p>
-        <p className="text-sm font-bold text-foreground leading-tight">AI in Clinical Practice</p>
-        <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">
+        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mb-2">CEA Learning</p>
+        <p className="text-base font-bold text-foreground leading-tight mb-2">AI in Clinical Practice</p>
+        <p className="text-[11px] text-muted-foreground tabular-nums">
           {MODULES.length} modules · {totalMin}m total
         </p>
       </Link>
 
-      {/* Module list */}
-      <div className="flex-1 px-3 py-4">
-        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 px-2 mb-2">
+      {/* Module list — full-width titles, no truncation */}
+      <div className="flex-1 px-3 pt-5 pb-4">
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 px-2 mb-3">
           Curriculum
         </p>
-        <ul className="space-y-0.5 mb-5">
+        <ul className="space-y-1 mb-6">
           {MODULES.map((m) => {
             const active = currentModuleSlug === m.slug
             return (
               <li key={m.slug}>
                 <Link
                   href={`/courses/ai-in-clinical-practice/${m.slug}`}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${
+                  className={`flex items-start gap-2.5 px-2 py-2 rounded-lg transition-colors ${
                     active
-                      ? 'bg-accent/10 text-accent font-semibold'
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-accent/10'
+                      : 'hover:bg-slate-50'
                   }`}
                 >
-                  <Circle className={`w-3 h-3 shrink-0 ${active ? 'text-accent fill-accent/30' : 'text-slate-300'}`} />
-                  <span className="w-7 text-[10px] font-bold tabular-nums text-slate-500">
-                    {String(m.number).padStart(2, '0')}
-                  </span>
-                  <span className="flex-1 truncate leading-tight">{m.title}</span>
-                  <span className="shrink-0 text-[9px] tabular-nums text-slate-400">{m.durationMin}m</span>
+                  <Circle className={`w-3 h-3 shrink-0 mt-1 ${active ? 'text-accent fill-accent/30' : 'text-slate-300'}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[10px] font-bold tabular-nums text-slate-500 shrink-0">
+                        {String(m.number).padStart(2, '0')}
+                      </span>
+                      <p className={`text-xs leading-snug ${active ? 'text-accent font-semibold' : 'text-slate-800'}`}>
+                        {m.title}
+                      </p>
+                    </div>
+                    <p className="text-[10px] tabular-nums text-slate-400 mt-0.5 ml-6">
+                      {m.durationMin} min{m.loadBearing ? ' · Required' : ''}
+                    </p>
+                  </div>
                 </Link>
               </li>
             )

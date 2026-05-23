@@ -23,7 +23,7 @@ export default async function ToolkitPage() {
     <div className="min-h-screen bg-background">
       <SiteNav />
       <CourseSidebar />
-      <main className="md:pl-64">
+      <main className="md:pl-72">
         <div className="max-w-4xl mx-auto px-6 pt-[120px] pb-20">
           <AdminPreviewBadge access={access} />
 
