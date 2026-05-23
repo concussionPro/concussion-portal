@@ -20,25 +20,32 @@ export const metadata: Metadata = {
   robots: 'noindex, nofollow',
 }
 
-const AI_COURSE_MODULES = [
-  '01 · Compliance & Medicolegal Framework',
-  '02 · Tool Selection & Data Sovereignty',
-  '03 · Documentation Workflows (Compliant by Design)',
-  '04 · Patient Communication & Documents',
-  '05–08 · Specialty Deep Dives (Physio · Naturopathy · GP · Osteo)',
-  '09 · Hub Onboarding & Certification',
+interface Module {
+  num: string
+  title: string
+  duration: string
+  heidi?: boolean
+}
+
+const AI_COURSE_MODULES: Module[] = [
+  { num: '01', title: 'Compliance & Medicolegal Framework', duration: '40m' },
+  { num: '02', title: 'Tool Selection & Data Sovereignty', duration: '20m', heidi: true },
+  { num: '03', title: 'Documentation Workflows (Compliant by Design)', duration: '20m', heidi: true },
+  { num: '04', title: 'Patient Communication & Documents', duration: '15m', heidi: true },
+  { num: '05–08', title: 'Specialty Deep Dives · Physio · Naturopathy · GP · Osteo', duration: '31m' },
+  { num: '09', title: 'Hub Onboarding & Certification', duration: '10m' },
 ]
 
-const CCM_MODULES = [
-  '01 · What is a Concussion?',
-  '02 · Diagnosis & Initial Assessment',
-  '03 · Practical Assessment & Acute Management',
-  '04 · Persistent Post-Concussive Symptoms',
-  '05 · Multidisciplinary Approach',
-  '06 · Return to Play, Work, and School',
-  '07 · Rehabilitation Pathways by Phenotype',
-  '08 · Legal, Ethical, Communication & Documentation',
-  '09–11 · SCAT6 + SCOAT6 + Clinical Scenarios',
+const CCM_MODULES: Module[] = [
+  { num: '01', title: 'What is a Concussion?', duration: '75m' },
+  { num: '02', title: 'Diagnosis & Initial Assessment', duration: '90m' },
+  { num: '03', title: 'Practical Assessment & Acute Management', duration: '90m' },
+  { num: '04', title: 'Persistent Post-Concussive Symptoms', duration: '75m' },
+  { num: '05', title: 'Multidisciplinary Approach', duration: '60m' },
+  { num: '06', title: 'Return to Play, Work, and School', duration: '60m' },
+  { num: '07', title: 'Rehabilitation Pathways by Phenotype', duration: '75m' },
+  { num: '08', title: 'Legal, Ethical, Communication & Documentation', duration: '45m' },
+  { num: '09–11', title: 'SCAT6 + SCOAT6 + Clinical Scenarios', duration: '60m' },
 ]
 
 const METRICS = [
@@ -133,15 +140,24 @@ export default async function HeidiTourPage() {
               <div className="border-t border-accent/15 bg-white/40">
                 <div className="px-5 py-2 border-b border-accent/10 flex items-center justify-between">
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Curriculum</p>
-                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">9 modules</p>
+                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">9 modules · 136m</p>
                 </div>
                 <ul>
                   {AI_COURSE_MODULES.map((m, i) => (
                     <li
-                      key={m}
-                      className={`px-5 py-1.5 text-xs text-foreground/80 leading-snug flex items-baseline gap-2 ${i < AI_COURSE_MODULES.length - 1 ? 'border-b border-accent/5' : ''}`}
+                      key={m.num}
+                      className={`px-4 py-2 flex items-center gap-3 ${i < AI_COURSE_MODULES.length - 1 ? 'border-b border-accent/5' : ''}`}
                     >
-                      <span>{m}</span>
+                      <span className={`shrink-0 inline-flex items-center justify-center w-7 h-5 rounded-md text-[10px] font-bold tabular-nums ${m.heidi ? 'bg-accent/15 text-accent border border-accent/20' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                        {m.num}
+                      </span>
+                      <span className="text-xs text-foreground/85 leading-snug flex-1 truncate">{m.title}</span>
+                      {m.heidi && (
+                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
+                          Heidi
+                        </span>
+                      )}
+                      <span className="shrink-0 text-[10px] font-medium tabular-nums text-slate-500 min-w-[32px] text-right">{m.duration}</span>
                     </li>
                   ))}
                 </ul>
@@ -186,15 +202,19 @@ export default async function HeidiTourPage() {
               <div className="border-t border-slate-200 bg-slate-50/60">
                 <div className="px-5 py-2 border-b border-slate-200 flex items-center justify-between">
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Curriculum</p>
-                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">11 modules</p>
+                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">11 modules · 630m</p>
                 </div>
                 <ul>
                   {CCM_MODULES.map((m, i) => (
                     <li
-                      key={m}
-                      className={`px-5 py-1.5 text-xs text-foreground/80 leading-snug flex items-baseline gap-2 ${i < CCM_MODULES.length - 1 ? 'border-b border-slate-100' : ''}`}
+                      key={m.num}
+                      className={`px-4 py-2 flex items-center gap-3 ${i < CCM_MODULES.length - 1 ? 'border-b border-slate-100' : ''}`}
                     >
-                      <span>{m}</span>
+                      <span className="shrink-0 inline-flex items-center justify-center w-7 h-5 rounded-md text-[10px] font-bold tabular-nums bg-slate-100 text-slate-600 border border-slate-200">
+                        {m.num}
+                      </span>
+                      <span className="text-xs text-foreground/85 leading-snug flex-1 truncate">{m.title}</span>
+                      <span className="shrink-0 text-[10px] font-medium tabular-nums text-slate-500 min-w-[32px] text-right">{m.duration}</span>
                     </li>
                   ))}
                 </ul>
@@ -338,17 +358,6 @@ export default async function HeidiTourPage() {
           </div>
         </div>
 
-        {/* CLOSE — earn the 15 minutes, that's it */}
-        <div className="rounded-2xl bg-foreground text-white p-6 text-center">
-          <p className="text-2xl font-bold mb-4">Worth 15 minutes?</p>
-          <a
-            href="mailto:zac@concussion-education-australia.com?subject=Heidi%20%C3%97%20CEA"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
-          >
-            zac@concussion-education-australia.com
-            <ArrowRight className="w-4 h-4" />
-          </a>
-        </div>
       </div>
     </div>
   )
