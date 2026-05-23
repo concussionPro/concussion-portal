@@ -1,13 +1,17 @@
 /**
  * Short-URL slug → demo metadata map.
  *
- * Each slug maps to:
- *   keyEnvVar — the env var that holds the actual demo key. Lets you
- *               rotate one partner's access without affecting others.
- *   suggestedOrg — pre-fills the organisation field on the NDA page,
- *                  so the recipient doesn't type their own employer name.
+ * Each slug is itself non-guessable — `/d/heidi` won't work; only
+ * `/d/<full-slug-with-token>` will. The slug embeds an outreach-specific
+ * code so the URL you share is the wall: anyone without the exact URL
+ * gets 404. Rotate by changing the slug + email Paul a new one.
  *
- * Add new partners here as you pitch. Each gets a /d/<slug> short URL.
+ *   keyEnvVar — the env var that holds the actual demo cookie value.
+ *               Lets you rotate one partner's session without affecting
+ *               the URL itself.
+ *   suggestedOrg — pre-fills the organisation field on the NDA page.
+ *
+ * Add new partners with unique slug tokens — never reuse `<org>-<token>`.
  */
 
 export interface DemoSlugMeta {
@@ -17,14 +21,15 @@ export interface DemoSlugMeta {
 }
 
 export const DEMO_SLUGS: Record<string, DemoSlugMeta> = {
-  heidi: {
+  // Heidi outreach token — rotate by replacing this slug + emailing a new link.
+  'heidi-h8k3q9p': {
     keyEnvVar: 'HEIDI_DEMO_KEY',
     suggestedOrg: 'Heidi Health',
     suggestedDisplayName: 'Paul Williamson',
   },
-  // Future partners — add an env var per partner and a slug entry here.
-  // guild:   { keyEnvVar: 'GUILD_DEMO_KEY', suggestedOrg: 'Guild Insurance' },
-  // medcast: { keyEnvVar: 'MEDCAST_DEMO_KEY', suggestedOrg: 'Medcast' },
+  // Future partners — give each a non-guessable slug:
+  // 'guild-x7m2pq8':   { keyEnvVar: 'GUILD_DEMO_KEY', suggestedOrg: 'Guild Insurance' },
+  // 'medcast-r4k1jn8': { keyEnvVar: 'MEDCAST_DEMO_KEY', suggestedOrg: 'Medcast' },
 }
 
 export function lookupSlug(slug: string): DemoSlugMeta | null {
