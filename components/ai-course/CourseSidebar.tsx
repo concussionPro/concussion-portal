@@ -13,7 +13,7 @@ import {
   BookMarked,
   Wrench,
 } from 'lucide-react'
-import { MODULES } from '@/lib/ai-course/content'
+import { MODULES } from '@/lib/ai-course/modules'
 
 /**
  * Course-specific sidebar for the AI in Clinical Practice page tree.
