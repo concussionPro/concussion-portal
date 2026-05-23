@@ -6,6 +6,8 @@ Most "vagal" presentations cluster into five distinct phenotypes. Recognising wh
 
 [KEYPOINT: The clinical question is not "is this vagal?" — it's "which autonomic phenotype is this?" Different phenotypes need different referrals.]
 
+[INFOGRAPHIC: autonomic-phenotype-matrix]
+
 ## 1. POTS (Postural Orthostatic Tachycardia Syndrome)
 
 **Pattern:** HR increase ≥30 bpm within 10 min of standing, sustained ≥10 min, without orthostatic hypotension. Symptoms: lightheadedness, palpitations, fatigue, brain fog.
@@ -35,6 +37,8 @@ Most "vagal" presentations cluster into five distinct phenotypes. Recognising wh
 **Workup:** Concussion-specialist referral if available. Otherwise GP-led with neurology backup. Buffalo Concussion Treadmill Test (Leddy et al.) is the gold-standard exercise tolerance evaluation.
 
 **In-house intervention:** Graded sub-symptom-threshold aerobic exercise (Buffalo protocol) has RCT support — see references. This is one of the few defensible vagal-adjacent interventions.
+
+[INFOGRAPHIC: post-concussion-timeline]
 
 [QUICK-CHECK: A 19-year-old rugby player presents 8 weeks post-concussion with persistent dizziness on exertion and a resting HR that's 15 bpm higher than his pre-injury baseline. He's symptom-free at rest. Cleared by his GP for "no red flags." Next step? | 1 | Refer back to GP — symptoms will resolve spontaneously. | Buffalo Concussion Treadmill Test or equivalent graded exercise assessment. Sub-symptom-threshold aerobic progression has RCT support (Leddy 2019). Document baseline + progression criteria. | Prescribe daily vagus-nerve stimulation device for 6 weeks. | rationale: Persistent post-concussion autonomic dysfunction has evidence-based intervention. Graded aerobic exercise at sub-symptom threshold improves recovery vs strict rest. The Leddy RCT is the foundation.]
 

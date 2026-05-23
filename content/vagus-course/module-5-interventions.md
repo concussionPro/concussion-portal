@@ -6,6 +6,8 @@ This module ranks vagal-related interventions by evidence quality. The honest ve
 
 [KEYPOINT: The strength-of-evidence pyramid for vagal interventions: vagal manoeuvres for tachyarrhythmia (RCT-supported) → slow-paced breathing (meta-analytic support) → graded exercise post-concussion (RCT-supported) → manual therapy (limited evidence) → wellness products (no robust evidence).]
 
+[INFOGRAPHIC: intervention-evidence-ladder]
+
 ## Tier 1 — Evidence-supported in acute clinical context
 
 ### Modified Valsalva for SVT
@@ -30,6 +32,8 @@ Laborde et al. (2022) — meta-analysis of voluntary slow breathing on HRV demon
 
 **Honest caveat:** The HRV effect is reliable; the downstream clinical outcomes (anxiety reduction, BP improvement, sleep) are more variable.
 
+[INFOGRAPHIC: paced-breathing-protocol]
+
 ### Graded sub-symptom-threshold exercise (post-concussion)
 
 Leddy et al. (2019) RCT supports early sub-symptom-threshold aerobic exercise for sport-related concussion recovery.
@@ -37,6 +41,22 @@ Leddy et al. (2019) RCT supports early sub-symptom-threshold aerobic exercise fo
 **Protocol:** Buffalo Concussion Treadmill Test → personalised heart-rate target at 80% of symptom-onset threshold → progressive aerobic protocol with weekly reassessment.
 
 **Use case:** Acute and subacute post-concussion autonomic dysfunction with appropriate clinical oversight.
+
+[INFOGRAPHIC: buffalo-hr-threshold]
+
+### Salt + fluid loading (POTS first-line)
+
+Non-pharmacological first-line for POTS across all major guidelines (Sheldon 2015 HRS, Vernino 2021 NIH, CSANZ 2024). Expands plasma volume to reduce the compensatory tachycardia on standing.
+
+**Protocol:** 2–3 L fluids/day, 8–10 g salt/day, titrated over 2 weeks. Requires medical clearance for hypertension, CKD, CHF, pregnancy.
+
+[INFOGRAPHIC: salt-fluid-protocol]
+
+### Counter-pressure manoeuvres (vasovagal syncope)
+
+Physical manoeuvres that briefly raise BP at the first sign of pre-syncopal prodrome. RCT support for reducing the proportion of prodromal episodes that proceed to full syncope (Sheldon 2015).
+
+[INFOGRAPHIC: counter-pressure-manoeuvres]
 
 [QUICK-CHECK: A patient asks if they should buy a vagal-tone stimulation device (transcutaneous auricular VNS) advertised on social media for "stress and anxiety." The device costs A$300. What's your response? | 1 | Recommend it — vagus nerve stimulation has solid evidence. | Explain that surgically-implanted VNS has FDA-approved indications (epilepsy, depression), but transcutaneous auricular devices marketed direct-to-consumer have limited evidence for the claimed benefits. Suggest evidence-based alternatives (slow-paced breathing, structured exercise, psychological therapy) before discretionary spend on the device. | Tell them to ignore all vagal interventions as pseudoscience. | rationale: Implanted VNS is a real, regulated intervention with specific indications. Direct-to-consumer transcutaneous VNS devices are a different product class — early evidence is mixed and consumer-grade. Honest framing protects the patient's wallet and your credibility.]
 

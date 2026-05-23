@@ -24,11 +24,15 @@ The active stand test is the single most useful bedside procedure for vagally-fr
 | Sustained tachycardia ≥100 bpm at rest, not orthostatic | Inappropriate sinus tachycardia (IST) — refer |
 | BP and HR within normal ranges | Symptoms not orthostatic — consider other phenotypes |
 
+[INFOGRAPHIC: active-stand-test]
+
 [BREAK]
 
 ## What HRV actually measures (and what it does not)
 
 [DEFINITION: HRV | Heart Rate Variability — the variation in time between successive heartbeats. Measured in milliseconds (typically RMSSD, SDNN, pNN50) or via frequency-domain analysis (HF, LF, LF/HF ratio).]
+
+[INFOGRAPHIC: hrv-honest-ranking]
 
 **What HRV reliably correlates with:**
 - General cardiovascular health (population-level)

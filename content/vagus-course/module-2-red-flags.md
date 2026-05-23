@@ -8,6 +8,8 @@ This module is the medicolegal scaffolding for the rest of the course.
 
 [KEYPOINT: A "vagal symptom" diagnosis is acceptable only after you've ruled out the differentials that look identical at the bedside. The wellness ecosystem skips this step. You cannot.]
 
+[INFOGRAPHIC: red-flag-decision-tree]
+
 ## The four red-flag categories
 
 ### 1. Cardiac

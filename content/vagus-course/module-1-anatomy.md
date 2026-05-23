@@ -8,6 +8,8 @@ The vagus nerve is the tenth cranial nerve and the longest of the autonomic nerv
 
 [KEYPOINT: ~80% of vagal fibres are AFFERENT — sending information FROM the periphery TO the brain. The popular "vagus nerve = relaxation output" framing inverts the actual traffic direction.]
 
+[INFOGRAPHIC: vagus-anatomy-map]
+
 ## What the literature actually supports
 
 The neuroanatomy is uncontested. Two efferent motor nuclei in the medulla — the dorsal motor nucleus (DMN) and the nucleus ambiguus (NA) — give rise to two distinct fibre populations:
@@ -35,6 +37,8 @@ Common claims you will hear from patients (and some practitioners):
 - That trauma is stored *"in the vagus nerve"* and released through specific manoeuvres
 
 The published evidence for most of these claims is, at best, preliminary. The anatomy is real. The interventions are mostly aspirational.
+
+[INFOGRAPHIC: polyvagal-evidence-table]
 
 [REDFLAG: A patient who frames their entire history around "low vagal tone" or "dysregulated vagal state" has been pattern-matched by the wellness ecosystem. Treat the underlying clinical question (POTS? Long COVID? Anxiety? Autonomic dysfunction post-concussion?) — not the vagal-tone framing.]
 
