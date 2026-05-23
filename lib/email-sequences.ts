@@ -539,6 +539,37 @@ export const SCAT_COMPLETION_UPSELL = {
     <center><a href="${utm(pricingLink + (pricingLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_completion_upsell', 'upgrade_now')}" class="cta-btn">See the Online Course</a></center>
     <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">$${CONFIG.COURSE.PRICE_ONLINE} &middot; 8 online modules &middot; 8 CPD points &middot; Lifetime access</p>
     ${nextWorkshopCallout()}
+
+    <!-- Shorter alternatives — for clinicians who want incremental CPD, not the full clinical course -->
+    <div style="margin: 32px 0 16px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+      <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
+        Or — short courses if you want incremental CPD
+      </p>
+      <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
+        We run short specialty drops every 6 weeks at A$97-147. Two are live this month:
+      </p>
+
+      <div style="background: #f0fdfa; border: 1px solid #5eead4; border-radius: 10px; padding: 14px; margin-bottom: 10px;">
+        <strong style="color: #0f172a;">AI in Clinical Practice</strong>
+        <span style="font-size: 12px; color: #64748b;">&middot; 3 CPD hrs &middot; A$147 (A$97 for you with code SCAT40)</span>
+        <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
+          AHPRA-aligned compliance for clinicians using AI scribes + LLM tools. Privacy Act, TGA, indemnity. Fillable consent templates included.
+        </p>
+      </div>
+
+      <div style="background: #f0fdfa; border: 1px solid #5eead4; border-radius: 10px; padding: 14px;">
+        <strong style="color: #0f172a;">The Vagus Nerve in Clinical Practice</strong>
+        <span style="font-size: 12px; color: #64748b;">&middot; 1.25 CPD hrs &middot; A$97</span>
+        <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
+          Evidence-based assessment + defensible interventions for autonomic dysfunction (POTS, post-concussion, long COVID). Honest evidence ranking — no polyvagal-marketing fluff.
+        </p>
+      </div>
+
+      <p style="margin: 16px 0 0 0; font-size: 13px; color: #475569; text-align: center;">
+        <a href="${utm('https://portal.concussion-education-australia.com/courses', 'scat_completion_upsell', 'browse_short_courses')}" style="color: #0d9488; font-weight: 600;">Browse all CEA courses →</a>
+      </p>
+    </div>
+
     <p class="ps">P.S. If you want hands-on clinical skills too (VOMS, BESS, SCAT6 administration), you can add the in-person workshop later &mdash; you'll only pay the difference.</p>
     <div class="sig">
       Zac Lewis<br>
