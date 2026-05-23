@@ -77,11 +77,12 @@ The AHPRA expectation is that the record reflects what occurred. If the scribe h
 
 For workers compensation, mental health, and high-stakes documentation, treat the scribe output as a first draft that needs more, not less, scrutiny.
 
-> **Self-check (Scribes):**
-> A patient asks whether the recording is stored. You don't know. What's your immediate response, and what's your next action?
-> *"I don't know off the top of my head — let me confirm with our system and come back to you before we proceed." Then check the vendor's DPA. Never proceed with the scribe running until you can answer the patient's question. This is APP 1 (open and transparent management of personal information) in practice.*
+[QUICK-CHECK: A patient asks whether the recording is stored. You don't know. What's your immediate response? | 1 | Reassure them it's fine and continue the consult — the vendor handles all storage compliance. | "I don't know off the top of my head — let me confirm with our system and come back to you before we proceed." Pause the scribe and check the DPA. | Refer them to your privacy policy and proceed. | rationale: Under APP 1 (open and transparent management of personal information), patients are entitled to know how their information is handled. If you can't answer, pause — never proceed with the scribe running until you can.]
 
 ---
+
+
+[BREAK]
 
 ## 2. SOAP Note Refinement — Clinician Drafts, LLM Polishes
 
@@ -115,11 +116,12 @@ LLMs sometimes add detail that wasn't in your input — a phenomenon often calle
 
 For Tier C usage specifically: keep a copy of the de-identified input you pasted, in case a question arises later about what the model was actually asked to do.
 
-> **Self-check (SOAP refinement):**
-> You paste your raw notes into Tier C, and the polished output includes "no red flags identified on history." You did ask about red flags, but you didn't say so in your raw notes. Do you keep that sentence?
-> *No — not as-is. Either delete it, or only retain it if you separately confirm you actually screened for red flags during the consult. The LLM is interpolating from context; the record has to reflect what you actually did.*
+[QUICK-CHECK: You paste raw notes into Tier C. The polished output includes "no red flags identified on history" — you DID ask, but didn't note it. Keep that sentence? | 1 | Yes — it's accurate, and the LLM just made the documentation cleaner. | No — not as-is. Either delete it, or only keep it if you separately confirm you screened. The LLM is interpolating; the record must reflect what you actually did. | Yes — under standard clinical practice, "no red flags" can be assumed when not documented. | rationale: LLM-polished notes often add plausible-sounding clinical claims that weren't in your raw input. Every sentence in the final record must be something you actually did or observed.]
 
 ---
+
+
+[BREAK]
 
 ## 3. Treatment Plan Documents — Generated from a De-identified Case Summary
 
@@ -145,6 +147,9 @@ This works well in Tier C precisely because the input doesn't need PII — the c
 A generic plan that isn't tailored to the actual patient is not a treatment plan — it is a template. The edit step has to convert the LLM output into something specific to the person in front of you. Standing recommendations the LLM invents (specific exercise dosages, specific medication doses, specific return-to-sport timelines) must be cross-checked against your own clinical judgement and current Australian guidelines.
 
 ---
+
+
+[BREAK]
 
 ## 4. Workers Compensation Documentation
 
@@ -181,11 +186,12 @@ A statement of capacity or restriction that the LLM generated and you signed wit
 
 If your jurisdiction requires a specific certificate format (e.g. NSW Certificate of Capacity), the AI tool's output is not the certificate. The certificate is the official form you sign.
 
-> **Self-check (Workers comp):**
-> Your scribe generates a progress report stating the patient has "full capacity for pre-injury duties within four weeks." You hadn't formed that opinion explicitly. Do you sign?
-> *No. Delete or rephrase to reflect your actual clinical view. A prognosis the LLM volunteered is not your prognosis until you have actively endorsed it.*
+[QUICK-CHECK: Your scribe generates a workers-comp progress report stating the patient has "full capacity for pre-injury duties within four weeks." You hadn't formed that opinion. Sign? | 1 | Yes — the scribe is trained on clinical patterns and the prognosis is plausible. | No — delete or rephrase. A prognosis the LLM volunteered is not your prognosis until you have actively endorsed it. | Yes, but add a caveat that the AI generated it. | rationale: Workers comp documents shape compensation eligibility and return-to-work timelines. Every prognostic statement must reflect your actual considered clinical opinion. Tribunals will not accept "the AI suggested it."]
 
 ---
+
+
+[BREAK]
 
 ## 5. Discharge Summaries
 
@@ -218,6 +224,9 @@ The receiving clinician will make decisions based on this document. Treat it acc
 
 ---
 
+
+[BREAK]
+
 ## 6. Pre-appointment Intake Forms — LLM Drafts, Clinician Verifies
 
 **Tier:** C acceptable (template generation, no patient data)
@@ -242,6 +251,9 @@ What is *not* a Tier C task: ingesting completed intake forms from real patients
 Intake forms collect personal information, including potentially sensitive health information under APP 3. The form itself isn't PII, but what patients submit through it is. Ensure the storage and access controls on the *completed* forms meet APP standards (Module 1) — not the template-generation step.
 
 ---
+
+
+[BREAK]
 
 ## 7. Mental Health Care Plans — Highest-risk PII
 
@@ -276,11 +288,12 @@ If a mental health plan contains an LLM-generated risk assessment that you signe
 
 For complex presentations (suicidality, eating disorders, complex trauma, psychosis), consider drafting the entire document manually and using the LLM only for grammar and structure polish on the non-risk sections.
 
-> **Self-check (Mental health):**
-> Your scribe outputs an MHCP including a risk-assessment paragraph that reads plausibly but is more reassuring than your actual clinical impression. What do you do?
-> *Rewrite the risk-assessment section entirely in your own words. The LLM's tone-matching to a "standard" presentation is not appropriate for a domain where accuracy of clinical impression is the document's whole purpose.*
+[QUICK-CHECK: Your scribe outputs a Mental Health Care Plan with a risk-assessment paragraph that reads plausibly but is MORE reassuring than your actual clinical impression. What do you do? | 1 | Sign as-is — it's a reasonable summary. | Rewrite the entire risk-assessment section in your own words. The LLM tone-matching a "standard" presentation is not appropriate when accuracy of clinical impression is the document's whole purpose. | Add a sentence saying "AI-generated; verified" and sign. | rationale: Mental Health Care Plans drive Medicare-funded sessions and inform downstream clinicians' risk decisions. A plausibly-worded but inaccurate risk statement is worse than no statement — it gives false reassurance.]
 
 ---
+
+
+[BREAK]
 
 ## 8. The Review-and-Sign Workflow
 
@@ -311,6 +324,9 @@ Whether you include this line in the patient-facing document is a clinic-level d
 > *(1) Pull the audit trail — your scribe should log when the note was generated and edited. (2) Compare against any contemporaneous evidence (appointment time, billing, related correspondence). (3) If the note is wrong, acknowledge it and correct the record per AHPRA expectations. (4) Review your review-and-sign workflow to understand how the error passed through. The scribe is a contributor, not the author — your signature owns the content.*
 
 ---
+
+
+[BREAK]
 
 ## Key takeaways
 

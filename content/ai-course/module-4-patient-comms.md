@@ -40,6 +40,9 @@ The risk tier is not academic. It governs how much of your own time the document
 
 ---
 
+
+[BREAK]
+
 ## 1. Personalised patient information sheets
 
 **Goal:** A plain-English explainer for a specific condition, pitched at a defined literacy level, with optional translation.
@@ -72,6 +75,9 @@ The risk tier is not academic. It governs how much of your own time the document
 
 ---
 
+
+[BREAK]
+
 ## 2. Exercise programs (introduction)
 
 **Goal:** A structured home program with named exercises, sets/reps/dosage, progression criteria, and cues.
@@ -93,6 +99,9 @@ The risk tier is not academic. It governs how much of your own time the document
 Specialty deep-dive lives in Module 5a (Physio) and Module 5d (Osteo).
 
 ---
+
+
+[BREAK]
 
 ## 3. Supplement information sheets
 
@@ -119,6 +128,9 @@ Specialty deep-dive lives in Module 5a (Physio) and Module 5d (Osteo).
 Specialty deep-dive lives in Module 5b (Naturopathy).
 
 ---
+
+
+[BREAK]
 
 ## 4. Referral letters
 
@@ -148,6 +160,9 @@ Specialty deep-dive lives in Module 5b (Naturopathy).
 
 ---
 
+
+[BREAK]
+
 ## 5. Work and school certificates
 
 **Goal:** Return-to-work, return-to-learn, or modified-duties documentation.
@@ -172,6 +187,9 @@ Specialty deep-dive lives in Module 5b (Naturopathy).
 - Signed and dated.
 
 ---
+
+
+[BREAK]
 
 ## 6. Discharge instructions
 
@@ -200,6 +218,9 @@ Specialty deep-dive lives in Module 5b (Naturopathy).
 
 ---
 
+
+[BREAK]
+
 ## 7. Multilingual patient communication
 
 **Goal:** Translate clinician-approved content into another language for a patient.
@@ -226,6 +247,9 @@ Specialty deep-dive lives in Module 5b (Naturopathy).
 
 ---
 
+
+[BREAK]
+
 ## 8. Patient compliance scripts
 
 **Goal:** Appointment reminders, medication adherence prompts, exercise check-ins.
@@ -247,6 +271,9 @@ Specialty deep-dive lives in Module 5b (Naturopathy).
 
 ---
 
+
+[BREAK]
+
 ## A working pattern across all eight use cases
 
 If you take one structural lesson from this module, take this: every patient-facing document benefits from a three-step workflow.
@@ -261,6 +288,9 @@ This pattern is slow on the first document of any new type and fast on the hundr
 
 ---
 
+
+[BREAK]
+
 ## Key takeaways
 
 - Every patient-facing document is your clinical communication. The LLM drafts; you sign.
@@ -268,6 +298,9 @@ This pattern is slow on the first document of any new type and fast on the hundr
 - Risk tier scales with consequences: a compliance SMS is Low; a return-to-work certificate is High.
 - AI-attestation belongs on referral letters and any document that may be relied upon by a third party.
 - Translation requires a verification loop (back-translation or NAATI).
+
+
+[BREAK]
 
 ## Common mistakes to avoid
 

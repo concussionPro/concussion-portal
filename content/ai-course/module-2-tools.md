@@ -95,11 +95,9 @@ These tools have several characteristics that disqualify them for PII:
 
 Tier C is genuinely useful — for generic drafting, learning, ideation, and patient-facing handouts written from a generic prompt. The rest of this module assumes you will use it that way.
 
-> **Self-check (Tiers):**
-> A colleague suggests pasting "the last six referral letters, with names removed" into ChatGPT Plus to generate a template. Which tier is this and what is the problem?
-> *Answer at the end of this module.*
+[QUICK-CHECK: A colleague suggests pasting "the last six referral letters, with names removed" into ChatGPT Plus to generate a template. Which tier and what's the problem? | 2 | Tier C — names are removed so it's de-identified, no issue. | Tier B — enterprise LLM in Sydney would be appropriate here. | Tier C, but the names-removed test isn't enough — clinical detail plus context usually re-identifies. Don't paste. | rationale: Removing names alone doesn't de-identify. The clinical narrative, dates, employer, and unusual presentations almost always re-identify a patient to anyone who knows them. For template work, write a synthetic case from scratch.]
 
----
+[BREAK]
 
 ## 2. Decision Tree — Which Tier for Which Task
 
@@ -133,6 +131,9 @@ A few worked examples:
 
 ---
 
+
+[BREAK]
+
 ## 3. Australian Data Residency — What It Means and What It Doesn't
 
 "Data residency" is one of the most misused terms in healthcare AI marketing. Understanding it precisely is part of professional competence now.
@@ -164,6 +165,9 @@ For APP 8 purposes (cross-border disclosure), what matters is whether personal i
 
 ---
 
+
+[BREAK]
+
 ## 4. Red-flag Tools to Avoid
 
 Some tools should not enter a clinical environment at all, regardless of the de-identification of inputs.
@@ -190,6 +194,9 @@ Some tools should not enter a clinical environment at all, regardless of the de-
 
 ---
 
+
+[BREAK]
+
 ## 5. Pricing Snapshot
 
 > **As of May 2026 — verify current pricing before purchase. AI tool pricing changes frequently; all figures below are indicative.**
@@ -213,6 +220,9 @@ Tier A tools are more expensive per seat than Tier C consumer tools, but the com
 [KEYPOINT: The contract is the product. A Tier A tool without a real DPA is a Tier C tool with better marketing.]
 
 ---
+
+
+[BREAK]
 
 ## 6. Subscription Budgeting Framework
 
@@ -242,6 +252,9 @@ A common mistake is paying for three overlapping Tier C subscriptions personally
 > *Move to one Tier A scribe per clinician (~$240–400/mo) and one shared ChatGPT Team workspace (~$120/mo). Yes, this is more expensive — but the four personal Plus accounts are not covering the actual clinical risk. The current arrangement is paying for the wrong thing.*
 
 ---
+
+
+[BREAK]
 
 ## 7. How to Read a Data Processing Agreement — Three Questions
 
@@ -283,11 +296,17 @@ If a vendor will not tell you within 72 hours that your patients' data has been 
 
 ---
 
+
+[BREAK]
+
 ## Answer to Tier self-check
 
 A colleague pasting "the last six referral letters, with names removed" into ChatGPT Plus is using Tier C for what is almost certainly still PII. Removing the name is not de-identification — letters typically contain DOB, referral provider, specific clinical findings, sometimes addresses or workplaces, and combinations of attributes that re-identify trivially in a local catchment. This is a Tier A task. If the goal is a reusable template, the correct workflow is to write a fully fabricated example letter and use that as the Tier C input.
 
 ---
+
+
+[BREAK]
 
 ## Key takeaways
 
