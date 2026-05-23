@@ -107,7 +107,9 @@ export function DemoAccessClient() {
         return
       }
       setAccepted({ id: data.acceptanceId || 0 })
-      setTimeout(() => router.push('/courses'), 1800)
+      // Land partners on the curated tour, not the raw marketplace.
+      // The tour does the work of orienting them to the build.
+      setTimeout(() => router.push('/courses/heidi-tour'), 1800)
     } catch {
       setError('Network error. Try again.')
       setSubmitting(false)
