@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { findModule, loadModuleContent, MODULES } from '@/lib/ai-course/content'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { CourseSidebar } from '@/components/ai-course/CourseSidebar'
 import { ModuleViewer } from '@/components/ai-course/ModuleViewer'
 import { parseModuleSections } from '@/lib/ai-course/module-sections'
 
@@ -42,6 +43,8 @@ export default async function ModulePage({ params }: PageParams) {
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
+      <CourseSidebar />
+      <main className="md:pl-64">
       <div className="max-w-3xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
 
@@ -96,6 +99,7 @@ export default async function ModulePage({ params }: PageParams) {
           )}
         </div>
       </div>
+      </main>
     </div>
   )
 }

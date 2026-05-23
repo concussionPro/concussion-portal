@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { CourseSidebar } from '@/components/ai-course/CourseSidebar'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { getUserCertificate } from '@/lib/ai-course/certificate'
 import { CONFIG } from '@/lib/config'
@@ -18,6 +19,8 @@ export default async function CertificatePage() {
     return (
       <div className="min-h-screen bg-background">
         <SiteNav />
+        <CourseSidebar />
+        <main className="md:pl-64">
         <div className="max-w-3xl mx-auto px-6 pt-[120px] pb-20">
           <AdminPreviewBadge access={access} />
           <h1 className="text-3xl font-bold tracking-tight mb-3">Certificate</h1>
@@ -31,6 +34,7 @@ export default async function CertificatePage() {
             Take the quiz →
           </Link>
         </div>
+        </main>
       </div>
     )
   }
@@ -42,6 +46,8 @@ export default async function CertificatePage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
+      <CourseSidebar />
+      <main className="md:pl-64">
       <div className="max-w-3xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
         <h1 className="text-3xl font-bold tracking-tight mb-8">Your certificate</h1>
@@ -103,6 +109,7 @@ export default async function CertificatePage() {
           </a>
         </div>
       </div>
+      </main>
     </div>
   )
 }

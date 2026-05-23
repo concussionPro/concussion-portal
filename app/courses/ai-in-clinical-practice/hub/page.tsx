@@ -1,12 +1,13 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
+import { CourseSidebar } from '@/components/ai-course/CourseSidebar'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { TOOLS } from '@/lib/ai-course/tools-matrix'
 import { loadPrompts, loadTemplates } from '@/lib/ai-course/content'
 
 export const metadata: Metadata = {
-  title: 'AI Practice Hub — Admin Preview',
+  title: 'AI Practice Hub — AI in Clinical Practice',
   robots: 'noindex, nofollow',
 }
 
@@ -21,6 +22,8 @@ export default async function HubPage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
+      <CourseSidebar />
+      <main className="md:pl-64">
       <div className="max-w-5xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
         <Link
@@ -140,6 +143,7 @@ export default async function HubPage() {
           </div>
         </section>
       </div>
+      </main>
     </div>
   )
 }

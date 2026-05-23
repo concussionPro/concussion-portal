@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { SiteNav } from '@/components/SiteNav'
+import { CourseSidebar } from '@/components/ai-course/CourseSidebar'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { QuizClient } from './QuizClient'
 import { QUIZ_QUESTIONS } from '@/lib/ai-course/quiz'
@@ -19,6 +20,8 @@ export default async function QuizPage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
+      <CourseSidebar />
+      <main className="md:pl-64">
       <div className="max-w-3xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
         <h1 className="text-3xl font-bold tracking-tight mb-2">Certification Quiz</h1>
@@ -30,6 +33,7 @@ export default async function QuizPage() {
         </p>
         <QuizClient questions={questions} />
       </div>
+      </main>
     </div>
   )
 }
