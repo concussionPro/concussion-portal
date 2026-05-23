@@ -30,9 +30,12 @@ interface Module {
 const AI_COURSE_MODULES: Module[] = [
   { num: '01', title: 'Compliance & Medicolegal Framework', duration: '40m' },
   { num: '02', title: 'Tool Selection & Data Sovereignty', duration: '20m', heidi: true },
-  { num: '03', title: 'Documentation Workflows (Compliant by Design)', duration: '20m', heidi: true },
+  { num: '03', title: 'Documentation Workflows', duration: '20m', heidi: true },
   { num: '04', title: 'Patient Communication & Documents', duration: '15m', heidi: true },
-  { num: '05–08', title: 'Specialty Deep Dives · Physio · Naturopathy · GP · Osteo', duration: '31m' },
+  { num: '05', title: 'Specialty · Physiotherapy', duration: '8m' },
+  { num: '06', title: 'Specialty · Naturopathy', duration: '8m' },
+  { num: '07', title: 'Specialty · General Practice', duration: '8m' },
+  { num: '08', title: 'Specialty · Osteopathy', duration: '7m' },
   { num: '09', title: 'Hub Onboarding & Certification', duration: '10m' },
 ]
 
@@ -45,7 +48,9 @@ const CCM_MODULES: Module[] = [
   { num: '06', title: 'Return to Play, Work, and School', duration: '60m' },
   { num: '07', title: 'Rehabilitation Pathways by Phenotype', duration: '75m' },
   { num: '08', title: 'Legal, Ethical, Communication & Documentation', duration: '45m' },
-  { num: '09–11', title: 'SCAT6 + SCOAT6 + Clinical Scenarios', duration: '60m' },
+  { num: '09', title: 'SCAT6 Essentials', duration: '25m' },
+  { num: '10', title: 'SCOAT6 & Recovery Pathways', duration: '20m' },
+  { num: '11', title: 'Clinical Scenarios & Final Quiz', duration: '15m' },
 ]
 
 const METRICS = [
@@ -138,26 +143,34 @@ export default async function HeidiTourPage() {
 
               {/* Module list — product-chrome style */}
               <div className="border-t border-accent/15 bg-white/40">
-                <div className="px-5 py-2 border-b border-accent/10 flex items-center justify-between">
+                <div className="px-5 py-2.5 border-b border-accent/10 flex items-center justify-between">
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Curriculum</p>
-                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">9 modules · 136m</p>
+                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">9 modules · 146m</p>
                 </div>
                 <ul>
                   {AI_COURSE_MODULES.map((m, i) => (
                     <li
                       key={m.num}
-                      className={`px-4 py-2 flex items-center gap-3 ${i < AI_COURSE_MODULES.length - 1 ? 'border-b border-accent/5' : ''}`}
+                      className={`px-4 py-2 flex items-center gap-3 ${i < AI_COURSE_MODULES.length - 1 ? 'border-b border-accent/5' : ''} ${m.heidi ? 'bg-accent/[0.03]' : ''}`}
                     >
-                      <span className={`shrink-0 inline-flex items-center justify-center w-7 h-5 rounded-md text-[10px] font-bold tabular-nums ${m.heidi ? 'bg-accent/15 text-accent border border-accent/20' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                      <span
+                        className={`shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold tabular-nums ${
+                          m.heidi
+                            ? 'bg-accent text-white shadow-sm'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
                         {m.num}
                       </span>
-                      <span className="text-xs text-foreground/85 leading-snug flex-1 truncate">{m.title}</span>
-                      {m.heidi && (
-                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
-                          Heidi
-                        </span>
-                      )}
-                      <span className="shrink-0 text-[10px] font-medium tabular-nums text-slate-500 min-w-[32px] text-right">{m.duration}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground leading-tight truncate">{m.title}</p>
+                        {m.heidi && (
+                          <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-accent mt-0.5">
+                            ↳ Heidi workflow taught
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-500 min-w-[28px] text-right">{m.duration}</span>
                     </li>
                   ))}
                 </ul>
@@ -200,9 +213,9 @@ export default async function HeidiTourPage() {
 
               {/* Module list */}
               <div className="border-t border-slate-200 bg-slate-50/60">
-                <div className="px-5 py-2 border-b border-slate-200 flex items-center justify-between">
+                <div className="px-5 py-2.5 border-b border-slate-200 flex items-center justify-between">
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Curriculum</p>
-                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">11 modules · 630m</p>
+                  <p className="text-[10px] font-bold text-slate-500 tabular-nums">11 modules · 670m</p>
                 </div>
                 <ul>
                   {CCM_MODULES.map((m, i) => (
@@ -210,11 +223,11 @@ export default async function HeidiTourPage() {
                       key={m.num}
                       className={`px-4 py-2 flex items-center gap-3 ${i < CCM_MODULES.length - 1 ? 'border-b border-slate-100' : ''}`}
                     >
-                      <span className="shrink-0 inline-flex items-center justify-center w-7 h-5 rounded-md text-[10px] font-bold tabular-nums bg-slate-100 text-slate-600 border border-slate-200">
+                      <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold tabular-nums bg-slate-100 text-slate-600">
                         {m.num}
                       </span>
-                      <span className="text-xs text-foreground/85 leading-snug flex-1 truncate">{m.title}</span>
-                      <span className="shrink-0 text-[10px] font-medium tabular-nums text-slate-500 min-w-[32px] text-right">{m.duration}</span>
+                      <p className="text-xs font-medium text-foreground leading-tight flex-1 truncate">{m.title}</p>
+                      <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-500 min-w-[28px] text-right">{m.duration}</span>
                     </li>
                   ))}
                 </ul>
