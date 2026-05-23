@@ -13,14 +13,23 @@ import {
   TryThisCard,
 } from './Infographics'
 import { PromptCard } from './PromptCard'
+import { InteractivePromptForm } from './InteractivePromptForm'
 import { findPromptCard } from '@/lib/ai-course/prompt-cards'
+import type { PromptFormData } from '@/lib/ai-course/prompt-form-extract'
 
-// Match all six marker types in a single pass. The marker body runs until
+// Match all seven marker types in a single pass. The marker body runs until
 // the closing `]` on the same paragraph (no nested brackets supported).
 const MARKER_REGEX =
-  /\[(INFOGRAPHIC|KEYPOINT|REDFLAG|DEFINITION|TRYTHIS|PROMPT-CARD):\s*([^\]]+)\]/g
+  /\[(INFOGRAPHIC|KEYPOINT|REDFLAG|DEFINITION|TRYTHIS|PROMPT-CARD|PROMPT-FORM-AUTO):\s*([^\]]+)\]/g
 
-type MarkerKind = 'INFOGRAPHIC' | 'KEYPOINT' | 'REDFLAG' | 'DEFINITION' | 'TRYTHIS' | 'PROMPT-CARD'
+type MarkerKind =
+  | 'INFOGRAPHIC'
+  | 'KEYPOINT'
+  | 'REDFLAG'
+  | 'DEFINITION'
+  | 'TRYTHIS'
+  | 'PROMPT-CARD'
+  | 'PROMPT-FORM-AUTO'
 type Part =
   | { kind: 'md'; value: string }
   | { kind: 'marker'; type: MarkerKind; value: string }
@@ -35,7 +44,7 @@ type Part =
  *   [DEFINITION: <term> | <definition>]
  *   [TRYTHIS: <text>]
  */
-function SectionBody({ body }: { body: string }) {
+function SectionBody({ body, promptForms }: { body: string; promptForms?: PromptFormData[] }) {
   const parts: Part[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
@@ -84,6 +93,18 @@ function SectionBody({ body }: { body: string }) {
           )
         }
         return <PromptCard key={i} data={data} />
+      }
+      case 'PROMPT-FORM-AUTO': {
+        const idx = parseInt(value, 10)
+        const formData = promptForms?.[idx]
+        if (!formData) {
+          return (
+            <p key={i} className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 my-4 not-prose">
+              Prompt form not available
+            </p>
+          )
+        }
+        return <InteractivePromptForm key={i} data={formData} />
       }
     }
   }
@@ -163,7 +184,7 @@ export function ModuleViewer({ header, sections }: ModuleViewerProps) {
           </span>
         </div>
 
-        <SectionBody body={active.body} />
+        <SectionBody body={active.body} promptForms={active.promptForms} />
 
         {active.quizCheck && (
           <QuizCheck key={active.id} check={active.quizCheck} />

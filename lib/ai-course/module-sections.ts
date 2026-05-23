@@ -11,6 +11,7 @@
  */
 
 import { SECTION_QUIZZES } from './section-quizzes'
+import { extractPromptForms, type PromptFormData } from './prompt-form-extract'
 
 export interface ParsedSection {
   /** Stable slug derived from the heading text — used as DOM id + stepper key */
@@ -23,6 +24,8 @@ export interface ParsedSection {
   readingMin: number
   /** Markdown body of the section (between this H2 and the next, or EOF) */
   body: string
+  /** Auto-extracted interactive prompt forms (replace [PROMPT-FORM-AUTO: N] in body) */
+  promptForms?: PromptFormData[]
   /** Optional inline quiz check that appears at the END of this section */
   quizCheck?: SectionQuizCheck
   /** Optional "Apply tomorrow" prompt at the end of this section */
@@ -92,26 +95,30 @@ export function parseModuleSections(moduleSlug: string, raw: string): {
       const intro = currentLines.join('\n').trim()
       if (intro.length > 40) {
         const id = 'intro'
-        const sectionMin = estimateReadingMin(intro)
+        const { transformed, forms } = extractPromptForms(intro)
+        const sectionMin = estimateReadingMin(transformed)
         sections.push({
           id,
           title: 'Overview',
           index: index++,
           readingMin: sectionMin,
-          body: intro,
+          body: transformed,
+          promptForms: forms.length ? forms : undefined,
           quizCheck: moduleQuizzes[id],
         })
       }
       return
     }
     const sectionBody = currentLines.join('\n').trim()
+    const { transformed, forms } = extractPromptForms(sectionBody)
     const id = slugify(currentTitle)
     sections.push({
       id,
       title: currentTitle,
       index: index++,
-      readingMin: estimateReadingMin(sectionBody),
-      body: sectionBody,
+      readingMin: estimateReadingMin(transformed),
+      body: transformed,
+      promptForms: forms.length ? forms : undefined,
       quizCheck: moduleQuizzes[id],
     })
   }
