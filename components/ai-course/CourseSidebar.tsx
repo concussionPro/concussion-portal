@@ -10,6 +10,8 @@ import {
   Lock,
   CheckCircle2,
   Circle,
+  BookMarked,
+  Wrench,
 } from 'lucide-react'
 import { MODULES } from '@/lib/ai-course/content'
 
@@ -88,10 +90,30 @@ export function CourseSidebar() {
           <SidebarLink
             href="/courses/ai-in-clinical-practice/hub"
             label="AI Practice Hub"
-            sub="Prompts · Templates · Tools"
+            sub="40 prompts · 14 templates · tools matrix"
             icon={Library}
             active={isResourceActive('hub')}
           />
+          <SidebarLink
+            href="/courses/ai-in-clinical-practice/toolkit"
+            label="Clinical Toolkit"
+            sub="Consent · de-id · audit · incident"
+            icon={Wrench}
+            active={isResourceActive('toolkit')}
+          />
+          <SidebarLink
+            href="/courses/ai-in-clinical-practice/references"
+            label="Reference Repository"
+            sub="AHPRA · OAIC · TGA · clinical evidence"
+            icon={BookMarked}
+            active={isResourceActive('references')}
+          />
+        </ul>
+
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 px-2 mb-2 mt-5">
+          Certification
+        </p>
+        <ul className="space-y-0.5">
           <SidebarLink
             href="/courses/ai-in-clinical-practice/quiz"
             label="Certification quiz"

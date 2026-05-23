@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { CourseSidebar } from '@/components/ai-course/CourseSidebar'
-import { Library, FileQuestion, Award, ArrowRight } from 'lucide-react'
+import { Library, FileQuestion, Award, ArrowRight, Wrench, BookMarked } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'AI in Clinical Practice',
@@ -69,46 +69,50 @@ export default async function CoursePage() {
           </div>
 
           {/* Resource grid */}
-          <div className="grid gap-3 sm:grid-cols-3 mb-8">
-            <Link
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3">
+            Resources
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3 mb-4">
+            <ResourceCard
               href="/courses/ai-in-clinical-practice/hub"
-              className="card rounded-xl p-4 hover:border-accent/40 transition-colors flex items-start gap-3"
-            >
-              <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
-                <Library className="w-4 h-4 text-accent" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">AI Practice Hub</p>
-                <p className="text-sm text-foreground font-semibold">Prompts · Templates · Tools</p>
-                <p className="text-xs text-muted-foreground mt-1">Post-course resources.</p>
-              </div>
-            </Link>
-            <Link
+              icon={Library}
+              tag="AI Practice Hub"
+              title="Prompts · Templates · Tools"
+              note="40 prompts · 14 templates · 9 vendors in the tool comparison"
+            />
+            <ResourceCard
+              href="/courses/ai-in-clinical-practice/toolkit"
+              icon={Wrench}
+              tag="Clinical Toolkit"
+              title="Consent · de-id · audit · incident"
+              note="9 clinician-grade artefacts designed to survive an AHPRA notification"
+            />
+            <ResourceCard
+              href="/courses/ai-in-clinical-practice/references"
+              icon={BookMarked}
+              tag="Reference Repository"
+              title="AHPRA · OAIC · TGA · evidence"
+              note="Every regulatory claim has an upstream source · refreshed monthly"
+            />
+          </div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3 mt-6">
+            Certification
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 mb-8">
+            <ResourceCard
               href="/courses/ai-in-clinical-practice/quiz"
-              className="card rounded-xl p-4 hover:border-accent/40 transition-colors flex items-start gap-3"
-            >
-              <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
-                <FileQuestion className="w-4 h-4 text-accent" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Quiz</p>
-                <p className="text-sm text-foreground font-semibold">10 questions · 8/10 to pass</p>
-                <p className="text-xs text-muted-foreground mt-1">Issues the certificate on pass.</p>
-              </div>
-            </Link>
-            <Link
+              icon={FileQuestion}
+              tag="Quiz"
+              title="10 questions · 8/10 to pass"
+              note="Issues the certificate on pass."
+            />
+            <ResourceCard
               href="/courses/ai-in-clinical-practice/certificate"
-              className="card rounded-xl p-4 hover:border-accent/40 transition-colors flex items-start gap-3"
-            >
-              <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
-                <Award className="w-4 h-4 text-accent" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">My Certificate</p>
-                <p className="text-sm text-foreground font-semibold">Download · verify</p>
-                <p className="text-xs text-muted-foreground mt-1">12-month validity.</p>
-              </div>
-            </Link>
+              icon={Award}
+              tag="My Certificate"
+              title="Download · verify"
+              note="12-month validity · public verification URL"
+            />
           </div>
 
           {/* Footer disclaimer */}
@@ -121,5 +125,35 @@ export default async function CoursePage() {
         </div>
       </main>
     </div>
+  )
+}
+
+function ResourceCard({
+  href,
+  icon: Icon,
+  tag,
+  title,
+  note,
+}: {
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  tag: string
+  title: string
+  note: string
+}) {
+  return (
+    <Link
+      href={href}
+      className="card rounded-xl p-4 hover:border-accent/40 transition-colors flex items-start gap-3"
+    >
+      <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+        <Icon className="w-4 h-4 text-accent" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">{tag}</p>
+        <p className="text-sm text-foreground font-semibold leading-tight">{title}</p>
+        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{note}</p>
+      </div>
+    </Link>
   )
 }
