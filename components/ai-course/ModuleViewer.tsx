@@ -76,7 +76,7 @@ function SectionBody({ body }: { body: string }) {
   }
 
   return (
-    <article className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-base prose-p:text-[15px] prose-p:leading-relaxed prose-li:text-[15px] prose-li:leading-relaxed prose-strong:text-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-blockquote:border-accent prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-md prose-blockquote:not-italic prose-code:bg-slate-100 prose-code:text-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden prose-table:text-sm prose-th:bg-slate-50 prose-th:text-left">
+    <article className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-base prose-p:text-[15px] prose-p:leading-relaxed prose-li:text-[15px] prose-li:leading-relaxed prose-strong:text-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-blockquote:border-accent prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-md prose-blockquote:not-italic prose-code:bg-slate-100 prose-code:text-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden [&_table]:w-full [&_table]:my-6 [&_table]:border [&_table]:border-slate-200 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:border-separate [&_table]:border-spacing-0 [&_thead]:bg-slate-50 [&_th]:text-left [&_th]:font-bold [&_th]:text-[12px] [&_th]:uppercase [&_th]:tracking-wide [&_th]:text-slate-600 [&_th]:px-3 [&_th]:py-2.5 [&_th]:border-b [&_th]:border-slate-200 [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-[13px] [&_td]:align-top [&_td]:border-b [&_td]:border-slate-100 [&_tr:last-child_td]:border-b-0">
       {parts.map((p, i) =>
         p.kind === 'md' ? (
           <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>
@@ -119,14 +119,17 @@ export function ModuleViewer({ header, sections }: ModuleViewerProps) {
     return <p className="text-muted-foreground">No section content available.</p>
   }
 
+  // header is intentionally NOT rendered as body content — the parent
+  // page header already shows module number, title, duration, and
+  // load-bearing flag. Rendering the markdown header block here
+  // duplicated all that metadata as an unstyled prose dump.
+  // The `header` prop is preserved on the interface for future use
+  // (e.g. an "About this module" footer with last-reviewed date), but
+  // not displayed here.
+  void header
+
   return (
     <div>
-      {header && (
-        <div className="prose prose-sm prose-slate max-w-none mb-8 text-muted-foreground">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{header}</ReactMarkdown>
-        </div>
-      )}
-
       <SectionStepper
         sections={sections}
         activeIdx={activeIdx}
