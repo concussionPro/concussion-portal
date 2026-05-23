@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { COURSES, PROVIDERS, findProvider } from '@/lib/ai-course/provider-catalogue'
+import { getAllEarlyAccessCounts } from '@/lib/early-access'
+import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
 import { Check, AlertCircle, ShieldCheck, FileBarChart, BookOpenCheck, Award, Stethoscope, Users, Building2 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -19,6 +21,10 @@ export const metadata: Metadata = {
 export default async function CoursesIndexPage() {
   const access = await requireAiCourseAccess()
   const liveCourses = COURSES.filter((c) => c.status === 'live')
+  const earlyAccessCourses = COURSES.filter(
+    (c) => c.status === 'coming-soon' && c.earlyBirdDiscountPct
+  )
+  const earlyAccessCounts = await getAllEarlyAccessCounts().catch(() => ({}))
 
   return (
     <div className="min-h-screen bg-background">
@@ -188,6 +194,8 @@ export default async function CoursesIndexPage() {
             })}
           </div>
         </section>
+
+        <ComingSoonSection courses={earlyAccessCourses} initialCounts={earlyAccessCounts} />
 
         {/* Open for provider applications — replaces the placeholder card grid */}
         <section className="mb-12 rounded-2xl bg-gradient-to-br from-foreground to-slate-800 text-white p-7">

@@ -41,6 +41,12 @@ export interface CourseCatalogueEntry {
   priceAUD: number | null
   status: 'live' | 'coming-soon' | 'pilot'
   tags: string[]
+  /** Early-access discount percentage applied at launch for waitlist signups */
+  earlyBirdDiscountPct?: number
+  /** Computed early-bird price (priceAUD * (1 - earlyBirdDiscountPct/100)), rounded */
+  earlyBirdPriceAUD?: number | null
+  /** Soft launch target — display only, not enforced */
+  launchTarget?: string
 }
 
 export const PROVIDERS: ProviderProfile[] = [
@@ -92,8 +98,11 @@ export const COURSES: CourseCatalogueEntry[] = [
     description: 'AHPRA-aligned compliance training for AI use by Australian clinicians. Covers Privacy Act, APP 6/8/11, TGA boundaries, AHPRA documentation, indemnity carrier positions.',
     route: '/courses/ai-in-clinical-practice',
     priceAUD: 147,
-    status: 'live',
+    status: 'coming-soon',
     tags: ['compliance', 'ai', 'documentation', 'privacy', 'all-specialties'],
+    earlyBirdDiscountPct: 15,
+    earlyBirdPriceAUD: 125,
+    launchTarget: 'July 2026',
   },
   {
     id: 'vagus-nerve',
@@ -104,8 +113,11 @@ export const COURSES: CourseCatalogueEntry[] = [
     description: 'Evidence-based assessment + defensible interventions for autonomic dysfunction. Anatomy, red flags, phenotypes (POTS, post-concussion, long-COVID), interventions with honest evidence ranking. 6 modules · ~75 minutes.',
     route: '/courses/vagus-nerve',
     priceAUD: 97,
-    status: 'live',
+    status: 'coming-soon',
     tags: ['autonomic', 'concussion', 'pots', 'long-covid', 'evidence-based', 'all-specialties'],
+    earlyBirdDiscountPct: 15,
+    earlyBirdPriceAUD: 82,
+    launchTarget: 'July 2026',
   },
   {
     id: 'concussion-clinical-mastery',
