@@ -104,6 +104,29 @@ export interface TemplateMeta {
   specialty: string
   useCase: string
   body: string
+  /** Field placeholder names extracted from body and/or frontmatter `fields:` list. */
+  fields: string[]
+}
+
+/**
+ * Pull all `{snake_case_token}` placeholders out of a template body in
+ * order of first appearance, deduplicated. We don't trust the
+ * frontmatter `fields:` list alone — some templates have placeholders
+ * the author didn't enumerate.
+ */
+function extractTemplateFields(body: string): string[] {
+  const seen = new Set<string>()
+  const ordered: string[] = []
+  const re = /\{([a-z][a-z0-9_]*)\}/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(body)) !== null) {
+    const key = m[1]
+    if (!seen.has(key)) {
+      seen.add(key)
+      ordered.push(key)
+    }
+  }
+  return ordered
 }
 
 export async function loadTemplates(): Promise<TemplateMeta[]> {
@@ -122,7 +145,14 @@ export async function loadTemplates(): Promise<TemplateMeta[]> {
     const fmEnd = raw.indexOf('\n---', 4)
     if (!raw.startsWith('---') || fmEnd === -1) {
       // No frontmatter; use defaults
-      templates.push({ slug, title: slug, specialty: 'all', useCase: '', body: raw })
+      templates.push({
+        slug,
+        title: slug,
+        specialty: 'all',
+        useCase: '',
+        body: raw,
+        fields: extractTemplateFields(raw),
+      })
       continue
     }
     const fm = raw.slice(3, fmEnd).trim()
@@ -139,6 +169,7 @@ export async function loadTemplates(): Promise<TemplateMeta[]> {
       specialty: meta.specialty || 'all',
       useCase: meta.useCase || '',
       body,
+      fields: extractTemplateFields(body),
     })
   }
   return templates
