@@ -67,49 +67,72 @@ The *Privacy Act 1988* (Cth) and its thirteen Australian Privacy Principles (APP
 
 [DEFINITION: OAIC | The Office of the Australian Information Commissioner — the federal regulator that enforces the *Privacy Act 1988*, publishes the APP Guidelines, and investigates privacy complaints and data breaches.]
 
-The OAIC publishes the authoritative APP Guidelines: <https://www.oaic.gov.au/privacy/australian-privacy-principles>.
+OAIC publishes the authoritative APP Guidelines and specific generative-AI guidance — your two anchor sources.
 
-The OAIC has also published specific guidance on generative AI and privacy obligations: <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/hands-on-guides/guidance-on-privacy-and-the-use-of-commercially-available-ai-products>.
+- [OAIC · Australian Privacy Principles Guidelines](https://www.oaic.gov.au/privacy/australian-privacy-principles)
+- [OAIC · Guidance on privacy and commercially-available AI products](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/hands-on-guides/guidance-on-privacy-and-the-use-of-commercially-available-ai-products)
 
-Five APPs deserve particular attention when LLMs enter a clinical workflow.
+Of the thirteen APPs, **five matter most** the moment an LLM enters a clinical workflow.
 
-### APP 1 — Open and transparent management of personal information
+[BREAK]
 
-Your practice must have a current privacy policy that accurately describes how personal information is handled. Once an AI tool is introduced, the policy must reflect that fact: which AI tools are used, for what purposes, what categories of information they process, and whether information is disclosed overseas. A policy that predates your AI scribe is, by definition, out of date.
+### APP 1 — Open and transparent management
+
+**The rule.** Your privacy policy must accurately describe how personal information is handled — including AI use.
+
+Once you introduce an AI tool, the policy needs to spell out: which tools, what purposes, what data categories they process, whether anything goes overseas. A policy written before your AI scribe is, by definition, out of date.
+
+[TRYTHIS: Open your practice's privacy policy and search for "AI" or "artificial intelligence". If neither appears and you're using any AI tool, your APP 1 disclosure is out of date today.]
+
+[BREAK]
 
 ### APP 5 — Notification of collection
 
-When you collect personal information from a patient, you must take reasonable steps to notify them of the matters listed in APP 5.2 — including the purposes of collection, the recipients of the information, and whether disclosure is likely to occur overseas. If an AI scribe will process the consultation audio in real time, that is a collection event the patient should be notified about. A consent form signed at registration that does not mention AI does not satisfy APP 5 once AI is introduced.
+**The rule.** Patients must be notified about new types of data collection.
+
+If an AI scribe processes consultation audio in real time, that is a fresh collection event. A patient who signed a general consent form at registration *before* you adopted the scribe has not been notified about AI involvement. APP 5 isn't satisfied until they are.
+
+[QUICK-CHECK: A patient signed your standard consent form 18 months ago. You start using an AI scribe today. What's required? | 1 | The original consent still covers it — health-data consent is broad. | The patient must be re-notified about AI involvement before the next consultation it records. | A verbal heads-up is enough — written notification is only required for new patients. | rationale: APP 5.2 requires notification of the purposes of collection. Adding an AI scribe changes the collection event — written re-notification (even a clinic-wide letter) is the safer interpretation.]
+
+[BREAK]
 
 ### APP 6 — Use or disclosure
 
-APP 6 restricts how health information collected for one purpose may be used for another. Feeding identifiable consultation transcripts into a general-purpose LLM (for example, pasting them into a public chatbot to "summarise this") is a disclosure for a secondary purpose and almost certainly breaches APP 6 unless one of the narrow exceptions applies (consent, directly related secondary use the patient would reasonably expect, etc.).
+**The rule.** Health info collected for one purpose can't be reused for another without consent or an exception.
 
-### APP 8 — Cross-border disclosure of personal information
+Pasting identifiable transcripts into a public chatbot to "summarise this" is a disclosure for a secondary purpose. Almost always a breach — unless one of the narrow exceptions applies (express consent, or a secondary use the patient would reasonably expect).
 
-This is the principle that catches most clinicians using US-hosted LLMs.
+[REDFLAG: Never paste identifiable patient transcripts into a consumer LLM (ChatGPT, Claude.ai, Gemini) for "summarising". That's an APP 6 disclosure to a non-permitted recipient.]
 
-Under APP 8, before disclosing personal information to an overseas recipient, the APP entity must take reasonable steps to ensure the overseas recipient does not breach the APPs in relation to that information. If you do not take those steps, you may be **accountable for the overseas recipient's acts as if you had done them yourself** (s 16C of the Act).
+[BREAK]
 
-[DEFINITION: DPA | Data Processing Agreement (sometimes called a Data Processing Addendum) — a contract between you and an AI vendor that sets out how they handle your data, who their sub-processors are, where data is stored, and what happens in a breach. The DPA, not the marketing page, is the legal commitment.]
+### APP 8 — Cross-border disclosure
 
-[KEYPOINT: APP 8 is the principle that catches US-hosted LLMs. Cross-border disclosure to overseas AI endpoints is regulated even where the vendor promises not to train on your inputs.]
+**The rule.** Before disclosing personal information overseas, you must take reasonable steps to ensure the overseas recipient doesn't breach the APPs — *or you become liable for their breach.*
 
-Most major LLM providers — OpenAI, Anthropic, Google, Microsoft — host primary inference infrastructure in the United States. Even where an "Australian region" is offered, the contractual terms, sub-processors, or training-data flows may still involve US entities.
+This is the principle that catches **almost every** clinician using US-hosted LLMs. Section 16C of the Act makes you accountable as if you had done the overseas recipient's acts yourself.
 
-Before disclosing identifiable health information to any cloud AI service, you should:
+[KEYPOINT: APP 8 catches US-hosted LLMs. The vendor's "we don't train on your data" promise does not by itself satisfy APP 8 — you still need data-residency proof and a DPA.]
 
-- Confirm the data residency of the inference endpoint in the vendor's data processing addendum (DPA).
-- Confirm that the vendor's terms exclude your inputs from being used to train models.
-- Confirm whether the disclosure is captured by an APP 8.2 exception (for example, the patient has consented to the disclosure after being expressly informed of the consequences).
+[DEFINITION: DPA | Data Processing Agreement (or Addendum) — the contract between you and a vendor that sets out how they handle your data, where it's stored, who their sub-processors are, and what happens in a breach. The DPA is the legal commitment; the marketing page is not.]
+
+**Before disclosing identifiable health info to any cloud AI service, confirm three things:**
+
+- **Data residency** — written confirmation of inference endpoint region in the vendor's DPA.
+- **No training on inputs** — explicit exclusion clause, not a marketing-page assertion.
+- **APP 8.2 exception** — does an exception apply (express patient consent, substantially-similar overseas law, required by law)?
 
 [INFOGRAPHIC: dpa-checklist]
 
+[QUICK-CHECK: A vendor's marketing page says "Australian-hosted, your data never leaves Australia." What gives you APP 8 protection? | 1 | The marketing claim — it's a public commitment. | A signed DPA with explicit data-residency clauses and a sub-processor list. | An email from the vendor's sales rep confirming AU hosting. | rationale: APP 8 protection requires the contractual commitment, not the marketing claim. Only the signed DPA (or equivalent) is enforceable.]
+
+[BREAK]
+
 ### APP 11 — Security of personal information
 
-You must take reasonable steps to protect personal information from misuse, interference, loss, unauthorised access, modification or disclosure. For AI workflows this includes: vendor security posture (SOC 2 Type II, ISO 27001), encryption in transit and at rest, access controls on the AI tool, audit logging, and a written incident response plan that explicitly contemplates AI-tool data breaches.
+**The rule.** Take reasonable steps to protect personal information from misuse, loss, or unauthorised access.
 
-[TRYTHIS: This week, open your practice's current privacy policy and search it for the word "AI" or "artificial intelligence". If neither appears and you are using any AI tool, your APP 1 disclosure is out of date.]
+For AI workflows that means: vendor security posture (SOC 2 Type II, ISO 27001), encryption in transit and at rest, access controls on the AI tool itself, audit logging, and a written incident-response plan that explicitly contemplates AI-tool breaches.
 
 ### APP 6 vs APP 8 — at a glance
 

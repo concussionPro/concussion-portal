@@ -14,13 +14,14 @@ import {
 } from './Infographics'
 import { PromptCard } from './PromptCard'
 import { InteractivePromptForm } from './InteractivePromptForm'
+import { QuickCheck } from './QuickCheck'
 import { findPromptCard } from '@/lib/ai-course/prompt-cards'
 import type { PromptFormData } from '@/lib/ai-course/prompt-form-extract'
 
-// Match all seven marker types in a single pass. The marker body runs until
+// Match all marker types in a single pass. The marker body runs until
 // the closing `]` on the same paragraph (no nested brackets supported).
 const MARKER_REGEX =
-  /\[(INFOGRAPHIC|KEYPOINT|REDFLAG|DEFINITION|TRYTHIS|PROMPT-CARD|PROMPT-FORM-AUTO):\s*([^\]]+)\]/g
+  /\[(INFOGRAPHIC|KEYPOINT|REDFLAG|DEFINITION|TRYTHIS|PROMPT-CARD|PROMPT-FORM-AUTO|QUICK-CHECK|BREAK)(?::\s*([^\]]+))?\]/g
 
 type MarkerKind =
   | 'INFOGRAPHIC'
@@ -30,6 +31,8 @@ type MarkerKind =
   | 'TRYTHIS'
   | 'PROMPT-CARD'
   | 'PROMPT-FORM-AUTO'
+  | 'QUICK-CHECK'
+  | 'BREAK'
 type Part =
   | { kind: 'md'; value: string }
   | { kind: 'marker'; type: MarkerKind; value: string }
@@ -53,7 +56,7 @@ function SectionBody({ body, promptForms }: { body: string; promptForms?: Prompt
     if (match.index > lastIndex) {
       parts.push({ kind: 'md', value: body.slice(lastIndex, match.index) })
     }
-    parts.push({ kind: 'marker', type: match[1] as MarkerKind, value: match[2].trim() })
+    parts.push({ kind: 'marker', type: match[1] as MarkerKind, value: (match[2] || '').trim() })
     lastIndex = match.index + match[0].length
   }
   if (lastIndex < body.length) {
@@ -106,11 +109,34 @@ function SectionBody({ body, promptForms }: { body: string; promptForms?: Prompt
         }
         return <InteractivePromptForm key={i} data={formData} />
       }
+      case 'QUICK-CHECK': {
+        // Syntax: [QUICK-CHECK: question | correctIdx | option-a | option-b | ... | rationale: text]
+        const parts = value.split('|').map((s) => s.trim())
+        if (parts.length < 4) {
+          return <p key={i} className="text-xs text-red-700 not-prose">Quick check needs at least: question | correctIdx | 2 options</p>
+        }
+        const question = parts[0]
+        const correctIndex = parseInt(parts[1], 10)
+        const optionsAndRationale = parts.slice(2)
+        let rationale: string | undefined
+        const options: string[] = []
+        for (const item of optionsAndRationale) {
+          if (item.toLowerCase().startsWith('rationale:')) {
+            rationale = item.slice('rationale:'.length).trim()
+          } else {
+            options.push(item)
+          }
+        }
+        return <QuickCheck key={i} question={question} correctIndex={correctIndex} options={options} rationale={rationale} />
+      }
+      case 'BREAK': {
+        return <hr key={i} className="my-8 border-0 border-t border-dashed border-slate-200 not-prose" />
+      }
     }
   }
 
   return (
-    <article className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-base prose-p:text-[15px] prose-p:leading-relaxed prose-li:text-[15px] prose-li:leading-relaxed prose-strong:text-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-blockquote:border-accent prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-md prose-blockquote:not-italic prose-code:bg-slate-100 prose-code:text-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden [&_table]:w-full [&_table]:my-6 [&_table]:border [&_table]:border-slate-200 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:border-separate [&_table]:border-spacing-0 [&_thead]:bg-slate-50 [&_th]:text-left [&_th]:font-bold [&_th]:text-[12px] [&_th]:uppercase [&_th]:tracking-wide [&_th]:text-slate-600 [&_th]:px-3 [&_th]:py-2.5 [&_th]:border-b [&_th]:border-slate-200 [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-[13px] [&_td]:align-top [&_td]:border-b [&_td]:border-slate-100 [&_tr:last-child_td]:border-b-0">
+    <article className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-base prose-h3:mt-8 prose-h3:mb-2 prose-h3:pl-3 prose-h3:border-l-[3px] prose-h3:border-accent prose-h3:text-foreground prose-h3:py-1 prose-h4:text-sm prose-h4:mt-5 prose-h4:mb-1.5 prose-h4:text-slate-700 prose-h4:uppercase prose-h4:tracking-wide prose-h4:text-[11px] prose-p:text-[15px] prose-p:leading-relaxed prose-p:my-3 prose-li:text-[15px] prose-li:leading-relaxed prose-li:my-1 prose-ul:my-3 prose-strong:text-foreground prose-a:text-accent prose-a:no-underline prose-a:font-semibold prose-a:break-words hover:prose-a:underline prose-a:bg-accent/[0.06] prose-a:px-1.5 prose-a:py-0.5 prose-a:rounded prose-blockquote:border-accent prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-md prose-blockquote:not-italic prose-code:bg-slate-100 prose-code:text-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden [&_table]:w-full [&_table]:my-6 [&_table]:border [&_table]:border-slate-200 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:border-separate [&_table]:border-spacing-0 [&_thead]:bg-slate-50 [&_th]:text-left [&_th]:font-bold [&_th]:text-[12px] [&_th]:uppercase [&_th]:tracking-wide [&_th]:text-slate-600 [&_th]:px-3 [&_th]:py-2.5 [&_th]:border-b [&_th]:border-slate-200 [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-[13px] [&_td]:align-top [&_td]:border-b [&_td]:border-slate-100 [&_tr:last-child_td]:border-b-0">
       {parts.map((p, i) =>
         p.kind === 'md' ? (
           <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>
