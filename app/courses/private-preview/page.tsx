@@ -112,7 +112,7 @@ export default async function PreviewPage() {
                 AI in Clinical Practice
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                3 CPD hours · 9 modules · tool-agnostic Tier A/B/C framework. Heidi appears alongside Lyrebird, Halo, Dragon as worked examples of Tier A AU scribes.
+                3 CPD hours · 9 modules · Tier A/B/C framework. <strong className="text-foreground">Heidi recommended as Tier A AU scribe throughout Modules 5 &amp; 7.</strong>
               </p>
             </div>
             <div className="px-5 py-3 border-t border-accent/15 bg-accent/[0.03] flex items-center justify-between text-xs">
