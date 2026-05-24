@@ -990,6 +990,32 @@ export default function AnalyticsDashboard() {
       </div>
 
       <div className="container-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* ── Heidi pitch tracking — pinned for pitch-day visibility ──────── */}
+        <a
+          href="/admin/analytics/heidi"
+          className="block rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white p-5 hover:border-accent/50 hover:shadow-md transition-all"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+                <Flame size={18} className="text-[var(--accent)]" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--accent)] mb-0.5">
+                  Pitch tracking · Heidi Health
+                </p>
+                <p className="text-sm font-bold text-[var(--foreground)] leading-tight">
+                  What Paul is doing right now →
+                </p>
+                <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
+                  NDA acceptance, tour-stop clicks, conversation-card engagement, page dwell time. Auto-refreshes every 15s.
+                </p>
+              </div>
+            </div>
+            <ArrowRight size={16} className="text-[var(--accent)] shrink-0" />
+          </div>
+        </a>
+
         {/* ── Stat cards ────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} onClick={() => setActiveTab('overview')} />

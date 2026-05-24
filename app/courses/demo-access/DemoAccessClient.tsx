@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { ShieldCheck, Eye, Clock, AlertCircle, Loader2, Check, ArrowRight } from 'lucide-react'
+import { trackEvent } from '@/lib/analytics'
+import { DEMO_EVENTS } from '@/lib/analytics-demo'
 
 const NDA_VERSION = '2026-05-22-v1'
 
@@ -93,6 +95,17 @@ export function DemoAccessClient() {
         return
       }
       setAccepted({ id: data.acceptanceId || 0 })
+      // Fire NDA acceptance event explicitly (cookie isn't readable until
+      // next render, so trackDemoEvent's getDemoOrgFromCookie() would
+      // no-op here). Manually attach demoOrg + isDemo so the admin
+      // demo-activity query picks it up.
+      trackEvent(DEMO_EVENTS.NDA_ACCEPTED, {
+        demoOrg: organisation.trim(),
+        isDemo: true,
+        ndaVersion: NDA_VERSION,
+        acceptanceId: data.acceptanceId || 0,
+        hadEmail: !!email.trim(),
+      }).catch(() => {})
       // Land partners on the curated tour, not the raw marketplace.
       // The tour does the work of orienting them to the build.
       setTimeout(() => router.push('/courses/heidi-tour'), 1800)

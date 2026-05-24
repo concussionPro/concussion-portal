@@ -2,6 +2,8 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { ConversationCard } from '@/components/ai-course/ConversationCard'
+import { TourStopLink } from '@/components/ai-course/TourStopLink'
 import {
   ArrowRight,
   Layers,
@@ -106,28 +108,18 @@ export default async function HeidiTourPage() {
 
         {/* TWO CONVERSATIONS — the actual ask, sized appropriately */}
         <div className="mb-10 grid md:grid-cols-2 gap-3">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent mb-2">
-              Conversation A
-            </p>
-            <p className="text-sm font-bold text-foreground mb-1.5">
-              Commercial partnership · revenue-share or integration
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              If Heidi sees value in surfacing CPD as a feature for AU users, my platform ingests the events you already produce and returns audit-grade CPD records. Co-developed, co-branded, structured around a clean commercial split. Integration spec at <span className="font-mono text-[11px]">/courses/integration</span>.
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent mb-2">
-              Conversation B
-            </p>
-            <p className="text-sm font-bold text-foreground mb-1.5">
-              Strategic acquisition · IP + founder onboard
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              If Heidi wants to own the CPD vertical for AU clinicians outright — CEA&rsquo;s shipped platform, the OA-endorsement on the flagship course, the 17-Board calibration logic, and the founder coming across to lead it. Cleanest path if you want CPD to be a Heidi-owned moat rather than a partner relationship.
-            </p>
-          </div>
+          <ConversationCard
+            label="Conversation A"
+            tier="Smaller"
+            title="Mutual referral · licensing partnership"
+            body="I keep promoting Heidi as a worked example of a Tier A AU scribe in the CPD courses my clinicians are taking. You suggest CEA courses to your AU users as their accredited CPD path. Optional integration layer if it makes sense later — POST /api/cpd/events takes ~2 engineer-weeks your side. Light commercial touch, clean alignment."
+          />
+          <ConversationCard
+            label="Conversation B"
+            tier="Preferred"
+            title="Acqui-hire · architecture + founder onboard"
+            body="You acquire CEA's shipped CPD architecture — the 17-Board calibration logic, the OA-endorsed flagship, the multi-course shell, the categoriser — and bring me across to lead CPD as a product surface inside Heidi. Saves you 12 months of regulator work, gives Heidi a defensible moat in the AU clinician segment that scribe-only competitors (Abridge, Nabla, DeepScribe) can't replicate. This is the conversation I'd most like to have."
+          />
         </div>
 
         {/* GUIDED TOUR — pinned for first-visit visitors (Paul) */}
@@ -142,72 +134,27 @@ export default async function HeidiTourPage() {
             Three stops. Each shows what&rsquo;s shipping today. Heidi appears as one example among the Tier A AU scribes in the course matrix — alongside Lyrebird, Halo, and Dragon Copilot for Healthcare. The platform is tool-agnostic.
           </p>
           <ol className="space-y-3">
-            <li>
-              <Link
-                href="/courses/ai-in-clinical-practice"
-                className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all"
-              >
-                <div className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shrink-0">
-                  1
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
-                    The AI in Clinical Practice course
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    9 modules, AHPRA-aligned. Tool-agnostic. Tier-A scribes (Heidi, Lyrebird, Halo, Dragon) appear as worked examples in the tool-selection module — same treatment for each.
-                  </p>
-                  <p className="text-[11px] text-accent font-semibold mt-1">
-                    What to look at: Module 2 (Tool Selection) and the Tools matrix in the Hub. ~3 min skim.
-                  </p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent shrink-0 mt-1" />
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/courses/cpd-record/passive"
-                className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all"
-              >
-                <div className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shrink-0">
-                  2
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
-                    The passive-CPD vision
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Mock event timeline showing how AI-tool usage events (any vendor) could be categorised against AHPRA Board ceilings and dropped into an audit-ready log. Illustrative of the integration shape, not a live data feed.
-                  </p>
-                  <p className="text-[11px] text-accent font-semibold mt-1">
-                    What to look at: the event timeline + per-Board ceiling table. ~2 min.
-                  </p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent shrink-0 mt-1" />
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/courses/integration"
-                className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all"
-              >
-                <div className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shrink-0">
-                  3
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
-                    The integration spec
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    POST /api/cpd/events. Generic event shape — any vendor that produces clinician-attributable events can plug in. Curlable today. Estimate of effort if Heidi (or any partner) wanted to integrate: ~2 engineer-weeks vendor-side, 6 weeks joint.
-                  </p>
-                  <p className="text-[11px] text-accent font-semibold mt-1">
-                    What to look at: the curl example + the 6-week milestone plan. ~1 min.
-                  </p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent shrink-0 mt-1" />
-              </Link>
-            </li>
+            <TourStopLink
+              number={1}
+              href="/courses/ai-in-clinical-practice"
+              title="The AI in Clinical Practice course"
+              body="9 modules, AHPRA-aligned. Tool-agnostic. Tier-A scribes (Heidi, Lyrebird, Halo, Dragon) appear as worked examples in the tool-selection module — same treatment for each."
+              highlight="What to look at: Module 2 (Tool Selection) and the Tools matrix in the Hub. ~3 min skim."
+            />
+            <TourStopLink
+              number={2}
+              href="/courses/cpd-record/passive"
+              title="The passive-CPD vision"
+              body="Mock event timeline showing how AI-tool usage events (any vendor) could be categorised against AHPRA Board ceilings and dropped into an audit-ready log. Illustrative of the integration shape, not a live data feed."
+              highlight="What to look at: the event timeline + per-Board ceiling table. ~2 min."
+            />
+            <TourStopLink
+              number={3}
+              href="/courses/integration"
+              title="The integration spec"
+              body="POST /api/cpd/events. Generic event shape — any vendor that produces clinician-attributable events can plug in. Curlable today. Estimate of effort if Heidi (or any partner) wanted to integrate: ~2 engineer-weeks vendor-side, 6 weeks joint."
+              highlight="What to look at: the curl example + the 6-week milestone plan. ~1 min."
+            />
           </ol>
           <p className="text-[11px] text-muted-foreground italic mt-4 text-center">
             Everything else on this page is supporting context — market data, channels, second course. Read at your leisure.
