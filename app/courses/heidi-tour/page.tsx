@@ -24,14 +24,13 @@ interface Module {
   num: string
   title: string
   duration: string
-  heidi?: boolean
 }
 
 const AI_COURSE_MODULES: Module[] = [
   { num: '01', title: 'Compliance & Medicolegal Framework', duration: '40m' },
-  { num: '02', title: 'Tool Selection & Data Sovereignty', duration: '20m', heidi: true },
-  { num: '03', title: 'Documentation Workflows', duration: '20m', heidi: true },
-  { num: '04', title: 'Patient Communication & Documents', duration: '15m', heidi: true },
+  { num: '02', title: 'Tool Selection & Data Sovereignty', duration: '20m' },
+  { num: '03', title: 'Documentation Workflows', duration: '20m' },
+  { num: '04', title: 'Patient Communication & Documents', duration: '15m' },
   { num: '05', title: 'Specialty · Physiotherapy', duration: '8m' },
   { num: '06', title: 'Specialty · Naturopathy', duration: '8m' },
   { num: '07', title: 'Specialty · General Practice', duration: '8m' },
@@ -70,17 +69,17 @@ const DISTRIBUTION = [
   {
     icon: Award,
     label: 'CCM (live)',
-    detail: 'A$1,190 · Osteopathy Australia endorsed · AU clinician subscriber base',
-  },
-  {
-    icon: BookOpen,
-    label: 'AI compliance course',
-    detail: 'Launches publicly 1 June 2026 on the CEA portal · Heidi recommended throughout',
+    detail: 'A$1,190 · the only concussion training Osteopathy Australia endorses for osteopaths in AU · paying AU clinician base',
   },
   {
     icon: Mic,
     label: 'OA Conference 2026 (confirmed speaker)',
-    detail: '16–17 October · Sea World Resort, Gold Coast · concussion talk · Heidi demoed live',
+    detail: '16–17 October · Sea World Resort, Gold Coast · concussion talk',
+  },
+  {
+    icon: BookOpen,
+    label: 'AI compliance course',
+    detail: 'Launches 1 June 2026 on the CEA portal · Heidi included alongside Lyrebird, Halo, Dragon as Tier A scribe examples',
   },
 ]
 
@@ -95,13 +94,41 @@ export default async function HeidiTourPage() {
 
         {/* HERO */}
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          CEA · CPD layer for Heidi
+          CEA · exploring a CPD conversation with Heidi
         </p>
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
-          CPD layer for{' '}
-          <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">Heidi Evidence + Scribe.</span>{' '}
-          Built.
+          A working AU CPD platform.{' '}
+          <span className="text-muted-foreground">Two conversations open.</span>
         </h1>
+        <p className="text-base text-muted-foreground max-w-2xl mb-8 leading-relaxed">
+          I&rsquo;ve built and shipped a CPD platform for AHPRA-registered clinicians — a flagship live course (CCM, Osteopathy Australia endorsed, paying base), two short courses ready to launch, and a passive-CPD categoriser keyed against all 17 AHPRA Boards. This tour is a 6-minute look at what&rsquo;s real today. The conversation I&rsquo;d like to open with you is exploratory.
+        </p>
+
+        {/* TWO CONVERSATIONS — the actual ask, sized appropriately */}
+        <div className="mb-10 grid md:grid-cols-2 gap-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent mb-2">
+              Conversation A
+            </p>
+            <p className="text-sm font-bold text-foreground mb-1.5">
+              Commercial partnership · revenue-share or integration
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              If Heidi sees value in surfacing CPD as a feature for AU users, my platform ingests the events you already produce and returns audit-grade CPD records. Co-developed, co-branded, structured around a clean commercial split. Integration spec at <span className="font-mono text-[11px]">/courses/integration</span>.
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent mb-2">
+              Conversation B
+            </p>
+            <p className="text-sm font-bold text-foreground mb-1.5">
+              Strategic acquisition · IP + founder onboard
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              If Heidi wants to own the CPD vertical for AU clinicians outright — CEA&rsquo;s shipped platform, the OA-endorsement on the flagship course, the 17-Board calibration logic, and the founder coming across to lead it. Cleanest path if you want CPD to be a Heidi-owned moat rather than a partner relationship.
+            </p>
+          </div>
+        </div>
 
         {/* GUIDED TOUR — pinned for first-visit visitors (Paul) */}
         <section className="mb-10 rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white p-5 md:p-6">
@@ -112,7 +139,7 @@ export default async function HeidiTourPage() {
             <p className="text-[10px] text-muted-foreground">~6 minutes total</p>
           </div>
           <p className="text-sm text-foreground/85 leading-relaxed mb-5">
-            If you only have a few minutes, this is the sequence that maps the CEA platform to Heidi&rsquo;s distribution opportunity. Click each stop in order.
+            Three stops. Each shows what&rsquo;s shipping today. Heidi appears as one example among the Tier A AU scribes in the course matrix — alongside Lyrebird, Halo, and Dragon Copilot for Healthcare. The platform is tool-agnostic.
           </p>
           <ol className="space-y-3">
             <li>
@@ -125,13 +152,13 @@ export default async function HeidiTourPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
-                    The course that recommends Heidi
+                    The AI in Clinical Practice course
                   </p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    AI in Clinical Practice — 9 modules, AHPRA-aligned. Heidi positioned as Tier-A AU scribe across the tool-selection module, documentation workflows, and specialty deep-dives.
+                    9 modules, AHPRA-aligned. Tool-agnostic. Tier-A scribes (Heidi, Lyrebird, Halo, Dragon) appear as worked examples in the tool-selection module — same treatment for each.
                   </p>
                   <p className="text-[11px] text-accent font-semibold mt-1">
-                    What to look at: Module 2 (Tool Selection) and Module 3 (Documentation) — both teach Heidi-shaped workflows. ~3 min skim.
+                    What to look at: Module 2 (Tool Selection) and the Tools matrix in the Hub. ~3 min skim.
                   </p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent shrink-0 mt-1" />
@@ -147,13 +174,13 @@ export default async function HeidiTourPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
-                    The integration that turns Heidi events into logged CPD
+                    The passive-CPD vision
                   </p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Passive-CPD demo. Scribe + Evidence sessions hit the categoriser, get tagged against AHPRA Board ceilings, drop into an audit-ready log. ~2 engineer-weeks Heidi-side.
+                    Mock event timeline showing how AI-tool usage events (any vendor) could be categorised against AHPRA Board ceilings and dropped into an audit-ready log. Illustrative of the integration shape, not a live data feed.
                   </p>
                   <p className="text-[11px] text-accent font-semibold mt-1">
-                    What to look at: the event-stream timeline + per-Board ceiling — the integration spec is one click away from this page. ~2 min.
+                    What to look at: the event timeline + per-Board ceiling table. ~2 min.
                   </p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent shrink-0 mt-1" />
@@ -169,10 +196,10 @@ export default async function HeidiTourPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
-                    The API + 6-week MVP
+                    The integration spec
                   </p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    POST /api/cpd/events. Reads from Heidi&rsquo;s existing event stream — no new UX, no replatforming. Curlable today. Joint 6-week MVP for a co-branded pilot.
+                    POST /api/cpd/events. Generic event shape — any vendor that produces clinician-attributable events can plug in. Curlable today. Estimate of effort if Heidi (or any partner) wanted to integrate: ~2 engineer-weeks vendor-side, 6 weeks joint.
                   </p>
                   <p className="text-[11px] text-accent font-semibold mt-1">
                     What to look at: the curl example + the 6-week milestone plan. ~1 min.
@@ -183,20 +210,20 @@ export default async function HeidiTourPage() {
             </li>
           </ol>
           <p className="text-[11px] text-muted-foreground italic mt-4 text-center">
-            Everything else on this page is supporting context — market data, distribution channels, second course (CCM flagship). Read at your leisure.
+            Everything else on this page is supporting context — market data, channels, second course. Read at your leisure.
           </p>
         </section>
 
-        {/* STRATEGIC INSIGHT — first thing read, no CTA */}
+        {/* CONTEXT — the AU CPD opportunity, no Heidi-specific claims */}
         <div className="mb-10 rounded-2xl bg-gradient-to-br from-foreground to-slate-800 text-white p-7">
           <p className="text-lg font-semibold leading-snug mb-3">
-            Heidi&rsquo;s Evidence tool is already a CPD engine. Every guideline review is literature-review CPD. Every Scribe session adds clinical reasoning. AHPRA already counts both.
+            AU clinicians do 100-400 hours of unstructured clinical research per year — and log almost none of it.
           </p>
           <p className="text-sm text-white/85 leading-relaxed">
-            Your AU users earn meaningful hours per year inside Heidi and log none of it. Scribe-only competitors (Abridge, Nabla, DeepScribe) can&rsquo;t replicate this — they have no Evidence equivalent.
+            AHPRA already accepts literature review and clinical-reasoning activity as CPD. Any AI tool that surfaces those activities at the point of use can convert real workflow into audit-ready hours — if there&rsquo;s a categoriser keyed to Board rules on the other side.
           </p>
           <p className="text-sm font-semibold text-white/95 mt-4">
-            Here&rsquo;s the platform that turns it into audit-grade CPD:
+            Here&rsquo;s the platform that does the categoriser part:
           </p>
         </div>
 
@@ -220,13 +247,13 @@ export default async function HeidiTourPage() {
               <div className="px-5 pt-5 pb-4">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-accent text-white mb-3">
                   <Sparkles className="w-3 h-3" />
-                  Launches Jun 1 · Heidi recommended
+                  Launches Jun 1 2026
                 </span>
                 <h2 className="text-xl font-bold text-foreground leading-tight mb-1.5">
                   AI in Clinical Practice
                 </h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  AHPRA-aligned AI compliance for AU clinicians. <strong className="text-foreground">Heidi is the CEA-recommended AU scribe</strong> throughout every documentation module and specialty deep-dive.
+                  AHPRA-aligned AI compliance for AU clinicians. The course is tool-agnostic — it teaches a Tier A/B/C framework and uses Heidi alongside Lyrebird, Halo, and Dragon as worked examples of Tier A AU scribes.
                 </p>
               </div>
 
@@ -240,24 +267,13 @@ export default async function HeidiTourPage() {
                   {AI_COURSE_MODULES.map((m, i) => (
                     <li
                       key={m.num}
-                      className={`px-4 py-2 flex items-center gap-3 ${i < AI_COURSE_MODULES.length - 1 ? 'border-b border-accent/5' : ''} ${m.heidi ? 'bg-accent/[0.03]' : ''}`}
+                      className={`px-4 py-2 flex items-center gap-3 ${i < AI_COURSE_MODULES.length - 1 ? 'border-b border-accent/5' : ''}`}
                     >
-                      <span
-                        className={`shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold tabular-nums ${
-                          m.heidi
-                            ? 'bg-accent text-white shadow-sm'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
+                      <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold tabular-nums bg-slate-100 text-slate-600">
                         {m.num}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-foreground leading-tight truncate">{m.title}</p>
-                        {m.heidi && (
-                          <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-accent mt-0.5">
-                            ↳ Heidi workflow taught
-                          </p>
-                        )}
                       </div>
                       <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-500 min-w-[28px] text-right">{m.duration}</span>
                     </li>

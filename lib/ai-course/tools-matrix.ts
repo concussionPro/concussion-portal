@@ -33,9 +33,8 @@ export const TOOLS: ToolEntry[] = [
     pricingFromAUD: 50,
     pricingNote: '~A$50-100/clinician/mo at standard tiers',
     primaryUse: 'AI scribe — voice-to-note in consult',
-    notes: 'CEA-recommended Australian AI scribe. Healthcare-purpose-built, AU residency, reference implementation used throughout this course. Founder-led AU healthtech with documented growth in 2025-26.',
+    notes: 'Australian. Healthcare-purpose-built, AU residency. Featured in course examples alongside other Tier A scribes.',
     url: 'https://www.heidihealth.com',
-    ceaRecommended: true,
   },
   {
     name: 'Lyrebird Health',

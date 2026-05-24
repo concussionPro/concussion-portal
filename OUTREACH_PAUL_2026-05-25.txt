@@ -4,35 +4,37 @@ Send Monday 2026-05-25, afternoon AU time.
 
 Demo URL: `https://portal.concussion-education-australia.com/d/heidi-h8k3q9p`
 
-The slug pre-fills Paul's name on the NDA acceptance page, sets a 7-day demo cookie, and lands him on the guided tour (`/courses/heidi-tour`). The new "Start here · 3-stop tour" pinned card walks him through the three Heidi-relevant surfaces in ~6 minutes.
+The slug pre-fills Paul's name on the NDA acceptance page, sets a 7-day demo cookie, and lands him on `/courses/heidi-tour`. The page is gated — only reachable via this link (or admin). Not indexed, not linked from any public page.
 
 ---
 
 ## Email draft
 
-**Subject:** CPD layer for Heidi Evidence + Scribe — 6 min look
+**Subject:** Quick 6-min look at CEA — two conversations I'd like to open
 
 Hi Paul,
 
-Quick follow-up. I've built the CPD layer for Heidi Evidence + Scribe end-to-end and it's live on the platform. The 3-stop tour is ~6 minutes:
+Zac Lewis here — osteopath, founder of Concussion Education Australia (concussion-education-australia.com).
+
+I've been building a CPD platform for AHPRA-registered AU clinicians for the past 12 months. The flagship course is live, Osteopathy Australia–endorsed (the only concussion training OA endorses for osteopaths in AU), and I'm a confirmed speaker at the OA Conference this October.
+
+There are two conversations I'd like to open with Heidi. The shorter is faster to read than describe — 6 minutes, NDA-gated:
 
 → https://portal.concussion-education-australia.com/d/heidi-h8k3q9p
 
-The framing in one sentence: every Heidi Evidence guideline review is literature-review CPD, every Scribe session adds clinical-reasoning CPD, AHPRA already counts both — but your AU users log none of it. The tour shows the platform that turns those events into audit-grade CPD against the right Board ceiling.
+In one sentence: AHPRA accepts literature review and clinical-reasoning activity as CPD, AU clinicians do hundreds of hours of it per year, and almost none of it gets logged. The tour shows the platform I've built to log it — and the two ways I think Heidi could play in this space.
 
-What's running today:
-- AI in Clinical Practice course (9 modules, AHPRA-aligned, Heidi recommended as Tier A throughout) — launches publicly 1 June.
-- Concussion Clinical Mastery (live, Osteopathy Australia–endorsed, A$1,190) on the same platform.
-- Passive-CPD categoriser keyed against all 15 AHPRA Boards + RACGP + ACRRM.
-- POST /api/cpd/events — curlable today, ~2 engineer-weeks your side for an integration MVP.
+The two conversations:
+1. **Commercial partnership** — Heidi sends event metadata, my platform returns audit-grade CPD records. Co-developed, clean commercial split.
+2. **Strategic acquisition** — Heidi owns the CPD vertical for AU clinicians outright. Platform IP, OA relationships, Board-calibration logic, founder onboard.
 
-I'm at OA Conference 16–17 October on the Gold Coast (concussion talk, Heidi demoed live in-session if you're game). Happy to lock 30 min before then — Tuesday or Wednesday next week works.
+Either could be a sensible outcome. I'd genuinely like to know which (if either) is interesting to Heidi.
 
-The demo URL is NDA-gated and tied to your name. 7-day cookie, you can come and go without re-agreeing.
+30 min next week — Tuesday or Wednesday afternoon AEST suits me. Otherwise, in person at OA Conference 16–17 October on the Gold Coast.
 
 Zac
 Founder, Concussion Education Australia
-[ABN] · [phone] · z.lew87@gmail.com
+Osteopath · AHPRA reg [number] · z.lew87@gmail.com
 
 ---
 
@@ -40,48 +42,69 @@ Founder, Concussion Education Australia
 
 Use only the ones Paul asks about. Don't volunteer.
 
-### 1. Why this matters for Heidi commercially
-- Healthcare CPD is a ~A$480M AU vertical, fragmented, no provider >30% share, no quality authority.
-- Heidi has the distribution + event stream nobody else has — Scribe and Evidence sessions are already happening at scale in AU.
-- Competitors (Abridge, Nabla, DeepScribe) are scribe-only — no Evidence equivalent, no CPD framing available to them. This is a structural moat.
-- The CPD layer is a wedge product. Once Heidi is the auto-CPD source, switching cost goes up significantly per AU user.
+### 1. The trust signals to lead with (always honest, never inflate)
 
-### 2. What "integration" actually means
-- One POST endpoint: `POST /api/cpd/events`. Reads Heidi's existing event metadata.
-- No new UX surface in Heidi. No replatforming. ~2 engineer-weeks your side.
-- 6-week joint MVP — co-branded pilot to a subset of AU AHPRA users.
-- I'm the CPD layer; you're the workflow layer. Clean division of labour, neither party reinvents the other.
+- CCM (Concussion Clinical Mastery) is the **only** concussion training Osteopathy Australia endorses for osteopaths in Australia. Category of one.
+- OA Conference 2026 — confirmed speaker, concussion talk, Gold Coast 16–17 October. Same body that endorses the course is putting me on stage.
+- AHPRA-registered osteopath. Single founder, single voice, no marketing department speaking for me.
+- 12 months of AHPRA Board calibration work shipped — all 15 National Boards + RACGP + ACRRM CPD Homes encoded in the platform.
 
-### 3. Revenue model — options to discuss
-Three credible structures, in order of complexity:
-- **Affiliate / revenue share** — Heidi recommends CEA courses to AU users at cost. Simplest. Aligned incentives.
-- **White-label CPD inside Heidi** — Heidi-branded CPD record inside the Heidi app, powered by CEA. More integration work, deeper moat.
-- **Acquisition** — CEA's IP + AU regulator relationships + course pipeline at fair valuation. Discuss only if Paul opens that door.
+### 2. The shape of the platform (what's running today)
 
-### 4. Things Paul will probably ask
-- *"Are you OA-endorsed for the AI course too?"* — In progress. CCM is endorsed today; AI course endorsement pending. Honest answer.
-- *"Why should we partner vs build this ourselves?"* — Three reasons: 12 months of AHPRA Board calibration work already done; clinician-network trust (osteopath, OA conference speaker, AU sub base); CEA absorbs the regulatory risk of CPD claims, Heidi doesn't have to own that.
-- *"What's your scale today?"* — 487 subscribers, 17 paying customers. Honest. The play here is Heidi distribution multiplying that, not me pretending I'm already at scale.
-- *"Why are you so confident the polyvagal / wellness market won't dilute this?"* — Different audience. CEA is AHPRA-clinician-facing, evidence-graded, regulator-aligned. The course content (see Vagus course Module 1) directly critiques the wellness-market overclaims.
+- CCM live at A$1,190, paying AU clinician base.
+- AI in Clinical Practice course launches 1 June 2026 — 9 modules, tool-agnostic Tier A/B/C framework, Heidi listed as one of four Tier A scribes alongside Lyrebird, Halo, Dragon.
+- Vagus Nerve course ready to launch July 2026.
+- Passive-CPD categoriser keyed against every AHPRA Board's actual rules — not a guess at the rules.
+- Generic event-ingestion API (POST /api/cpd/events) — any vendor that produces clinician-attributable events can plug in. Heidi is one possible source, not the only one.
 
-### 5. What NOT to over-promise
-- Don't claim the AI course is OA-endorsed yet (it isn't).
-- Don't promise specific user numbers Heidi can hit through the integration — Paul will ask, but say "we'd model that together with your AU user-base data".
-- Don't commit to an exclusivity deal in this first conversation. Floats only.
-- Don't bring up acquisition unless Paul does.
+### 3. The Heidi positioning — be careful here
+
+- The platform is tool-agnostic. Heidi is mentioned in the course as one of several Tier A AU scribes — same visual treatment as Lyrebird, Halo, Dragon. **Do not** position it as "the Heidi-recommended course." It isn't.
+- The integration spec is written generically — any vendor producing clinician event metadata could integrate. Heidi just happens to be the partner this outreach is exploring.
+- If Paul asks "are you committed to Heidi specifically?" — the honest answer is "no — but you're the AU player with the right product surface (Evidence + Scribe) to make this work elegantly. Other AU scribes have Scribe but not Evidence."
+
+### 4. Conversation A — commercial partnership, what it looks like
+
+- One POST endpoint: `POST /api/cpd/events`. Reads Heidi's existing event metadata. No new UX in the Heidi app, no replatforming.
+- ~2 engineer-weeks Heidi-side. 6 weeks joint MVP.
+- Co-branded pilot to a subset of AU AHPRA users — e.g. opt-in beta among Heidi's osteopath/physio/GP users.
+- Revenue share, referral fees, or white-label arrangement — open to discuss. **Don't** lock structure in this first call.
+
+### 5. Conversation B — strategic acquisition, what it looks like
+
+- CEA's platform + IP + OA relationships + AU clinician network.
+- Founder (Zac) onboard for at least 12-24 months to lead the CPD product line at Heidi.
+- Tail-end of CCM-style flagship courses build out a co-branded Heidi CPD catalogue under their banner.
+- Don't lead with this. If Paul asks about it, walk through it cleanly. Don't pretend a number — say "fair value reflecting the regulator work + the customer base + the brand · happy to bring in an advisor on both sides to scope".
+
+### 6. Things Paul will probably ask
+
+- *"Are you only talking to Heidi?"* — Honest answer: "Heidi is the strongest AU fit because of Evidence + Scribe. I'm not pretending I won't talk to others — but you're the first conversation."
+- *"What's your scale today?"* — 487 subscribers, 17 paying customers, CCM revenue base. Honest. The play is Heidi distribution multiplying that.
+- *"Why should Heidi own CPD vs partner?"* — Acquisition makes sense if CPD becomes a moat that locks in AU users. Partnership makes sense if Heidi doesn't want regulatory exposure or wants to keep optionality with other CPD providers globally.
+- *"How long would the acquisition take?"* — "Depends on diligence depth. 4-8 weeks to close, 12-24 months for me to transition the platform into Heidi's product org."
+
+### 7. What NOT to over-promise
+
+- **Don't** position Heidi as "CEA-recommended" — the platform is tool-agnostic.
+- **Don't** promise specific AU user numbers — model together with Heidi's data.
+- **Don't** commit to exclusivity in this first call. Float, don't lock.
+- **Don't** name a number for the acquisition. Anchor to "fair value reflecting the regulator work + the customer base + the brand".
+- **Don't** trash competitors (Abridge, Nabla, DeepScribe). They're scribe-only; the Evidence moat is a structural fact, not a take-down line.
 
 ---
 
 ## Pre-send checklist (Monday morning)
 
 - [ ] Click the demo URL in an incognito window. Confirm NDA page loads with Paul's name pre-filled.
-- [ ] After NDA acceptance, confirm the guided tour shows the "Start here · 3-stop tour" pinned section at top.
+- [ ] After NDA acceptance, confirm the guided tour shows the "Two conversations open" framing + the 3-stop tour.
 - [ ] Click stop 1 → AI course landing. Confirm AdminPreviewBadge shows. No 404s.
-- [ ] Click stop 2 → passive CPD demo. Confirm event timeline renders.
+- [ ] Click stop 2 → passive CPD demo. Confirm event timeline renders + "mock data" caveat visible.
 - [ ] Click stop 3 → integration spec page. Confirm curl example visible.
-- [ ] Click "References" inside AI course. Confirm new "Go Deeper · Podcasts, Videos, Webinars" category renders with 8 entries.
-- [ ] Click "Hub → Literature search". Confirm 8 suggested-query buttons render. Click one to confirm PubMed query runs.
+- [ ] Click "References" inside AI course. Confirm "Go Deeper · Podcasts, Videos, Webinars" category renders.
+- [ ] Click "Hub → Literature search". Confirm 8 suggested-query buttons render.
 - [ ] Confirm `HEIDI_DEMO_KEY` env var is set in Vercel production.
+- [ ] Confirm `/courses/heidi-tour` is NOT linked from the public marketplace anywhere.
 - [ ] Send email from `zac@concussion-education-australia.com` (not the Gmail).
 - [ ] Set a calendar follow-up for 2026-06-01 — if no reply, single bump.
 

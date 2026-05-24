@@ -5,7 +5,7 @@ import { checkServerAccess, AdminPreviewBadge } from '@/components/ai-course/Cou
 import { COURSES, PROVIDERS, findProvider } from '@/lib/ai-course/provider-catalogue'
 import { getAllEarlyAccessCounts } from '@/lib/early-access'
 import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
-import { Check, AlertCircle, ShieldCheck, FileBarChart, BookOpenCheck, Award, Stethoscope, Users, Building2 } from 'lucide-react'
+import { Check, AlertCircle, ShieldCheck, BookOpenCheck, Award, Stethoscope, Users, Building2 } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'CPD Courses — Concussion Education Australia',
@@ -47,23 +47,11 @@ export default async function CoursesIndexPage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/courses/heidi-tour"
+              href="/pricing"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors"
             >
-              15-min guided tour →
-            </Link>
-            <Link
-              href="/courses/cpd-record/passive"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-foreground text-white font-semibold text-sm hover:bg-foreground/90 transition-colors"
-            >
-              See the passive-CPD demo
-            </Link>
-            <Link
-              href="/courses/cpd-record"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors"
-            >
-              <FileBarChart className="w-4 h-4" />
-              CPD dashboard
+              <Award className="w-4 h-4" />
+              See the flagship course
             </Link>
             <Link
               href="/courses/how-we-vet"
@@ -73,16 +61,11 @@ export default async function CoursesIndexPage() {
               How we vet providers
             </Link>
             <Link
-              href="/courses/integration"
+              href="/courses/about-the-founder"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors"
             >
-              Integration spec
-            </Link>
-            <Link
-              href="/courses/build-status"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50 transition-colors"
-            >
-              Shipped vs roadmap
+              <Stethoscope className="w-4 h-4" />
+              About the founder
             </Link>
           </div>
         </div>

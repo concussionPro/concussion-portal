@@ -115,7 +115,7 @@ export const TOOLKIT_ITEMS: ToolkitItem[] = [
     icon: Scale,
     taughtIn: 'tool-selection',
     contents: [
-      'Tier A — Healthcare-purpose-built, AU residency, DPA signed. Safe for identifiable patient data. Examples: Heidi (CEA-recommended scribe), Lyrebird, Halo, Dragon Copilot for Healthcare.',
+      'Tier A — Healthcare-purpose-built, AU residency, DPA signed. Safe for identifiable patient data. Examples: Heidi, Lyrebird, Halo, Dragon Copilot for Healthcare.',
       'Tier B — Enterprise general LLM with AU region configured + DPA. Safe for PII when configured correctly. Examples: Azure OpenAI Sydney region, AWS Bedrock Sydney, Vertex AI Sydney.',
       'Tier C — Consumer LLM, no AU residency, no DPA. NEVER paste identifiable patient data. De-identified prompts only. Examples: ChatGPT, Claude (consumer), Gemini, Perplexity.',
       'Default question for every task: does this prompt contain identifiable patient data? If yes → Tier A or B. If no (truly de-identified) → Tier C acceptable.',
