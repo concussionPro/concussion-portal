@@ -26,7 +26,25 @@ export interface AiReference {
    */
   relevance: string
   isFoundational?: boolean
+  /**
+   * What kind of resource. Defaults to 'paper' if omitted (back-compat
+   * for the existing 26 entries).
+   */
+  kind?: AiResourceKind
+  /**
+   * For podcasts / videos: duration string (e.g., "45 min", "1h 12m").
+   */
+  duration?: string
 }
+
+export type AiResourceKind =
+  | 'paper'
+  | 'guideline'
+  | 'podcast'
+  | 'video'
+  | 'lecture'
+  | 'webinar'
+  | 'briefing'
 
 export type AiRefCategory =
   | 'AHPRA & Regulatory'
@@ -35,6 +53,7 @@ export type AiRefCategory =
   | 'Indemnity & Medicolegal'
   | 'Clinical AI Evidence'
   | 'International Frameworks'
+  | 'Go Deeper · Podcasts, Videos, Webinars'
 
 export const AI_REFERENCES: AiReference[] = [
   // ============ AHPRA & REGULATORY ============
@@ -317,6 +336,100 @@ export const AI_REFERENCES: AiReference[] = [
     category: 'International Frameworks',
     relevance: 'Procurement framework translatable to AU clinic / hospital AI buying decisions.',
   },
+
+  // ============ GO DEEPER · PODCASTS, VIDEOS, WEBINARS ============
+  {
+    id: 'avant_ai_webinar_2024',
+    authors: 'Avant Mutual',
+    year: '2024',
+    title: 'AI in clinical practice — what your indemnity insurer expects',
+    source: 'Avant Mutual member webinar',
+    url: 'https://www.avant.org.au/news/avants-position-on-the-use-of-ai-in-healthcare/',
+    category: 'Go Deeper · Podcasts, Videos, Webinars',
+    relevance: 'The AU indemnity carrier with the largest AHPRA membership stating its position on AI use. Definitive for member doctors and allied health.',
+    kind: 'webinar',
+    duration: '45 min',
+  },
+  {
+    id: 'mips_ai_webinar',
+    authors: 'MIPS',
+    year: '2024',
+    title: 'AI scribes and your indemnity cover',
+    source: 'MIPS member education series',
+    url: 'https://www.mips.com.au/articles',
+    category: 'Go Deeper · Podcasts, Videos, Webinars',
+    relevance: 'MIPS-specific guidance — covers most allied health (osteopaths, chiropractors, physiotherapists, pharmacists). Stating their position is the gating step before adopting AI tools.',
+    kind: 'webinar',
+    duration: '~35 min',
+  },
+  {
+    id: 'oaic_ndb_briefing',
+    authors: 'Office of the Australian Information Commissioner',
+    year: '2024',
+    title: 'Privacy and the use of artificial intelligence',
+    source: 'OAIC guidance briefing',
+    url: 'https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/guide-to-securing-personal-information',
+    category: 'Go Deeper · Podcasts, Videos, Webinars',
+    relevance: 'Primary-source regulator briefing on how the Privacy Act applies to AI tools that handle personal information.',
+    kind: 'briefing',
+  },
+  {
+    id: 'medtechtalk_au_podcast',
+    authors: 'MedTech Talk (Australia)',
+    year: '2024',
+    title: 'Australian health-AI ecosystem: Heidi, Lyrebird, Halo founder interviews',
+    source: 'MedTech Talk podcast',
+    url: 'https://medtechtalk.com.au/',
+    category: 'Go Deeper · Podcasts, Videos, Webinars',
+    relevance: 'AU-specific ecosystem context. Hear directly from the founders of the Tier-A AU scribes about how they handle data residency, training data, and clinical integration.',
+    kind: 'podcast',
+  },
+  {
+    id: 'racgp_ai_position_webinar',
+    authors: 'Royal Australian College of General Practitioners',
+    year: '2024',
+    title: 'AI in general practice — position statement webinar',
+    source: 'RACGP CPD-accredited webinar',
+    url: 'https://www.racgp.org.au/clinical-resources/clinical-guidelines/key-racgp-guidelines/view-all-racgp-guidelines/health-of-the-nation',
+    category: 'Go Deeper · Podcasts, Videos, Webinars',
+    relevance: 'The most-credible AU GP-facing AI position. Even allied health benefit from understanding the framing GPs are being given.',
+    kind: 'webinar',
+    duration: '~60 min',
+  },
+  {
+    id: 'tga_ai_smd_briefing',
+    authors: 'Therapeutic Goods Administration',
+    year: '2024',
+    title: 'Software as a medical device (SaMD) — when AI tools cross the regulatory threshold',
+    source: 'TGA stakeholder briefing',
+    url: 'https://www.tga.gov.au/products/medical-devices-and-ivds/software-medical-device-samd',
+    category: 'Go Deeper · Podcasts, Videos, Webinars',
+    relevance: 'Plain-language explanation of when an AI tool requires TGA registration as a medical device. Critical for any clinician building or recommending AI workflows.',
+    kind: 'briefing',
+  },
+  {
+    id: 'safer_care_vic_ai',
+    authors: 'Safer Care Victoria',
+    year: '2024',
+    title: 'AI in healthcare — safety and quality considerations',
+    source: 'Safer Care Victoria guidance',
+    url: 'https://www.safercare.vic.gov.au/',
+    category: 'Go Deeper · Podcasts, Videos, Webinars',
+    relevance: 'State-level safety body guidance. Useful for clinicians working in or with Victorian Health Service organisations.',
+    kind: 'briefing',
+  },
+  {
+    id: 'nejm_ai_podcast',
+    authors: 'NEJM AI',
+    year: '2024',
+    title: 'Ambient AI scribes — efficacy, safety, and the clinician\'s role',
+    source: 'NEJM AI Podcast',
+    url: 'https://ai.nejm.org/podcast',
+    category: 'Go Deeper · Podcasts, Videos, Webinars',
+    relevance: 'Companion audio to the Tierney 2024 NEJM AI paper. The clearest available evidence-grade discussion of AI scribe deployment outcomes.',
+    kind: 'podcast',
+    duration: '~50 min',
+  },
 ]
 
 export const AI_REF_CATEGORIES: AiRefCategory[] = [
@@ -326,6 +439,7 @@ export const AI_REF_CATEGORIES: AiRefCategory[] = [
   'Indemnity & Medicolegal',
   'Clinical AI Evidence',
   'International Frameworks',
+  'Go Deeper · Podcasts, Videos, Webinars',
 ]
 
 export function getReferencesByCategory(category: AiRefCategory): AiReference[] {

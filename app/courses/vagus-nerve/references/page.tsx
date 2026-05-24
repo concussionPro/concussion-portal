@@ -3,8 +3,18 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { VagusCourseSidebar } from '@/components/ai-course/VagusCourseSidebar'
-import { VAGUS_REFERENCES, VAGUS_REF_CATEGORIES } from '@/lib/vagus-course/references'
-import { ExternalLink, Star } from 'lucide-react'
+import { VAGUS_REFERENCES, VAGUS_REF_CATEGORIES, type VagusResourceKind } from '@/lib/vagus-course/references'
+import { ExternalLink, Star, Mic, Video, GraduationCap, FileText, ScrollText, Headphones, PlaySquare } from 'lucide-react'
+
+const KIND_META: Record<VagusResourceKind, { label: string; icon: typeof Mic; color: string }> = {
+  paper: { label: 'Paper', icon: FileText, color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  guideline: { label: 'Guideline', icon: ScrollText, color: 'bg-blue-50 text-blue-800 border-blue-200' },
+  podcast: { label: 'Podcast', icon: Headphones, color: 'bg-purple-50 text-purple-800 border-purple-200' },
+  video: { label: 'Video', icon: Video, color: 'bg-rose-50 text-rose-800 border-rose-200' },
+  lecture: { label: 'Lecture', icon: GraduationCap, color: 'bg-amber-50 text-amber-800 border-amber-200' },
+  webinar: { label: 'Webinar', icon: PlaySquare, color: 'bg-teal-50 text-teal-800 border-teal-200' },
+  'conference-talk': { label: 'Conference talk', icon: Mic, color: 'bg-indigo-50 text-indigo-800 border-indigo-200' },
+}
 
 export const metadata: Metadata = {
   title: 'Reference Repository — Vagus Nerve',
@@ -91,13 +101,28 @@ function ReferenceCard({
   reference: typeof VAGUS_REFERENCES[0]
   foundational?: boolean
 }) {
+  const kind = reference.kind || 'paper'
+  const kindMeta = KIND_META[kind]
+  const KindIcon = kindMeta.icon
+  const isMediaKind = kind === 'podcast' || kind === 'video' || kind === 'webinar' || kind === 'lecture' || kind === 'conference-talk'
+
   return (
-    <div className={`rounded-lg border p-4 ${foundational ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-white'}`}>
+    <div className={`rounded-lg border p-4 ${foundational ? 'border-amber-200 bg-amber-50/30' : isMediaKind ? 'border-slate-200 bg-gradient-to-br from-white to-slate-50/60' : 'border-slate-200 bg-white'}`}>
       <div className="flex items-baseline gap-2 mb-1.5 flex-wrap">
         {foundational && <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />}
+        <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border flex items-center gap-1 ${kindMeta.color}`}>
+          <KindIcon className="w-2.5 h-2.5" />
+          {kindMeta.label}
+        </span>
         <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{reference.category}</span>
         <span className="text-[10px] text-slate-400">·</span>
         <span className="text-[10px] text-slate-500 tabular-nums">{reference.year}</span>
+        {reference.duration && (
+          <>
+            <span className="text-[10px] text-slate-400">·</span>
+            <span className="text-[10px] text-slate-500 tabular-nums">{reference.duration}</span>
+          </>
+        )}
       </div>
       <p className="text-sm font-bold text-foreground leading-snug mb-1">{reference.title}</p>
       <p className="text-xs text-muted-foreground mb-2 leading-snug">
@@ -114,7 +139,7 @@ function ReferenceCard({
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:underline"
         >
-          Open source
+          {isMediaKind ? 'Open / watch / listen' : 'Open source'}
           <ExternalLink className="w-3 h-3" />
         </a>
       )}

@@ -123,7 +123,7 @@ export function SiteNav() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="text-[13px] font-medium px-3 py-2 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)]"
+                className="font-sans text-[13px] font-medium leading-normal tracking-normal px-3 py-2 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer"
               >
                 Logout
               </button>
@@ -203,7 +203,7 @@ export function SiteNav() {
               <button
                 type="button"
                 onClick={() => { setMobileMenuOpen(false); handleLogout() }}
-                className="text-left text-sm py-2.5 px-3 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)]"
+                className="font-sans text-left text-sm font-medium leading-normal tracking-normal py-2.5 px-3 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer"
               >
                 Logout
               </button>

@@ -20,7 +20,25 @@ export interface VagusReference {
   category: VagusRefCategory
   relevance: string
   isFoundational?: boolean
+  /**
+   * What kind of resource. Defaults to 'paper' if omitted (back-compat
+   * for the existing 29 entries).
+   */
+  kind?: VagusResourceKind
+  /**
+   * For podcasts / videos / lectures: duration string.
+   */
+  duration?: string
 }
+
+export type VagusResourceKind =
+  | 'paper'
+  | 'guideline'
+  | 'podcast'
+  | 'video'
+  | 'lecture'
+  | 'webinar'
+  | 'conference-talk'
 
 export type VagusRefCategory =
   | 'Anatomy & Neurophysiology'
@@ -31,6 +49,7 @@ export type VagusRefCategory =
   | 'Long COVID & Post-Viral'
   | 'Interventions · Evidence Base'
   | 'Clinical Guidelines & Frameworks'
+  | 'Go Deeper · Podcasts, Videos, Lectures'
 
 export const VAGUS_REFERENCES: VagusReference[] = [
   // ============ ANATOMY & NEUROPHYSIOLOGY ============
@@ -370,6 +389,109 @@ export const VAGUS_REFERENCES: VagusReference[] = [
     category: 'Clinical Guidelines & Frameworks',
     relevance: 'AU/NZ-specific position statement on POTS — relevant for AHPRA clinicians cross-referencing local practice norms.',
   },
+
+  // ============ GO DEEPER · PODCASTS, VIDEOS, LECTURES ============
+  {
+    id: 'curbsiders_pots_episode',
+    authors: 'The Curbsiders Internal Medicine Podcast',
+    year: '2021',
+    title: 'POTS — Postural Orthostatic Tachycardia Syndrome with Dr. Satish Raj',
+    source: 'The Curbsiders #265',
+    url: 'https://thecurbsiders.com/internal-medicine-podcast/265-pots',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'Dr Satish Raj (Calgary autonomic clinic, co-author of the NIH 2021/2022 POTS consensus) walks through POTS diagnosis and management. Single best-quality podcast on POTS available freely.',
+    kind: 'podcast',
+    duration: '60 min',
+  },
+  {
+    id: 'hrs_pots_webinar',
+    authors: 'Heart Rhythm Society',
+    year: '2024',
+    title: 'POTS, IST, and vasovagal syncope — clinical update',
+    source: 'HRS expert webinar series',
+    url: 'https://www.hrsonline.org/education',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'Free webinar series from the authors of the 2015 HRS expert consensus. Updated periodically — check for the most recent on POTS / IST / vasovagal.',
+    kind: 'webinar',
+  },
+  {
+    id: 'nih_pots_2019_recordings',
+    authors: 'National Institutes of Health',
+    year: '2019',
+    title: 'NIH Expert Consensus Meeting on POTS — full recordings',
+    source: 'NIH NHLBI archived event',
+    url: 'https://www.nhlbi.nih.gov/events/2019/expert-consensus-meeting-postural-tachycardia-syndrome-pots',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'The source material for the Vernino 2021 / Raj 2022 consensus papers. ~6 hours of expert presentations — for clinicians who want the unfiltered evidence base.',
+    kind: 'lecture',
+    duration: '~6 hours',
+  },
+  {
+    id: 'leddy_buffalo_lectures',
+    authors: 'Leddy, J. J. — University at Buffalo Concussion Center',
+    year: '2023',
+    title: 'Buffalo Concussion Treadmill Test — protocol and application',
+    source: 'University at Buffalo lecture series',
+    url: 'https://medicine.buffalo.edu/departments/orthopaedics/research/concussion.html',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'Dr Leddy (lead author of the 2019 RCT) explains the BCTT in his own words. Free, video-recorded lecture material from the originating lab.',
+    kind: 'lecture',
+  },
+  {
+    id: 'dysautonomia_intl_conference',
+    authors: 'Dysautonomia International',
+    year: '2024',
+    title: 'Annual research conference — recorded sessions',
+    source: 'Dysautonomia International YouTube',
+    url: 'https://www.dysautonomiainternational.org/page.php?ID=205',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'Patient-advocacy organisation with annual research conferences attended by all the named POTS clinicians (Grubb, Stiles, Raj, Vernino). Sessions are recorded and freely available.',
+    kind: 'conference-talk',
+  },
+  {
+    id: 'wilson_emory_autonomic',
+    authors: 'Wilson, R. — Emory University Autonomic Clinic',
+    year: '2024',
+    title: 'Autonomic clinical assessment in primary care',
+    source: 'Emory Department of Neurology lecture',
+    url: 'https://med.emory.edu/departments/neurology/',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'Bedside-focused autonomic clinical reasoning. Useful for allied health building diagnostic confidence before referral.',
+    kind: 'lecture',
+  },
+  {
+    id: 'csanz_pots_webinar',
+    authors: 'Cardiac Society of Australia and New Zealand',
+    year: '2024',
+    title: 'CSANZ POTS position — implementation webinar',
+    source: 'CSANZ professional education',
+    url: 'https://www.csanz.edu.au/professional-development/',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'AU/NZ-specific webinar implementing the CSANZ POTS position statement. Closest to AHPRA-relevant practice norms.',
+    kind: 'webinar',
+  },
+  {
+    id: 'attia_hrv_podcast',
+    authors: 'Peter Attia, MD',
+    year: '2023',
+    title: 'HRV — what it measures, what it doesn\'t, how to use it honestly',
+    source: 'The Drive podcast',
+    url: 'https://peterattiamd.com/category/podcast/',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'One of the more evidence-honest discussions of HRV in mainstream health media. Useful for clinicians whose patients have absorbed inflated wearable-HRV claims.',
+    kind: 'podcast',
+  },
+  {
+    id: 'long_covid_clinic_aus',
+    authors: 'Australian Long COVID clinic network',
+    year: '2024',
+    title: 'Autonomic manifestations of long COVID — multidisciplinary management',
+    source: 'St Vincent\'s / Royal North Shore long COVID clinic webinar',
+    url: 'https://www.svhs.org.au/services/long-covid',
+    category: 'Go Deeper · Podcasts, Videos, Lectures',
+    relevance: 'AU-specific long-COVID clinic content. Demonstrates referral pathway and multidisciplinary structure for the autonomic-cluster phenotype.',
+    kind: 'webinar',
+  },
 ]
 
 export const VAGUS_REF_CATEGORIES: VagusRefCategory[] = [
@@ -381,6 +503,7 @@ export const VAGUS_REF_CATEGORIES: VagusRefCategory[] = [
   'Long COVID & Post-Viral',
   'Interventions · Evidence Base',
   'Clinical Guidelines & Frameworks',
+  'Go Deeper · Podcasts, Videos, Lectures',
 ]
 
 export function getVagusReferencesByCategory(category: VagusRefCategory): VagusReference[] {

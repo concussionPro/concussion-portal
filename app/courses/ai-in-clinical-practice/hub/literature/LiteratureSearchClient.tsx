@@ -5,6 +5,22 @@ import type { Article } from '@/lib/ai-course/literature'
 
 type SourceFilter = 'both' | 'pubmed' | 'semantic-scholar'
 
+/**
+ * Suggested clinical-question one-clicks. Each demonstrates a different
+ * use case the course teaches — and gives Paul (and any cold-arriving
+ * visitor) immediate substance instead of an empty search box.
+ */
+const SUGGESTED_QUERIES: Array<{ label: string; q: string }> = [
+  { label: 'AI scribes', q: 'ambient AI scribe clinical documentation efficacy safety' },
+  { label: 'Post-concussion exercise', q: 'sub-symptom threshold aerobic exercise concussion recovery' },
+  { label: 'POTS management', q: 'postural orthostatic tachycardia syndrome management adult' },
+  { label: 'Slow-paced breathing & HRV', q: 'slow paced breathing heart rate variability meta-analysis' },
+  { label: 'Privacy by design (health)', q: 'privacy by design health information clinical AI' },
+  { label: 'Long COVID autonomic', q: 'long COVID dysautonomia postural tachycardia phenotype' },
+  { label: 'Clinician burnout & AI', q: 'physician burnout AI scribe documentation burden' },
+  { label: 'TGA software medical device', q: 'software as a medical device AI Australia regulatory' },
+]
+
 interface SearchResponse {
   articles: Article[]
   totalFound: number
@@ -166,6 +182,28 @@ export function LiteratureSearchClient() {
             </button>
           ))}
         </div>
+
+        {/* Suggested clinical queries — one-click demo */}
+        {!submitted && !loading && (
+          <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 mb-2">
+              Try a clinical question
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {SUGGESTED_QUERIES.map((sq) => (
+                <button
+                  key={sq.label}
+                  type="button"
+                  onClick={() => { setQuery(sq.q); setError(null) }}
+                  className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-slate-300 text-foreground hover:border-accent/50 hover:bg-accent/5 transition-colors"
+                  title={sq.q}
+                >
+                  {sq.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </form>
 
       {error && (

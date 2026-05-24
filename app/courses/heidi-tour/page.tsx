@@ -103,6 +103,90 @@ export default async function HeidiTourPage() {
           Built.
         </h1>
 
+        {/* GUIDED TOUR — pinned for first-visit visitors (Paul) */}
+        <section className="mb-10 rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white p-5 md:p-6">
+          <div className="flex items-baseline justify-between mb-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
+              Start here · 3-stop tour
+            </p>
+            <p className="text-[10px] text-muted-foreground">~6 minutes total</p>
+          </div>
+          <p className="text-sm text-foreground/85 leading-relaxed mb-5">
+            If you only have a few minutes, this is the sequence that maps the CEA platform to Heidi&rsquo;s distribution opportunity. Click each stop in order.
+          </p>
+          <ol className="space-y-3">
+            <li>
+              <Link
+                href="/courses/ai-in-clinical-practice"
+                className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all"
+              >
+                <div className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shrink-0">
+                  1
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
+                    The course that recommends Heidi
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    AI in Clinical Practice — 9 modules, AHPRA-aligned. Heidi positioned as Tier-A AU scribe across the tool-selection module, documentation workflows, and specialty deep-dives.
+                  </p>
+                  <p className="text-[11px] text-accent font-semibold mt-1">
+                    What to look at: Module 2 (Tool Selection) and Module 3 (Documentation) — both teach Heidi-shaped workflows. ~3 min skim.
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent shrink-0 mt-1" />
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/courses/cpd-record/passive"
+                className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all"
+              >
+                <div className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shrink-0">
+                  2
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
+                    The integration that turns Heidi events into logged CPD
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Passive-CPD demo. Scribe + Evidence sessions hit the categoriser, get tagged against AHPRA Board ceilings, drop into an audit-ready log. ~2 engineer-weeks Heidi-side.
+                  </p>
+                  <p className="text-[11px] text-accent font-semibold mt-1">
+                    What to look at: the event-stream timeline + per-Board ceiling — the integration spec is one click away from this page. ~2 min.
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent shrink-0 mt-1" />
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/courses/integration"
+                className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all"
+              >
+                <div className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shrink-0">
+                  3
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground leading-tight mb-0.5">
+                    The API + 6-week MVP
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    POST /api/cpd/events. Reads from Heidi&rsquo;s existing event stream — no new UX, no replatforming. Curlable today. Joint 6-week MVP for a co-branded pilot.
+                  </p>
+                  <p className="text-[11px] text-accent font-semibold mt-1">
+                    What to look at: the curl example + the 6-week milestone plan. ~1 min.
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent shrink-0 mt-1" />
+              </Link>
+            </li>
+          </ol>
+          <p className="text-[11px] text-muted-foreground italic mt-4 text-center">
+            Everything else on this page is supporting context — market data, distribution channels, second course (CCM flagship). Read at your leisure.
+          </p>
+        </section>
+
         {/* STRATEGIC INSIGHT — first thing read, no CTA */}
         <div className="mb-10 rounded-2xl bg-gradient-to-br from-foreground to-slate-800 text-white p-7">
           <p className="text-lg font-semibold leading-snug mb-3">
