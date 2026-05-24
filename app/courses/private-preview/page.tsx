@@ -18,15 +18,19 @@ export default async function PreviewPage() {
       <div className="max-w-5xl mx-auto px-6 pt-[100px] pb-20">
         <AdminPreviewBadge access={access} />
 
-        {/* HERO — minimal, scannable in 6 seconds */}
+        {/* HERO — lead with the insight, not the feature list */}
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          Concussion Education Australia
+          Concussion Education Australia · partner preview
         </p>
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1] max-w-3xl">
-          AHPRA-aligned CPD platform for Australian clinicians.
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.05] max-w-3xl">
+          AU clinicians need 20–50 CPD hours a year.<br />
+          <span className="text-muted-foreground">Almost none of the hours they actually earn get logged.</span>
         </h1>
-        <p className="text-base text-muted-foreground max-w-2xl mb-5 leading-relaxed">
-          OA-endorsed flagship course. Tool-agnostic AI compliance course launching 1 June. Generic event-ingestion API any AI vendor can plug into.
+        <p className="text-base text-foreground/85 max-w-2xl mb-3 leading-relaxed">
+          AHPRA already accepts literature review, clinical reasoning, and tool-assisted documentation as CPD. AU clinicians do <strong>100–400 hours</strong> of this per year. Almost none of it makes it into their record.
+        </p>
+        <p className="text-base text-foreground/85 max-w-2xl mb-6 leading-relaxed">
+          <strong>We built the platform that closes the loop.</strong> AHPRA-Board calibrated for all 17 Boards, OA-endorsed flagship course already live, and a generic event-ingestion API any AI tool can plug into in ~2 engineer-weeks. You&rsquo;re seeing this because your product surface and our infrastructure could compound.
         </p>
         <a
           href="mailto:zac@concussion-education-australia.com?subject=CEA%20%E2%80%94%2030%20min%20to%20discuss&body=Hi%20Zac%2C%0A%0AI%20had%20a%20look.%20Available%20%5Bday%5D%20AEST%20for%20a%2030-min%20call.%0A%0A%5Byour%20name%5D"
