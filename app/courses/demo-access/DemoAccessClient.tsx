@@ -6,30 +6,54 @@ import { ShieldCheck, Eye, Clock, AlertCircle, Loader2, Check, ArrowRight } from
 import { trackEvent } from '@/lib/analytics'
 import { DEMO_EVENTS } from '@/lib/analytics-demo'
 
-const NDA_VERSION = '2026-05-22-v1'
+const NDA_VERSION = '2026-05-25-v2'
 
 const NDA_TEXT = `1. PURPOSE OF DISCLOSURE
-This preview contains confidential pre-release material owned by Concussion Education Australia ("CEA"). Access is provided for the sole purpose of evaluating a potential partnership or commercial arrangement with CEA.
+This preview contains confidential pre-release material, trade secrets, technical architecture, regulatory mapping, and commercial methodology ("the Confidential Information") owned by Concussion Education Australia Pty Ltd ("CEA"). Access is granted solely for the purpose of evaluating a potential partnership, licensing arrangement, or acquisition involving CEA ("the Permitted Purpose"). Use for any other purpose is a material breach of this agreement.
 
-2. NON-DEVELOPMENT
-For a period of 18 months from the date of this access, the recipient and their organisation will not build, fund, commission, or assist any other party in building a substantially similar product based on the materials in this preview.
+2. TRADE SECRET DESIGNATION
+The recipient acknowledges that the Confidential Information includes trade secrets within the meaning of common law and equity, the disclosure or unauthorised use of which would cause CEA serious and irreparable harm. The recipient will treat the Confidential Information with no less care than it treats its own trade secrets, and in any event with no less than a reasonable standard of care.
 
 3. NON-DISCLOSURE
-For a period of 24 months, the recipient will not disclose the contents of this preview to third parties outside their organisation. Internal discussion within the recipient's organisation is permitted and encouraged for the purpose stated in clause 1.
+For a period of thirty-six (36) months from the date of access, the recipient will not disclose any part of the Confidential Information to any third party outside the recipient's organisation. Internal disclosure within the recipient's organisation is limited to personnel who (a) have a need to know for the Permitted Purpose, and (b) are bound by confidentiality obligations no less protective than this agreement.
 
-4. NO COPYING
-The recipient will not download, extract, scrape, screenshot for redistribution, or otherwise reproduce content beyond what is reasonably necessary for internal evaluation.
+4. NON-DEVELOPMENT AND NON-USE
+For a period of thirty-six (36) months from the date of access, the recipient and any entity controlling, controlled by, or under common control with the recipient ("Affiliates") will not: (a) build, develop, fund, commission, or assist any other party in building a product, feature, or service that is substantially derived from, substantially similar to, or competitive with the Confidential Information; (b) use any element of the Confidential Information — including but not limited to AHPRA Board calibration logic, multi-provider CPD marketplace architecture, passive-CPD categorisation methodology, or course-shell design — in the recipient's own products or services without a separately executed written licence from CEA.
 
-5. AS-IS
-The preview is provided without warranty. Any final commercial arrangement requires a separately negotiated written agreement.
+5. RESIDUAL INFORMATION
+The recipient agrees that even where specific written materials are not retained, ideas, concepts, architectures, regulatory mappings, and methodologies disclosed under this agreement remain Confidential Information and are subject to clauses 3 and 4. The "residual information" defence — that an individual was free to use anything retained in memory — is expressly waived.
 
-6. JURISDICTION
-This agreement is governed by Australian law. Any dispute is heard in the courts of New South Wales.
+6. RIGHT OF FIRST NEGOTIATION
+If, within thirty-six (36) months of access, the recipient or any Affiliate proposes to develop, launch, or acquire a continuing professional development ("CPD") or continuing medical education ("CME") product or feature for the Australian healthcare market that overlaps in whole or in part with the Confidential Information, the recipient will give CEA written notice and a period of not less than sixty (60) days within which to negotiate in good faith a partnership, licence, or acquisition that would permit the proposed development. This clause does not oblige either party to conclude an agreement.
 
-7. RECORD OF ACCEPTANCE
-This is a click-through agreement under the Electronic Transactions Act 1999 (Cth). The recipient's acceptance is logged with organisation, timestamp, IP address, and the version of these terms shown above. Email is optional — provide it if you would like a copy of this agreement sent for your records.
+7. NON-CIRCUMVENTION
+The recipient will not, directly or indirectly, contact any clinician, partner, vendor, regulator, professional body, or supplier identified in the Confidential Information for the purpose of replicating, substituting, or competing with the relationships disclosed, without CEA's prior written consent.
 
-By proceeding, the recipient confirms they are authorised to bind their organisation to the terms above and have read each clause.`
+8. NO COPYING OR REVERSE-ENGINEERING
+The recipient will not download, scrape, screenshot for redistribution, transcribe, reverse-engineer, decompile, or otherwise reproduce any part of the Confidential Information beyond what is strictly necessary for the Permitted Purpose. All such permitted reproductions remain CEA's property and must be destroyed on request.
+
+9. INDEPENDENT DEVELOPMENT WARRANTY
+The recipient warrants that, as at the date of access, neither the recipient nor any Affiliate has commenced development of any product or feature substantially similar to the Confidential Information. If such development is in progress, the recipient must disclose this in writing to CEA before proceeding past this page; failure to do so is a material breach.
+
+10. REMEDIES — INJUNCTIVE RELIEF AND COSTS
+The parties acknowledge that monetary damages may be inadequate for breaches of this agreement and that CEA is entitled to seek injunctive relief and specific performance in addition to any other remedy at law or in equity. The prevailing party in any dispute arising under this agreement is entitled to recover its reasonable legal costs and disbursements.
+
+11. AS-IS — NO WARRANTY
+The preview is provided "as is" without warranty of any kind. Any final commercial arrangement requires a separately negotiated written agreement.
+
+12. ASSIGNMENT
+This agreement binds the recipient, its Affiliates, successors, assigns, and any party acquiring the recipient (whether by merger, asset purchase, or otherwise). Obligations under clauses 2–7 survive any termination or expiry.
+
+13. JURISDICTION AND GOVERNING LAW
+This agreement is governed by the laws of New South Wales, Australia. The parties submit to the exclusive jurisdiction of the courts of New South Wales. CEA may also seek injunctive relief in any court of competent jurisdiction where the recipient does business.
+
+14. SIGNER AUTHORITY AND PERSONAL ACKNOWLEDGEMENT
+By proceeding, the individual signer warrants (a) that they have authority to bind the named organisation to this agreement, (b) that they have read each clause, and (c) that they acknowledge personal awareness of the obligations herein. The individual signer's acknowledgement is logged alongside organisation, timestamp, IP address, and the version of these terms shown above.
+
+15. CLICK-THROUGH ACCEPTANCE
+This is a click-through agreement under the Electronic Transactions Act 1999 (Cth) and equivalent state legislation. Acceptance is logged digitally and constitutes a binding electronic signature. Email is optional but recommended for a copy of this agreement to be sent to the signer.
+
+By proceeding, the recipient agrees to be bound by each clause above.`
 
 export function DemoAccessClient() {
   const params = useSearchParams()
@@ -108,7 +132,7 @@ export function DemoAccessClient() {
       }).catch(() => {})
       // Land partners on the curated tour, not the raw marketplace.
       // The tour does the work of orienting them to the build.
-      setTimeout(() => router.push('/courses/heidi-tour'), 1800)
+      setTimeout(() => router.push('/courses/private-preview'), 1800)
     } catch {
       setError('Network error. Try again.')
       setSubmitting(false)

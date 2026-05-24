@@ -13,7 +13,7 @@ interface TourStopLinkProps {
 }
 
 /**
- * Single stop in the 3-stop guided tour on /courses/heidi-tour.
+ * Single stop in the 3-stop guided tour on /courses/private-preview.
  *
  * On click, fires demo_resource_clicked with stop=N + href so Zac can
  * see which stops Paul actually explored (and in what order).

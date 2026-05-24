@@ -183,9 +183,9 @@ export function HeidiAnalyticsClient() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent mb-1">
-              Pitch tracking · Heidi Health
+              heidi user
             </p>
-            <h1 className="text-2xl font-bold text-foreground">What Paul is doing right now</h1>
+            <h1 className="text-2xl font-bold text-foreground">Demo activity</h1>
           </div>
           <div className="flex items-center gap-2">
             <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
@@ -238,11 +238,11 @@ export function HeidiAnalyticsClient() {
             </div>
           </div>
           <Link
-            href="/d/heidi-h8k3q9p"
+            href="/d/pw-x9k3m7q8n4"
             target="_blank"
             className="text-xs font-semibold text-accent hover:underline flex items-center gap-1"
           >
-            Open Paul&rsquo;s demo link
+            Open the demo link
             <ExternalLink className="w-3 h-3" />
           </Link>
         </div>
@@ -287,7 +287,7 @@ export function HeidiAnalyticsClient() {
           </p>
           {tourStopClicks.length === 0 ? (
             <p className="text-[11px] text-slate-500 italic">
-              No stop clicks yet. The 3-stop tour cards on /courses/heidi-tour fire this event on click.
+              No stop clicks yet. The 3-stop tour cards on /courses/private-preview fire this event on click.
             </p>
           ) : (
             <ol className="space-y-1.5">
@@ -318,7 +318,7 @@ export function HeidiAnalyticsClient() {
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">
               Pages visited (sorted by views)
             </p>
-            <p className="text-[10px] text-muted-foreground">avg dwell = how long Paul stayed</p>
+            <p className="text-[10px] text-muted-foreground">avg dwell = time on page</p>
           </div>
           {topPages.length === 0 ? (
             <p className="text-[11px] text-slate-500 italic">No page views yet.</p>
@@ -427,11 +427,11 @@ export function HeidiAnalyticsClient() {
             <p className="text-[11px] text-muted-foreground">Channels · funnels · IP intent</p>
           </Link>
           <Link
-            href="/courses/heidi-tour"
+            href="/courses/private-preview"
             className="rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 transition-colors"
           >
             <p className="text-sm font-bold text-foreground">Tour page (admin view)</p>
-            <p className="text-[11px] text-muted-foreground">What Paul lands on</p>
+            <p className="text-[11px] text-muted-foreground">Tour the user lands on</p>
           </Link>
         </section>
 
@@ -446,7 +446,7 @@ export function HeidiAnalyticsClient() {
               <li>Verify <code className="font-mono bg-white px-1 rounded">HEIDI_DEMO_KEY</code> is set in Vercel production env</li>
               <li>Click the link above in an incognito window to confirm NDA flow works end-to-end</li>
               <li>Confirm your test acceptance disappears from this dashboard (filter is org=&ldquo;Heidi Health&rdquo;, your test should match if you use that org name)</li>
-              <li>Then send Paul the email + monitor this page during business hours</li>
+              <li>Then send the email + check back during business hours</li>
             </ul>
           </section>
         )}

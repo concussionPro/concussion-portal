@@ -100,9 +100,15 @@ export default async function HeidiTourPage() {
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
           A working AU CPD platform for AHPRA-registered clinicians.
         </h1>
-        <p className="text-base text-muted-foreground max-w-2xl mb-8 leading-relaxed">
-          Flagship clinical course live and Osteopathy Australia–endorsed (the only concussion training OA endorses for osteopaths in AU), short-course shell ready, passive-CPD categoriser keyed against all 17 AHPRA Boards, generic event-ingestion API any AI-tool vendor can plug into in ~2 engineer-weeks. Built solo over 12 months. This is a 6-minute look at what&rsquo;s real today.
+        <p className="text-base text-muted-foreground max-w-2xl mb-6 leading-relaxed">
+          Flagship clinical course live and Osteopathy Australia–endorsed — the only concussion training OA endorses for osteopaths in Australia. Short-course shell ready. Passive-CPD categoriser keyed against all 17 AHPRA Boards. Generic event-ingestion API any AI-tool vendor can plug into in ~2 engineer-weeks.
         </p>
+        <a
+          href="mailto:zac@concussion-education-australia.com?subject=CEA%20%E2%80%94%2030%20min%20to%20discuss"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors mb-10"
+        >
+          Book a 30-min conversation →
+        </a>
 
         {/* GUIDED TOUR — pinned for first-visit visitors (Paul) */}
         <section className="mb-10 rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white p-5 md:p-6">
