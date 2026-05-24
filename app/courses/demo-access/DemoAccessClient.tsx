@@ -159,54 +159,91 @@ export function DemoAccessClient() {
   }
 
   return (
-    <div>
-      {/* Hero — compact, no oversized type */}
-      <div className="mb-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent mb-2">
-          Confidential preview · partner-only
-        </p>
-        {isPrefilled ? (
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 leading-tight">
-            Curated for{' '}
-            <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">
-              {organisation}
-            </span>
-            {suggestedName && (
-              <span className="text-base font-normal text-muted-foreground ml-2">· prepared for {suggestedName}</span>
-            )}
-          </h1>
-        ) : (
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 leading-tight">
-            Partner preview · accept to continue
-          </h1>
-        )}
-        <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Eye className="w-3 h-3 text-accent" /> Read-only
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Clock className="w-3 h-3 text-accent" /> 7-day access
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-accent" /> NDA-watermarked
-          </span>
+    <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] gap-8 lg:gap-10 items-start">
+      {/* LEFT — hero + context cards (the marketing column) */}
+      <div className="relative">
+        <div
+          aria-hidden="true"
+          className="absolute -top-12 -left-12 w-72 h-72 rounded-full bg-gradient-to-br from-accent/15 via-emerald-100/40 to-transparent blur-3xl pointer-events-none"
+        />
+        <div className="relative">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-4">
+            Confidential preview · Partner-only
+          </p>
+
+          {isPrefilled ? (
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.05]">
+              Curated for{' '}
+              <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">
+                {organisation}
+              </span>
+            </h1>
+          ) : (
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.05]">
+              A clinical-education platform, by your side.
+            </h1>
+          )}
+
+          <p className="text-base text-muted-foreground leading-relaxed mb-2">
+            Preview the AHPRA-aligned course, the multi-provider CPD marketplace shell, and the passive-CPD layer that captures the informal learning clinicians already do but never log.
+          </p>
+          {suggestedName && (
+            <p className="text-sm text-muted-foreground mt-3 italic">
+              Prepared specifically for {suggestedName}.
+            </p>
+          )}
+
+          {/* Three context cards — stacked tighter, premium styling preserved */}
+          <div className="grid sm:grid-cols-3 gap-3 mt-6">
+            {[
+              { icon: Eye, label: 'Read-only', body: 'Course, certification flow, passive-CPD mockup.' },
+              { icon: Clock, label: '7-day access', body: 'Auto-expires. Re-enter via the link to extend.' },
+              { icon: ShieldCheck, label: 'Watermarked', body: 'Every page carries your organisation name.' },
+            ].map((c) => {
+              const Icon = c.icon
+              return (
+                <div key={c.label} className="rounded-xl border border-slate-200 bg-white p-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/10 to-emerald-50 border border-accent/20 flex items-center justify-center mb-2">
+                    <Icon className="w-4 h-4 text-accent" />
+                  </div>
+                  <p className="text-xs font-bold text-foreground mb-0.5">{c.label}</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{c.body}</p>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        {/* Optional email — compact single field for prefilled mode */}
-        {isPrefilled ? (
-          <input
-            type="text"
-            inputMode="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={submitting}
-            placeholder="Optional · your work email for a copy of the signed agreement"
-            autoComplete="email"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50 transition-colors"
-          />
-        ) : (
+      {/* RIGHT — acceptance form (sticky on desktop so it stays in view) */}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 lg:sticky lg:top-[100px] rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm"
+        noValidate
+      >
+        {isPrefilled && (
+          <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/5 to-emerald-50/30 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-accent mb-1">
+              Accepting on behalf of
+            </p>
+            <p className="text-xl font-bold text-foreground mb-2">{organisation}</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              IP + timestamp logged with the agreement. Add work email below for a copy — optional.
+            </p>
+            <input
+              type="text"
+              inputMode="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={submitting}
+              placeholder="Optional · your work email"
+              autoComplete="email"
+              className="mt-2.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50 transition-colors"
+            />
+          </div>
+        )}
+
+        {!isPrefilled && (
           <div className="grid sm:grid-cols-2 gap-3">
             <input
               type="text"
@@ -231,16 +268,16 @@ export function DemoAccessClient() {
         )}
 
         {/* NDA — summary + collapsible full text */}
-        <details className="group rounded-lg border border-slate-200 bg-slate-50">
-          <summary className="cursor-pointer px-4 py-3 list-none flex items-start justify-between gap-3 hover:bg-slate-100 rounded-lg">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground mb-1">
-                Confidentiality &amp; non-development agreement <span className="text-[10px] font-normal text-slate-500 ml-1">v{NDA_VERSION}</span>
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                36-month non-disclosure + non-use · trade-secret designation · right of first negotiation if you launch a CPD/CME product in AU within 3 years · NSW jurisdiction · binds successors. <span className="text-accent font-semibold">Expand to read all 15 clauses →</span>
-              </p>
-            </div>
+        <details className="group rounded-xl border border-slate-200 bg-slate-50">
+          <summary className="cursor-pointer px-4 py-3 list-none hover:bg-slate-100 rounded-xl">
+            <p className="text-sm font-semibold text-foreground mb-1">
+              Confidentiality &amp; non-development agreement
+              <span className="text-[10px] font-normal text-slate-500 ml-1">v{NDA_VERSION}</span>
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              36-month non-disclosure + non-use · trade-secret designation · right of first negotiation if you launch a CPD/CME product in AU within 3 years · NSW jurisdiction · binds successors.
+              <span className="text-accent font-semibold"> Expand to read all 15 clauses →</span>
+            </p>
           </summary>
           <div className="px-4 pb-4">
             <div
@@ -252,15 +289,15 @@ export function DemoAccessClient() {
           </div>
         </details>
 
-        {/* Two checkboxes — compact */}
-        <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
+        {/* Two checkboxes */}
+        <div className="space-y-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
               disabled={submitting}
-              className="mt-1 w-4 h-4 accent-accent shrink-0"
+              className="mt-0.5 w-4 h-4 accent-accent shrink-0"
             />
             <span className="text-xs text-foreground leading-relaxed">
               I have read and agree to the confidentiality &amp; non-development terms.
@@ -272,7 +309,7 @@ export function DemoAccessClient() {
               checked={authorised}
               onChange={(e) => setAuthorised(e.target.checked)}
               disabled={submitting}
-              className="mt-1 w-4 h-4 accent-accent shrink-0"
+              className="mt-0.5 w-4 h-4 accent-accent shrink-0"
             />
             <span className="text-xs text-foreground leading-relaxed">
               I am authorised to bind <strong>{orgLabel}</strong> to this agreement.
