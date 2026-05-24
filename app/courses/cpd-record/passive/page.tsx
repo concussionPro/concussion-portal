@@ -90,10 +90,10 @@ export default async function PassiveCpdPage() {
             Passive CPD · The killer feature
           </p>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 max-w-3xl">
-            Heidi sessions are CPD. We make them count.
+            AI-tool sessions are CPD. We make them count.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mb-6">
-            Every complex Scribe session and Evidence search is already CPD-qualifying activity — clinicians just never log it. CEA reads the session metadata, the clinician confirms with one tap, and it auto-categorises against their AHPRA Board.{' '}
+            Every complex scribe session and every literature-search event is already CPD-qualifying activity under AHPRA rules — clinicians just never log it. CEA reads vendor-emitted session metadata, the clinician confirms with one tap, and it auto-categorises against their AHPRA Board.{' '}
             <Link href="/courses/cpd-record/requirements" className="text-foreground font-semibold underline decoration-accent/40 hover:decoration-accent">
               Honest ceiling: 50-100% of annual hours depending on Board
             </Link>
@@ -217,10 +217,10 @@ export default async function PassiveCpdPage() {
           <h2 className="text-2xl font-bold mb-4">The behavioural moat</h2>
           <div className="grid sm:grid-cols-2 gap-6 text-sm leading-relaxed">
             <div>
-              <p className="font-semibold mb-2">What Heidi already sees:</p>
+              <p className="font-semibold mb-2">What an AI-tool vendor already sees:</p>
               <ul className="space-y-1 text-white/80">
-                <li>· Every Scribe session — duration, complexity, topic tags</li>
-                <li>· Evidence literature searches + guideline reads</li>
+                <li>· Every scribe session — duration, complexity, topic tags</li>
+                <li>· Literature searches + guideline reads</li>
                 <li>· Time spent on clinical reasoning post-consult</li>
                 <li>· 100-400 hrs/year of CPD-qualifying activity already happening</li>
               </ul>

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Integration Architecture — CEA × Heidi',
+  title: 'Integration Architecture · Scribe + Evidence events → CPD log',
   robots: 'noindex, nofollow',
 }
 

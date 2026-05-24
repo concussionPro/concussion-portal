@@ -59,7 +59,7 @@ export default async function CertificatePage() {
           </p>
           <p className="text-sm text-muted-foreground mb-8">Certificate of Completion</p>
           <h2 className="text-2xl font-bold text-foreground mb-2">AI in Clinical Practice</h2>
-          <p className="text-xs text-muted-foreground mb-8">Aligned with AHPRA&apos;s 2025 AI guidance, Australian Privacy Principles, and TGA Therapeutic Goods Advertising Code</p>
+          <p className="text-xs text-muted-foreground mb-8">Aligned with AHPRA&apos;s 2024 AI guidance, Australian Privacy Principles, and TGA Therapeutic Goods Advertising Code</p>
 
           <p className="text-xs text-muted-foreground mb-1">Awarded to</p>
           <p className="text-2xl font-bold text-foreground mb-10">{cert.name}</p>

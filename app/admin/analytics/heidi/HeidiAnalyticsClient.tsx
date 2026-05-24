@@ -143,7 +143,7 @@ export function HeidiAnalyticsClient() {
       .filter(
         (e) =>
           e.event_type === 'demo_resource_clicked' &&
-          (e.event_data?.resource === 'tour-stop' || e.event_data?.resource === 'conversation-card')
+          e.event_data?.resource === 'tour-stop'
       )
       .reverse() // oldest first to show click order
   }, [timeline])
@@ -156,27 +156,6 @@ export function HeidiAnalyticsClient() {
     }, 0)
   }, [timeline])
 
-  // Conversation card preference
-  const convAClicks = useMemo(
-    () =>
-      timeline.filter(
-        (e) =>
-          e.event_type === 'demo_resource_clicked' &&
-          e.event_data?.resource === 'conversation-card' &&
-          e.event_data?.conversation === 'Conversation A'
-      ).length,
-    [timeline]
-  )
-  const convBClicks = useMemo(
-    () =>
-      timeline.filter(
-        (e) =>
-          e.event_type === 'demo_resource_clicked' &&
-          e.event_data?.resource === 'conversation-card' &&
-          e.event_data?.conversation === 'Conversation B'
-      ).length,
-    [timeline]
-  )
 
   if (loading && !data) {
     return (
@@ -294,57 +273,26 @@ export function HeidiAnalyticsClient() {
           />
           <Metric
             icon={MousePointer}
-            label="Tour stops + cards"
+            label="Tour stop clicks"
             value={tourStopClicks.length}
-            sub="Resource clicks"
+            sub={`of 3 stops · ${new Set(tourStopClicks.map((e) => e.event_data?.stop)).size} unique`}
           />
         </div>
 
-        {/* TWO-CONVERSATIONS PREFERENCE */}
-        <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">
-              Two-conversations engagement
-            </p>
-            <p className="text-[10px] text-muted-foreground">Which framing got the click</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <ConvCell
-              label="Conversation A"
-              tier="Smaller"
-              title="Partnership / licensing"
-              clicks={convAClicks}
-            />
-            <ConvCell
-              label="Conversation B"
-              tier="Preferred"
-              title="Acqui-hire"
-              clicks={convBClicks}
-              highlight
-            />
-          </div>
-          {convAClicks === 0 && convBClicks === 0 && (
-            <p className="mt-3 text-[11px] text-slate-500 italic">
-              No conversation acknowledgement yet — Paul hasn&rsquo;t tapped either card.
-            </p>
-          )}
-        </section>
 
         {/* TOUR-STOP CLICK ORDER */}
         <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3">
-            Tour stops + resource click order (oldest → newest)
+            Tour stop click order (oldest → newest)
           </p>
           {tourStopClicks.length === 0 ? (
             <p className="text-[11px] text-slate-500 italic">
-              No stop clicks yet. Tour stops fire on click of the 3-stop tour cards or conversation cards.
+              No stop clicks yet. The 3-stop tour cards on /courses/heidi-tour fire this event on click.
             </p>
           ) : (
             <ol className="space-y-1.5">
               {tourStopClicks.map((e, i) => {
-                const isStop = e.event_data?.resource === 'tour-stop'
-                const stopNum = e.event_data?.stop
-                const conv = e.event_data?.conversation
+                const stopNum = e.event_data?.stop as number | string | undefined
                 const title = e.event_data?.title as string | undefined
                 return (
                   <li key={i} className="flex items-center gap-3 text-xs">
@@ -352,7 +300,7 @@ export function HeidiAnalyticsClient() {
                       {i + 1}
                     </span>
                     <span className="text-foreground font-medium flex-1">
-                      {isStop ? `Stop ${stopNum}` : `Card ${conv}`}: {title || '(untitled)'}
+                      Stop {stopNum}: {title || '(untitled)'}
                     </span>
                     <span className="text-slate-500 tabular-nums shrink-0">
                       {relativeTime(Number(e.timestamp_ms))}
@@ -530,40 +478,6 @@ function Metric({
   )
 }
 
-function ConvCell({
-  label,
-  tier,
-  title,
-  clicks,
-  highlight,
-}: {
-  label: string
-  tier: string
-  title: string
-  clicks: number
-  highlight?: boolean
-}) {
-  return (
-    <div
-      className={`rounded-lg border p-4 ${
-        highlight
-          ? 'border-accent/30 bg-accent/5'
-          : 'border-slate-200 bg-slate-50/50'
-      }`}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-accent">{label}</p>
-        <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600 flex items-center gap-1">
-          {highlight && <Sparkles className="w-2.5 h-2.5" />}
-          {tier}
-        </span>
-      </div>
-      <p className="text-sm font-bold text-foreground mb-1">{title}</p>
-      <p className="text-2xl font-bold text-foreground tabular-nums leading-none">{clicks}</p>
-      <p className="text-[10px] text-muted-foreground mt-1">acknowledgement clicks</p>
-    </div>
-  )
-}
-
 void Mail
 void ArrowRight
+void Sparkles

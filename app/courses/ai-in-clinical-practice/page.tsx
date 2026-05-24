@@ -32,7 +32,7 @@ export default async function CoursePage() {
             AI in Clinical Practice
           </h1>
           <p className="text-lg text-muted-foreground mb-2 leading-relaxed">
-            For Australian clinicians using LLMs in patient care. Designed against AHPRA&rsquo;s 2025 AI guidance, the Australian Privacy Principles, and current indemnity-insurer positions (Avant, MIPS, Guild, MIGA).
+            For Australian clinicians using LLMs in patient care. Designed against AHPRA&rsquo;s 2024 AI guidance, the Australian Privacy Principles, and current indemnity-insurer positions (Avant, MIPS, Guild, MIGA).
           </p>
           <p className="text-sm text-muted-foreground mb-8">
             {totalMin} minutes total · Certificate of completion on passing the quiz.

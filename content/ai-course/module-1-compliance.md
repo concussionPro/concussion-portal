@@ -23,9 +23,9 @@ This module sets out that scaffolding. Read it carefully — every subsequent mo
 
 ---
 
-## 1. AHPRA's 2025 AI Guidance for Registered Health Practitioners
+## 1. AHPRA's 2024 AI Guidance for Registered Health Practitioners
 
-In 2025, AHPRA and the National Boards published guidance titled *Meeting your professional obligations when using Artificial Intelligence in healthcare*. The guidance applies to all registered health practitioners across the fifteen National Boards, including medical practitioners, nurses, physiotherapists, osteopaths, psychologists, and Chinese medicine practitioners. The full guidance is available on the AHPRA website: <https://www.ahpra.gov.au/Resources/Artificial-Intelligence-in-healthcare.aspx>.
+In November 2024, AHPRA and the National Boards published guidance titled *Meeting your professional obligations when using Artificial Intelligence in healthcare*. The guidance applies to all registered health practitioners across the fifteen National Boards, including medical practitioners, nurses, physiotherapists, osteopaths, psychologists, and Chinese medicine practitioners. The full guidance is available on the AHPRA website: <https://www.ahpra.gov.au/Resources/Artificial-Intelligence-in-healthcare.aspx>.
 
 ### What the guidance requires
 
@@ -40,7 +40,7 @@ The guidance does not prohibit AI use. It instead clarifies that existing profes
 
 [REDFLAG: "The AI said so" is never a defence. Signing an AI-generated note without reading it makes you — not the vendor — the falsifier of the record.]
 
-### "Aligned with AHPRA's 2025 guidance" — wording matters
+### "Aligned with AHPRA's 2024 guidance" — wording matters
 
 AHPRA does not certify, accredit, or endorse individual AI products. Any vendor or course (including this one) that describes itself as "AHPRA-certified" or "AHPRA-approved" is misusing AHPRA's name.
 
@@ -72,7 +72,7 @@ OAIC publishes the authoritative APP Guidelines and specific generative-AI guida
 - [OAIC · Australian Privacy Principles Guidelines](https://www.oaic.gov.au/privacy/australian-privacy-principles)
 - [OAIC · Guidance on privacy and commercially-available AI products](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/hands-on-guides/guidance-on-privacy-and-the-use-of-commercially-available-ai-products)
 
-Of the thirteen APPs, **five matter most** the moment an LLM enters a clinical workflow.
+Of the thirteen APPs, **six matter most** the moment an LLM enters a clinical workflow.
 
 [BREAK]
 
@@ -93,6 +93,18 @@ Once you introduce an AI tool, the policy needs to spell out: which tools, what 
 If an AI scribe processes consultation audio in real time, that is a fresh collection event. A patient who signed a general consent form at registration *before* you adopted the scribe has not been notified about AI involvement. APP 5 isn't satisfied until they are.
 
 [QUICK-CHECK: A patient signed your standard consent form 18 months ago. You start using an AI scribe today. What's required? | 1 | The original consent still covers it — health-data consent is broad. | The patient must be re-notified about AI involvement before the next consultation it records. | A verbal heads-up is enough — written notification is only required for new patients. | rationale: APP 5.2 requires notification of the purposes of collection. Adding an AI scribe changes the collection event — written re-notification (even a clinic-wide letter) is the safer interpretation.]
+
+[BREAK]
+
+### APP 3 — Collection of sensitive information
+
+**The rule.** Health information is *sensitive information* under the Privacy Act (s 6) and attracts stricter rules than ordinary personal information. APP 3 requires that you only collect health information where it is reasonably necessary for one of your functions or activities, and (generally) with the individual's consent.
+
+In an AI workflow, APP 3 binds twice: the consultation itself (you collect health info from the patient) AND the LLM call (the AI tool collects it from you on the patient's behalf). Both moments must be justifiable and (in most cases) consented.
+
+The categories the Act flags as sensitive — and where extra care applies — include: **mental health, sexual health, genetic data, biometric data, racial or ethnic origin (relevant to Aboriginal and Torres Strait Islander health), and political/religious/philosophical beliefs.** A general consent for clinical care does *not* automatically extend to sensitive-category processing by a third-party AI vendor.
+
+[REDFLAG: For mental-health, sexual-health, or Aboriginal-health workflows, the safer position is: explicit, recorded consent for AI tool use, scoped to the specific tool and the specific session type. Implied consent is harder to defend if a complaint is made under APP 3.]
 
 [BREAK]
 
@@ -284,10 +296,21 @@ Always pull the current version directly from your carrier; do not rely on secon
 
 [TRYTHIS: Log into your MDO member portal today and search "artificial intelligence". Save the current position statement to your practice's policies folder, dated. Re-pull every six months.]
 
+### Coverage-exclusion risk — non-negotiable
+
+Most indemnity policies (Avant, MIPS, MIGA, Guild) reserve the right to decline a claim or apply an excess where the practitioner's conduct fell outside policy conditions. In the AI context, three patterns commonly fall outside cover:
+
+- Pasting identifiable patient information into a Tier C consumer LLM (ChatGPT, Gemini, Claude.ai) — even where the patient verbally consented.
+- Deploying an AI scribe without obtaining express patient consent for AI involvement, recorded in the patient's file.
+- Failing to document AI use in the clinical record where the AI materially contributed to a decision or document.
+
+[REDFLAG: Compliance with AHPRA and the Privacy Act is the floor that keeps indemnity cover active. A non-compliant AI workflow can void cover even where there is no clinical error — the conduct itself is the breach.]
+
 ### Self-check
 
 1. Why is it not safe to rely on a course or vendor's summary of your indemnity carrier's AI position?
 2. Name three questions you should put to your indemnity carrier before introducing a new AI tool into your practice.
+3. Name three patterns of AI use that commonly fall outside indemnity policy cover.
 
 ---
 
@@ -295,7 +318,7 @@ Always pull the current version directly from your carrier; do not rely on secon
 
 [INFOGRAPHIC: documentation-do-dont]
 
-AHPRA's 2025 guidance is clear that AI use should be transparent and traceable. In practice, this means the patient record itself must reflect when AI was used in producing or supporting the record.
+AHPRA's 2024 guidance is clear that AI use should be transparent and traceable. In practice, this means the patient record itself must reflect when AI was used in producing or supporting the record.
 
 ### Recommended documentation patterns
 
@@ -480,7 +503,7 @@ The following are the most common errors clinicians make when reasoning about AI
 
 ## Citation index
 
-- AHPRA — *Meeting your professional obligations when using Artificial Intelligence in healthcare* (2025): <https://www.ahpra.gov.au/Resources/Artificial-Intelligence-in-healthcare.aspx>
+- AHPRA — *Meeting your professional obligations when using Artificial Intelligence in healthcare* (2024): <https://www.ahpra.gov.au/Resources/Artificial-Intelligence-in-healthcare.aspx>
 - OAIC — Australian Privacy Principles Guidelines: <https://www.oaic.gov.au/privacy/australian-privacy-principles>
 - OAIC — Guidance on privacy and the use of commercially available AI products: <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/hands-on-guides/guidance-on-privacy-and-the-use-of-commercially-available-ai-products>
 - OAIC — De-identification and the Privacy Act: <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/handling-personal-information/de-identification-and-the-privacy-act>
