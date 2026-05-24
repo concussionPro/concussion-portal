@@ -2,7 +2,6 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
-import { ConversationCard } from '@/components/ai-course/ConversationCard'
 import { TourStopLink } from '@/components/ai-course/TourStopLink'
 import {
   ArrowRight,
@@ -18,7 +17,7 @@ import {
 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'CPD layer for Heidi Evidence + Scribe',
+  title: 'CEA · platform demo',
   robots: 'noindex, nofollow',
 }
 
@@ -58,7 +57,7 @@ const METRICS = [
   { value: '17', label: 'AHPRA Boards encoded', detail: 'All 15 National Boards + RACGP + ACRRM CPD Homes' },
   { value: '50–100%', label: 'Passive CPD ceiling', detail: 'Calibrated per profession, sourced against registration standards' },
   { value: '~A$480M', label: 'AU CPD TAM', detail: 'Fragmented, no platform >30%, no quality authority' },
-  { value: '~0', label: 'Marginal cost to Heidi', detail: 'Categoriser runs on event metadata only' },
+  { value: '~0', label: 'Marginal cost per event', detail: 'Categoriser runs on event metadata only' },
 ]
 
 const MARKET_FACTS = [
@@ -96,31 +95,14 @@ export default async function HeidiTourPage() {
 
         {/* HERO */}
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
-          CEA · exploring a CPD conversation with Heidi
+          Concussion Education Australia
         </p>
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
-          A working AU CPD platform.{' '}
-          <span className="text-muted-foreground">Two conversations open.</span>
+          A working AU CPD platform for AHPRA-registered clinicians.
         </h1>
         <p className="text-base text-muted-foreground max-w-2xl mb-8 leading-relaxed">
-          I&rsquo;ve built and shipped a CPD platform for AHPRA-registered clinicians — a flagship live course (CCM, Osteopathy Australia endorsed, paying base), two short courses ready to launch, and a passive-CPD categoriser keyed against all 17 AHPRA Boards. This tour is a 6-minute look at what&rsquo;s real today. The conversation I&rsquo;d like to open with you is exploratory.
+          Flagship clinical course live and Osteopathy Australia–endorsed (the only concussion training OA endorses for osteopaths in AU), short-course shell ready, passive-CPD categoriser keyed against all 17 AHPRA Boards. This is a 6-minute look at what&rsquo;s real today.
         </p>
-
-        {/* TWO CONVERSATIONS — the actual ask, sized appropriately */}
-        <div className="mb-10 grid md:grid-cols-2 gap-3">
-          <ConversationCard
-            label="Conversation A"
-            tier="Smaller"
-            title="Mutual referral · licensing partnership"
-            body="I keep promoting Heidi as a worked example of a Tier A AU scribe in the CPD courses my clinicians are taking. You suggest CEA courses to your AU users as their accredited CPD path. Optional integration layer if it makes sense later — POST /api/cpd/events takes ~2 engineer-weeks your side. Light commercial touch, clean alignment."
-          />
-          <ConversationCard
-            label="Conversation B"
-            tier="Preferred"
-            title="Acqui-hire · architecture + founder onboard"
-            body="You acquire CEA's shipped CPD architecture — the 17-Board calibration logic, the OA-endorsed flagship, the multi-course shell, the categoriser — and bring me across to lead CPD as a product surface inside Heidi. Saves you 12 months of regulator work, gives Heidi a defensible moat in the AU clinician segment that scribe-only competitors (Abridge, Nabla, DeepScribe) can't replicate. This is the conversation I'd most like to have."
-          />
-        </div>
 
         {/* GUIDED TOUR — pinned for first-visit visitors (Paul) */}
         <section className="mb-10 rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white p-5 md:p-6">
@@ -317,9 +299,9 @@ export default async function HeidiTourPage() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wide text-accent mb-1">POST /api/cpd/events · live · curlable today</p>
-              <p className="text-base font-bold text-foreground leading-tight">Heidi-integration API</p>
+              <p className="text-base font-bold text-foreground leading-tight">Vendor integration API</p>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                Scribe + Evidence events → categoriser → AHPRA-tagged log entry. ~2 engineer-weeks on Heidi side, 6-week joint MVP. Reads from your existing event stream — no new UX, no replatforming.
+                Scribe + literature-search events → categoriser → AHPRA-tagged log entry. ~2 engineer-weeks vendor side, 6-week joint MVP. Reads from any existing event stream — no new UX, no replatforming.
               </p>
             </div>
             <div className="text-sm font-bold text-accent group-hover:underline inline-flex items-center gap-1 shrink-0">
