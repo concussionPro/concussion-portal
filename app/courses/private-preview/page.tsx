@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
-import { ArrowRight, Award, BookOpen, Workflow, Activity, Database } from 'lucide-react'
+import { ArrowRight, Award, BookOpen, Workflow, Activity, Layers, ShoppingBag } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'CEA · platform demo',
@@ -24,10 +24,10 @@ export default async function PreviewPage() {
         </p>
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.05] max-w-3xl">
           AU clinicians need 20–50 CPD hours a year.<br />
-          <span className="text-muted-foreground">Almost none of the hours they actually earn get logged.</span>
+          <span className="text-muted-foreground">Most of what they actually earn never gets logged.</span>
         </h1>
         <p className="text-base text-foreground/85 max-w-2xl mb-3 leading-relaxed">
-          AHPRA already accepts literature review, clinical reasoning, and tool-assisted documentation as CPD. AU clinicians do <strong>100–400 hours</strong> of this per year. Almost none of it makes it into their record.
+          AHPRA accepts literature review, clinical reasoning, and tool-assisted documentation as CPD. Annual requirements run from 20 to 50 hours depending on the Board. Most of the informal learning that would count never makes it into a clinician&rsquo;s record — there&rsquo;s nowhere to log it on the way through.
         </p>
         <p className="text-base text-foreground/85 max-w-2xl mb-6 leading-relaxed">
           <strong>We built the platform that closes the loop.</strong> AHPRA-Board calibrated for all 17 Boards, OA-endorsed flagship course already live, and a generic event-ingestion API any AI tool can plug into in ~2 engineer-weeks. You&rsquo;re seeing this because your product surface and our infrastructure could compound.
@@ -39,38 +39,63 @@ export default async function PreviewPage() {
           Book a 30-min conversation →
         </a>
 
-        {/* COURSES — above fold, visible immediately */}
+        {/* WHAT PLUGGING IN UNLOCKS — Heidi-relevant value, above the courses */}
         <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3">
-          Available courses
+          What plugging in unlocks for your product
         </p>
-        <div className="grid md:grid-cols-2 gap-4 mb-12">
-          {/* CCM — LIVE */}
+        <div className="grid sm:grid-cols-3 gap-3 mb-10">
           <Link
-            href="/learning"
-            className="group rounded-2xl border-2 border-emerald-200 bg-white hover:border-emerald-300 hover:shadow-md transition-all flex flex-col overflow-hidden"
+            href="/courses/cpd-record/passive"
+            className="group rounded-xl border border-slate-200 bg-white p-5 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
           >
-            <div className="px-5 pt-5 pb-4 flex-1">
-              <div className="flex items-center justify-between mb-3">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <Award className="w-3 h-3" />
-                  Live · OA-endorsed
-                </span>
-                <span className="text-[11px] font-bold text-slate-600">A$1,190</span>
-              </div>
-              <h2 className="text-lg font-bold text-foreground leading-tight mb-1.5">
-                Concussion Clinical Mastery
-              </h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                14 CPD hours · 11 modules · SCAT6 + SCOAT6 · the only concussion training Osteopathy Australia endorses for osteopaths in Australia.
-              </p>
-            </div>
-            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
-              <span className="text-slate-500">Click to open the course</span>
-              <ArrowRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
-            </div>
+            <Activity className="w-5 h-5 text-accent mb-3" />
+            <p className="text-sm font-bold text-foreground leading-tight mb-1.5">CPD logs while clinicians use your tool</p>
+            <p className="text-[12px] text-muted-foreground leading-relaxed mb-3 flex-1">
+              Scribe sessions + literature searches → categorised against the right AHPRA Board → audit-ready CPD record. Clinician confirms with one tap. Never leaves your app.
+            </p>
+            <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
+              See the auto-log flow
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </span>
           </Link>
 
-          {/* AI course — LAUNCHING */}
+          <Link
+            href="/courses"
+            className="group rounded-xl border border-slate-200 bg-white p-5 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
+          >
+            <ShoppingBag className="w-5 h-5 text-accent mb-3" />
+            <p className="text-sm font-bold text-foreground leading-tight mb-1.5">In-product course catalogue</p>
+            <p className="text-[12px] text-muted-foreground leading-relaxed mb-3 flex-1">
+              Multi-course shell — OA-endorsed flagship live, short-course library shipping monthly. Designed to be embedded or white-labelled inside your app. Your users buy + complete CPD without leaving.
+            </p>
+            <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
+              See the catalogue
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </Link>
+
+          <Link
+            href="/courses/integration"
+            className="group rounded-xl border border-slate-200 bg-white p-5 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
+          >
+            <Workflow className="w-5 h-5 text-accent mb-3" />
+            <p className="text-sm font-bold text-foreground leading-tight mb-1.5">Plug-in integration · 2 engineer-weeks</p>
+            <p className="text-[12px] text-muted-foreground leading-relaxed mb-3 flex-1">
+              POST /api/cpd/events — curlable today. Reads your existing event stream. No new UX, no replatforming. 6-week joint MVP shape.
+            </p>
+            <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
+              See the API spec
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </Link>
+        </div>
+
+        {/* COURSES — proof the catalogue has substance */}
+        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3">
+          What&rsquo;s in the catalogue today
+        </p>
+        <div className="grid md:grid-cols-2 gap-4 mb-12">
+          {/* AI course — LAUNCHING — placed first because partner-relevant */}
           <Link
             href="/courses/ai-in-clinical-practice"
             className="group rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white hover:border-accent/50 hover:shadow-md transition-all flex flex-col overflow-hidden"
@@ -95,56 +120,31 @@ export default async function PreviewPage() {
               <ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-0.5 transition-transform" />
             </div>
           </Link>
-        </div>
 
-        {/* DEEPER SURFACES — three click-throughs, no walls of text */}
-        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3">
-          The platform behind the courses
-        </p>
-        <div className="grid sm:grid-cols-3 gap-3 mb-12">
+          {/* CCM — LIVE — placed second; flagship credibility signal */}
           <Link
-            href="/courses/integration"
-            className="group rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
+            href="/learning"
+            className="group rounded-2xl border-2 border-emerald-200 bg-white hover:border-emerald-300 hover:shadow-md transition-all flex flex-col overflow-hidden"
           >
-            <Workflow className="w-5 h-5 text-accent mb-2" />
-            <p className="text-sm font-bold text-foreground leading-tight mb-1">Integration API</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed mb-3 flex-1">
-              POST /api/cpd/events. Curlable today. ~2 engineer-weeks vendor-side.
-            </p>
-            <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
-              See the spec
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-            </span>
-          </Link>
-
-          <Link
-            href="/courses/cpd-record/passive"
-            className="group rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
-          >
-            <Activity className="w-5 h-5 text-accent mb-2" />
-            <p className="text-sm font-bold text-foreground leading-tight mb-1">Passive-CPD vision</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed mb-3 flex-1">
-              How AI-tool events become AHPRA-audit-ready CPD hours. Mock data, illustrative.
-            </p>
-            <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
-              See the demo
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-            </span>
-          </Link>
-
-          <Link
-            href="/courses/cpd-record/requirements"
-            className="group rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
-          >
-            <Database className="w-5 h-5 text-accent mb-2" />
-            <p className="text-sm font-bold text-foreground leading-tight mb-1">17 AHPRA Boards</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed mb-3 flex-1">
-              All National Boards + RACGP + ACRRM CPD Homes. Per-Board calibration encoded.
-            </p>
-            <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
-              See the reference
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-            </span>
+            <div className="px-5 pt-5 pb-4 flex-1">
+              <div className="flex items-center justify-between mb-3">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <Award className="w-3 h-3" />
+                  Live · OA-endorsed
+                </span>
+                <span className="text-[11px] font-bold text-slate-600">A$1,190</span>
+              </div>
+              <h2 className="text-lg font-bold text-foreground leading-tight mb-1.5">
+                Concussion Clinical Mastery
+              </h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                14 CPD hours · 11 modules · SCAT6 + SCOAT6 · the only concussion training Osteopathy Australia endorses for osteopaths in Australia.
+              </p>
+            </div>
+            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
+              <span className="text-slate-500">Click to open the course</span>
+              <ArrowRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
+            </div>
           </Link>
         </div>
 
