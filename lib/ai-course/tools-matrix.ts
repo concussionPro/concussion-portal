@@ -33,7 +33,7 @@ export const TOOLS: ToolEntry[] = [
     pricingFromAUD: 50,
     pricingNote: '~A$50-100/clinician/mo at standard tiers',
     primaryUse: 'AI scribe — voice-to-note in consult',
-    notes: 'CEA-recommended Australian AI scribe. Healthcare-purpose-built, AU residency, most-used AI scribe in AU primary care 2026. Reference implementation used throughout this course.',
+    notes: 'CEA-recommended Australian AI scribe. Healthcare-purpose-built, AU residency, reference implementation used throughout this course. Founder-led AU healthtech with documented growth in 2025-26.',
     url: 'https://www.heidihealth.com',
     ceaRecommended: true,
   },

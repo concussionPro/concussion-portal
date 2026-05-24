@@ -1,25 +1,27 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { checkServerAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { COURSES, PROVIDERS, findProvider } from '@/lib/ai-course/provider-catalogue'
 import { getAllEarlyAccessCounts } from '@/lib/early-access'
 import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
 import { Check, AlertCircle, ShieldCheck, FileBarChart, BookOpenCheck, Award, Stethoscope, Users, Building2 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Courses — Concussion Education Australia',
-  robots: 'noindex, nofollow',
+  title: 'CPD Courses — Concussion Education Australia',
+  description: 'Evidence-graded CPD short courses for AHPRA-registered clinicians. Concussion Clinical Mastery available now, AI in Clinical Practice and Vagus Nerve coming soon.',
 }
 
 /**
- * Marketplace catalogue index. Surfaces every course in the platform
- * grouped by provider, with status badges (live / coming-soon / pilot)
- * and CPD recognition. Marketplace placeholder slots demonstrate the
- * multi-provider shape without claiming providers we have not signed.
+ * Marketplace catalogue index. Public surface — anyone can browse
+ * available + coming-soon courses, click through to buy CCM, or sign up
+ * for the 15% early-access waitlist on upcoming courses.
+ *
+ * The individual course landing pages (AI + Vagus) remain admin/demo
+ * gated; this page only links into them, doesn't render their content.
  */
 export default async function CoursesIndexPage() {
-  const access = await requireAiCourseAccess()
+  const access = await checkServerAccess()
   const liveCourses = COURSES.filter((c) => c.status === 'live')
   const earlyAccessCourses = COURSES.filter(
     (c) => c.status === 'coming-soon' && c.earlyBirdDiscountPct
