@@ -15,7 +15,7 @@ import { PlayCircle, TrendingUp, Sparkles, Activity, ArrowLeft } from 'lucide-re
  */
 export function ClinicianMockDashboard() {
   return (
-    <aside className="hidden md:flex fixed left-0 top-[60px] bottom-0 w-72 flex-col border-r border-slate-200 bg-white z-30 overflow-y-auto">
+    <aside className="hidden md:flex fixed left-0 top-[88px] bottom-0 w-72 flex-col border-r border-slate-200 bg-white z-30 overflow-y-auto">
       {/* Banner — flags this as the mock-clinician view */}
       <div className="px-4 py-2.5 bg-amber-50 border-b border-amber-200">
         <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-amber-800">

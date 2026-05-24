@@ -26,18 +26,9 @@ export default async function PreviewPage() {
           AU clinicians need 20–50 CPD hours a year.<br />
           <span className="text-muted-foreground">Most of what they actually earn never gets logged.</span>
         </h1>
-        <p className="text-base text-foreground/85 max-w-2xl mb-3 leading-relaxed">
-          AHPRA accepts literature review, clinical reasoning, and tool-assisted documentation as CPD. Annual requirements run from 20 to 50 hours depending on the Board. Most of the informal learning that would count never makes it into a clinician&rsquo;s record — there&rsquo;s nowhere to log it on the way through.
+        <p className="text-base text-foreground/85 max-w-2xl mb-10 leading-relaxed">
+          <strong>We built the platform that closes the loop.</strong> OA-endorsed flagship course live. AHPRA-Board calibrated for all 17 Boards. Generic event-ingestion API any AI tool can plug into.
         </p>
-        <p className="text-base text-foreground/85 max-w-2xl mb-6 leading-relaxed">
-          <strong>We built the platform that closes the loop.</strong> AHPRA-Board calibrated for all 17 Boards, OA-endorsed flagship course already live, and a generic event-ingestion API any AI tool can plug into in ~2 engineer-weeks. You&rsquo;re seeing this because your product surface and our infrastructure could compound.
-        </p>
-        <a
-          href="mailto:zac@concussion-education-australia.com?subject=CEA%20%E2%80%94%2030%20min%20to%20discuss&body=Hi%20Zac%2C%0A%0AI%20had%20a%20look.%20Available%20%5Bday%5D%20AEST%20for%20a%2030-min%20call.%0A%0A%5Byour%20name%5D"
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors mb-10"
-        >
-          Book a 30-min conversation →
-        </a>
 
         {/* WHAT PLUGGING IN UNLOCKS — Heidi-relevant value, above the courses */}
         <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3">
@@ -146,6 +137,19 @@ export default async function PreviewPage() {
               <ArrowRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </Link>
+        </div>
+
+        {/* BOOK CTA — placed after the walkthrough, not before */}
+        <div className="mb-10 rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white p-6 md:p-7 text-center">
+          <p className="text-sm font-semibold text-foreground mb-3">
+            Want to talk it through?
+          </p>
+          <a
+            href="mailto:zac@concussion-education-australia.com?subject=CEA%20%E2%80%94%2030%20min%20to%20discuss&body=Hi%20Zac%2C%0A%0AI%20had%20a%20look.%20Available%20%5Bday%5D%20AEST%20for%20a%2030-min%20call.%0A%0A%5Byour%20name%5D"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors"
+          >
+            Book a 30-min conversation →
+          </a>
         </div>
 
         {/* MINIMAL FOOTER — credibility line */}

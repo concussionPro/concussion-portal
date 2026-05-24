@@ -23,7 +23,7 @@ export default async function CoursePage() {
       <SiteNav />
       <ClinicianMockDashboard />
       <main className="md:pl-72">
-        <div className="max-w-4xl mx-auto px-6 pt-[80px] pb-20">
+        <div className="max-w-4xl mx-auto px-6 pt-[100px] pb-20">
           <AdminPreviewBadge access={access} />
 
           {/* DASHBOARD HEADER — course overview card with primary CTA */}
