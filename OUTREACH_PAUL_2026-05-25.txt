@@ -16,17 +16,17 @@ Hi Paul,
 
 Zac Lewis here — osteopath, founder of Concussion Education Australia.
 
-Spent the last 12 months building a CPD platform for AHPRA-registered AU clinicians. Flagship course is live, Osteopathy Australia–endorsed (the only concussion training OA endorses for osteopaths in AU), and I'm a confirmed speaker at the OA Conference this October.
+Spent the last 12 months building a CPD platform for AHPRA-registered AU clinicians. Flagship course is live, Osteopathy Australia–endorsed (the only concussion training OA endorses for osteopaths in AU), and I&rsquo;m a confirmed speaker at the OA Conference this October.
 
 NDA-gated 6-minute look:
 
 → https://portal.concussion-education-australia.com/d/heidi-h8k3q9p
 
-The tour walks through what's shipped today: the course shell, the AHPRA-Board categoriser, and a generic event-ingestion API any AI tool could plug into. Heidi appears in the course content as one of four Tier A AU scribes — same treatment as Lyrebird, Halo, and Dragon.
+The tour walks through what&rsquo;s shipping: the course shell, the AHPRA-Board categoriser keyed against every Board&rsquo;s actual rules, and a generic event-ingestion API any AI tool could plug into in ~2 engineer-weeks. Heidi appears in the course content as one of four Tier A AU scribes — same treatment as Lyrebird, Halo, and Dragon.
 
-I'm sharing this with you specifically because Heidi sits in the right product space for CPD to become a feature rather than a separate destination — but the demo doesn't presume any particular conversation. Have a look, tell me if any of it is interesting, and I'm happy to talk.
+Sharing it with you because Heidi&rsquo;s product surface sits in the right place for what this enables. Worth a look.
 
-30 min next week if it lands. Otherwise, in person at OA Conference 16–17 October on the Gold Coast.
+30 min next week if it&rsquo;s interesting. Otherwise, in person at OA Conference 16–17 October on the Gold Coast.
 
 Zac
 Founder, Concussion Education Australia

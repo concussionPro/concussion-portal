@@ -101,7 +101,7 @@ export default async function HeidiTourPage() {
           A working AU CPD platform for AHPRA-registered clinicians.
         </h1>
         <p className="text-base text-muted-foreground max-w-2xl mb-8 leading-relaxed">
-          Flagship clinical course live and Osteopathy Australia–endorsed (the only concussion training OA endorses for osteopaths in AU), short-course shell ready, passive-CPD categoriser keyed against all 17 AHPRA Boards. This is a 6-minute look at what&rsquo;s real today.
+          Flagship clinical course live and Osteopathy Australia–endorsed (the only concussion training OA endorses for osteopaths in AU), short-course shell ready, passive-CPD categoriser keyed against all 17 AHPRA Boards, generic event-ingestion API any AI-tool vendor can plug into in ~2 engineer-weeks. Built solo over 12 months. This is a 6-minute look at what&rsquo;s real today.
         </p>
 
         {/* GUIDED TOUR — pinned for first-visit visitors (Paul) */}
