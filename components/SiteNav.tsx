@@ -120,13 +120,13 @@ export function SiteNav() {
               </Link>
             ))}
             {isLoggedIn && (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="font-sans text-[13px] font-medium leading-normal tracking-normal px-3 py-2 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer"
+              <a
+                href="/"
+                onClick={(e) => { e.preventDefault(); handleLogout() }}
+                className="text-[13px] font-medium px-3 py-2 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)]"
               >
                 Logout
-              </button>
+              </a>
             )}
             {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
               <span className="hidden lg:inline-flex ml-2 text-[10px] font-semibold px-2 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 whitespace-nowrap">
@@ -200,13 +200,13 @@ export function SiteNav() {
               </Link>
             ))}
             {isLoggedIn && (
-              <button
-                type="button"
-                onClick={() => { setMobileMenuOpen(false); handleLogout() }}
-                className="font-sans text-left text-sm font-medium leading-normal tracking-normal py-2.5 px-3 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer"
+              <a
+                href="/"
+                onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); handleLogout() }}
+                className="text-left text-sm py-2.5 px-3 rounded-md transition-colors text-[var(--muted-foreground)] hover:bg-[rgba(13,115,119,0.04)]"
               >
                 Logout
-              </button>
+              </a>
             )}
             {onPricing ? (
               <button
