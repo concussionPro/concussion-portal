@@ -159,9 +159,9 @@ export function DemoAccessClient() {
   }
 
   return (
-    <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] gap-8 lg:gap-10 items-start">
-      {/* LEFT — hero + context cards (the marketing column) */}
-      <div className="relative">
+    <div>
+      {/* Hero — original premium style, full width */}
+      <div className="relative mb-8">
         <div
           aria-hidden="true"
           className="absolute -top-12 -left-12 w-72 h-72 rounded-full bg-gradient-to-br from-accent/15 via-emerald-100/40 to-transparent blur-3xl pointer-events-none"
@@ -172,19 +172,19 @@ export function DemoAccessClient() {
           </p>
 
           {isPrefilled ? (
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.05]">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
               Curated for{' '}
               <span className="bg-gradient-to-r from-accent to-emerald-600 bg-clip-text text-transparent">
                 {organisation}
               </span>
             </h1>
           ) : (
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.05]">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
               A clinical-education platform, by your side.
             </h1>
           )}
 
-          <p className="text-base text-muted-foreground leading-relaxed mb-2">
+          <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mb-1">
             Preview the AHPRA-aligned course, the multi-provider CPD marketplace shell, and the passive-CPD layer that captures the informal learning clinicians already do but never log.
           </p>
           {suggestedName && (
@@ -192,80 +192,75 @@ export function DemoAccessClient() {
               Prepared specifically for {suggestedName}.
             </p>
           )}
-
-          {/* Three context cards — stacked tighter, premium styling preserved */}
-          <div className="grid sm:grid-cols-3 gap-3 mt-6">
-            {[
-              { icon: Eye, label: 'Read-only', body: 'Course, certification flow, passive-CPD mockup.' },
-              { icon: Clock, label: '7-day access', body: 'Auto-expires. Re-enter via the link to extend.' },
-              { icon: ShieldCheck, label: 'Watermarked', body: 'Every page carries your organisation name.' },
-            ].map((c) => {
-              const Icon = c.icon
-              return (
-                <div key={c.label} className="rounded-xl border border-slate-200 bg-white p-3.5">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/10 to-emerald-50 border border-accent/20 flex items-center justify-center mb-2">
-                    <Icon className="w-4 h-4 text-accent" />
-                  </div>
-                  <p className="text-xs font-bold text-foreground mb-0.5">{c.label}</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{c.body}</p>
-                </div>
-              )
-            })}
-          </div>
         </div>
       </div>
 
-      {/* RIGHT — acceptance form (sticky on desktop so it stays in view) */}
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4 lg:sticky lg:top-[100px] rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm"
-        noValidate
-      >
-        {isPrefilled && (
-          <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/5 to-emerald-50/30 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-accent mb-1">
-              Accepting on behalf of
-            </p>
-            <p className="text-xl font-bold text-foreground mb-2">{organisation}</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              IP + timestamp logged with the agreement. Add work email below for a copy — optional.
-            </p>
-            <input
-              type="text"
-              inputMode="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={submitting}
-              placeholder="Optional · your work email"
-              autoComplete="email"
-              className="mt-2.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50 transition-colors"
-            />
-          </div>
-        )}
+      {/* Three context cards — premium */}
+      <div className="grid sm:grid-cols-3 gap-3 mb-8">
+        {[
+          { icon: Eye, label: 'Read-only', body: 'Course, certification flow, passive-CPD mockup, marketplace shell.' },
+          { icon: Clock, label: '7-day access', body: 'Auto-expires. Re-enter via the link to extend.' },
+          { icon: ShieldCheck, label: 'Watermarked', body: 'Every page carries a confidentiality stripe with your organisation name.' },
+        ].map((c) => {
+          const Icon = c.icon
+          return (
+            <div key={c.label} className="relative rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/10 to-emerald-50 border border-accent/20 flex items-center justify-center mb-3">
+                <Icon className="w-5 h-5 text-accent" />
+              </div>
+              <p className="text-sm font-bold text-foreground mb-1">{c.label}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{c.body}</p>
+            </div>
+          )
+        })}
+      </div>
 
-        {!isPrefilled && (
-          <div className="grid sm:grid-cols-2 gap-3">
-            <input
-              type="text"
-              inputMode="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={submitting}
-              placeholder="your work email"
-              autoComplete="email"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
-            />
-            <input
-              type="text"
-              value={organisation}
-              onChange={(e) => setOrganisation(e.target.value)}
-              disabled={submitting}
-              placeholder="Your organisation"
-              autoComplete="organization"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
-            />
-          </div>
-        )}
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {isPrefilled && (
+            <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/5 to-emerald-50/30 p-4">
+              <div className="flex items-baseline justify-between mb-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-accent">
+                  Accepting on behalf of
+                </p>
+                <p className="text-[10px] text-slate-500">IP + timestamp logged</p>
+              </div>
+              <p className="text-xl font-bold text-foreground mb-3">{organisation}</p>
+              <input
+                type="text"
+                inputMode="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={submitting}
+                placeholder="Optional · your work email for a copy of the agreement"
+                autoComplete="email"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent disabled:opacity-50 transition-colors"
+              />
+            </div>
+          )}
+
+          {!isPrefilled && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                inputMode="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={submitting}
+                placeholder="your work email"
+                autoComplete="email"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              />
+              <input
+                type="text"
+                value={organisation}
+                onChange={(e) => setOrganisation(e.target.value)}
+                disabled={submitting}
+                placeholder="Your organisation"
+                autoComplete="organization"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              />
+            </div>
+          )}
 
         {/* NDA — summary + collapsible full text */}
         <details className="group rounded-xl border border-slate-200 bg-slate-50">
@@ -349,4 +344,5 @@ export function DemoAccessClient() {
     </div>
   )
 }
+
 
