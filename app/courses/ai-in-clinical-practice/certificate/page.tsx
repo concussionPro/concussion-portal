@@ -85,12 +85,18 @@ export default async function CertificatePage() {
         </div>
 
         {!cert.isValid && (
-          <div className="rounded-xl p-4 bg-amber-50 border border-amber-200 text-sm text-amber-900 mb-6">
-            This certificate has expired. Re-take the (refreshed) quiz to renew for another 12 months.
+          <div className="rounded-xl p-4 bg-amber-50 border border-amber-200 text-sm text-amber-900 mb-6 flex flex-wrap items-center justify-between gap-3">
+            <span>This certificate has expired. Re-take the (refreshed) quiz to renew for another 12 months.</span>
+            <Link
+              href="/courses/ai-in-clinical-practice/quiz"
+              className="px-4 py-2 rounded-lg bg-amber-700 text-white text-xs font-semibold hover:bg-amber-800 transition-colors"
+            >
+              Re-take quiz →
+            </Link>
           </div>
         )}
 
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3 mb-6">
           <a
             href={`/api/ai-course/certificate/pdf/${cert.certificateId}`}
             className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
@@ -108,6 +114,25 @@ export default async function CertificatePage() {
             <p className="text-xs text-muted-foreground mt-1">Share with insurers, employers, clinics</p>
           </a>
         </div>
+
+        {/* AHPRA logging guidance — matches Vagus cert pattern */}
+        <section className="rounded-xl bg-slate-50 border border-slate-200 p-5">
+          <p className="text-sm font-bold text-foreground mb-2">Logging this in your AHPRA CPD record</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+            Most AHPRA boards expect each CPD activity to be logged with: activity name, provider, hours, date, and a brief reflection on relevance to practice. The reflection element is what differentiates &quot;attended&quot; from &quot;learned&quot; — most boards explicitly require it.
+          </p>
+          <div className="rounded-lg bg-white border border-slate-200 p-3 text-xs text-foreground/85 leading-relaxed">
+            <p className="font-bold mb-1">Suggested log entry</p>
+            <p className="font-mono text-[11px] leading-relaxed">
+              Activity: AI in Clinical Practice<br />
+              Provider: Concussion Education Australia<br />
+              Hours: 3<br />
+              Date completed: {issuedDate}<br />
+              Certificate ID: {cert.certificateId}<br />
+              Reflection: [Add 2–3 sentences here — what changed in your AI workflow / which compliance gap this addressed / one specific safeguard you&apos;ll implement]
+            </p>
+          </div>
+        </section>
       </div>
       </main>
     </div>

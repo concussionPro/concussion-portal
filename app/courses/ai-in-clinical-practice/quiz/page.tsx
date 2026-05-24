@@ -24,9 +24,12 @@ export default async function QuizPage() {
       <main className="md:pl-72">
       <div className="max-w-3xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Certification Quiz</h1>
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent mb-2">
+          Certification Quiz
+        </p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Test your understanding.</h1>
         <p className="text-muted-foreground mb-2">
-          10 questions. Pass mark: 8 out of 10. The certificate is issued automatically on pass.
+          {QUIZ_QUESTIONS.length} questions. Pass mark: 8 out of {QUIZ_QUESTIONS.length}. The certificate is issued automatically on pass.
         </p>
         <p className="text-xs text-muted-foreground mb-8">
           Questions focus on AHPRA, Privacy Act, and TGA compliance — not productivity. The certificate attests that the holder understands the legal framework for AI use in Australian clinical practice.

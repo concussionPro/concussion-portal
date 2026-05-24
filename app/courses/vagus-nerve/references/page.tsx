@@ -42,7 +42,7 @@ export default async function VagusReferencesPage() {
             Reference Repository
           </p>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            Sourced. Verifiable. Evidence-graded.
+            Sourced. Verifiable. Defensible.
           </h1>
           <p className="text-base text-muted-foreground mb-2 leading-relaxed">
             Every claim about vagal anatomy, HRV measurement, autonomic phenotypes, and intervention efficacy in this course has an upstream source. {VAGUS_REFERENCES.length} references across {VAGUS_REF_CATEGORIES.length} categories. Refreshed monthly via the content-refresh cron.

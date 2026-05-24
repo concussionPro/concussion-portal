@@ -32,16 +32,16 @@ export default async function CoursesIndexPage() {
       <div className="max-w-5xl mx-auto px-6 pt-[120px] pb-20">
         <AdminPreviewBadge access={access} />
 
-        {/* Hero — confident, restrained, outcome-focused */}
+        {/* Hero — clinician-first, outcome-focused */}
         <div className="mb-14">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-3">
-            CPD Marketplace · the shell that fixes a A$480M fragmented vertical
+            CEA CPD Marketplace
           </p>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.05] max-w-3xl">
-            Trusted CPD. <span className="text-muted-foreground">Audit-ready by default.</span>
+            CPD that&rsquo;s <span className="text-accent">worth your time.</span>
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mb-8">
-            ~900k AHPRA clinicians, 20-50 mandatory hours/year, no platform holds &gt;30% share, no quality authority. The shell here is the answer: every course passes a six-criterion review, hours auto-log across providers, audit export in a click. The passive layer captures the 100-400 hrs of research clinicians already do but never log.
+            Short, evidence-graded courses for AHPRA-registered clinicians. Each one passes a six-criterion review before listing. Hours auto-log, certificates come AHPRA-audit-ready, every clinical claim cites a primary source.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -151,9 +151,12 @@ export default async function CoursesIndexPage() {
           })}
         </div>
 
-        {/* Live courses */}
+        {/* Available courses */}
         <section className="mb-12">
-          <h2 className="text-xl font-bold text-foreground mb-4">Live courses</h2>
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="text-xl font-bold text-foreground">Available now</h2>
+            <p className="text-xs text-muted-foreground">{liveCourses.length} {liveCourses.length === 1 ? 'course' : 'courses'}</p>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             {liveCourses.map((c) => {
               const provider = findProvider(c.providerId)
@@ -161,9 +164,9 @@ export default async function CoursesIndexPage() {
                 <Link
                   key={c.id}
                   href={c.route}
-                  className="card rounded-xl p-5 hover:border-accent/40 transition-colors flex flex-col"
+                  className="card rounded-xl p-5 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
                 >
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] font-bold uppercase tracking-wide text-accent">
                       {provider?.shortName || c.providerId}
                     </span>
@@ -173,12 +176,12 @@ export default async function CoursesIndexPage() {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-1">{c.title}</h3>
+                  <h3 className="text-lg font-bold text-foreground mb-1 leading-tight">{c.title}</h3>
                   <p className="text-sm text-muted-foreground mb-3 leading-relaxed flex-1">{c.description}</p>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground tabular-nums">
                       <strong className="text-foreground">{c.cpdHours} CPD hours</strong>
-                      {c.priceAUD !== null && <> · AUD ${c.priceAUD}</>}
+                      {c.priceAUD !== null && <> · A${c.priceAUD.toLocaleString('en-AU')}</>}
                     </span>
                     <span className="text-accent font-semibold">View →</span>
                   </div>

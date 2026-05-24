@@ -55,7 +55,7 @@ export default async function ModulePage({ params }: PageParams) {
           ← All modules
         </Link>
 
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mb-2 flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-bold uppercase tracking-wide text-accent">
             Module {meta.number}
           </span>
@@ -67,34 +67,39 @@ export default async function ModulePage({ params }: PageParams) {
           )}
         </div>
 
-        <h1 className="text-3xl font-bold tracking-tight mb-8">{meta.title}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">{meta.title}</h1>
+        {meta.description && (
+          <p className="text-sm text-muted-foreground mb-8 leading-relaxed">{meta.description}</p>
+        )}
 
         <ModuleViewer header={header} sections={sections} />
 
-        <hr className="my-12 border-slate-200" />
-
-        <div className="flex items-center justify-between">
+        {/* Prev/Next nav — card pattern, matches Vagus course */}
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {prev ? (
             <Link
               href={`/courses/ai-in-clinical-practice/${prev.slug}`}
-              className="text-sm text-accent hover:underline"
+              className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
             >
-              ← {prev.title}
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">← Previous</p>
+              <p className="text-sm font-semibold text-foreground">Module {prev.number}: {prev.title}</p>
             </Link>
-          ) : <span />}
+          ) : <div className="hidden sm:block" />}
           {next ? (
             <Link
               href={`/courses/ai-in-clinical-practice/${next.slug}`}
-              className="text-sm font-semibold text-accent hover:underline"
+              className="card rounded-xl p-4 hover:border-accent/40 transition-colors sm:text-right"
             >
-              {next.title} →
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Next →</p>
+              <p className="text-sm font-semibold text-foreground">Module {next.number}: {next.title}</p>
             </Link>
           ) : (
             <Link
               href="/courses/ai-in-clinical-practice/quiz"
-              className="text-sm font-semibold text-accent hover:underline"
+              className="card rounded-xl p-4 hover:border-accent/40 transition-colors sm:text-right border-accent/40"
             >
-              Take the quiz →
+              <p className="text-[10px] font-bold uppercase tracking-wide text-accent mb-1">Ready?</p>
+              <p className="text-sm font-semibold text-foreground">Take the certification quiz →</p>
             </Link>
           )}
         </div>

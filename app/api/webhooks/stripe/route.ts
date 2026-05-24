@@ -10,6 +10,9 @@ import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
 import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
+import { recordCoursePurchase } from '@/lib/course-purchases'
+import { enrolUser as enrolAiCourseUser } from '@/lib/ai-course/access'
+import { findCourse } from '@/lib/ai-course/provider-catalogue'
 
 function labelForCourse(courseType: string, accessLevel: string): string {
   switch (courseType) {
@@ -199,6 +202,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // + download email. The course upsell happens via a subsequent nurture email.
   if (session.metadata?.productType === 'reference-book') {
     await handleBookPurchase(session, customerEmail, customerName)
+    return
+  }
+
+  // Short-course purchase path (AI in Clinical Practice, Vagus Nerve, future
+  // monthly drops). Separate from CCM flagship. Provisions user, records the
+  // purchase, enrols the user for course-specific access, sends a magic-link
+  // welcome email. Returns early — does NOT fall through to CCM provisioning.
+  if (session.metadata?.productType === 'short-course') {
+    await handleShortCoursePurchase(session, customerEmail, customerName)
     return
   }
 
@@ -423,6 +435,105 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   } catch (adminErr) {
     console.error('Admin sale notification failed:', adminErr)
   }
+}
+
+/**
+ * Handle short-course purchase (AI in Clinical Practice, Vagus Nerve, etc).
+ * Creates a preview-level user if none exists, records the purchase, sets the
+ * appropriate enrolment flag, and sends a magic-link welcome email.
+ */
+async function handleShortCoursePurchase(
+  session: Stripe.Checkout.Session,
+  customerEmail: string,
+  customerName: string,
+) {
+  const courseSlug = session.metadata?.courseSlug
+  if (!courseSlug) {
+    console.error('[short-course] No courseSlug in session metadata:', session.id)
+    return
+  }
+  const course = findCourse(courseSlug)
+  if (!course) {
+    console.error(`[short-course] Unknown courseSlug: ${courseSlug}`)
+    return
+  }
+
+  const currency = (session.currency || 'aud').toUpperCase()
+  const amountCents = session.amount_total || 0
+  const amountAud = amountCents / 100
+
+  // Ensure user exists at preview level (course-specific access is gated by
+  // the enrolment flag, not the broader CCM accessLevel).
+  const existing = await findUserByEmail(customerEmail)
+  let userId: string
+  if (existing) {
+    userId = existing.id
+  } else {
+    userId = await createUser({
+      email: customerEmail,
+      name: customerName,
+      accessLevel: 'preview',
+      stripeCustomerId: typeof session.customer === 'string' ? session.customer : undefined,
+      signupSource: 'purchase',
+    })
+  }
+
+  // Record the purchase (idempotent per stripe session id).
+  try {
+    await recordCoursePurchase({
+      email: customerEmail,
+      courseSlug,
+      stripeSessionId: session.id,
+      amountAud,
+    })
+  } catch (err) {
+    console.error(`[short-course] recordCoursePurchase failed for ${courseSlug}:`, err)
+  }
+
+  // Course-specific enrolment.
+  if (courseSlug === 'ai-in-clinical-practice') {
+    try {
+      await enrolAiCourseUser(customerEmail)
+    } catch (err) {
+      console.error('[short-course] enrolAiCourseUser failed:', err)
+    }
+  }
+
+  // Welcome email with magic link.
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
+  const token = createMagicToken(userId, customerEmail, customerName, 'preview')
+  const loginUrl = `${baseUrl}/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=short_course_purchase&next=${encodeURIComponent(course.route)}`
+
+  try {
+    await sendEmail({
+      to: customerEmail,
+      subject: `You're enrolled — ${course.title}`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1e293b;">
+          <div style="height: 4px; background: linear-gradient(90deg, #0d9488, #0ea5e9); border-radius: 2px; margin-bottom: 24px;"></div>
+          <h2 style="margin: 0 0 12px; font-size: 22px; color: #0f172a;">You're in, ${escapeHtml(customerName.split(' ')[0] || 'there')}.</h2>
+          <p style="margin: 0 0 14px; font-size: 15px;"><strong>${escapeHtml(course.title)}</strong> is yours — ${course.cpdHours} CPD ${course.cpdHours === 1 ? 'hour' : 'hours'}, 12-month certificate on completion.</p>
+          <p style="text-align: center; margin: 24px 0;">
+            <a href="${loginUrl}" style="display: inline-block; padding: 14px 28px; background: #0d9488; color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Open the course →</a>
+          </p>
+          <div style="background: #f0fdfa; border-left: 3px solid #0d9488; padding: 14px 16px; margin: 20px 0; border-radius: 6px; font-size: 14px;">
+            <strong>What you paid:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br>
+            <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>
+          </div>
+          <p style="margin: 14px 0 0; font-size: 14px; color: #475569;">Questions — just reply to this email.</p>
+          <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">Zac Lewis<br>Concussion Education Australia</div>
+        </div>
+      `,
+      tags: [
+        { name: 'type', value: 'short-course-purchase' },
+        { name: 'course', value: courseSlug },
+      ],
+    })
+  } catch (emailErr) {
+    console.error(`[short-course] Welcome email failed for ${redact(customerEmail)}:`, emailErr)
+  }
+
+  console.log(`[short-course] Provisioned ${redact(customerEmail)} for ${courseSlug} — $${amountAud} ${currency}`)
 }
 
 /**

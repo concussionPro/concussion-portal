@@ -45,7 +45,7 @@ export default async function ReferencesPage() {
             Reference Repository
           </p>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            Sourced. Verifiable. AHPRA-aligned.
+            Sourced. Verifiable. Defensible.
           </h1>
           <p className="text-base text-muted-foreground mb-2 leading-relaxed">
             Every regulatory claim, every privacy principle, every TGA boundary cited in this course has an upstream source. {AI_REFERENCES.length} references across {AI_REF_CATEGORIES.length} categories. Refreshed monthly via the content-refresh cron.

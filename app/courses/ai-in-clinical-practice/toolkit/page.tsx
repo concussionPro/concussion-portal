@@ -43,15 +43,19 @@ export default async function ToolkitPage() {
 
           {/* Category jump nav */}
           <div className="flex flex-wrap gap-2 mb-10">
-            {TOOLKIT_CATEGORIES.map((cat) => (
-              <a
-                key={cat}
-                href={`#${slugify(cat)}`}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors"
-              >
-                {cat}
-              </a>
-            ))}
+            {TOOLKIT_CATEGORIES.map((cat) => {
+              const count = TOOLKIT_ITEMS.filter((i) => i.category === cat).length
+              return (
+                <a
+                  key={cat}
+                  href={`#${slugify(cat)}`}
+                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors"
+                >
+                  {cat}
+                  <span className="ml-1.5 text-slate-500">({count})</span>
+                </a>
+              )
+            })}
           </div>
 
           {/* Categories */}

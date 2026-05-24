@@ -145,12 +145,20 @@ export function QuizClient({ questions }: { questions: Question[] }) {
         </div>
 
         {!result.passed && (
-          <button
-            onClick={() => { setResult(null); setAnswers({}) }}
-            className="mt-6 px-5 py-2.5 rounded-lg bg-foreground text-white font-semibold text-sm hover:bg-foreground/90 transition-colors"
-          >
-            Re-attempt quiz
-          </button>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              onClick={() => { setResult(null); setAnswers({}) }}
+              className="px-5 py-2.5 rounded-lg bg-foreground text-white font-semibold text-sm hover:bg-foreground/90 transition-colors"
+            >
+              Re-attempt quiz
+            </button>
+            <Link
+              href="/courses/ai-in-clinical-practice"
+              className="px-5 py-2.5 rounded-lg bg-white border border-slate-300 text-foreground font-semibold text-sm hover:border-accent/40 hover:bg-slate-50 transition-colors"
+            >
+              Review modules first →
+            </Link>
+          </div>
         )}
       </div>
     )

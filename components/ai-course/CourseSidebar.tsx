@@ -49,7 +49,7 @@ export function CourseSidebar() {
         <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mb-2">CEA Learning</p>
         <p className="text-base font-bold text-foreground leading-tight mb-2">AI in Clinical Practice</p>
         <p className="text-[11px] text-muted-foreground tabular-nums">
-          {MODULES.length} modules · {totalMin}m total
+          {MODULES.length} modules · {totalMin}m total · 3 CPD hours
         </p>
       </Link>
 
@@ -139,14 +139,14 @@ export function CourseSidebar() {
         </ul>
       </div>
 
-      {/* Footer — return to demo */}
+      {/* Footer — return to marketplace */}
       <div className="px-5 py-3 border-t border-slate-200 bg-slate-50/50">
         <Link
-          href="/courses/heidi-tour"
+          href="/courses"
           className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-3 h-3" />
-          Back to overview
+          Back to marketplace
         </Link>
       </div>
     </aside>

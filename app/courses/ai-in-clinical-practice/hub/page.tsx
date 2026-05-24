@@ -5,6 +5,7 @@ import { CourseSidebar } from '@/components/ai-course/CourseSidebar'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { TOOLS } from '@/lib/ai-course/tools-matrix'
 import { loadPrompts, loadTemplates } from '@/lib/ai-course/content'
+import { Search } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'AI Practice Hub — AI in Clinical Practice',
@@ -34,9 +35,29 @@ export default async function HubPage() {
         </Link>
 
         <h1 className="text-3xl font-bold tracking-tight mb-3">AI Practice Hub</h1>
-        <p className="text-muted-foreground mb-10">
-          Prompt library, document templates, and tool comparison matrix. Refreshed monthly — the change feed lives in your inbox via the automated digest.
+        <p className="text-muted-foreground mb-8">
+          Prompt library, document templates, tool comparison matrix, and live literature search. Refreshed monthly — the change feed lives in your inbox via the automated digest.
         </p>
+
+        {/* Literature search — surfaced as a primary feature */}
+        <Link
+          href="/courses/ai-in-clinical-practice/hub/literature"
+          className="mb-12 group flex items-start gap-4 rounded-2xl border-2 border-accent/20 bg-gradient-to-br from-accent/[0.04] to-white p-5 hover:border-accent/40 hover:shadow-sm transition-all"
+        >
+          <div className="w-11 h-11 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+            <Search className="w-5 h-5 text-accent" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-accent mb-1">New · live search</p>
+            <p className="text-base font-bold text-foreground leading-tight mb-1">Literature search</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              PubMed + Semantic Scholar federated search. Vancouver citation export. 8 one-click clinical questions to start.
+            </p>
+          </div>
+          <div className="text-sm font-bold text-accent group-hover:underline shrink-0 self-center">
+            Search →
+          </div>
+        </Link>
 
         {/* Prompt library overview */}
         <section className="mb-12">

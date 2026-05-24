@@ -102,7 +102,7 @@ export const COURSES: CourseCatalogueEntry[] = [
     tags: ['compliance', 'ai', 'documentation', 'privacy', 'all-specialties'],
     earlyBirdDiscountPct: 15,
     earlyBirdPriceAUD: 125,
-    launchTarget: 'July 2026',
+    launchTarget: '1 June 2026',
   },
   {
     id: 'vagus-nerve',
@@ -131,34 +131,10 @@ export const COURSES: CourseCatalogueEntry[] = [
     status: 'live',
     tags: ['concussion', 'sport-medicine', 'physio', 'osteo', 'gp'],
   },
-  // Marketplace-expansion placeholders — these surface on the catalogue
-  // page as "coming soon when [Provider] joins" cards. They are NOT
-  // purchasable; they exist to make the marketplace shape obvious to
-  // Dr. Condon during the demo.
-  {
-    id: 'placeholder-mental-health',
-    title: 'Mental Health First Aid for Clinicians',
-    providerId: 'placeholder-medcast',
-    cpdHours: 12,
-    cpdRecognition: ['Awaiting provider onboarding'],
-    description: 'Sample of a course that would be available once Medcast (or equivalent) joins the marketplace.',
-    route: '#',
-    priceAUD: null,
-    status: 'coming-soon',
-    tags: ['mental-health', 'gp', 'nursing'],
-  },
-  {
-    id: 'placeholder-cardiology',
-    title: 'Cardiovascular Risk Assessment Update',
-    providerId: 'placeholder-racgp',
-    cpdHours: 4,
-    cpdRecognition: ['Awaiting provider onboarding'],
-    description: 'Sample course — RACGP-accredited cardiology update, would auto-log to RACGP CPD Home on completion.',
-    route: '#',
-    priceAUD: null,
-    status: 'coming-soon',
-    tags: ['cardiology', 'gp', 'audit'],
-  },
+  // Placeholder partner cards removed — they were demo-shells with
+  // route: '#' that dead-linked. Real partner courses will be added
+  // once provider applications close. Coming-soon courses are now
+  // ONLY first-party CEA courses that can be honestly waitlisted for.
 ]
 
 export function findProvider(id: string): ProviderProfile | undefined {

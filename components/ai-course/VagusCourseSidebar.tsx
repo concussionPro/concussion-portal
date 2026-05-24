@@ -41,7 +41,7 @@ export function VagusCourseSidebar() {
         <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mb-2">CEA Learning</p>
         <p className="text-base font-bold text-foreground leading-tight mb-2">The Vagus Nerve in Clinical Practice</p>
         <p className="text-[11px] text-muted-foreground tabular-nums">
-          {VAGUS_MODULES.length} modules · {totalMin}m total · 1.25 CPD hrs
+          {VAGUS_MODULES.length} modules · {totalMin}m total · 1.25 CPD hours
         </p>
       </Link>
 
