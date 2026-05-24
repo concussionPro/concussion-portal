@@ -70,9 +70,9 @@ export default async function PreviewPage() {
             className="group rounded-xl border border-slate-200 bg-white p-5 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
           >
             <Workflow className="w-5 h-5 text-accent mb-3" />
-            <p className="text-sm font-bold text-foreground leading-tight mb-1.5">Plug-in integration · 2 engineer-weeks</p>
+            <p className="text-sm font-bold text-foreground leading-tight mb-1.5">Plug-in integration</p>
             <p className="text-[12px] text-muted-foreground leading-relaxed mb-3 flex-1">
-              POST /api/cpd/events — curlable today. Reads your existing event stream. No new UX, no replatforming. 6-week joint MVP shape.
+              POST /api/cpd/events — curlable today. Reads your existing event stream. No new UX, no replatforming.
             </p>
             <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
               See the API spec
