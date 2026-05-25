@@ -330,7 +330,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </span>
             </div>
 
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Online Course</h3>
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">CCM Online</h3>
+            <p className="text-[10px] text-slate-500 mb-3">Online component of Concussion Clinical Mastery — no workshop</p>
 
             <div className="mb-3">
               {bookOwner && (
@@ -344,15 +345,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <span className="text-[10px] text-slate-400">≈ $320 USD</span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(onlinePrice)} with Afterpay or Klarna</p>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD pts</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · Lifetime access · 8 CPD hours</p>
             </div>
 
             <ul className="space-y-1.5 mb-4 flex-1">
               {[
-                '8 online modules (8 CPD hours)',
+                'Same 8 online modules as the full CCM',
                 'Own pace — no deadlines',
                 'Clinical Toolkit & resources',
-                'Upgrade to add workshop anytime',
+                'Upgrade to add the workshop anytime',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <Check className="w-3 h-3 text-[var(--accent)] flex-shrink-0 mt-0.5" strokeWidth={3} />
@@ -388,7 +389,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </span>
             </div>
 
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Complete Course</h3>
+            <h3 className="text-sm font-bold text-[var(--foreground)] mb-0.5">CCM Complete</h3>
+            <p className="text-[10px] text-slate-500 mb-3">Full Concussion Clinical Mastery — online modules + hands-on workshop</p>
 
             <div className="mb-4">
               {isEarlyBird ? (
@@ -675,9 +677,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-1.5">Online Course</h3>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CCM Online</h3>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">Online component of Concussion Clinical Mastery — no workshop</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            8 comprehensive modules at your own pace. Upgrade to add hands-on training anytime.
+            Same 8 modules as the full CCM, at your own pace. Add the hands-on workshop anytime to upgrade.
           </p>
 
           {/* Visual: course interface preview */}
@@ -777,9 +780,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-1.5">Complete Course</h3>
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-0.5">CCM Complete</h3>
+          <p className="text-[12px] text-slate-500 mb-2 font-medium">Full Concussion Clinical Mastery — online modules + hands-on workshop</p>
           <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            Online course + full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback.
+            Same 8 online modules as CCM Online, plus a full-day hands-on workshop. Practice SCAT6, VOMS &amp; BESS with expert feedback.
           </p>
 
           {/* Melbourne workshop mini-tile — thumbnail + date */}
