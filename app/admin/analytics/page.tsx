@@ -45,6 +45,8 @@ import {
   ExternalLink,
   Search,
   Bell,
+  Trash2,
+  Loader2,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -827,6 +829,47 @@ export default function AnalyticsDashboard() {
     interest?: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; source: string; createdAt: string }> }>
     interestTotal?: number
   } | null>(null)
+  const [deletingInterest, setDeletingInterest] = useState<Set<string>>(new Set())
+
+  const handleDeleteInterest = async (email: string, city: string, name: string) => {
+    if (!confirm(`Remove ${name || email} (${city}) from unpaid interest? This cannot be undone.`)) return
+    const key = `${email}|${city}`
+    setDeletingInterest(prev => new Set(prev).add(key))
+    try {
+      const res = await fetch(
+        `/api/admin/workshop-interest-list?email=${encodeURIComponent(email)}&city=${encodeURIComponent(city)}`,
+        { method: 'DELETE', cache: 'no-store' }
+      )
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        alert(`Delete failed: ${data?.error || 'unknown error'}`)
+        return
+      }
+      setPoolData(prev => {
+        if (!prev || !prev.interest) return prev
+        const nextInterest = prev.interest
+          .map(c =>
+            c.city !== city
+              ? c
+              : {
+                  ...c,
+                  registrations: c.registrations.filter(r => r.email.toLowerCase() !== email.toLowerCase()),
+                }
+          )
+          .map(c => ({ ...c, count: c.registrations.length }))
+          .filter(c => c.count > 0)
+        return { ...prev, interest: nextInterest, interestTotal: (prev.interestTotal ?? 0) - 1 }
+      })
+    } catch (err) {
+      alert(`Delete failed: ${err instanceof Error ? err.message : 'network error'}`)
+    } finally {
+      setDeletingInterest(prev => {
+        const next = new Set(prev)
+        next.delete(key)
+        return next
+      })
+    }
+  }
 
   // Preseason data
   const [preseasonData, setPreseasonData] = useState<{ clinics: Array<{ clinicName: string; contactName: string; email: string; code: string; createdAt: string }>; baselines: Array<{ clinicCode: string; clinicName?: string; athleteName?: string; submittedAt: string; symptomCount?: number; symptomSeverity?: number; cognitiveScore?: number }>; totalClinics: number; totalBaselines: number } | null>(null)
@@ -1683,20 +1726,36 @@ export default function AnalyticsDashboard() {
                                     <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Name</th>
                                     <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
                                     <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Source</th>
-                                    <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Registered</th>
+                                    <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Registered</th>
+                                    <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)] w-12">Remove</th>
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {city.registrations.map((r, i) => (
-                                    <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
-                                      <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
-                                      <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
-                                      <td className="py-2.5 px-2 text-xs text-[var(--muted-foreground)]">{r.source}</td>
-                                      <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">
-                                        {new Date(r.createdAt).toLocaleDateString('en-AU')}
-                                      </td>
-                                    </tr>
-                                  ))}
+                                  {city.registrations.map((r, i) => {
+                                    const delKey = `${r.email}|${city.city}`
+                                    const isDeleting = deletingInterest.has(delKey)
+                                    return (
+                                      <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                                        <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
+                                        <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
+                                        <td className="py-2.5 px-2 text-xs text-[var(--muted-foreground)]">{r.source}</td>
+                                        <td className="py-2.5 px-2 text-right text-xs text-[var(--muted-foreground)]">
+                                          {new Date(r.createdAt).toLocaleDateString('en-AU')}
+                                        </td>
+                                        <td className="py-2.5 pl-2 text-right">
+                                          <button
+                                            onClick={() => handleDeleteInterest(r.email, city.city, r.name)}
+                                            disabled={isDeleting}
+                                            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[var(--muted-foreground)] hover:text-red-600 hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                            aria-label={`Remove ${r.email} from unpaid interest`}
+                                            title="Remove from unpaid interest"
+                                          >
+                                            {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    )
+                                  })}
                                 </tbody>
                               </table>
                             </div>
