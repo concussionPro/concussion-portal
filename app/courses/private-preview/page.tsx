@@ -32,7 +32,7 @@ export default async function PreviewPage() {
 
         {/* WHAT PLUGGING IN UNLOCKS — Heidi-relevant value, above the courses */}
         <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3">
-          What plugging in unlocks for your product
+          What plugging in unlocks for Heidi
         </p>
         <div className="grid sm:grid-cols-3 gap-3 mb-10">
           <Link
@@ -40,9 +40,9 @@ export default async function PreviewPage() {
             className="group rounded-xl border border-slate-200 bg-white p-5 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col"
           >
             <Activity className="w-5 h-5 text-accent mb-3" />
-            <p className="text-sm font-bold text-foreground leading-tight mb-1.5">CPD logs while clinicians use your tool</p>
+            <p className="text-sm font-bold text-foreground leading-tight mb-1.5">CPD logs while clinicians use Heidi</p>
             <p className="text-[12px] text-muted-foreground leading-relaxed mb-3 flex-1">
-              Scribe sessions + literature searches → categorised against the right AHPRA Board → audit-ready CPD record. Clinician confirms with one tap. Never leaves your app.
+              Scribe sessions + Evidence searches → categorised against the right AHPRA Board → audit-ready CPD record. Clinician confirms with one tap. Never leaves Heidi.
             </p>
             <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
               See the auto-log flow
@@ -57,7 +57,7 @@ export default async function PreviewPage() {
             <ShoppingBag className="w-5 h-5 text-accent mb-3" />
             <p className="text-sm font-bold text-foreground leading-tight mb-1.5">In-product course catalogue</p>
             <p className="text-[12px] text-muted-foreground leading-relaxed mb-3 flex-1">
-              Multi-course shell — OA-endorsed flagship live, short-course library shipping monthly. Designed to be embedded or white-labelled inside your app. Your users buy + complete CPD without leaving.
+              Multi-course shell — OA-endorsed flagship live, short-course library shipping monthly. Designed to be embedded or white-labelled inside Heidi. Your users buy + complete CPD without leaving.
             </p>
             <span className="text-[11px] font-semibold text-accent inline-flex items-center gap-1">
               See the catalogue
@@ -103,7 +103,7 @@ export default async function PreviewPage() {
                 AI in Clinical Practice
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                3 CPD hours · 9 modules · Tier A/B/C framework. <strong className="text-foreground">Heidi recommended as Tier A AU scribe throughout Modules 5 &amp; 7.</strong>
+                3 CPD hours · 9 modules · Tier A/B/C framework. <strong className="text-foreground">Heidi featured as the Tier A healthcare-purpose-built AU scribe in Module 2 (Tool Selection).</strong>
               </p>
             </div>
             <div className="px-5 py-3 border-t border-accent/15 bg-accent/[0.03] flex items-center justify-between text-xs">
@@ -145,7 +145,9 @@ export default async function PreviewPage() {
             Want to talk it through?
           </p>
           <a
-            href="mailto:zac@concussion-education-australia.com?subject=CEA%20%E2%80%94%2030%20min%20to%20discuss&body=Hi%20Zac%2C%0A%0AI%20had%20a%20look.%20Available%20%5Bday%5D%20AEST%20for%20a%2030-min%20call.%0A%0A%5Byour%20name%5D"
+            href="https://cal.com/zac-lewis-so8zjs"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors"
           >
             Book a 30-min conversation →

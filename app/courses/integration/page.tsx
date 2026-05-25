@@ -46,7 +46,7 @@ export default async function IntegrationPage() {
           Scribe + Evidence events → CPD log. Live API.
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mb-4 leading-relaxed">
-          ~2 engineer-weeks on Heidi side. Six-week joint MVP. The categoriser, per-Board reference data, and export PDF are already shipped at CEA.
+          A short engineering scope on Heidi&rsquo;s side (event-source instrumentation + a prompt UI). The categoriser, per-Board reference data, and export PDF are already shipped at CEA. Real sizing happens with your engineering team.
         </p>
         <p className="text-sm text-muted-foreground max-w-2xl mb-8 leading-relaxed">
           One event per qualifying Scribe session or Evidence search, fired to <code className="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded">POST /api/cpd/events</code>. CEA returns categorisation + audit-ready log entry. No replatforming. No clinician-facing UX changes beyond a non-blocking confirmation prompt.
@@ -222,14 +222,14 @@ export default async function IntegrationPage() {
           </div>
         </section>
 
-        {/* Engineering effort estimate */}
+        {/* Integration shape — directional, not a cost quote */}
         <section className="mb-12">
-          <h2 className="text-xl font-bold mb-4">Engineering effort estimate</h2>
+          <h2 className="text-xl font-bold mb-4">Integration shape</h2>
           <div className="grid sm:grid-cols-3 gap-3">
             {[
-              { label: "Heidi side", body: '~2 engineer-weeks (1 senior backend + 1 front-end). Event-source instrumentation + prompt UI component. No DB schema changes; piggybacks on existing event stream.', highlight: '~A$30k loaded cost' },
-              { label: 'CEA side', body: 'Founder-led. Categoriser logic + endpoint + dashboard view. ~6 weeks at the existing build pace. Audit-export PDF reuses the certificate generator infrastructure already shipping.', highlight: 'Founder time' },
-              { label: 'Joint integration', body: 'Spec review, API contract finalisation, beta-cohort coordination, GTM messaging for the opt-in beta. ~4 hrs/wk across the 6 weeks for each side.', highlight: '~30 hrs total' },
+              { label: 'Heidi side', body: 'Backend instrumentation on the existing Scribe + Evidence event streams. Lightweight in-product prompt UI for the one-tap confirmation. No DB schema changes — piggybacks on metadata you already emit.', highlight: 'Event-source + prompt UI' },
+              { label: 'CEA side', body: 'Categoriser endpoint, dashboard view, audit-export PDF. Already shipped at CEA — reuses the certificate generator + per-Board calibration infrastructure currently in production.', highlight: 'Already shipped' },
+              { label: 'Joint', body: 'Spec review, API contract finalisation, beta-cohort coordination, GTM messaging for the opt-in beta.', highlight: 'Light coordination' },
             ].map((b) => (
               <div key={b.label} className="rounded-xl border border-slate-200 bg-white p-5">
                 <p className="text-xs font-bold uppercase tracking-wide text-accent mb-2">{b.label}</p>
@@ -239,7 +239,7 @@ export default async function IntegrationPage() {
             ))}
           </div>
           <p className="text-xs text-muted-foreground mt-4 italic">
-            For reference: Heidi&apos;s product team ships features of this complexity in 4-6 weeks per Stripe-style engineering norms. This MVP is well inside that envelope.
+            Real sizing happens on your engineering team&apos;s estimate — happy to scope with them on the first call.
           </p>
         </section>
 
@@ -252,7 +252,7 @@ export default async function IntegrationPage() {
           <div className="space-y-3 text-sm leading-relaxed">
             <div>
               <p className="font-semibold text-white mb-1">1. AHPRA per-Board calibration logic.</p>
-              <p className="text-white/80">15 National Boards × different category structures × different self-directed allowances × different recording requirements. Already encoded in <code className="bg-white/10 px-1 py-0.5 rounded text-xs">lib/ai-course/cpd-requirements.ts</code> with per-Board passive ceilings. Heidi&apos;s team would need 4-6 weeks just to source-verify this; CEA shipped it in two days because the founder is an AHPRA-registered osteopath who already lives inside the regulatory framework.</p>
+              <p className="text-white/80">15 National Boards × different category structures × different self-directed allowances × different recording requirements. Already encoded in <code className="bg-white/10 px-1 py-0.5 rounded text-xs">lib/ai-course/cpd-requirements.ts</code> with per-Board passive ceilings. Source-verifying this from scratch is non-trivial; CEA has it already because the founder is an AHPRA-registered osteopath who already lives inside the regulatory framework.</p>
             </div>
             <div>
               <p className="font-semibold text-white mb-1">2. Provider vetting process.</p>
@@ -264,7 +264,7 @@ export default async function IntegrationPage() {
             </div>
           </div>
           <p className="text-sm text-white/80 mt-6">
-            <strong className="text-white">Net:</strong> Heidi builds the integration (2 engineer-weeks); CEA delivers the platform (12+ months of work already shipped). Costs Heidi roughly A$30k of engineering + the partnership terms in <code className="bg-white/10 px-1 py-0.5 rounded text-xs">docs/heidi-proposal.md</code>.
+            <strong className="text-white">Net:</strong> Heidi builds the integration on its side; CEA delivers the platform (already shipped — the regulatory and content work isn&rsquo;t something to redo). Commercial terms are a separate conversation once shape is clear.
           </p>
         </section>
 
