@@ -15,6 +15,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
+import { HomepageAiCourseCard } from './HomepageAiCourseCard'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
@@ -558,92 +559,9 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           content length. */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-stretch">
 
-        {/* ── Reference + Toolkit — entry tier ────────────── */}
-        <div
-          className="card rounded-2xl p-5 md:p-6 flex flex-col relative"
-          style={{ borderWidth: '1.5px', borderColor: 'rgba(194, 65, 12, 0.2)' }}
-        >
-          {/* Header row: badge left, price right */}
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div
-                className="w-10 h-10 rounded-xl flex flex-col items-center justify-center border border-orange-300/50 flex-shrink-0 shadow-[0_4px_12px_-4px_rgba(234,88,12,0.4)]"
-                style={{
-                  background:
-                    'linear-gradient(135deg, #fb923c 0%, #f97316 40%, #e11d48 100%)',
-                }}
-                aria-label="Clinical Toolkit"
-              >
-                <p className="text-[8px] font-black tracking-wider text-white leading-[1] text-center">CLINICAL</p>
-                <p className="text-[8px] font-black tracking-wider text-white leading-[1] text-center mt-[1px]">TOOLKIT</p>
-              </div>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
-                Start here
-              </span>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div className="flex items-baseline gap-1 justify-end">
-                <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">$97</span>
-                <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
-              </div>
-              <p className="text-[10px] text-[var(--muted-foreground)]">Instant PDF</p>
-            </div>
-          </div>
+        {/* ── AI in Clinical Practice — coming-soon tier (replaces never-sold Reference + Toolkit) ── */}
+        <HomepageAiCourseCard />
 
-          <h3 className="text-xl font-bold text-[var(--foreground)] mb-1.5">Reference + Toolkit</h3>
-          <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed mb-4">
-            256-page reference text + 2026 Clinical Toolkit. Apply concussion care in clinic — without the CPD course.
-          </p>
-
-          {/* Visual: reference cover + Clinical Toolkit cover */}
-          <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50/60 border border-orange-100 mb-4 h-[120px] flex items-center justify-center gap-3">
-            <div className="relative w-[72px] h-[96px] rounded-md overflow-hidden shadow-[0_6px_16px_-6px_rgba(15,23,42,0.25)] ring-1 ring-slate-200 -rotate-[5deg]">
-              <Image
-                src="/ccm-cover.png"
-                alt="Reference text cover"
-                fill
-                sizes="72px"
-                className="object-cover"
-              />
-            </div>
-            <div
-              className="relative w-[72px] h-[96px] rounded-md overflow-hidden shadow-[0_6px_16px_-6px_rgba(15,23,42,0.3)] ring-1 ring-orange-200/60 rotate-[5deg] flex flex-col items-center justify-center px-1.5"
-              style={{
-                background:
-                  'linear-gradient(135deg, #fb923c 0%, #f97316 40%, #e11d48 100%)',
-              }}
-              aria-label="Clinical Toolkit 2026 cover"
-            >
-              <p className="text-[11px] font-black tracking-wider text-white leading-[1.05] text-center">CLINICAL</p>
-              <p className="text-[11px] font-black tracking-wider text-white leading-[1.05] text-center">TOOLKIT</p>
-              <div className="w-6 h-px bg-white/70 my-1.5" />
-              <p className="text-[9px] font-semibold text-white/90 tracking-wide">2026</p>
-            </div>
-          </div>
-
-          <ul className="space-y-1.5 mb-4">
-            {[
-              '256-page Clinical Reference',
-              'Cheat Sheet · PPCS · Referral Map',
-              'RehabFlow + RTP/RTL/RTW ladder',
-              'Patient handouts + templates',
-              '$100 off course on upgrade',
-            ].map((feature, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[12px]">
-                <Check className="w-3 h-3 text-orange-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                <span className="text-[var(--muted-foreground)]">{feature}</span>
-              </li>
-            ))}
-          </ul>
-
-          <Link
-            href="/reference"
-            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm bg-orange-600 text-white hover:bg-orange-700 transition-colors"
-          >
-            Get Reference + Toolkit
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
 
         {/* ── Online Course — Most Popular ────────────────── */}
         <div
