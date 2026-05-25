@@ -7,6 +7,7 @@ import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { OrganizationSchema, CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
 import { OtherCityInterest } from '@/components/OtherCityInterest'
+import { HomepageAiCourseCard } from '@/components/HomepageAiCourseCard'
 import { trackShopClick } from '@/lib/analytics'
 
 export default function HomePage() {
@@ -174,108 +175,9 @@ export default function HomePage() {
                   {/* Register interest for other cities */}
                   <OtherCityInterest />
 
-                  {/* Reference + Toolkit — richer offer card */}
-                  <Link
-                    href="/reference"
-                    className="group relative block rounded-2xl overflow-hidden border border-slate-200 bg-gradient-to-br from-white via-teal-50/40 to-emerald-50/30 p-5 md:p-6 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_36px_-8px_rgba(13,115,119,0.2)] hover:border-[rgba(13,115,119,0.4)] transition-all"
-                  >
-                    {/* Decorative accent bar */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--accent)] via-emerald-500 to-orange-500" aria-hidden="true" />
-
-                    {/* Decorative corner glow */}
-                    <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-[var(--accent)]/10 blur-2xl pointer-events-none" aria-hidden="true" />
-
-                    <div className="relative flex items-start justify-between gap-3 mb-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        {/* Stacked thumbnails: reference cover + Clinical Toolkit cover */}
-                        <div className="relative w-[64px] h-[60px] flex-shrink-0">
-                          <div className="absolute left-0 top-0 w-[44px] h-[60px] rounded-md overflow-hidden bg-slate-100 shadow-[0_4px_12px_-4px_rgba(15,23,42,0.25)] ring-1 ring-slate-200 -rotate-[5deg] origin-bottom-left">
-                            <Image
-                              src="/ccm-cover.png"
-                              alt="Reference text cover"
-                              fill
-                              sizes="44px"
-                              className="object-cover"
-                            />
-                          </div>
-                          <div
-                            className="absolute left-[18px] top-0 w-[44px] h-[60px] rounded-md overflow-hidden shadow-[0_4px_12px_-4px_rgba(15,23,42,0.3)] ring-1 ring-orange-200/60 rotate-[5deg] origin-bottom-right flex flex-col items-center justify-center px-1"
-                            style={{
-                              background:
-                                'linear-gradient(135deg, #fb923c 0%, #f97316 40%, #e11d48 100%)',
-                            }}
-                            aria-label="Clinical Toolkit 2026 cover"
-                          >
-                            <p className="text-[7px] font-black tracking-wider text-white leading-[1.05] text-center">CLINICAL</p>
-                            <p className="text-[7px] font-black tracking-wider text-white leading-[1.05] text-center">TOOLKIT</p>
-                            <div className="w-5 h-px bg-white/70 my-1" />
-                            <p className="text-[6px] font-semibold text-white/90 tracking-wide">2026</p>
-                          </div>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent)]">
-                            Reference + Toolkit
-                          </p>
-                          <p className="text-[11px] text-slate-600 font-medium">Book + Clinical Toolkit</p>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 text-right">
-                        <div className="inline-flex items-baseline gap-0.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-sm">
-                          <span className="text-[10px] font-semibold text-slate-500">A$</span>
-                          <span className="text-lg font-bold text-slate-900 leading-none">97</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="relative text-[15px] font-bold text-slate-900 leading-snug mb-3.5">
-                      256-page reference text + 10 clinical tools
-                    </p>
-
-                    {/* Feature pills */}
-                    <div className="relative flex flex-wrap gap-1.5 mb-4">
-                      {[
-                        'Cheat sheet',
-                        'PPCS flow',
-                        'Referral map',
-                        'RTP ladder',
-                        '+6 more',
-                      ].map((pill) => (
-                        <span
-                          key={pill}
-                          className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700"
-                        >
-                          {pill}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Value props */}
-                    <div className="relative flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-4 text-[11px] text-slate-600">
-                      <span className="inline-flex items-center gap-1">
-                        <Check className="w-3 h-3 text-[var(--accent)]" strokeWidth={3} />
-                        Instant download
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Check className="w-3 h-3 text-[var(--accent)]" strokeWidth={3} />
-                        Lifetime access
-                      </span>
-                      <span className="inline-flex items-center gap-1 font-semibold text-orange-700">
-                        <Check className="w-3 h-3 text-orange-600" strokeWidth={3} />
-                        $100 off course later
-                      </span>
-                    </div>
-
-                    {/* CTA button */}
-                    <div className="relative pt-3 border-t border-slate-200/70">
-                      <div className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[var(--accent)] text-white text-sm font-bold shadow-sm group-hover:bg-[#0b6165] group-hover:shadow-md transition-all">
-                        Get Reference + Toolkit — A$97
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-                      </div>
-                      <p className="text-[11px] text-slate-500 italic text-center mt-2">
-                        Start here · stack the course anytime
-                      </p>
-                    </div>
-                  </Link>
+                  {/* AI in Clinical Practice — coming-soon card with early-access email signup
+                      (replaces the never-sold Reference + Toolkit standalone SKU) */}
+                  <HomepageAiCourseCard />
 
                 </div>
               </div>

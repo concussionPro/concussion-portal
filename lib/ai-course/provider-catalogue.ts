@@ -100,9 +100,11 @@ export const COURSES: CourseCatalogueEntry[] = [
     priceAUD: 197,
     status: 'coming-soon',
     tags: ['compliance', 'ai', 'documentation', 'privacy', 'all-specialties'],
-    earlyBirdDiscountPct: 15,
-    earlyBirdPriceAUD: 167,
+    earlyBirdDiscountPct: 50,
+    earlyBirdPriceAUD: 99,
     launchTarget: '1 June 2026',
+    // LAUNCH PROMO: A$99 for first week (Jun 1–8 2026). Reverts to A$197 on Jun 9.
+    // After Jun 8 23:59 AEST: manually remove earlyBirdDiscountPct + earlyBirdPriceAUD.
   },
   {
     id: 'vagus-nerve',
