@@ -966,6 +966,13 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href="/admin/analytics/heidi"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-[rgba(13,115,119,0.2)] text-[var(--accent)] hover:bg-[rgba(13,115,119,0.04)] transition-colors"
+              title="Heidi pitch tracking"
+            >
+              heidi user →
+            </a>
             <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.08)]">
               {PERIODS.map((p) => (
                 <button
@@ -990,16 +997,6 @@ export default function AnalyticsDashboard() {
       </div>
 
       <div className="container-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* ── Quiet link to partner-demo tracking ─────────────────────────── */}
-        <div className="flex justify-end">
-          <a
-            href="/admin/analytics/heidi"
-            className="text-[11px] font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] flex items-center gap-1.5"
-          >
-            heidi user →
-          </a>
-        </div>
-
         {/* ── Stat cards ────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="Unique Visitors" value={stats?.uniques.value ?? 0} prev={stats?.uniques.prev ?? 0} icon={Users} loading={loading && !stats} onClick={() => setActiveTab('overview')} />
