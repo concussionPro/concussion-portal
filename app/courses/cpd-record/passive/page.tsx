@@ -240,13 +240,27 @@ export default async function PassiveCpdPage() {
           </p>
         </section>
 
-        {/* CTA */}
+        {/* CTA — book a call after the value demo lands */}
+        <div className="rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white p-6 mb-4">
+          <p className="text-sm font-semibold text-foreground mb-3">
+            Want to talk through how this maps to your product?
+          </p>
+          <a
+            href="https://cal.com/zac-lewis-so8zjs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors"
+          >
+            Book a 30-min conversation →
+          </a>
+        </div>
+
         <div className="flex flex-wrap gap-3">
           <Link
             href="/courses"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-foreground text-white font-semibold text-sm hover:bg-foreground/90"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white border border-slate-300 text-foreground font-semibold text-sm hover:bg-slate-50"
           >
-            Browse formal courses (fill the gap)
+            Browse formal courses
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link

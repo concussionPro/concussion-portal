@@ -293,6 +293,21 @@ export default async function IntegrationPage() {
               This document is a starting proposal. Architecture, scope and timeline are open to revision based on Heidi&apos;s engineering and product input during the first scoping call. The goal is a concrete shared spec by end of week 1.
             </p>
           </div>
+
+          {/* CTA — place after the proposal has been read */}
+          <div className="mt-6 rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white p-6 text-center">
+            <p className="text-sm font-semibold text-foreground mb-3">
+              Ready to scope?
+            </p>
+            <a
+              href="https://cal.com/zac-lewis-so8zjs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors"
+            >
+              Book a 30-min scoping call →
+            </a>
+          </div>
         </section>
       </div>
     </div>

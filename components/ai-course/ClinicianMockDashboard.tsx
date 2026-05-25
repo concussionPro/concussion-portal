@@ -144,14 +144,21 @@ export function ClinicianMockDashboard() {
         </section>
       </div>
 
-      {/* Footer — back to demo */}
-      <div className="px-4 py-3 border-t border-slate-200 bg-slate-50/50">
+      {/* Footer — booking link + back to demo */}
+      <div className="px-4 py-3 border-t border-slate-200 bg-slate-50/50 space-y-2">
+        <a
+          href="https://cal.com/zac-lewis-so8zjs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-accent text-white text-[11px] font-semibold hover:bg-accent/90 transition-colors"
+        >
+          Book a 30-min call →
+        </a>
         <Link
           href="/courses/private-preview"
-          className="inline-flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="block text-center text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="w-3 h-3" />
-          Back to demo overview
+          ← Back to demo overview
         </Link>
       </div>
     </aside>
