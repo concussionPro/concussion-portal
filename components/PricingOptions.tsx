@@ -145,7 +145,7 @@ function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) 
         <Bell className={`text-[var(--accent)] flex-shrink-0 mt-0.5 ${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
         <div>
           <p className={`font-semibold text-foreground leading-tight ${isCompact ? 'text-xs' : 'text-sm'}`}>
-            {label} workshop isn&apos;t confirmed yet
+            {`${label} workshop isn’t confirmed yet`}
           </p>
           <p className={`text-muted-foreground leading-snug mt-0.5 ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
             We run workshops once a city reaches {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians. Drop your details — you&apos;ll get {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice as soon as the date is locked in.
@@ -320,14 +320,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         )}
 
         <div className="grid sm:grid-cols-2 gap-4 pt-5">
-          {/* Online Course - Compact (Most Popular) — primary conversion target */}
-          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}>
+          {/* CCM Online - Compact (online component of CCM) */}
+          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}>
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center border border-teal-200/50">
                 <BookOpen className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                Most Popular
+                Online tier
               </span>
             </div>
 
@@ -379,14 +379,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </p>
           </div>
 
-          {/* Complete Course - Compact (Upgrade path) */}
-          <div className="card rounded-xl p-5 flex flex-col relative">
-            <div className="flex items-center gap-2.5 mb-3">
+          {/* CCM Complete - Compact (online + workshop, MOST POPULAR) */}
+          <div className="card card-visible rounded-xl p-5 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
+            <div className="flex items-center gap-2.5 mb-3 flex-wrap">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
                 <Award className="w-4 h-4 text-orange-500" strokeWidth={2} />
               </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
+                Most Popular
+              </span>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                + Hands-On Workshop
+                + Workshop
               </span>
             </div>
 
@@ -563,10 +566,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
         <HomepageAiCourseCard />
 
 
-        {/* ── Online Course — Most Popular ────────────────── */}
+        {/* ── CCM Online — online component of CCM ────────────────── */}
         <div
           className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
-          style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.2)' }}
+          style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}
         >
           {/* Header row: badge left, price right */}
           <div className="flex items-start justify-between gap-3 mb-4">
@@ -575,7 +578,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <BookOpen className="w-4.5 h-4.5 text-[var(--accent)]" strokeWidth={2} />
               </div>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
-                Most Popular
+                Online tier
               </span>
             </div>
             <div className="text-right flex-shrink-0">
@@ -653,14 +656,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </Link>
         </div>
 
-        {/* ── Complete Course — + Hands-on Workshop ────────── */}
-        <div className="card rounded-2xl p-5 md:p-6 flex flex-col relative">
+        {/* ── CCM Complete — online + workshop, MOST POPULAR ────────── */}
+        <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
           {/* Header row: badge left, price right */}
           <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 flex-shrink-0">
                 <Award className="w-4.5 h-4.5 text-orange-500" strokeWidth={2} />
               </div>
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[var(--accent)] border border-teal-200">
+                Most Popular
+              </span>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
                 + Workshop
               </span>
