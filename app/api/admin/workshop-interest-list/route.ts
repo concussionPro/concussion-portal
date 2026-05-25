@@ -54,3 +54,30 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Query failed' }, { status: 500 })
   }
 }
+
+/**
+ * DELETE /api/admin/workshop-interest-list?email=foo@bar.com&city=sydney
+ *
+ * Removes a single workshop_interest row. Requires both email + city
+ * (the table has a UNIQUE constraint on that pair). Admin-gated.
+ */
+export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const { searchParams } = new URL(request.url)
+  const email = searchParams.get('email')?.trim().toLowerCase()
+  const city = searchParams.get('city')?.trim().toLowerCase()
+  if (!email || !city) {
+    return NextResponse.json({ error: 'email and city query params required' }, { status: 400 })
+  }
+  try {
+    const { rowCount } = await sql`
+      DELETE FROM workshop_interest
+      WHERE LOWER(email) = ${email} AND LOWER(city) = ${city}
+    `
+    return NextResponse.json({ success: true, deleted: rowCount ?? 0 })
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Delete failed' }, { status: 500 })
+  }
+}
