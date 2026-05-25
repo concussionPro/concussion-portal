@@ -14,7 +14,7 @@ const schema = z.object({
  * POST /api/courses/checkout
  *
  * Creates a Stripe Checkout session for a single short-course purchase
- * (e.g. AI in Clinical Practice at A$147, Vagus Nerve at A$97).
+ * (e.g. AI in Clinical Practice at A$197, Vagus Nerve at A$97).
  *
  * Returns { url } — the client redirects the browser there.
  *

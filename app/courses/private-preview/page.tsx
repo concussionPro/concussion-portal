@@ -97,7 +97,7 @@ export default async function PreviewPage() {
                   <BookOpen className="w-3 h-3" />
                   Launches 1 June 2026
                 </span>
-                <span className="text-[11px] font-bold text-slate-600">A$147</span>
+                <span className="text-[11px] font-bold text-slate-600">A$197</span>
               </div>
               <h2 className="text-lg font-bold text-foreground leading-tight mb-1.5">
                 AI in Clinical Practice

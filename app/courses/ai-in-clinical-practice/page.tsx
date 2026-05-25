@@ -34,7 +34,7 @@ export default async function CoursePage() {
                   Launches 1 June 2026
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
-                  A$147
+                  A$197
                 </span>
               </div>
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 leading-tight">

@@ -97,11 +97,11 @@ export const COURSES: CourseCatalogueEntry[] = [
     cpdRecognition: ['AHPRA-aligned', 'By Osteopathy Australia–endorsed provider'],
     description: 'AHPRA-aligned compliance training for AI use by Australian clinicians. Covers Privacy Act, APP 6/8/11, TGA boundaries, AHPRA documentation, indemnity carrier positions.',
     route: '/courses/ai-in-clinical-practice',
-    priceAUD: 147,
+    priceAUD: 197,
     status: 'coming-soon',
     tags: ['compliance', 'ai', 'documentation', 'privacy', 'all-specialties'],
     earlyBirdDiscountPct: 15,
-    earlyBirdPriceAUD: 125,
+    earlyBirdPriceAUD: 167,
     launchTarget: '1 June 2026',
   },
   {
