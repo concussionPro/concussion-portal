@@ -16,12 +16,12 @@ export interface DemoSlugMeta {
 }
 
 export const DEMO_SLUGS: Record<string, DemoSlugMeta> = {
-  // Partner code PW-001 — rotate by replacing this slug + emailing a new link.
+  // Partner code HH-001 (Heidi Health) — rotate by replacing this slug + emailing a new link.
   // Slug deliberately non-identifying — URL does not reveal recipient org.
+  // Anonymised at org-level — no individual name pre-fill (signer enters their own).
   'pw-x9k3m7q8n4': {
     keyEnvVar: 'HEIDI_DEMO_KEY',
     suggestedOrg: 'Heidi Health',
-    suggestedDisplayName: 'Paul Williamson',
   },
   // Future partners — give each a non-identifying slug code:
   // 'gi-r4k1jn8p2': { keyEnvVar: 'GUILD_DEMO_KEY', suggestedOrg: 'Guild Insurance' },

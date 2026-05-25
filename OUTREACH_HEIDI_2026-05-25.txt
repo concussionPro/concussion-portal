@@ -1,0 +1,126 @@
+# Outreach — Lee Plumridge (Head of Commercial Australia, Heidi Health)
+
+Send Monday 2026-05-25, afternoon AU time. Send from `zac@concussion-education-australia.com`.
+
+Demo URL: `https://portal.concussion-education-australia.com/d/pw-x9k3m7q8n4`
+Booking link: `https://cal.com/zac-lewis-so8zjs`
+
+Demo is anonymised at the organisation level — NDA pre-fills "Heidi Health" but no individual name (Lee enters his own name when accepting). NDA (v2 2026-05-25) is org-binding: trade-secret designation, 36-month non-development + non-use, residual-info waiver, right of first negotiation if Heidi launches CPD/CME in AU within 3 years, NSW jurisdiction, binds successors.
+
+---
+
+## Email draft
+
+**Subject:** Lee — CPD for your AU clinicians (osteopath / Heidi user)
+
+Hi Lee,
+
+Zac Lewis — AHPRA-registered osteopath, Heidi user, and founder of Concussion Education Australia.
+
+CCM, my flagship clinical course, is the only concussion training Osteopathy Australia endorses for osteopaths in Australia. I'm confirmed as a speaker at the OA Conference this October.
+
+Behind that course sits a CPD platform — AHPRA-Board-calibrated categoriser, multi-course shell, generic event-ingestion API. Heidi Evidence is already capturing CPD-eligible activity from your AU users; almost none of it gets logged because there's no layer that catches it.
+
+NDA-gated 6-minute look:
+→ https://portal.concussion-education-australia.com/d/pw-x9k3m7q8n4
+
+Sharing it with you because AU clinician retention is your patch and CPD-as-a-feature is a clean stickiness play that scribe-only competitors can't replicate. Worth a look.
+
+Book 30 min directly: https://cal.com/zac-lewis-so8zjs
+Otherwise in person at OA Conference 16–17 October on the Gold Coast.
+
+Zac
+Founder, Concussion Education Australia
+Osteopath · AHPRA reg [number] · 0449 186 579 · zac@concussion-education-australia.com
+
+---
+
+## Talking points (for live conversation IF Lee replies)
+
+Use only if asked. Don't volunteer. Don't lead with the ask.
+
+### The trust signals to lead with
+
+- CCM is the only concussion training Osteopathy Australia endorses for osteopaths in Australia. Category of one.
+- OA Conference 2026 confirmed speaker, concussion talk, Gold Coast 16–17 October. Same body that endorses the course is putting me on stage.
+- AHPRA-registered osteopath, single founder, in the same clinician segment Heidi serves.
+- AHPRA Board calibration shipped — all 15 National Boards + RACGP + ACRRM CPD Homes encoded in the platform.
+
+### The shape of the platform
+
+- CCM live at A$1,190, paying AU clinician base.
+- AI in Clinical Practice short course launches 1 June 2026 — Tier A/B/C framework taught in Module 2. Heidi featured as the Tier A healthcare-purpose-built AU scribe example.
+- Vagus Nerve short course ready to launch July 2026.
+- Passive-CPD categoriser keyed against every AHPRA Board's rules.
+- Generic event-ingestion API (POST /api/cpd/events) — any vendor producing clinician-attributable events can plug in.
+
+### Heidi-specific positioning
+
+- The platform is tool-agnostic. Heidi is featured as one of the Tier A AU scribes in the course matrix — same treatment as Lyrebird, Halo, Dragon.
+- Lee's KPI is AU commercial — frame conversations around retention + differentiation, not company-wide strategy.
+- The demo doesn't ask for anything specific. If Lee asks what conversation you want: "Nothing specific — wanted you to see the platform because Heidi's product surface fits what this enables. If you see value, you'll tell me." Let Lee name the shape.
+
+### Things Lee might ask
+
+- *"What are you actually asking for?"* — "Nothing specific. Wanted you to see the platform. If you see value, you'll tell me."
+- *"Why are you sending this to me?"* — "You own AU commercial — this is an AU clinician retention play. If it lands, it lands with you first."
+- *"Are you only talking to Heidi?"* — "Heidi is the strongest AU fit. I'm not pretending I won't talk to others. You're the first conversation."
+- *"What's your scale today?"* — "CCM revenue base + growing subscriber list across the platform. I'd rather walk through the platform than swap vanity metrics."
+- *"How would this fit in our roadmap?"* — "I'd rather hear your roadmap shape first — you know your product surface better than I do."
+- *"How long would acquisition take?"* — "Depends on diligence depth. Not naming a number here. Happy to scope with your team if that conversation makes sense later."
+
+### What NOT to do
+
+- **Don't** position Heidi as "CEA-recommended" — the platform is tool-agnostic.
+- **Don't** lead with the ask. Lead with the platform.
+- **Don't** name an acquisition number or even use the word unless Lee does.
+- **Don't** mention build time.
+- **Don't** promise specific AU user numbers — model together with Heidi's data.
+- **Don't** commit to exclusivity in this first call.
+- **Don't** trash competitors (Abridge, Nabla, DeepScribe).
+- **Don't** sound desperate. The value is the platform. They'll see it or they won't.
+
+---
+
+## Pre-send checklist (Monday morning)
+
+- [ ] Confirm `HEIDI_DEMO_KEY` env var is set in Vercel production.
+- [ ] Verify Lee Plumridge's email via Apollo / Hunter / LinkedIn before sending.
+- [ ] Click `https://portal.concussion-education-australia.com/d/pw-x9k3m7q8n4` in incognito. NDA loads — should say "Curated for Heidi Health" but NO individual name pre-fill.
+- [ ] After NDA acceptance, lands on `/courses/private-preview`. Hero loads. "Book a 30-min conversation" CTA visible (points to cal.com).
+- [ ] Click AI course tile → AI course landing loads with ClinicianMockDashboard sidebar visible.
+- [ ] Click "Integration API" platform tile → integration spec loads with curl example.
+- [ ] Click "CPD logs while clinicians use Heidi" tile → passive CPD demo loads.
+- [ ] Confirm `/courses/private-preview` is NOT linked from public marketplace.
+- [ ] Open `/admin/analytics/heidi` to confirm tracking dashboard works + your test acceptance shows.
+- [ ] Send email from `zac@concussion-education-australia.com` (not Gmail).
+- [ ] Confirm cal.com booking flow works — book a test slot in incognito to verify confirmation email lands.
+- [ ] Set calendar follow-up: 2026-06-01 — single bump if no reply.
+
+---
+
+## If Lee doesn't reply within a week
+
+Single follow-up.
+
+> Hi Lee, bumping the below in case it landed in spam. Demo still active at the same URL.
+>
+> OA Conference is locking the agenda in early June. If Heidi wants to be in the room (or remote dial-in to my talk), tell me what to flag in advance.
+>
+> If this isn't the right time, no worries.
+>
+> Zac
+
+If no reply after the bump: stand down for 6 weeks, then a different angle (relevant AHPRA development, OA conference moment, specific Heidi product release).
+
+---
+
+## If Lee doesn't bite — secondary AU-commercial targets
+
+In order of fit:
+1. **Gabe Warren** — Commercial Director ANZ (Melbourne). Adjacent role, same KPIs.
+2. **Leah Mahtani** — VP Go-to-Market / CMO (London). Owns commercial globally; would route AU back to Lee/Gabe but worth a touch if Lee doesn't engage.
+3. **Kieran McLeod** — Head of Medical Knowledge. Clinical-content angle rather than commercial. Different pitch — emphasise CPD-quality not retention.
+4. **Tom Kelly** — CEO / co-founder. Last resort. Goes straight to top, signals desperation if you've already hit Lee.
+
+For each: same demo URL works (org-level anonymised). Just change the email opener + subject to match.
