@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { createCourseCheckoutSession, type CourseType } from '@/lib/stripe'
 import { findUserByEmail } from '@/lib/users'
+import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
 
 /**
@@ -52,8 +54,30 @@ export async function POST(request: NextRequest) {
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${baseUrl}/upgrade?canceled=true`,
     })
+
+    // Persist a short-link row so the admin can paste a tiny URL
+    // instead of the 700-char Stripe checkout URL. /pay/[code] route
+    // 302s to session.url.
+    await sql`
+      CREATE TABLE IF NOT EXISTS pay_links (
+        code TEXT PRIMARY KEY,
+        url TEXT NOT NULL,
+        email TEXT NOT NULL,
+        location TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `
+    // 8-char alphanumeric — enough collision-resistance for low volume
+    const code = crypto.randomBytes(6).toString('base64url').slice(0, 8)
+    await sql`
+      INSERT INTO pay_links (code, url, email, location)
+      VALUES (${code}, ${session.url ?? ''}, ${user.email}, ${location})
+    `
+    const shortUrl = `${baseUrl}/pay/${code}`
+
     return NextResponse.json({
       success: true,
+      shortUrl,
       checkoutUrl: session.url,
       sessionId: session.id,
       buyer: { email: user.email, name: user.name, accessLevel: user.accessLevel },
