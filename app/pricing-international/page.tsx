@@ -10,7 +10,6 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CONFIG } from '@/lib/config'
 import Link from 'next/link'
-import Image from 'next/image'
 import {
   AlertCircle,
   ChevronDown,
@@ -170,7 +169,7 @@ function InternationalPricingContent() {
     },
     {
       q: 'What is your refund policy?',
-      a: 'We offer a 7-day satisfaction guarantee. If the course isn\'t right for you, email us within 7 days of purchase for a full refund (online content must be less than 25% accessed). No questions asked.',
+      a: 'Full 14-day money-back guarantee with no access cap. If your licensing board doesn\'t accept the course for CE/CPD, or if it isn\'t right for you for any other reason, email us within 14 days of purchase for a full refund. We want you to actually test the course against your board\'s requirements — so no "less than X% accessed" rule, no questions asked.',
       link: { text: 'See our full terms and conditions', href: '/terms' },
     },
     {
@@ -263,20 +262,20 @@ function InternationalPricingContent() {
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Master SCAT6, VOMS and BESS — the assessments that matter most in clinical practice.
-            Comprehensive concussion certification at a fraction of the cost of alternatives.
+            8 hours of evidence-based clinical training built around the Berlin 2023 / Amsterdam 2023 international consensus protocols.
           </p>
         </div>
 
         {/* ─── Why Clinicians Trust This Course ─────────────────────────── */}
         <div className="max-w-4xl mx-auto mb-10">
-          {/* Credential badges row */}
+          {/* Credential badges row — international-applicable trust signals */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
             {[
-              { icon: Building2, label: 'Endorsed by a national medical peak body' },
-              { icon: ShieldCheck, label: 'Built to national regulatory standards (AHPRA)' },
-              { icon: BookOpen, label: 'Evidence-based — 140+ peer-reviewed references' },
-              { icon: User, label: 'Created by a registered osteopath & concussion specialist' },
-              { icon: Globe, label: 'Trusted by clinicians in AU, US, CA & UK' },
+              { icon: Globe, label: 'Berlin 2023 / Amsterdam 2023 consensus protocols' },
+              { icon: GraduationCap, label: '8 hours structured CE · Self-paced · Lifetime access' },
+              { icon: BookOpen, label: '140+ peer-reviewed clinical references' },
+              { icon: User, label: 'Created by a registered clinician + concussion specialist' },
+              { icon: ShieldCheck, label: '14-day full refund · No access cap' },
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center text-center p-3 glass rounded-xl">
                 <item.icon className="w-5 h-5 text-accent mb-2" />
@@ -285,19 +284,13 @@ function InternationalPricingContent() {
             ))}
           </div>
 
-          {/* OA endorsement bar */}
+          {/* Payment + access strip */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 py-4 px-6 glass rounded-xl border border-accent/10 mb-4">
-            <div className="flex items-center gap-2">
-              <Image src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" width={36} height={32} className="h-8 w-auto" priority />
-              <div>
-                <span className="text-sm font-semibold text-foreground">Endorsed by Osteopathy Australia</span>
-                <span className="text-xs text-muted-foreground block">Australia&apos;s national peak body for osteopathic medicine — 3,000+ registered practitioners</span>
-              </div>
-            </div>
+            <span className="text-sm text-muted-foreground">Pay in USD · Stripe processes cards worldwide</span>
             <span className="hidden sm:inline text-slate-300">|</span>
-            <span className="text-sm text-muted-foreground">8 CE Credits · Evidence-Based Certification</span>
+            <span className="text-sm text-muted-foreground">Instant access on purchase</span>
             <span className="hidden sm:inline text-slate-300">|</span>
-            <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
+            <span className="text-sm text-muted-foreground">14-day full money-back guarantee</span>
             {enrollmentCount >= 100 && (
               <>
                 <span className="hidden sm:inline text-slate-300">|</span>
@@ -306,14 +299,11 @@ function InternationalPricingContent() {
             )}
           </div>
 
-          {/* Explainer paragraph */}
+          {/* Creator credentials — AU framework reframed as background, not selling point */}
           <div className="glass rounded-xl p-5 border border-accent/10">
-            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-              This course was built to meet Australia&apos;s national health practitioner regulatory standards (AHPRA) — one of the world&apos;s most rigorous clinical education frameworks. It is endorsed by Osteopathy Australia, the national peak body for osteopathic medicine. While designed in Australia, the clinical content — SCAT6 administration, VOMS assessment, BESS scoring, and return-to-play protocols — follows international consensus guidelines and is directly applicable to clinical practice worldwide.
-            </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               <GraduationCap className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
-              Created by Zac Lewis, B.Clin.Sci., M.Ost.Med. — AHPRA-registered osteopath and concussion specialist with clinical experience across sport and primary care settings.
+              Created by Zac Lewis (B.Clin.Sci., M.Ost.Med.) — a registered osteopath and concussion specialist with clinical experience across sport and primary care. The course was developed to Australia&apos;s national health practitioner regulatory standards (AHPRA) and is endorsed by Osteopathy Australia. The clinical content — SCAT6 administration, VOMS assessment, BESS scoring, and return-to-play protocols — follows international consensus guidelines and is directly applicable wherever you practise.
             </p>
           </div>
         </div>
@@ -397,7 +387,7 @@ function InternationalPricingContent() {
               </span>
             </div>
 
-            <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">ConcussionPro Online Course</h3>
+            <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Clinical Concussion Course</h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">
               8 comprehensive modules. Master SCAT6, VOMS, BESS and return-to-play — everything for clinical confidence.
             </p>
@@ -448,7 +438,7 @@ function InternationalPricingContent() {
 
         {/* Trust Signals */}
         <div className="max-w-[900px] mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-[var(--muted-foreground)]">
-          {['7-Day Guarantee', 'Secure Checkout', 'Evidence-Based', 'Lifetime Access', 'Certificate Included'].map(item => (
+          {['14-Day Guarantee', 'Secure Checkout', 'Evidence-Based', 'Lifetime Access', 'Certificate Included'].map(item => (
             <div key={item} className="flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={2.5} />
               {item}
@@ -482,7 +472,7 @@ function InternationalPricingContent() {
                     ['CE credits', 'Free', '8'],
                     ['Lifetime access', true, true],
                     ['Certificate of completion', true, true],
-                    ['7-day money-back guarantee', false, true],
+                    ['14-day money-back guarantee', false, true],
                     ['Price', 'Free', `$${PRICE_USD} USD`],
                   ] as [string, boolean | string, boolean | string][]).map(([feature, free, full], i) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
@@ -509,42 +499,46 @@ function InternationalPricingContent() {
           </div>
         </div>
 
-        {/* ─── Professional Development Credits ─────────────────────── */}
+        {/* Structured CE — Self-Claim with Your Board */}
         <div className="max-w-4xl mx-auto mt-12">
-          <h3 className="text-xl font-bold text-center text-foreground mb-6">
-            Recognised for Professional Development
+          <h3 className="text-xl font-bold text-center text-foreground mb-2">
+            Structured Continuing Education — Self-Claim with Your Board
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <p className="text-sm text-muted-foreground text-center mb-6 max-w-2xl mx-auto">
+            8 hours of structured contact time with a documented syllabus, learning outcomes, and a certificate of completion. Built for clinicians who self-claim CPD/CE with their licensing board.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
             {[
-              { flag: '\ud83c\udde6\ud83c\uddfa', country: 'Australia', detail: 'Endorsed by Osteopathy Australia \u00b7 AHPRA-aligned \u00b7 8 CPD hours' },
-              { flag: '\ud83c\uddec\ud83c\udde7', country: 'United Kingdom', detail: 'Accepted for HCPC CPD portfolios \u00b7 Outcomes-based learning' },
-              { flag: '\ud83c\uddf3\ud83c\uddff', country: 'New Zealand', detail: 'Claimable for Physiotherapy Board NZ CPD' },
-              { flag: '\ud83c\uddee\ud83c\uddea', country: 'Ireland', detail: 'Accepted for CORU CPD requirements' },
-              { flag: '\ud83c\udde8\ud83c\udde6', country: 'Canada', detail: 'Claimable for CPD in most Canadian provinces' },
-              { flag: '\ud83c\uddfa\ud83c\uddf8', country: 'United States', detail: '8 structured contact hours \u00b7 Self-study CE applicable in most states' },
+              { icon: BookOpen, title: 'Detailed syllabus + learning outcomes', detail: 'Module-by-module breakdown you can submit for board pre-approval.' },
+              { icon: GraduationCap, title: 'Certificate with structured contact hours', detail: 'Hours, completion date, content scope — everything your board needs on record.' },
+              { icon: ShieldCheck, title: '140+ peer-reviewed clinical references', detail: 'For boards that require evidence-based CE category claims.' },
+              { icon: Building2, title: 'Tax invoice for employer reimbursement', detail: 'Issued automatically — most practices and employers reimburse CE.' },
             ].map((item, i) => (
               <div key={i} className="glass rounded-xl p-4 border border-slate-200/60">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">{item.flag}</span>
-                  <span className="text-sm font-bold text-foreground">{item.country}</span>
+                <div className="flex items-start gap-3">
+                  <item.icon className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground mb-0.5">{item.title}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
               </div>
             ))}
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-            Built to AHPRA standards and endorsed by Osteopathy Australia. Curriculum follows international consensus guidelines (SCAT6, VOMS, return-to-play). Certificate of completion with documented learning outcomes provided.
-          </p>
-          <p className="text-[10px] text-slate-400">
-            CE/CPD applicability varies by jurisdiction, profession and licensing board. Verify acceptance with your regulatory body before purchase.
-          </p>
+
+          <div className="glass rounded-xl p-4 border border-amber-200/60 bg-amber-50/30">
+            <p className="text-sm text-foreground leading-relaxed">
+              <strong>Before purchase, confirm acceptance with your licensing board.</strong> CE/CPD eligibility, category, and hours vary by board, profession, and jurisdiction — we don&apos;t claim specific board approval anywhere we haven&apos;t earned it. If your board declines, our 14-day full refund covers you. No access cap, no questions.
+            </p>
+          </div>
         </div>
 
         {/* Testimonials */}
         <div className="max-w-4xl mx-auto mt-12">
           <h3 className="text-xl font-bold text-center text-foreground mb-2">What Clinicians Are Saying</h3>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            Trusted by clinicians across Australia, the US, Canada and the UK
+            From the Australian clinicians who completed the course — the clinical fundamentals are the same wherever you practise.
           </p>
           <div className="grid md:grid-cols-3 gap-4">
             {testimonials.slice(0, 3).map((t) => (
@@ -565,11 +559,11 @@ function InternationalPricingContent() {
               <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
               </div>
-              <h3 className="font-bold text-foreground">7-Day Satisfaction Guarantee</h3>
+              <h3 className="font-bold text-foreground">14-Day Full Money-Back Guarantee</h3>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Try the course risk-free. If it&apos;s not right for you, email us within
-              7 days for a full refund — no questions asked.
+              Try the course risk-free. If your board declines it for CE/CPD, or it&apos;s not right for you, email us within
+              14 days for a full refund. No access cap, no questions.
             </p>
           </div>
 
@@ -638,7 +632,7 @@ function InternationalPricingContent() {
               {enrollmentCount >= 100
                 ? `Join ${enrollmentCount}+ clinicians across 4 countries.`
                 : 'Join clinicians building concussion confidence.'}
-              {' '}7-day money-back guarantee.
+              {' '}14-day money-back guarantee, no access cap.
             </p>
           </div>
 
@@ -680,7 +674,7 @@ function InternationalPricingContent() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-[var(--muted-foreground)]">
-              {['7-Day Guarantee', 'Secure Checkout'].map(item => (
+              {['14-Day Guarantee', 'Secure Checkout'].map(item => (
                 <div key={item} className="flex items-center gap-1">
                   <Check className="w-3 h-3 text-[var(--accent)]" strokeWidth={2.5} />
                   {item}

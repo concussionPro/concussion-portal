@@ -103,7 +103,7 @@ export async function createCourseCheckoutSession({
   if (courseType === 'international-online') {
     unitAmount = COURSE_PRICING.INTERNATIONAL_ONLINE
     currency = 'usd'
-    productName = 'ConcussionPro Online Course — International'
+    productName = 'Clinical Concussion Course — International'
     productDescription = '8 online modules (8 CE credits) · Lifetime access · Clinical Toolkit · Reference Repository · Certificate of completion'
   } else if (courseType === 'workshop-upgrade') {
     unitAmount = isEarlyBird ? COURSE_PRICING.WORKSHOP_UPGRADE_EARLY : COURSE_PRICING.WORKSHOP_UPGRADE_REGULAR
