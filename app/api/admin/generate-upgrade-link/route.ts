@@ -47,12 +47,16 @@ export async function POST(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
   try {
+    // 30 days = Stripe's max expires_at. Admin-generated upgrade links
+    // are sent in personal emails — recipients may take days to act.
+    const thirtyDaysOut = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30
     const session = await createCourseCheckoutSession({
       courseType: 'workshop-upgrade' as CourseType,
       location,
       customerEmail: user.email,
       successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${baseUrl}/upgrade?canceled=true`,
+      expiresAt: thirtyDaysOut,
     })
 
     // Persist a short-link row so the admin can paste a tiny URL
