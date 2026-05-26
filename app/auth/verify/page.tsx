@@ -48,6 +48,7 @@ function VerifyContent() {
         // Session cookie is set automatically by the server
         // Short delay to allow gtag to fire before redirect
         setTimeout(() => {
+          const urlRedirect = searchParams.get('redirect')
           const savedRedirect = localStorage.getItem('login_redirect')
           localStorage.removeItem('login_redirect')
 
@@ -59,8 +60,15 @@ function VerifyContent() {
           // can race with the Set-Cookie commit, leaving middleware seeing
           // no session and bouncing back to /login. Full browser nav avoids
           // the race entirely.
+          //
+          // Priority: ?redirect= URL param (admin-generated direct links) >
+          // localStorage (set by /login when user came from a gated page) >
+          // accessLevel default. URL param wins so admins can point a
+          // specific user at a specific page via a baked one-click URL.
           let target = '/dashboard'
-          if (savedRedirect && isValidRedirect(savedRedirect) && data.user.accessLevel !== 'preview') {
+          if (urlRedirect && isValidRedirect(urlRedirect) && data.user.accessLevel !== 'preview') {
+            target = urlRedirect
+          } else if (savedRedirect && isValidRedirect(savedRedirect) && data.user.accessLevel !== 'preview') {
             target = savedRedirect
           } else if (data.user.accessLevel === 'preview') {
             target = '/modules/101'
