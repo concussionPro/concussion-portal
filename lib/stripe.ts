@@ -82,7 +82,6 @@ export async function createCourseCheckoutSession({
   promoCode,
   utm,
   bundleDiscountAud = 0,
-  expiresAt,
 }: {
   courseType: CourseType
   location?: string
@@ -92,8 +91,6 @@ export async function createCourseCheckoutSession({
   cancelUrl: string
   promoCode?: string
   utm?: Record<string, string>
-  /** Unix timestamp (seconds) when the checkout session should expire. Stripe min: 30 min from now, max: 30 days. Default: 24h (Stripe default). */
-  expiresAt?: number
   /** AUD dollars (not cents) of discount to apply for Reference+Toolkit bundle owners. */
   bundleDiscountAud?: number
 }) {
@@ -167,7 +164,7 @@ export async function createCourseCheckoutSession({
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
-    expires_at: expiresAt ?? Math.floor(Date.now() / 1000) + 60 * 60, // default 1 hour (gives BNPL users time); admin-generated upgrade links pass a 30-day expiry
+    expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour (gives BNPL users time)
     // Let Stripe auto-detect optimal payment methods per device/location/currency.
     // Shows Apple Pay, Google Pay, Link, cards, Afterpay, Klarna as appropriate.
     // Requires: (1) payment methods enabled in Stripe Dashboard, (2) Apple Pay
