@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { findUserByEmail } from '@/lib/users'
 import { createMagicToken } from '@/lib/magic-link-jwt'
+import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
 
 /**
@@ -48,8 +50,22 @@ export async function POST(request: NextRequest) {
   if (redirect) params.set('redirect', redirect)
   const url = `${baseUrl}/auth/verify?${params.toString()}`
 
+  // Wrap in a portal-domain short URL so admin can paste a tiny link
+  // into a personal email. The long URL is just a 302 destination.
+  await sql`
+    CREATE TABLE IF NOT EXISTS short_urls (
+      code TEXT PRIMARY KEY,
+      url TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `
+  const code = crypto.randomBytes(5).toString('base64url').slice(0, 7)
+  await sql`INSERT INTO short_urls (code, url) VALUES (${code}, ${url})`
+  const shortUrl = `${baseUrl}/s/${code}`
+
   return NextResponse.json({
     success: true,
+    shortUrl,
     url,
     expiresInDays: ttlDays,
     user: { email: user.email, name: user.name, accessLevel: user.accessLevel },
