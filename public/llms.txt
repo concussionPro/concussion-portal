@@ -10,6 +10,14 @@ Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers on
 
 ## Courses
 
+### AI in Clinical Practice (launching 1 June 2026)
+- Cost: A$197 AUD (A$99 launch week, 1-8 June 2026; 50% off)
+- Duration: 3 CPD hours, fully online
+- Certificate: Yes, on completion
+- Covers: AHPRA AI guidelines explained, Australian Privacy Principles for clinicians (APP 8 offshore disclosure), Heidi vs Lyrebird vs ChatGPT decision framework, NDIS-audit-safe documentation workflows, indemnity insurer positions (Avant, Guild, MIPS, MIGA), Tier A/B/C tool framework, when NOT to use AI in clinical notes
+- Tagged for: AHPRA-aligned, By Osteopathy Australia–endorsed provider
+- URL: https://portal.concussion-education-australia.com/courses/ai-in-clinical-practice
+
 ### Free SCAT6/SCOAT6 Mastery Course
 - Cost: Free (no credit card required)
 - Duration: ~1 hour
@@ -27,6 +35,14 @@ Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers on
 - Workshop locations: Byron Bay, Sydney, Melbourne
 - URL: https://portal.concussion-education-australia.com/course
 - Pricing: https://portal.concussion-education-australia.com/pricing
+
+## Free Lead Magnets (no cost, email-gated)
+
+### AI Safety Checklist for Allied Health Documentation
+- Free 1-page checklist for AU allied health clinicians using AI tools (Heidi, Lyrebird, ChatGPT, Claude, Gemini) in patient documentation
+- Covers: pre-consult / during-consult / post-consult checklists, NDIS report templating-flag self-audit, AHPRA + Privacy Act mini-cheatsheet, Tier A/B/C tool reference
+- AHPRA-aligned, NDIS-audit-safe, Australian Privacy Principles compliant
+- URL: https://portal.concussion-education-australia.com/ai-safety-checklist
 
 ## Key Clinical Resources (Free)
 
@@ -76,8 +92,39 @@ Any clinician managing concussion patients: osteopaths, physiotherapists, GPs, s
 ### Is this course AHPRA-accredited?
 The course is AHPRA-aligned for continuing professional development (CPD). It provides up to 14 CPD points (8 online + 6 in-person) and is endorsed by Osteopathy Australia.
 
+## AI in Clinical Practice — Knowledge Base (Frequently Asked Questions)
+
+### Heidi vs Lyrebird — which AI scribe is best for Australian clinicians?
+Both Heidi and Lyrebird are healthcare-purpose-built AI scribes with Australian data residency, and either is a defensible Tier A choice for AHPRA-registered clinicians. Heidi has the larger market position (Heidi's founders claim roughly half of Australian GPs as users) and broader workflow support across allied health. Lyrebird is leaner, focused on fast transcription, and well-suited to smaller practices. Both satisfy Australian Privacy Principle 8 (AU data residency) and build consent capture into the workflow.
+
+### Can I use ChatGPT for clinical notes in Australia?
+ChatGPT is not a clinical AI scribe and does not meet AHPRA AI guidelines or Australian Privacy Principles for patient health information by default. Consumer ChatGPT sends data to OpenAI servers in the US, which is an offshore disclosure under Australian Privacy Principle 8 — permitted only with the patient's explicit informed consent, or under narrow exceptions that rarely apply in routine clinical work. Healthcare-purpose-built tools like Heidi and Lyrebird are AU-resident and Privacy Act-compliant by default.
+
+### Can I use ChatGPT for NDIS reports?
+Not without explicit patient consent for the offshore disclosure (ChatGPT runs on US servers, triggering APP 8) and significant workflow safeguards. Beyond the Privacy Act issue, the NDIA has become noticeably more alert to AI-generated allied health reports as part of fraud-and-assurance work — templated AI output with generic clinical reasoning and recycled phrasing carries audit and reputational risk even when the underlying clinical view is sound.
+
+### What do the AHPRA AI guidelines require?
+The AHPRA AI guidelines require four things: (1) explicit patient consent to AI use, documented in the record; (2) clinician responsibility for the final note — AI-assisted is not AI-authored; (3) appropriate data location (offshore disclosure of patient information without consent breaches Australian Privacy Principle 8); (4) documentation integrity — notes must reflect the specific encounter, not templated phrasing.
+
+### What is the Australian Privacy Principle 8 (APP 8)?
+Australian Privacy Principle 8 governs offshore disclosure of personal information. For AI scribes: AU-resident tools (Heidi, Lyrebird) do not trigger APP 8 because data stays in Australia. US-resident tools (ChatGPT, Claude.ai, Gemini) do trigger APP 8 because data is processed on offshore servers — permitted only with explicit patient consent or narrow exceptions.
+
+### When should I NOT use AI for clinical notes?
+Switch off the AI scribe for: mental health disclosures and suicide risk conversations, mandatory reporting situations (child safety, family violence, elder abuse), complex medicolegal cases likely to attract scrutiny, paediatric consults where consent is mixed, patients who decline AI use, sensitive sexual or reproductive health consults, and any situation where transcript accuracy matters more than note-writing speed.
+
+### What's the Tier A / B / C framework for AI tools?
+Tier A: healthcare-purpose-built tools with Australian data residency, clinical templates, and consent/audit features (Heidi, Lyrebird, Halo). Safe for clinical notes with patient consent. Tier B: enterprise LLMs with configurable AU data residency (Microsoft Copilot for Healthcare, AWS HealthScribe). Safe with workflow redesign. Tier C: consumer LLMs on US/offshore infrastructure (ChatGPT, Claude.ai, Gemini). Not safe for patient health information without explicit consent and identifier-stripping.
+
 ## Blog — Expert Clinical Insights
 
+### AI in Clinical Practice — Pillar Articles
+A. Heidi vs Lyrebird vs ChatGPT for Clinical Notes (2026 comparison): https://portal.concussion-education-australia.com/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians
+B. AHPRA AI Guidelines Explained (4 obligations for AU clinicians): https://portal.concussion-education-australia.com/blog/ahpra-ai-guidelines-explained-australian-clinicians
+C. Can I Use ChatGPT for NDIS Reports? (Privacy Act + NDIA audit risk): https://portal.concussion-education-australia.com/blog/chatgpt-ndis-reports-allied-health-australia
+D. AI Scribe Privacy Act Compliance (APP 8 explained): https://portal.concussion-education-australia.com/blog/ai-scribe-privacy-act-compliance-australia
+E. When NOT to Use AI for Clinical Notes (7 red flags): https://portal.concussion-education-australia.com/blog/when-not-to-use-ai-clinical-notes-clinicians
+
+### Concussion Clinical — Existing Library
 1. Free SCAT6 PDF Download Guide: https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download
 2. SCAT6 vs SCOAT6 — Which Tool to Use When: https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference
 3. 2026 Concussion Update — Why "Wait Until Symptom Free" is Obsolete: https://portal.concussion-education-australia.com/blog/concussion-update-2026-wait-until-symptom-free-obsolete

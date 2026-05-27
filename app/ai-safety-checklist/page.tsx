@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { SiteNav } from '@/components/SiteNav'
 import { AiSafetyChecklistSignupForm } from '@/components/AiSafetyChecklistSignupForm'
+import { createMedicalWebPageSchema, createFAQSchema, organizationSchema } from '@/lib/schema-markup'
 import { ShieldCheck, FileText, ClipboardList, BookOpen, CheckCircle, AlertTriangle } from 'lucide-react'
 
 const TITLE = 'Free: AI Safety Checklist for Allied Health Documentation'
@@ -23,6 +24,46 @@ export const metadata: Metadata = {
 export default function AiSafetyChecklistLanding() {
   return (
     <div className="min-h-screen bg-slate-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(createMedicalWebPageSchema({
+            title: TITLE,
+            description: DESCRIPTION,
+            url: URL,
+            lastReviewed: '2026-05-27',
+            about: 'AI clinical documentation safety, AHPRA AI guidelines, Australian Privacy Principles, NDIS audit-safe documentation, AI medical scribe selection (Heidi, Lyrebird, ChatGPT)',
+            reviewedBy: 'Zac Lewis',
+          })),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(createFAQSchema([
+            {
+              question: 'Can I use ChatGPT for clinical notes in Australia?',
+              answer: 'ChatGPT is not a clinical AI scribe and does not meet AHPRA AI guidelines or Australian Privacy Principles for patient health information by default. Consumer ChatGPT sends data to OpenAI servers in the US, which is an offshore disclosure under Australian Privacy Principle 8 — permitted only with explicit patient consent. Healthcare-purpose-built tools like Heidi and Lyrebird are AU-resident and Privacy Act-compliant by default.',
+            },
+            {
+              question: 'What is the difference between Heidi and Lyrebird?',
+              answer: 'Both are healthcare-purpose-built AI scribes with Australian data residency, and either is a defensible Tier A choice for AHPRA-registered clinicians. Heidi has wider market adoption (Heidi’s founders claim about half of Australian GPs as users) and broader workflow support. Lyrebird is leaner, faster, and better-suited to solo or small practices.',
+            },
+            {
+              question: 'Will the NDIA audit AI-generated allied health reports?',
+              answer: 'Yes. The NDIA has become noticeably more alert to AI-generated allied health reports as part of fraud-and-assurance work. Templated AI output with generic clinical reasoning and recycled phrasing carries audit and reputational risk even when the underlying clinical view is sound.',
+            },
+            {
+              question: 'What is the AI Safety Checklist for?',
+              answer: 'A free 1-page checklist for Australian allied health clinicians using AI tools (Heidi, Lyrebird, ChatGPT, Claude, Gemini) in patient documentation. Covers pre-consult, during-consult, and post-consult checklists, NDIS report templating-flag self-audit, an AHPRA + Privacy Act mini-cheatsheet, and a Tier A/B/C tool reference. AHPRA-aligned and NDIS-audit-safe.',
+            },
+          ])),
+        }}
+      />
       <SiteNav />
 
       {/* Hero */}

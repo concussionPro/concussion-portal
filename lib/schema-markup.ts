@@ -71,7 +71,7 @@ export const organizationSchema = {
   url: MARKETING_URL,
   logo: `${MARKETING_URL}/logo.png`,
   description:
-    'Australia\'s concussion CPD provider for GPs, physiotherapists, osteopaths and allied health clinicians. AHPRA-aligned, Osteopathy Australia endorsed, MedCPD Career Health accredited.',
+    'Australia\'s concussion CPD provider for GPs, physiotherapists, osteopaths and allied health clinicians. AHPRA-aligned, Osteopathy Australia endorsed. Also publishes AI in Clinical Practice training covering AHPRA AI guidelines, Australian Privacy Principles, NDIS-audit-safe documentation, and AI scribe selection (Heidi, Lyrebird, ChatGPT).',
   founder: resolveAuthor('Zac Lewis'),
   address: {
     '@type': 'PostalAddress',
@@ -93,6 +93,15 @@ export const organizationSchema = {
     'Concussion Management',
     'Sports Medicine',
     'Mild Traumatic Brain Injury',
+    'AHPRA AI Guidelines',
+    'Australian Privacy Principles for Healthcare',
+    'AI Medical Scribes',
+    'Heidi Health',
+    'Lyrebird Health',
+    'ChatGPT Clinical Notes',
+    'NDIS Allied Health Documentation',
+    'AI in Clinical Practice',
+    'Healthcare AI Compliance',
   ],
   memberOf: { '@type': 'Organization', name: 'Osteopathy Australia' },
   contactPoint: {
