@@ -57,35 +57,51 @@ Green-light a course concept only if **all four** pass:
 
 **If any one fails → kill it.** Don't build a course you can't win, don't sell into a persona you can't reach, don't dilute the brand outside Zac's authority.
 
-### Stage 3 — Lead magnet MVP (1 week)
+### Stage 3 — Waitlist validation (1 week)
 
-**Before** building the full course, ship the lead magnet:
-- 1-page free PDF/checklist (using the search-validated exact keywords)
-- Landing page (`/[course-slug]-checklist` or similar)
-- POST email-gate signup → preview user creation
-- 3-email nurture sequence (Day 0 delivery, Day 3 value-add, Day 7 social proof / comparison)
-- Single pillar blog post on the highest-volume query, linking to the lead magnet
+**Before** building the full course, validate paid intent via a waitlist — NOT another free PDF.
 
-**Track for 4 weeks.** Kill criteria:
-- <50 signups in 4 weeks → kill the course concept
-- 50-150 signups → re-scope (smaller course, A$97 tier, narrower audience)
-- 150+ signups → build the full course
+The lead-magnet-per-course pattern was an over-generalisation from N=1 (SCAT6 Mastery worked → projected onto every course). The right pattern:
 
-This is the **anti-bloat gate**. Most ideas die here cheaply (~10 hours of work each) instead of dying expensively after a full course build.
+1. Write 1-3 pillar blog posts targeting the search-validated keyword cluster (using existing CEA brand + organic reach)
+2. Add a "Notify me when [course name] launches + get 50% off launch week" email-only signup at the end of each post (no PDF, no nurture pre-launch beyond a single confirmation email)
+3. Track for 4 weeks
 
-### Stage 4 — Full course build (only if MVP validated, 2-3 weeks)
+**Kill criteria:**
+- <50 waitlist signups in 4 weeks → kill or pivot
+- 50-100 → re-scope smaller (A$97 tier, narrower audience)
+- 100+ → build the full course; waitlist gets a 50%-off launch email
+
+This validates **paid intent** (someone willing to be notified about a paid product) rather than free-content intent (someone willing to give email for a PDF). The signal is stronger and the brand stays focused on "CEA = clinical mastery courses" not "CEA = free content provider."
+
+**Why this is better than free-lead-magnet-per-course:**
+- Free signups are cheap intent — many are content-hunters who never convert
+- Waitlist signups are warm intent — they've already committed to "yes I'd buy if it existed"
+- No nurture-sequence proliferation (one new sequence per course = email fatigue + maintenance burden)
+- Brand stays premium
+
+**Free lead magnets remain appropriate ONLY when all 3 are true:**
+- The persona is genuinely new (not an existing CEA buyer)
+- The free artefact has independent clinical utility (e.g. fillable SCAT6 form, AI Safety Checklist)
+- The persona needs to test a concrete skill before trusting CEA as educator
+
+The current 2 lead magnets (SCAT6 Mastery free course + AI Safety Checklist) satisfy all three. **Cap free entry points at 2** until data proves the second one's pulling weight.
+
+### Stage 4 — Full course build (only if waitlist validated, 2-3 weeks)
 
 Follow the **build template** in §4. Every course must produce:
 
 - Course landing page (`/courses/[slug]`)
 - Module markdown content (`/content/[slug]/`)
 - Stripe checkout integration (extend `provider-catalogue.ts`)
-- 5 pillar blog posts (the same 5 keyword clusters: comparison, regulatory, how-to, risk/red-flag, decision-framework)
-- 4-email nurture sequence (Day 0/3/7/14)
-- Free lead magnet (already shipped in Stage 3)
+- 3-5 pillar blog posts (already partially shipped in Stage 3, expand as needed)
+- 4-email post-purchase nurture sequence (Day 0/3/7/14)
 - Engaged-user launch blast endpoint (templated)
 - Sitemap entries + schema markup
 - Dashboard card surface (when access purchased)
+- Launch-week 50% discount mechanic
+
+Note: NO new free lead magnet per course. The waitlist from Stage 3 IS the launch list.
 
 ### Stage 5 — Launch (1 day)
 
@@ -146,26 +162,58 @@ Decide whether to:
 
 **Cap at this size for 2026.** Adding more rungs creates choice paralysis at the /pricing page.
 
-### 12-month schedule (only commits past Course #2)
+### 12-month schedule (research-validated; supersedes the MBS Billing draft)
 
-| When | Course / lead magnet | Tier | Status |
+Two research agents (2026-05-27) validated the direction:
+1. **International market agent:** Don't build UK/US/Canada-specific streams. Topic-driven content + existing `/pricing-international` funnel + GEO/LLM citation is the winning play.
+2. **Clinical-want agent:** The highest-ROI courses are a **"Head, Neck & Vestibular Mastery" trilogy** above CCM. Same buyer, same authority, same funnel, cross-jurisdiction transferable. MBS Billing is dropped — boring, mandate-driven (have-to not want), AU-only, low willingness-to-pay.
+
+| When | Course / blog post | Tier | Status |
 |---|---|---|---|
-| 2026-06-01 | **AI in Clinical Practice** — LAUNCH | A$197 (A$99 launch wk) | Building, code shipped, content live |
+| 2026-06-01 | **AI in Clinical Practice** — LAUNCH | A$197 (A$99 launch wk) | Built, content live, course gated until 1 Jun |
 | 2026-06-08 | AI launch week ends | — | Auto |
-| 2026-06-15 → 07-15 | **MBS Billing for Allied Health** — lead magnet MVP | Free | Validation gate first |
-| 2026-08-01 | **MBS Billing for Allied Health** — full course (IF validated) | A$197 | Build only if >150 signups on lead magnet |
-| 2026-09-01 → 09-30 | Demand sensing window for Course #3 | — | Spreadsheet review + Stage 2 gate |
-| 2026-10-01 → 10-31 | Course #3 lead magnet MVP — candidates: Cultural Safety, NDIS Report Writing, AHPRA Advertising Compliance, Telehealth/MyMedicare | TBD | Pick ONE based on demand-sensing data |
-| 2026-12-01 | Course #3 full course (IF validated) | A$127 or A$197 | TBD |
-| 2027-Q1 | Course #4 OR Cultural Safety (if AHPRA standard finalises) | TBD | Re-evaluate Q4 2026 |
+| 2026-06-10 | Cross-jurisdiction blog post: **"AI Medical Scribe Comparison 2026 — Heidi vs Lyrebird vs Tortus vs Abridge vs DAX"** | Free SEO/GEO | Single highest-impact post — targets +600% YoY global query, converts via /pricing-international |
+| 2026-06-15 → 07-15 | **PPCS waitlist validation** (3 blog posts, no PDF) | — | Posts: "Persistent post-concussion symptoms management", "Chronic concussion when to escalate", "PPCS vestibulo-ocular workup". Each ends with "Notify me when PPCS course launches + 50% off" |
+| 2026-08-01 | **Persistent Post-Concussion Symptoms (PPCS) — The Chronic 5-20%** (IF validated, ≥100 waitlist) | A$497-697 | Open lane per research; perfect cross-sell from CCM; Zac's lane |
+| 2026-09-15 → 10-15 | **Cervicogenic Dizziness + Headache** waitlist validation | — | Same pattern — 3 blog posts + waitlist |
+| 2026-11-01 | **Cervicogenic Dizziness + Headache** full course (IF validated) | A$297-397 | Natural Module 2 of Head/Neck/Vestibular trilogy |
+| 2027-Q1 | **Applied Vestibular for MSK Clinicians** waitlist + course | A$397-597 | Position as "applied/screening" not competency replacement; avoid head-to-head with VEA/Vestibular Courses AU |
 
-**Hard rule: max 2 paid courses launched per quarter.** Anything faster and the nurture sequences cannibalise each other.
+**Hard rule: max 2 paid courses launched per quarter.** Faster = nurture cannibalises, support overhead climbs.
+
+**Why this trilogy works:**
+- Same buyer persona as CCM (clinicians who manage head injuries) — built-in funnel
+- Same Zac-authority lane (sports medicine + osteo + concussion specialty)
+- Cross-jurisdiction transferable (clinical content, not regulator-locked) — sells via /pricing-international
+- High-want clinical-skills topics (felt gap), not have-to mandates — higher willingness-to-pay
+
+### Topics confirmed dropped from the roadmap
+
+| Topic | Why dropped |
+|---|---|
+| MBS Billing for Allied Health | Boring, mandate-driven, AU-only, low willingness-to-pay |
+| Cultural Safety ACPD | Mandate-driven (have-to), still in draft, race-to-bottom pricing |
+| AHPRA Advertising Compliance | Niche, mandate-driven, low ARPU |
+| NDIS Report Writing | Already covered by AI course's Module 3 — would cannibalise |
+| Tendinopathy / Running injury | Jill Cook + Tom Goom own these globally; CEA has no authority |
+| Pelvic health, REDs, pain neuroscience | Out of Zac's scope or saturated by stronger incumbents |
+| Long COVID standalone | Drifts into respiratory + dysautonomia; thin osteo overlap |
+| Dedicated UK/US/Canada CPD streams | UK dominated by free incumbents (BMJ, e-LfH); US compliance overhead destroys margin; Canada-only is too small for the lift |
 
 ---
 
 ## 3. Anti-bloat protocol
 
 The dashboard already has 3 products visible. By end of 2026 it could have 6+. Without discipline that's a mess.
+
+### Hard caps
+
+| Category | Cap | Reason |
+|---|---|---|
+| **Free entry points** (lead magnets / free courses) | **2 max** | Each new freebie splits the nurture audience + dilutes brand premium signal. Currently: SCAT6 Mastery + AI Safety Checklist. Don't add a third unless data proves AI Safety Checklist's pulling weight. |
+| **Paid courses per quarter (launches)** | **2 max** | Nurture sequences cannibalise + support overhead climbs above this rate |
+| **Active courses per price tier** | **4 max** | Choice paralysis sets in past this |
+| **Pillar blog posts per course** | **3-5** | Below 3 = thin topical cluster (LLMs won't see authority); above 5 = diminishing returns + content rot risk |
 
 ### Visibility tiers
 
@@ -269,10 +317,43 @@ Things you'd benefit from deciding before MBS scoping starts (June 15):
 
 ---
 
-## 6. The system in one sentence
+## 6. The honest revenue thesis
 
-**Every new course follows: validated query → lead-magnet MVP → only-if-validated full build → templated launch → performance-gated keep/retire.**
+This is a profit-generating business, not an education project. Revenue comes from converting the existing list and shipping the next paid course — NOT from adding more free signups.
 
-The lead-magnet MVP is the kill switch. The build template is the consistency mechanism. The performance gate is the bloat prevention. The pricing ladder rules are the catalogue discipline.
+### CEA's actual conversion data (30-day window, 2026-05)
 
-Once all four are in place, the system runs without you having to think about quality on each individual course — quality is enforced by the pattern.
+| Metric | Value |
+|---|---|
+| Total recipients on email list | 237 |
+| Engaged (hot clickers + warm openers) | 93 |
+| Paying conversions in window | 5 |
+| Conversion rate | 2.1% |
+| Top conversion driver | SCAT6 Mastery free course nurture (4 of 18 hot clickers had `signupSource = free-course`) |
+
+### Where the leverage actually is
+
+| Lever | Math | Effort per A$1k revenue |
+|---|---|---|
+| Add 200 free signups (new lead magnet) | 200 × 2.1% × A$497 = +A$2k/month | 8-15 hours per build |
+| Improve conversion of existing list by 1pp | 237 × 1% × A$497 + compounds on next month's intake | 4-8 hours per experiment |
+| **Ship 1 new paid course to existing list** | 237 × 5% (warm-list conversion benchmark) × new course ARPU = **biggest lever** | 2-3 weeks per course |
+
+**Shipping the next paid course is 3-5x more revenue per build-hour than another free lead magnet.** This is the empirical answer to "should we add another freebie."
+
+### What this means for the system
+
+1. Free entry points are a one-time investment per persona, not a recurring per-course pattern
+2. New paid courses validate via waitlist (paid intent), not free PDF gates (content intent)
+3. Improving conversion of the existing list (better nurture, better launch blasts, better landing copy) compounds — it works on every future signup too
+4. Authority concentration > content sprawl. CEA = clinical mastery training authority. Every additional free PDF dilutes that signal in LLM training data.
+
+## 7. The system in one sentence
+
+**Every new course follows: validated query → 3 pillar blog posts + waitlist → only-if-validated full build → templated launch → performance-gated keep/retire.**
+
+The waitlist (paid intent, not free intent) is the kill switch. The build template is the consistency mechanism. The performance gate is the bloat prevention. The pricing ladder rules are the catalogue discipline. The free-entry cap (2 max) protects the brand premium signal.
+
+The thesis: **conversion of existing engaged users + premium paid course launches** is the profit lever. Free signups are not.
+
+Once these gates are in place, the system runs without you having to think about quality on each individual course — quality is enforced by the pattern.
