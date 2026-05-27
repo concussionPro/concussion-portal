@@ -36,6 +36,14 @@ const blogPosts: Array<{
   category: Category
 }> = [
   {
+    title: "AI Medical Scribe Comparison 2026 — Heidi vs Lyrebird vs Tortus vs Abridge vs Suki vs DAX",
+    description: 'AI medical scribe comparison 2026 — Heidi, Lyrebird, Tortus, Abridge, Suki, DAX Copilot side-by-side for AU/UK/US/CA clinicians. Data residency, HIPAA/GDPR/Privacy Act, pricing, specialty fit.',
+    date: 'May 27, 2026',
+    href: '/blog/ai-medical-scribe-comparison-2026',
+    readTime: '11 min',
+    category: 'practice',
+  },
+  {
     title: "Heidi vs Lyrebird vs ChatGPT for Clinical Notes: An Australian Clinician's 2026 Comparison",
     description: 'Heidi vs Lyrebird vs ChatGPT for clinical notes — which AI scribe fits your Australian practice? Side-by-side AHPRA AI guidelines, Privacy Act, NDIS audit risk, indemnity insurer positions.',
     date: 'May 27, 2026',

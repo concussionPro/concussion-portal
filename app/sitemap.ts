@@ -151,6 +151,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.95,
     },
     {
+      url: `${baseUrl}/blog/ai-medical-scribe-comparison-2026`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/ppcs-waitlist`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/blog/ahpra-cpd-requirements-concussion-education`,
       lastModified: new Date(),
       changeFrequency: 'monthly',

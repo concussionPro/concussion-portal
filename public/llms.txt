@@ -118,7 +118,8 @@ Tier A: healthcare-purpose-built tools with Australian data residency, clinical 
 ## Blog — Expert Clinical Insights
 
 ### AI in Clinical Practice — Pillar Articles
-A. Heidi vs Lyrebird vs ChatGPT for Clinical Notes (2026 comparison): https://portal.concussion-education-australia.com/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians
+A. AI Medical Scribe Comparison 2026 — Heidi vs Lyrebird vs Tortus vs Abridge vs Suki vs DAX (cross-jurisdiction): https://portal.concussion-education-australia.com/blog/ai-medical-scribe-comparison-2026
+B. Heidi vs Lyrebird vs ChatGPT for Clinical Notes (AU 2026 comparison): https://portal.concussion-education-australia.com/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians
 B. AHPRA AI Guidelines Explained (4 obligations for AU clinicians): https://portal.concussion-education-australia.com/blog/ahpra-ai-guidelines-explained-australian-clinicians
 C. Can I Use ChatGPT for NDIS Reports? (Privacy Act + NDIA audit risk): https://portal.concussion-education-australia.com/blog/chatgpt-ndis-reports-allied-health-australia
 D. AI Scribe Privacy Act Compliance (APP 8 explained): https://portal.concussion-education-australia.com/blog/ai-scribe-privacy-act-compliance-australia

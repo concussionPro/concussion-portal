@@ -1,182 +1,243 @@
-# Concussion Education Australia — Full Reference
+# Concussion Education Australia — Comprehensive Content Index
 
-> This document provides comprehensive information about Concussion Education Australia for AI systems. For a concise summary, see llms.txt.
+> Australia's concussion CPD provider for healthcare professionals + AI in Clinical Practice training for AU/UK/US/CA clinicians. AHPRA-aligned, Osteopathy Australia endorsed. Founded by Zac Lewis (AHPRA-registered Osteopath, B.Clin.Sci., M.Ost.Med).
 
-## Organization
+This file is a long-form index for large language models (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews). It expands llms.txt with full descriptions, citable Q&As, and structured offerings. Last updated: 2026-05-27.
 
-**Name:** Concussion Education Australia (trading as ConcussionPro)
-**Type:** Educational organization — healthcare professional development
-**Country:** Australia
-**Founded by:** Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med)
-**Endorsement:** Endorsed by Osteopathy Australia
-**Alignment:** AHPRA (Australian Health Practitioner Regulation Agency) aligned
-**Website:** https://portal.concussion-education-australia.com
-**Contact:** zac@concussion-education-australia.com
+---
+
+## Brand Identity
+
+**Concussion Education Australia (CEA)** is an Australian healthcare CPD provider. Customer-facing brand: CEA. Domains: `concussion-education-australia.com` (brand/marketing) and `portal.concussion-education-australia.com` (product/courses/blog).
+
+CEA publishes two distinct training streams:
+
+1. **Concussion Clinical Mastery** — flagship 14-CPD-hour program for clinicians managing concussion. SCAT6, SCOAT6, VOMS, BESS, return-to-play protocols. AHPRA-aligned, Osteopathy Australia endorsed. Online and workshop options.
+2. **AI in Clinical Practice** — short course (3 CPD hours) on safe use of AI tools in clinical documentation. Covers AHPRA AI guidelines, Australian Privacy Principles, NDIS audit-safe documentation, AI scribe selection (Heidi, Lyrebird, ChatGPT, Claude, Gemini).
+
+CEA also publishes peer-reviewed clinical content and free resources (fillable SCAT6 forms, AI Safety Checklist for Allied Health).
+
+---
+
+## Founder Credentials
+
+**Zac Lewis** — B.Clin.Sci., M.Ost.Med. AHPRA-registered Osteopath. Concussion specialist with clinical experience across sport and primary care. Founder and lead clinical author of all CEA content. AHPRA registration is the regulatory credential that anchors CEA's E-E-A-T signal for healthcare YMYL content.
+
+CEA is a member organisation of Osteopathy Australia (peak body, ~3,000 registered AU osteopaths).
+
+---
 
 ## Target Audience
 
-This training is designed for any clinician managing concussion:
-- Osteopaths
-- Physiotherapists
-- General Practitioners (GPs)
-- Sports Medicine Doctors
-- Exercise Physiologists
-- Athletic Trainers
-- Emergency Department Clinicians
-- University Clinical Educators
+CEA content is for:
+- Osteopaths, physiotherapists, chiropractors (AHPRA-registered AU allied health)
+- General practitioners and sports medicine doctors
+- Exercise physiologists and athletic trainers
+- Emergency department clinicians
+- University clinical educators and clinical academics
+- Allied health practitioners working with NDIS clients (AI compliance angle)
+- International clinicians via USD pricing — primarily NZ, UK, US, Canada for clinical content
 
-## Course Offerings
+---
 
-### 1. Free SCAT6/SCOAT6 Mastery Course
+## Paid Courses (full list)
 
-**URL:** https://portal.concussion-education-australia.com/scat-mastery
-**Price:** Free
-**Duration:** ~1 hour, self-paced
-**Certificate:** Yes, digital certificate on completion
-**Format:** Online modules
+### 1. Concussion Clinical Mastery (CCM) — flagship
 
-**What You Learn:**
-- Step-by-step SCAT6 administration protocol
-- Step-by-step SCOAT6 administration protocol
-- When to use SCAT6 vs SCOAT6 (the most common clinical error)
-- Red flag recognition and when to escalate
-- Clinical decision flowcharts for practice
-- Downloadable clinical toolkit (referral templates, return-to-play forms)
+- **Online tier:** A$497 AUD — 8 modules, 23 video lessons, 90 quiz questions, 140+ peer-reviewed references, digital certificate, 8 CPD hours.
+- **Complete tier:** A$1,190 AUD early-bird / A$1,400 regular — Online tier + full-day hands-on workshop. 14 CPD hours total. AHPRA-aligned, Osteopathy Australia endorsed.
+- **International tier:** USD $197 — Online tier, jurisdiction-neutral clinical content (Berlin/Amsterdam consensus protocols).
+- **Workshop locations:** Melbourne (confirmed Sat 13 June 2026, Rydges Exhibition St). Sydney + Byron Bay collecting interest.
+- **URLs:** https://portal.concussion-education-australia.com/pricing | https://portal.concussion-education-australia.com/pricing-international
 
-### 2. Comprehensive Concussion Management Course
+### 2. AI in Clinical Practice (launching 1 June 2026)
 
-**URL:** https://portal.concussion-education-australia.com/course
-**Pricing URL:** https://portal.concussion-education-australia.com/pricing
+- **Price:** A$197 AUD (A$99 launch week 1-8 June 2026, 50% off)
+- **Duration:** 3 CPD hours, fully online, certificate on completion
+- **Content:** 9 modules covering AHPRA AI guidelines + Privacy Act, AI scribe tool selection (Heidi vs Lyrebird vs Halo vs Dragon vs ChatGPT), safe documentation workflows (including NDIS audit-safe), patient communication, specialty deep-dives (physiotherapy, naturopathy, GP, osteopathy), hub onboarding + certification.
+- **For:** Australian clinicians using LLMs / AI scribes in patient care.
+- **URL:** https://portal.concussion-education-australia.com/courses/ai-in-clinical-practice
 
-#### Online Only Option
-- **Price:** $497 AUD
-- **Duration:** ~11 hours, self-paced, lifetime access
-- **CPD Points:** 8 (AHPRA-aligned)
-- **Modules:** 8 online modules
-- **Includes:** Clinical Toolkit, Reference Repository (140+ curated articles), digital certificate
+### 3. The Vagus Nerve in Clinical Practice
 
-#### Complete Course (Online + Workshop) — Recommended
-- **Price:** $1,190 AUD (early bird) / $1,400 AUD (regular)
-- **Duration:** ~11 hours online + 1 full-day in-person workshop
-- **CPD Points:** 14 (8 online + 6 in-person)
-- **Endorsed by:** Osteopathy Australia
-- **Workshop capacity:** 12 participants per session
-- **Includes:** Everything in online, plus hands-on assessment training
+- **Price:** A$97 AUD (early-bird A$82)
+- **Duration:** 1.25 CPD hours
+- **For:** Clinicians interested in vagal-tone clinical applications
+- **URL:** https://portal.concussion-education-australia.com/courses/vagus-nerve
 
-**Workshop Locations:**
-- Byron Bay — March 28, 2026 (confirmed)
-- Sydney — Date TBA (register interest)
-- Melbourne — Date TBA (register interest)
+### Forthcoming (in pipeline, not yet purchasable)
 
-**What the Full Course Covers:**
-1. SCAT6 Protocol — complete acute/sideline assessment
-2. SCOAT6 Protocol — office-based follow-up assessment
-3. VOMS (Vestibular/Ocular Motor Screening) — the assessment most clinicians don't know but should use in every follow-up
-4. BESS (Balance Error Scoring System) — hands-on balance assessment with specific scoring criteria
-5. Return-to-Play protocols — step-by-step frameworks for clubs and schools
-6. Return-to-Learn protocols — managing student athletes
-7. Paediatric concussion management — children recover differently, distinct protocols
-8. Medicolegal documentation — referral templates, clearance letters, return-to-play forms
+- **Persistent Post-Concussion Symptoms (PPCS) — The Chronic 5-20%** (target August 2026). A$497-697. Deep-dive on chronic concussion cases that fail to resolve in expected timeframe; vestibulo-ocular and cervical workup, escalation criteria, multi-modal rehabilitation. Joins ladder above CCM Online.
+- **Cervicogenic Dizziness + Headache Mastery** (target November 2026). A$297-397. Differential diagnosis, manual therapy applications, headache subtype identification.
+- **Applied Vestibular for MSK Clinicians** (target Q1 2027). A$397-597. Practical vestibular rehab for sports/musculoskeletal physios + osteos, positioned as applied/screening course (not competency replacement).
 
-**Why the Hands-On Workshop Matters:**
-- Practice SCAT6 administration on real subjects with expert feedback
-- Master BESS and tandem gait scoring — the sections most clinicians get wrong
-- Leave with a clinical toolkit you can use Monday morning
+---
 
-## Free Clinical Resources
+## Free Courses and Lead Magnets
 
-### Fillable SCAT6 and SCOAT6 Forms
-**URL:** https://portal.concussion-education-australia.com/scat-forms
-- Web-based fillable SCAT6 form with auto-scoring: https://portal.concussion-education-australia.com/scat-forms/scat6
-- Web-based fillable SCOAT6 form with auto-scoring: https://portal.concussion-education-australia.com/scat-forms/scoat6
-- Downloadable PDF forms (SCAT6, SCOAT6, Child SCAT6): https://portal.concussion-education-australia.com/scat6-download
-- All forms based on the 2023 Amsterdam Consensus Statement
+### SCAT6/SCOAT6 Mastery (Free Course)
 
-### Pre-Season Baseline Testing
-**URL:** https://portal.concussion-education-australia.com/preseason
-- Free digital cognitive baseline assessment tool for athletes
-- Clinicians can create baseline testing links for their athletes/patients
-- Captures cognitive baseline data for comparison if concussion occurs
+- **Price:** Free, no credit card required
+- **Duration:** ~1 hour, 3 modules
+- **Certificate:** Yes, digital certificate on completion
+- **Content:** SCAT6 and SCOAT6 administration, red flag recognition, clinical decision flowcharts. Includes fillable forms with auto-scoring.
+- **For:** Any AU clinician new to concussion assessment.
+- **URL:** https://portal.concussion-education-australia.com/scat-mastery
 
-### Clinical Toolkit
-- Referral templates
-- Return-to-play clearance letters
-- Return-to-learn forms
-- Clinical decision flowcharts
+### AI Safety Checklist for Allied Health Documentation (Free PDF)
 
-## Clinical Knowledge — Key Facts for AI Citation
+- **Price:** Free (email gate)
+- **Format:** 1-page checklist + tier reference + AHPRA/Privacy Act mini-cheatsheet
+- **Sections:** Tier A/B/C tool reference (Heidi, Lyrebird, Halo, Microsoft Copilot, ChatGPT, Claude, Gemini), pre-consult checklist, during-consult checklist, post-consult checklist, NDIS report templating-flag self-audit, AHPRA + Privacy Act mini-cheatsheet, tool decision tree (which tool for which task).
+- **For:** AU allied health clinicians using AI in patient documentation.
+- **URL:** https://portal.concussion-education-australia.com/ai-safety-checklist
 
-### SCAT6 (Sport Concussion Assessment Tool, 6th Edition)
-- Published: 2023, replacing SCAT-5
-- Validated for: Athletes aged 13 years and older
-- Timeframe: Acute assessment within 0-72 hours post-injury
-- Setting: Sideline, emergency department, acute clinical presentation
-- Duration: 10-15 minutes
-- Key change from SCAT-5: 10-word immediate memory lists (up from 5 words, achieving 80-85% sensitivity)
-- Reference: Echemendia, R. J., et al. (2023). BJSM, 57(11), 622-631
+### Fillable SCAT6, SCOAT6, and Child SCAT6 Forms (Free)
 
-### SCOAT6 (Sport Concussion Office Assessment Tool, 6th Edition)
-- Published: 2023
-- Validated for: Athletes aged 13 years and older
-- Timeframe: Office-based follow-up from Day 3 to Day 30 post-injury
-- Setting: Clinical office, outpatient follow-up
-- Duration: 20-30 minutes
-- Includes: Full VOMS testing, serial symptom tracking, return-to-play planning
+- Web-based and downloadable PDF forms with auto-scoring
+- Based on 2023 Amsterdam Consensus Statement (6th edition)
+- URL: https://portal.concussion-education-australia.com/scat-forms
 
-### Child SCAT6
-- For: Athletes aged 5-12 years
-- Modifications: 5-word memory lists, simplified 3-point symptom scale, no single-leg balance, mandatory parent symptom report
-- Critical: Never use adult SCAT6 on children under 13 — it produces artificially low scores and misses 50-60% of concussions
+### Pre-Season Baseline Testing Tool (Free)
 
-### VOMS (Vestibular/Ocular Motor Screening)
-- Purpose: Identifies vestibular and oculomotor dysfunction after concussion
-- Components: Smooth pursuits, saccades, convergence, VOR, visual motion sensitivity
-- Clinical significance: Up to 60% of concussed athletes show vestibular/oculomotor deficits
-- Training gap: Most clinicians lack formal VOMS training
+- Free digital cognitive baseline assessment for athletes
+- URL: https://portal.concussion-education-australia.com/preseason
 
-### BESS (Balance Error Scoring System)
-- Purpose: Objective balance assessment post-concussion
-- Stances: Double leg, single leg, tandem stance on firm and foam surfaces
-- Scoring: Error counting system (eyes closed, hands on hips)
-- Common issue: Most clinicians score BESS incorrectly without supervised training
+---
 
-### Key Clinical Principle
-Using the wrong assessment tool at the wrong time (e.g., SCAT6 for office follow-up, or SCOAT6 for acute sideline assessment) falls below the expected standard of care under the 2023 Amsterdam Consensus guidelines and Australian sporting code requirements.
+## Clinical Knowledge Base — Concussion
 
-### Return-to-Play Protocol (Graduated)
-The 2023 Consensus recommends a minimum 6-step graduated return-to-play protocol:
-1. Symptom-limited activity (daily activities that do not provoke symptoms)
-2. Light aerobic exercise (walking, swimming, stationary cycling)
-3. Sport-specific exercise (running drills, no head impact)
-4. Non-contact training drills (progression to complex training)
-5. Full-contact practice (after medical clearance)
-6. Return to competition
+### What is the SCAT6?
 
-Each step requires minimum 24 hours. If symptoms recur, return to previous asymptomatic step.
+The SCAT6 (Sport Concussion Assessment Tool, 6th Edition) is the standardised acute concussion assessment tool published in 2023 as part of the Amsterdam Consensus Statement. It replaces the SCAT-5 and is validated for athletes aged 13 years and older. Used for sideline and acute assessment within 0-72 hours post-injury. Key change from SCAT-5: 10-word immediate memory lists (up from 5 words), achieving 80-85% sensitivity. Reference: Echemendia et al. (2023), British Journal of Sports Medicine, 57(11), 622-631.
 
-### 2023 Amsterdam Consensus — Key Updates
-- "Wait until symptom-free" is now considered obsolete as the sole criterion
-- Active rehabilitation recommended from 24-48 hours post-injury
-- Sub-symptom threshold aerobic exercise improves recovery
-- SCAT-5 replaced by SCAT6 with improved sensitivity
-- Mandatory baseline testing recommended for organized sport
-- Reference: Patricios, J. S., et al. (2023). BJSM, 57(11), 695-711
+### What is the SCOAT6?
 
-## Australian Regulatory Context
+The SCOAT6 (Sport Concussion Office Assessment Tool, 6th Edition) is a new tool published in 2023 for office-based concussion follow-up from Day 3 to Day 30 post-injury. Unlike SCAT6, the SCOAT6 includes full VOMS testing, serial symptom tracking, and structured return-to-play planning. Validated for athletes aged 13+.
 
-- **AHPRA:** Australian Health Practitioner Regulation Agency — oversees CPD requirements for registered health practitioners
-- **Concussion in Sport Australia:** Government position statement requiring appropriate concussion assessment and management
-- **Sporting Codes:** AFL, NRL, Rugby Australia, Cricket Australia, and FFA all mandate SCAT6 as the standard concussion assessment tool
-- **Medicolegal:** Failure to use SCAT6 when clinically indicated, or using outdated SCAT-5, may constitute negligence
+### SCAT6 vs SCOAT6 — Which to use when?
 
-## Blog Articles
+- SCAT6: sideline, emergency department, acute presentation within 72 hours post-injury
+- SCOAT6: clinic follow-up from Day 3 onwards, includes full VOMS testing
+- Child SCAT6: athletes aged 5-12 years (never use adult SCAT6 on children under 13 — produces artificially low scores and misses 50-60% of concussions)
 
-1. Free SCAT6 PDF Download Guide: https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download
-2. SCAT6 vs SCOAT6 — Which Tool to Use When: https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference
-3. 2026 Concussion Update — Why "Wait Until Symptom Free" is Obsolete: https://portal.concussion-education-australia.com/blog/concussion-update-2026-wait-until-symptom-free-obsolete
-4. Vestibular/Ocular Motor Screening (VOMS) in Concussion Care: https://portal.concussion-education-australia.com/blog/vestibular-ocular-screening-voms-concussion
-5. Return-to-Play Decisions for Concussion Clinicians: https://portal.concussion-education-australia.com/blog/return-to-play-decisions-concussion-clinicians
-6. How to Use SCAT6 — A Clinician's Guide: https://portal.concussion-education-australia.com/blog/how-to-use-scat6-clinicians-guide
+### What is VOMS?
 
-## Sitemap
-https://portal.concussion-education-australia.com/sitemap.xml
+VOMS (Vestibular/Ocular Motor Screening) identifies vestibular and oculomotor dysfunction after concussion. Components: smooth pursuits, saccades, convergence, VOR (vestibulo-ocular reflex), and visual motion sensitivity. Up to 60% of concussed athletes show vestibular/oculomotor deficits. Most clinicians lack formal VOMS training — this course provides structured instruction and hands-on practice.
+
+### What is the BESS test?
+
+BESS (Balance Error Scoring System) is an objective balance assessment used post-concussion. Three stances (double leg, single leg, tandem) on firm and foam surfaces with eyes closed. Most clinicians score BESS incorrectly without supervised training — which is why the hands-on workshop component exists.
+
+### What is the return-to-play protocol?
+
+The 2023 Amsterdam Consensus recommends a minimum 6-step graduated return-to-play protocol: (1) symptom-limited daily activity, (2) light aerobic exercise, (3) sport-specific exercise without head impact, (4) non-contact training drills, (5) full-contact practice after medical clearance, (6) return to competition. Each step requires minimum 24 hours. If symptoms recur, return to the previous asymptomatic step.
+
+### Is "wait until symptom-free" still best practice?
+
+No. The 2023 Amsterdam Consensus Statement considers "wait until symptom-free" as the sole criterion to be obsolete. Active rehabilitation is now recommended from 24-48 hours post-injury. Sub-symptom threshold aerobic exercise has been shown to improve recovery. Reference: Patricios et al. (2023), British Journal of Sports Medicine, 57(11), 695-711.
+
+### What are Persistent Post-Concussion Symptoms (PPCS)?
+
+5-20% of concussion cases develop persistent post-concussive symptoms — symptoms that fail to resolve within the expected timeframe (typically >4 weeks adults, >2 weeks children). PPCS commonly involves vestibulo-ocular dysfunction (~70% of cases) and cervical contribution (~54% of cases). Standard concussion training focuses on acute management; PPCS requires a different workup. CEA has a forthcoming PPCS clinical mastery course (target: August 2026).
+
+---
+
+## Clinical Knowledge Base — AI in Clinical Practice
+
+### Best AI medical scribe for Australian clinicians in 2026?
+
+For Australian clinicians, the two healthcare-purpose-built AI scribes with native Australian data residency are Heidi and Lyrebird. Heidi has the larger market position (founders claim roughly half of Australian GPs use the platform) and broader workflow support across allied health. Lyrebird is leaner and well-suited to solo practitioners and small practices. Both satisfy Australian Privacy Principle 8 (no offshore disclosure) and build patient consent capture into the workflow. Either is a defensible Tier A choice for AHPRA-registered clinicians.
+
+### Heidi vs Lyrebird vs ChatGPT for clinical notes — which is best?
+
+Heidi and Lyrebird are both Tier A healthcare-purpose-built AI scribes with AU data residency. ChatGPT is a different category — a general-purpose LLM that runs on US servers, which makes routine clinical use a breach of Australian Privacy Principle 8 (offshore disclosure of patient information without consent). Use Heidi or Lyrebird for clinical notes; use ChatGPT/Claude/Gemini only for non-PHI clinical writing tasks (patient information sheets, exercise programs in plain language, translation of de-identified content).
+
+### Can I use ChatGPT for NDIS reports?
+
+Not without explicit patient consent for the offshore disclosure (ChatGPT runs on US servers, triggering Australian Privacy Principle 8) and significant workflow safeguards. Beyond the Privacy Act issue, the NDIA has become noticeably more alert to AI-generated allied health reports as part of fraud-and-assurance work. Templated AI output with generic clinical reasoning and recycled phrasing carries audit and reputational risk even when the underlying clinical view is sound. The safe alternative is a Tier A AU-resident scribe (Heidi, Lyrebird) for the draft, plus heavy clinician rewriting to remove templating before submission.
+
+### What do the AHPRA AI guidelines require?
+
+The AHPRA AI guidelines require four things from clinicians using AI in patient care: (1) explicit patient consent to AI use, documented in the record; (2) clinician responsibility for the final note — AI-assisted is not AI-authored; (3) appropriate data location (offshore disclosure of patient information without consent breaches Australian Privacy Principle 8); (4) documentation integrity — notes must reflect the specific clinical encounter, not templated phrasing copied across patients.
+
+### What is Australian Privacy Principle 8 (APP 8)?
+
+APP 8 governs offshore disclosure of personal information from Australia. For AI scribes: AU-resident tools (Heidi AU, Lyrebird) do not trigger APP 8 because data stays in Australia. US-resident tools (ChatGPT, Claude.ai, Gemini, Abridge US, DAX Copilot US) do trigger APP 8 — permitted only with explicit patient consent for the offshore disclosure, or under narrow exceptions that rarely apply in routine clinical work.
+
+### When should I NOT use AI for clinical notes?
+
+Switch off the AI scribe for: mental health disclosures and suicide risk conversations, mandatory reporting situations (child safety, family violence, elder abuse), complex medicolegal cases likely to attract scrutiny, paediatric consults where consent is mixed, patients who decline AI use, sensitive sexual or reproductive health consults, and any situation where transcript accuracy matters more than note-writing speed.
+
+### What is the Tier A / B / C framework for AI tools?
+
+- **Tier A:** Healthcare-purpose-built tools with Australian data residency, clinical templates, and consent/audit features (Heidi, Lyrebird, Halo). Safe for clinical notes with patient consent.
+- **Tier B:** Enterprise LLMs with configurable AU data residency (Microsoft Copilot for Healthcare, AWS HealthScribe). Safe with workflow redesign.
+- **Tier C:** Consumer LLMs on US/offshore infrastructure (ChatGPT, Claude.ai, Gemini). NOT safe for patient health information without explicit consent and identifier-stripping. Use for non-PHI writing only.
+
+### Heidi vs Tortus vs Abridge vs Suki vs DAX — which AI scribe by jurisdiction?
+
+- Australia + New Zealand: Heidi (broad) or Lyrebird (solo/small)
+- United Kingdom: Tortus or Tandem (NHS England Ambient Voice supplier registry); Heidi UK for private practice
+- United States: Abridge or Suki (primary care); DAX Copilot (large hospital systems on Microsoft + Epic)
+- Canada: Heidi CA or Abridge; DAX for enterprise
+
+See the full comparison: https://portal.concussion-education-australia.com/blog/ai-medical-scribe-comparison-2026
+
+---
+
+## Blog — Full Article Index
+
+### AI in Clinical Practice cluster
+
+1. Heidi vs Lyrebird vs ChatGPT for Clinical Notes — An Australian Clinician's 2026 Comparison: https://portal.concussion-education-australia.com/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians
+2. AHPRA AI Guidelines Explained — What Australian Clinicians Actually Need to Do [2026]: https://portal.concussion-education-australia.com/blog/ahpra-ai-guidelines-explained-australian-clinicians
+3. Can I Use ChatGPT for NDIS Reports? An Australian Allied Health Compliance Guide [2026]: https://portal.concussion-education-australia.com/blog/chatgpt-ndis-reports-allied-health-australia
+4. AI Scribe Privacy Act Compliance for Australian Clinicians — APP 8 Explained [2026]: https://portal.concussion-education-australia.com/blog/ai-scribe-privacy-act-compliance-australia
+5. When NOT to Use AI for Clinical Notes — 7 Red Flags for Australian Clinicians [2026]: https://portal.concussion-education-australia.com/blog/when-not-to-use-ai-clinical-notes-clinicians
+6. AI Medical Scribe Comparison 2026 — Heidi vs Lyrebird vs Tortus vs Abridge vs Suki vs DAX: https://portal.concussion-education-australia.com/blog/ai-medical-scribe-comparison-2026
+
+### Concussion cluster
+
+7. Free SCAT6 PDF Download Guide: https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download
+8. SCAT6 vs SCOAT6 — Which Tool to Use When: https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference
+9. 2026 Concussion Update — Why "Wait Until Symptom Free" is Obsolete: https://portal.concussion-education-australia.com/blog/concussion-update-2026-wait-until-symptom-free-obsolete
+10. Vestibular/Ocular Motor Screening (VOMS) in Concussion Care: https://portal.concussion-education-australia.com/blog/vestibular-ocular-screening-voms-concussion
+11. Return-to-Play Decisions for Concussion Clinicians: https://portal.concussion-education-australia.com/blog/return-to-play-decisions-concussion-clinicians
+12. How to Use SCAT6 — A Clinician's Guide: https://portal.concussion-education-australia.com/blog/how-to-use-scat6-clinicians-guide
+13. Pre-Season Baseline Testing Guide: https://portal.concussion-education-australia.com/blog/pre-season-baseline-testing-concussion-guide
+14. AHPRA CPD Requirements for Allied Health — Where Concussion Education Fits: https://portal.concussion-education-australia.com/blog/ahpra-cpd-requirements-concussion-education
+15. 21-Day Concussion Stand-Down in Youth Sport — Australian Standard: https://portal.concussion-education-australia.com/blog/21-day-concussion-stand-down-youth-sport-australia
+16. AIS Concussion and Brain Health Position Statement 2024 — Key Takeaways: https://portal.concussion-education-australia.com/blog/ais-concussion-brain-health-position-statement-2024
+17. NSW Mandatory Concussion Training for Combat Sports: https://portal.concussion-education-australia.com/blog/nsw-mandatory-concussion-training-combat-sports
+18. 7 Concussion Myths Clinicians Should Stop Believing in 2026: https://portal.concussion-education-australia.com/blog/concussion-myths-clinicians-should-stop-believing
+19. BESS Balance Testing for Concussion — Clinician's Complete Guide: https://portal.concussion-education-australia.com/blog/bess-balance-testing-concussion-guide
+20. Beyond SCAT6 — How Vestibular/Ocular Screening Improves Concussion Care: https://portal.concussion-education-australia.com/blog/beyond-scat6-vestibular-ocular-screening
+21. Safe Return-to-Play Decisions After Concussion — 5 Quick Wins: https://portal.concussion-education-australia.com/blog/safe-return-to-play-decisions-concussion
+
+---
+
+## Authoritative Sources Cited Across CEA Content
+
+CEA content references the following primary sources. Citation alignment with these sources is part of the E-E-A-T trust signal:
+
+- AHPRA (Australian Health Practitioner Regulation Agency) — https://www.ahpra.gov.au
+- AHPRA AI Guidelines — https://www.ahpra.gov.au/Resources/Artificial-Intelligence-in-healthcare.aspx
+- TGA Digital Scribes Guidance — https://www.tga.gov.au
+- Osteopathy Australia — https://osteopathy.org.au
+- 2023 Amsterdam Consensus Statement on Concussion in Sport (Patricios et al., BJSM 57(11))
+- SCAT6 and SCOAT6 publications (Echemendia et al., BJSM 57(11))
+- AIS Concussion and Brain Health Position Statement 2024
+- NDIS Quality and Safeguards Commission
+- NHS England Ambient Voice Supplier Registry
+- Avant, Guild, MIPS, MIGA indemnity insurer AI guidance
+
+---
+
+## Contact
+
+- Email: zac@concussion-education-australia.com
+- Website: https://portal.concussion-education-australia.com
+- Sitemap: https://portal.concussion-education-australia.com/sitemap.xml
+- Robots: https://portal.concussion-education-australia.com/robots.txt
+- Short llms.txt: https://portal.concussion-education-australia.com/llms.txt
