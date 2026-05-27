@@ -1092,6 +1092,55 @@ export const MELBOURNE_WORKSHOP_PUSH = {
   `),
 }
 
+/**
+ * AI_COURSE_LAUNCH_BLAST — one-off broadcast to engaged portal users
+ * with the launch-week 50% discount on the AI in Clinical Practice course.
+ *
+ * Sent via /api/admin/ai-course-launch-blast. NOT part of the automated
+ * nurture cron — fires only on admin trigger. Idempotent via
+ * email_audit_log key `ai_course_launch_v1_${userId}`.
+ *
+ * Audience: preview + online-only users who have opened/clicked any CEA
+ * email in the last 60 days OR signed up in the last 90 days; not
+ * unsubscribed; do not already own the AI course.
+ *
+ * Goal: convert engaged users into A$99 launch-week buyers (50% off the
+ * A$197 regular price). Discount window 2026-06-01 to 2026-06-08.
+ */
+export const AI_COURSE_LAUNCH_BLAST = {
+  subject: 'AI in clinical practice — launching 1 June (50% off for engaged users)',
+  template: (name: string, courseLink: string) => emailShell(`
+    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Quick heads-up since you&rsquo;ve been engaging with our concussion content — I&rsquo;m launching a new short course on <strong>1 June 2026</strong> that you might find useful.</p>
+    <p><strong>AI in Clinical Practice — AHPRA-aligned compliance for clinicians using AI tools.</strong></p>
+    <p>It came out of three things I kept seeing:</p>
+    <ul>
+      <li>AHPRA quietly published their AI guidelines — most clinicians haven&rsquo;t read them</li>
+      <li>NDIS is auditing AI-generated allied health reports more aggressively (templated output is now an audit risk)</li>
+      <li>Heidi, Lyrebird, Halo and ChatGPT are now in regular clinical use without a clear framework for safe documentation</li>
+    </ul>
+    <p>The course covers:</p>
+    <ul>
+      <li>What AHPRA and the Privacy Act actually require when you use AI in patient care</li>
+      <li>Tier A/B/C framework for choosing AI tools (healthcare-purpose-built vs general-purpose)</li>
+      <li>Heidi vs Lyrebird vs the rest &mdash; when each is the right tool</li>
+      <li>Safe documentation workflows that hold up to NDIS and indemnity scrutiny</li>
+      <li>When NOT to use AI &mdash; red flags, edge cases, patient consent</li>
+    </ul>
+    <p>3 CPD hours, fully online, certificate on completion.</p>
+    <div class="callout">
+      <strong>Launch-week price: A$99</strong> (50% off the A$197 regular price). Available 1&ndash;8 June 2026 only.
+    </div>
+    <center><a href="${utm(courseLink, 'ai_course_launch_v1', 'reserve')}" class="cta-btn">See the course (A$99 launch week)</a></center>
+    <p>If it&rsquo;s relevant to your practice, the launch-week price disappears on Sunday 8 June. After that it&rsquo;s A$197.</p>
+    <p>Reply if you have any questions about whether it fits your scope.</p>
+    <div class="sig">
+      Zac<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
 export const ALMOST_DONE_EMAIL = {
   subject: "You're one module away from your certificate",
   template: (name: string, loginLink: string) => emailShell(`

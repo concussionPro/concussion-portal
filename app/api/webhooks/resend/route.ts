@@ -127,6 +127,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    // Resend account is shared with byronwebstudio.com.au (Local Leads project).
+    // Reject any event whose sender isn't a CEA domain so foreign cold-pitch
+    // analytics don't pollute email_events. Without this filter, ~50%+ of
+    // top-click data was Byron Web Services links.
+    const fromDomain = (data.from || '').toLowerCase()
+    const isCEASender =
+      fromDomain.includes('concussion-education-australia.com') ||
+      fromDomain.includes('concussion-education.com') ||
+      fromDomain.includes('@ceapro.') // tolerate any historical alias
+    if (!isCEASender) {
+      return NextResponse.json({ received: true, filtered: 'non-cea-sender' })
+    }
+
     const eventType = type.replace('email.', '')
 
     // Parse tags from array format [{name, value}] to key-value
