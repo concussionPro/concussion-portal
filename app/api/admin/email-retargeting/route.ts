@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
           (ARRAY_AGG(click_url ORDER BY created_at DESC) FILTER (WHERE event_type = 'clicked' AND click_url IS NOT NULL))[1] AS last_click_url
         FROM email_events
         WHERE created_at >= NOW() - (${days} || ' days')::INTERVAL
+          AND COALESCE(project, 'cea') = 'cea'
         GROUP BY LOWER(recipient)
       )
       SELECT

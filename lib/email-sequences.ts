@@ -1107,6 +1107,92 @@ export const MELBOURNE_WORKSHOP_PUSH = {
  * Goal: convert engaged users into A$99 launch-week buyers (50% off the
  * A$197 regular price). Discount window 2026-06-01 to 2026-06-08.
  */
+/**
+ * AI_SAFETY_CHECKLIST_SEQUENCE — lead-magnet nurture for clinicians who
+ * downloaded the AI Safety Checklist PDF/page.
+ *
+ * Day 0 (transactional, fired immediately by /api/lead-magnet/ai-safety-checklist):
+ *   AI_SAFETY_CHECKLIST_DAY0 — delivers the link, builds trust.
+ *
+ * Day 3, Day 7, Day 14: value-add nurture, soft-sells the AI in
+ * Clinical Practice course. Wired via the existing send-nurture-emails
+ * cron — trigger condition: signupSource = 'ai-safety-checklist'.
+ */
+export const AI_SAFETY_CHECKLIST_DAY0 = {
+  subject: 'Your AI Safety Checklist for Allied Health Documentation',
+  template: (name: string, checklistLink: string) => emailShell(`
+    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Here&rsquo;s the AI Safety Checklist for Allied Health Documentation, as promised.</p>
+    <center><a href="${utm(checklistLink, 'ai_checklist_delivery', 'open_checklist')}" class="cta-btn">Open the checklist</a></center>
+    <p>What&rsquo;s inside:</p>
+    <ul>
+      <li>Pre-consult: consent, tool selection, documentation plan</li>
+      <li>During-consult: ambient AI scribe checklist, verbal consent script</li>
+      <li>Post-consult: note review, audit trail, secure storage</li>
+      <li>NDIS-report-specific: templating-flag check, clinical reasoning verification</li>
+      <li>AHPRA + Privacy Act mini-cheatsheet</li>
+      <li>Tier A / B / C tool reference (Heidi, Lyrebird, ChatGPT, Claude)</li>
+    </ul>
+    <p>Use it as a 5-minute audit before and after each consult while you&rsquo;re embedding AI into your workflow. If anything in there doesn&rsquo;t apply to your scope of practice, reply and tell me — I&rsquo;ll update the next version.</p>
+    <div class="sig">
+      Zac<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
+export const AI_SAFETY_CHECKLIST_DAY3 = {
+  subject: 'The 3 most common AI documentation mistakes I see',
+  template: (name: string, courseLink: string) => emailShell(`
+    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Quick follow-up on the AI Safety Checklist &mdash; the three documentation mistakes I see most often when I review AI-generated allied health notes:</p>
+    <ol>
+      <li><strong>Templated phrasing recycled across patients.</strong> The NDIA is now flagging this as a fraud-and-assurance trigger. If three of your notes contain the same paragraph structure, you have an audit problem even when the underlying clinical view is correct.</li>
+      <li><strong>Missing consent record.</strong> A note that says &ldquo;AI scribe used&rdquo; but doesn&rsquo;t document the patient&rsquo;s explicit verbal consent is unsupportable under AHPRA AI guidelines. The consent line takes 8 seconds to add and prevents the entire problem.</li>
+      <li><strong>Pasting personal information into ChatGPT.</strong> Most clinicians don&rsquo;t realise this is an offshore disclosure under Australian Privacy Principle 8. Even one patient name in a prompt creates a notifiable-disclosure risk.</li>
+    </ol>
+    <p>The full Tier A / B / C framework for choosing AI tools that don&rsquo;t fall into these traps is in the upcoming course.</p>
+    <center><a href="${utm(courseLink, 'ai_checklist_day3', 'see_course')}" class="cta-btn">AI in Clinical Practice &rarr; A$99 launch week</a></center>
+    <div class="sig">
+      Zac<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
+export const AI_SAFETY_CHECKLIST_DAY7 = {
+  subject: 'Heidi vs Lyrebird vs ChatGPT — which one for your practice?',
+  template: (name: string, blogLink: string, courseLink: string) => emailShell(`
+    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>This week&rsquo;s most-asked question in my inbox: <em>Heidi or Lyrebird for clinical notes?</em></p>
+    <p>The short answer: both are healthcare-purpose-built AU scribes (Tier A in the checklist framework). Heidi has wider adoption and broader workflow support; Lyrebird is leaner and works better for solo practitioners. ChatGPT is a different category entirely &mdash; not a scribe, not Privacy Act-compliant by default.</p>
+    <p>I wrote up the full comparison &mdash; including the AHPRA + Privacy Act differences and a side-by-side feature table &mdash; here:</p>
+    <center><a href="${utm(blogLink, 'ai_checklist_day7', 'read_comparison')}" class="cta-btn">Read: Heidi vs Lyrebird vs ChatGPT</a></center>
+    <p>If you want the full Tier A / B / C framework with worked examples for physio, osteo, GP and naturopathy, that&rsquo;s the AI in Clinical Practice course &mdash; launching 1 June, A$99 launch week.</p>
+    <p>&mdash; <a href="${utm(courseLink, 'ai_checklist_day7', 'see_course')}">See the course</a></p>
+    <div class="sig">
+      Zac<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
+export const AI_SAFETY_CHECKLIST_DAY14 = {
+  subject: 'Last call: AI in Clinical Practice — A$99 launch week ends Sunday',
+  template: (name: string, courseLink: string) => emailShell(`
+    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Quick heads-up &mdash; the launch-week price on AI in Clinical Practice (A$99, 50% off the A$197 regular price) ends <strong>Sunday 8 June at 23:59 AEST</strong>.</p>
+    <p>If you&rsquo;ve been on the fence, this is the moment. After Sunday it&rsquo;s A$197 indefinitely.</p>
+    <p>You already have the AI Safety Checklist &mdash; the course is the full framework behind it. 3 CPD hours, 9 modules, certificate.</p>
+    <center><a href="${utm(courseLink, 'ai_checklist_day14', 'last_chance')}" class="cta-btn">Get it at A$99 (ends Sunday)</a></center>
+    <p>If you&rsquo;ve decided it&rsquo;s not for you, no worries &mdash; you&rsquo;ll stay on the list for the MBS Billing for Allied Health course landing in August.</p>
+    <div class="sig">
+      Zac<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
 export const AI_COURSE_LAUNCH_BLAST = {
   subject: 'AI in clinical practice — launching 1 June (50% off for engaged users)',
   template: (name: string, courseLink: string) => emailShell(`

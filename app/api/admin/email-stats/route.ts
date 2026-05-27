@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
           MAX(CASE WHEN event_type = 'complained' THEN 1 ELSE 0 END) AS complained
         FROM email_events
         WHERE created_at >= NOW() - (${days} || ' days')::INTERVAL
+          AND COALESCE(project, 'cea') = 'cea'
         GROUP BY email_id
       )
       SELECT
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
           MAX(CASE WHEN event_type = 'bounced'    THEN 1 ELSE 0 END) AS bounced
         FROM email_events
         WHERE created_at >= NOW() - (${days} || ' days')::INTERVAL
+          AND COALESCE(project, 'cea') = 'cea'
         GROUP BY email_id
       )
       SELECT
@@ -82,6 +84,7 @@ export async function GET(request: NextRequest) {
       WHERE event_type = 'clicked'
         AND click_url IS NOT NULL
         AND created_at >= NOW() - (${days} || ' days')::INTERVAL
+        AND COALESCE(project, 'cea') = 'cea'
       GROUP BY click_url
       ORDER BY clicks DESC
       LIMIT 20

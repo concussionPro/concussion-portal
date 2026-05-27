@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { loadUsers } from '@/lib/users'
 import { sendEmail } from '@/lib/resend-client'
-import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE } from '@/lib/email-sequences'
+import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUENCE, PRE_WORKSHOP_SEQUENCE, ONLINE_UPGRADE_SEQUENCE, REENGAGEMENT_EMAIL, WORKSHOP_RESERVATION_EMAIL, WORKSHOP_MOMENTUM_EMAILS, WORKSHOP_LOGISTICS_EMAIL, ALMOST_DONE_EMAIL, SCAT_COMPLETION_UPSELL, FREE_USER_REENGAGEMENT, FREE_LOGGED_IN_NO_PROGRESS, SCAT_DAY10_ENGAGEMENT, FREE_ALMOST_DONE, REFERENCE_UPGRADE_SEQUENCE, PAID_NO_PROGRESS_NUDGE, AI_SAFETY_CHECKLIST_DAY3, AI_SAFETY_CHECKLIST_DAY7, AI_SAFETY_CHECKLIST_DAY14 } from '@/lib/email-sequences'
 import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
@@ -68,6 +68,8 @@ export async function GET(request: Request) {
     for (const user of users) {
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
+      // AI Safety Checklist signups have their own dedicated sequence below — skip here
+      if (user.signupSource === 'ai-safety-checklist') continue
 
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -818,6 +820,62 @@ export async function GET(request: Request) {
       } catch (err) {
         console.error(`[Reference Upgrade] Failed for ${redact(user.email)}:`, err)
         errors.push(`ref-upgrade day${candidate.day}: ${(err as Error).message}`)
+      }
+    }
+
+    // ── AI Safety Checklist Nurture Sequence ──
+    // Day 0 fires from /api/lead-magnet/ai-safety-checklist transactionally.
+    // Day 3, 7, 14 fire here, gated by signupSource + audit-log idempotency.
+    const aiChecklistSchedule: Array<{ day: number; tpl: typeof AI_SAFETY_CHECKLIST_DAY3 | typeof AI_SAFETY_CHECKLIST_DAY7 | typeof AI_SAFETY_CHECKLIST_DAY14; tag: string }> = [
+      { day: 3,  tpl: AI_SAFETY_CHECKLIST_DAY3,  tag: 'day3' },
+      { day: 7,  tpl: AI_SAFETY_CHECKLIST_DAY7,  tag: 'day7' },
+      { day: 14, tpl: AI_SAFETY_CHECKLIST_DAY14, tag: 'day14' },
+    ]
+    const aiCourseLink = `${baseUrl}/courses/ai-in-clinical-practice`
+    const heidiVsLyrebirdBlog = `${baseUrl}/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians`
+
+    for (const user of users) {
+      if (user.signupSource !== 'ai-safety-checklist') continue
+      if (user.nurtureUnsubscribed) continue
+      const signupDate = new Date(user.createdAt)
+      const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
+      const slot = aiChecklistSchedule.find(s => s.day === daysSinceSignup)
+      if (!slot) continue
+
+      const auditKey = `ai_checklist_${slot.tag}_${user.id}`
+      const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
+      if (inserted === 0) continue
+
+      const unsubToken = generateUnsubscribeToken(user.email)
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
+
+      // Day 3 + Day 14 use (name, courseLink); Day 7 uses (name, blogLink, courseLink)
+      const html = (slot.day === 7
+        ? (AI_SAFETY_CHECKLIST_DAY7.template(user.name, heidiVsLyrebirdBlog, aiCourseLink))
+        : (slot.tpl as typeof AI_SAFETY_CHECKLIST_DAY3).template(user.name, aiCourseLink)
+      ).replace('{{unsubscribe_url}}', unsubscribeUrl)
+
+      try {
+        await sendEmail({
+          to: user.email,
+          scheduledAt: scheduler.next(user.email),
+          subject: slot.tpl.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'ai-safety-checklist' },
+            { name: 'day', value: String(slot.day) },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        })
+        emailsSent++
+        console.log(`[AI Checklist] ${slot.tag} → ${redact(user.email)}`)
+      } catch (err) {
+        console.error(`[AI Checklist] Failed ${slot.tag} for ${redact(user.email)}:`, err)
+        errors.push(`ai-checklist ${slot.tag}: ${(err as Error).message}`)
+        await sql`DELETE FROM email_audit_log WHERE audit_key = ${auditKey}` // roll back so next run retries
       }
     }
 

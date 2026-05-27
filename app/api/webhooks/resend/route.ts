@@ -128,16 +128,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Resend account is shared with byronwebstudio.com.au (Local Leads project).
-    // Reject any event whose sender isn't a CEA domain so foreign cold-pitch
-    // analytics don't pollute email_events. Without this filter, ~50%+ of
-    // top-click data was Byron Web Services links.
+    // Tag every row with the project so admin queries can scope cleanly to
+    // CEA without dropping Byron Web Studio analytics. Project inferred from
+    // data.from domain.
     const fromDomain = (data.from || '').toLowerCase()
-    const isCEASender =
+    let project: 'cea' | 'byronwebstudio' | 'other' = 'other'
+    if (
       fromDomain.includes('concussion-education-australia.com') ||
-      fromDomain.includes('concussion-education.com') ||
-      fromDomain.includes('@ceapro.') // tolerate any historical alias
-    if (!isCEASender) {
-      return NextResponse.json({ received: true, filtered: 'non-cea-sender' })
+      fromDomain.includes('concussion-education.com')
+    ) {
+      project = 'cea'
+    } else if (fromDomain.includes('byronwebstudio.com.au')) {
+      project = 'byronwebstudio'
     }
 
     const eventType = type.replace('email.', '')
@@ -154,10 +156,13 @@ export async function POST(request: NextRequest) {
     const day = tags.day || null
     const clickUrl = data.click?.link || null
 
-    // Store in email_events table
+    // Ensure project column exists (one-shot migration; ALTER ... IF NOT EXISTS is safe)
+    await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS project TEXT`
+
+    // Store in email_events table — tagged with project for downstream scoping
     await sql`
       INSERT INTO email_events (
-        email_id, recipient, event_type, subject, sequence, day, click_url, created_at
+        email_id, recipient, event_type, subject, sequence, day, click_url, project, created_at
       ) VALUES (
         ${data.email_id},
         ${email},
@@ -166,6 +171,7 @@ export async function POST(request: NextRequest) {
         ${sequence},
         ${day},
         ${clickUrl},
+        ${project},
         NOW()
       )
     `
