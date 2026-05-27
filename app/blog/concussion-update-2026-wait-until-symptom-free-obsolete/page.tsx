@@ -310,6 +310,13 @@ export default function ConcussionUpdate2026Page() {
             </ul>
           </div>
 
+          {/* PPCS retrofit — for patients who DON'T resolve under active recovery */}
+          <div className="bg-purple-50 border-l-4 border-purple-600 rounded-lg p-5 mt-12">
+            <p className="text-sm text-slate-700 leading-relaxed">
+              <strong className="text-purple-900">Patient not resolving under active recovery?</strong> 5-20% of concussion cases become persistent (PPCS). The chronic-case workup is different from the acute one — vestibulo-ocular, cervical, autonomic. See our <Link href="/blog/persistent-post-concussion-symptoms-clinician-workup" className="text-purple-700 underline font-semibold">PPCS clinical workup guide</Link>, and join the waitlist for the forthcoming <Link href="/ppcs-waitlist" className="text-purple-700 underline font-semibold">PPCS Clinical Mastery course</Link> (50% off launch week).
+            </p>
+          </div>
+
           <RelatedPosts slugs={['voms-screening', 'scat6-vs-scoat6', 'return-to-play']} />
 
           {/* CTA Section */}

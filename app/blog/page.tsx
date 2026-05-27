@@ -36,6 +36,30 @@ const blogPosts: Array<{
   category: Category
 }> = [
   {
+    title: "Persistent Post-Concussion Symptoms (PPCS): A Clinician's Workup [2026]",
+    description: 'The 5-20% of concussion cases that don\'t resolve in standard timeframes. PPCS criteria, vestibulo-ocular + cervical workup, escalation pathways, active rehabilitation protocols.',
+    date: 'May 27, 2026',
+    href: '/blog/persistent-post-concussion-symptoms-clinician-workup',
+    readTime: '10 min',
+    category: 'clinical-tools',
+  },
+  {
+    title: "Cervicogenic Drivers in Chronic Concussion — Why ~54% of PPCS Patients Need Cervical Assessment [2026]",
+    description: 'Cervicogenic contribution to persistent post-concussion symptoms — present in ~54% of PPCS cases yet routinely missed at acute presentation. Clinical workup, cervicogenic dizziness vs headache differential, manual therapy applications.',
+    date: 'May 27, 2026',
+    href: '/blog/cervicogenic-drivers-chronic-concussion',
+    readTime: '7 min',
+    category: 'clinical-tools',
+  },
+  {
+    title: "Vestibulo-Ocular Workup for Persistent Post-Concussion Symptoms — Beyond VOMS [2026]",
+    description: 'Vestibulo-ocular dysfunction is in ~70% of PPCS cases. Beyond acute VOMS — convergence insufficiency, BPPV after head trauma, gaze stability, VOR exercises, when to refer.',
+    date: 'May 27, 2026',
+    href: '/blog/vestibulo-ocular-workup-ppcs',
+    readTime: '8 min',
+    category: 'clinical-tools',
+  },
+  {
     title: "AI Medical Scribe Comparison 2026 — Heidi vs Lyrebird vs Tortus vs Abridge vs Suki vs DAX",
     description: 'AI medical scribe comparison 2026 — Heidi, Lyrebird, Tortus, Abridge, Suki, DAX Copilot side-by-side for AU/UK/US/CA clinicians. Data residency, HIPAA/GDPR/Privacy Act, pricing, specialty fit.',
     date: 'May 27, 2026',

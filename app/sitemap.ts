@@ -163,6 +163,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/blog/persistent-post-concussion-symptoms-clinician-workup`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/blog/cervicogenic-drivers-chronic-concussion`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/blog/vestibulo-ocular-workup-ppcs`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.85,
+    },
+    {
       url: `${baseUrl}/blog/ahpra-cpd-requirements-concussion-education`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
