@@ -69,10 +69,10 @@ export default function PpcsWaitlistLanding() {
             Clinical mastery for the concussion cases that don&apos;t resolve in standard timeframes. Vestibulo-ocular workup, cervical contribution, escalation pathways. For clinicians who already work in acute concussion and want the chronic-case framework.
           </p>
           <div className="flex flex-wrap gap-2 text-xs text-purple-100">
-            <span className="bg-white/10 px-3 py-1 rounded-full">5-20% of concussion cases</span>
+            <span className="bg-white/10 px-3 py-1 rounded-full">6 CPD hours · 7 modules</span>
             <span className="bg-white/10 px-3 py-1 rounded-full">~70% need vestibulo-ocular workup</span>
             <span className="bg-white/10 px-3 py-1 rounded-full">~54% have cervical contribution</span>
-            <span className="bg-white/10 px-3 py-1 rounded-full">Waitlist 50% off launch week</span>
+            <span className="bg-white/10 px-3 py-1 rounded-full">A$397 reg · A$197 launch wk (50% off)</span>
           </div>
         </div>
       </section>
@@ -120,8 +120,8 @@ export default function PpcsWaitlistLanding() {
         <aside>
           <div className="bg-white rounded-xl shadow-md border-2 border-purple-300 p-6 sticky top-24">
             <h3 className="text-base font-bold text-slate-900 mb-1">Join the waitlist</h3>
-            <p className="text-xs text-slate-600 mb-1">Get a launch announcement with <strong>50% off launch week</strong>.</p>
-            <p className="text-[11px] text-slate-500 mb-4">Targeted launch: <strong>August 2026</strong>. One confirmation email now, one launch email when the course goes live. No spam in between.</p>
+            <p className="text-xs text-slate-600 mb-1">Get a launch announcement with the <strong>A$197 launch-week price</strong> (50% off the A$397 regular price).</p>
+            <p className="text-[11px] text-slate-500 mb-4">6 CPD hours · 7 modules · certificate. Targeted launch: <strong>August 2026</strong>. One confirmation email now, one launch email when the course goes live. No spam in between.</p>
             <PpcsWaitlistForm />
             <p className="text-[10px] text-slate-500 mt-4 italic">
               If we don&apos;t hit ≥100 waitlist signups in 4 weeks, the course won&apos;t be built. You&apos;ll be notified either way.

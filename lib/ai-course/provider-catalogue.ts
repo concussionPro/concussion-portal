@@ -110,7 +110,7 @@ export const COURSES: CourseCatalogueEntry[] = [
     id: 'vagus-nerve',
     title: 'The Vagus Nerve in Clinical Practice',
     providerId: 'cea',
-    cpdHours: 1.25,
+    cpdHours: 1,
     cpdRecognition: ['AHPRA-aligned', 'By Osteopathy Australia–endorsed provider'],
     description: 'Evidence-based assessment + defensible interventions for autonomic dysfunction. Anatomy, red flags, phenotypes (POTS, post-concussion, long-COVID), interventions with honest evidence ranking. 6 modules · ~75 minutes.',
     route: '/courses/vagus-nerve',

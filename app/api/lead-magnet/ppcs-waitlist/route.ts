@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
           <li>Escalation criteria and multi-disciplinary referral pathways</li>
           <li>Active rehabilitation protocols beyond &ldquo;wait until symptom-free&rdquo;</li>
         </ul>
-        <p>You&rsquo;ll get a launch email with a <strong>50% off discount code</strong> the day the course goes live. No spam, no other emails between now and then.</p>
+        <p>The course is 6 CPD hours, 7 modules, fully online with certificate. Regular price A$397; <strong>launch-week price A$197 (50% off)</strong>. You&rsquo;ll get a launch email with your access link the day the course goes live. No spam, no other emails between now and then.</p>
         <p>If PPCS isn&rsquo;t the right fit, you can unsubscribe any time: <a href="${unsubscribeUrl}">unsubscribe</a>.</p>
         <p>&mdash; Zac<br>Concussion Education Australia</p>
       `
