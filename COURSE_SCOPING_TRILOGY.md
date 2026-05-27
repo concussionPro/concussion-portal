@@ -1,7 +1,16 @@
-# Head/Neck/Vestibular Trilogy — Content Scope + Honest Pricing
-**Date:** 2026-05-27
-**Supersedes:** Speculative pricing in `ROADMAP_AND_SYSTEM.md` and `STRATEGY_AUDIT_2026-05-27.md`
-**Rules applied:**
+# Head/Neck/Vestibular Trilogy — Planning Document
+**Date:** 2026-05-27 (updated after course-build audit)
+**⚠️ Status:** PLANNING ONLY. None of these three courses are built yet. CPD hours + pricing below are *targets* for if/when the course is built — they are NOT commitments. Final hours + pricing get set after the content is actually completed.
+
+**Build state as of 2026-05-27 (audited from filesystem):**
+- PPCS: 0 modules built, no content directory exists. Only `/ppcs-waitlist` landing + blog posts exist.
+- Cervicogenic Dizziness: 0 modules, no waitlist, no blog posts beyond ones in the existing concussion cluster.
+- Applied Vestibular MSK: 0 modules, no waitlist, no blog posts.
+
+**Rule going forward (locked):**
+**Pricing and launch dates are set ONLY after course content is fully completed.** Waitlists validate demand; they do not lock pricing or dates. Marketing copy across all surfaces should reflect this honestly.
+
+**Original rules carried forward (when these courses are built):**
 1. Price reflects hours accumulated and content — not positioning
 2. CPD hours are **whole numbers only** — no fractions
 

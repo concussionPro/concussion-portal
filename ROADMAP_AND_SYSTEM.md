@@ -168,16 +168,17 @@ Two research agents (2026-05-27) validated the direction:
 1. **International market agent:** Don't build UK/US/Canada-specific streams. Topic-driven content + existing `/pricing-international` funnel + GEO/LLM citation is the winning play.
 2. **Clinical-want agent:** The highest-ROI courses are a **"Head, Neck & Vestibular Mastery" trilogy** above CCM. Same buyer, same authority, same funnel, cross-jurisdiction transferable. MBS Billing is dropped — boring, mandate-driven (have-to not want), AU-only, low willingness-to-pay.
 
-| When | Course / blog post | Tier | Status |
-|---|---|---|---|
-| 2026-06-01 | **AI in Clinical Practice** — LAUNCH | A$197 (A$99 launch wk) | Built, content live, course gated until 1 Jun |
-| 2026-06-08 | AI launch week ends | — | Auto |
-| 2026-06-10 | Cross-jurisdiction blog post: **"AI Medical Scribe Comparison 2026 — Heidi vs Lyrebird vs Tortus vs Abridge vs DAX"** | Free SEO/GEO | Single highest-impact post — targets +600% YoY global query, converts via /pricing-international |
-| 2026-06-15 → 07-15 | **PPCS waitlist validation** (3 blog posts, no PDF) | — | Posts: "Persistent post-concussion symptoms management", "Chronic concussion when to escalate", "PPCS vestibulo-ocular workup". Each ends with "Notify me when PPCS course launches + 50% off" |
-| 2026-08-01 | **Persistent Post-Concussion Symptoms (PPCS) — The Chronic 5-20%** (IF validated, ≥100 waitlist) | A$497-697 | Open lane per research; perfect cross-sell from CCM; Zac's lane |
-| 2026-09-15 → 10-15 | **Cervicogenic Dizziness + Headache** waitlist validation | — | Same pattern — 3 blog posts + waitlist |
-| 2026-11-01 | **Cervicogenic Dizziness + Headache** full course (IF validated) | A$297-397 | Natural Module 2 of Head/Neck/Vestibular trilogy |
-| 2027-Q1 | **Applied Vestibular for MSK Clinicians** waitlist + course | A$397-597 | Position as "applied/screening" not competency replacement; avoid head-to-head with VEA/Vestibular Courses AU |
+| When | Event | Status |
+|---|---|---|
+| 2026-06-01 | **AI in Clinical Practice — LAUNCH** | BUILT (9 modules, 2,360 lines content + prompts + templates). A$197 / A$99 launch wk. Date-driven status flip via `launchAt`. |
+| 2026-06-08 | AI launch week ends, price auto-reverts to A$197 | Date-driven via `earlyBirdEndsAt`. No manual action |
+| 2026-06 → ongoing | PPCS demand validation (3 blog posts shipped + `/ppcs-waitlist` live) | Validates demand only. No course commitment. |
+| If ≥100 waitlist signups | **DECISION POINT: commit to building PPCS course?** | If yes → enter build phase. CPD hours + price set once content is complete. Launch date follows build completion, not a fixed roadmap date. |
+| If ≥100 PPCS signups + build completed | PPCS Clinical Mastery launch | Targeted at the end of build phase. No specific date until build is underway. |
+| 2026-Q3 / Q4 | (Conditional) Cervicogenic Dizziness demand validation | Only spin up waitlist + blog cluster if PPCS validates AND ships AND there's bandwidth |
+| 2027+ | (Conditional) Applied Vestibular for MSK Clinicians | Same gating |
+
+**Hard rule (added after 2026-05-27 audit):** No course gets a price tag or launch date until the course content is *built*. Waitlists validate demand; build phase begins after the validation gate; pricing + date confirmed at end of build. Anything else is selling something that doesn't exist.
 
 **Hard rule: max 2 paid courses launched per quarter.** Faster = nurture cannibalises, support overhead climbs.
 

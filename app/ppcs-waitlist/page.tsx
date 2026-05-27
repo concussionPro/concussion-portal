@@ -4,8 +4,8 @@ import { PpcsWaitlistForm } from '@/components/PpcsWaitlistForm'
 import { createMedicalWebPageSchema, createFAQSchema, organizationSchema } from '@/lib/schema-markup'
 import { Clock, Eye, Activity, ShieldCheck, Stethoscope, AlertTriangle } from 'lucide-react'
 
-const TITLE = "Persistent Post-Concussion Symptoms (PPCS) Course — Join the Waitlist"
-const DESCRIPTION = 'Persistent post-concussion symptoms management course for AU/UK/US/CA clinicians. The chronic 5-20% who don\'t resolve in standard timeframes — vestibulo-ocular workup, cervical contribution, escalation pathways. Launching August 2026. Waitlist 50% off launch week.'
+const TITLE = "Persistent Post-Concussion Symptoms (PPCS) Course — Join the Demand-Validation List"
+const DESCRIPTION = 'Persistent post-concussion symptoms management course for AU/UK/US/CA clinicians. The chronic 5-20% who don\'t resolve in standard timeframes — vestibulo-ocular workup, cervical contribution, escalation pathways. Gauging demand before building. Waitlist gets first-look access + launch-week discount once the course is complete.'
 const URL = 'https://portal.concussion-education-australia.com/ppcs-waitlist'
 
 export const metadata: Metadata = {
@@ -46,7 +46,7 @@ export default function PpcsWaitlistLanding() {
             },
             {
               question: 'When will the PPCS course launch?',
-              answer: 'The PPCS course is targeted to launch August 2026. Waitlist members get a launch announcement with a 50% off discount code on the day the course goes live.',
+              answer: 'The PPCS course is in the planning phase. We are gauging demand via this waitlist before committing to a build. If ≥100 clinicians sign up, we proceed; if fewer, we do not. Waitlist members get a launch announcement with a 50% off launch-week price code on the day the course goes live.',
             },
             {
               question: 'Who is this course for?',
@@ -60,7 +60,7 @@ export default function PpcsWaitlistLanding() {
       <section className="bg-gradient-to-br from-purple-800 to-indigo-800 text-white pt-[120px] pb-16">
         <div className="max-w-4xl mx-auto px-6">
           <div className="inline-block bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold mb-4">
-            Waitlist · Launching August 2026
+            Demand-validation waitlist · Course in planning
           </div>
           <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
             Persistent Post-Concussion Symptoms (PPCS) — The Chronic 5-20%
@@ -69,10 +69,10 @@ export default function PpcsWaitlistLanding() {
             Clinical mastery for the concussion cases that don&apos;t resolve in standard timeframes. Vestibulo-ocular workup, cervical contribution, escalation pathways. For clinicians who already work in acute concussion and want the chronic-case framework.
           </p>
           <div className="flex flex-wrap gap-2 text-xs text-purple-100">
-            <span className="bg-white/10 px-3 py-1 rounded-full">6 CPD hours · 7 modules</span>
+            <span className="bg-white/10 px-3 py-1 rounded-full">5-20% of concussion cases</span>
             <span className="bg-white/10 px-3 py-1 rounded-full">~70% need vestibulo-ocular workup</span>
             <span className="bg-white/10 px-3 py-1 rounded-full">~54% have cervical contribution</span>
-            <span className="bg-white/10 px-3 py-1 rounded-full">A$397 reg · A$197 launch wk (50% off)</span>
+            <span className="bg-white/10 px-3 py-1 rounded-full">Waitlist gets 50% off launch week</span>
           </div>
         </div>
       </section>
@@ -120,11 +120,11 @@ export default function PpcsWaitlistLanding() {
         <aside>
           <div className="bg-white rounded-xl shadow-md border-2 border-purple-300 p-6 sticky top-24">
             <h3 className="text-base font-bold text-slate-900 mb-1">Join the waitlist</h3>
-            <p className="text-xs text-slate-600 mb-1">Get a launch announcement with the <strong>A$197 launch-week price</strong> (50% off the A$397 regular price).</p>
-            <p className="text-[11px] text-slate-500 mb-4">6 CPD hours · 7 modules · certificate. Targeted launch: <strong>August 2026</strong>. One confirmation email now, one launch email when the course goes live. No spam in between.</p>
+            <p className="text-xs text-slate-600 mb-1">We&apos;re gauging demand before building this course. If interest is strong, waitlist members get first access + <strong>50% off launch week</strong>.</p>
+            <p className="text-[11px] text-slate-500 mb-4">One confirmation email now. One launch email when the course is built and ready. No spam in between. Final pricing, CPD hours and launch date confirmed once the course is fully scoped and built.</p>
             <PpcsWaitlistForm />
             <p className="text-[10px] text-slate-500 mt-4 italic">
-              If we don&apos;t hit ≥100 waitlist signups in 4 weeks, the course won&apos;t be built. You&apos;ll be notified either way.
+              We commit to building this course only if waitlist demand is strong (≥100 signups). You&apos;ll be notified either way — including if we decide not to proceed.
             </p>
           </div>
         </aside>

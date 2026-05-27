@@ -130,7 +130,7 @@ export default function VestibuloOcularWorkupPpcsPage() {
 
           <section className="bg-gradient-to-br from-emerald-700 to-teal-700 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">PPCS Clinical Mastery course — full vestibulo-ocular module</h2>
-            <p className="text-emerald-100 leading-relaxed mb-5">The forthcoming PPCS course includes a deep vestibulo-ocular module — worked clinical scenarios, BPPV repositioning demonstrations, VOR exercise progressions, when-to-refer thresholds. Target launch August 2026. Waitlist 50% off launch week.</p>
+            <p className="text-emerald-100 leading-relaxed mb-5">A planned PPCS course will include a deep vestibulo-ocular module — worked clinical scenarios, BPPV repositioning demonstrations, VOR exercise progressions, when-to-refer thresholds. Gauging demand first via the waitlist. Members get first access + 50% off launch week if the course goes ahead.</p>
             <Link href="/ppcs-waitlist" className="inline-flex items-center gap-2 bg-white text-emerald-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-emerald-50 transition-colors">Join the PPCS waitlist (50% off launch)</Link>
           </section>
 

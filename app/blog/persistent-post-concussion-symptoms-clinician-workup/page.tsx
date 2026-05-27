@@ -128,7 +128,7 @@ export default function PpcsWorkupPage() {
 
           <section className="bg-gradient-to-br from-purple-800 to-indigo-800 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">PPCS Clinical Mastery course — joining the waitlist</h2>
-            <p className="text-purple-100 leading-relaxed mb-5">We&apos;re building a dedicated course on PPCS — the chronic-case workup in depth, with worked clinical scenarios across vestibulo-ocular, cervical, autonomic, and headache subtypes. Target launch August 2026. Waitlist members get 50% off launch week.</p>
+            <p className="text-purple-100 leading-relaxed mb-5">We&apos;re planning a dedicated course on PPCS — the chronic-case workup in depth, with worked clinical scenarios across vestibulo-ocular, cervical, autonomic, and headache subtypes. Gauging demand first via the waitlist. Members get first access + 50% off launch week if the course goes ahead.</p>
             <Link href="/ppcs-waitlist" className="inline-flex items-center gap-2 bg-white text-purple-800 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-purple-50 transition-colors">Join the PPCS waitlist (50% off launch)</Link>
           </section>
 

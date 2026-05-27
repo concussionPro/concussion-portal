@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       const html = `
         <p>Hi ${escapeHtml(userName.split(' ')[0])},</p>
         <p>You&rsquo;re on the waitlist for <strong>Persistent Post-Concussion Symptoms (PPCS) &mdash; The Chronic 5-20%</strong>.</p>
-        <p>The course is targeted to launch <strong>August 2026</strong> and covers:</p>
+        <p>Honest framing: this course is in the planning phase. I&rsquo;m gauging demand before building it. The topics it will cover:</p>
         <ul>
           <li>The chronic 5-20% of concussion cases that fail to resolve in standard timeframes</li>
           <li>Vestibulo-ocular workup (the ~70% of PPCS cases that need it)</li>
@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
           <li>Escalation criteria and multi-disciplinary referral pathways</li>
           <li>Active rehabilitation protocols beyond &ldquo;wait until symptom-free&rdquo;</li>
         </ul>
-        <p>The course is 6 CPD hours, 7 modules, fully online with certificate. Regular price A$397; <strong>launch-week price A$197 (50% off)</strong>. You&rsquo;ll get a launch email with your access link the day the course goes live. No spam, no other emails between now and then.</p>
-        <p>If PPCS isn&rsquo;t the right fit, you can unsubscribe any time: <a href="${unsubscribeUrl}">unsubscribe</a>.</p>
+        <p>If enough clinicians sign up to the waitlist, I&rsquo;ll commit to building the course. Final CPD hours, pricing and launch date will be confirmed once the content is built. Waitlist members get first access + <strong>50% off launch week</strong>.</p>
+        <p>If PPCS isn&rsquo;t the right fit, unsubscribe any time: <a href="${unsubscribeUrl}">unsubscribe</a>. I&rsquo;ll also notify you if I decide not to proceed with the build.</p>
         <p>&mdash; Zac<br>Concussion Education Australia</p>
       `
 

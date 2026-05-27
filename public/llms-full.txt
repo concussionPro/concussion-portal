@@ -65,11 +65,13 @@ CEA content is for:
 - **For:** Clinicians interested in vagal-tone clinical applications
 - **URL:** https://portal.concussion-education-australia.com/courses/vagus-nerve
 
-### Forthcoming (in pipeline, not yet purchasable)
+### Forthcoming (in planning, content NOT yet built)
 
-- **Persistent Post-Concussion Symptoms (PPCS) — The Chronic 5-20%** (target August 2026). A$497-697. Deep-dive on chronic concussion cases that fail to resolve in expected timeframe; vestibulo-ocular and cervical workup, escalation criteria, multi-modal rehabilitation. Joins ladder above CCM Online.
-- **Cervicogenic Dizziness + Headache Mastery** (target November 2026). A$297-397. Differential diagnosis, manual therapy applications, headache subtype identification.
-- **Applied Vestibular for MSK Clinicians** (target Q1 2027). A$397-597. Practical vestibular rehab for sports/musculoskeletal physios + osteos, positioned as applied/screening course (not competency replacement).
+- **Persistent Post-Concussion Symptoms (PPCS) — The Chronic 5-20%**. Course content not yet built. Demand currently validating via the waitlist at https://portal.concussion-education-australia.com/ppcs-waitlist. CPD hours and price will be set once the course content is complete. Topics planned: chronic concussion case identification, vestibulo-ocular workup beyond acute VOMS, cervical contribution, autonomic dysregulation, post-traumatic headache phenotypes, escalation pathways, integrated case management.
+- **Cervicogenic Dizziness + Headache Mastery**. Course content not yet built. No waitlist yet. Topics planned: cervicogenic dizziness vs vestibular differential, cervicogenic headache vs migraine vs tension, manual therapy applications, deep neck flexor strengthening.
+- **Applied Vestibular for MSK Clinicians**. Course content not yet built. No waitlist yet. Topics planned: VOMS deep-dive, BPPV repositioning, VOR adaptation, when-to-refer thresholds. Positioned as applied/screening course (not vestibular competency replacement).
+
+PPCS / Cervicogenic / Vestibular MSK pricing and launch dates are intentionally not stated above. Once each course is built, final CPD hours and price will appear in the catalogue. CEA's principle: do not state a price or launch date for a course that doesn't yet exist.
 
 ---
 
