@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { SiteNav } from '@/components/SiteNav'
+import { PrintButton } from './PrintButton'
 
 export const metadata: Metadata = {
   title: 'AI Safety Checklist for Allied Health Documentation',
@@ -21,12 +22,7 @@ export default function AiSafetyChecklistPage() {
           <p className="text-xs text-slate-600">
             Tip: <kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] font-mono">Cmd+P</kbd> &rarr; <strong>Save as PDF</strong> to keep the checklist on your device.
           </p>
-          <button
-            onClick={() => window.print()}
-            className="text-xs font-semibold px-3 py-1.5 bg-teal-700 text-white rounded-md hover:bg-teal-800"
-          >
-            Print / Save PDF
-          </button>
+          <PrintButton />
         </div>
 
         {/* Header */}
