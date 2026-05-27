@@ -6,7 +6,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 const TITLE = "AI Scribe Privacy Act Compliance for Australian Clinicians — APP 8 Explained [2026]"
-const DESCRIPTION = 'Australian Privacy Principle 8 governs offshore disclosure of patient information. Here is how it applies to AI scribes — Heidi and Lyrebird (AU-resident) versus ChatGPT and Claude (US-resident) — and what AU clinicians must do.'
+const DESCRIPTION = 'AI scribe Privacy Act compliance for AU clinicians — APP 8 explained. Why Heidi and Lyrebird (AU-resident) are compliant by default and ChatGPT/Claude (US-resident) need explicit patient consent for offshore disclosure.'
 const URL = 'https://portal.concussion-education-australia.com/blog/ai-scribe-privacy-act-compliance-australia'
 
 export const metadata: Metadata = {

@@ -6,7 +6,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 const TITLE = "Heidi vs Lyrebird vs ChatGPT for Clinical Notes: An Australian Clinician's 2026 Comparison"
-const DESCRIPTION = 'Comparing Heidi, Lyrebird, and ChatGPT for AU clinical note-taking. AHPRA AI guidelines, Australian Privacy Principles, NDIS audit risk, indemnity insurer positions, and which tool fits which practice.'
+const DESCRIPTION = 'Heidi vs Lyrebird vs ChatGPT for clinical notes — which AI scribe fits your Australian practice? Side-by-side: AHPRA AI guidelines, Australian Privacy Principles, NDIS audit risk, indemnity insurer positions.'
 const URL = 'https://portal.concussion-education-australia.com/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians'
 
 export const metadata: Metadata = {

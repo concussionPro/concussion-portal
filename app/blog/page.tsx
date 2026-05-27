@@ -37,7 +37,7 @@ const blogPosts: Array<{
 }> = [
   {
     title: "Heidi vs Lyrebird vs ChatGPT for Clinical Notes: An Australian Clinician's 2026 Comparison",
-    description: 'Comparing Heidi, Lyrebird, and ChatGPT for AU clinical note-taking. AHPRA AI guidelines, Australian Privacy Principles, NDIS audit risk, indemnity insurer positions, and which tool fits which practice.',
+    description: 'Heidi vs Lyrebird vs ChatGPT for clinical notes — which AI scribe fits your Australian practice? Side-by-side AHPRA AI guidelines, Privacy Act, NDIS audit risk, indemnity insurer positions.',
     date: 'May 27, 2026',
     href: '/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians',
     readTime: '9 min',
@@ -61,7 +61,7 @@ const blogPosts: Array<{
   },
   {
     title: "AI Scribe Privacy Act Compliance for Australian Clinicians — APP 8 Explained [2026]",
-    description: 'Australian Privacy Principle 8 governs offshore disclosure. How it applies to AI scribes — Heidi and Lyrebird (AU-resident) versus ChatGPT and Claude (US-resident).',
+    description: 'AI scribe Privacy Act compliance for AU clinicians — APP 8 explained. Heidi and Lyrebird (AU-resident) versus ChatGPT and Claude (US-resident) and what clinicians must do.',
     date: 'May 27, 2026',
     href: '/blog/ai-scribe-privacy-act-compliance-australia',
     readTime: '8 min',
@@ -69,7 +69,7 @@ const blogPosts: Array<{
   },
   {
     title: "When NOT to Use AI for Clinical Notes — 7 Red Flags for Australian Clinicians [2026]",
-    description: '7 scenarios where AI documentation is the wrong choice for AU clinicians. Mental health, mandatory reporting, family violence, complex medicolegal cases — when to switch off the scribe.',
+    description: 'When NOT to use AI for clinical notes — 7 red flags for AU clinicians. Mental health, mandatory reporting, family violence, complex medicolegal cases, paediatric consults: when to switch off the scribe.',
     date: 'May 27, 2026',
     href: '/blog/when-not-to-use-ai-clinical-notes-clinicians',
     readTime: '6 min',

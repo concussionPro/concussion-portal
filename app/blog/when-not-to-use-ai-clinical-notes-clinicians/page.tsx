@@ -6,7 +6,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 const TITLE = "When NOT to Use AI for Clinical Notes — 7 Red Flags for Australian Clinicians [2026]"
-const DESCRIPTION = '7 concrete scenarios where AI documentation is the wrong choice for AU clinicians. Mental health disclosures, mandatory reporting, family violence, complex medicolegal cases, paediatric consults — when to switch off the AI scribe.'
+const DESCRIPTION = 'When NOT to use AI for clinical notes — 7 red flags for Australian clinicians. Mental health, mandatory reporting, family violence, complex medicolegal cases, paediatric consults: when to switch off the AI scribe.'
 const URL = 'https://portal.concussion-education-australia.com/blog/when-not-to-use-ai-clinical-notes-clinicians'
 
 export const metadata: Metadata = {
