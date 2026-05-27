@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { checkServerAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
-import { COURSES, PROVIDERS, findProvider } from '@/lib/ai-course/provider-catalogue'
+import { COURSES, PROVIDERS, findProvider, getEffectiveStatus } from '@/lib/ai-course/provider-catalogue'
 import { getAllEarlyAccessCounts } from '@/lib/early-access'
 import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
 import { Check, AlertCircle, ShieldCheck, BookOpenCheck, Award, Stethoscope, Users, Building2 } from 'lucide-react'
@@ -22,9 +22,12 @@ export const metadata: Metadata = {
  */
 export default async function CoursesIndexPage() {
   const access = await checkServerAccess()
-  const liveCourses = COURSES.filter((c) => c.status === 'live')
+  // Use getEffectiveStatus so the AI course auto-flips to 'live' at launchAt
+  // without needing a manual edit or cron. Pilot courses (Vagus) stay hidden
+  // because they're neither 'live' nor 'coming-soon'.
+  const liveCourses = COURSES.filter((c) => getEffectiveStatus(c) === 'live')
   const earlyAccessCourses = COURSES.filter(
-    (c) => c.status === 'coming-soon' && c.earlyBirdDiscountPct
+    (c) => getEffectiveStatus(c) === 'coming-soon' && c.earlyBirdDiscountPct
   )
   const earlyAccessCounts = await getAllEarlyAccessCounts().catch(() => ({}))
 

@@ -11,6 +11,14 @@
     {
       "path": "/api/cron/lead-scoring",
       "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/fire-launch-blasts",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/cron/publish-scheduled-blog",
+      "schedule": "0 23 * * 4"
     }
   ]
 }

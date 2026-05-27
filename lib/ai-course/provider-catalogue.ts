@@ -47,6 +47,63 @@ export interface CourseCatalogueEntry {
   earlyBirdPriceAUD?: number | null
   /** Soft launch target — display only, not enforced */
   launchTarget?: string
+  /**
+   * Hard launch timestamp — when status flips from 'coming-soon' to effectively 'live'.
+   * ISO 8601 with timezone. If set, getEffectiveStatus() uses this date to flip
+   * automatically — NO cron job needed. Single source of truth.
+   */
+  launchAt?: string
+  /**
+   * When early-bird (launch week) discount ends. After this date,
+   * getEffectivePrice() returns priceAUD, not earlyBirdPriceAUD.
+   * ISO 8601 with timezone. NO cron job needed for price reversion.
+   */
+  earlyBirdEndsAt?: string
+}
+
+/**
+ * Returns the effective status of a course at the current moment.
+ * Replaces the manual "flip status from coming-soon to live on launch day" cron.
+ *
+ * Logic:
+ *   - If course.status is already 'live' OR 'pilot': return as-is
+ *   - If course.status is 'coming-soon' AND launchAt is set AND now >= launchAt:
+ *     return 'live' (date-driven flip)
+ *   - Otherwise: return course.status
+ */
+export function getEffectiveStatus(course: CourseCatalogueEntry): CourseCatalogueEntry['status'] {
+  if (course.status === 'live' || course.status === 'pilot') return course.status
+  if (course.launchAt && new Date() >= new Date(course.launchAt)) return 'live'
+  return course.status
+}
+
+/**
+ * Returns the effective price of a course at the current moment.
+ * Replaces the manual "remove earlyBirdDiscountPct/earlyBirdPriceAUD after launch
+ * week" step. Single source of truth.
+ *
+ * Logic:
+ *   - If earlyBirdEndsAt is set AND now > earlyBirdEndsAt: return priceAUD (full price)
+ *   - Else if earlyBirdPriceAUD is set: return earlyBirdPriceAUD
+ *   - Else: return priceAUD
+ *
+ * Returns { price, isEarlyBird, isFullPrice } so consumers can render correctly.
+ */
+export function getEffectivePrice(course: CourseCatalogueEntry): {
+  price: number | null
+  isEarlyBird: boolean
+  isFullPrice: boolean
+} {
+  const fullPrice = course.priceAUD
+  const earlyPrice = course.earlyBirdPriceAUD ?? null
+
+  if (course.earlyBirdEndsAt && new Date() > new Date(course.earlyBirdEndsAt)) {
+    return { price: fullPrice, isEarlyBird: false, isFullPrice: true }
+  }
+  if (earlyPrice !== null) {
+    return { price: earlyPrice, isEarlyBird: true, isFullPrice: false }
+  }
+  return { price: fullPrice, isEarlyBird: false, isFullPrice: true }
 }
 
 export const PROVIDERS: ProviderProfile[] = [
@@ -103,8 +160,11 @@ export const COURSES: CourseCatalogueEntry[] = [
     earlyBirdDiscountPct: 50,
     earlyBirdPriceAUD: 99,
     launchTarget: '1 June 2026',
-    // LAUNCH PROMO: A$99 for first week (Jun 1–8 2026). Reverts to A$197 on Jun 9.
-    // After Jun 8 23:59 AEST: manually remove earlyBirdDiscountPct + earlyBirdPriceAUD.
+    // Date-driven launch: getEffectiveStatus() flips this to 'live' once now >= launchAt.
+    // getEffectivePrice() returns A$197 once now > earlyBirdEndsAt.
+    // No cron required — single source of truth, evaluated at every render.
+    launchAt: '2026-06-01T00:01:00+10:00',
+    earlyBirdEndsAt: '2026-06-08T23:59:59+10:00',
   },
   {
     id: 'vagus-nerve',
@@ -115,11 +175,13 @@ export const COURSES: CourseCatalogueEntry[] = [
     description: 'Evidence-based assessment + defensible interventions for autonomic dysfunction. Anatomy, red flags, phenotypes (POTS, post-concussion, long-COVID), interventions with honest evidence ranking. 6 modules · ~75 minutes.',
     route: '/courses/vagus-nerve',
     priceAUD: 97,
-    status: 'coming-soon',
+    status: 'pilot',
     tags: ['autonomic', 'concussion', 'pots', 'long-covid', 'evidence-based', 'all-specialties'],
+    // Hidden from public pricing display until proper funnel exists (lead magnet + blog cluster + waitlist).
+    // Catalogue entry preserved for when we're ready to flip back to 'coming-soon' or 'live'.
     earlyBirdDiscountPct: 15,
     earlyBirdPriceAUD: 82,
-    launchTarget: 'July 2026',
+    launchTarget: 'TBD — funnel build pending',
   },
   {
     id: 'concussion-clinical-mastery',

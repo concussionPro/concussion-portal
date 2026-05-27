@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { stripe } from '@/lib/stripe'
-import { COURSES } from '@/lib/ai-course/provider-catalogue'
+import { COURSES, getEffectiveStatus, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { CONFIG } from '@/lib/config'
 
 const schema = z.object({
@@ -37,12 +37,19 @@ export async function POST(request: NextRequest) {
   }
   const { courseSlug, email, promoCode } = parsed.data
 
-  const course = COURSES.find((c) => c.id === courseSlug && c.status === 'live')
-  if (!course) {
+  const course = COURSES.find((c) => c.id === courseSlug)
+  if (!course || getEffectiveStatus(course) !== 'live') {
     return NextResponse.json({ error: 'Course not found or not available for purchase' }, { status: 404 })
   }
   if (course.priceAUD === null) {
     return NextResponse.json({ error: 'Course is not configured for direct purchase' }, { status: 400 })
+  }
+  // Resolve current price (launch-week early-bird vs full) at request time —
+  // not at module-load time. This is what handles the A$99 → A$197 reversion
+  // automatically on earlyBirdEndsAt without a cron.
+  const { price: effectivePrice, isEarlyBird } = getEffectivePrice(course)
+  if (effectivePrice === null) {
+    return NextResponse.json({ error: 'Course price not configured' }, { status: 400 })
   }
 
   const successBase = CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
@@ -78,7 +85,7 @@ export async function POST(request: NextRequest) {
       {
         price_data: {
           currency: 'aud',
-          unit_amount: course.priceAUD * 100,
+          unit_amount: effectivePrice * 100,
           product_data: {
             name: course.title,
             description: course.description,
@@ -94,6 +101,8 @@ export async function POST(request: NextRequest) {
       productType: 'short-course',
       courseSlug,
       email,
+      isEarlyBird: String(isEarlyBird),
+      priceAUD: String(effectivePrice),
     },
     ...(discounts ? { discounts } : {}),
     ...(allowPromotionCodes !== undefined ? { allow_promotion_codes: allowPromotionCodes } : {}),
