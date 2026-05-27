@@ -36,6 +36,14 @@ const blogPosts: Array<{
   category: Category
 }> = [
   {
+    title: "Heidi vs Lyrebird vs ChatGPT for Clinical Notes: An Australian Clinician's 2026 Comparison",
+    description: 'Comparing Heidi, Lyrebird, and ChatGPT for AU clinical note-taking. AHPRA AI guidelines, Australian Privacy Principles, NDIS audit risk, indemnity insurer positions, and which tool fits which practice.',
+    date: 'May 27, 2026',
+    href: '/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians',
+    readTime: '9 min',
+    category: 'practice',
+  },
+  {
     title: 'AHPRA CPD Requirements for Allied Health: Where Concussion Education Fits',
     description: 'Annual CPD requirements for physiotherapists, osteopaths, chiropractors, and exercise physiologists — and how structured concussion education counts toward your obligations.',
     date: 'March 18, 2026',

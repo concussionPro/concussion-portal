@@ -41,7 +41,7 @@ export default async function CoursePage() {
                 AI in Clinical Practice
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-2xl">
-                For Australian clinicians using LLMs in patient care. Designed against AHPRA&rsquo;s 2024 AI guidance, the Australian Privacy Principles, and current indemnity-insurer positions (Avant, MIPS, Guild, MIGA).
+                For Australian clinicians choosing between Heidi vs Lyrebird vs ChatGPT, writing NDIS-audit-safe reports, and meeting AHPRA AI guidelines + the Australian Privacy Principles. Designed against AHPRA, TGA digital scribes guidance, and indemnity-insurer positions (Avant, MIPS, Guild, MIGA).
               </p>
 
               {/* Stats strip */}

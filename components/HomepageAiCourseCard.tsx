@@ -83,12 +83,12 @@ export function HomepageAiCourseCard() {
         AI in Clinical Practice
       </h3>
       <p className="relative text-[12px] text-slate-600 leading-relaxed mb-3">
-        AHPRA-aligned compliance for clinicians using AI tools. 3 CPD hours · 9 modules · certificate.
+        AHPRA AI guidelines, NDIS-audit-safe reports, and Heidi vs Lyrebird vs ChatGPT for clinical notes — for AU allied health. 3 CPD hours · 9 modules · certificate.
       </p>
 
       {/* Feature pills */}
       <div className="relative flex flex-wrap gap-1.5 mb-4">
-        {['AHPRA + Privacy Act', 'Indemnity-aware', 'Tier A/B/C tool framework', 'Live literature search'].map((pill) => (
+        {['AHPRA AI guidelines', 'NDIS audit-safe', 'Heidi vs Lyrebird', 'Privacy Act + indemnity'].map((pill) => (
           <span
             key={pill}
             className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700"

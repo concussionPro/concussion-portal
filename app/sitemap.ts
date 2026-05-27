@@ -115,6 +115,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${baseUrl}/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/blog/ahpra-cpd-requirements-concussion-education`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
