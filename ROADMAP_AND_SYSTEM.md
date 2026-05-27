@@ -181,6 +181,8 @@ Two research agents (2026-05-27) validated the direction:
 
 **Hard rule: max 2 paid courses launched per quarter.** Faster = nurture cannibalises, support overhead climbs.
 
+**Hard rule: 1 blog post per week max** (Friday publish). See §7 for the cadence rules + 12-week content calendar.
+
 **Why this trilogy works:**
 - Same buyer persona as CCM (clinicians who manage head injuries) — built-in funnel
 - Same Zac-authority lane (sports medicine + osteo + concussion specialty)
@@ -348,7 +350,84 @@ This is a profit-generating business, not an education project. Revenue comes fr
 3. Improving conversion of the existing list (better nurture, better launch blasts, better landing copy) compounds — it works on every future signup too
 4. Authority concentration > content sprawl. CEA = clinical mastery training authority. Every additional free PDF dilutes that signal in LLM training data.
 
-## 7. The system in one sentence
+## 7. Content publishing cadence (the discipline that's been missing)
+
+Past mistake (2026-05-27): I pushed 5 AI blog posts + 3 PPCS blog posts + the AI Safety Checklist + the cross-jurisdiction post + the llms-full.txt rewrite — all in one day. Symptoms of doing this:
+- Google sees 8 same-day posts = batch-indexing rate-limit + "content dump" signal
+- LLMs may downweight as automated content
+- No bandwidth left to promote any individual post on social / email
+- Sitemap floods all at once
+- Nurture sequences can't reference "this week's new article" because they're all simultaneous
+- No reaction-time to see which posts are working before publishing the next
+
+### Cadence rules going forward
+
+| What | How often | Why |
+|---|---|---|
+| New blog posts | **1 per week max** | Healthcare YMYL content rewards depth + consistent freshness signal; 1/week = 52/year is plenty |
+| Publishing day | **Friday morning AEST** | Highest AU healthcare-professional engagement day; gives 72h pre-weekend social distribution |
+| Course launches | **1 per quarter max** | Existing rule; protects nurture sequences from cannibalising |
+| Lead magnet updates | **When there's a real reason** | Don't update for cadence's sake |
+| Email newsletter (founder digest) | **Weekly, Tuesday morning** | Stays separated from new-post Friday so each gets its own engagement window |
+
+### Mechanism — how posts get scheduled without a code change
+
+For the next 6 months, content lives in this repo in two states:
+- **Live**: in `/app/blog/[slug]/page.tsx` and indexed in sitemap + blog index — visible to Google + LLMs
+- **Drafted**: written and committed, but NOT yet in sitemap or blog index. Branch: `content-drafts` or kept as files prefixed `_draft_` until publish day.
+
+Friday morning ritual (15 min):
+1. Pick the post for this week from the drafts queue
+2. Update `datePublished` + `dateModified` to today
+3. Add to `app/blog/page.tsx` index + `app/sitemap.ts` + `public/llms.txt`
+4. Commit + push
+5. Send email newsletter referencing the post
+6. LinkedIn organic post from Zac's profile (native, link in first comment)
+
+If this gets enough use to justify it, automate step 1-4 with a Vercel cron + a `publishAt` field in post metadata. Skip until then — premature.
+
+### Scheduled content calendar — next 12 weeks (2026-05-30 → 2026-08-22)
+
+Posts dated by Friday publish day. Posts already shipped (this week's dump) get re-dated via `dateModified` to spread the freshness signal — adding `dateModified` of e.g. 2026-06-05 to one and 2026-06-12 to another doesn't change indexing but tells Google these aren't all simultaneous.
+
+| Friday | Post / event | Why |
+|---|---|---|
+| 2026-05-29 | (already shipped: AI cluster + PPCS cluster — 8 posts, freeze) | Past |
+| 2026-06-05 | **AI Course Launch Day (1 June)** + Engaged-user blast + LinkedIn launch post | Highest-impact week of the year; don't compete with new content |
+| 2026-06-12 | "AHPRA AI Code Section-by-Section — Plain English for Australian Clinicians" | Deep-dive that LLMs cite; expands AHPRA AI cluster |
+| 2026-06-19 | "How to Get Patient Consent for AI Scribe Use — Word-for-Word Scripts" | Practical / high-search-intent; complements course |
+| 2026-06-26 | "Heidi Health Review 2026 — An Australian Clinician's Honest Take" | Targets "Heidi review" branded query; partnership pitch context |
+| 2026-07-03 | "PPCS in Children + Adolescents — Different Timeline, Different Workup" | Expands PPCS cluster; paediatric angle (consult with credentialed reviewer first) |
+| 2026-07-10 | "Cervicogenic Headache vs Migraine vs Tension — Differential for Clinicians" | Cervicogenic Dizziness validation begins — next course |
+| 2026-07-17 | "Lyrebird vs Heidi — When Each Wins for Solo Practitioners" | Branded query targeting; complements June 26 Heidi post |
+| 2026-07-24 | "Active Concussion Recovery — Sub-Threshold Exercise Prescription Guide" | High-intent practical post; complements CCM |
+| 2026-07-31 | "PPCS waitlist status update + course preview" (assumes ≥100 signups) | PPCS validation gate decision week |
+| 2026-08-07 | "Cervicogenic Dizziness — The Test That Differentiates It From BPPV" | Cervicogenic Dizziness validation post #2 |
+| 2026-08-14 | "Vestibular Rehabilitation for the MSK Clinician — When to Refer vs Manage" | Vestibular MSK validation begins |
+| 2026-08-21 | **PPCS Course Launch** (if validated) + launch blast | Targets August 2026 from roadmap |
+
+Each post needs to be drafted ahead of time — minimum 2 weeks of buffer in the drafts queue so Friday never gets missed.
+
+### Email newsletter cadence (Tuesday)
+
+Separate from blog publishing. Weekly founder digest from Zac. Format:
+- **One** clinical insight (≤300 words)
+- **One** course / waitlist callout (the active one this week)
+- **One** link to most recent blog post
+- Sign-off
+
+Sent to all opted-in CEA users (free + paid). Held to one per week max — emails are the highest-engagement channel CEA owns; over-mailing burns it.
+
+### What to track for cadence health
+
+- Days-between-posts (target: 7, accept: 5-9, alert: <4 or >14)
+- Per-post organic traffic in first 7 days (rolling average)
+- Per-post LLM citation rate at 30 days (from the GEO pipeline measurement)
+- Email newsletter open rate (target: maintain >40%)
+
+Drift signals: posts batched <4 days apart (content dump), no posts in 14+ days (stalled pipeline), open rate trending down (sending too often or content losing relevance).
+
+## 8. The system in one sentence
 
 **Every new course follows: validated query → 3 pillar blog posts + waitlist → only-if-validated full build → templated launch → performance-gated keep/retire.**
 
