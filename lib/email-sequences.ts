@@ -1070,6 +1070,44 @@ export const PAID_NO_PROGRESS_NUDGE = {
  * days, not unsubscribed. Goal: convert warming free-completers into
  * Melbourne 13 June 2026 paid attendees while early-bird is live.
  */
+/**
+ * MELBOURNE_EARLY_BIRD_LAST_CALL — final-24h urgency blast.
+ *
+ * Sent via /api/admin/melbourne-early-bird-last-call. NOT part of automated
+ * nurture — fires only on admin trigger with explicit confirm flag.
+ * Idempotent via email_audit_log key `melbourne_eb_last_call_v1_${userId}`.
+ *
+ * Audience: preview + online-only users with engagement signal (opened or
+ * clicked any CEA email in last 60 days). Excludes already-paid Melbourne
+ * attendees + unsubscribed + cold non-openers.
+ *
+ * Goal: convert engaged not-yet-paid users into Melbourne 13 Jun 2026
+ * full-course attendees before early-bird closes 31 May.
+ */
+export const MELBOURNE_EARLY_BIRD_LAST_CALL = {
+  subject: 'Melbourne workshop — early bird closes tomorrow (save A$210)',
+  template: (name: string, pricingLink: string) => emailShell(`
+    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>Quick heads-up since you&rsquo;ve been engaging with our content &mdash; the early-bird price on the Melbourne Concussion Clinical Mastery workshop closes <strong>tomorrow (Sat 31 May)</strong>.</p>
+    <div class="callout">
+      <strong>A$1,190 early-bird</strong> → A$1,400 from Sunday onwards. <strong>Save A$210</strong> if you confirm before midnight.
+    </div>
+    <p><strong>Saturday 13 June 2026, Melbourne CBD (Rydges Exhibition St)</strong></p>
+    <ul>
+      <li>14 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
+      <li>Full day, 8am&ndash;4pm, buffet lunch included</li>
+      <li>Capped at 12 clinicians for hands-on practice time</li>
+      <li>25% off Rydges accommodation for attendees travelling in</li>
+    </ul>
+    <center><a href="${utm(pricingLink, 'melbourne_eb_last_call_v1', 'enrol')}" class="cta-btn">Enrol at A$1,190 before midnight</a></center>
+    <p>If you have any questions about whether it fits your scope or schedule, just reply &mdash; I&rsquo;ll respond before tomorrow night.</p>
+    <div class="sig">
+      Zac<br>
+      Concussion Education Australia
+    </div>
+  `),
+}
+
 export const MELBOURNE_WORKSHOP_PUSH = {
   subject: 'Concussion Clinical Mastery — Melbourne 13 June 2026',
   template: (name: string, pricingLink: string) => emailShell(`
