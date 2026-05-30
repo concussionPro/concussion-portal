@@ -33,9 +33,9 @@ const LAUNCH_BLAST_REGISTRY: Array<{
 }> = [
   {
     courseId: 'ai-in-clinical-practice',
-    cronAuditKey: 'cron_blast_ai_course_2026-06-01',
+    cronAuditKey: 'cron_blast_ai_course_2026-06-17',
     blastEndpoint: '/api/admin/ai-course-launch-blast',
-    confirmFlag: 'ai-course-launch-2026-06-01',
+    confirmFlag: 'ai-course-launch-2026-06-17',
   },
   // Future course launches: add entries here as each becomes ready
   // {

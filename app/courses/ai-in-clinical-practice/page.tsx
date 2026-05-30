@@ -31,7 +31,7 @@ export default async function CoursePage() {
             <div className="p-6 md:p-7">
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
-                  Launches 1 June 2026
+                  Launches 17 June 2026
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
                   Launch week A$99 · then A$197

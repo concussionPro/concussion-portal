@@ -12,7 +12,7 @@
  *
  * GET ?dryRun=1  → preview audience, no sends (default)
  * POST           → preview audience, no sends (default — same as GET)
- * POST ?confirm=ai-course-launch-2026-06-01  → actually fires
+ * POST ?confirm=ai-course-launch-2026-06-17  → actually fires
  *
  * Idempotent via email_audit_log key `ai_course_launch_v1_${userId}`.
  * Hard-coded confirm flag prevents accidental fire — must be updated
@@ -28,7 +28,7 @@ import { EmailScheduler } from '@/lib/email-scheduler'
 
 export const maxDuration = 60
 
-const CONFIRM_FLAG = 'ai-course-launch-2026-06-01'
+const CONFIRM_FLAG = 'ai-course-launch-2026-06-17'
 
 interface Target {
   id: string

@@ -6,7 +6,7 @@ import { Loader2, Sparkles, Check, Lock } from 'lucide-react'
 /**
  * Homepage card replacing the (never-sold) Reference + Toolkit standalone SKU.
  *
- * Promotes AI in Clinical Practice (launches 1 June 2026) — greyed/locked styling
+ * Promotes AI in Clinical Practice (launches 17 June 2026) — greyed/locked styling
  * because not yet purchasable. Email-capture inline form POSTs to the existing
  * /api/courses/early-access endpoint with courseSlug='ai-in-clinical-practice'
  * and source='homepage'. Waitlist signups get the launch-week A$99 code emailed
@@ -65,7 +65,7 @@ export function HomepageAiCourseCard() {
           </div>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-amber-700">
-              Launches 1 June 2026
+              Launches 17 June 2026
             </p>
             <p className="text-[11px] text-slate-600 font-medium">New short course</p>
           </div>

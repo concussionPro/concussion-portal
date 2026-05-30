@@ -10,7 +10,7 @@
 A$0      SCAT6 Mastery (free course)         ━━━ LIVE, lead-gen funnel for concussion
 A$0      AI Safety Checklist (free PDF)      ━━━ LIVE, lead-gen funnel for AI compliance
 A$97     Vagus Nerve                         ━━━ BUILT but HIDDEN — no funnel yet
-A$197    AI in Clinical Practice             ━━━ LAUNCHING 1 JUNE 2026
+A$197    AI in Clinical Practice             ━━━ LAUNCHING 17 JUNE 2026
 A$497    CCM Online                          ━━━ LIVE
 A$1,190  CCM Complete (online + workshop)    ━━━ LIVE
 USD$197  CCM International                   ━━━ LIVE
@@ -90,14 +90,14 @@ Three planned courses (PPCS / Cervicogenic / Vestibular MSK) are NOT shown above
 ### 2.1 AI in Clinical Practice
 | Field | Value |
 |---|---|
-| **Status** | BUILT, `coming-soon` (auto-flips to `live` at `launchAt: 2026-06-01T00:01+10:00`) |
-| **Price** | A$197 regular / A$99 launch week (auto-reverts at `earlyBirdEndsAt: 2026-06-08T23:59+10:00`) |
+| **Status** | BUILT, `coming-soon` (auto-flips to `live` at `launchAt: 2026-06-17T00:01+10:00`) |
+| **Price** | A$197 regular / A$99 launch week (auto-reverts at `earlyBirdEndsAt: 2026-06-24T23:59+10:00`) |
 | **Built** | YES — 9 modules, 2,360 lines of markdown content + prompts library + templates library |
 | **CPD hours** | 3 |
 | **Persona** | AU allied-health clinician anxious about AHPRA/Privacy Act/NDIS audit risk when using AI tools |
 | **Funnel role** | The AI compliance funnel flagship. AI Safety Checklist → this course. |
 | **Where it lives** | `/courses/ai-in-clinical-practice` (gated by `requireAiCourseAccess()`) |
-| **Catalogue entry** | YES — `id: 'ai-in-clinical-practice'`, `status: 'coming-soon'`, `launchAt: '2026-06-01T00:01+10:00'`, `earlyBirdEndsAt: '2026-06-08T23:59+10:00'` |
+| **Catalogue entry** | YES — `id: 'ai-in-clinical-practice'`, `status: 'coming-soon'`, `launchAt: '2026-06-17T00:01+10:00'`, `earlyBirdEndsAt: '2026-06-24T23:59+10:00'` |
 | **Content location** | `content/ai-course/module-1-compliance.md` through `module-6-hub-and-certification.md` + `content/ai-course/prompts/` + `content/ai-course/templates/` |
 | **Modules** | 1. AHPRA AI Guidelines, Privacy Act & ChatGPT Clinical Notes Compliance · 2. AI Scribe Tool Selection — Heidi vs Lyrebird vs Halo vs Dragon · 3. Safe Documentation Workflows (NDIS audit-safe) · 4. Patient Communication & Documents · 5a. Specialty deep-dive: Physio · 5b. Naturopath · 5c. GP · 5d. Osteopath · 6. Hub Onboarding & Certification |
 | **Pre-launch ready** | Engaged-user blast endpoint built (`/api/admin/ai-course-launch-blast`) + cron wired (`fire-launch-blasts`) to auto-fire on launchAt |
@@ -236,8 +236,8 @@ CROSS-JURISDICTION TOPIC FUNNEL (for international traffic)
 
 | Date | Event | Pre-conditions |
 |---|---|---|
-| **2026-06-01** | AI in Clinical Practice launch | Course built ✓ · `launchAt` set ✓ · Engaged-user blast cron wired ✓ |
-| **2026-06-08** | A$99 launch-week price ends, reverts to A$197 | Date-driven ✓ |
+| **2026-06-17** | AI in Clinical Practice launch | Course built ✓ · `launchAt` set ✓ · Engaged-user blast cron wired ✓ |
+| **2026-06-24** | A$99 launch-week price ends, reverts to A$197 | Date-driven ✓ |
 | 2026-06-12 onwards | Weekly Friday blog drops (calendar in `lib/blog-schedule.ts`) | Cron sends Zac a reminder Thursday 09:00 AEST |
 | ongoing | PPCS waitlist accepts signups | Live |
 | At ≥100 signups | DECISION POINT: commit to PPCS build? | Manual decision |

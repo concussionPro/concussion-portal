@@ -10,8 +10,8 @@ Founded by Zac Lewis, Osteopath (B.Clin.Sci., M.Ost.Med), the platform offers on
 
 ## Courses
 
-### AI in Clinical Practice (launching 1 June 2026)
-- Cost: A$197 AUD (A$99 launch week, 1-8 June 2026; 50% off)
+### AI in Clinical Practice (launching 17 June 2026)
+- Cost: A$197 AUD (A$99 launch week, 17-24 June 2026; 50% off)
 - Duration: 3 CPD hours, fully online
 - Certificate: Yes, on completion
 - Covers: AHPRA AI guidelines explained, Australian Privacy Principles for clinicians (APP 8 offshore disclosure), Heidi vs Lyrebird vs ChatGPT decision framework, NDIS-audit-safe documentation workflows, indemnity insurer positions (Avant, Guild, MIPS, MIGA), Tier A/B/C tool framework, when NOT to use AI in clinical notes

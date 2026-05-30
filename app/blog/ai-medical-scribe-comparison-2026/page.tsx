@@ -202,7 +202,7 @@ export default function AiScribeComparisonPage() {
 
           {/* CTA */}
           <section className="bg-gradient-to-br from-teal-700 to-emerald-700 text-white rounded-xl p-8 mb-8">
-            <h2 className="text-2xl font-bold mb-3">Get the full framework — AI in Clinical Practice (launching 1 June 2026)</h2>
+            <h2 className="text-2xl font-bold mb-3">Get the full framework — AI in Clinical Practice (launching 17 June 2026)</h2>
             <p className="text-emerald-50 leading-relaxed mb-5">Our short course teaches the Tier A/B/C decision framework with worked examples across physio, osteo, GP and naturopathy. Includes AHPRA compliance, HIPAA-equivalent jurisdictional adaptations, and NDIS audit-safe documentation workflows. 3 CPD hours, fully online, certificate.</p>
             <div className="flex flex-wrap gap-3">
               <Link href="/ai-safety-checklist" className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-emerald-50 transition-colors">Get the free AI Safety Checklist</Link>

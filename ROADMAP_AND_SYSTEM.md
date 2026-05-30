@@ -170,8 +170,8 @@ Two research agents (2026-05-27) validated the direction:
 
 | When | Event | Status |
 |---|---|---|
-| 2026-06-01 | **AI in Clinical Practice — LAUNCH** | BUILT (9 modules, 2,360 lines content + prompts + templates). A$197 / A$99 launch wk. Date-driven status flip via `launchAt`. |
-| 2026-06-08 | AI launch week ends, price auto-reverts to A$197 | Date-driven via `earlyBirdEndsAt`. No manual action |
+| 2026-06-17 | **AI in Clinical Practice — LAUNCH** | BUILT (9 modules, 2,360 lines content + prompts + templates). A$197 / A$99 launch wk. Date-driven status flip via `launchAt`. (Moved from 2026-06-01 on 2026-05-30 to space from Melbourne early-bird blast.) |
+| 2026-06-24 | AI launch week ends, price auto-reverts to A$197 | Date-driven via `earlyBirdEndsAt`. No manual action |
 | 2026-06 → ongoing | PPCS demand validation (3 blog posts shipped + `/ppcs-waitlist` live) | Validates demand only. No course commitment. |
 | If ≥100 waitlist signups | **DECISION POINT: commit to building PPCS course?** | If yes → enter build phase. CPD hours + price set once content is complete. Launch date follows build completion, not a fixed roadmap date. |
 | If ≥100 PPCS signups + build completed | PPCS Clinical Mastery launch | Targeted at the end of build phase. No specific date until build is underway. |

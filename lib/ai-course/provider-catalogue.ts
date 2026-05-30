@@ -159,12 +159,16 @@ export const COURSES: CourseCatalogueEntry[] = [
     tags: ['compliance', 'ai', 'documentation', 'privacy', 'all-specialties'],
     earlyBirdDiscountPct: 50,
     earlyBirdPriceAUD: 99,
-    launchTarget: '1 June 2026',
+    launchTarget: '17 June 2026',
     // Date-driven launch: getEffectiveStatus() flips this to 'live' once now >= launchAt.
     // getEffectivePrice() returns A$197 once now > earlyBirdEndsAt.
     // No cron required — single source of truth, evaluated at every render.
-    launchAt: '2026-06-01T00:01:00+10:00',
-    earlyBirdEndsAt: '2026-06-08T23:59:59+10:00',
+    //
+    // Date moved from 2026-06-01 to 2026-06-17 (2026-05-30) to space launch
+    // from the Melbourne early-bird blast (30 May). 18 days separation
+    // avoids blast-fatigue on the same engaged list.
+    launchAt: '2026-06-17T00:01:00+10:00',
+    earlyBirdEndsAt: '2026-06-24T23:59:59+10:00',
   },
   {
     id: 'vagus-nerve',

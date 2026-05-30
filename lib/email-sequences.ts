@@ -1219,7 +1219,7 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
   subject: 'Last call: AI in Clinical Practice — A$99 launch week ends Sunday',
   template: (name: string, courseLink: string) => emailShell(`
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p>Quick heads-up &mdash; the launch-week price on AI in Clinical Practice (A$99, 50% off the A$197 regular price) ends <strong>Sunday 8 June at 23:59 AEST</strong>.</p>
+    <p>Quick heads-up &mdash; the launch-week price on AI in Clinical Practice (A$99, 50% off the A$197 regular price) ends <strong>Wednesday 24 June at 23:59 AEST</strong>.</p>
     <p>If you&rsquo;ve been on the fence, this is the moment. After Sunday it&rsquo;s A$197 indefinitely.</p>
     <p>You already have the AI Safety Checklist &mdash; the course is the full framework behind it. 3 CPD hours, 9 modules, certificate.</p>
     <center><a href="${utm(courseLink, 'ai_checklist_day14', 'last_chance')}" class="cta-btn">Get it at A$99 (ends Sunday)</a></center>
@@ -1235,7 +1235,7 @@ export const AI_COURSE_LAUNCH_BLAST = {
   subject: 'AI in clinical practice — launching 1 June (50% off for engaged users)',
   template: (name: string, courseLink: string) => emailShell(`
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p>Quick heads-up since you&rsquo;ve been engaging with our concussion content — I&rsquo;m launching a new short course on <strong>1 June 2026</strong> that you might find useful.</p>
+    <p>Quick heads-up since you&rsquo;ve been engaging with our concussion content — I&rsquo;m launching a new short course on <strong>17 June 2026</strong> that you might find useful.</p>
     <p><strong>AI in Clinical Practice — AHPRA-aligned compliance for clinicians using AI tools.</strong></p>
     <p>It came out of three things I kept seeing:</p>
     <ul>
@@ -1256,7 +1256,7 @@ export const AI_COURSE_LAUNCH_BLAST = {
       <strong>Launch-week price: A$99</strong> (50% off the A$197 regular price). Available 1&ndash;8 June 2026 only.
     </div>
     <center><a href="${utm(courseLink, 'ai_course_launch_v1', 'reserve')}" class="cta-btn">See the course (A$99 launch week)</a></center>
-    <p>If it&rsquo;s relevant to your practice, the launch-week price disappears on Sunday 8 June. After that it&rsquo;s A$197.</p>
+    <p>If it&rsquo;s relevant to your practice, the launch-week price disappears on Wednesday 24 June. After that it&rsquo;s A$197.</p>
     <p>Reply if you have any questions about whether it fits your scope.</p>
     <div class="sig">
       Zac<br>

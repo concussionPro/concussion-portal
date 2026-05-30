@@ -50,9 +50,9 @@ CEA content is for:
 - **Workshop locations:** Melbourne (confirmed Sat 13 June 2026, Rydges Exhibition St). Sydney + Byron Bay collecting interest.
 - **URLs:** https://portal.concussion-education-australia.com/pricing | https://portal.concussion-education-australia.com/pricing-international
 
-### 2. AI in Clinical Practice (launching 1 June 2026)
+### 2. AI in Clinical Practice (launching 17 June 2026)
 
-- **Price:** A$197 AUD (A$99 launch week 1-8 June 2026, 50% off)
+- **Price:** A$197 AUD (A$99 launch week 17-24 June 2026, 50% off)
 - **Duration:** 3 CPD hours, fully online, certificate on completion
 - **Content:** 9 modules covering AHPRA AI guidelines + Privacy Act, AI scribe tool selection (Heidi vs Lyrebird vs Halo vs Dragon vs ChatGPT), safe documentation workflows (including NDIS audit-safe), patient communication, specialty deep-dives (physiotherapy, naturopathy, GP, osteopathy), hub onboarding + certification.
 - **For:** Australian clinicians using LLMs / AI scribes in patient care.
