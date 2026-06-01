@@ -28,15 +28,15 @@ export default function MelbournePage() {
       <SiteNav />
       <div className="min-h-screen bg-background pt-[120px] pb-20 px-6">
         <div className="max-w-4xl mx-auto">
-          {/* Hero image — Melbourne skyline */}
+          {/* Hero image — Melbourne workshop feature card (smaller, centred) */}
           {location.status === 'confirmed' && (
-            <div className="relative w-full aspect-[16/9] sm:aspect-[2/1] max-h-[380px] rounded-2xl overflow-hidden mb-8 shadow-lg">
+            <div className="relative mx-auto w-full max-w-sm aspect-[4/3] rounded-xl overflow-hidden mb-8 shadow-md">
               <Image
                 src="/melbourne-workshop.jpg"
                 alt="Concussion Clinical Mastery · Melbourne · June 13 2026"
                 fill
                 priority
-                sizes="(max-width: 768px) 100vw, 900px"
+                sizes="(max-width: 768px) 320px, 384px"
                 className="object-cover"
               />
             </div>

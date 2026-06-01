@@ -12,8 +12,13 @@ interface TimeRemaining {
 }
 
 /**
- * CountdownTimer — shows countdown to the nearest confirmed workshop date.
- * Hidden when all cities are in 'collecting' status (no dates to count down to).
+ * CountdownTimer — shows countdown to the EARLY BIRD DEADLINE (price reverts).
+ * Hidden when:
+ *   - No confirmed workshops exist (nothing to be early about), OR
+ *   - The early-bird deadline has already passed (deadline → null → render null)
+ *
+ * Previously counted down to the workshop date itself which mislabelled the
+ * timer as "Early Bird Ends" when it was really showing "Workshop Starts In".
  */
 export default function CountdownTimer({ className = '' }: { className?: string }) {
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(null)
@@ -22,16 +27,14 @@ export default function CountdownTimer({ className = '' }: { className?: string 
   useEffect(() => {
     setMounted(true)
 
-    // Find the nearest confirmed workshop date
-    const confirmedDates = Object.values(CONFIG.LOCATIONS)
-      .filter(loc => loc.status === 'confirmed' && loc.dateObj)
-      .map(loc => loc.dateObj!.getTime())
-      .sort((a, b) => a - b)
+    // Need at least one confirmed workshop for an "early bird" framing to make sense
+    const hasConfirmedWorkshop = Object.values(CONFIG.LOCATIONS).some(
+      (loc) => loc.status === 'confirmed' && loc.dateObj
+    )
+    if (!hasConfirmedWorkshop) return
 
-    // No confirmed dates → nothing to count down to
-    if (confirmedDates.length === 0) return
-
-    const deadline = confirmedDates[0]
+    // The actual target — the early-bird PRICE deadline (config string yyyy-mm-dd, AEST end-of-day)
+    const deadline = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59+10:00').getTime()
 
     const calculateTimeRemaining = (): TimeRemaining | null => {
       const now = new Date().getTime()
