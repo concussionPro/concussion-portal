@@ -449,21 +449,38 @@ function buildUserInsights(
   }
 
   // --- Recent signups trend (this week vs last week) ---
-  const thisWeek = users.filter(u => now - new Date(u.createdAt).getTime() < 7 * DAY).length
+  // Squarespace imports are bulk one-time data syncs, NOT organic acquisition.
+  // Including them inflates the WoW baseline (e.g. 41 squarespace imports on a
+  // single day in May made the next "real" week look like a 90% drop). Exclude
+  // squarespace-source signups from both windows to compare like-for-like
+  // organic acquisition only.
+  const isOrganicSignup = (src: string | null | undefined) => src !== 'squarespace'
+  const thisWeek = users.filter(u =>
+    now - new Date(u.createdAt).getTime() < 7 * DAY && isOrganicSignup(u.signupSource)
+  ).length
   const lastWeek = users.filter(u => {
     const age = now - new Date(u.createdAt).getTime()
-    return age >= 7 * DAY && age < 14 * DAY
+    return age >= 7 * DAY && age < 14 * DAY && isOrganicSignup(u.signupSource)
+  }).length
+  // Surface squarespace imports separately so admin can see the bulk-import
+  // story without it polluting the WoW signal
+  const squarespaceImportsThisFortnight = users.filter(u => {
+    const age = now - new Date(u.createdAt).getTime()
+    return age < 14 * DAY && u.signupSource === 'squarespace'
   }).length
 
   if (thisWeek > 0 || lastWeek > 0) {
     if (lastWeek > 0) {
       const growth = ((thisWeek - lastWeek) / lastWeek) * 100
+      const importNote = squarespaceImportsThisFortnight > 0
+        ? ` (${squarespaceImportsThisFortnight} squarespace bulk-import signup${squarespaceImportsThisFortnight === 1 ? '' : 's'} excluded from this comparison)`
+        : ''
       if (growth > 30) {
         insights.push({
           type: 'positive',
           category: 'users',
-          title: `Signups up ${growth.toFixed(0)}% week-on-week`,
-          detail: `${thisWeek} signups this week vs ${lastWeek} last week. Growth momentum is building.`,
+          title: `Organic signups up ${growth.toFixed(0)}% week-on-week`,
+          detail: `${thisWeek} organic signups this week vs ${lastWeek} last week. Growth momentum is building.${importNote}`,
           metric: `+${growth.toFixed(0)}% WoW`,
           action: 'Identify what changed — new ad, blog post, or referral? Double down on what\'s working.',
         })
@@ -471,8 +488,8 @@ function buildUserInsights(
         insights.push({
           type: 'warning',
           category: 'users',
-          title: `Signups down ${Math.abs(growth).toFixed(0)}% week-on-week`,
-          detail: `${thisWeek} signups this week vs ${lastWeek} last week. Acquisition is slowing.`,
+          title: `Organic signups down ${Math.abs(growth).toFixed(0)}% week-on-week`,
+          detail: `${thisWeek} organic signups this week vs ${lastWeek} last week. Acquisition is slowing.${importNote}`,
           metric: `${growth.toFixed(0)}% WoW`,
           action: 'Check if ad campaigns are still running. Review traffic sources. Consider a new outreach push or content piece.',
         })
@@ -481,8 +498,8 @@ function buildUserInsights(
       insights.push({
         type: 'positive',
         category: 'users',
-        title: `${thisWeek} new signup${thisWeek !== 1 ? 's' : ''} this week`,
-        detail: `First week with signup data. ${thisWeek} user${thisWeek !== 1 ? 's' : ''} registered.`,
+        title: `${thisWeek} new organic signup${thisWeek !== 1 ? 's' : ''} this week`,
+        detail: `${thisWeek} organic signup${thisWeek !== 1 ? 's' : ''} (squarespace bulk imports excluded).`,
         metric: `${thisWeek} new`,
         action: 'Keep momentum going — track which channels drove these signups.',
       })
