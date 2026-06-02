@@ -44,6 +44,47 @@ The cold pitch sells **online concussion training delivered via the CEA portal**
 
 Lower pricing tier, easier yes. **This is what the cold pitch leads with.**
 
+### Tier 1 pricing model — per-clinician seats with discipline weighting
+
+Individual CCM Online = A$497 retail. Clinic-level Tier 1 is volume-discounted seat pricing, weighted by discipline because each role gets a different content depth.
+
+**Per-clinician annual seat prices (Tier 1)**
+
+| Discipline | Seat price | What's included |
+|---|---|---|
+| Osteopath | A$397 | Full CCM, AI in Clinical Practice, discipline-curated track (diagnosis + cervical + PPCS emphasis) |
+| Physiotherapist | A$397 | Full CCM, AI in Clinical Practice, discipline-curated track (assessment + early rehab emphasis) |
+| GP / Sports Med | A$397 | Full CCM, discipline-curated track (diagnosis + MBS items + return-to-play sign-off) |
+| Exercise Physiologist | A$347 | CCM with rehab emphasis, AI in Clinical Practice, discipline-curated track (BCTT + sub-threshold + RTP-six-step + RTS/RTW) |
+| Myotherapist / RMT | A$197 | Subset content (cervical soft tissue, symptom tracking, escalation criteria) — adjunct role |
+| Admin / Reception | A$97 | 1-hour Admin Concussion Workflow micro-course only |
+| Practice Manager | A$197 | Admin micro-course + clinic-management overview + reporting access |
+
+**Team volume discount** (applied to total subtotal)
+
+| Total clinicians | Discount on subtotal |
+|---|---|
+| 1-7 | Standard rates |
+| 8-15 | 10% off |
+| 16-30 | 20% off |
+| 30+ | 30% off |
+
+**Worked example — Advanced Health (16 staff identified)**
+
+| Role | Count | Seat | Subtotal |
+|---|---|---|---|
+| Osteopath | 9 | A$397 | A$3,573 |
+| Exercise Physiologist | 3 | A$347 | A$1,041 |
+| Myotherapist / RMT | 2 | A$197 | A$394 |
+| Admin / Reception | 3 | A$97 | A$291 |
+| **Subtotal** | **17 seats** | | **A$5,299** |
+| Volume discount (16-30 band) | | -20% | -A$1,060 |
+| **Tier 1 annual total** | | | **A$4,239 / year** |
+
+vs A$7,952 if every clinician bought CCM Online individually at retail = 47% savings + admin micro-course bundled + ongoing updates.
+
+The pricing renders dynamically per prospect inside the portal — the math table shows their actual roster, their actual subtotal, their actual discount tier.
+
 ### Tier 2 — Full Local Concussion Hub (Upgrade for Engaged Clinics)
 
 For clinics that engage with Tier 1 and want to become the local concussion hub:
@@ -56,6 +97,81 @@ For clinics that engage with Tier 1 and want to become the local concussion hub:
 - **Plus** CEA-trained-clinic badge + waiting-room poster
 
 This is the upsell after a clinic has clinicians using the portal and wants to formalise the local positioning.
+
+**Tier 2 pricing — on-site upgrade add-on (one-time)**
+
+| Component | Price |
+|---|---|
+| On-site training day at clinic | A$4,500 |
+| Discharge template library (6 templates, clinic-licensed + branded) | A$1,500 |
+| Outreach package (6 templates, sequences, scripts, follow-up tracker) | A$1,000 |
+| 30-day post-training implementation support | A$500 |
+| CEA-trained-clinic badge + waiting-room poster | included |
+| Travel surcharge | Variable by distance band (see below) |
+| **Tier 2 base total** | **A$7,500** |
+
+**Travel surcharge bands** (Byron Bay departure)
+
+| Distance | Surcharge |
+|---|---|
+| Within 2 hrs drive (Northern Rivers, Gold Coast, southern Brisbane) | A$0 included |
+| 2-4 hrs drive (Brisbane, Sunshine Coast) | A$300 |
+| 4-6 hrs drive (Toowoomba, mid-NSW coast) | A$600 |
+| 6-10 hrs drive (Hunter, Newcastle, Coffs) | A$1,000 |
+| Domestic flight required (Sydney, Melbourne) | A$1,500 |
+| Far flight (Cairns, Townsville, Perth, Tas) | A$2,500 |
+
+**Worked example — Advanced Health (Buderim QLD = 2-4 hr drive band)**
+
+Tier 2 base A$7,500 + travel A$300 = **A$7,800 one-time** on top of Tier 1 annual.
+
+### "Best case" — Tier 1 + Tier 2 combined pitch
+
+For clinics with serious local-hub ambition, the cold pitch shows BOTH tiers and the combined total. This is the highest-value path and the most defensible pitch ("the cheapest way to own concussion management in your region").
+
+**Combined offering for Advanced Health (worked example)**
+
+| Item | Cost |
+|---|---|
+| Tier 1 — Online Hub subscription (17 seats, year 1) | A$4,239 |
+| Tier 2 — On-site training day + templates + outreach + support + travel | A$7,800 |
+| **Year 1 total — Online + In-Person Hub Programme** | **A$12,039** |
+| Ongoing — annual portal access only (year 2+) | A$4,239/year |
+
+vs A$22,400 of individual retail at 16 × A$1,400 CCM Complete + no clinic-level extras = 46% off retail with the complete local-hub package bundled.
+
+The portal renders all three pricing views side by side: Tier 1 alone, Tier 2 alone (assumes Tier 1 in place), Combined. The combined column is visually emphasised as "the way most engaged clinics buy."
+
+### Pricing engine implementation
+
+`getProspectPricing(clinic)` returns:
+```typescript
+{
+  tier1: {
+    seatBreakdown: [{ discipline, count, seatPrice, subtotal }],
+    subtotalBeforeDiscount,
+    volumeDiscountBand,
+    volumeDiscountPct,
+    annualTotal,
+  },
+  tier2: {
+    onSiteTraining: 4500,
+    templates: 1500,
+    outreach: 1000,
+    support: 500,
+    travelSurcharge: number,
+    onceOffTotal,
+  },
+  combined: {
+    year1Total,
+    year2OnwardsAnnual,
+    vsIndividualRetail,
+    discountPctVsRetail,
+  },
+}
+```
+
+Per-prospect overrides are supported (e.g. a custom Tier 2 base price for a specific clinic, or a sponsor discount).
 
 ### Pitch flow
 
