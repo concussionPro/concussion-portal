@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { OUTREACH_TEMPLATES } from '@/data/hub-program-content'
-import { OutreachToolkitDoc } from './OutreachToolkitDoc'
+import { OutreachToolkitDoc } from '@/components/toolkit/OutreachToolkitDoc'
 
 const ACCESS_KEY = 'ah2026'
 

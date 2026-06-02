@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { DISCHARGE_TEMPLATES, DOCUMENTATION_PRINCIPLES } from '@/data/hub-program-content'
-import { ClinicalToolkitDoc } from './ClinicalToolkitDoc'
+import { ClinicalToolkitDoc } from '@/components/toolkit/ClinicalToolkitDoc'
 
 const ACCESS_KEY = 'ah2026'
 

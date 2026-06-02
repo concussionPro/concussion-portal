@@ -1,6 +1,6 @@
 'use client'
 
-import { FillableDoc, Fld } from '../FillableDoc'
+import { FillableDoc, Fld } from './FillableDoc'
 import type { AdminCourseModule } from '@/data/hub-program-content'
 import { CheckCircle2, Clock } from 'lucide-react'
 

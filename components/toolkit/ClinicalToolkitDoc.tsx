@@ -1,6 +1,6 @@
 'use client'
 
-import { FillableDoc, Fld, FldArea } from '../FillableDoc'
+import { FillableDoc, Fld, FldArea } from './FillableDoc'
 import type { DischargeTemplate } from '@/data/hub-program-content'
 
 interface Principles {

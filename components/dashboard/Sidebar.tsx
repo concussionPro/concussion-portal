@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock } from 'lucide-react'
+import { Home, BookOpen, Brain, Activity, Settings, LogOut, User, FileText, Library, Menu, X, BookMarked, ExternalLink, Cloud, Loader2, AlertCircle, WifiOff, CheckCircle2, Lock, Mail, Stethoscope } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -21,6 +21,8 @@ const navItems: Array<{
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
   { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit', paidOnly: true },
+  { icon: Mail, label: 'Outreach Kit', href: '/outreach-kit', paidOnly: true },
+  { icon: Stethoscope, label: 'Admin Workflow', href: '/admin-workflow', paidOnly: true },
   { icon: Activity, label: 'SCAT Forms', href: '/scat-forms' },
   { icon: Library, label: 'Reference Repository', href: '/references', paidOnly: true },
   { icon: BookMarked, label: 'Complete Reference', href: '/complete-reference', paidOnly: true },

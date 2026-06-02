@@ -1,6 +1,6 @@
 'use client'
 
-import { FillableDoc, Fld } from '../FillableDoc'
+import { FillableDoc, Fld } from './FillableDoc'
 import type { OutreachTemplate } from '@/data/hub-program-content'
 
 export function OutreachToolkitDoc({ templates }: { templates: OutreachTemplate[] }) {

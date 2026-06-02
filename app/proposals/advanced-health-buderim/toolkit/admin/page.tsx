@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { ADMIN_COURSE_MODULES } from '@/data/hub-program-content'
-import { AdminCourseDoc } from './AdminCourseDoc'
+import { AdminCourseDoc } from '@/components/toolkit/AdminCourseDoc'
 
 const ACCESS_KEY = 'ah2026'
 
