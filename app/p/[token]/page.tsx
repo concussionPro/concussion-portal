@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { ProspectLanding, AccessWall } from '@/components/prospect/ProspectLanding'
-import { getClinicBySlug } from '@/lib/prospect/repo'
+import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -30,6 +31,18 @@ export default async function ProspectPage({ params, searchParams }: PageProps) 
   if (k !== clinic.accessKey) {
     return <AccessWall clinicName={clinic.name} />
   }
+
+  // Engagement signal — fire-and-forget. Failures don't block the render.
+  const h = await headers()
+  const userAgent = h.get('user-agent') ?? undefined
+  const forwarded = h.get('x-forwarded-for') ?? undefined
+  const viewerIp = forwarded?.split(',')[0]?.trim()
+  recordPortalView({
+    clinicId: clinic.id,
+    viewerIp,
+    userAgent,
+    section: 'landing',
+  }).catch((err) => console.error('[Portal view tracking failed]', err))
 
   return <ProspectLanding clinic={clinic} />
 }

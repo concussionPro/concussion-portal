@@ -194,10 +194,158 @@ export async function POST(request: NextRequest) {
       `
     }
 
+    // ── PROSPECT OUTREACH TRACKING ──
+    // Cold-outreach sends are tagged with `prospect-id` + `template`. If those
+    // tags are present, also update the prospect_outreach_log + suppression
+    // + clinic status downstream. Idempotent: open events fire multiple times.
+    const prospectId = tags['prospect-id']
+    const templateSlug = tags['template']
+    const mode = tags['mode'] // 'test' | 'production'
+    if (prospectId && templateSlug) {
+      const pidNum = parseInt(prospectId, 10)
+      if (!isNaN(pidNum)) {
+        try {
+          // Update outreach log counters
+          if (eventType === 'opened') {
+            // Check if this is the FIRST open across all sends to this prospect
+            // (fire one notification per prospect, not per event)
+            const { rows: priorOpens } = await sql<{ total: string }>`
+              SELECT COALESCE(SUM(opened_count), 0)::text AS total
+              FROM prospect_outreach_log WHERE clinic_id = ${pidNum}
+            `
+            const wasFirstOpen = parseInt(priorOpens[0]?.total ?? '0', 10) === 0
+
+            await sql`
+              UPDATE prospect_outreach_log
+              SET opened_count = opened_count + 1
+              WHERE resend_email_id = ${data.email_id}
+            `
+            // Bump clinic status from 'sent' -> 'opened' (first open only)
+            await sql`
+              UPDATE prospect_clinics
+              SET status = 'opened', updated_at = NOW()
+              WHERE id = ${pidNum} AND status = 'sent'
+            `
+            if (wasFirstOpen) {
+              await notifyZacFirstEngagement(pidNum, 'opened', templateSlug)
+            }
+          } else if (eventType === 'clicked') {
+            const { rows: priorClicks } = await sql<{ total: string }>`
+              SELECT COALESCE(SUM(clicked_count), 0)::text AS total
+              FROM prospect_outreach_log WHERE clinic_id = ${pidNum}
+            `
+            const wasFirstClick = parseInt(priorClicks[0]?.total ?? '0', 10) === 0
+
+            await sql`
+              UPDATE prospect_outreach_log
+              SET clicked_count = clicked_count + 1
+              WHERE resend_email_id = ${data.email_id}
+            `
+            await sql`
+              UPDATE prospect_clinics
+              SET status = 'engaged', updated_at = NOW()
+              WHERE id = ${pidNum} AND status IN ('sent', 'opened')
+            `
+            if (wasFirstClick) {
+              await notifyZacFirstEngagement(pidNum, 'clicked', templateSlug)
+            }
+          } else if (eventType === 'bounced' || eventType === 'complained') {
+            // Add to suppression — never send again
+            const reason = eventType === 'bounced' ? 'hard-bounce' : 'complained'
+            await sql`
+              INSERT INTO email_suppression (email, reason, source)
+              VALUES (${email}, ${reason}, ${'webhook:' + eventType + ':prospect-id:' + pidNum})
+              ON CONFLICT (email) DO NOTHING
+            `
+            // Mark clinic as lost (manual review needed)
+            await sql`
+              UPDATE prospect_clinics
+              SET status = 'lost', notes = COALESCE(notes, '') || ${'\n[auto] ' + new Date().toISOString() + ' webhook ' + eventType}, updated_at = NOW()
+              WHERE id = ${pidNum}
+            `
+          }
+          console.log(`[Resend prospect] ${eventType} prospect=${pidNum} template=${templateSlug} mode=${mode}`)
+        } catch (prospectErr) {
+          // Log but don't fail the webhook — we still want the email_events row
+          console.error('[Resend prospect tracking failed]', prospectErr)
+        }
+      }
+    }
+
     console.log(`[Resend] ${eventType}: ${email.slice(0, 3)}*** (${data.subject})`)
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('Resend webhook error:', error)
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
+  }
+}
+
+/**
+ * Fire-and-forget transactional notification to Zac when a prospect first
+ * engages (opens or clicks). Uses the same Resend client; failures don't
+ * propagate.
+ */
+async function notifyZacFirstEngagement(
+  prospectId: number,
+  event: 'opened' | 'clicked',
+  templateSlug: string,
+): Promise<void> {
+  try {
+    const { rows } = await sql<{
+      short_name: string
+      contact_full_name: string
+      contact_email: string
+      region: string
+      slug: string
+      access_key: string
+    }>`
+      SELECT short_name, contact_full_name, contact_email, region, slug, access_key
+      FROM prospect_clinics WHERE id = ${prospectId} LIMIT 1
+    `
+    const clinic = rows[0]
+    if (!clinic) return
+
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      console.warn('[Engagement notify] RESEND_API_KEY not configured — skipping notify')
+      return
+    }
+
+    const { Resend } = await import('resend')
+    const resend = new Resend(apiKey)
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
+    const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.access_key}`
+    const zacInbox = process.env.ZAC_INBOX ?? 'zac@concussion-education-australia.com'
+
+    const verb = event === 'opened' ? 'opened' : 'clicked through'
+    const subject = `🎯 ${clinic.short_name} just ${verb} the ${templateSlug} email`
+
+    const body = `${clinic.contact_full_name} at ${clinic.short_name} (${clinic.region}) just ${verb} the cold outreach email (${templateSlug}).
+
+This is the first engagement signal for this prospect.
+
+Suggested actions:
+- Check the portal view metrics: ${baseUrl}/api/admin/prospect-engagement?clinicId=${prospectId}
+- Preview their portal: ${portalUrl}
+- Consider a personal reply if their engagement deepens (multi-visit + multiple opens within 48hr).
+
+Email: ${clinic.contact_email}
+`
+
+    await resend.emails.send({
+      from: 'Concussion Education Australia <partnerships@concussion-education-australia.com>',
+      to: zacInbox,
+      replyTo: 'zac@concussion-education-australia.com',
+      subject,
+      text: body,
+      tags: [
+        { name: 'category', value: 'engagement-alert' },
+        { name: 'prospect-id', value: String(prospectId) },
+        { name: 'event', value: event },
+      ],
+    })
+  } catch (err) {
+    console.error('[Engagement notify failed]', err)
   }
 }
