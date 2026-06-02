@@ -44,13 +44,19 @@ export default async function ProspectAdminCoursePage({
           </Link>
 
           {/*
-            Admin course content is VIEW-ONLY for prospect portals.
-            - The 8 modules render in full so prospects see the depth.
-            - The DownloadButton is omitted (no ZIP for prospects).
-            - The bulk-download API also blocks `kit=admin` for any
-              request carrying a prospect access key (defence in depth).
+            Admin course content for prospect portal — STRUCTURE ONLY:
+            - 8 modules visible with title, duration, learning outcomes
+            - Module body content + knowledge check questions HIDDEN
+            - Completion certificate HIDDEN
+            - No download (defence in depth: API blocks kit=admin for
+              prospect tokens)
+            Full access activates per staff member with the Hub Program.
           */}
-          <AdminCourseDoc modules={ADMIN_COURSE_MODULES} />
+          <AdminCourseDoc
+            modules={ADMIN_COURSE_MODULES}
+            previewMode
+            unlockHref={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}#pricing`}
+          />
         </div>
       </main>
     </div>

@@ -206,23 +206,25 @@ function OutreachBlock({
         </div>
       )}
 
-      {/* Body — possibly truncated */}
-      <div className="mt-4 space-y-1">
-        {sectionsToRender.map((section, i) => (
-          <div key={i} className="my-3">
-            {section.heading && (
-              <h3 className="text-sm font-bold text-foreground tracking-tight mt-4 mb-1.5">
-                <ParsedText text={section.heading} />
-              </h3>
-            )}
-            {section.body.map((line, j) => (
-              <p key={j} className="text-[13px] text-foreground leading-relaxed my-1.5">
-                <ParsedText text={line} />
-              </p>
-            ))}
-          </div>
-        ))}
-      </div>
+      {/* Body — full render only if NOT truncated */}
+      {!isTruncated && (
+        <div className="mt-4 space-y-1">
+          {sectionsToRender.map((section, i) => (
+            <div key={i} className="my-3">
+              {section.heading && (
+                <h3 className="text-sm font-bold text-foreground tracking-tight mt-4 mb-1.5">
+                  <ParsedText text={section.heading} />
+                </h3>
+              )}
+              {section.body.map((line, j) => (
+                <p key={j} className="text-[13px] text-foreground leading-relaxed my-1.5">
+                  <ParsedText text={line} />
+                </p>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
 
       {isTruncated && (
         <div className="mt-6 rounded-xl bg-amber-50/60 border border-amber-200 p-4 sm:p-5">
@@ -232,11 +234,29 @@ function OutreachBlock({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground mb-1">
-                Full outreach template + follow-up schedule + advertising compliance note locked
+                Full outreach template locked
               </p>
               <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">
-                This excerpt shows the structure. The full template with editable body, sequence cadence and AHPRA-aligned advertising review notes activates with the Hub Program.
+                This preview shows the structure only. Section headings are listed below — full editable body, sequence cadence, follow-up schedule and AHPRA-aligned advertising review notes activate with the Hub Program.
               </p>
+              <ul className="space-y-1 text-[12px] text-muted-foreground mb-4">
+                {template.sections.map((s, i) => s.heading ? (
+                  <li key={i} className="flex items-start gap-2">
+                    <Lock className="w-3 h-3 text-amber-600 mt-0.5 shrink-0" />
+                    <span>{s.heading.replace(/\{[a-z_]+\}/g, '[merge field]')}</span>
+                  </li>
+                ) : null)}
+                {template.followUpSchedule && template.followUpSchedule.length > 0 && (
+                  <li className="flex items-start gap-2">
+                    <Lock className="w-3 h-3 text-amber-600 mt-0.5 shrink-0" />
+                    <span>Follow-up schedule ({template.followUpSchedule.length} touchpoints)</span>
+                  </li>
+                )}
+                <li className="flex items-start gap-2">
+                  <Lock className="w-3 h-3 text-amber-600 mt-0.5 shrink-0" />
+                  <span>AHPRA-aligned advertising compliance note</span>
+                </li>
+              </ul>
               <a
                 href={unlockHref}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"

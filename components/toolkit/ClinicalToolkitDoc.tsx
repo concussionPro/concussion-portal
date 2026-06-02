@@ -234,16 +234,18 @@ function TemplateBlock({
       {/* Pre-issue checklist */}
       <PreIssueChecklist />
 
-      {/* Body — possibly truncated for prospect preview */}
-      <div className="mt-5 space-y-1">
-        {sectionsToRender.map((section, i) => (
-          <SectionRenderer key={i} heading={section.heading} body={section.body} />
-        ))}
-      </div>
+      {/* Body — full render only if NOT truncated; preview mode shows nothing */}
+      {!isTruncated && (
+        <div className="mt-5 space-y-1">
+          {sectionsToRender.map((section, i) => (
+            <SectionRenderer key={i} heading={section.heading} body={section.body} />
+          ))}
+        </div>
+      )}
 
       {isTruncated && (
         <TruncatedSectionLock
-          hiddenSectionCount={hiddenSectionCount}
+          template={template}
           unlockHref={unlockHref}
         />
       )}
@@ -262,12 +264,13 @@ function TemplateBlock({
 }
 
 function TruncatedSectionLock({
-  hiddenSectionCount,
+  template,
   unlockHref,
 }: {
-  hiddenSectionCount: number
+  template: DischargeTemplate
   unlockHref: string
 }) {
+  const headings = template.sections.map((s) => s.heading).filter(Boolean) as string[]
   return (
     <div className="mt-6 rounded-xl bg-amber-50/60 border border-amber-200 p-4 sm:p-5">
       <div className="flex items-start gap-3">
@@ -276,11 +279,29 @@ function TruncatedSectionLock({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground mb-1">
-            {hiddenSectionCount} more section{hiddenSectionCount > 1 ? 's' : ''} + sign-off + compliance footer locked
+            Full template content locked
           </p>
           <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">
-            This excerpt shows the structure. The full template — management plan, follow-up, sign-off block and AHPRA-aligned compliance footer — activates per clinician with the Hub Program.
+            This preview shows the structure only. Section headings are listed below — full editable body, fillable patient fields, sign-off block and AHPRA-aligned compliance footer activate per clinician with the Hub Program.
           </p>
+          {headings.length > 0 && (
+            <ul className="space-y-1 text-[12px] text-muted-foreground mb-4">
+              {headings.map((h, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <Lock className="w-3 h-3 text-amber-600 mt-0.5 shrink-0" />
+                  <span>{h.replace(/\{[a-z_]+\}/g, '[merge field]')}</span>
+                </li>
+              ))}
+              <li className="flex items-start gap-2">
+                <Lock className="w-3 h-3 text-amber-600 mt-0.5 shrink-0" />
+                <span>Practitioner sign-off block</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Lock className="w-3 h-3 text-amber-600 mt-0.5 shrink-0" />
+                <span>AHPRA-aligned compliance &amp; disclaimer footer</span>
+              </li>
+            </ul>
+          )}
           <a
             href={unlockHref}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"

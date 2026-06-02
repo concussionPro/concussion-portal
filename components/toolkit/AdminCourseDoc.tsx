@@ -2,18 +2,33 @@
 
 import { FillableDoc, Fld } from './FillableDoc'
 import type { AdminCourseModule } from '@/data/hub-program-content'
-import { CheckCircle2, Clock } from 'lucide-react'
+import { CheckCircle2, Clock, Lock } from 'lucide-react'
 
-export function AdminCourseDoc({ modules }: { modules: AdminCourseModule[] }) {
+export function AdminCourseDoc({
+  modules,
+  previewMode = false,
+  unlockHref = '/pricing',
+}: {
+  modules: AdminCourseModule[]
+  /** When true, modules show structure only (title + outcomes), no body
+   *  content or knowledge check. Certificate is hidden. */
+  previewMode?: boolean
+  unlockHref?: string
+}) {
   const totalMinutes = modules.reduce((acc, m) => acc + m.durationMinutes, 0)
   return (
     <FillableDoc storageKey="admin-course">
       <Cover totalMinutes={totalMinutes} moduleCount={modules.length} />
       <TableOfContents modules={modules} />
       {modules.map((m) => (
-        <ModuleBlock key={m.slug} module={m} />
+        <ModuleBlock
+          key={m.slug}
+          module={m}
+          previewMode={previewMode}
+          unlockHref={unlockHref}
+        />
       ))}
-      <Certificate moduleCount={modules.length} totalMinutes={totalMinutes} />
+      {!previewMode && <Certificate moduleCount={modules.length} totalMinutes={totalMinutes} />}
     </FillableDoc>
   )
 }
@@ -93,7 +108,15 @@ function TableOfContents({ modules }: { modules: AdminCourseModule[] }) {
   )
 }
 
-function ModuleBlock({ module: m }: { module: AdminCourseModule }) {
+function ModuleBlock({
+  module: m,
+  previewMode = false,
+  unlockHref = '/pricing',
+}: {
+  module: AdminCourseModule
+  previewMode?: boolean
+  unlockHref?: string
+}) {
   return (
     <article id={m.slug} className="bg-white rounded-2xl border border-accent/10 p-6 sm:p-9 mb-6 shadow-sm print:shadow-none print:border-0 print:rounded-none print:break-before-page">
       {/* Meta */}
@@ -105,6 +128,11 @@ function ModuleBlock({ module: m }: { module: AdminCourseModule }) {
           <Clock className="w-3 h-3" />
           {m.durationMinutes} min
         </span>
+        {previewMode && (
+          <span className="text-[9px] uppercase tracking-wider font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+            Structure only
+          </span>
+        )}
       </div>
 
       {/* Title */}
@@ -112,7 +140,7 @@ function ModuleBlock({ module: m }: { module: AdminCourseModule }) {
         {m.title}
       </h2>
 
-      {/* Learning outcomes */}
+      {/* Learning outcomes — always shown so prospects see what each module covers */}
       <div className="rounded-lg bg-accent/[0.04] border border-accent/15 p-3 sm:p-4 mb-5">
         <p className="text-[9px] uppercase tracking-[0.14em] font-bold text-accent mb-2">
           You will be able to
@@ -127,24 +155,50 @@ function ModuleBlock({ module: m }: { module: AdminCourseModule }) {
         </ul>
       </div>
 
-      {/* Body */}
-      <div className="space-y-1">
-        {m.sections.map((s, i) => (
-          <div key={i} className="my-3">
-            {s.heading && (
-              <h3 className="text-sm font-bold text-foreground tracking-tight mt-4 mb-1.5">{s.heading}</h3>
-            )}
-            {s.body.map((line, j) => (
-              <p key={j} className="text-[13px] text-foreground leading-relaxed my-1.5">
-                <ParsedText text={line} />
+      {previewMode && (
+        <div className="rounded-xl bg-amber-50/60 border border-amber-200 p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+              <Lock className="w-4 h-4 text-amber-700" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground mb-1">
+                Module body + knowledge check locked
               </p>
-            ))}
+              <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">
+                The structure is shown above. The full module content, knowledge check question and digital completion certificate activate per staff member with the Hub Program.
+              </p>
+              <a
+                href={unlockHref}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"
+              >
+                Unlock the full course →
+              </a>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Body — full render only when NOT in preview mode */}
+      {!previewMode && (
+        <div className="space-y-1">
+          {m.sections.map((s, i) => (
+            <div key={i} className="my-3">
+              {s.heading && (
+                <h3 className="text-sm font-bold text-foreground tracking-tight mt-4 mb-1.5">{s.heading}</h3>
+              )}
+              {s.body.map((line, j) => (
+                <p key={j} className="text-[13px] text-foreground leading-relaxed my-1.5">
+                  <ParsedText text={line} />
+                </p>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Knowledge check */}
-      {m.knowledgeCheck && <KnowledgeCheck check={m.knowledgeCheck} />}
+      {!previewMode && m.knowledgeCheck && <KnowledgeCheck check={m.knowledgeCheck} />}
     </article>
   )
 }
