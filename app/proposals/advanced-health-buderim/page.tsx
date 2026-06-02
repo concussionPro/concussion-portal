@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import {
   Home,
   BookOpen,
@@ -13,6 +14,7 @@ import {
   ExternalLink,
   TrendingUp,
   Stethoscope,
+  ShieldCheck,
 } from 'lucide-react'
 
 const ACCESS_KEY = 'ah2026'
@@ -90,12 +92,15 @@ function ProspectDashboard() {
       <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Greeting />
+          <ZacCredibility />
           <StartHereHero />
           <OnsiteHubHeadline />
           <ProspectBento />
           <PricingTiers />
+          <RiskReversal />
           <Testimonials />
           <FaqSection />
+          <BookingEmbed />
           <SocialProofFooter />
         </div>
       </main>
@@ -848,5 +853,109 @@ function Credential({ headline, label }: { headline: string; label: string }) {
       <p className="text-xl sm:text-2xl font-bold text-accent leading-none mb-1">{headline}</p>
       <p className="text-[11px] text-muted-foreground leading-snug">{label}</p>
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ZAC CREDIBILITY — face + bio + standout hook
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ZacCredibility() {
+  return (
+    <section className="glass-premium rounded-2xl p-5 sm:p-6 mb-6">
+      <div className="flex items-start gap-4 sm:gap-5">
+        <Image
+          src="/zac-lewis.jpg"
+          alt="Zac Lewis"
+          width={88}
+          height={88}
+          className="rounded-xl w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] object-cover shrink-0 border border-accent/15"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
+            Delivered by
+          </p>
+          <p className="text-base sm:text-lg font-bold text-foreground leading-tight">
+            Dr Zac Lewis · B.Clin.Sci., M.Ost.Med.
+          </p>
+          <p className="text-xs text-muted-foreground mb-2">
+            AHPRA-registered Osteopath · Course Director, Concussion Education Australia
+          </p>
+          <p className="text-[12.5px] text-foreground leading-relaxed">
+            Over a decade specialising in concussion management — including work with national and professional ice-hockey leagues across New Zealand and Canada. Course director and clinical mentor to early-career clinicians Australia-wide.
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RISK REVERSAL — guarantees strip
+// ─────────────────────────────────────────────────────────────────────────────
+
+function RiskReversal() {
+  return (
+    <section className="mt-6 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white border border-emerald-200/60 p-5 sm:p-6">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-emerald-700 mb-3">
+        What you&rsquo;re covered for
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <Guarantee
+          headline="14 CPD or refund"
+          detail="Every clinician walks away with an AHPRA-aligned certificate. If your team doesn't, full refund."
+        />
+        <Guarantee
+          headline="Reschedule free outside 2 weeks"
+          detail="Life happens. Push the on-site day to a future date at no cost, provided 2+ weeks notice."
+        />
+        <Guarantee
+          headline="Lifetime portal access"
+          detail="Online modules, forms, references and clinical templates stay accessible for every seat — no renewals, no expiry."
+        />
+      </div>
+    </section>
+  )
+}
+
+function Guarantee({ headline, detail }: { headline: string; detail: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-7 h-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0">
+        <ShieldCheck className="w-4 h-4 text-emerald-700" strokeWidth={2} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-bold text-foreground mb-0.5 leading-snug">{headline}</p>
+        <p className="text-[11px] text-muted-foreground leading-snug">{detail}</p>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CAL.COM EMBEDDED BOOKING
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BookingEmbed() {
+  return (
+    <section className="mt-10">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
+        Book the call
+      </p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
+        Pick a time that suits
+      </h3>
+      <p className="text-sm text-muted-foreground mb-5 max-w-xl">
+        20 minutes · we walk through your team mix, the catchment opportunity, and a delivery date. No prep needed.
+      </p>
+      <div className="rounded-2xl overflow-hidden border border-accent/15 bg-white shadow-sm">
+        <iframe
+          src="https://cal.com/zac-lewis-so8zjs/30min/embed?theme=light&hideBranding=true"
+          loading="lazy"
+          style={{ width: '100%', height: '700px', border: 0 }}
+          title="Book a call with Zac Lewis"
+        />
+      </div>
+    </section>
   )
 }
