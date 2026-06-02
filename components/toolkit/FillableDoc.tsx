@@ -11,8 +11,19 @@ interface FillableContextValue {
 
 const FillableContext = createContext<FillableContextValue | null>(null)
 
-export function FillableDoc({ storageKey, children }: { storageKey: string; children: React.ReactNode }) {
-  const [values, setValues] = useState<Record<string, string>>({})
+export function FillableDoc({
+  storageKey,
+  defaultValues,
+  children,
+}: {
+  storageKey: string
+  /** Pre-populated values used on first load (before user edits).
+   *  Used by prospect portals to brand the templates with the prospect's
+   *  clinic name etc., so the preview reads as if already branded for them. */
+  defaultValues?: Record<string, string>
+  children: React.ReactNode
+}) {
+  const [values, setValues] = useState<Record<string, string>>(defaultValues ?? {})
   const [hydrated, setHydrated] = useState(false)
 
   // Hydrate from localStorage on mount. setState inside the effect is the
@@ -24,15 +35,17 @@ export function FillableDoc({ storageKey, children }: { storageKey: string; chil
       if (raw) {
         const parsed = JSON.parse(raw)
         if (parsed && typeof parsed === 'object') {
+          // localStorage takes precedence over defaults (user edits persist),
+          // but defaults fill gaps for keys the user hasn't touched.
           // eslint-disable-next-line react-hooks/set-state-in-effect
-          setValues(parsed)
+          setValues({ ...(defaultValues ?? {}), ...parsed })
         }
       }
     } catch {
       // ignore parse errors
     }
     setHydrated(true)
-  }, [storageKey])
+  }, [storageKey, defaultValues])
 
   // Persist to localStorage whenever values change (post-hydration)
   useEffect(() => {

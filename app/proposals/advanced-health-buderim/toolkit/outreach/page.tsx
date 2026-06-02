@@ -47,6 +47,12 @@ export default async function OutreachKitPage({
             templates={OUTREACH_TEMPLATES}
             previewedSlugs={['generic-capability-one-pager']}
             unlockHref={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}#pricing`}
+            defaultValues={{
+              clinic_name: 'Advanced Health Pain & Injury Clinic',
+              clinic_phone: '07 5444 0044',
+              clinic_address: 'Buderim QLD',
+              region: 'Sunshine Coast',
+            }}
           />
         </div>
       </main>

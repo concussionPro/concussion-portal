@@ -20,16 +20,19 @@ export function ClinicalToolkitDoc({
   principles,
   previewedSlugs,
   unlockHref = '/pricing',
+  defaultValues,
 }: {
   templates: DischargeTemplate[]
   principles: Principles
   previewedSlugs?: string[]
   unlockHref?: string
+  /** Pre-populated field values for prospect-branded previews. */
+  defaultValues?: Record<string, string>
 }) {
   const isPreviewMode = Array.isArray(previewedSlugs)
   const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
   return (
-    <FillableDoc storageKey="clinical-toolkit">
+    <FillableDoc storageKey="clinical-toolkit" defaultValues={defaultValues}>
       <Cover />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>

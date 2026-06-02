@@ -48,6 +48,10 @@ export default async function ClinicalToolkitPage({
             principles={DOCUMENTATION_PRINCIPLES}
             previewedSlugs={['gp-handover-letter']}
             unlockHref={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}#pricing`}
+            defaultValues={{
+              clinic_name: 'Advanced Health Pain & Injury Clinic',
+              clinic_phone: '07 5444 0044',
+            }}
           />
         </div>
       </main>

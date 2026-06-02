@@ -12,15 +12,17 @@ export function OutreachToolkitDoc({
   templates,
   previewedSlugs,
   unlockHref = '/pricing',
+  defaultValues,
 }: {
   templates: OutreachTemplate[]
   previewedSlugs?: string[]
   unlockHref?: string
+  defaultValues?: Record<string, string>
 }) {
   const isPreviewMode = Array.isArray(previewedSlugs)
   const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
   return (
-    <FillableDoc storageKey="outreach-kit">
+    <FillableDoc storageKey="outreach-kit" defaultValues={defaultValues}>
       <Cover />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
