@@ -4,14 +4,14 @@ import { TeamTrainingInquiryForm } from '@/components/TeamTrainingInquiryForm'
 import { createMedicalWebPageSchema, organizationSchema } from '@/lib/schema-markup'
 import { Users, MapPin, BookOpen, Calendar, ShieldCheck, Sparkles, Stethoscope } from 'lucide-react'
 
-const TITLE = 'Train Your Team — In-House Concussion + AI Clinical Practice CPD for AU Clinics'
-const DESCRIPTION = 'In-house team training for Australian clinics, sports organisations, hospital networks, and allied health groups. Concussion Clinical Mastery + AI in Clinical Practice delivered on-site or live online. AHPRA-aligned, Osteopathy Australia endorsed.'
+const TITLE = 'Train Your Team — In-House Concussion CPD for AU Clinics'
+const DESCRIPTION = 'In-house concussion training for Australian clinics, sports organisations, hospital networks, and allied health groups. Concussion Clinical Mastery delivered on-site or live online. AHPRA-aligned, Osteopathy Australia endorsed.'
 const URL = 'https://portal.concussion-education-australia.com/team-training'
 
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  keywords: 'in-house team training concussion, clinic group training ahpra, team cpd australian clinics, sports organisation concussion training, hospital network ai compliance training, allied health team training',
+  keywords: 'in-house team training concussion, clinic group training ahpra, team cpd australian clinics, sports organisation concussion training, hospital network concussion training, allied health team training',
   openGraph: { title: TITLE, description: DESCRIPTION, type: 'website', url: URL },
   alternates: { canonical: URL },
 }
@@ -27,7 +27,7 @@ export default function TeamTrainingLanding() {
             description: DESCRIPTION,
             url: URL,
             lastReviewed: '2026-06-02',
-            about: 'In-house team training in concussion clinical mastery and AI in clinical practice for AU healthcare organisations',
+            about: 'In-house team training in concussion clinical mastery for AU healthcare organisations',
             reviewedBy: 'Zac Lewis',
           })),
         }}
@@ -46,7 +46,7 @@ export default function TeamTrainingLanding() {
             Train your team in-house
           </h1>
           <p className="text-lg text-emerald-50 mb-2 max-w-2xl">
-            Bring CEA&apos;s flagship training to your team — on-site, live online, or hybrid. Concussion Clinical Mastery + AI in Clinical Practice delivered around your workflow.
+            Bring CEA&apos;s flagship Concussion Clinical Mastery training to your team — on-site, live online, or hybrid. Delivered around your workflow.
           </p>
           <p className="text-sm text-emerald-100 max-w-2xl mb-2">
             We&rsquo;ve helped many clinics become the local hub for concussion management — the practice GPs, sports clubs, and schools refer to when a head injury happens.
@@ -67,7 +67,7 @@ export default function TeamTrainingLanding() {
             </h2>
             <ul className="space-y-3 text-sm text-slate-700">
               {[
-                { i: Stethoscope, t: 'Multi-clinician private practices', d: 'Allied health and sports medicine groups wanting concussion or AI compliance training delivered to the whole clinic at once.' },
+                { i: Stethoscope, t: 'Multi-clinician private practices', d: 'Allied health and sports medicine groups wanting structured concussion training delivered to the whole clinic at once.' },
                 { i: Sparkles, t: 'Sports organisations', d: 'AFL / NRL / NSWRL clubs, NSWIS / VIS / AIS programs, school sports academies needing structured concussion management capability.' },
                 { i: ShieldCheck, t: 'Hospital networks + rehab groups', d: 'Emergency departments, mTBI clinics, brain injury rehab services — standardised concussion + AI documentation training across staff.' },
                 { i: BookOpen, t: 'University clinical placement programs', d: 'Concussion training built into final-year clinical education for osteopathy / physiotherapy / sports medicine programs.' },
@@ -96,15 +96,15 @@ export default function TeamTrainingLanding() {
               <li className="flex gap-3">
                 <ShieldCheck className="w-4 h-4 text-teal-700 mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-semibold text-slate-900">AI in Clinical Practice (3 CPD hours)</p>
-                  <p className="text-xs text-slate-600 leading-relaxed">AHPRA AI guidelines + Australian Privacy Principles + NDIS audit-safe documentation + Tier A/B/C tool framework (Heidi, Lyrebird, ChatGPT, Claude).</p>
+                  <p className="font-semibold text-slate-900">Discipline-specific tracks</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">Curated content for osteopaths, physiotherapists, GPs, exercise physiologists, and admin/reception — each clinician sees what&apos;s relevant to their role in the patient journey.</p>
                 </div>
               </li>
               <li className="flex gap-3">
                 <Sparkles className="w-4 h-4 text-teal-700 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-semibold text-slate-900">Custom curriculum</p>
-                  <p className="text-xs text-slate-600 leading-relaxed">Mix concussion + AI + specialty modules around your team&apos;s scope. Sports orgs often combine concussion + return-to-play decision-making. Hospital networks combine concussion + AI documentation. Discuss what fits.</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">Adjust emphasis around your team&apos;s scope — paediatric, sports sideline, vestibular rehab, return-to-play, or PPCS workup. Sports orgs often combine clinical training + RTP decision-making. Discuss what fits.</p>
                 </div>
               </li>
             </ul>

@@ -53,8 +53,9 @@ export default function HomePage() {
                   Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.
                 </p>
 
-                {/* CTAs — primary + secondary buttons; preview link sits on its
-                    own line underneath so the button row stays visually tight. */}
+                {/* CTAs — two equally prominent entry points: free SCAT course
+                    and a try-the-modules preview. Compare pricing demoted to a
+                    tertiary text link below. */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
                   <Link
                     href="/scat-mastery"
@@ -64,18 +65,25 @@ export default function HomePage() {
                     <ArrowRight className="w-4.5 h-4.5" />
                   </Link>
                   <Link
-                    href="/pricing"
-                    className="px-6 py-4 rounded-xl text-sm font-semibold text-[var(--foreground)] bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-1.5 shadow-sm"
+                    href="/preview"
+                    className="px-8 py-4 rounded-xl text-base font-bold text-[var(--accent)] bg-white border-2 border-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors inline-flex items-center justify-center gap-2 shadow-md"
                   >
-                    Compare Pricing
+                    Try Modules Free
+                    <ArrowRight className="w-4.5 h-4.5" />
                   </Link>
                 </div>
-                <div className="mb-3">
+                <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
                   <Link
-                    href="/preview"
-                    className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1"
+                    href="/pricing"
+                    className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors"
                   >
-                    Preview course content →
+                    Compare pricing →
+                  </Link>
+                  <Link
+                    href="/scat-forms"
+                    className="text-sm font-medium text-[var(--accent)] hover:underline"
+                  >
+                    Free SCAT forms →
                   </Link>
                 </div>
 
@@ -91,15 +99,6 @@ export default function HomePage() {
                     Early bird pricing available — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 )}
-
-                <p className="text-[13px] text-[var(--muted-foreground)] mt-4">
-                  <Link
-                    href="/scat-forms"
-                    className="text-[var(--accent)] font-medium hover:underline"
-                  >
-                    Free SCAT forms →
-                  </Link>
-                </p>
 
                 {/* Social proof strip */}
                 {CONFIG.FEATURES.SHOW_SOCIAL_PROOF && (
