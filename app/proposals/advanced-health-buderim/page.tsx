@@ -11,6 +11,8 @@ import {
   ArrowUpRight,
   GraduationCap,
   ExternalLink,
+  TrendingUp,
+  Stethoscope,
 } from 'lucide-react'
 
 const ACCESS_KEY = 'ah2026'
@@ -96,6 +98,7 @@ function ProspectDashboard() {
       <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Greeting />
+          <StartHereHero />
           <ProspectBento />
         </div>
       </main>
@@ -132,10 +135,12 @@ function ProspectSidebar() {
 
       <nav className="flex-1 space-y-1">
         <SidebarItem label="Dashboard" icon={Home} active />
-        <SidebarItem label="Learning Suite" icon={BookOpen} />
-        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
+        <SidebarItem href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} label="Learning Suite" icon={BookOpen} />
         <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
-        <SidebarItem href="/references" label="Reference Repository" icon={Library} external />
+        <SidebarItem href="/scat-forms" label="Baseline Testing" icon={TrendingUp} external />
+        <SidebarItem href="/references" label="Reference Library" icon={Library} external />
+        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
+        <SidebarItem label="Outreach Kit" icon={Stethoscope} locked />
         <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
       </nav>
 
@@ -196,214 +201,239 @@ function SidebarItem({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GREETING
+// GREETING — accent gradient on clinic name
 // ─────────────────────────────────────────────────────────────────────────────
 
 function Greeting() {
   return (
     <div className="mb-6">
-      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">
         Concussion Hub Program · {CLINIC.city}, {CLINIC.state}
       </p>
-      <h2 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight leading-[1.05] mb-2">
+      <h2 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.02] mb-3 bg-gradient-to-br from-foreground via-foreground to-accent bg-clip-text text-transparent">
         {CLINIC.shortName}
       </h2>
-      <p className="text-sm text-muted-foreground">
-        Hi {CLINIC.contactFirstName} — your team&rsquo;s preview workspace. Explore the contents below.
+      <p className="text-sm text-muted-foreground max-w-xl">
+        Hi {CLINIC.contactFirstName} — your team&rsquo;s preview workspace.
       </p>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BENTO — capability-led, no pricing visible
+// START HERE HERO — clear focal point
+// ─────────────────────────────────────────────────────────────────────────────
+
+function StartHereHero() {
+  return (
+    <a
+      href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`}
+      className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg group hover:shadow-xl transition-shadow"
+    >
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_60%)]" />
+      <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
+              <BookOpen className="w-4 h-4" strokeWidth={2} />
+            </div>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">
+              Start here
+            </p>
+          </div>
+          <h3 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">
+            Module 1 Trial · What is a Concussion?
+          </h3>
+          <p className="text-sm text-white/85 leading-relaxed">
+            First sections + interactive quiz checkpoint, open for your team. 14 CPD hrs total across 8 modules.
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
+          Open trial
+          <ArrowUpRight className="w-4 h-4" />
+        </div>
+      </div>
+    </a>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BENTO — visual-led, minimal text per tile
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ProspectBento() {
   return (
     <div className="bento-premium">
-      <LearningSuiteCard />
-      <ScatFormsCard />
-      <BaselineTestingCard />
-      <ReferenceCard />
-      <ClinicalToolkitCard />
-      <OutreachKitCard />
-      <AdminWorkflowCard />
-      <OnsiteCard />
+      <Tile
+        href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`}
+        icon={BookOpen}
+        iconTone="accent"
+        label="Learning Suite"
+        title="8 Modules · 14 CPD"
+        badge={{ text: 'Trial open', tone: 'emerald' }}
+        span2
+        accent
+      />
+      <Tile
+        href="/scat-forms"
+        icon={Activity}
+        iconTone="violet"
+        label="SCAT Forms"
+        title="SCAT6 · SCOAT6 · Child"
+        badge={{ text: 'Open', tone: 'emerald' }}
+        external
+      />
+      <Tile
+        href="/scat-forms"
+        icon={TrendingUp}
+        iconTone="emerald"
+        label="Baseline Testing"
+        title="Pre-season cognitive"
+        badge={{ text: 'Built', tone: 'emerald' }}
+        external
+      />
+      <Tile
+        href="/references"
+        icon={Library}
+        iconTone="amber"
+        label="Reference Library"
+        title="140+ peer-reviewed"
+        badge={{ text: 'Open', tone: 'emerald' }}
+        span2
+        external
+      />
+      <Tile
+        icon={FileText}
+        label="Clinical Toolkit"
+        title="6 discharge templates"
+      />
+      <Tile
+        icon={Stethoscope}
+        label="Outreach Kit"
+        title="Schools · clubs · GPs"
+      />
+      <Tile
+        icon={BookMarked}
+        label="Admin Workflow"
+        title="1-hr reception course"
+      />
+      <Tile
+        icon={GraduationCap}
+        iconTone="rose"
+        label="On-site Hub Day"
+        title="Hands-on in Buderim"
+        badge={{ text: 'Next step', tone: 'amber' }}
+      />
     </div>
   )
 }
 
-// ── 1: LEARNING SUITE (span-2, hero) — links to module list ──────────────────
-function LearningSuiteCard() {
-  return (
-    <a href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block bento-span-2 border-l-4 border-l-accent">
-      <ArrowUpRight className="absolute top-5 right-5 w-5 h-5 text-muted-foreground/40 group-hover:text-accent transition-colors" />
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center shrink-0">
-          <BookOpen className="w-6 h-6 text-accent" strokeWidth={1.8} />
+// ─────────────────────────────────────────────────────────────────────────────
+// TILE — single component, visual treatment driven by props
+// ─────────────────────────────────────────────────────────────────────────────
+
+type Tone = 'accent' | 'violet' | 'emerald' | 'amber' | 'rose' | 'slate'
+type BadgeTone = 'emerald' | 'amber' | 'slate'
+
+const TONE_BG: Record<Tone, string> = {
+  accent: 'from-accent/20 to-accent/5',
+  violet: 'from-violet-500/15 to-violet-400/5',
+  emerald: 'from-emerald-500/15 to-emerald-400/5',
+  amber: 'from-amber-500/15 to-amber-400/5',
+  rose: 'from-rose-500/15 to-rose-400/5',
+  slate: 'from-slate-200/50 to-slate-100/50',
+}
+
+const TONE_TEXT: Record<Tone, string> = {
+  accent: 'text-accent',
+  violet: 'text-violet-600',
+  emerald: 'text-emerald-600',
+  amber: 'text-amber-600',
+  rose: 'text-rose-600',
+  slate: 'text-slate-400',
+}
+
+const BADGE_TONE: Record<BadgeTone, string> = {
+  emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  amber: 'bg-amber-50 text-amber-700 border-amber-200',
+  slate: 'bg-slate-50 text-slate-500 border-slate-200',
+}
+
+function Tile({
+  href,
+  icon: Icon,
+  iconTone,
+  label,
+  title,
+  badge,
+  span2,
+  external,
+  accent,
+}: {
+  href?: string
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
+  iconTone?: Tone
+  label: string
+  title: string
+  badge?: { text: string; tone: BadgeTone }
+  span2?: boolean
+  external?: boolean
+  accent?: boolean
+}) {
+  const locked = !href
+  const tone: Tone = locked ? 'slate' : (iconTone ?? 'accent')
+  const isLink = !!href
+
+  const containerClasses = [
+    'glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden',
+    span2 ? 'bento-span-2' : '',
+    locked ? 'opacity-80' : '',
+    isLink ? 'group block hover:shadow-md transition-all' : '',
+    accent ? 'border-l-4 border-l-accent' : '',
+  ].filter(Boolean).join(' ')
+
+  const inner = (
+    <>
+      {isLink && (
+        <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+      )}
+      <div className="flex items-start gap-3">
+        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${TONE_BG[tone]} flex items-center justify-center shrink-0`}>
+          {locked ? (
+            <Lock className={`w-5 h-5 ${TONE_TEXT[tone]}`} strokeWidth={1.8} />
+          ) : (
+            <Icon className={`w-5 h-5 ${TONE_TEXT[tone]}`} strokeWidth={1.8} />
+          )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="stat-label mb-0">Learning Suite</p>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-              Trial open
-            </span>
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <p className="stat-label mb-0">{label}</p>
+            {badge && (
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${BADGE_TONE[badge.tone]}`}>
+                {badge.text}
+              </span>
+            )}
           </div>
-          <p className="text-base text-foreground font-semibold mb-1">8 Clinical Modules · 14 CPD hrs</p>
-          <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-            Concussion Clinical Mastery — SCAT6, SCOAT6, VOMS, BESS, cervical, PPCS, paediatric, return-to-play. AHPRA-aligned, OA endorsed.
-          </p>
-          <p className="text-[11px] font-bold text-accent">
-            → Open Module 1 trial
+          <p className={`text-sm font-bold leading-tight ${locked ? 'text-muted-foreground' : 'text-foreground'}`}>
+            {title}
           </p>
         </div>
       </div>
-    </a>
+    </>
   )
-}
 
-// ── 2: SCAT FORMS — unlocked ─────────────────────────────────────────────────
-function ScatFormsCard() {
-  return (
-    <a href="/scat-forms" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
-      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-400/5 flex items-center justify-center">
-          <Activity className="w-[18px] h-[18px] text-violet-600/70" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">SCAT Forms</p>
-        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-          Open
-        </span>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">Digital Assessment</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        SCAT6, Child SCAT6, SCOAT6 — fillable, auto-scored, downloadable.
-      </p>
-    </a>
-  )
-}
+  if (href) {
+    return (
+      <a
+        href={href}
+        target={external ? '_blank' : undefined}
+        rel={external ? 'noopener' : undefined}
+        className={containerClasses}
+      >
+        {inner}
+      </a>
+    )
+  }
 
-// ── 3: BASELINE COGNITIVE TESTING ────────────────────────────────────────────
-function BaselineTestingCard() {
-  return (
-    <a href="/scat-forms" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
-      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 flex items-center justify-center">
-          <Activity className="w-[18px] h-[18px] text-emerald-600/80" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">Pre-season baseline</p>
-        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-          Built
-        </span>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">Cognitive baseline testing</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Pre-season baseline SCAT6 + SCOAT6 for local sports clubs. Recurring service capability.
-      </p>
-    </a>
-  )
-}
-
-// ── 4: REFERENCE REPOSITORY (span-2) — unlocked ──────────────────────────────
-function ReferenceCard() {
-  return (
-    <a href="/references" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block bento-span-2">
-      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
-      <div className="flex items-start gap-4">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-400/5 flex items-center justify-center shrink-0">
-          <Library className="w-5 h-5 text-amber-600/70" strokeWidth={1.8} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="stat-label">Reference Repository</p>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-              Open
-            </span>
-          </div>
-          <p className="text-sm text-foreground font-semibold mb-1">140+ Peer-Reviewed Sources</p>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Amsterdam 2023, AIS 2024, RACGP, Cochrane. Searchable.
-          </p>
-        </div>
-      </div>
-    </a>
-  )
-}
-
-// ── 5: CLINICAL TOOLKIT — locked ─────────────────────────────────────────────
-function ClinicalToolkitCard() {
-  return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-85">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
-          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">Clinical Toolkit</p>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">6 Discharge Templates</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        GP letter, school RTP, parent plan, sports cert, WorkCover, NDIS — clinic-branded.
-      </p>
-    </div>
-  )
-}
-
-// ── 6: OUTREACH KIT — locked ─────────────────────────────────────────────────
-function OutreachKitCard() {
-  return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-85">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
-          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">Outreach Kit</p>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">6 Templates · scripts · tracker</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Schools, sports clubs, GPs — email sequences + phone scripts + follow-up tracker.
-      </p>
-    </div>
-  )
-}
-
-// ── 7: ADMIN WORKFLOW — locked ───────────────────────────────────────────────
-function AdminWorkflowCard() {
-  return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-85">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
-          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">Admin Workflow</p>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">1-hr Reception Course</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Phone triage, red flags, intake form, AI-safe workflow, template library.
-      </p>
-    </div>
-  )
-}
-
-// ── 8: ON-SITE HUB DAY — the "next step" framing ─────────────────────────────
-function OnsiteCard() {
-  return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-85">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
-          <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">On-site Hub Day</p>
-        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
-          Next step
-        </span>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">Hands-on training in Buderim</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Builds on the online program — full-day on-site delivery once your team has the foundations.
-      </p>
-    </div>
-  )
+  return <div className={containerClasses}>{inner}</div>
 }

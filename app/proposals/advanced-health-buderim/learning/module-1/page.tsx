@@ -95,11 +95,18 @@ export default async function ProspectModuleOneTrial({
             ))}
           </div>
 
+          {/* QUIZ CHECKPOINT — first myth question interactive */}
+          <QuizCheckpoint
+            question={m1.quiz[0]}
+            totalMythQuestions={m1.quiz.filter((q) => q.id.startsWith('myth')).length}
+            totalQuizQuestions={m1.quiz.length}
+          />
+
           {/* Locked sections preview */}
-          <div className="glass-premium rounded-2xl p-5 mt-8">
+          <div className="glass-premium rounded-2xl p-5 mt-6">
             <div className="flex items-center gap-2 mb-3">
               <Lock className="w-4 h-4 text-slate-400" />
-              <p className="stat-label mb-0">{lockedSections.length} more sections + module quiz · locked</p>
+              <p className="stat-label mb-0">{lockedSections.length} more sections · locked</p>
             </div>
             <ul className="space-y-1.5 text-xs text-muted-foreground">
               {lockedSections.slice(0, 6).map((s) => (
@@ -119,6 +126,71 @@ export default async function ProspectModuleOneTrial({
         </div>
       </main>
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUIZ CHECKPOINT — first myth question with reveal-on-click
+// ─────────────────────────────────────────────────────────────────────────────
+
+function QuizCheckpoint({
+  question,
+  totalMythQuestions,
+  totalQuizQuestions,
+}: {
+  question: { id: string; question: string; options: string[]; correctAnswer: number; explanation: string }
+  totalMythQuestions: number
+  totalQuizQuestions: number
+}) {
+  return (
+    <section className="mt-8">
+      <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50/80 to-orange-50/40 p-5 sm:p-7 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-amber-200/60 flex items-center justify-center">
+            <CheckCircle2 className="w-4 h-4 text-amber-700" strokeWidth={2.2} />
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-800">
+            Quiz checkpoint · question 1 of {totalMythQuestions} myth questions
+          </p>
+        </div>
+
+        <h3 className="text-base sm:text-lg font-bold text-foreground leading-snug mb-4">
+          {question.question}
+        </h3>
+
+        <div className="space-y-2 mb-4">
+          {question.options.map((opt, i) => (
+            <div
+              key={i}
+              className="rounded-lg bg-white/70 border border-amber-200/70 px-3 py-2.5 text-[13px] text-foreground leading-snug"
+            >
+              <span className="text-[10px] font-bold text-amber-700 mr-2">{String.fromCharCode(65 + i)}.</span>
+              {opt}
+            </div>
+          ))}
+        </div>
+
+        <details className="group">
+          <summary className="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-700 text-white text-xs font-bold hover:bg-amber-800 transition-colors list-none">
+            <span className="group-open:hidden">Reveal answer</span>
+            <span className="hidden group-open:inline">Hide answer</span>
+          </summary>
+          <div className="mt-4 rounded-lg bg-white/80 border border-emerald-300 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
+                Correct answer: {String.fromCharCode(65 + question.correctAnswer)}
+              </p>
+            </div>
+            <p className="text-sm text-foreground leading-relaxed">{question.explanation}</p>
+          </div>
+        </details>
+
+        <p className="text-[11px] text-muted-foreground italic mt-4">
+          {totalQuizQuestions - 1} more questions follow this checkpoint in Module 1 · activated with the full Hub Program.
+        </p>
+      </div>
+    </section>
   )
 }
 
@@ -302,9 +374,10 @@ function ProspectSidebar() {
       <nav className="flex-1 space-y-1">
         <SidebarItem href={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}`} label="Dashboard" icon={Home} />
         <SidebarItem href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} label="Learning Suite" icon={BookOpen} active />
-        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
         <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
-        <SidebarItem href="/references" label="Reference Repository" icon={Library} external />
+        <SidebarItem href="/scat-forms" label="Baseline Testing" icon={TrendingUp} external />
+        <SidebarItem href="/references" label="Reference Library" icon={Library} external />
+        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
         <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
       </nav>
 
