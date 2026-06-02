@@ -37,8 +37,32 @@ export interface DischargeTemplate {
   /** Fields the clinic merges per patient at delivery. */
   mergeFields: string[]
   sections: TemplateSection[]
-  /** Optional legal / clinical guidance shown at the bottom in a callout. */
+  /** Compliance + medicolegal footer rendered on every issued document. */
+  complianceFooter: string[]
+  /** Optional supplementary notes (designer/clinician guidance, not patient-facing). */
   footnotes?: string[]
+}
+
+/**
+ * Global documentation principles — render on the back/last page of every
+ * compiled template document or in the clinic's standard operating procedure.
+ * Reviewed against AHPRA record-keeping standards, the 2023 Amsterdam Consensus
+ * Statement, Australian Privacy Principles, and indemnity-insurer expectations
+ * (Avant, Guild, MIPS — generic to AHPRA-registered allied health practice).
+ *
+ * NOT a substitute for the clinic's own indemnity insurer review. Recommend the
+ * clinic's PI insurer signs off on the local-letterhead version before issue.
+ */
+export const DOCUMENTATION_PRINCIPLES = {
+  title: 'Documentation principles',
+  body: [
+    'Every issued document is prepared with reasonable clinical care and skill, consistent with the 2023 Amsterdam Consensus Statement on Concussion in Sport, AHPRA record-keeping standards, and the registered clinician\'s scope of practice.',
+    'The treating clinician retains professional responsibility for clinical decisions, findings and recommendations recorded herein. The treating clinician\'s name, AHPRA registration number, qualification and contact details appear on every issued document.',
+    'Patient (or parent/guardian for minors) consent is obtained before preparation and disclosure of any document to a named recipient (GP, school, club, insurer, NDIA). Consent is documented in the clinical record.',
+    'Findings reflect the clinical presentation on the date of assessment. Subsequent presentation may differ; updated documents are issued at each clinical review.',
+    'Where activity or duty resumption requires medical clearance under sport governing-body, employer, insurer, or regulatory requirements that extend beyond the treating clinician\'s scope, that clearance is to be arranged separately. The treating clinician will facilitate referral where appropriate.',
+    'AI tools used to assist drafting are restricted to AU-data-residency, healthcare-purpose-built scribes (Tier A) with explicit patient consent. All AI-assisted drafting is reviewed and edited by the named clinician before issue. Patient-identifiable information is not disclosed to overseas-hosted general-purpose AI tools without specific consent and APP 8 compliance.',
+  ],
 }
 
 export interface OutreachTemplate {
@@ -129,9 +153,14 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
         ],
       },
     ],
+    complianceFooter: [
+      'Prepared with reasonable clinical care and skill, consistent with the 2023 Amsterdam Consensus Statement on Concussion in Sport and aligned with RACGP concussion management guidance and AHPRA record-keeping standards.',
+      'Findings reflect the clinical presentation on {date_of_assessment}. Subsequent presentation may differ; this letter will be updated at each clinical review.',
+      'Patient consent obtained for preparation and disclosure of this report to the named GP recipient. Consent documented in the clinical record.',
+      '{clinician_name} retains professional responsibility for the clinical findings and recommendations herein. AHPRA Registration: {ahpra_number}.',
+    ],
     footnotes: [
-      'This letter is structured against the 2023 Amsterdam Consensus Statement on Concussion in Sport and aligned with RACGP concussion management guidance.',
-      'Edit fields in {curly_braces}. Save as PDF or print on clinic letterhead before issuing.',
+      'Designer note: render compliance footer in small type at the foot of every page. Merge fields in {curly_braces} populated per patient at delivery — never leave an unfilled field.',
     ],
   },
   {
@@ -195,8 +224,14 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
         ],
       },
     ],
+    complianceFooter: [
+      'Prepared in line with the 2023 Amsterdam Consensus Statement (graduated return-to-sport / return-to-learn protocols) and Australian school-sport governing-body requirements. AHPRA record-keeping standards apply.',
+      'Parent/guardian consent obtained for preparation of this authorisation and disclosure to {school_name}. Consent documented in the clinical record.',
+      'Medical clearance for full-contact return-to-play (Stage 5–6) is issued separately by a qualified medical practitioner where governing-body protocols require it (AFL, NRL, Rugby Australia, FA, school sport associations). The treating clinician will facilitate referral where appropriate.',
+      '{clinician_name}, AHPRA Registration {ahpra_number} — retains professional responsibility for the clinical recommendations herein.',
+    ],
     footnotes: [
-      'Aligned with Amsterdam 2023 graduated return-to-sport / return-to-learn protocols and Australian school-sport governing-body requirements.',
+      'Designer note: prominent display of red-flag protocol on page 1 is medicolegally important — do not bury it.',
     ],
   },
   {
@@ -273,6 +308,14 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
         ],
       },
     ],
+    complianceFooter: [
+      'This plan is information for parents/guardians supporting recovery at home. It does not replace clinical review. Red flags require immediate medical review at the nearest emergency department or call 000.',
+      'Prepared by {clinician_name}, AHPRA Registration {ahpra_number}, in line with the 2023 Amsterdam Consensus Statement on Concussion in Sport.',
+      'Parent/guardian consent obtained for preparation of this plan. The treating clinician retains professional responsibility for the clinical recommendations herein.',
+    ],
+    footnotes: [
+      'Designer note: plain English readability — target a Year 8 reading level. Avoid medical jargon. Red flag list must be visually prominent.',
+    ],
   },
   {
     slug: 'sports-club-rtp-certificate',
@@ -280,7 +323,7 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
     audience: 'Sports club, coach, team manager, parent-coach',
     purpose: 'Written certification that a player has completed a graduated return-to-play protocol and is cleared for full participation.',
     estimatedReadMinutes: 3,
-    mergeFields: ['player_name', 'dob', 'club_name', 'sport', 'date_of_injury', 'date_of_clearance', 'stages_completed', 'medical_clearance_date', 'clinician_name', 'ahpra_number', 'clinic_name', 'review_required'],
+    mergeFields: ['player_name', 'dob', 'club_name', 'sport', 'date_of_injury', 'date_of_clearance', 'stages_completed', 'medical_clearance_clinician', 'medical_clearance_date', 'clinician_name', 'ahpra_number', 'clinic_name', 'review_required'],
     sections: [
       {
         heading: 'Return-to-Play Clearance',
@@ -294,19 +337,20 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
       {
         heading: 'Confirmation',
         body: [
-          'I confirm that {player_name} has completed the graduated return-to-play protocol per the 2023 Amsterdam Consensus Statement on Concussion in Sport, including:',
+          'I confirm that {player_name} has completed the graduated return-to-play protocol per the 2023 Amsterdam Consensus Statement on Concussion in Sport, supervised at {clinic_name}:',
           '✓ Stage 1: Symptom-limited activity',
           '✓ Stage 2: Light aerobic exercise',
           '✓ Stage 3: Sport-specific exercise without head impact',
           '✓ Stage 4: Non-contact training drills',
           '✓ Stage 5: Full-contact practice',
-          'Each stage was tolerated for ≥24 hours without symptom recurrence before progression. Medical clearance for full participation was issued on {medical_clearance_date}.',
+          'Each stage was tolerated for ≥24 hours without symptom recurrence before progression.',
+          'Where sport governing-body protocols require medical clearance issued by a qualified medical practitioner (AFL, NRL, Rugby Australia, FA, school sport associations), that clearance was completed by {medical_clearance_clinician} on {medical_clearance_date}. (If issued by the same clinician, restate here; if by a separate doctor, identify them.)',
         ],
       },
       {
         heading: 'Clearance status',
         body: [
-          '{player_name} is medically cleared for full Stage 6 return-to-play, including full contact, effective {date_of_clearance}.',
+          '{player_name} has completed the supervised graduated return-to-play protocol within the scope of {clinician_name}\'s practice and, where required, medical clearance from a qualified medical practitioner. Full Stage 6 return-to-play, including full contact, is effective {date_of_clearance}.',
           'Sport-specific governing body protocols (AFL / NRL / Rugby Australia / FA / school sport) apply in addition to this clearance.',
         ],
       },
@@ -327,8 +371,14 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
         ],
       },
     ],
+    complianceFooter: [
+      'Prepared with reasonable clinical care and skill, consistent with the 2023 Amsterdam Consensus Statement on Concussion in Sport. {clinician_name}, AHPRA Registration {ahpra_number}, retains professional responsibility for the supervision recorded herein.',
+      'This certificate confirms completion of the graduated return-to-play protocol within the scope of the certifying clinician\'s practice. Where sport governing-body protocols require medical clearance issued by a qualified medical practitioner, that clearance is completed separately (and noted above).',
+      'Parent/guardian consent obtained for preparation of this certificate (paediatric athletes). Patient consent obtained for adult athletes.',
+      'Valid only for the injury event dated {date_of_injury}. New events require fresh assessment.',
+    ],
     footnotes: [
-      'This certificate is valid only for the injury event dated {date_of_injury}. New events require fresh assessment.',
+      'Designer note: name fields for both the supervising clinician AND the medical clearance practitioner (if separate) — the certificate must show both clearly when scope requires both.',
     ],
   },
   {
@@ -408,8 +458,15 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
         ],
       },
     ],
+    complianceFooter: [
+      'Prepared with reasonable clinical care and skill, consistent with the 2023 Amsterdam Consensus Statement on Concussion in Sport and AHPRA record-keeping standards.',
+      'Findings reflect the clinical presentation on {date_of_assessment}. Capacity and restrictions may change with recovery — an updated report will be issued at each clinical review.',
+      'Patient consent obtained for preparation and disclosure of this report to WorkCover / the named insurer and to the employer return-to-work coordinator. Consent documented in the clinical record.',
+      'Safety-critical roles (driving heavy vehicles, operating machinery, working at heights) require formal medical clearance issued by a qualified medical practitioner before resumption. The treating clinician will facilitate referral where appropriate.',
+      '{clinician_name}, AHPRA Registration {ahpra_number} — retains professional responsibility for the clinical findings and recommendations herein.',
+    ],
     footnotes: [
-      'This report is prepared for WorkCover / insurer use and is based on clinical findings on the date of assessment. Capacity and restrictions may change with recovery — updated reports issued at each review.',
+      'Designer note: WorkCover bodies expect a structured, objective report. Avoid templated phrasing — populate the {current_capacity} and {restrictions} fields with specific clinical detail per patient.',
     ],
   },
   {
@@ -486,8 +543,15 @@ export const DISCHARGE_TEMPLATES: DischargeTemplate[] = [
         ],
       },
     ],
+    complianceFooter: [
+      'Prepared in line with NDIS allied health reporting expectations, AHPRA record-keeping standards, and the 2023 Amsterdam Consensus Statement on Concussion in Sport.',
+      'Participant (or nominee) consent obtained for preparation of this report and disclosure to the NDIA / Local Area Coordinator / Support Coordinator. Consent documented in the clinical record.',
+      'This report has been prepared by the named clinician. Where AI tools have assisted drafting, content has been reviewed and edited by {clinician_name} before issue. No portion of this report is produced by an automated system without clinical review.',
+      'Findings reflect the clinical presentation on {date_of_assessment}. The treating clinician retains professional responsibility for the clinical findings, functional impact statements, and recommended supports recorded herein. AHPRA Registration: {ahpra_number}.',
+      'Specific clinical findings, participant-specific goals, and recommended supports are populated per participant at delivery — templated phrasing is intentionally avoided to satisfy NDIA fraud-and-assurance audit expectations.',
+    ],
     footnotes: [
-      'Prepared in line with NDIS allied health reporting expectations. Templated phrasing is intentionally avoided; specific clinical findings and participant-specific goals are populated at delivery.',
+      'Designer note: NDIA audits are sensitive to AI-template phrasing. The {presenting_concerns}, {functional_impact}, {goals}, and {recommended_supports} fields MUST be populated with participant-specific clinical content — do not leave generic.',
     ],
   },
 ]

@@ -102,6 +102,9 @@ function ProspectDashboard() {
           <OnsiteHubHeadline />
           <ProspectBento />
           <PricingTiers />
+          <Testimonials />
+          <FaqSection />
+          <SocialProofFooter />
         </div>
       </main>
     </div>
@@ -679,4 +682,179 @@ function Tile({
   }
 
   return <div className={containerClasses}>{inner}</div>
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TESTIMONIALS — real quotes from /pricing
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TESTIMONIALS = [
+  {
+    quote: 'Before this training, our approach to concussion cases was uncertain. Now, my team has the confidence and proven skills to diagnose and manage them with clarity.',
+    name: 'Andy',
+    role: 'Clinic Owner, NSW',
+  },
+  {
+    quote: 'An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.',
+    name: 'Dean',
+    role: 'University Clinical Educator, QLD',
+  },
+  {
+    quote: 'Incredibly thorough and well structured. The hands-on component was invaluable — I left feeling genuinely confident in my concussion assessments.',
+    name: 'Amelia',
+    role: 'Physiotherapist',
+  },
+  {
+    quote: 'Well organised — content explained in a way that was relevant and memorable. Changed how I approach concussion in clinic.',
+    name: 'Alex',
+    role: 'Osteopath, Melbourne',
+  },
+]
+
+function Testimonials() {
+  return (
+    <section className="mt-10">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
+        From clinicians who&rsquo;ve done the training
+      </p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-5">
+        What past trainees say
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {TESTIMONIALS.map((t, i) => (
+          <div key={i} className="glass-premium rounded-xl p-4 sm:p-5">
+            <div className="flex gap-0.5 mb-2.5">
+              {[...Array(5)].map((_, j) => (
+                <span key={j} className="text-amber-400 text-sm">★</span>
+              ))}
+            </div>
+            <p className="text-[13px] text-foreground leading-relaxed italic mb-3">
+              &ldquo;{t.quote}&rdquo;
+            </p>
+            <div className="flex items-center gap-2 pt-2 border-t border-accent/8">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
+                <span className="text-[11px] font-bold text-accent">{t.name[0]}</span>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground leading-tight">{t.name}</p>
+                <p className="text-[10px] text-muted-foreground">{t.role}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FAQ — adapted from /pricing FAQs for the clinic-owner context
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FAQS = [
+  {
+    q: 'When can we run the on-site day?',
+    a: 'A weekday that suits the clinic. Online pre-work opens ~3 weeks beforehand so the on-site day is hands-on from the first hour. Most clinics schedule 6–10 weeks out.',
+  },
+  {
+    q: 'What if a staff member can\'t attend on the day?',
+    a: 'Substitutes are welcome. The online pre-work modules sit in their portal account with lifetime access — they catch up in their own time and progress through the same certificate workflow as the rest of the team.',
+  },
+  {
+    q: 'Will the team get AHPRA-aligned CPD certificates?',
+    a: 'Yes — each clinician receives an individual certificate showing completion date, CPD hours, and a unique certificate ID. Logged under "Educational Activity — Reviewing & Reflecting" in your AHPRA CPD portfolio. Endorsed by Osteopathy Australia, content is universal across osteopath / physio / GP / sports medicine / exercise physiology.',
+  },
+  {
+    q: 'Does the price include admin / reception staff?',
+    a: 'Yes — front-of-house access (forms toolkit + a brief non-clinical "AI in Concussion" primer for reception) is bundled with every cohort at no extra cost. They get a completion certificate for the HR file.',
+  },
+  {
+    q: 'Is GST included? How do we pay?',
+    a: 'All cohort prices are quoted + GST. Standard structure is 50% deposit on booking, 50% on completion of the on-site day. Tax invoice issued with each payment. Most clinics treat it as professional development for the practice.',
+  },
+  {
+    q: 'Can we add more clinicians later?',
+    a: 'Yes — per-clinician rate scales with cohort size. If a new clinician joins after the on-site day, their portal seat can be added at the discounted rate that matches the original cohort tier.',
+  },
+  {
+    q: 'What happens if we reschedule?',
+    a: 'Full flexibility — you can reschedule the on-site day to a future date at no extra cost. There\'s no expiry on the online portal access.',
+  },
+  {
+    q: 'How do we know this is right for our clinic?',
+    a: 'Start with the Module 1 trial above to see the teaching style and depth. If you\'d like a recommendation tailored to your team mix, the 20-minute call covers your specific scope — Zac will tell you honestly if it\'s not a fit.',
+  },
+]
+
+function FaqSection() {
+  return (
+    <section className="mt-10">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
+        Common questions
+      </p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-5">
+        FAQ
+      </h3>
+      <div className="space-y-2">
+        {FAQS.map((f, i) => (
+          <details key={i} className="group glass-premium rounded-xl">
+            <summary className="cursor-pointer list-none p-4 flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-foreground">{f.q}</span>
+              <span className="shrink-0 text-accent text-base transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <div className="px-4 pb-4 -mt-1">
+              <p className="text-[13px] text-muted-foreground leading-relaxed">{f.a}</p>
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SOCIAL PROOF FOOTER — credentials strip + final CTA
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SocialProofFooter() {
+  return (
+    <section className="mt-10 mb-4">
+      <div className="rounded-2xl bg-gradient-to-br from-accent/8 via-white to-white border border-accent/15 p-5 sm:p-7">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+          <Credential headline="500+" label="SCAT6 forms downloaded by AU clinicians" />
+          <Credential headline="OA" label="Endorsed by Osteopathy Australia" />
+          <Credential headline="14 hrs" label="AHPRA-aligned CPD per clinician" />
+          <Credential headline="140+" label="Peer-reviewed references in the library" />
+        </div>
+        <div className="pt-5 border-t border-accent/10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-center">
+          <div>
+            <p className="text-base font-bold text-foreground mb-0.5">
+              Ready to discuss a cohort date?
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              20-minute call · weekday timing flexible · honest answer if it&rsquo;s not the right fit.
+            </p>
+          </div>
+          <a
+            href="https://cal.com/zac-lewis-so8zjs/30min"
+            target="_blank"
+            rel="noopener"
+            className="shrink-0 inline-flex items-center gap-1.5 px-5 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"
+          >
+            Book call
+            <ArrowUpRight className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Credential({ headline, label }: { headline: string; label: string }) {
+  return (
+    <div>
+      <p className="text-xl sm:text-2xl font-bold text-accent leading-none mb-1">{headline}</p>
+      <p className="text-[11px] text-muted-foreground leading-snug">{label}</p>
+    </div>
+  )
 }
