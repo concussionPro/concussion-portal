@@ -14,6 +14,7 @@ const FillableContext = createContext<FillableContextValue | null>(null)
 export function FillableDoc({
   storageKey,
   defaultValues,
+  previewMode = false,
   children,
 }: {
   storageKey: string
@@ -21,6 +22,10 @@ export function FillableDoc({
    *  Used by prospect portals to brand the templates with the prospect's
    *  clinic name etc., so the preview reads as if already branded for them. */
   defaultValues?: Record<string, string>
+  /** When true: no Save-as-PDF / Clear toolbar, and a global @media print
+   *  rule suppresses the content. Prospect prospect previews must enable
+   *  this so the prospect can't print-to-PDF the locked content. */
+  previewMode?: boolean
   children: React.ReactNode
 }) {
   const [values, setValues] = useState<Record<string, string>>(defaultValues ?? {})
@@ -72,10 +77,36 @@ export function FillableDoc({
 
   return (
     <FillableContext.Provider value={ctx}>
-      {children}
-      <Toolbar />
+      {previewMode && <PreviewPrintBlock />}
+      <div data-preview-mode={previewMode ? 'true' : 'false'}>{children}</div>
+      {!previewMode && <Toolbar />}
     </FillableContext.Provider>
   )
+}
+
+/**
+ * Suppresses the prospect preview content when printed. Replaces the page
+ * with a single line directing the prospect to the live portal — no part
+ * of the locked content goes to PDF/printer.
+ */
+const PREVIEW_PRINT_CSS = `
+  @media print {
+    body * { visibility: hidden !important; }
+    body::before {
+      content: "Preview content only. The full template, course modules and clinical documentation activate with the Hub Program. portal.concussion-education-australia.com";
+      visibility: visible !important;
+      display: block !important;
+      padding: 24px !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      font-size: 13px !important;
+      line-height: 1.6 !important;
+      color: #1a2332 !important;
+    }
+  }
+`
+
+function PreviewPrintBlock() {
+  return <style dangerouslySetInnerHTML={{ __html: PREVIEW_PRINT_CSS }} />
 }
 
 function Toolbar() {

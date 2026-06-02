@@ -17,7 +17,7 @@ export function AdminCourseDoc({
 }) {
   const totalMinutes = modules.reduce((acc, m) => acc + m.durationMinutes, 0)
   return (
-    <FillableDoc storageKey="admin-course">
+    <FillableDoc storageKey="admin-course" previewMode={previewMode}>
       <Cover totalMinutes={totalMinutes} moduleCount={modules.length} />
       <TableOfContents modules={modules} />
       {modules.map((m) => (

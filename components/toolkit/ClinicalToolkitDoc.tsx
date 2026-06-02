@@ -37,7 +37,7 @@ export function ClinicalToolkitDoc({
   const isPreviewMode = Array.isArray(previewedSlugs)
   const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
   return (
-    <FillableDoc storageKey="clinical-toolkit" defaultValues={defaultValues}>
+    <FillableDoc storageKey="clinical-toolkit" defaultValues={defaultValues} previewMode={isPreviewMode}>
       <Cover />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>

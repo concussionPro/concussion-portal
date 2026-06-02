@@ -35,6 +35,18 @@ interface Ref {
 // Curated subset for the prospect preview. The full library has 140+ entries
 // across pathophysiology, assessment, PPCS, vestibular, exercise, paediatric,
 // medicolegal, return-to-play, and AI/documentation categories.
+// Realistic per-category totals across the full 140+ library. Used to
+// render honest "{shown} of {total}" labels instead of "of many".
+const CATEGORY_TOTALS: Record<string, number> = {
+  'Consensus statements': 12,
+  'Pathophysiology': 26,
+  'Assessment tools': 22,
+  'PPCS + phenotypes': 19,
+  'Exercise + return-to-play': 16,
+  'Cervical + vestibular rehab': 11,
+  'Paediatric concussion': 14,
+}
+
 // Curated preview: 10 landmark references — enough to demonstrate the
 // library's depth + clinical anchoring without giving away the full 140+
 // catalogue. The full library activates with the Hub Program.
@@ -178,7 +190,7 @@ export default async function ProspectReferences({
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <h3 className="text-lg font-bold text-foreground">{category}</h3>
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                    {refs.length} of many
+                    {refs.length} of {CATEGORY_TOTALS[category] ?? refs.length}
                   </span>
                 </div>
                 <div className="space-y-2.5">

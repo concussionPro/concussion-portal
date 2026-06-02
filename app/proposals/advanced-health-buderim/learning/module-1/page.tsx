@@ -39,6 +39,26 @@ export const metadata: Metadata = {
   robots: 'noindex, nofollow',
 }
 
+// Print-suppression CSS — prospect cannot save the trial content as PDF.
+// Replaces the printed page with a single line directing them to the
+// portal. Cmd+P / "Save as PDF" still works as a browser feature, but
+// nothing useful comes out.
+const PREVIEW_PRINT_CSS = `
+  @media print {
+    body * { visibility: hidden !important; }
+    body::before {
+      content: "Module 1 trial preview — full Concussion Clinical Mastery (8 modules, 14 CPD hrs) activates with the Hub Program. portal.concussion-education-australia.com";
+      visibility: visible !important;
+      display: block !important;
+      padding: 24px !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      font-size: 13px !important;
+      line-height: 1.6 !important;
+      color: #1a2332 !important;
+    }
+  }
+`
+
 export default async function ProspectModuleOneTrial({
   searchParams,
 }: {
@@ -62,6 +82,7 @@ export default async function ProspectModuleOneTrial({
 
   return (
     <div className="flex min-h-screen dashboard-bg">
+      <style dangerouslySetInnerHTML={{ __html: PREVIEW_PRINT_CSS }} />
       <ProspectSidebar />
       <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">

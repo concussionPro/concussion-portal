@@ -24,7 +24,7 @@ export function OutreachToolkitDoc({
   const isPreviewMode = Array.isArray(previewedSlugs)
   const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
   return (
-    <FillableDoc storageKey="outreach-kit" defaultValues={defaultValues}>
+    <FillableDoc storageKey="outreach-kit" defaultValues={defaultValues} previewMode={isPreviewMode}>
       <Cover />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
