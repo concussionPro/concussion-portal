@@ -8,13 +8,12 @@ import {
   Library,
   BookMarked,
   Lock,
-  Award,
-  TrendingUp,
   ArrowUpRight,
   GraduationCap,
   ExternalLink,
   MapPin,
   Users,
+  Stethoscope,
 } from 'lucide-react'
 
 const ACCESS_KEY = 'ah2026'
@@ -43,25 +42,6 @@ const TEAM_TOTAL =
   CLINIC.team.remedialMassage +
   CLINIC.team.practiceManager +
   CLINIC.team.admin
-
-// Revenue model — defensible Year 1 estimates for the Sunshine Coast catchment
-const REVENUE = {
-  baselineTestingLow: 6000,   // 3 contracts × ~50 athletes × $40
-  baselineTestingHigh: 12000,  // 5 contracts
-  newConsultsLow: 15000,       // ~30 new presentations × $130 + 3 follow-ups
-  newConsultsHigh: 28000,      // 50 presentations × deeper follow-up
-  rehabEpisodesLow: 10000,     // 10 rehab episodes × 8 sessions × ~$130
-  rehabEpisodesHigh: 20000,    // 20 episodes
-  yearOneLow: 31000,
-  yearOneHigh: 60000,
-}
-
-const PRICING = {
-  combined: 12434,
-  retail: 22400,
-  paybackMonthsLow: 2,
-  paybackMonthsHigh: 4,
-}
 
 export const metadata: Metadata = {
   title: 'Concussion Hub Program — Advanced Health Buderim',
@@ -119,7 +99,7 @@ function ProspectDashboard() {
       <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Greeting />
-          <BusinessCaseHero />
+          <MissionHero />
           <ProspectBento />
         </div>
       </main>
@@ -227,55 +207,48 @@ function Greeting() {
   return (
     <div className="mb-6">
       <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
-        Hi {CLINIC.contactFirstName} — here&rsquo;s the business case for {CLINIC.shortName}
+        Hi {CLINIC.contactFirstName} — built around {CLINIC.shortName}
       </h2>
       <p className="text-sm text-muted-foreground">
-        Your team is 1-2 trained clinicians away from being the {CLINIC.region}&rsquo;s concussion clinic.
+        Upskilling your full team to deliver comprehensive, advanced concussion care for the {CLINIC.region}.
       </p>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BUSINESS CASE HERO — value first, big number is revenue not cost
+// MISSION HERO — clinical mission + epidemiology, no ROI math
 // ─────────────────────────────────────────────────────────────────────────────
 
-function BusinessCaseHero() {
+function MissionHero() {
   return (
     <div className="glass-premium rounded-2xl p-6 sm:p-8 mb-6 relative overflow-hidden border-2 border-accent/20">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-center">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-4 h-4 text-accent" />
-            <p className="text-[10px] uppercase tracking-wider font-bold text-accent">
-              Year 1 revenue estimate · {CLINIC.region} catchment
-            </p>
-          </div>
-          <p className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight leading-none mb-3">
-            A${REVENUE.yearOneLow.toLocaleString()} – A${REVENUE.yearOneHigh.toLocaleString()}
-          </p>
-          <p className="text-sm text-foreground leading-relaxed mb-4 max-w-2xl">
-            New concussion revenue once Advanced Health is the trained, referral-positioned concussion clinic in Buderim. Investment of A${PRICING.combined.toLocaleString()} recovered in <strong>{PRICING.paybackMonthsLow}-{PRICING.paybackMonthsHigh} months</strong> — and lifetime portal access for every team member after that.
-          </p>
+          <h3 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.1] mb-5 max-w-2xl">
+            Become the concussion hub for the {CLINIC.region}.
+          </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 max-w-2xl">
-            <RevenueStream
-              label="Pre-season baseline testing"
-              detail="3-5 club contracts × 50 athletes"
-              low={REVENUE.baselineTestingLow}
-              high={REVENUE.baselineTestingHigh}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-3xl">
+            <StatPill
+              headline="~144k"
+              label="Sport-related concussions in Australia / year"
+              source="Sports Medicine Australia"
             />
-            <RevenueStream
-              label="New concussion presentations"
-              detail="Sports + GP + school referrals"
-              low={REVENUE.newConsultsLow}
-              high={REVENUE.newConsultsHigh}
+            <StatPill
+              headline="~14%"
+              label="Senior community AFL players concussed / season"
+              source="AFL injury surveillance"
             />
-            <RevenueStream
-              label="Structured rehab episodes"
-              detail="BCTT-led, 6-10 sessions each"
-              low={REVENUE.rehabEpisodesLow}
-              high={REVENUE.rehabEpisodesHigh}
+            <StatPill
+              headline="4–12%"
+              label="Youth contact-sport athletes ≥1 concussion / season"
+              source="Amsterdam 2023"
+            />
+            <StatPill
+              headline="60+"
+              label={`Contact-sport clubs across ${CLINIC.region}`}
+              source="rugby · AFL · soccer · SLS"
             />
           </div>
         </div>
@@ -299,20 +272,18 @@ function BusinessCaseHero() {
   )
 }
 
-function RevenueStream({ label, detail, low, high }: { label: string; detail: string; low: number; high: number }) {
+function StatPill({ headline, label, source }: { headline: string; label: string; source: string }) {
   return (
     <div className="rounded-lg bg-white/60 border border-accent/10 px-3 py-2.5">
-      <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">{label}</p>
-      <p className="text-sm font-bold text-foreground leading-tight">
-        A${(low / 1000).toFixed(0)}k–{(high / 1000).toFixed(0)}k
-      </p>
-      <p className="text-[10px] text-muted-foreground mt-0.5">{detail}</p>
+      <p className="text-lg font-bold text-foreground leading-tight">{headline}</p>
+      <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{label}</p>
+      <p className="text-[9px] text-muted-foreground/70 italic mt-1">{source}</p>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BENTO — value-led tile ordering
+// BENTO — capability-led, no pricing visible
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ProspectBento() {
@@ -320,7 +291,7 @@ function ProspectBento() {
     <div className="bento-premium">
       <LocalHubCard />
       <BaselineTestingCard />
-      <InvestmentCard />
+      <ClinicalCapabilityCard />
       <LearningSuiteCard />
       <ScatFormsCard />
       <ReferenceCard />
@@ -330,7 +301,7 @@ function ProspectBento() {
   )
 }
 
-// ── 1: LOCAL HUB (span-2) — the why, region-specific opportunity ─────────────
+// ── 1: LOCAL HUB (span-2) — region-specific referral catchment ───────────────
 function LocalHubCard() {
   return (
     <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden bento-span-2 border-l-4 border-l-amber-400">
@@ -339,21 +310,16 @@ function LocalHubCard() {
           <MapPin className="w-6 h-6 text-amber-600/80" strokeWidth={1.8} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="stat-label mb-0">{CLINIC.region} positioning</p>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
-              Hub opportunity
-            </span>
-          </div>
+          <p className="stat-label">{CLINIC.region} catchment</p>
           <p className="text-base text-foreground font-semibold mb-2">
             Be the clinic GPs, sports clubs and schools refer to
           </p>
           <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-            One trained clinic per region owns the referral flow. Pre-mapped catchment targets:
+            Pre-mapped concussion-relevant organisations within your catchment radius:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-muted-foreground leading-snug">
             <ul className="space-y-0.5">
-              <li>• Sunshine Coast Falcons (Q-Cup)</li>
+              <li>• Sunshine Coast Falcons (Q-Cup rugby)</li>
               <li>• Junior rugby league + AFL + soccer</li>
               <li>• Surf life saving (Maroochydore → Caloundra)</li>
               <li>• Mooloolaba triathlon + cycling</li>
@@ -371,7 +337,7 @@ function LocalHubCard() {
   )
 }
 
-// ── 2: BASELINE SCAT TESTING SERVICE — the revenue stream most clinics miss ──
+// ── 2: BASELINE SCAT SERVICE ─────────────────────────────────────────────────
 function BaselineTestingCard() {
   return (
     <a href="/scat-forms" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
@@ -385,39 +351,33 @@ function BaselineTestingCard() {
           Built
         </span>
       </div>
-      <p className="text-sm text-foreground font-semibold mb-1">Pre-season club revenue</p>
+      <p className="text-sm text-foreground font-semibold mb-1">Pre-season club testing</p>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Our fillable SCAT6 + SCOAT6 are paid-service ready. Offer pre-season baseline testing to local clubs — A${REVENUE.baselineTestingLow.toLocaleString()}-{REVENUE.baselineTestingHigh.toLocaleString()}/year capture realistic.
+        Fillable SCAT6 + SCOAT6 — paid-service ready. Offer pre-season baseline testing to local clubs as a recurring engagement.
       </p>
     </a>
   )
 }
 
-// ── 3: INVESTMENT — small, value framing not cost framing ────────────────────
-function InvestmentCard() {
+// ── 3: CLINICAL CAPABILITY — what your team will deliver ─────────────────────
+function ClinicalCapabilityCard() {
   return (
     <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-400/5 flex items-center justify-center">
-          <Award className="w-[18px] h-[18px] text-blue-600/70" strokeWidth={1.8} />
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+          <Stethoscope className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
         </div>
-        <p className="stat-label mb-0">Total investment</p>
+        <p className="stat-label mb-0">What your team delivers</p>
       </div>
-      <p className="text-2xl font-bold text-foreground leading-tight">
-        A${PRICING.combined.toLocaleString()}
-        <span className="text-xs font-medium text-muted-foreground"> one-time</span>
-      </p>
-      <p className="text-xs text-accent font-semibold mt-1">
-        Recovered in {PRICING.paybackMonthsLow}-{PRICING.paybackMonthsHigh} months
-      </p>
-      <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-        Lifetime portal access for {TEAM_TOTAL} staff + on-site delivery + templates + outreach kit. No subscription.
+      <p className="text-sm text-foreground font-semibold mb-1">Full-spectrum concussion care</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Acute diagnosis, sub-symptom-threshold rehab, paediatric, PPCS workup, return-to-play / school / work. Across all your disciplines.
       </p>
     </div>
   )
 }
 
-// ── 4: LEARNING SUITE — what's included ──────────────────────────────────────
+// ── 4: LEARNING SUITE ────────────────────────────────────────────────────────
 function LearningSuiteCard() {
   return (
     <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden">
@@ -432,13 +392,13 @@ function LearningSuiteCard() {
       </div>
       <p className="text-sm text-foreground font-semibold mb-1">14 CPD hrs / osteo</p>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Full Concussion Clinical Mastery: SCAT6, SCOAT6, VOMS, BESS, cervical, PPCS, paediatric, structured rehab + RTP.
+        Concussion Clinical Mastery: SCAT6, SCOAT6, VOMS, BESS, cervical, PPCS, paediatric, RTP. AHPRA-aligned, OA endorsed.
       </p>
     </div>
   )
 }
 
-// ── 5: SCAT FORMS — unlocked, real link, your-team-can-use-today ─────────────
+// ── 5: SCAT FORMS — unlocked ─────────────────────────────────────────────────
 function ScatFormsCard() {
   return (
     <a href="/scat-forms" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
@@ -507,7 +467,7 @@ function OnsiteCard() {
   )
 }
 
-// ── 8: TEAM SNAPSHOT — context, not hero ─────────────────────────────────────
+// ── 8: TEAM SNAPSHOT ─────────────────────────────────────────────────────────
 function TeamSnapshotCard() {
   return (
     <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden">
