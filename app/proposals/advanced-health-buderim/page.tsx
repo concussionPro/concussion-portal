@@ -99,6 +99,7 @@ function ProspectDashboard() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Greeting />
           <StartHereHero />
+          <OnsiteHubHeadline />
           <ProspectBento />
           <PricingTiers />
         </div>
@@ -340,90 +341,158 @@ function ProspectBento() {
         stat="1 hr"
         statSuffix="phone triage · intake · AI"
       />
-      <Tile
-        icon={GraduationCap}
-        iconTone="rose"
-        label="On-site Hub Day"
-        title="Hands-on training at Buderim"
-        stat="Full day"
-        statSuffix="Zac delivers in-clinic"
-        badge={{ text: 'Next step', tone: 'amber' }}
-      />
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PRICING TIERS — participant tiers + where the value is
+// ON-SITE HUB DAY HEADLINE — highest-value product, prominent placement
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TIER1 = {
-  name: 'Online Clinic License',
-  price: 4634,
-  priceLabel: 'one-time · lifetime access',
-  participants: `${TEAM_TOTAL} seats — full ${CLINIC.shortName} team`,
-  perSeat: 'A$97–A$397 / seat by discipline · 20% volume discount applied',
-  inclusions: [
-    'All 8 modules of Concussion Clinical Mastery',
-    '14 CPD hrs / osteo · 8 hrs / EP · 4 hrs / myo+RMT · 1 hr / admin',
-    'Discipline-specific learning tracks',
-    'Fillable SCAT6, SCOAT6, Child SCAT6',
-    'Pre-season baseline testing service',
-    '140+ peer-reviewed reference library',
-    'Per-clinician CPD dashboards + certificates',
-    'Content updates as consensus evolves',
-  ],
-  value: 'Every clinician on your team capable of structured concussion management.',
+function OnsiteHubHeadline() {
+  return (
+    <section className="mb-6">
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-rose-600 via-rose-700 to-orange-700 text-white shadow-xl">
+        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_right,white,transparent_60%)]" />
+        <div className="relative p-6 sm:p-9">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
+              <GraduationCap className="w-4 h-4" strokeWidth={2} />
+            </div>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/95">
+              The day at Buderim · highest-value product
+            </p>
+          </div>
+
+          <h3 className="text-3xl sm:text-4xl font-bold leading-[1.05] mb-3 max-w-2xl">
+            One full practical day. Your team trained on your own cases.
+          </h3>
+          <p className="text-sm text-white/90 leading-relaxed mb-5 max-w-2xl">
+            Zac delivers in-clinic at Buderim. Online pre-work opens 3 weeks prior so the on-site day is hands-on from the first hour — SCAT6 + SCOAT6 stations, cervical &amp; vestibular examination, acute and PPCS pathways, and your team&rsquo;s referral &amp; discharge workflow embedded by the end of the day.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            <DayStep num="01" label="Calibrate" detail="Team baseline + case review" />
+            <DayStep num="02" label="Assess" detail="SCAT6 / SCOAT6 stations" />
+            <DayStep num="03" label="Manage" detail="Acute + persistent pathways" />
+            <DayStep num="04" label="Embed" detail="Referral &amp; discharge workflow" />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-white/20">
+            <FactBlock label="Format" value="1 full day · in-clinic" />
+            <FactBlock label="Pre-work" value="8 hrs online modules" />
+            <FactBlock label="CPD" value="14 hrs · OA-endorsed" />
+            <FactBlock label="When" value="Weekday that suits you" />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
 
-const TIER2 = {
-  name: 'Combined Hub Program',
-  price: 12434,
-  priceLabel: 'one-time · everything in Tier 1 + on-site',
-  participants: `${TEAM_TOTAL} seats + full-day on-site at ${CLINIC.city}`,
-  perSeat: 'Includes Tier 1 (A$4,634) + on-site Hub day (A$7,800)',
-  inclusions: [
-    'Everything in Tier 1',
-    'Full-day on-site training at Buderim (Zac travels in)',
-    '6 discharge templates — GP letter, school RTP, parent plan, sports cert, WorkCover, NDIS — clinic-branded',
-    '6 outreach templates + email sequences + phone scripts + follow-up tracker',
-    '30-day post-training implementation support',
-    'CEA-trained-clinic badge + waiting-room poster',
-    'Travel included (Byron → Buderim)',
-  ],
-  value: `${CLINIC.shortName} positioned as the ${CLINIC.region}'s concussion referral destination.`,
-  recommended: true,
+function DayStep({ num, label, detail }: { num: string; label: string; detail: string }) {
+  return (
+    <div className="rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 p-3">
+      <p className="text-[9px] uppercase tracking-wider font-bold text-white/70 mb-0.5">{num}</p>
+      <p className="text-sm font-bold leading-tight">{label}</p>
+      <p className="text-[11px] text-white/80 leading-snug mt-0.5">{detail}</p>
+    </div>
+  )
 }
+
+function FactBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[9px] uppercase tracking-wider font-bold text-white/70 mb-0.5">{label}</p>
+      <p className="text-[13px] font-semibold leading-tight">{value}</p>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRICING TIERS — 3 cohort sizes, per-clinician rate scales down
+// ─────────────────────────────────────────────────────────────────────────────
+
+const COHORT_TIERS = [
+  {
+    name: 'Essential',
+    badge: 'Minimum',
+    clinicians: 8,
+    perClinician: 1000,
+    total: 8000,
+    detail: 'Minimum cohort size. Run the program with your senior team.',
+  },
+  {
+    name: 'Recommended',
+    badge: 'Most clinics your size',
+    clinicians: 10,
+    perClinician: 950,
+    total: 9500,
+    detail: `Sweet spot for a multi-disciplinary clinic like ${CLINIC.shortName}.`,
+    recommended: true,
+  },
+  {
+    name: 'Full team',
+    badge: 'Best value',
+    clinicians: 12,
+    perClinician: 900,
+    total: 10800,
+    detail: 'Whole-clinic training. Per-clinician rate drops at scale.',
+  },
+] as const
 
 function PricingTiers() {
   return (
     <section className="mt-8">
       <div className="mb-5">
         <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
-          Investment · two tiers
+          Investment · you choose the cohort
         </p>
         <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-          Choose the scope of the Hub Program
+          On-site training at Buderim
         </h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          One-time pricing. Lifetime access per seat. If a clinician leaves, the seat transfers at no charge.
+        <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+          Public course rate is A$1,400 per clinician. Run it on-site at {CLINIC.shortName} and the whole team trains together — per-clinician rate drops the more of you train. Minimum 8 clinicians.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <TierCard tier={TIER1} />
-        <TierCard tier={TIER2} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {COHORT_TIERS.map((tier) => (
+          <CohortCard key={tier.name} tier={tier} />
+        ))}
       </div>
 
-      <div className="mt-5 glass-premium rounded-xl p-4 text-center">
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Pricing rendered against {CLINIC.shortName}&rsquo;s identified team composition ({TEAM_TOTAL} staff). GST exclusive. Final scope confirmed on the 20-min scoping call.
+      <div className="mt-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white to-white border-2 border-emerald-200 p-5">
+        <div className="flex items-start gap-3 flex-wrap">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+            <span className="text-emerald-700 font-bold">+</span>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 mb-1">
+              Front-of-house — included with every cohort
+            </p>
+            <p className="text-sm font-bold text-foreground mb-1">
+              Concussion forms toolkit + &ldquo;AI in Concussion&rdquo; admin primer
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Reception team gets the intake/discharge forms and a brief non-clinical primer — enough to triage and book cases into the right pathway. No extra cost.
+            </p>
+          </div>
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full">
+            Included
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-5 glass-premium rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
+        <p className="text-xs text-muted-foreground leading-relaxed flex-1 min-w-[200px]">
+          All prices + GST. Cohort size confirmed on the 20-min scoping call alongside a date that suits the clinic.
         </p>
         <a
           href="https://cal.com/zac-lewis-so8zjs/30min"
           target="_blank"
           rel="noopener"
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors mt-3 shadow-md"
+          className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"
         >
           Book scoping call
           <ArrowUpRight className="w-4 h-4" />
@@ -433,48 +502,45 @@ function PricingTiers() {
   )
 }
 
-function TierCard({ tier }: { tier: typeof TIER1 | typeof TIER2 }) {
+function CohortCard({ tier }: { tier: (typeof COHORT_TIERS)[number] }) {
   const recommended = 'recommended' in tier && tier.recommended
   return (
     <div
-      className={`relative rounded-2xl p-6 sm:p-7 overflow-hidden ${
+      className={`relative rounded-2xl p-5 sm:p-6 overflow-hidden border ${
         recommended
-          ? 'bg-gradient-to-br from-accent/8 via-accent/4 to-white border-2 border-accent shadow-md'
-          : 'glass-premium'
+          ? 'bg-gradient-to-br from-accent/8 via-accent/3 to-white border-2 border-accent shadow-md'
+          : 'glass-premium border-accent/8'
       }`}
     >
-      {recommended && (
-        <span className="absolute top-4 right-4 text-[9px] font-bold uppercase tracking-wider bg-accent text-white px-2.5 py-1 rounded-full">
-          Recommended
+      <div className="flex items-center justify-between mb-3">
+        <p className="stat-label mb-0">{tier.name}</p>
+        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${recommended ? 'bg-accent text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+          {tier.badge}
         </span>
-      )}
+      </div>
 
-      <p className="stat-label">{tier.name}</p>
-      <p className={`text-3xl sm:text-4xl font-bold leading-none mt-1 mb-1 ${recommended ? 'text-accent' : 'text-foreground'}`}>
-        A${tier.price.toLocaleString()}
+      <p className={`text-4xl sm:text-5xl font-bold leading-none mb-1 ${recommended ? 'text-accent' : 'text-foreground'}`}>
+        {tier.clinicians}
       </p>
-      <p className="text-[11px] text-muted-foreground mb-4">{tier.priceLabel}</p>
+      <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-4">
+        clinicians
+      </p>
 
-      <div className="rounded-lg bg-white/60 border border-accent/10 px-3 py-2.5 mb-3">
-        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-0.5">Participants</p>
-        <p className="text-[13px] font-semibold text-foreground leading-snug">{tier.participants}</p>
-        <p className="text-[11px] text-muted-foreground leading-snug mt-1">{tier.perSeat}</p>
+      <div className="space-y-1 mb-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-xs text-muted-foreground">Per clinician</span>
+          <span className="text-base font-bold text-foreground">A${tier.perClinician.toLocaleString()}</span>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 pt-2 border-t border-accent/8">
+          <span className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Total</span>
+          <span className={`text-xl font-bold ${recommended ? 'text-accent' : 'text-foreground'}`}>
+            A${tier.total.toLocaleString()}
+          </span>
+        </div>
+        <p className="text-[10px] text-muted-foreground">+ GST</p>
       </div>
 
-      <div className="rounded-lg bg-amber-50/60 border border-amber-200 px-3 py-2.5 mb-4">
-        <p className="text-[10px] uppercase tracking-wider font-bold text-amber-800 mb-0.5">Where the value is</p>
-        <p className="text-[12px] text-foreground leading-snug">{tier.value}</p>
-      </div>
-
-      <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-2">What&rsquo;s included</p>
-      <ul className="space-y-1.5">
-        {tier.inclusions.map((item, i) => (
-          <li key={i} className="text-[12px] text-foreground leading-snug flex gap-2">
-            <span className={recommended ? 'text-accent mt-0.5 shrink-0' : 'text-emerald-600 mt-0.5 shrink-0'}>✓</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+      <p className="text-[11px] text-muted-foreground leading-snug">{tier.detail}</p>
     </div>
   )
 }
