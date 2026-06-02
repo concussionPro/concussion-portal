@@ -360,7 +360,7 @@ export default function BESSBalanceTestingPage() {
                 Pre-season baseline BESS testing should be conducted under standardised conditions: the same foam pad, the same surface, the same instructions, and the same rater where possible. This baseline becomes the individual&apos;s reference point against which post-injury scores are compared. A change of <strong>5 or more points from baseline</strong> on the total BESS score is generally considered clinically meaningful (Guskiewicz et al., 2001), although reliable change indices provide more statistically robust thresholds.
               </p>
               <p>
-                For organisations managing baseline testing programmes, digital platforms that store individual baselines alongside SCAT6 data streamline this process and reduce the risk of lost paper records.
+                For organisations managing baseline testing programs, digital platforms that store individual baselines alongside SCAT6 data streamline this process and reduce the risk of lost paper records.
               </p>
             </div>
           </div>

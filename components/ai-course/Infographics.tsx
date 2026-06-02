@@ -697,7 +697,7 @@ export function AutonomicPhenotypeMatrix() {
       hallmark: 'Symptoms (HR, BP lability, exercise intolerance) post-mTBI > 4 weeks',
       criteria: 'Often overlaps with POTS criteria post-injury (Goodman 2022).',
       driver: 'Brainstem autonomic network dysfunction post-TBI',
-      management: 'Buffalo sub-symptom-threshold exercise · Heart-rate-threshold programme',
+      management: 'Buffalo sub-symptom-threshold exercise · Heart-rate-threshold program',
       red: false,
     },
     {
@@ -768,7 +768,7 @@ export function InterventionEvidenceLadder() {
       examples: [
         { name: 'Compression garments (abdominal + lower limb)', source: 'CSANZ 2024 POTS · Brignole 2018 ESC' },
         { name: 'Counter-pressure manoeuvres for vasovagal', source: 'Sheldon 2015 HRS · Shen 2017 ACC/AHA/HRS' },
-        { name: 'Graded reconditioning programme (recumbent → upright)', source: 'Raj 2022 NIH part 2' },
+        { name: 'Graded reconditioning program (recumbent → upright)', source: 'Raj 2022 NIH part 2' },
       ],
     },
     {
@@ -983,10 +983,10 @@ export function PacedBreathingProtocol() {
 export function PostConcussionAutonomicTimeline() {
   const phases = [
     { phase: 'Days 0–3', color: 'red', what: 'Acute symptomatic phase. Symptom-limited activity. Sleep, hydration, simple cognitive load.', do: 'Symptom-limited rest. NOT total bed rest.' },
-    { phase: 'Days 4–14', color: 'amber', what: 'Sub-symptom aerobic introduction. BCTT to determine HR threshold. Most recover by end of this window.', do: 'Begin HR-threshold programme · 20 min/day at 80–90% of SThr-HR.' },
+    { phase: 'Days 4–14', color: 'amber', what: 'Sub-symptom aerobic introduction. BCTT to determine HR threshold. Most recover by end of this window.', do: 'Begin HR-threshold program · 20 min/day at 80–90% of SThr-HR.' },
     { phase: 'Weeks 2–4', color: 'blue', what: 'Persistent symptoms = persistent post-concussion syndrome (PPCS). Autonomic phenotype may emerge.', do: 'Re-evaluate · active stand test · consider POTS overlay · structured graded exercise.' },
     { phase: 'Months 1–3', color: 'blue', what: 'Most resolve. Those who don\'t require structured rehabilitation + autonomic workup.', do: 'Multi-disciplinary referral · vestibular if dizzy · psychology if mood overlay.' },
-    { phase: 'Months 3+', color: 'slate', what: 'Persistent autonomic symptoms = persistent dysautonomia. Cardiology referral for tilt-table, autonomic battery.', do: 'Cardiology + autonomic neurology. Long-term graded reconditioning programme.' },
+    { phase: 'Months 3+', color: 'slate', what: 'Persistent autonomic symptoms = persistent dysautonomia. Cardiology referral for tilt-table, autonomic battery.', do: 'Cardiology + autonomic neurology. Long-term graded reconditioning program.' },
   ]
   return (
     <div className="my-8 not-prose">

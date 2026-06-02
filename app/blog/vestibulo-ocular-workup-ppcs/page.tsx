@@ -122,7 +122,7 @@ export default function VestibuloOcularWorkupPpcsPage() {
               <li><strong>10 min</strong> — BPPV screening (Dix-Hallpike both sides, supine roll)</li>
               <li><strong>5 min</strong> — quantified NPC, repeated measures</li>
               <li><strong>10 min</strong> — gaze stability exercise tolerance benchmark (VOR ×1 starting prescription)</li>
-              <li><strong>5 min</strong> — home programme prescription, written instructions, expected timeframe</li>
+              <li><strong>5 min</strong> — home program prescription, written instructions, expected timeframe</li>
               <li><strong>5 min</strong> — review at 2 weeks, adjust prescription</li>
             </ul>
             <p>Don&apos;t skip steps. Each is high-yield in a different subset of patients, and the workup is what separates effective PPCS care from &ldquo;keep doing VOR exercises and see how you go.&rdquo;</p>

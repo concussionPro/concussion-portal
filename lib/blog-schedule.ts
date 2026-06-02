@@ -91,7 +91,7 @@ export const BLOG_SCHEDULE: ScheduledBlogPost[] = [
   },
   {
     slug: 'ppcs-waitlist-status-update-course-preview',
-    title: 'PPCS Course Preview — Inside the Forthcoming Clinical Mastery Programme',
+    title: 'PPCS Course Preview — Inside the Forthcoming Clinical Mastery Program',
     publishAt: '2026-07-30T23:00:00Z', // Fri 31 Jul 2026
     draftStatus: 'not-started',
     notes: 'Validation-gate decision week (assumes ≥100 waitlist signups). If gate fails, swap this slot for an evergreen concussion post.',

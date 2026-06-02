@@ -23,13 +23,13 @@ export async function POST(request: NextRequest) {
 
       <div style="border-bottom: 3px solid #0f766e; padding-bottom: 16px; margin-bottom: 24px;">
         <p style="margin: 0 0 4px; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #0f766e; font-weight: 700;">Cold Outreach Brief — Regional / Outer-Metro Clinics</p>
-        <h1 style="margin: 0; font-size: 22px; font-weight: 700;">12 high-fit prospects for the Concussion Hub Programme</h1>
+        <h1 style="margin: 0; font-size: 22px; font-weight: 700;">12 high-fit prospects for the Concussion Hub Program</h1>
         <p style="margin: 6px 0 0; font-size: 13px; color: #475569;">Prepared 2026-06-02 · 9 regions covered · researched via Google + clinic websites + AHPRA register</p>
       </div>
 
       <h2 style="font-size: 14px; color: #0f766e; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 12px;">Executive summary</h2>
       <p style="font-size: 13px; margin: 0 0 16px;">
-        12 verified clinics across regional Australia that match the Hub Programme profile: multi-clinician (8-50+), allied health / sports medicine, owner identifiable, sports adjacency. Several (Geelong SMC, Mid North Coast Allied Health, Peak Physio, NQPC Townsville) already advertise some form of concussion or vestibular service — these are upsell pitches, not greenfield. Others (Ballarat Allied Health, Hunter Performance) have stacked sports CVs but no formal concussion programme — these are differentiation pitches.
+        12 verified clinics across regional Australia that match the Hub Program profile: multi-clinician (8-50+), allied health / sports medicine, owner identifiable, sports adjacency. Several (Geelong SMC, Mid North Coast Allied Health, Peak Physio, NQPC Townsville) already advertise some form of concussion or vestibular service — these are upsell pitches, not greenfield. Others (Ballarat Allied Health, Hunter Performance) have stacked sports CVs but no formal concussion program — these are differentiation pitches.
       </p>
 
       <h2 style="font-size: 14px; color: #0f766e; text-transform: uppercase; letter-spacing: 0.1em; margin: 24px 0 12px;">Recommended outreach order (Tier 1)</h2>
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
             <td style="padding: 8px; vertical-align: top;"><strong>Mid North Coast Allied Health</strong></td>
             <td style="padding: 8px; vertical-align: top;">Port Macquarie / Coffs Harbour NSW</td>
             <td style="padding: 8px; vertical-align: top;">42 across 9 sites</td>
-            <td style="padding: 8px; vertical-align: top;">Largest single deal in the list. 9 sites means the templates + admin micro-course become a huge force multiplier. Already lists concussion services — natural upsell to formal programme.</td>
+            <td style="padding: 8px; vertical-align: top;">Largest single deal in the list. 9 sites means the templates + admin micro-course become a huge force multiplier. Already lists concussion services — natural upsell to formal program.</td>
           </tr>
           <tr style="border-bottom: 1px solid #e2e8f0;">
             <td style="padding: 8px; vertical-align: top;">3</td>
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         email: 'info@ballaratalliedhealth.com.au',
         hooks: [
           'Stacked elite-sport CV across staff — AFL, AFLW, Olympic athletes',
-          'NO current concussion programme advertised — differentiation pitch, not upsell',
+          'NO current concussion program advertised — differentiation pitch, not upsell',
           'AFL ties: Richmond, Collingwood, North Ballarat VFL',
           'Australian U23 Wheelchair Basketball + Olympic Park Sports Medicine pipeline',
         ],
@@ -297,8 +297,8 @@ export async function POST(request: NextRequest) {
         <p style="margin: 0 0 10px; font-style: italic; color: #64748b;">--- body ---</p>
         <p style="margin: 0 0 10px;">Hi Nick,</p>
         <p style="margin: 0 0 10px;">Saw GSMC already runs concussion + vestibular care alongside the Cats / AFLW physio work — and your 25+ clinician multi-disciplinary mix is genuinely the right setup for what I'm pitching, so wanted to reach out directly.</p>
-        <p style="margin: 0 0 10px;">I'm Zac Lewis, AHPRA-registered osteopath and founder of Concussion Education Australia. We run a structured on-site Concussion Hub programme — not generic CPD, but a workflow-aligned package that maps onto a clinic's existing patient journey: reception triage → osteo / physio assessment → EP rehab → discharge with audit-safe documentation. Built around Amsterdam 2023, AHPRA-aligned, OA-endorsed.</p>
-        <p style="margin: 0 0 10px;">The reason I think it's a fit for GSMC specifically: you already have the clinical depth. What we'd bring is (1) the formalised SCAT6 / SCOAT6 / VOMS / BESS pathway across the whole team, (2) discharge documentation that's NDIS-, WorkCover- and indemnity-defensible, and (3) the outreach + capability collateral to deepen your existing AFL / cricket / Geelong school sport relationships. Programme delivered as a full day on-site at your clinic.</p>
+        <p style="margin: 0 0 10px;">I'm Zac Lewis, AHPRA-registered osteopath and founder of Concussion Education Australia. We run a structured on-site Concussion Hub program — not generic CPD, but a workflow-aligned package that maps onto a clinic's existing patient journey: reception triage → osteo / physio assessment → EP rehab → discharge with audit-safe documentation. Built around Amsterdam 2023, AHPRA-aligned, OA-endorsed.</p>
+        <p style="margin: 0 0 10px;">The reason I think it's a fit for GSMC specifically: you already have the clinical depth. What we'd bring is (1) the formalised SCAT6 / SCOAT6 / VOMS / BESS pathway across the whole team, (2) discharge documentation that's NDIS-, WorkCover- and indemnity-defensible, and (3) the outreach + capability collateral to deepen your existing AFL / cricket / Geelong school sport relationships. Program delivered as a full day on-site at your clinic.</p>
         <p style="margin: 0 0 10px;">Pricing depends on team and topic scope, starting at A$8k for training only and A$12.5k for the full Hub package with templates and outreach. Travel is included for Geelong (within Vic) so no surcharge.</p>
         <p style="margin: 0 0 10px;">Worth a 20-minute scoping call? I'm based in QLD but can do any week-day afternoon AEST.</p>
         <p style="margin: 0 0 10px;">Cheers,<br>Zac Lewis<br>B.Clin.Sci., M.Ost.Med.<br>AHPRA-registered Osteopath<br>Founder, Concussion Education Australia</p>

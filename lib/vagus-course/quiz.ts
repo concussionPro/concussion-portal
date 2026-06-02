@@ -73,7 +73,7 @@ export const VAGUS_QUIZ_QUESTIONS: VagusQuizQuestion[] = [
     module: 'module-2-red-flags',
     question: 'A 25-year-old patient presents with one episode of syncope during football training. There is a paternal uncle who died suddenly at age 32. What is your role as an allied-health clinician?',
     options: [
-      'Begin a graded reconditioning programme — syncope is benign at this age',
+      'Begin a graded reconditioning program — syncope is benign at this age',
       'Reassure the patient and proceed with their original presenting complaint',
       'Stop, do NOT prescribe exercise, and refer urgently for cardiology assessment',
       'Recommend salt and fluid loading as first-line for vasovagal syncope',

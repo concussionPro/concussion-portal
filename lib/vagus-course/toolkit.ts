@@ -316,7 +316,7 @@ export const VAGUS_TOOLKIT_ITEMS: VagusToolkitItem[] = [
           'Restrictive diets (gluten-free, dairy-free, etc.) — only if you have a separately diagnosed food intolerance, not as POTS treatment.',
           'Most "vagus nerve toning" exercises beyond slow breathing — no strong evidence for cures.',
           'Supplements marketed for "adrenal fatigue" — adrenal fatigue isn\'t a recognised medical condition.',
-          '"Resetting your nervous system" programmes that cost thousands — there is no nervous-system reset switch. Be cautious of high-cost programmes promising a cure.',
+          '"Resetting your nervous system" programs that cost thousands — there is no nervous-system reset switch. Be cautious of high-cost programs promising a cure.',
         ],
       },
       {
@@ -384,7 +384,7 @@ export const VAGUS_TOOLKIT_ITEMS: VagusToolkitItem[] = [
         heading: 'Apps that can help',
         body: [
           'Free apps that pace breathing visually: Awesome Breathing (iOS/Android), Breathwrk, Calm, Insight Timer. Any free app with a 5–6 breath/min pacer works.',
-          'You don\'t need a paid programme to do this. The visual pacer is the only feature that matters.',
+          'You don\'t need a paid program to do this. The visual pacer is the only feature that matters.',
         ],
       },
       {
@@ -697,7 +697,7 @@ export const VAGUS_TOOLKIT_ITEMS: VagusToolkitItem[] = [
   },
   {
     id: 'protocol-pots-reconditioning',
-    title: 'POTS reconditioning programme — 12-week structured plan',
+    title: 'POTS reconditioning program — 12-week structured plan',
     category: 'Treatment Protocols',
     oneLiner: 'Modified-Levine protocol for graded exercise in POTS. Recumbent → upright over 3 months.',
     icon: Activity,
@@ -706,7 +706,7 @@ export const VAGUS_TOOLKIT_ITEMS: VagusToolkitItem[] = [
       {
         heading: 'Why upright exercise alone fails in POTS',
         body: [
-          'POTS patients have orthostatic intolerance — upright posture itself is the stress. Starting on an upright bike or treadmill in week 1 frequently triggers post-exertional symptom flares and patients abandon the programme.',
+          'POTS patients have orthostatic intolerance — upright posture itself is the stress. Starting on an upright bike or treadmill in week 1 frequently triggers post-exertional symptom flares and patients abandon the program.',
           'The modified Levine / Dallas protocol uses 3+ weeks of recumbent (lying down) exercise before introducing upright work. This builds cardiovascular conditioning while the patient is in the easiest posture.',
         ],
       },
@@ -736,7 +736,7 @@ export const VAGUS_TOOLKIT_ITEMS: VagusToolkitItem[] = [
       {
         heading: 'Progression and setback rules',
         body: [
-          'If post-exercise symptoms (next-day fatigue, lightheadedness) increase: drop back one week of the programme. Do not push through.',
+          'If post-exercise symptoms (next-day fatigue, lightheadedness) increase: drop back one week of the program. Do not push through.',
           'A "good" week is one without post-exertional flare. Two consecutive good weeks → progress.',
           'Total expected timeline to baseline upright activity: 12 weeks. Some patients take 6 months. Both are normal.',
         ],

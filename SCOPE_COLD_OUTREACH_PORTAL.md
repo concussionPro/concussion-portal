@@ -135,7 +135,7 @@ For clinics with serious local-hub ambition, the cold pitch shows BOTH tiers and
 |---|---|
 | Tier 1 — Online Hub subscription (17 seats, year 1) | A$4,239 |
 | Tier 2 — On-site training day + templates + outreach + support + travel | A$7,800 |
-| **Year 1 total — Online + In-Person Hub Programme** | **A$12,039** |
+| **Year 1 total — Online + In-Person Hub Program** | **A$12,039** |
 | Ongoing — annual portal access only (year 2+) | A$4,239/year |
 
 vs A$22,400 of individual retail at 16 × A$1,400 CCM Complete + no clinic-level extras = 46% off retail with the complete local-hub package bundled.
@@ -179,10 +179,10 @@ Per-prospect overrides are supported (e.g. a custom Tier 2 base price for a spec
 Cold email → Bespoke portal (Tier 1 framing) → 20-min call → 
   ↓
   Path A: Smaller clinic / pilot interest → Tier 1 portal subscription
-  Path B: Engaged clinic / sees the hub opportunity → Tier 2 full Hub Programme
+  Path B: Engaged clinic / sees the hub opportunity → Tier 2 full Hub Program
 ```
 
-The portal renders BOTH tiers but leads visually with Tier 1 (the entry point). Tier 2 is the obvious "and once you're ready to own the local market, here's the full programme" upsell.
+The portal renders BOTH tiers but leads visually with Tier 1 (the entry point). Tier 2 is the obvious "and once you're ready to own the local market, here's the full program" upsell.
 
 ---
 
@@ -192,7 +192,7 @@ The portal renders BOTH tiers but leads visually with Tier 1 (the entry point). 
 [1] Cold email lands in clinic principal's inbox
     "Hi {first_name} — saw your team page at {clinic_name}, with {osteo_count} osteos + {ep_count} EPs. 
      Concussion is undertaught and over-presented; your team is exactly the setup to own it locally.
-     I've put together a programme overview specifically for {clinic_name} → {portal_url}"
+     I've put together a program overview specifically for {clinic_name} → {portal_url}"
 
 [2] They click the gated portal URL → /p/{token}
     ↓
@@ -455,7 +455,7 @@ These two content blocks:
 - Only render inside `/p/{token}` after token resolves to a valid `prospect_clinic`
 - Protected by the same noindex/nofollow + robots.txt block as the portal itself
 
-This protects the public catalogue from B2B-only content leaking out as a publicly-discoverable course or asset. It also makes the B2B pitch genuinely differentiated — "you don't get this anywhere else, only as part of the Hub Programme."
+This protects the public catalogue from B2B-only content leaking out as a publicly-discoverable course or asset. It also makes the B2B pitch genuinely differentiated — "you don't get this anywhere else, only as part of the Hub Program."
 
 Public consumer portal content (CCM, AI in Clinical Practice, AI Safety Checklist, SCAT6 forms, references) **does** appear in both the prospect portal and the public catalogue — same content, different framing per surface.
 

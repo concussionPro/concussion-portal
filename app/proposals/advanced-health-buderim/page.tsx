@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { PrintButton } from './PrintButton'
 
 export const metadata: Metadata = {
-  title: 'Concussion Hub Programme — Advanced Health Buderim',
+  title: 'Concussion Hub Program — Advanced Health Buderim',
   description: 'On-site concussion training proposal for Advanced Health, Buderim QLD. Clinical mastery + local-hub positioning.',
   robots: 'noindex, nofollow',
 }
@@ -30,7 +30,7 @@ export default function AdvancedHealthProposal() {
               Concussion Education Australia
             </p>
             <h1 className="text-[22px] font-bold text-slate-900 leading-tight mb-1">
-              Concussion Hub Programme
+              Concussion Hub Program
             </h1>
             <p className="text-[13px] text-slate-700 leading-snug">
               Clinical mastery + local-hub positioning for <strong>Advanced Health Pain &amp; Injury Clinic</strong>, Buderim QLD
@@ -51,7 +51,7 @@ export default function AdvancedHealthProposal() {
             The opportunity
           </p>
           <p className="text-[12px] text-slate-800 leading-relaxed">
-            Concussion is one of the most undertaught conditions in Australian healthcare &mdash; and one of the highest-volume sports injuries on the Sunshine Coast. Most clinics aren&rsquo;t trained to manage it confidently. Your team can be the one that is. The Concussion Hub Programme gives Advanced Health <strong>clinical mastery in concussion diagnosis and rehab</strong>, and the positioning to become the Sunshine Coast&rsquo;s referral destination for sports teams, schools and local GPs.
+            Concussion is one of the most undertaught conditions in Australian healthcare &mdash; and one of the highest-volume sports injuries on the Sunshine Coast. Most clinics aren&rsquo;t trained to manage it confidently. Your team can be the one that is. The Concussion Hub Program gives Advanced Health <strong>clinical mastery in concussion diagnosis and rehab</strong>, and the positioning to become the Sunshine Coast&rsquo;s referral destination for sports teams, schools and local GPs.
           </p>
         </section>
 
@@ -88,7 +88,7 @@ export default function AdvancedHealthProposal() {
             Become the Sunshine Coast&rsquo;s concussion clinic
           </h2>
           <p className="text-[12px] text-slate-800 leading-relaxed mb-3">
-            One trained clinic per region becomes the natural concussion referral destination. The Hub Programme builds out that positioning explicitly &mdash; not just the training, but the relationships and referral pathways that turn it into patient volume.
+            One trained clinic per region becomes the natural concussion referral destination. The Hub Program builds out that positioning explicitly &mdash; not just the training, but the relationships and referral pathways that turn it into patient volume.
           </p>
           <div className="grid grid-cols-2 gap-3 text-[11px]">
             <div>

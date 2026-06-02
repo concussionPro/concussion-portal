@@ -156,7 +156,7 @@ export default function ConcussionMythsPage() {
                   <div>
                     <h4 className="font-bold text-slate-900 mb-1">Clinical Implication</h4>
                     <p className="text-sm text-slate-700">
-                      Prescribe 24-48 hours of relative rest, then initiate a structured active recovery programme. Heart-rate-monitored walking by Day 3 is now the standard. Continued advice to &ldquo;rest in a dark room until you feel better&rdquo; is below the current standard of care and may actively harm your patients.
+                      Prescribe 24-48 hours of relative rest, then initiate a structured active recovery program. Heart-rate-monitored walking by Day 3 is now the standard. Continued advice to &ldquo;rest in a dark room until you feel better&rdquo; is below the current standard of care and may actively harm your patients.
                     </p>
                   </div>
                 </div>
