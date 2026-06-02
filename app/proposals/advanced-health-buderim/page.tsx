@@ -11,9 +11,6 @@ import {
   ArrowUpRight,
   GraduationCap,
   ExternalLink,
-  MapPin,
-  Users,
-  Stethoscope,
 } from 'lucide-react'
 
 const ACCESS_KEY = 'ah2026'
@@ -99,7 +96,6 @@ function ProspectDashboard() {
       <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Greeting />
-          <MissionHero />
           <ProspectBento />
         </div>
       </main>
@@ -206,78 +202,15 @@ function SidebarItem({
 function Greeting() {
   return (
     <div className="mb-6">
-      <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
-        Hi {CLINIC.contactFirstName} — built around {CLINIC.shortName}
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
+        Concussion Hub Program · {CLINIC.city}, {CLINIC.state}
+      </p>
+      <h2 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight leading-[1.05] mb-2">
+        {CLINIC.shortName}
       </h2>
       <p className="text-sm text-muted-foreground">
-        Upskilling your full team to deliver comprehensive, advanced concussion care for the {CLINIC.region}.
+        Hi {CLINIC.contactFirstName} — your team&rsquo;s preview workspace. Explore the contents below.
       </p>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MISSION HERO — clinical mission + epidemiology, no ROI math
-// ─────────────────────────────────────────────────────────────────────────────
-
-function MissionHero() {
-  return (
-    <div className="glass-premium rounded-2xl p-6 sm:p-8 mb-6 relative overflow-hidden border-2 border-accent/20">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-center">
-        <div>
-          <h3 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.1] mb-5 max-w-2xl">
-            Become the concussion hub for the {CLINIC.region}.
-          </h3>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-3xl">
-            <StatPill
-              headline="~144k"
-              label="Sport-related concussions in Australia / year"
-              source="Sports Medicine Australia"
-            />
-            <StatPill
-              headline="~14%"
-              label="Senior community AFL players concussed / season"
-              source="AFL injury surveillance"
-            />
-            <StatPill
-              headline="4–12%"
-              label="Youth contact-sport athletes ≥1 concussion / season"
-              source="Amsterdam 2023"
-            />
-            <StatPill
-              headline="60+"
-              label={`Contact-sport clubs across ${CLINIC.region}`}
-              source="rugby · AFL · soccer · SLS"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2 shrink-0">
-          <a
-            href="https://cal.com/zac-lewis-so8zjs/30min"
-            target="_blank"
-            rel="noopener"
-            className="inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors whitespace-nowrap shadow-md"
-          >
-            Book 20-min scoping call
-            <ArrowUpRight className="w-4 h-4" />
-          </a>
-          <p className="text-[10px] text-muted-foreground text-center">
-            cal.com/zac-lewis-so8zjs/30min
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function StatPill({ headline, label, source }: { headline: string; label: string; source: string }) {
-  return (
-    <div className="rounded-lg bg-white/60 border border-accent/10 px-3 py-2.5">
-      <p className="text-lg font-bold text-foreground leading-tight">{headline}</p>
-      <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{label}</p>
-      <p className="text-[9px] text-muted-foreground/70 italic mt-1">{source}</p>
     </div>
   )
 }
@@ -289,116 +222,48 @@ function StatPill({ headline, label, source }: { headline: string; label: string
 function ProspectBento() {
   return (
     <div className="bento-premium">
-      <LocalHubCard />
-      <BaselineTestingCard />
-      <ClinicalCapabilityCard />
       <LearningSuiteCard />
       <ScatFormsCard />
+      <BaselineTestingCard />
       <ReferenceCard />
+      <ClinicalToolkitCard />
+      <OutreachKitCard />
+      <AdminWorkflowCard />
       <OnsiteCard />
-      <TeamSnapshotCard />
     </div>
   )
 }
 
-// ── 1: LOCAL HUB (span-2) — region-specific referral catchment ───────────────
-function LocalHubCard() {
+// ── 1: LEARNING SUITE (span-2, hero) — links to module list ──────────────────
+function LearningSuiteCard() {
   return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden bento-span-2 border-l-4 border-l-amber-400">
+    <a href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block bento-span-2 border-l-4 border-l-accent">
+      <ArrowUpRight className="absolute top-5 right-5 w-5 h-5 text-muted-foreground/40 group-hover:text-accent transition-colors" />
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/15 to-amber-400/5 flex items-center justify-center shrink-0">
-          <MapPin className="w-6 h-6 text-amber-600/80" strokeWidth={1.8} />
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center shrink-0">
+          <BookOpen className="w-6 h-6 text-accent" strokeWidth={1.8} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="stat-label">{CLINIC.region} catchment</p>
-          <p className="text-base text-foreground font-semibold mb-2">
-            Be the clinic GPs, sports clubs and schools refer to
-          </p>
-          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-            Pre-mapped concussion-relevant organisations within your catchment radius:
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-muted-foreground leading-snug">
-            <ul className="space-y-0.5">
-              <li>• Sunshine Coast Falcons (Q-Cup rugby)</li>
-              <li>• Junior rugby league + AFL + soccer</li>
-              <li>• Surf life saving (Maroochydore → Caloundra)</li>
-              <li>• Mooloolaba triathlon + cycling</li>
-            </ul>
-            <ul className="space-y-0.5">
-              <li>• Matthew Flinders Anglican</li>
-              <li>• Sunshine Coast Grammar</li>
-              <li>• Immanuel, Pacific Lutheran</li>
-              <li>• Local GPs needing referral path</li>
-            </ul>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="stat-label mb-0">Learning Suite</p>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+              Trial open
+            </span>
           </div>
+          <p className="text-base text-foreground font-semibold mb-1">8 Clinical Modules · 14 CPD hrs</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+            Concussion Clinical Mastery — SCAT6, SCOAT6, VOMS, BESS, cervical, PPCS, paediatric, return-to-play. AHPRA-aligned, OA endorsed.
+          </p>
+          <p className="text-[11px] font-bold text-accent">
+            → Open Module 1 trial
+          </p>
         </div>
       </div>
-    </div>
-  )
-}
-
-// ── 2: BASELINE SCAT SERVICE ─────────────────────────────────────────────────
-function BaselineTestingCard() {
-  return (
-    <a href="/scat-forms" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
-      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 flex items-center justify-center">
-          <Activity className="w-[18px] h-[18px] text-emerald-600/80" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">Baseline SCAT service</p>
-        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-          Built
-        </span>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">Pre-season club testing</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Fillable SCAT6 + SCOAT6 — paid-service ready. Offer pre-season baseline testing to local clubs as a recurring engagement.
-      </p>
     </a>
   )
 }
 
-// ── 3: CLINICAL CAPABILITY — what your team will deliver ─────────────────────
-function ClinicalCapabilityCard() {
-  return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
-          <Stethoscope className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">What your team delivers</p>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">Full-spectrum concussion care</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Acute diagnosis, sub-symptom-threshold rehab, paediatric, PPCS workup, return-to-play / school / work. Across all your disciplines.
-      </p>
-    </div>
-  )
-}
-
-// ── 4: LEARNING SUITE ────────────────────────────────────────────────────────
-function LearningSuiteCard() {
-  return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
-          <BookOpen className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
-        </div>
-        <p className="stat-label mb-0">Learning Suite</p>
-        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
-          Hub
-        </span>
-      </div>
-      <p className="text-sm text-foreground font-semibold mb-1">14 CPD hrs / osteo</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Concussion Clinical Mastery: SCAT6, SCOAT6, VOMS, BESS, cervical, PPCS, paediatric, RTP. AHPRA-aligned, OA endorsed.
-      </p>
-    </div>
-  )
-}
-
-// ── 5: SCAT FORMS — unlocked ─────────────────────────────────────────────────
+// ── 2: SCAT FORMS — unlocked ─────────────────────────────────────────────────
 function ScatFormsCard() {
   return (
     <a href="/scat-forms" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
@@ -409,18 +274,40 @@ function ScatFormsCard() {
         </div>
         <p className="stat-label mb-0">SCAT Forms</p>
         <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-          Open now
+          Open
         </span>
       </div>
       <p className="text-sm text-foreground font-semibold mb-1">Digital Assessment</p>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        SCAT6, Child SCAT6, SCOAT6 — fillable, auto-scored. Use today.
+        SCAT6, Child SCAT6, SCOAT6 — fillable, auto-scored, downloadable.
       </p>
     </a>
   )
 }
 
-// ── 6: REFERENCE REPOSITORY (span-2) — unlocked ──────────────────────────────
+// ── 3: BASELINE COGNITIVE TESTING ────────────────────────────────────────────
+function BaselineTestingCard() {
+  return (
+    <a href="/scat-forms" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
+      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 flex items-center justify-center">
+          <Activity className="w-[18px] h-[18px] text-emerald-600/80" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">Pre-season baseline</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+          Built
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">Cognitive baseline testing</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Pre-season baseline SCAT6 + SCOAT6 for local sports clubs. Recurring service capability.
+      </p>
+    </a>
+  )
+}
+
+// ── 4: REFERENCE REPOSITORY (span-2) — unlocked ──────────────────────────────
 function ReferenceCard() {
   return (
     <a href="/references" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block bento-span-2">
@@ -433,12 +320,12 @@ function ReferenceCard() {
           <div className="flex items-center gap-2">
             <p className="stat-label">Reference Repository</p>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-              Open now
+              Open
             </span>
           </div>
           <p className="text-sm text-foreground font-semibold mb-1">140+ Peer-Reviewed Sources</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Amsterdam 2023, AIS 2024, RACGP, Cochrane. Searchable. Your team uses it today.
+            Amsterdam 2023, AIS 2024, RACGP, Cochrane. Searchable.
           </p>
         </div>
       </div>
@@ -446,42 +333,76 @@ function ReferenceCard() {
   )
 }
 
-// ── 7: ON-SITE HUB DAY ───────────────────────────────────────────────────────
-function OnsiteCard() {
+// ── 5: CLINICAL TOOLKIT — locked ─────────────────────────────────────────────
+function ClinicalToolkitCard() {
   return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-90">
+    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-85">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
-          <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
         </div>
-        <p className="stat-label mb-0">On-site Hub Day</p>
-        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
-          Included
-        </span>
+        <p className="stat-label mb-0">Clinical Toolkit</p>
       </div>
-      <p className="text-sm text-foreground font-semibold mb-1">In-clinic at Buderim</p>
+      <p className="text-sm text-foreground font-semibold mb-1">6 Discharge Templates</p>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Full-day hands-on training + 6 discharge templates + outreach kit + 30-day support.
+        GP letter, school RTP, parent plan, sports cert, WorkCover, NDIS — clinic-branded.
       </p>
     </div>
   )
 }
 
-// ── 8: TEAM SNAPSHOT ─────────────────────────────────────────────────────────
-function TeamSnapshotCard() {
+// ── 6: OUTREACH KIT — locked ─────────────────────────────────────────────────
+function OutreachKitCard() {
   return (
-    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden">
+    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-85">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
-          <Users className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
         </div>
-        <p className="stat-label mb-0">Your team trained</p>
+        <p className="stat-label mb-0">Outreach Kit</p>
       </div>
-      <p className="text-2xl font-bold text-foreground leading-tight">
-        {TEAM_TOTAL}<span className="text-xs font-medium text-muted-foreground"> staff</span>
+      <p className="text-sm text-foreground font-semibold mb-1">6 Templates · scripts · tracker</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Schools, sports clubs, GPs — email sequences + phone scripts + follow-up tracker.
       </p>
-      <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-        {CLINIC.team.osteopaths} osteo · {CLINIC.team.exercisePhys} EP · {CLINIC.team.myotherapists + CLINIC.team.remedialMassage} myo/RMT · {CLINIC.team.practiceManager + CLINIC.team.admin} admin
+    </div>
+  )
+}
+
+// ── 7: ADMIN WORKFLOW — locked ───────────────────────────────────────────────
+function AdminWorkflowCard() {
+  return (
+    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-85">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">Admin Workflow</p>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">1-hr Reception Course</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Phone triage, red flags, intake form, AI-safe workflow, template library.
+      </p>
+    </div>
+  )
+}
+
+// ── 8: ON-SITE HUB DAY — the "next step" framing ─────────────────────────────
+function OnsiteCard() {
+  return (
+    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden opacity-85">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
+          <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">On-site Hub Day</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
+          Next step
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">Hands-on training in Buderim</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Builds on the online program — full-day on-site delivery once your team has the foundations.
       </p>
     </div>
   )
