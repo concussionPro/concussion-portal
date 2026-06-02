@@ -759,7 +759,7 @@ const FAQS = [
   },
   {
     q: 'What if our team is smaller than 8?',
-    a: 'Two options. Most clinics in this position invite a physio or EP from a neighbouring practice to round out the cohort — it builds a natural referral pathway with the second clinic and works out well for both. Alternatively, we can scope a 6-clinician engagement at A$1,100/head (A$6,600 + GST, GST inclusive). Raise it on the scoping call.',
+    a: 'For under-8 cohorts, the cleanest path is sending the team to one of our public workshops — same 14 CPD hours, same content, no on-site travel logistics for sub-minimum numbers. Public workshops run regularly in Melbourne, Sydney and Brisbane. We can confirm the next available date on the scoping call.',
   },
   {
     q: 'We have two locations — how does the on-site day work?',
@@ -884,10 +884,10 @@ function ZacCredibility() {
             Delivered by
           </p>
           <p className="text-base sm:text-lg font-bold text-foreground leading-tight">
-            Zac Lewis · B.Clin.Sci., M.Ost.Med.
+            Dr Zac Lewis, Osteopath
           </p>
           <p className="text-xs text-muted-foreground mb-2">
-            AHPRA-registered Osteopath · Course Director, Concussion Education Australia
+            B.Clin.Sci., M.Ost.Med. · AHPRA-registered · Course Director, Concussion Education Australia
           </p>
           <p className="text-[12.5px] text-foreground leading-relaxed">
             Over a decade specialising in concussion management — including work with national and professional ice-hockey leagues across New Zealand and Canada. Course director and clinical mentor to early-career clinicians Australia-wide.

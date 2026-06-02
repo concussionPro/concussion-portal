@@ -251,10 +251,10 @@ function ZacCredibility() {
         <div className="flex-1 min-w-0">
           <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Delivered by</p>
           <p className="text-base sm:text-lg font-bold text-foreground leading-tight">
-            Zac Lewis · B.Clin.Sci., M.Ost.Med.
+            Dr Zac Lewis, Osteopath
           </p>
           <p className="text-xs text-muted-foreground mb-2">
-            AHPRA-registered Osteopath · Course Director, Concussion Education Australia
+            B.Clin.Sci., M.Ost.Med. · AHPRA-registered · Course Director, Concussion Education Australia
           </p>
           <p className="text-[12.5px] text-foreground leading-relaxed">
             Over a decade specialising in concussion management — including work with national and professional ice-hockey leagues across New Zealand and Canada. Course director and clinical mentor to early-career clinicians Australia-wide.
