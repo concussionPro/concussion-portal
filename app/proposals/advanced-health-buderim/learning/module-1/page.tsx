@@ -398,8 +398,8 @@ function ProspectSidebar() {
         <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
-        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
-        <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
+        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/clinical?k=${ACCESS_KEY}`} label="Clinical Toolkit" icon={FileText} locked />
+        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`} label="Admin Workflow" icon={BookMarked} locked />
       </nav>
 
       <div className="pt-5 border-t border-white/30">
@@ -427,13 +427,21 @@ function SidebarItem({
 }) {
   const base = 'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all relative text-sm font-medium'
   if (locked) {
-    return (
-      <div className={`${base} opacity-50 text-muted-foreground cursor-default`}>
+    const lockInner = (
+      <>
         <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
         <span>{label}</span>
-        <Lock className="w-3 h-3 ml-auto text-muted-foreground/60" />
-      </div>
+        <Lock className="w-3 h-3 ml-auto text-amber-600/70" />
+      </>
     )
+    if (href) {
+      return (
+        <a href={href} className={`${base} text-muted-foreground hover:text-foreground hover:bg-white/40`}>
+          {lockInner}
+        </a>
+      )
+    }
+    return <div className={`${base} opacity-50 text-muted-foreground cursor-default`}>{lockInner}</div>
   }
   if (active) {
     return (
