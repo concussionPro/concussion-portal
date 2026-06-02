@@ -169,6 +169,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/team-training`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.85,
+    },
+    {
       url: `${baseUrl}/blog/persistent-post-concussion-symptoms-clinician-workup`,
       lastModified: new Date(),
       changeFrequency: 'monthly',

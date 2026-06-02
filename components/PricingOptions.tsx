@@ -825,6 +825,25 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </div>
         ))}
       </div>
+
+      {/* Team / clinic training callout — for clinic owners + sports orgs browsing the pricing page */}
+      <div className="mt-12 max-w-3xl mx-auto rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50/60 to-emerald-50/40 p-6 md:p-7">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-teal-800 mb-1">For clinics + organisations</p>
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1">Training a whole team?</h3>
+            <p className="text-sm text-slate-700 leading-relaxed">
+              In-house team training for clinics, sports organisations, and hospital networks. Concussion + AI in Clinical Practice, delivered on-site or live online, around your workflow. Zac discusses pricing privately based on team size + topics.
+            </p>
+          </div>
+          <a
+            href="/team-training"
+            className="shrink-0 inline-flex items-center gap-1.5 px-5 py-3 rounded-xl bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 transition-colors whitespace-nowrap"
+          >
+            Send a team inquiry
+          </a>
+        </div>
+      </div>
     </div>
   )
 }
