@@ -1,22 +1,39 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { PrintButton } from './PrintButton'
+import {
+  Home,
+  BookOpen,
+  Brain,
+  Activity,
+  FileText,
+  Library,
+  BookMarked,
+  Lock,
+  Award,
+  Clock,
+  ArrowUpRight,
+  GraduationCap,
+  Sparkles,
+  MapPin,
+  Calendar,
+  ExternalLink,
+} from 'lucide-react'
 
 // Soft access gate. Paired with the unguessable clinic-name slug.
-// Anyone with the full URL + key sees the full personalised hub.
+// Anyone with full URL + key sees the personalised dashboard.
 // Without the key, render an access wall (no pricing leakage).
 const ACCESS_KEY = 'ah2026'
 
 // Single source of truth for this prospect's personalisation.
 // In the engine version (`/p/[token]/page.tsx`), this is loaded
-// from the `prospect_clinics` + `prospect_clinicians` tables.
+// from the prospect_clinics + prospect_clinicians tables.
 const CLINIC = {
   name: 'Advanced Health Pain & Injury Clinic',
   shortName: 'Advanced Health',
   city: 'Buderim',
   region: 'Sunshine Coast',
   state: 'QLD',
-  contactName: 'Lauren Kidston',
+  contactFirstName: 'Lauren',
   team: {
     osteopaths: 9,
     exercisePhys: 3,
@@ -35,7 +52,12 @@ const TEAM_TOTAL =
   CLINIC.team.practiceManager +
   CLINIC.team.admin
 
-// Pricing — matches SCOPE_COLD_OUTREACH_PORTAL.md (one-time clinic license model)
+const CLINICAL_TOTAL =
+  CLINIC.team.osteopaths +
+  CLINIC.team.exercisePhys +
+  CLINIC.team.myotherapists +
+  CLINIC.team.remedialMassage
+
 const PRICING = {
   tier1: {
     osteo: { count: 9, seat: 397, subtotal: 3573 },
@@ -45,26 +67,18 @@ const PRICING = {
     pm: { count: 1, seat: 197, subtotal: 197 },
     admin: { count: 2, seat: 97, subtotal: 194 },
     subtotal: 5793,
-    volumeDiscountPct: 20,
-    volumeDiscountAud: 1159,
+    discountPct: 20,
+    discountAud: 1159,
     total: 4634,
   },
-  tier2: {
-    onsite: 4500,
-    templates: 1500,
-    outreach: 1000,
-    support: 500,
-    travel: 300,
-    total: 7800,
-  },
+  tier2: { onsite: 4500, templates: 1500, outreach: 1000, support: 500, travel: 300, total: 7800 },
   combined: 12434,
-  individualRetail: 22400, // 16 clinicians × A$1,400 CCM Complete retail
+  individualRetail: 22400,
 }
 
 export const metadata: Metadata = {
   title: 'Concussion Hub Program — Advanced Health Buderim',
-  description:
-    'Working preview portal: concussion training hub prepared for Advanced Health Pain & Injury Clinic, Buderim QLD. Clinical mastery + local-hub positioning.',
+  description: 'Working preview portal: concussion training hub prepared for Advanced Health Pain & Injury Clinic, Buderim QLD.',
   robots: 'noindex, nofollow',
 }
 
@@ -74,757 +88,653 @@ export default async function AdvancedHealthHubPage({
   searchParams: Promise<{ k?: string }>
 }) {
   const { k } = await searchParams
-  const unlocked = k === ACCESS_KEY
-
-  if (!unlocked) {
-    return <AccessWall />
-  }
-
-  return <HubDemo />
+  if (k !== ACCESS_KEY) return <AccessWall />
+  return <ProspectDashboard />
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ACCESS WALL — shown when ?k query param is missing or wrong
+// ACCESS WALL
 // ─────────────────────────────────────────────────────────────────────────────
 
 function AccessWall() {
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-8 text-center">
-        <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-teal-700 mb-2">
+    <div className="min-h-screen dashboard-bg flex items-center justify-center p-6">
+      <div className="max-w-md w-full glass-premium rounded-2xl p-8 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center mx-auto mb-4 shadow-md shadow-accent/15">
+          <Brain className="w-6 h-6 text-white" strokeWidth={2} />
+        </div>
+        <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-accent mb-2">
           Concussion Education Australia
         </p>
-        <h1 className="text-xl font-bold text-slate-900 mb-3">
+        <h1 className="text-xl font-bold text-foreground mb-3">
           Private proposal portal
         </h1>
-        <p className="text-sm text-slate-600 leading-relaxed mb-5">
-          This portal was prepared for <strong>Advanced Health Pain &amp; Injury Clinic</strong>, Buderim. Access requires the link from Zac&rsquo;s introductory email.
+        <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+          This portal was prepared for <strong className="text-foreground">Advanced Health Pain &amp; Injury Clinic</strong>, Buderim. Access requires the link from Zac&rsquo;s introductory email.
         </p>
-        <p className="text-xs text-slate-500 leading-relaxed mb-6">
+        <p className="text-xs text-muted-foreground leading-relaxed mb-6">
           Lost the link? Reply to the introductory email and Zac will resend within 1 business day.
         </p>
         <a
           href="mailto:zac@concussion-education-australia.com?subject=Resend%20proposal%20portal%20access"
-          className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 transition-colors"
+          className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
         >
           Email Zac for access
         </a>
-        <p className="text-[10px] text-slate-400 mt-6">
-          zac@concussion-education-australia.com
-        </p>
       </div>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HUB DEMO — the working portal personalised for Advanced Health
+// PROSPECT DASHBOARD — matches production /dashboard chrome
 // ─────────────────────────────────────────────────────────────────────────────
 
-function HubDemo() {
+function ProspectDashboard() {
   return (
-    <div className="min-h-screen bg-slate-50 print:bg-white">
-      <TopBar />
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 print:py-0 print:px-8 print:max-w-none">
-        <HubHeader />
-        <OpportunityBanner />
-        <SectionNav />
-
-        <div id="free-utility" className="scroll-mt-20">
-          <FreeUtilitySection />
+    <div className="flex min-h-screen dashboard-bg">
+      <ProspectSidebar />
+      <main className="flex-1 ml-0 md:ml-64">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+          <Greeting />
+          <BespokeBanner />
+          <ProspectBento />
+          <InvestmentDetail />
+          <LocalHubDetail />
+          <BookingCta />
+          <FooterMeta />
         </div>
-
-        <div id="module-trial" className="scroll-mt-20 mt-6">
-          <ModuleOneTrialSection />
-        </div>
-
-        <div id="pathways" className="scroll-mt-20 mt-6">
-          <DisciplinePathwaysSection />
-        </div>
-
-        <div id="locked" className="scroll-mt-20 mt-6">
-          <LockedPremiumSection />
-        </div>
-
-        <div id="flow" className="scroll-mt-20 mt-6">
-          <HubFlowSection />
-        </div>
-
-        <div id="local-hub" className="scroll-mt-20 mt-6">
-          <LocalHubSection />
-        </div>
-
-        <div id="investment" className="scroll-mt-20 mt-6">
-          <InvestmentSection />
-        </div>
-
-        <div id="book" className="scroll-mt-20 mt-6">
-          <CTASection />
-        </div>
-
-        <HubFooter />
       </main>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOP BAR (print bar + portal chrome)
+// SIDEBAR — production look, prospect-mode content
 // ─────────────────────────────────────────────────────────────────────────────
 
-function TopBar() {
+function ProspectSidebar() {
   return (
-    <div className="print:hidden bg-white border-b border-slate-200 sticky top-0 z-30 backdrop-blur">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex w-2 h-2 rounded-full bg-emerald-500" />
-          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-700">
-            Live proposal portal · {CLINIC.shortName}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <p className="hidden sm:block text-[10px] text-slate-500">
-            Tip: <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-300 rounded text-[9px] font-mono">Cmd+P</kbd> for PDF
-          </p>
-          <PrintButton />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HEADER — Prepared for Advanced Health
-// ─────────────────────────────────────────────────────────────────────────────
-
-function HubHeader() {
-  return (
-    <header className="rounded-2xl bg-gradient-to-br from-teal-800 via-teal-700 to-emerald-700 text-white p-6 sm:p-8 shadow-lg">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-teal-100 mb-2">
-            Concussion Education Australia · Prepared for
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold leading-tight mb-1">
-            {CLINIC.name}
+    <div className="hidden md:flex fixed left-0 top-0 h-screen w-64 sidebar-premium p-6 flex-col z-40 overflow-y-auto overscroll-contain">
+      {/* Logo */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-md shadow-accent/15">
+            <Brain className="w-5 h-5 text-white" strokeWidth={2} />
+          </div>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">
+            Concussion<span className="text-accent">Pro</span>
           </h1>
-          <p className="text-sm text-teal-50">
-            {CLINIC.city}, {CLINIC.state} · Hi {CLINIC.contactName.split(' ')[0]} — this is your team&rsquo;s working preview portal
+        </div>
+        <p className="text-[0.65rem] text-muted-foreground ml-12 uppercase tracking-widest font-medium">
+          Hub Program Preview
+        </p>
+      </div>
+
+      {/* Prepared for card */}
+      <div className="glass-premium rounded-xl p-3 mb-6">
+        <p className="text-[9px] uppercase tracking-wider font-bold text-accent mb-1">Prepared for</p>
+        <p className="text-sm font-bold text-foreground leading-tight">{CLINIC.shortName}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">{CLINIC.city}, {CLINIC.state}</p>
+        <div className="mt-2 pt-2 border-t border-accent/10">
+          <p className="text-[10px] text-muted-foreground">Hi {CLINIC.contactFirstName} —</p>
+          <p className="text-[10px] text-muted-foreground">This is your team&rsquo;s preview.</p>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 space-y-1">
+        <SidebarItem href="#dashboard" label="Dashboard" icon={Home} active />
+        <SidebarItem href="#learning" label="Learning Suite" icon={BookOpen} />
+        <SidebarItem href="#clinical-toolkit" label="Clinical Toolkit" icon={FileText} locked />
+        <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
+        <SidebarItem href="/references" label="Reference Repository" icon={Library} external />
+        <SidebarItem href="#admin-track" label="Admin Workflow" icon={BookMarked} locked />
+        <SidebarItem href="#investment" label="Investment" icon={Award} />
+        <SidebarItem href="#book" label="Book a call" icon={Calendar} />
+      </nav>
+
+      {/* Footer */}
+      <div className="pt-5 border-t border-white/30">
+        <div className="px-1">
+          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+            AHPRA Aligned
           </p>
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-[9px] uppercase tracking-wider text-teal-200 mb-0.5">Prepared</p>
-          <p className="text-xs font-semibold">June 2026</p>
-          <p className="text-[9px] uppercase tracking-wider text-teal-200 mt-2 mb-0.5">Valid until</p>
-          <p className="text-xs font-semibold">02 Jul 2026</p>
+          <p className="text-[10px] text-muted-foreground mb-2">OA Endorsed · 14 CPD hrs</p>
+          <p className="text-[10px] text-muted-foreground">
+            Author: <span className="font-semibold text-foreground">Zac Lewis</span>
+          </p>
+          <p className="text-[10px] text-muted-foreground">Osteopath · Founder, CEA</p>
         </div>
       </div>
-
-      <div className="mt-5 grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-3">
-        <TeamPill label="Osteopaths" count={CLINIC.team.osteopaths} />
-        <TeamPill label="Exercise Phys" count={CLINIC.team.exercisePhys} />
-        <TeamPill label="Myotherapists" count={CLINIC.team.myotherapists} />
-        <TeamPill label="Remedial Massage" count={CLINIC.team.remedialMassage} />
-        <TeamPill label="Practice Mgr" count={CLINIC.team.practiceManager} />
-        <TeamPill label="Admin" count={CLINIC.team.admin} />
-      </div>
-      <p className="text-[11px] text-teal-100 mt-3">
-        {TEAM_TOTAL} staff identified across clinical + admin — discipline pathways below are curated to this exact composition.
-      </p>
-    </header>
-  )
-}
-
-function TeamPill({ label, count }: { label: string; count: number }) {
-  return (
-    <div className="rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 px-3 py-2">
-      <p className="text-[20px] font-bold leading-none">{count}</p>
-      <p className="text-[9px] uppercase tracking-wide text-teal-100 mt-1">{label}</p>
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// OPPORTUNITY BANNER
-// ─────────────────────────────────────────────────────────────────────────────
-
-function OpportunityBanner() {
-  return (
-    <section className="mt-5 rounded-xl border-2 border-teal-200 bg-teal-50/60 p-5">
-      <p className="text-[10px] uppercase tracking-wider text-teal-800 font-bold mb-2">
-        The opportunity
-      </p>
-      <p className="text-sm text-slate-800 leading-relaxed">
-        Concussion is one of the most undertaught conditions in Australian healthcare — and one of the highest-volume sports injuries on the {CLINIC.region}. Most clinics aren&rsquo;t trained to manage it confidently. Your team can be the one that is. The Concussion Hub Program gives {CLINIC.shortName} <strong>clinical mastery in concussion diagnosis and structured rehab</strong>, and the positioning to become the {CLINIC.region}&rsquo;s referral destination for sports teams, schools and local GPs.
-      </p>
-    </section>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SECTION NAV — pseudo-dashboard tabs
-// ─────────────────────────────────────────────────────────────────────────────
-
-function SectionNav() {
-  const items = [
-    { href: '#free-utility', label: 'Free utility' },
-    { href: '#module-trial', label: 'Module 1 trial' },
-    { href: '#pathways', label: 'Discipline pathways' },
-    { href: '#locked', label: 'Premium content' },
-    { href: '#local-hub', label: 'Local hub' },
-    { href: '#investment', label: 'Investment' },
-    { href: '#book', label: 'Book a call' },
-  ]
-  return (
-    <nav className="print:hidden mt-5 -mx-2 px-2 overflow-x-auto">
-      <ul className="flex gap-2 min-w-max">
-        {items.map((it) => (
-          <li key={it.href}>
-            <a
-              href={it.href}
-              className="inline-block px-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-teal-400 hover:text-teal-700 transition-colors"
-            >
-              {it.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// FREE UTILITY — visible, usable, real links to live tools
-// ─────────────────────────────────────────────────────────────────────────────
-
-function FreeUtilitySection() {
-  return (
-    <section className="rounded-xl bg-white border border-slate-200 shadow-sm p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-4 mb-1">
-        <h2 className="text-lg font-bold text-slate-900">Free utility — open + use right now</h2>
-        <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-full">
-          Unlocked
-        </span>
-      </div>
-      <p className="text-xs text-slate-600 mb-4">
-        These are the real fillable clinical tools and reference library CEA hosts. Anyone on your team can open and use them today — no login required.
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <UtilityCard
-          href="/scat-forms/scat6"
-          title="SCAT6 fillable form"
-          detail="Adult sideline assessment. Web-based + downloadable PDF. Auto-scoring on key sections."
-        />
-        <UtilityCard
-          href="/scat-forms/scoat6"
-          title="SCOAT6 fillable form"
-          detail="Office-based follow-up assessment for ongoing care decisions."
-        />
-        <UtilityCard
-          href="/scat-forms/child-scat6"
-          title="Child SCAT6"
-          detail="Paediatric (5-12 yr) version with age-appropriate cognitive items."
-        />
-        <UtilityCard
-          href="/references"
-          title="Reference library"
-          detail="140+ peer-reviewed citations — Amsterdam 2023, AIS, RACGP, Cochrane. Searchable."
-        />
-      </div>
-
-      <p className="text-[11px] text-slate-500 italic mt-4 leading-relaxed">
-        Already free on the public CEA portal. Reception staff can bookmark these for triage; clinicians can fill them in-session and print to the patient&rsquo;s file. The Hub Program adds the <strong>clinical reasoning</strong> behind administering them and the <strong>discharge documentation</strong> built around the scores.
-      </p>
-    </section>
-  )
-}
-
-function UtilityCard({ href, title, detail }: { href: string; title: string; detail: string }) {
-  return (
-    <Link
-      href={href}
-      target="_blank"
-      className="block rounded-lg border-2 border-emerald-200 bg-emerald-50/30 p-3 hover:border-emerald-400 hover:bg-emerald-50/60 transition-colors group"
-    >
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-xs font-bold text-slate-900">{title}</p>
-        <span className="text-emerald-600 group-hover:translate-x-0.5 transition-transform text-xs">↗</span>
-      </div>
-      <p className="text-[11px] text-slate-600 leading-snug">{detail}</p>
-      <p className="text-[9px] uppercase tracking-wider font-bold text-emerald-700 mt-2">Open in new tab</p>
-    </Link>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MODULE 1 TRIAL — partial content visible, rest locked
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ModuleOneTrialSection() {
-  return (
-    <section className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-      <div className="bg-gradient-to-r from-teal-700 to-emerald-700 text-white p-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10px] uppercase tracking-wider text-teal-100 font-bold">Concussion Clinical Mastery</p>
-            <h2 className="text-lg font-bold">Module 1 — Introduction + diagnostic foundations</h2>
-            <p className="text-xs text-teal-50 mt-0.5">First section unlocked as a sample · Modules 2-8 locked</p>
-          </div>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-amber-900 bg-amber-200 px-2 py-1 rounded-full whitespace-nowrap">
-            Trial sample
-          </span>
-        </div>
-      </div>
-
-      <div className="p-5 sm:p-6">
-        <div className="grid sm:grid-cols-[1fr_280px] gap-6">
-          <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed">
-            <h3 className="text-sm font-bold text-slate-900 mb-2">1.1 — Why concussion is the most undertaught condition in your scope</h3>
-            <p className="text-[13px]">
-              Most allied health clinicians have had between zero and three hours of formal concussion teaching across their entire undergraduate degree. The same clinician will see 4-8 concussions a year in private practice and not recognise three of them. The presentation is heterogeneous, the cognitive screening tools have a learning curve, and the cervical contribution that primary-care clinicians are best positioned to address is almost entirely absent from current consensus documents.
-            </p>
-            <p className="text-[13px]">
-              The result: patients with sub-clinical post-concussion symptoms are getting reassurance instead of structured rehab, sports clubs are being told &ldquo;rest until symptoms resolve&rdquo; instead of being given the Amsterdam 2023 six-step return-to-play protocol, and the clinics that <em>do</em> know what they&rsquo;re doing become the obvious local referral destination almost by default.
-            </p>
-            <p className="text-[13px]">
-              That positioning is what this program is built around. The clinical content first, the local-hub mechanics second, the documentation third. By the end of Module 1 you&rsquo;ll have a working differential model — what is a concussion, what looks like one but isn&rsquo;t, and what the four diagnostic decision points are at the first consultation.
-            </p>
-
-            <h3 className="text-sm font-bold text-slate-900 mt-5 mb-2">1.2 — The four decision points at consultation 1</h3>
-            <p className="text-[13px]">
-              Continued in the full module — covers the red-flag screen, the symptom-cluster differential (vestibular vs cervical vs cognitive vs autonomic), the decision to refer/manage, and the documentation that protects both clinician and patient. <strong>This section unlocks with Tier 1 portal access.</strong>
-            </p>
-          </div>
-
-          <aside className="rounded-lg bg-slate-50 border border-slate-200 p-4">
-            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-3">In this module</p>
-            <ul className="space-y-2 text-[11px]">
-              <ModuleSubItem label="1.1 Why concussion is undertaught" unlocked />
-              <ModuleSubItem label="1.2 The four decision points" />
-              <ModuleSubItem label="1.3 Red flag screen + ED criteria" />
-              <ModuleSubItem label="1.4 Symptom cluster differential" />
-              <ModuleSubItem label="1.5 Documentation standards" />
-              <ModuleSubItem label="1.6 Module knowledge check" />
-            </ul>
-            <a
-              href="#investment"
-              className="block mt-4 text-center text-[11px] font-bold text-teal-700 hover:text-teal-800 underline"
-            >
-              Unlock the full module →
-            </a>
-          </aside>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function ModuleSubItem({ label, unlocked = false }: { label: string; unlocked?: boolean }) {
-  return (
-    <li className="flex items-center gap-2">
-      <span className={unlocked ? 'text-emerald-600' : 'text-slate-400'}>
-        {unlocked ? '✓' : '🔒'}
-      </span>
-      <span className={unlocked ? 'text-slate-700 font-semibold' : 'text-slate-500'}>{label}</span>
-    </li>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DISCIPLINE PATHWAYS — 4 cards aligned to Advanced Health's team
-// ─────────────────────────────────────────────────────────────────────────────
-
-function DisciplinePathwaysSection() {
-  return (
-    <section className="rounded-xl bg-white border border-slate-200 shadow-sm p-5 sm:p-6">
-      <h2 className="text-lg font-bold text-slate-900 mb-1">Your team&rsquo;s discipline pathways</h2>
-      <p className="text-xs text-slate-600 mb-4">
-        Curated content tracks built around each role&rsquo;s part of the concussion patient journey. Click any pathway to see what your team gets — content is locked until enrollment.
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <PathwayCard
-          discipline="Osteopath"
-          count={CLINIC.team.osteopaths}
-          colourClass="from-teal-600 to-teal-700"
-          items={[
-            'SCAT6 + SCOAT6 administration',
-            'VOMS deep-dive',
-            'BESS scoring + interpretation',
-            'Cervical contribution (your wheelhouse)',
-            'PPCS workup',
-            'Paediatric concussion',
-            '14 CPD hours per clinician',
-          ]}
-        />
-        <PathwayCard
-          discipline="Exercise Physiologist"
-          count={CLINIC.team.exercisePhys}
-          colourClass="from-emerald-600 to-emerald-700"
-          items={[
-            'Buffalo Concussion Treadmill Test',
-            'Sub-threshold aerobic Rx',
-            'VOR / gaze stability progression',
-            'Amsterdam 2023 six-step RTP',
-            'Return-to-school / return-to-work',
-            'Symptom-tracking tools',
-            'Escalation criteria',
-          ]}
-        />
-        <PathwayCard
-          discipline="Myo / RMT"
-          count={CLINIC.team.myotherapists + CLINIC.team.remedialMassage}
-          colourClass="from-amber-600 to-amber-700"
-          items={[
-            'Cervical soft tissue post-concussion',
-            'Symptom tracking documentation',
-            'Escalation criteria',
-            'Role-appropriate scope content',
-            'Lighter CPD load (4 hrs)',
-          ]}
-        />
-        <PathwayCard
-          discipline="Admin + reception"
-          count={CLINIC.team.practiceManager + CLINIC.team.admin}
-          colourClass="from-slate-600 to-slate-700"
-          items={[
-            '1-hour Concussion Workflow micro-course',
-            'Phone-triage scripts',
-            'Red-flag identification',
-            'Intake form additions',
-            'AI-safe documentation basics',
-            'Template library walkthrough',
-            'Booking flow for concussion priority',
-          ]}
-          b2bOnly
-        />
-      </div>
-
-      <p className="text-[11px] text-slate-500 italic mt-4">
-        B2B-only content (admin micro-course + outreach package) is exclusive to the Hub Program — never available as an individual purchase.
-      </p>
-    </section>
-  )
-}
-
-function PathwayCard({
-  discipline,
-  count,
-  items,
-  colourClass,
-  b2bOnly,
+function SidebarItem({
+  href,
+  label,
+  icon: Icon,
+  active,
+  locked,
+  external,
 }: {
-  discipline: string
-  count: number
-  items: string[]
-  colourClass: string
-  b2bOnly?: boolean
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
+  active?: boolean
+  locked?: boolean
+  external?: boolean
 }) {
+  const base = 'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all relative text-sm font-medium'
+
+  if (locked) {
+    return (
+      <a href={href} className={`${base} opacity-50 hover:opacity-70 text-muted-foreground`}>
+        <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
+        <span>{label}</span>
+        <Lock className="w-3 h-3 ml-auto text-muted-foreground/60" />
+      </a>
+    )
+  }
+
+  if (active) {
+    return (
+      <a href={href} className={`${base} bg-accent/8 text-accent font-semibold`}>
+        <div className="nav-active-indicator" />
+        <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+        <span>{label}</span>
+      </a>
+    )
+  }
+
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden bg-white flex flex-col">
-      <div className={`bg-gradient-to-br ${colourClass} text-white px-3 py-2.5`}>
-        <p className="text-[9px] uppercase tracking-wider opacity-80">{count} of your team</p>
-        <p className="text-sm font-bold">{discipline}</p>
-      </div>
-      <ul className="flex-1 p-3 space-y-1.5">
-        {items.map((item, i) => (
-          <li key={i} className="text-[11px] text-slate-700 leading-snug flex gap-1.5">
-            <span className="text-slate-400 mt-0.5">•</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-      {b2bOnly && (
-        <div className="px-3 py-1.5 bg-amber-50 border-t border-amber-200">
-          <p className="text-[9px] uppercase tracking-wider font-bold text-amber-800">B2B exclusive</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LOCKED PREMIUM — greyed cards driving conversion
-// ─────────────────────────────────────────────────────────────────────────────
-
-function LockedPremiumSection() {
-  return (
-    <section className="rounded-xl bg-slate-100 border border-slate-200 p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-4 mb-1 flex-wrap">
-        <h2 className="text-lg font-bold text-slate-900">Premium content — locked</h2>
-        <a
-          href="#investment"
-          className="text-xs font-bold text-teal-700 hover:text-teal-800 underline whitespace-nowrap"
-        >
-          Unlock with Hub Program →
-        </a>
-      </div>
-      <p className="text-xs text-slate-600 mb-4">
-        Activated for every clinician on enrollment. Click any tile to jump to investment.
-      </p>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        <LockedCard title="CCM Modules 2-8" detail="Diagnosis, rehab, RTP, paediatric, PPCS, documentation, knowledge check + certificate." tier="Tier 1" />
-        <LockedCard title="AI in Clinical Practice" detail="3 CPD hours · AHPRA AI code, APP, Heidi/Lyrebird tier framework." tier="Tier 1" />
-        <LockedCard title="Admin micro-course (mods 2-8)" detail="Phone triage, red flags, intake, AI-safe workflow, templates, booking, knowledge check." tier="Tier 1" />
-        <LockedCard title="Per-clinician CPD tracking" detail="Live dashboard. Completion certs auto-generated. Renewal reminders." tier="Tier 1" />
-        <LockedCard title="Discharge templates (×6)" detail="GP letter, school RTP, parent plan, sports club cert, WorkCover, NDIS — clinic-branded." tier="Tier 2" />
-        <LockedCard title="Outreach templates (×6)" detail="Schools, sports clubs, GPs, SLS, triathlon, generic — with email sequences + phone scripts." tier="Tier 2" />
-        <LockedCard title="CEA-trained-clinic badge" detail="Website badge + waiting-room poster. Verifiable per-clinician certification." tier="Tier 2" />
-        <LockedCard title="30-day implementation support" detail="Direct line to Zac after on-site delivery. Operational rollout coaching." tier="Tier 2" />
-      </div>
-    </section>
-  )
-}
-
-function LockedCard({ title, detail, tier }: { title: string; detail: string; tier: 'Tier 1' | 'Tier 2' }) {
-  const tierColor = tier === 'Tier 1' ? 'text-teal-700 bg-teal-50 border-teal-200' : 'text-amber-700 bg-amber-50 border-amber-200'
-  return (
-    <a href="#investment" className="block rounded-lg border border-slate-300 bg-white/60 p-3 relative opacity-80 hover:opacity-100 hover:border-teal-400 transition-all group">
-      <div className="absolute top-2 right-2 text-slate-400 group-hover:text-teal-600 text-base">🔒</div>
-      <p className="text-xs font-bold text-slate-700 pr-5">{title}</p>
-      <p className="text-[10.5px] text-slate-500 leading-snug mt-1">{detail}</p>
-      <span className={`inline-block mt-2 text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border ${tierColor}`}>
-        {tier}
-      </span>
+    <a
+      href={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener' : undefined}
+      className={`${base} text-muted-foreground hover:text-foreground hover:bg-white/40`}
+    >
+      <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
+      <span>{label}</span>
+      {external && <ExternalLink className="w-3 h-3 ml-auto opacity-50" />}
     </a>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4-STAGE HUB FLOW (retained from original pitch, lightly polished)
+// GREETING — mirrors production dashboard greeting
 // ─────────────────────────────────────────────────────────────────────────────
 
-function HubFlowSection() {
+function Greeting() {
   return (
-    <section className="rounded-xl bg-white border border-slate-200 shadow-sm p-5 sm:p-6">
-      <h2 className="text-lg font-bold text-slate-900 mb-1">How it&rsquo;s delivered — role-by-role on-site at Buderim</h2>
-      <p className="text-xs text-slate-600 mb-4">The Tier 2 on-site training day, sequenced across the patient flow.</p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <FlowStage
-          num="01"
-          roleLabel="Intake"
-          team="Reception + admin"
-          items={['Phone triage script', 'Red-flag ID', 'Intake form additions', 'Booking priority', '1-hr admin micro-course']}
-        />
-        <FlowStage
-          num="02"
-          roleLabel="Diagnosis"
-          team={`The ${CLINIC.team.osteopaths} osteopaths — hands-on`}
-          items={['SCAT6 + SCOAT6', 'VOMS deep-dive', 'BESS scoring', 'Cervical contribution', 'Acute RTA', 'Paediatric', '14 CPD hours']}
-          highlight
-        />
-        <FlowStage
-          num="03"
-          roleLabel="Rehab"
-          team={`The ${CLINIC.team.exercisePhys}-person EP team`}
-          items={['Buffalo Treadmill Test', 'Sub-threshold aerobic Rx', 'VOR / gaze stability', 'Amsterdam 2023 RTP', 'RTW / RTS', 'Symptom tracking', 'Escalation criteria']}
-          highlight
-        />
-        <FlowStage
-          num="04"
-          roleLabel="Discharge + referral"
-          team="Whole team"
-          items={['GP handover letter', 'School / coach RTP form', 'Parent plan', 'Sports club RTP cert', 'WorkCover + NDIS docs', 'Six clinic-licensed templates']}
-        />
-      </div>
-    </section>
-  )
-}
-
-function FlowStage({
-  num,
-  roleLabel,
-  team,
-  items,
-  highlight,
-}: {
-  num: string
-  roleLabel: string
-  team: string
-  items: string[]
-  highlight?: boolean
-}) {
-  return (
-    <div className={`rounded-lg border p-3 ${highlight ? 'border-teal-400 bg-teal-50/60' : 'border-slate-200 bg-white'}`}>
-      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">{num}</p>
-      <p className={`text-sm font-bold leading-tight ${highlight ? 'text-teal-800' : 'text-slate-900'}`}>{roleLabel}</p>
-      <p className="text-[10px] text-slate-500 mb-2 leading-tight">{team}</p>
-      <ul className="space-y-1">
-        {items.map((item, i) => (
-          <li key={i} className="text-[11px] text-slate-700 leading-snug flex gap-1.5">
-            <span className={highlight ? 'text-teal-600' : 'text-slate-400'}>•</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+    <div id="dashboard" className="mb-6">
+      <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
+        Welcome, {CLINIC.shortName} team
+      </h2>
+      <p className="text-sm text-muted-foreground">
+        This is a preview of what the Concussion Hub Program looks like for your {TEAM_TOTAL}-staff clinic in {CLINIC.city}.
+      </p>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LOCAL HUB — Sunshine Coast targets
+// BESPOKE BANNER — explains this is a personalised preview, not paid access
 // ─────────────────────────────────────────────────────────────────────────────
 
-function LocalHubSection() {
+function BespokeBanner() {
   return (
-    <section className="rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/70 to-orange-50/40 p-5 sm:p-6">
-      <h2 className="text-lg font-bold text-slate-900 mb-1">Become the {CLINIC.region}&rsquo;s concussion clinic</h2>
-      <p className="text-sm text-slate-700 leading-relaxed mb-4">
-        One trained clinic per region becomes the natural concussion referral destination. The Hub Program builds the relationships explicitly — not just the training, but the outreach kit that turns it into patient volume.
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <LocalCard
-          title="Sports teams + clubs"
-          items={[
-            'Sunshine Coast Falcons (Q-Cup rugby league)',
-            'Junior rugby league + AFL + soccer programs',
-            'Surf life saving (Maroochydore → Caloundra)',
-            'Mooloolaba triathlon + cycling clubs',
-            'Pre-season baseline testing as a paid service',
-          ]}
-        />
-        <LocalCard
-          title="Local schools + GPs"
-          items={[
-            'Matthew Flinders Anglican College',
-            'Sunshine Coast Grammar',
-            'Immanuel Lutheran, Pacific Lutheran',
-            'Local GP practices needing a referral path',
-            'University of the Sunshine Coast sports program',
-          ]}
-        />
+    <div className="glass-premium rounded-2xl p-5 mb-6 border-l-4 border-l-accent">
+      <div className="flex items-start gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-accent" />
+            <p className="text-[10px] uppercase tracking-wider font-bold text-accent">
+              Bespoke preview · prepared for Lauren Kidston
+            </p>
+          </div>
+          <p className="text-sm text-foreground leading-relaxed">
+            Unlocked tiles below are live on the CEA portal — your team can open and use them today. Locked tiles activate per-clinician once the Hub Program is in place. The pricing math beneath the grid is calculated against your actual team composition ({CLINIC.team.osteopaths} osteos, {CLINIC.team.exercisePhys} EPs, {CLINIC.team.myotherapists + CLINIC.team.remedialMassage} myo/RMT, {CLINIC.team.practiceManager + CLINIC.team.admin} admin).
+          </p>
+        </div>
+        <a
+          href="#book"
+          className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-accent/90 transition-colors whitespace-nowrap"
+        >
+          Book scoping call
+          <ArrowUpRight className="w-3.5 h-3.5" />
+        </a>
       </div>
-
-      <p className="text-xs text-slate-700 leading-snug mt-4 italic">
-        Editable email templates, capability one-pagers, phone scripts and meeting agendas — your team starts building these relationships <strong>the week after training</strong>. No DIY work required.
-      </p>
-    </section>
-  )
-}
-
-function LocalCard({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div className="rounded-lg bg-white border border-amber-200 p-4">
-      <p className="text-sm font-bold text-slate-900 mb-2">{title}</p>
-      <ul className="space-y-1 text-xs text-slate-700">
-        {items.map((item, i) => (
-          <li key={i} className="flex gap-2">
-            <span className="text-amber-600">•</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INVESTMENT — Tier 1 + Tier 2 + Combined, with per-clinician math
+// BENTO GRID — mirrors production BentoGrid layout
 // ─────────────────────────────────────────────────────────────────────────────
 
-function InvestmentSection() {
+function ProspectBento() {
   return (
-    <section className="rounded-xl bg-white border border-slate-200 shadow-sm p-5 sm:p-6">
-      <h2 className="text-lg font-bold text-slate-900 mb-1">Investment — built for {CLINIC.shortName}&rsquo;s exact team</h2>
-      <p className="text-xs text-slate-600 mb-4">
-        One-time clinic license. Lifetime access per seat. If a clinician leaves, the seat transfers to their replacement at no charge.
+    <div id="learning" className="bento-premium mb-8">
+      {/* 1. Team Snapshot (wide) — replaces Course Progress */}
+      <TeamSnapshotCard />
+
+      {/* 2. CPD Hours per clinician */}
+      <CpdCard />
+
+      {/* 3. Investment Quick View */}
+      <InvestmentQuickCard />
+
+      {/* 4. Learning Suite — partial unlocked */}
+      <LearningSuiteCard />
+
+      {/* 5. Clinical Toolkit — locked */}
+      <ClinicalToolkitCard />
+
+      {/* 6. SCAT Forms — unlocked */}
+      <ScatFormsCard />
+
+      {/* 7. Reference Repository (wide) — unlocked */}
+      <ReferenceCard />
+
+      {/* 8. On-site Hub Day — Tier 2 */}
+      <OnsiteCard />
+
+      {/* 9. Admin Micro-course — B2B exclusive */}
+      <AdminCourseCard />
+
+      {/* 10. Templates & Outreach */}
+      <TemplatesCard />
+
+      {/* 11. CEA-trained-clinic badge */}
+      <BadgeCard />
+
+      {/* 12. Local Hub Positioning */}
+      <LocalHubCard />
+    </div>
+  )
+}
+
+// ── Card 1: Team Snapshot (span-2, in place of Course Progress) ──────────────
+function TeamSnapshotCard() {
+  return (
+    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden bento-span-2">
+      <div className="flex items-start gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center shrink-0">
+          <span className="text-xl font-bold text-accent">{TEAM_TOTAL}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="stat-label">Your team</p>
+          <p className="stat-value">{CLINICAL_TOTAL}<span className="text-base font-medium text-muted-foreground"> clinical </span>+ {CLINIC.team.practiceManager + CLINIC.team.admin}<span className="text-base font-medium text-muted-foreground"> admin</span></p>
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            <TeamMicroPill label="Osteo" count={CLINIC.team.osteopaths} />
+            <TeamMicroPill label="Ex Phys" count={CLINIC.team.exercisePhys} />
+            <TeamMicroPill label="Myo/RMT" count={CLINIC.team.myotherapists + CLINIC.team.remedialMassage} />
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Identified from your team page. Discipline pathways below are curated to this composition.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TeamMicroPill({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="rounded-lg bg-white/60 border border-accent/10 px-2 py-1.5 text-center">
+      <p className="text-sm font-bold text-foreground leading-none">{count}</p>
+      <p className="text-[9px] uppercase tracking-wider text-muted-foreground mt-1">{label}</p>
+    </div>
+  )
+}
+
+// ── Card 2: CPD Hours (in place of CPD Hours) ────────────────────────────────
+function CpdCard() {
+  return (
+    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+          <Award className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">Hub Program CPD</p>
+      </div>
+      <p className="stat-value-accent">
+        14<span className="text-base text-muted-foreground font-medium"> hrs / osteo</span>
+      </p>
+      <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+        8 hrs / EP · 4 hrs / myo+RMT · 1 hr / admin. AHPRA-aligned, Osteopathy Australia endorsed.
+      </p>
+    </div>
+  )
+}
+
+// ── Card 3: Investment Quick (in place of Study Time) ────────────────────────
+function InvestmentQuickCard() {
+  return (
+    <a href="#investment" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
+      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-400/5 flex items-center justify-center">
+          <Clock className="w-[18px] h-[18px] text-blue-600/70" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">Investment</p>
+      </div>
+      <p className="stat-value">A${PRICING.combined.toLocaleString()}<span className="text-xs font-medium text-muted-foreground"> one-time</span></p>
+      <p className="text-xs text-muted-foreground mt-1">vs A${PRICING.individualRetail.toLocaleString()} retail · 44% off</p>
+    </a>
+  )
+}
+
+// ── Card 4: Learning Suite — partial unlocked ────────────────────────────────
+function LearningSuiteCard() {
+  return (
+    <div className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+          <BookOpen className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">Learning Suite</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+          Module 1
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">8 Clinical Modules</p>
+      <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+        CCM full curriculum: SCAT6, SCOAT6, VOMS, BESS, cervical, PPCS, paediatric, RTP.
+      </p>
+      <p className="text-[11px] text-accent font-semibold">
+        Module 1 trial unlocked · 2-8 activate with Tier 1
+      </p>
+    </div>
+  )
+}
+
+// ── Card 5: Clinical Toolkit — locked ────────────────────────────────────────
+function ClinicalToolkitCard() {
+  return (
+    <a href="#investment" id="clinical-toolkit" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block opacity-90 hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">Clinical Toolkit</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+          Hub Program
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">6 Discharge Templates</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        GP letter, school RTP, parent plan, sports cert, WorkCover, NDIS — clinic-branded.
+      </p>
+    </a>
+  )
+}
+
+// ── Card 6: SCAT Forms — unlocked, real link ─────────────────────────────────
+function ScatFormsCard() {
+  return (
+    <a href="/scat-forms" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block">
+      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-400/5 flex items-center justify-center">
+          <Activity className="w-[18px] h-[18px] text-violet-600/70" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">SCAT Forms</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+          Open now
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">Digital Assessment</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        SCAT6, Child SCAT6, SCOAT6 — fillable, auto-scored, downloadable.
+      </p>
+    </a>
+  )
+}
+
+// ── Card 7: Reference Repository (span-2) — unlocked ─────────────────────────
+function ReferenceCard() {
+  return (
+    <a href="/references" target="_blank" rel="noopener" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block bento-span-2">
+      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-400/5 flex items-center justify-center shrink-0">
+          <Library className="w-5 h-5 text-amber-600/70" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="stat-label">Reference Repository</p>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+              Open now
+            </span>
+          </div>
+          <p className="text-sm text-foreground font-semibold mb-1">140+ Peer-Reviewed Sources</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Amsterdam 2023, AIS 2024, RACGP, Cochrane. Your team can search and cite from this library today — already free on the public CEA portal.
+          </p>
+        </div>
+      </div>
+    </a>
+  )
+}
+
+// ── Card 8: On-site Hub Day — Tier 2 ─────────────────────────────────────────
+function OnsiteCard() {
+  return (
+    <a href="#investment" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block opacity-90 hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
+          <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">On-site Hub Day</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+          Tier 2
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">Full-day on-site training</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Zac delivers in-clinic at Buderim. Hands-on SCAT/VOMS/BESS, BCTT lab, role-specific tracks.
+      </p>
+    </a>
+  )
+}
+
+// ── Card 9: Admin Micro-course — B2B exclusive ───────────────────────────────
+function AdminCourseCard() {
+  return (
+    <a href="#investment" id="admin-track" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block opacity-90 hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">Admin Workflow</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+          B2B only
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">1-hr Reception Course</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Phone triage, red flags, intake form, booking priority. Not available individually.
+      </p>
+    </a>
+  )
+}
+
+// ── Card 10: Outreach Templates ──────────────────────────────────────────────
+function TemplatesCard() {
+  return (
+    <a href="#investment" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block opacity-90 hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">Outreach Kit</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+          Tier 2
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">6 Outreach Templates</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Schools, sports clubs, GPs — email sequences + phone scripts + follow-up tracker.
+      </p>
+    </a>
+  )
+}
+
+// ── Card 11: CEA-trained badge ───────────────────────────────────────────────
+function BadgeCard() {
+  return (
+    <a href="#investment" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block opacity-90 hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+        </div>
+        <p className="stat-label mb-0">CEA-Trained Badge</p>
+        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
+          Tier 2
+        </span>
+      </div>
+      <p className="text-sm text-foreground font-semibold mb-1">Website + Waiting Room</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Verifiable per-clinician certification. Local positioning asset.
+      </p>
+    </a>
+  )
+}
+
+// ── Card 12: Local Hub Positioning ───────────────────────────────────────────
+function LocalHubCard() {
+  return (
+    <a href="#local-hub" className="glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden group block bento-span-2">
+      <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-400/5 flex items-center justify-center shrink-0">
+          <MapPin className="w-5 h-5 text-amber-600/70" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="stat-label">{CLINIC.region} positioning</p>
+          <p className="text-sm text-foreground font-semibold mb-1">Local concussion hub targets</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Sunshine Coast Falcons, Matthew Flinders, SC Grammar, Immanuel, Mooloolaba triathlon, surf life saving clubs — pre-mapped referral opportunities in your catchment.
+          </p>
+        </div>
+      </div>
+    </a>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INVESTMENT DETAIL — full pricing breakdown beneath the bento
+// ─────────────────────────────────────────────────────────────────────────────
+
+function InvestmentDetail() {
+  return (
+    <section id="investment" className="glass-premium rounded-2xl p-5 sm:p-7 mb-8 scroll-mt-8">
+      <div className="flex items-center justify-between gap-4 mb-1 flex-wrap">
+        <div>
+          <p className="stat-label">Investment</p>
+          <h2 className="text-xl font-bold text-foreground">One-time clinic license · lifetime access per seat</h2>
+        </div>
+        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-accent/10 text-accent border border-accent/20 uppercase tracking-wider whitespace-nowrap">
+          Built for {CLINIC.shortName}
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground mb-5">
+        If a clinician leaves, the seat transfers to their replacement at no charge. Content updates as consensus evolves (Amsterdam → Berlin, etc).
       </p>
 
-      {/* Tier 1 seat breakdown */}
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 mb-4">
-        <p className="text-[10px] uppercase tracking-wider text-slate-600 font-bold mb-3">
-          Tier 1 — Online clinic license (lifetime access per seat)
+      <div className="rounded-xl bg-white/40 border border-accent/10 p-4 mb-4">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-accent mb-3">
+          Tier 1 — Online clinic license
         </p>
         <div className="overflow-x-auto">
-          <table className="w-full text-[11.5px] border-collapse">
+          <table className="w-full text-[12px] border-collapse">
             <thead>
-              <tr className="border-b-2 border-slate-300">
-                <th className="text-left py-1.5 font-semibold text-slate-700">Role</th>
-                <th className="text-right py-1.5 px-2 font-semibold text-slate-700">Count</th>
-                <th className="text-right py-1.5 px-2 font-semibold text-slate-700">Per seat</th>
-                <th className="text-right py-1.5 px-2 font-semibold text-slate-700">Subtotal</th>
+              <tr className="border-b-2 border-accent/20">
+                <th className="text-left py-1.5 font-semibold text-foreground">Role</th>
+                <th className="text-right py-1.5 px-2 font-semibold text-muted-foreground">Count</th>
+                <th className="text-right py-1.5 px-2 font-semibold text-muted-foreground">Per seat</th>
+                <th className="text-right py-1.5 px-2 font-semibold text-muted-foreground">Subtotal</th>
               </tr>
             </thead>
-            <tbody className="text-slate-700">
-              <SeatRow role="Osteopaths" count={PRICING.tier1.osteo.count} seat={PRICING.tier1.osteo.seat} subtotal={PRICING.tier1.osteo.subtotal} />
-              <SeatRow role="Exercise Physiologists" count={PRICING.tier1.ep.count} seat={PRICING.tier1.ep.seat} subtotal={PRICING.tier1.ep.subtotal} />
-              <SeatRow role="Myotherapists" count={PRICING.tier1.myo.count} seat={PRICING.tier1.myo.seat} subtotal={PRICING.tier1.myo.subtotal} />
-              <SeatRow role="Remedial Massage" count={PRICING.tier1.rmt.count} seat={PRICING.tier1.rmt.seat} subtotal={PRICING.tier1.rmt.subtotal} />
-              <SeatRow role="Practice Manager" count={PRICING.tier1.pm.count} seat={PRICING.tier1.pm.seat} subtotal={PRICING.tier1.pm.subtotal} />
-              <SeatRow role="Admin" count={PRICING.tier1.admin.count} seat={PRICING.tier1.admin.seat} subtotal={PRICING.tier1.admin.subtotal} />
-              <tr className="border-t-2 border-slate-300 font-semibold">
+            <tbody className="text-foreground">
+              <SeatRow role="Osteopaths" {...PRICING.tier1.osteo} />
+              <SeatRow role="Exercise Physiologists" {...PRICING.tier1.ep} />
+              <SeatRow role="Myotherapists" {...PRICING.tier1.myo} />
+              <SeatRow role="Remedial Massage" {...PRICING.tier1.rmt} />
+              <SeatRow role="Practice Manager" {...PRICING.tier1.pm} />
+              <SeatRow role="Admin / Reception" {...PRICING.tier1.admin} />
+              <tr className="border-t-2 border-accent/20 font-semibold">
                 <td className="py-1.5">Subtotal ({TEAM_TOTAL} seats)</td>
-                <td></td><td></td>
+                <td></td>
+                <td></td>
                 <td className="text-right py-1.5 px-2">A${PRICING.tier1.subtotal.toLocaleString()}</td>
               </tr>
               <tr>
                 <td className="py-1.5 text-emerald-700">Volume discount (16-30 band)</td>
-                <td></td><td></td>
-                <td className="text-right py-1.5 px-2 text-emerald-700">−{PRICING.tier1.volumeDiscountPct}% (A${PRICING.tier1.volumeDiscountAud.toLocaleString()})</td>
+                <td></td>
+                <td></td>
+                <td className="text-right py-1.5 px-2 text-emerald-700">−{PRICING.tier1.discountPct}% (A${PRICING.tier1.discountAud.toLocaleString()})</td>
               </tr>
-              <tr className="border-t border-slate-300 bg-teal-50 font-bold">
-                <td className="py-2 text-teal-800">Tier 1 one-time total</td>
-                <td></td><td></td>
-                <td className="text-right py-2 px-2 text-teal-800 text-base">A${PRICING.tier1.total.toLocaleString()}</td>
+              <tr className="border-t border-accent/20 bg-accent/5 font-bold">
+                <td className="py-2 text-accent">Tier 1 one-time total</td>
+                <td></td>
+                <td></td>
+                <td className="text-right py-2 px-2 text-accent text-base">A${PRICING.tier1.total.toLocaleString()}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <p className="text-[10.5px] text-slate-500 italic mt-2 leading-snug">
-          vs A${(497 * 16).toLocaleString()} of individual CCM Online at retail (A$497 × 16 clinicians) = 42% off + admin micro-course bundled + ongoing content updates.
-        </p>
       </div>
 
-      {/* Tier 2 + Combined */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-lg border border-slate-300 bg-white p-4">
-          <p className="text-[10px] uppercase tracking-wider text-slate-600 font-bold mb-3">
-            Tier 2 — On-site Hub upgrade (add-on)
+        <div className="rounded-xl bg-white/40 border border-accent/10 p-4">
+          <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-3">
+            Tier 2 — On-site Hub upgrade
           </p>
-          <ul className="space-y-1.5 text-[11.5px] text-slate-700">
+          <ul className="space-y-1.5 text-[12px] text-foreground">
             <PriceLine label="On-site training day at Buderim" amount={PRICING.tier2.onsite} />
-            <PriceLine label="6 discharge templates (clinic-licensed, branded)" amount={PRICING.tier2.templates} />
-            <PriceLine label="Outreach package (templates + sequences + scripts)" amount={PRICING.tier2.outreach} />
+            <PriceLine label="6 discharge templates (clinic-licensed)" amount={PRICING.tier2.templates} />
+            <PriceLine label="Outreach package" amount={PRICING.tier2.outreach} />
             <PriceLine label="30-day implementation support" amount={PRICING.tier2.support} />
-            <PriceLine label="Travel (Byron → Buderim, 2.5hr drive)" amount={PRICING.tier2.travel} />
+            <PriceLine label="Travel (Byron → Buderim)" amount={PRICING.tier2.travel} />
           </ul>
-          <div className="border-t-2 border-slate-300 mt-3 pt-2 flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-700">Tier 2 total</p>
-            <p className="text-base font-bold text-slate-900">A${PRICING.tier2.total.toLocaleString()}</p>
+          <div className="border-t-2 border-accent/20 mt-3 pt-2 flex items-center justify-between">
+            <p className="text-xs font-bold text-foreground">Tier 2 total</p>
+            <p className="text-base font-bold text-foreground">A${PRICING.tier2.total.toLocaleString()}</p>
           </div>
         </div>
 
-        <div className="rounded-lg border-2 border-teal-700 bg-gradient-to-br from-teal-50 to-emerald-50 p-4 shadow-md">
+        <div className="rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border-2 border-accent p-4 shadow-md">
           <div className="flex items-center justify-between gap-2 mb-3">
-            <p className="text-[10px] uppercase tracking-wider text-teal-800 font-bold">
+            <p className="text-[10px] uppercase tracking-wider text-accent font-bold">
               Combined Hub Program
             </p>
-            <span className="text-[9px] uppercase tracking-wider font-bold text-white bg-teal-700 px-2 py-0.5 rounded-full">Recommended</span>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-white bg-accent px-2 py-0.5 rounded-full">
+              Recommended
+            </span>
           </div>
-          <ul className="space-y-1.5 text-[11.5px] text-slate-700">
+          <ul className="space-y-1.5 text-[12px] text-foreground">
             <PriceLine label="Tier 1 — Online clinic license" amount={PRICING.tier1.total} />
-            <PriceLine label="Tier 2 — On-site + templates + outreach + support" amount={PRICING.tier2.total} />
+            <PriceLine label="Tier 2 — On-site + templates + outreach" amount={PRICING.tier2.total} />
           </ul>
-          <div className="border-t-2 border-teal-300 mt-3 pt-2 flex items-center justify-between">
-            <p className="text-sm font-bold text-teal-800">Combined one-time</p>
-            <p className="text-xl font-bold text-teal-800">A${PRICING.combined.toLocaleString()}</p>
+          <div className="border-t-2 border-accent mt-3 pt-2 flex items-center justify-between">
+            <p className="text-sm font-bold text-accent">Combined one-time</p>
+            <p className="text-xl font-bold text-accent">A${PRICING.combined.toLocaleString()}</p>
           </div>
-          <p className="text-[10.5px] text-slate-700 mt-2 leading-snug">
-            vs <strong>A${PRICING.individualRetail.toLocaleString()}</strong> at individual CCM Complete retail (A$1,400 × 16 clinicians, no clinic extras)
+          <p className="text-[11px] text-foreground mt-2 leading-snug">
+            vs <strong>A${PRICING.individualRetail.toLocaleString()}</strong> at individual CCM Complete retail
           </p>
-          <p className="text-[10.5px] text-teal-700 font-semibold mt-1">
-            = 44% off retail with the full local-hub package bundled. One purchase. Lifetime access. No renewals.
+          <p className="text-[11px] text-accent font-semibold mt-1">
+            = 44% off retail with full local-hub package bundled
           </p>
         </div>
       </div>
 
-      <p className="text-[10px] text-slate-500 italic mt-3 leading-snug">
-        GST exclusive. Pricing rendered against {CLINIC.shortName}&rsquo;s identified team composition; any adjustment recalculated on the scoping call.
+      <p className="text-[10px] text-muted-foreground italic mt-3 leading-snug">
+        GST exclusive. Pricing rendered against {CLINIC.shortName}&rsquo;s identified team composition; adjustable on the scoping call.
       </p>
     </section>
   )
@@ -832,7 +742,7 @@ function InvestmentSection() {
 
 function SeatRow({ role, count, seat, subtotal }: { role: string; count: number; seat: number; subtotal: number }) {
   return (
-    <tr className="border-b border-slate-200">
+    <tr className="border-b border-accent/10">
       <td className="py-1.5">{role}</td>
       <td className="text-right py-1.5 px-2">{count}</td>
       <td className="text-right py-1.5 px-2">A${seat}</td>
@@ -851,27 +761,64 @@ function PriceLine({ label, amount }: { label: string; amount: number }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CTA — book a call
+// LOCAL HUB DETAIL
 // ─────────────────────────────────────────────────────────────────────────────
 
-function CTASection() {
+function LocalHubDetail() {
   return (
-    <section className="rounded-2xl bg-gradient-to-br from-teal-800 to-emerald-700 text-white p-6 sm:p-8 shadow-lg">
+    <section id="local-hub" className="glass-premium rounded-2xl p-5 sm:p-7 mb-8 scroll-mt-8 border-l-4 border-l-amber-500">
+      <p className="stat-label">Local hub positioning</p>
+      <h2 className="text-xl font-bold text-foreground mb-2">Become the {CLINIC.region}&rsquo;s concussion clinic</h2>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+        One trained clinic per region becomes the natural concussion referral destination. The Hub Program builds these relationships explicitly — not just the training, but the outreach kit that turns it into patient volume.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="rounded-xl bg-white/40 border border-amber-200 p-4">
+          <p className="text-sm font-bold text-foreground mb-2">Sports teams + clubs</p>
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            <li>• Sunshine Coast Falcons (Q-Cup rugby league)</li>
+            <li>• Junior rugby league + AFL + soccer</li>
+            <li>• Surf life saving (Maroochydore → Caloundra)</li>
+            <li>• Mooloolaba triathlon + cycling</li>
+            <li>• Pre-season baseline testing as a paid service</li>
+          </ul>
+        </div>
+        <div className="rounded-xl bg-white/40 border border-amber-200 p-4">
+          <p className="text-sm font-bold text-foreground mb-2">Schools + GPs</p>
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            <li>• Matthew Flinders Anglican College</li>
+            <li>• Sunshine Coast Grammar</li>
+            <li>• Immanuel Lutheran, Pacific Lutheran</li>
+            <li>• Local GPs needing concussion referral path</li>
+            <li>• Univ. of the Sunshine Coast sports program</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOOKING CTA
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BookingCta() {
+  return (
+    <section id="book" className="rounded-2xl bg-gradient-to-br from-accent to-accent-dark text-white p-6 sm:p-8 shadow-lg mb-8 scroll-mt-8">
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-teal-100 font-bold mb-1">
-            Next step
-          </p>
+          <p className="text-[10px] uppercase tracking-wider opacity-80 font-bold mb-1">Next step</p>
           <h2 className="text-xl font-bold mb-1">Book a 20-minute scoping call</h2>
-          <p className="text-sm text-teal-50 leading-relaxed">
-            Pick a window that suits — Tuesday or Wednesday afternoon QLD time works well. We&rsquo;ll walk through the pathways for your team, answer questions, and confirm a delivery date.
+          <p className="text-sm opacity-90 leading-relaxed">
+            Tuesday or Wednesday afternoon QLD time works well. We&rsquo;ll walk through pathways for your team, answer questions, and confirm a delivery date.
           </p>
         </div>
         <a
           href="https://cal.com/zac-lewis-so8zjs/30min"
           target="_blank"
           rel="noopener"
-          className="shrink-0 inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-lg bg-white text-teal-800 text-sm font-bold hover:bg-teal-50 transition-colors whitespace-nowrap shadow-md no-underline"
+          className="shrink-0 inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-white text-accent text-sm font-bold hover:bg-white/95 transition-colors whitespace-nowrap shadow-md no-underline"
         >
           Book call → cal.com
         </a>
@@ -884,20 +831,20 @@ function CTASection() {
 // FOOTER
 // ─────────────────────────────────────────────────────────────────────────────
 
-function HubFooter() {
+function FooterMeta() {
   return (
-    <footer className="mt-8 pt-5 border-t border-slate-200">
-      <div className="flex items-start justify-between gap-4 flex-wrap text-xs text-slate-600">
+    <footer className="pt-5 border-t border-accent/10">
+      <div className="flex items-start justify-between gap-4 flex-wrap text-xs text-muted-foreground">
         <div>
-          <p className="font-bold text-slate-800">Zac Lewis · AHPRA-registered Osteopath</p>
+          <p className="font-bold text-foreground">Zac Lewis · AHPRA-registered Osteopath</p>
           <p>Founder, Concussion Education Australia</p>
         </div>
         <div className="text-right">
           <p>zac@concussion-education-australia.com</p>
-          <p className="text-teal-700">portal.concussion-education-australia.com</p>
+          <p className="text-accent">portal.concussion-education-australia.com</p>
         </div>
       </div>
-      <p className="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-bold text-center mt-4">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold text-center mt-4">
         AHPRA-aligned · Osteopathy Australia endorsed · 140+ peer-reviewed references · Amsterdam 2023 + AIS 2024
       </p>
     </footer>
