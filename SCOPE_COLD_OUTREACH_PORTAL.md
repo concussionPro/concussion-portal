@@ -6,6 +6,312 @@ The system optimises for **convertibility** at every step. Each prospect sees co
 
 ---
 
+## 0. Current build state (June 2026) — what's already shipped
+
+The Advanced Health prototype is the working reference. The engine generalises this surface for any prospect.
+
+### Built and live
+- **Prospect portal pattern** at `/proposals/[slug]?k=[access_key]` — gated by URL slug + access key (no auth). Hand-built today as `/proposals/advanced-health-buderim?k=ah2026`.
+- **Landing page** with: clinic-name headline, Zac credibility block (photo + bio), Module 1 trial CTA, on-site Practical Skills hero, 7-tile contents bento, three cohort pricing tiers with public-rate anchor, risk-reversal strip, testimonials (4 real quotes), FAQ (7 questions), embedded Cal.com booking, social proof footer.
+- **Trial routes** at `/proposals/[slug]/learning` + `/learning/module-1` rendering real CCM Module 1 sections + first myth-quiz checkpoint.
+- **Reference library preview** at `/proposals/[slug]/references` — 22 curated peer-reviewed citations across 7 categories.
+- **Toolkit preview** at `/proposals/[slug]/toolkit` with 1 sample clinical template + 1 sample outreach template visible (rest locked with "Unlock with Hub Program" → pricing anchor). Admin Workflow hidden in prospect portal entirely.
+- **Production paid-user routes** (post-purchase): `/clinical-toolkit/templates`, `/outreach-kit`, `/admin-workflow` — full content, all 20 docs, gated by `accessLevel !== 'preview'` + `ProtectedRoute`. New nav items on the production sidebar.
+- **Content single-source-of-truth** at `data/hub-program-content.ts` — typed `DischargeTemplate[]`, `OutreachTemplate[]`, `AdminCourseModule[]`, plus `DOCUMENTATION_PRINCIPLES`. 20 items, AHPRA/insurer-defensible compliance footers, AHPRA reg + sign-off blocks, patient-consent attestations, scope-of-practice demarcation.
+- **Doc renderers** at `components/toolkit/*` — `ClinicalToolkitDoc`, `OutreachToolkitDoc`, `AdminCourseDoc`, `FillableDoc` (cross-field localStorage sync, print CSS). Each accepts optional `previewedSlugs[]` to support the cold-pitch partial-preview pattern.
+- **Bulk download API** at `/api/toolkit/download?kit=all|clinical|outreach|admin&k=[access_key]` — generates ZIP with folder structure on-demand via JSZip. Prospect ZIPs exclude admin workflow + label "Preview-<Clinic>".
+- **AHPRA-compliant outreach templates** — every outreach template carries an advertising-compliance note (no clinical-outcome claims, no comparative statements, AHPRA s.133 awareness).
+
+### What the engine adds on top
+The remaining build is the **multi-prospect generation layer** — take the hand-built Advanced Health pattern and parameterise it so any clinic can be ingested → researched → portal-generated → emailed → tracked. Sections 1-13 below describe that engine architecture.
+
+---
+
+## 0a. Hot-swap data model — one prospect ↔ one ProspectClinic record
+
+The hand-built Advanced Health page embeds clinic details as a `CLINIC` const at the top of `app/proposals/advanced-health-buderim/page.tsx`. The engine version replaces this with a database-driven shape:
+
+```ts
+// lib/prospect/types.ts
+export interface ProspectClinic {
+  id: number
+  slug: string                    // url segment, e.g. 'advanced-health-buderim'
+  accessKey: string               // ?k= value, e.g. 'ah2026'
+  name: string                    // 'Advanced Health Pain & Injury Clinic'
+  shortName: string               // 'Advanced Health'
+  city: string                    // 'Buderim'
+  state: 'NSW' | 'QLD' | 'VIC' | 'SA' | 'WA' | 'TAS' | 'NT' | 'ACT'
+  region: string                  // 'Sunshine Coast' — used in headlines + outreach copy
+  contactFirstName: string        // 'Lauren'
+  contactFullName: string         // 'Lauren Kidston'
+  contactEmail: string            // 'lauren@advancedhealth.com.au'
+  contactRole?: string            // 'Practice Owner' / 'Clinical Director'
+  clinicWebsiteUrl: string        // for research / verification
+  team: ClinicTeam                // discipline counts → drives pricing + content
+  localTargets: LocalTarget[]     // schools, clubs, GPs (named, region-specific)
+  travelBand: 'within-2hr' | 'within-4hr' | 'within-6hr' | 'within-10hr' | 'flight-domestic' | 'flight-far'
+  travelSurcharge: number         // AUD, computed from travelBand
+  cohortRecommendation: 'essential' | 'recommended' | 'full-team'  // suggested tier
+  status: 'researching' | 'approved' | 'sent' | 'opened' | 'engaged' | 'replied' | 'won' | 'lost' | 'archived'
+  researchSource: 'manual' | 'llm-extracted' | 'imported'
+  validUntil: Date                // portal expiry (default +30 days)
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ClinicTeam {
+  osteopaths: number
+  physiotherapists: number
+  exercisePhys: number
+  myotherapists: number
+  remedialMassage: number
+  generalPractitioners: number
+  sportsMedicineDoctors: number
+  practiceManager: number
+  admin: number
+}
+
+export interface LocalTarget {
+  type: 'school' | 'sports-club' | 'gp-practice' | 'surf-life-saving' | 'triathlon' | 'cycling' | 'other'
+  name: string
+  url?: string
+  priority: 1 | 2 | 3
+  notes?: string
+}
+```
+
+**Hot-swap implementation:**
+
+The hand-built `/proposals/advanced-health-buderim/page.tsx` becomes the engine template at `/p/[token]/page.tsx`. The dynamic route resolves `[token]` → `ProspectClinic` row → renders the page with that data. Every `CLINIC.shortName`, `CLINIC.region`, `CLINIC.team.osteopaths` etc. binding is preserved; the source is just swapped from a const to a DB lookup.
+
+Identical UI for every prospect. The only branches are content-driven (e.g. discipline pathways only render the disciplines present in the team).
+
+### Acceptance criteria for hot-swap
+- Adding a new `ProspectClinic` row + token causes a new portal URL to render with that clinic's data, no code changes.
+- Updating a `ProspectClinic.team.osteopaths` value re-renders pricing tier math, team pills, discipline pathways without redeploy.
+- A prospect's `validUntil` past date renders a "this preview expired" banner but the page still works.
+- Multiple prospects' portals can be open simultaneously without state collisions (localStorage namespacing by `prospect:[token]:*`).
+
+---
+
+## 0b. Discipline-aware personalisation — what changes per clinician type
+
+The bespoke portal renders the same surface for every prospect, but the **content emphasis** shifts based on the team's discipline mix. The discipline content map (section 6) defines what content surfaces per role; the engine computes the team's "centre of gravity" and emphasises accordingly.
+
+### Discipline-driven content surfacing
+
+| Team composition signal | Surface emphasis on the landing |
+|---|---|
+| ≥3 osteopaths | Lead with manual-therapy + cervical-contribution differentiator; emphasise OA endorsement; "your osteo team will own the diagnosis pathway" |
+| ≥2 exercise physiologists | Lead with structured rehab + BCTT + sub-symptom-threshold protocols; "your EP team owns the active-rehab progression" |
+| GP-led practice (≥1 GP, no osteo) | Lead with diagnostic decision-making + RTP authority + MBS items for concussion management; less hands-on framing |
+| Mixed multi-disciplinary | Show all discipline pathways equally; emphasise multi-disciplinary referral flow within the clinic |
+| Sports medicine focus | Lead with sideline + Buffalo Treadmill + medicolegal RTP authority |
+
+### Discipline-specific copy variants
+
+Each cold-email template has discipline-aware variants:
+
+**T1 (initial cold)** — opening line is templated per the principal's discipline:
+
+| Principal discipline | Opening line variant |
+|---|---|
+| Osteopath | "Saw your team page — {osteo_count} osteopaths is the kind of depth that makes structured concussion training land properly across the clinic." |
+| Physiotherapist | "Saw your team page — {physio_count} physios working sideline + return-to-play means concussion presentations are on the books regularly." |
+| GP / Sports Med | "Saw your team page — running a primary-care practice that's positioned to manage concussion locally needs the diagnostic side tight." |
+| Exercise Phys | "Saw your team page — EP-led concussion rehab is the underbuilt half of the recovery pathway; structured training closes the gap." |
+| Mixed (no clear principal) | "Saw your team page — {clinic_name}'s mix of {top_3_disciplines} is the team composition concussion management is designed for." |
+
+### Region-aware personalisation
+
+Per-region content uses `LocalTarget[]` to render specific organisations by name on the portal landing's local-hub callout:
+
+```ts
+// Region detection drives the local catchment list
+const SUNSHINE_COAST_TARGETS = [
+  'Sunshine Coast Falcons (Q-Cup rugby league)',
+  'Matthew Flinders Anglican College',
+  'Sunshine Coast Grammar',
+  'Mooloolaba triathlon',
+  // ...
+]
+const SYDNEY_INNER_TARGETS = [...]
+const MELBOURNE_INNER_TARGETS = [...]
+```
+
+The cold email also references **one specific local organisation** by name in the body — e.g. "the Sunshine Coast Falcons run a Q-Cup rugby league program, and you're well-positioned to be the clinic they refer." This is the strongest personalisation signal and the line that gets the email past "looks like a template."
+
+### Acceptance criteria for personalisation depth
+
+Every cold email and every prospect portal landing MUST surface at least:
+1. **Clinic name** (full + short) — 4+ times across the page
+2. **Contact first name** — in the email greeting only (NOT on the portal, per current design)
+3. **Exact team count** by discipline — at least 1 reference in email body, multiple on portal
+4. **Region name** + at least 1 specific organisation in that region (sports club, school, or GP practice) named by full name
+5. **Discipline-aware copy** — the opening line varies by the principal's discipline
+
+If any of these 5 are missing or generic, the prospect dismisses it as "obvious template." Each is a hard requirement.
+
+---
+
+## 0c. Resend cold-send engine — full pipeline spec
+
+### Sender domain + reputation segregation
+
+| Send purpose | Sender address | Domain | Reputation pool |
+|---|---|---|---|
+| Cold outreach to prospects | `partnerships@concussion-education-australia.com` | configured in Resend Domains | dedicated B2B reputation |
+| Test sends to Zac (signoff) | `partnerships@concussion-education-australia.com` | same domain | same pool |
+| Transactional (course access, magic links, lead magnet, invoices) | `zac@concussion-education-australia.com` | same domain | unchanged — segregated by address only, shared SPF/DKIM/DMARC |
+| Replies-to | `zac@concussion-education-australia.com` | warm replies route to main inbox | n/a |
+
+DMARC stays at `p=quarantine` minimum. Complaint rate must remain <0.3% per Google/Yahoo bulk-sender rules.
+
+### Send pipeline (Resend SDK)
+
+```
+POST /api/admin/prospect-send-email
+  Body: { clinic_id: number, template_slug: 'initial' | 'followup' | 'final', test_mode?: boolean }
+
+Pipeline:
+  1. Verify admin auth (lib/require-admin)
+  2. Load ProspectClinic record + verify status === 'approved'
+  3. Load EmailTemplate where slug = template_slug and signed_off_at IS NOT NULL
+     (production sends FAIL if signed_off_at is null)
+  4. Resolve discipline-aware opening line variant based on principal's discipline
+  5. Merge variables — clinic_name, contact_first_name, team_breakdown_string,
+     primary_local_target, portal_url, access_key
+  6. If test_mode: override To: header to zac@concussion-education-australia.com
+  7. Add List-Unsubscribe header (RFC 8058 + RFC 2369)
+     - List-Unsubscribe: <https://portal.../unsubscribe?token=...>, <mailto:unsubscribe@...>
+     - List-Unsubscribe-Post: List-Unsubscribe=One-Click
+  8. Send via Resend SDK
+     - Tag with prospect_id for webhook correlation
+  9. Insert prospect_outreach_log row with email_subject + email_body + resend_email_id
+  10. Update ProspectClinic.status if applicable ('approved' → 'sent')
+```
+
+### Suppression + abuse handling
+
+Resend inbound webhook (`/api/webhooks/resend`) handles:
+- `email.bounced` — soft and hard. Hard bounces add `contact_email` to `email_suppression` table; future sends to that address fail at the merge step.
+- `email.complained` — adds to suppression + flags the clinic record `do_not_contact = true`.
+- `email.opened` — updates `prospect_outreach_log.opened_count`.
+- `email.clicked` — updates `prospect_outreach_log.clicked_count`.
+- Inbound replies — matched by `In-Reply-To` header → updates `replied_at` + queues LLM sentiment classification.
+
+### Volume controls + warmup
+
+- **Daily cap**: configurable, defaults to 5/day during ramp. Stored in `system_config` table.
+- **Per-domain throttle**: max 1 send per receiver domain per 6 hours (protects against multi-clinic groups marking as spam).
+- **Warmup curve**: week 1 = 3/day, week 2 = 5/day, week 3 = 8/day, week 4+ = 15/day. Adjust based on bounce/complaint rate.
+- **Send time**: scheduled for Tuesday-Thursday, 9:00-11:00 AEST (highest healthcare-professional open rate). Cron at `/api/cron/dispatch-prospect-emails`.
+
+### Email templates — content + structure
+
+Three production templates, each with discipline-aware opening line variants:
+
+#### T1 — Initial cold
+
+```
+Subject: {clinic_short_name} concussion training — {region} focus
+From: Zac Lewis <partnerships@concussion-education-australia.com>
+Reply-To: zac@concussion-education-australia.com
+To: {contact_full_name} <{contact_email}>
+
+Hi {contact_first_name},
+
+[discipline-aware opening line — see §0b above]
+
+Concussion is one of the most undertaught conditions in Australian healthcare, and one of the highest-volume sports injuries in {region}. Most clinics in your catchment aren't formally positioned to manage it. {clinic_short_name} could be.
+
+I'm Zac Lewis — AHPRA-registered osteopath, founder of Concussion Education Australia. Our flagship Concussion Clinical Mastery is endorsed by Osteopathy Australia, 14 CPD hours, used in clinics across AU.
+
+For multi-clinician practices like yours, we run on-site cohort training — your whole team trains together on your own cases. I put together a private working preview portal for {clinic_short_name} so you can see exactly what's in it before deciding:
+
+{portal_url}
+
+Access key: {access_key} (paste into the link when prompted)
+
+20-minute scoping call when it suits: cal.com/zac-lewis-so8zjs/30min
+
+Cheers,
+Zac
+
+—
+Zac Lewis · B.Clin.Sci., M.Ost.Med.
+AHPRA-registered Osteopath
+Founder, Concussion Education Australia
+Reply to unsubscribe.
+```
+
+#### T2 — Follow-up (sent 5-7 days after T1, if no reply + opened)
+
+```
+Subject: Re: {clinic_short_name} concussion training — {region} focus
+
+Hi {contact_first_name},
+
+Wanted to check this hadn't gone to your spam folder. Two things you might find useful even if a cohort isn't right for your team this year:
+
+1. Our Module 1 trial is open inside the preview portal — first sections plus the interactive myth-quiz checkpoint. Worth a 5-min skim for any clinician seeing head injuries. {portal_url}
+
+2. We released our concussion reference library — 140+ peer-reviewed sources across Amsterdam 2023, AIS 2024, RACGP, Cochrane. Free preview in the portal.
+
+If the timing isn't right, no need to reply. If it is, 20 mins on cal.com/zac-lewis-so8zjs/30min.
+
+Cheers,
+Zac
+
+Reply STOP to unsubscribe.
+```
+
+#### T3 — Final check (sent 10 days after T2, if still no reply)
+
+```
+Subject: Closing the loop — {clinic_short_name}
+
+Hi {contact_first_name},
+
+Last one from me — happy to leave it there if this isn't a fit. If you'd rather get the materials direct without a call, here's the full preview portal: {portal_url}
+
+If you're at the right point in the year for it, the Module 1 trial + reference library are useful even without the on-site program.
+
+Either way, all the best with the practice.
+
+Cheers,
+Zac
+
+Reply STOP — your address comes off the list immediately.
+```
+
+All three templates require explicit `signed_off_at` flag before production sends are permitted.
+
+### Headers required on every send (Google/Yahoo bulk-sender compliance 2024+)
+
+```
+From: Zac Lewis <partnerships@concussion-education-australia.com>
+Reply-To: zac@concussion-education-australia.com
+List-Unsubscribe: <https://portal.concussion-education-australia.com/unsubscribe?t={token}>, <mailto:unsubscribe@concussion-education-australia.com>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+List-ID: prospect-outreach.concussion-education-australia.com
+Precedence: bulk
+X-Mailer: ConcussionPro Outreach
+Auto-Submitted: no
+```
+
+### Acceptance criteria for the Resend engine
+
+- Test send via admin UI lands in Zac's inbox with all merge variables resolved.
+- Sender domain authenticated (SPF + DKIM + DMARC pass on Gmail inbox check).
+- Unsubscribe link works → suppression table updated → subsequent sends to that address fail at merge step with logged reason.
+- Bounce webhook updates `prospect_outreach_log` and the clinic's `status` correctly.
+- Reply webhook updates `replied_at` and notifies Zac via separate transactional email.
+- Daily volume cap enforced — 6th send of the day returns 429 with `Retry-After`.
+- Production sends BLOCKED if `signed_off_at` is null for the template.
+
+---
+
 ## ⚠️ Critical gate — no live sends until signoff
 
 **Nothing goes out to a real prospect until tests are sent to Zac and signed off.**
