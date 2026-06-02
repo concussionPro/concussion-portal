@@ -44,13 +44,13 @@ The cold pitch sells **online concussion training delivered via the CEA portal**
 
 Lower pricing tier, easier yes. **This is what the cold pitch leads with.**
 
-### Tier 1 pricing model — per-clinician seats with discipline weighting
+### Tier 1 pricing model — one-time clinic license, per-clinician seats with discipline weighting
 
-Individual CCM Online = A$497 retail. Clinic-level Tier 1 is volume-discounted seat pricing, weighted by discipline because each role gets a different content depth.
+Individual CCM Online = A$497 lifetime (one-time). Clinic-level Tier 1 is a **one-time clinic license**, priced per seat with discipline weighting and a volume discount. Pay once, lifetime access per seat — same access model as individual CCM, just sold to the clinic in bulk at a discount. No subscription. No renewal.
 
-**Per-clinician annual seat prices (Tier 1)**
+**Per-clinician one-time seat prices (Tier 1 — lifetime access per seat)**
 
-| Discipline | Seat price | What's included |
+| Discipline | Seat (one-time, lifetime) | What's included |
 |---|---|---|
 | Osteopath | A$397 | Full CCM, AI in Clinical Practice, discipline-curated track (diagnosis + cervical + PPCS emphasis) |
 | Physiotherapist | A$397 | Full CCM, AI in Clinical Practice, discipline-curated track (assessment + early rehab emphasis) |
@@ -60,7 +60,7 @@ Individual CCM Online = A$497 retail. Clinic-level Tier 1 is volume-discounted s
 | Admin / Reception | A$97 | 1-hour Admin Concussion Workflow micro-course only |
 | Practice Manager | A$197 | Admin micro-course + clinic-management overview + reporting access |
 
-**Team volume discount** (applied to total subtotal)
+**Team volume discount** (applied to total subtotal — bigger team, bigger discount)
 
 | Total clinicians | Discount on subtotal |
 |---|---|
@@ -69,19 +69,25 @@ Individual CCM Online = A$497 retail. Clinic-level Tier 1 is volume-discounted s
 | 16-30 | 20% off |
 | 30+ | 30% off |
 
-**Worked example — Advanced Health (16 staff identified)**
+**Worked example — Advanced Health (19 staff identified, full role breakdown)**
 
 | Role | Count | Seat | Subtotal |
 |---|---|---|---|
 | Osteopath | 9 | A$397 | A$3,573 |
 | Exercise Physiologist | 3 | A$347 | A$1,041 |
-| Myotherapist / RMT | 2 | A$197 | A$394 |
-| Admin / Reception | 3 | A$97 | A$291 |
-| **Subtotal** | **17 seats** | | **A$5,299** |
-| Volume discount (16-30 band) | | -20% | -A$1,060 |
-| **Tier 1 annual total** | | | **A$4,239 / year** |
+| Myotherapist | 2 | A$197 | A$394 |
+| Remedial Massage | 2 | A$197 | A$394 |
+| Practice Manager | 1 | A$197 | A$197 |
+| Admin / Reception | 2 | A$97 | A$194 |
+| **Subtotal** | **19 seats** | | **A$5,793** |
+| Volume discount (16-30 band) | | -20% | -A$1,159 |
+| **Tier 1 one-time total — lifetime access for the clinic** | | | **A$4,634** |
 
-vs A$7,952 if every clinician bought CCM Online individually at retail = 47% savings + admin micro-course bundled + ongoing updates.
+vs A$7,952 if the 16 clinicians (excluding admin) bought CCM Online individually at retail (A$497 × 16) = 42% savings + admin micro-course bundled + practice manager included + ongoing content updates.
+
+**Note:** The engine MUST distinguish Practice Manager (A$197 — clinic-management overview + reporting access) from Admin / Reception (A$97 — micro-course only). The team-page parser flags `role_title` strings like "Practice Manager" / "Clinic Manager" / "Director" as the higher tier. Lumping them together undersells the platform value.
+
+Pay once. Permanent access per seat. If a clinician leaves the clinic, the seat transfers to their replacement at no charge (clinic-level license, not personal). Content updates as CEA publishes new content (e.g. when consensus statements change — Amsterdam → Berlin etc).
 
 The pricing renders dynamically per prospect inside the portal — the math table shows their actual roster, their actual subtotal, their actual discount tier.
 
@@ -123,7 +129,7 @@ This is the upsell after a clinic has clinicians using the portal and wants to f
 
 **Worked example — Advanced Health (Buderim QLD = 2-4 hr drive band)**
 
-Tier 2 base A$7,500 + travel A$300 = **A$7,800 one-time** on top of Tier 1 annual.
+Tier 2 base A$7,500 + travel A$300 = **A$7,800 one-time** on top of Tier 1.
 
 ### "Best case" — Tier 1 + Tier 2 combined pitch
 
@@ -133,12 +139,12 @@ For clinics with serious local-hub ambition, the cold pitch shows BOTH tiers and
 
 | Item | Cost |
 |---|---|
-| Tier 1 — Online Hub subscription (17 seats, year 1) | A$4,239 |
+| Tier 1 — Online clinic license (19 seats, lifetime) | A$4,634 |
 | Tier 2 — On-site training day + templates + outreach + support + travel | A$7,800 |
-| **Year 1 total — Online + In-Person Hub Program** | **A$12,039** |
-| Ongoing — annual portal access only (year 2+) | A$4,239/year |
+| **Total — Online + In-Person Hub Program (one-time)** | **A$12,434** |
+| Ongoing | A$0 — content updates included |
 
-vs A$22,400 of individual retail at 16 × A$1,400 CCM Complete + no clinic-level extras = 46% off retail with the complete local-hub package bundled.
+vs A$22,400 of individual retail at 16 × A$1,400 CCM Complete + no clinic-level extras = 44% off retail with the complete local-hub package bundled. One-time purchase, lifetime access, no renewals.
 
 The portal renders all three pricing views side by side: Tier 1 alone, Tier 2 alone (assumes Tier 1 in place), Combined. The combined column is visually emphasised as "the way most engaged clinics buy."
 
@@ -229,6 +235,7 @@ Every prospect, every email, every portal page — generated from one template +
 |---|---|---|
 | `id` | SERIAL PK | |
 | `token` | TEXT UNIQUE | 16-char unguessable random string. URL fragment: `/p/{token}` |
+| `access_key` | TEXT NOT NULL | 6-8 char human-readable key for the `?k=` soft gate (e.g. `ah2026`). Sent in the cold email body alongside the URL. Prevents URL leak from exposing pricing. |
 | `clinic_name` | TEXT NOT NULL | Display name |
 | `trading_name` | TEXT | Legal entity if different |
 | `website_url` | TEXT NOT NULL | Source for research |
@@ -310,6 +317,25 @@ Every prospect, every email, every portal page — generated from one template +
 ---
 
 ## 3. The bespoke portal — page architecture
+
+### Reference implementation
+
+A working prototype of this pattern is live at `/proposals/advanced-health-buderim?k=ah2026` (hand-built for the Lauren Kidston inbound lead). The engine's `/p/{token}` template MUST be capable of reproducing every pattern in that prototype:
+
+1. **Access gate** — A soft key check (`?k=...` query param matched against a per-prospect access key stored on `prospect_clinics.access_key`). Without the key, an access wall renders with a CTA to email Zac for the link. The slug-based URL alone is not the gate; URL + key is the gate. This protects against URL-leak / accidental indexing of pricing.
+2. **Personalised hero** — Clinic name, primary contact first name in greeting, team-composition pills (one per discipline + count). Driven by `prospect_clinicians` aggregation grouped by discipline.
+3. **Pseudo-dashboard navigation** — Horizontal pill nav at the top with anchor links to every section. Establishes the "this is a working portal" feel vs "this is a one-pager".
+4. **Free utility panel** — Direct links to the live `/scat-forms/scat6`, `/scat-forms/scoat6`, `/scat-forms/child-scat6`, `/references` routes. Open-in-new-tab. Emerald visual treatment to communicate "unlocked".
+5. **Module 1 trial — inline content** — The opening text of CCM Module 1 rendered inline (not linked out). Section list sidebar with one item ticked (1.1) and 1.2-1.6 lock-iconed. Conversion CTA back to investment.
+6. **Discipline pathway cards** — One card per discipline present on the team, count rendered prominently. Curated content list keyed to the discipline content map (§6). B2B-exclusive cards (admin pathway) tagged with a badge.
+7. **Locked premium grid** — Greyed cards tagged with Tier 1 or Tier 2 badges. Click any locked card → smooth scroll to the matching pricing tier. No hard wall.
+8. **Hub flow** — 4-stage role-by-role delivery. Stage counts dynamic to team composition (e.g. "The 9 osteopaths" reads from `prospect_clinicians`).
+9. **Local hub targets** — Two cards listing region-specific sports/clubs + schools/GPs from `prospect_local_targets`. Falls back to generic regional language if targets aren't populated.
+10. **Investment** — Tier 1 seat table (every role row), Tier 2 line items, Combined panel with retail comparison. All numbers driven by `getProspectPricing(clinic)`.
+11. **CTA** — Cal.com link at the bottom + access pill nav anchor.
+12. **Print to PDF** — The entire page collapses cleanly when `Cmd+P`'d. Print-specific Tailwind classes (`print:hidden`, `print:bg-white` etc) on chrome.
+
+The engine's job is to template-render this same shape for every prospect. The hand-built page is the spec; the engine produces N copies of it.
 
 ### `/p/{token}` — Overview
 
