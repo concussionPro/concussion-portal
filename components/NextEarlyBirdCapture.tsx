@@ -1,0 +1,148 @@
+'use client'
+
+import { useState } from 'react'
+import { Loader2, Check, Sparkles } from 'lucide-react'
+
+type CitySlug = 'sydney' | 'byron-bay' | 'adelaide' | 'wa' | 'melbourne'
+
+const CITIES: { slug: CitySlug; label: string }[] = [
+  { slug: 'sydney', label: 'Sydney' },
+  { slug: 'byron-bay', label: 'Byron Bay' },
+  { slug: 'adelaide', label: 'Adelaide' },
+  { slug: 'wa', label: 'Perth / WA' },
+  { slug: 'melbourne', label: 'Next Melbourne' },
+]
+
+/**
+ * NextEarlyBirdCapture — compact inline form shown after early-bird closes.
+ * Lets a missed-early-bird buyer self-route to "notify me when the next
+ * early-bird opens" instead of just seeing the full price. Saves the buyer
+ * who might walk away rather than pay full price right now.
+ *
+ * Submits to the existing /api/register-interest endpoint with the chosen
+ * city — same backend as OtherCityInterest, just a more compact form.
+ *
+ * Default selected city is "melbourne" — preserves the context (they were
+ * browsing the Melbourne workshop page when early bird closed).
+ */
+export function NextEarlyBirdCapture({
+  defaultCity = 'melbourne',
+  className = '',
+}: {
+  defaultCity?: CitySlug
+  className?: string
+}) {
+  const [city, setCity] = useState<CitySlug>(defaultCity)
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (loading) return
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/register-interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, city }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setDone(true)
+      } else {
+        setError(data.error || 'Something went wrong.')
+      }
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const cityLabel = CITIES.find((c) => c.slug === city)?.label ?? 'your city'
+
+  if (done) {
+    return (
+      <div className={`mt-4 mx-auto max-w-md rounded-lg bg-emerald-50 border border-emerald-200 p-3 ${className}`}>
+        <p className="text-sm text-emerald-900 leading-snug flex items-start gap-2">
+          <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <span>You&rsquo;re on the list for {cityLabel}. We&rsquo;ll email when the next early-bird opens — usually 4-6 weeks before the workshop.</span>
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`mt-4 mx-auto max-w-md rounded-xl border-2 border-amber-200 bg-amber-50/40 p-4 ${className}`}>
+      <p className="text-xs font-semibold text-amber-900 flex items-center gap-1.5 mb-1">
+        <Sparkles className="w-3.5 h-3.5" />
+        Early bird closed — catch the next one
+      </p>
+      <p className="text-[12px] text-slate-700 leading-snug mb-3">
+        Get notified when the next early-bird opens (save A$210 vs full price). Pick a city you&rsquo;d travel to.
+      </p>
+
+      <form onSubmit={submit} className="space-y-2">
+        <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="City for next early-bird notification">
+          {CITIES.map((c) => (
+            <button
+              key={c.slug}
+              type="button"
+              role="radio"
+              aria-checked={city === c.slug}
+              onClick={() => setCity(c.slug)}
+              className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border transition-colors ${
+                city === c.slug
+                  ? 'bg-slate-900 text-white border-slate-900'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name"
+            autoComplete="name"
+            className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+          />
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@clinic.com.au"
+            autoComplete="email"
+            className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full inline-flex items-center justify-center gap-1 rounded-md bg-amber-700 hover:bg-amber-800 disabled:opacity-60 text-white text-xs font-semibold py-1.5 transition-colors"
+        >
+          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <>Notify me about {cityLabel}</>}
+        </button>
+
+        {error && (
+          <p className="text-[11px] text-red-600 leading-snug">{error}</p>
+        )}
+
+        <p className="text-[10px] text-slate-500 leading-snug">
+          One email when the next early-bird opens. Unsubscribe any time.
+        </p>
+      </form>
+    </div>
+  )
+}

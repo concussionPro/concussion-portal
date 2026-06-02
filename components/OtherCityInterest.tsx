@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Check, MapPin } from 'lucide-react'
+import { Loader2, Check, MapPin, Users } from 'lucide-react'
 
 type CitySlug = 'sydney' | 'byron-bay' | 'adelaide' | 'wa'
+type Selection = CitySlug | 'team'
 
 const CITIES: { slug: CitySlug; label: string }[] = [
   { slug: 'sydney', label: 'Sydney' },
@@ -13,7 +14,7 @@ const CITIES: { slug: CitySlug; label: string }[] = [
 ]
 
 export function OtherCityInterest() {
-  const [city, setCity] = useState<CitySlug>('sydney')
+  const [selection, setSelection] = useState<Selection>('sydney')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,23 +22,44 @@ export function OtherCityInterest() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
+  const isTeam = selection === 'team'
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (loading) return
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/register-interest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, city }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        setMessage(data.message)
-        setDone(true)
+      if (isTeam) {
+        const res = await fetch('/api/lead-magnet/team-training-inquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            name,
+            notes: 'Inquired via /pricing page team-training pill — wants a follow-up call.',
+          }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          setMessage("Got it. Zac will be in touch personally within 1-2 business days to discuss your team's training. You'll also get a confirmation email.")
+          setDone(true)
+        } else {
+          setError(data.error || 'Something went wrong.')
+        }
       } else {
-        setError(data.error || 'Something went wrong.')
+        const res = await fetch('/api/register-interest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name, city: selection }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          setMessage(data.message)
+          setDone(true)
+        } else {
+          setError(data.error || 'Something went wrong.')
+        }
       }
     } catch {
       setError('Network error. Please try again.')
@@ -46,21 +68,23 @@ export function OtherCityInterest() {
     }
   }
 
-  const cityLabel = CITIES.find((c) => c.slug === city)?.label ?? 'your city'
+  const cityLabel = CITIES.find((c) => c.slug === selection)?.label ?? 'your city'
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.08)]">
       <div className="flex items-center gap-2 mb-1">
         <MapPin className="w-3.5 h-3.5 text-[var(--accent)]" aria-hidden="true" />
         <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--accent)]">
-          Not in Melbourne?
+          {isTeam ? 'Training a whole team?' : 'Not in Melbourne?'}
         </p>
       </div>
       <p className="text-sm font-semibold text-slate-900 leading-snug mb-0.5">
-        Register interest for your city
+        {isTeam ? 'Inquire about in-house team training' : 'Register interest for your city'}
       </p>
       <p className="text-[12px] text-slate-600 leading-snug mb-3">
-        Once {cityLabel} hits 8 registrations we lock in a date — you&apos;ll be the first to know.
+        {isTeam
+          ? 'In-house training for clinics, sports orgs, and hospital networks. Pricing scoped privately on a short call.'
+          : `Once ${cityLabel} hits 8 registrations we lock in a date — you'll be the first to know.`}
       </p>
 
       {done ? (
@@ -70,16 +94,16 @@ export function OtherCityInterest() {
         </div>
       ) : (
         <form onSubmit={submit} className="space-y-2.5">
-          <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Workshop city">
+          <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Workshop city or team training">
             {CITIES.map((c) => (
               <button
                 key={c.slug}
                 type="button"
                 role="radio"
-                aria-checked={city === c.slug}
-                onClick={() => setCity(c.slug)}
+                aria-checked={selection === c.slug}
+                onClick={() => setSelection(c.slug)}
                 className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border transition-colors ${
-                  city === c.slug
+                  selection === c.slug
                     ? 'bg-slate-900 text-white border-slate-900'
                     : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
                 }`}
@@ -87,6 +111,20 @@ export function OtherCityInterest() {
                 {c.label}
               </button>
             ))}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={isTeam}
+              onClick={() => setSelection('team')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full border transition-colors ${
+                isTeam
+                  ? 'bg-teal-700 text-white border-teal-700'
+                  : 'bg-white text-teal-700 border-teal-300 hover:border-teal-500'
+              }`}
+            >
+              <Users className="w-3 h-3" />
+              Team training
+            </button>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -113,10 +151,14 @@ export function OtherCityInterest() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white text-sm font-semibold py-2 transition-colors"
+            className={`w-full inline-flex items-center justify-center gap-1.5 rounded-lg disabled:opacity-60 text-white text-sm font-semibold py-2 transition-colors ${
+              isTeam ? 'bg-teal-700 hover:bg-teal-800' : 'bg-slate-900 hover:bg-slate-800'
+            }`}
           >
             {loading ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : isTeam ? (
+              <>Send team training inquiry</>
             ) : (
               <>Notify me about {cityLabel}</>
             )}
@@ -126,9 +168,15 @@ export function OtherCityInterest() {
             <p className="text-[12px] text-red-600 leading-snug">{error}</p>
           )}
 
-          <p className="text-[10px] text-slate-400 leading-snug">
-            One email when the date is confirmed. No spam, unsubscribe any time.
-          </p>
+          {isTeam ? (
+            <p className="text-[10px] text-slate-400 leading-snug">
+              Zac responds personally within 1-2 business days. No automated sales sequence. <a href="/team-training" className="underline hover:text-slate-600">More detail →</a>
+            </p>
+          ) : (
+            <p className="text-[10px] text-slate-400 leading-snug">
+              One email when the date is confirmed. No spam, unsubscribe any time.
+            </p>
+          )}
         </form>
       )}
     </div>

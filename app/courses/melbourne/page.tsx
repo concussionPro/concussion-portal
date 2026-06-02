@@ -8,6 +8,7 @@ import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import CountdownTimer from '@/components/CountdownTimer'
 import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
+import { NextEarlyBirdCapture } from '@/components/NextEarlyBirdCapture'
 
 export default function MelbournePage() {
   const location = CONFIG.LOCATIONS.MELBOURNE
@@ -96,9 +97,9 @@ export default function MelbournePage() {
                     Early bird ${CONFIG.COURSE.PRICE_EARLY_BIRD} — save ${CONFIG.COURSE.SAVINGS} vs regular ${CONFIG.COURSE.PRICE_REGULAR}. Ends {earlyBirdDate}.
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground mt-4">
-                    Regular pricing ${CONFIG.COURSE.PRICE_REGULAR}
-                  </p>
+                  // Early-bird closed → no duplicate price line (button already shows it).
+                  // Instead capture missed-early-bird buyers for the next workshop.
+                  <NextEarlyBirdCapture defaultCity="melbourne" />
                 )}
               </>
             ) : (
