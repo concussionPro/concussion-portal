@@ -219,12 +219,9 @@ function Greeting() {
       <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">
         Concussion Hub Program · {CLINIC.city}, {CLINIC.state}
       </p>
-      <h2 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.02] mb-3 bg-gradient-to-br from-foreground via-foreground to-accent bg-clip-text text-transparent">
-        {CLINIC.shortName}
+      <h2 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.02] mb-2 bg-gradient-to-br from-foreground via-foreground to-accent bg-clip-text text-transparent">
+        {CLINIC.shortName} Dashboard
       </h2>
-      <p className="text-sm text-muted-foreground max-w-xl">
-        Hi {CLINIC.contactFirstName} — your team&rsquo;s preview workspace.
-      </p>
     </div>
   )
 }
@@ -278,7 +275,9 @@ function ProspectBento() {
         icon={BookOpen}
         iconTone="accent"
         label="Learning Suite"
-        title="8 Modules · 14 CPD"
+        title="Concussion Clinical Mastery"
+        stat="8"
+        statSuffix="modules · 14 CPD hrs"
         badge={{ text: 'Trial open', tone: 'emerald' }}
         span2
         accent
@@ -288,7 +287,9 @@ function ProspectBento() {
         icon={Activity}
         iconTone="violet"
         label="SCAT Forms"
-        title="SCAT6 · SCOAT6 · Child"
+        title="Sideline + office assessment"
+        stat="3"
+        statSuffix="fillable forms"
         badge={{ text: 'Open', tone: 'emerald' }}
         external
       />
@@ -297,7 +298,9 @@ function ProspectBento() {
         icon={TrendingUp}
         iconTone="emerald"
         label="Baseline Testing"
-        title="Pre-season cognitive"
+        title="Pre-season cognitive baseline"
+        stat="Pre-season"
+        statSuffix="club service"
         badge={{ text: 'Built', tone: 'emerald' }}
         external
       />
@@ -306,31 +309,44 @@ function ProspectBento() {
         icon={Library}
         iconTone="amber"
         label="Reference Library"
-        title="140+ peer-reviewed"
+        title="Amsterdam 2023 · AIS · RACGP · Cochrane"
+        stat="140+"
+        statSuffix="peer-reviewed sources"
         badge={{ text: 'Open', tone: 'emerald' }}
         span2
         external
       />
       <Tile
         icon={FileText}
+        iconTone="amber"
         label="Clinical Toolkit"
-        title="6 discharge templates"
+        title="Discharge templates"
+        stat="6"
+        statSuffix="clinic-branded docs"
       />
       <Tile
         icon={Stethoscope}
+        iconTone="amber"
         label="Outreach Kit"
         title="Schools · clubs · GPs"
+        stat="6"
+        statSuffix="templates + scripts"
       />
       <Tile
         icon={BookMarked}
+        iconTone="amber"
         label="Admin Workflow"
-        title="1-hr reception course"
+        title="Reception micro-course"
+        stat="1 hr"
+        statSuffix="phone triage · intake · AI"
       />
       <Tile
         icon={GraduationCap}
         iconTone="rose"
         label="On-site Hub Day"
-        title="Hands-on in Buderim"
+        title="Hands-on training at Buderim"
+        stat="Full day"
+        statSuffix="Zac delivers in-clinic"
         badge={{ text: 'Next step', tone: 'amber' }}
       />
     </div>
@@ -470,13 +486,22 @@ function TierCard({ tier }: { tier: typeof TIER1 | typeof TIER2 }) {
 type Tone = 'accent' | 'violet' | 'emerald' | 'amber' | 'rose' | 'slate'
 type BadgeTone = 'emerald' | 'amber' | 'slate'
 
-const TONE_BG: Record<Tone, string> = {
-  accent: 'from-accent/20 to-accent/5',
-  violet: 'from-violet-500/15 to-violet-400/5',
-  emerald: 'from-emerald-500/15 to-emerald-400/5',
-  amber: 'from-amber-500/15 to-amber-400/5',
-  rose: 'from-rose-500/15 to-rose-400/5',
-  slate: 'from-slate-200/50 to-slate-100/50',
+const TONE_ICON_BG: Record<Tone, string> = {
+  accent: 'from-accent/25 to-accent/10',
+  violet: 'from-violet-500/20 to-violet-400/8',
+  emerald: 'from-emerald-500/20 to-emerald-400/8',
+  amber: 'from-amber-500/20 to-amber-400/8',
+  rose: 'from-rose-500/20 to-rose-400/8',
+  slate: 'from-slate-200/60 to-slate-100/40',
+}
+
+const TONE_CARD_BG: Record<Tone, string> = {
+  accent: 'from-accent/[0.04] via-white to-white',
+  violet: 'from-violet-50/40 via-white to-white',
+  emerald: 'from-emerald-50/40 via-white to-white',
+  amber: 'from-amber-50/40 via-white to-white',
+  rose: 'from-rose-50/40 via-white to-white',
+  slate: 'from-slate-50/60 via-white to-white',
 }
 
 const TONE_TEXT: Record<Tone, string> = {
@@ -486,6 +511,15 @@ const TONE_TEXT: Record<Tone, string> = {
   amber: 'text-amber-600',
   rose: 'text-rose-600',
   slate: 'text-slate-400',
+}
+
+const TONE_BORDER_BOTTOM: Record<Tone, string> = {
+  accent: 'bg-accent',
+  violet: 'bg-violet-500',
+  emerald: 'bg-emerald-500',
+  amber: 'bg-amber-500',
+  rose: 'bg-rose-500',
+  slate: 'bg-slate-300',
 }
 
 const BADGE_TONE: Record<BadgeTone, string> = {
@@ -500,6 +534,8 @@ function Tile({
   iconTone,
   label,
   title,
+  stat,
+  statSuffix,
   badge,
   span2,
   external,
@@ -510,6 +546,8 @@ function Tile({
   iconTone?: Tone
   label: string
   title: string
+  stat?: string
+  statSuffix?: string
   badge?: { text: string; tone: BadgeTone }
   span2?: boolean
   external?: boolean
@@ -520,24 +558,30 @@ function Tile({
   const isLink = !!href
 
   const containerClasses = [
-    'glass-premium rounded-2xl p-5 sm:p-6 relative overflow-hidden',
+    'rounded-2xl p-5 sm:p-6 relative overflow-hidden border border-accent/8',
+    'bg-gradient-to-br', TONE_CARD_BG[tone],
+    'shadow-sm',
     span2 ? 'bento-span-2' : '',
-    locked ? 'opacity-80' : '',
-    isLink ? 'group block hover:shadow-md transition-all' : '',
+    locked ? 'opacity-85' : '',
+    isLink ? 'group block hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200' : '',
     accent ? 'border-l-4 border-l-accent' : '',
   ].filter(Boolean).join(' ')
 
   const inner = (
     <>
       {isLink && (
-        <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+        <ArrowUpRight className="absolute top-5 right-5 w-4 h-4 text-muted-foreground/40 group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
       )}
-      <div className="flex items-start gap-3">
-        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${TONE_BG[tone]} flex items-center justify-center shrink-0`}>
+
+      {/* Decorative accent bar at bottom */}
+      <div className={`absolute bottom-0 left-0 right-0 h-[3px] ${TONE_BORDER_BOTTOM[tone]} opacity-70`} />
+
+      <div className="flex items-start gap-3 mb-3">
+        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${TONE_ICON_BG[tone]} flex items-center justify-center shrink-0 shadow-sm`}>
           {locked ? (
-            <Lock className={`w-5 h-5 ${TONE_TEXT[tone]}`} strokeWidth={1.8} />
+            <Lock className={`w-5 h-5 ${TONE_TEXT[tone]}`} strokeWidth={2} />
           ) : (
-            <Icon className={`w-5 h-5 ${TONE_TEXT[tone]}`} strokeWidth={1.8} />
+            <Icon className={`w-[22px] h-[22px] ${TONE_TEXT[tone]}`} strokeWidth={1.8} />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -554,6 +598,17 @@ function Tile({
           </p>
         </div>
       </div>
+
+      {stat && (
+        <div className="flex items-baseline gap-2 pt-2 border-t border-accent/8">
+          <span className={`text-2xl font-bold leading-none ${locked ? 'text-slate-400' : TONE_TEXT[tone]}`}>
+            {stat}
+          </span>
+          {statSuffix && (
+            <span className="text-[11px] text-muted-foreground leading-snug">{statSuffix}</span>
+          )}
+        </div>
+      )}
     </>
   )
 
