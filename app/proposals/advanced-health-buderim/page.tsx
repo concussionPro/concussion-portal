@@ -100,6 +100,7 @@ function ProspectDashboard() {
           <Greeting />
           <StartHereHero />
           <ProspectBento />
+          <PricingTiers />
         </div>
       </main>
     </div>
@@ -136,9 +137,9 @@ function ProspectSidebar() {
       <nav className="flex-1 space-y-1">
         <SidebarItem label="Dashboard" icon={Home} active />
         <SidebarItem href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} label="Learning Suite" icon={BookOpen} />
-        <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
-        <SidebarItem href="/scat-forms" label="Baseline Testing" icon={TrendingUp} external />
-        <SidebarItem href="/references" label="Reference Library" icon={Library} external />
+        <SidebarItem label="SCAT Forms" icon={Activity} />
+        <SidebarItem label="Baseline Testing" icon={TrendingUp} />
+        <SidebarItem label="Reference Library" icon={Library} />
         <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
         <SidebarItem label="Outreach Kit" icon={Stethoscope} locked />
         <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
@@ -182,6 +183,14 @@ function SidebarItem({
       <div className={`${base} bg-accent/8 text-accent font-semibold cursor-default`}>
         <div className="nav-active-indicator" />
         <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+        <span>{label}</span>
+      </div>
+    )
+  }
+  if (!href) {
+    return (
+      <div className={`${base} text-muted-foreground cursor-default`}>
+        <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
         <span>{label}</span>
       </div>
     )
@@ -324,6 +333,132 @@ function ProspectBento() {
         title="Hands-on in Buderim"
         badge={{ text: 'Next step', tone: 'amber' }}
       />
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRICING TIERS — participant tiers + where the value is
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TIER1 = {
+  name: 'Online Clinic License',
+  price: 4634,
+  priceLabel: 'one-time · lifetime access',
+  participants: `${TEAM_TOTAL} seats — full ${CLINIC.shortName} team`,
+  perSeat: 'A$97–A$397 / seat by discipline · 20% volume discount applied',
+  inclusions: [
+    'All 8 modules of Concussion Clinical Mastery',
+    '14 CPD hrs / osteo · 8 hrs / EP · 4 hrs / myo+RMT · 1 hr / admin',
+    'Discipline-specific learning tracks',
+    'Fillable SCAT6, SCOAT6, Child SCAT6',
+    'Pre-season baseline testing service',
+    '140+ peer-reviewed reference library',
+    'Per-clinician CPD dashboards + certificates',
+    'Content updates as consensus evolves',
+  ],
+  value: 'Every clinician on your team capable of structured concussion management.',
+}
+
+const TIER2 = {
+  name: 'Combined Hub Program',
+  price: 12434,
+  priceLabel: 'one-time · everything in Tier 1 + on-site',
+  participants: `${TEAM_TOTAL} seats + full-day on-site at ${CLINIC.city}`,
+  perSeat: 'Includes Tier 1 (A$4,634) + on-site Hub day (A$7,800)',
+  inclusions: [
+    'Everything in Tier 1',
+    'Full-day on-site training at Buderim (Zac travels in)',
+    '6 discharge templates — GP letter, school RTP, parent plan, sports cert, WorkCover, NDIS — clinic-branded',
+    '6 outreach templates + email sequences + phone scripts + follow-up tracker',
+    '30-day post-training implementation support',
+    'CEA-trained-clinic badge + waiting-room poster',
+    'Travel included (Byron → Buderim)',
+  ],
+  value: `${CLINIC.shortName} positioned as the ${CLINIC.region}'s concussion referral destination.`,
+  recommended: true,
+}
+
+function PricingTiers() {
+  return (
+    <section className="mt-8">
+      <div className="mb-5">
+        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
+          Investment · two tiers
+        </p>
+        <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          Choose the scope of the Hub Program
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          One-time pricing. Lifetime access per seat. If a clinician leaves, the seat transfers at no charge.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TierCard tier={TIER1} />
+        <TierCard tier={TIER2} />
+      </div>
+
+      <div className="mt-5 glass-premium rounded-xl p-4 text-center">
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Pricing rendered against {CLINIC.shortName}&rsquo;s identified team composition ({TEAM_TOTAL} staff). GST exclusive. Final scope confirmed on the 20-min scoping call.
+        </p>
+        <a
+          href="https://cal.com/zac-lewis-so8zjs/30min"
+          target="_blank"
+          rel="noopener"
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors mt-3 shadow-md"
+        >
+          Book scoping call
+          <ArrowUpRight className="w-4 h-4" />
+        </a>
+      </div>
+    </section>
+  )
+}
+
+function TierCard({ tier }: { tier: typeof TIER1 | typeof TIER2 }) {
+  const recommended = 'recommended' in tier && tier.recommended
+  return (
+    <div
+      className={`relative rounded-2xl p-6 sm:p-7 overflow-hidden ${
+        recommended
+          ? 'bg-gradient-to-br from-accent/8 via-accent/4 to-white border-2 border-accent shadow-md'
+          : 'glass-premium'
+      }`}
+    >
+      {recommended && (
+        <span className="absolute top-4 right-4 text-[9px] font-bold uppercase tracking-wider bg-accent text-white px-2.5 py-1 rounded-full">
+          Recommended
+        </span>
+      )}
+
+      <p className="stat-label">{tier.name}</p>
+      <p className={`text-3xl sm:text-4xl font-bold leading-none mt-1 mb-1 ${recommended ? 'text-accent' : 'text-foreground'}`}>
+        A${tier.price.toLocaleString()}
+      </p>
+      <p className="text-[11px] text-muted-foreground mb-4">{tier.priceLabel}</p>
+
+      <div className="rounded-lg bg-white/60 border border-accent/10 px-3 py-2.5 mb-3">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-0.5">Participants</p>
+        <p className="text-[13px] font-semibold text-foreground leading-snug">{tier.participants}</p>
+        <p className="text-[11px] text-muted-foreground leading-snug mt-1">{tier.perSeat}</p>
+      </div>
+
+      <div className="rounded-lg bg-amber-50/60 border border-amber-200 px-3 py-2.5 mb-4">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-amber-800 mb-0.5">Where the value is</p>
+        <p className="text-[12px] text-foreground leading-snug">{tier.value}</p>
+      </div>
+
+      <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-2">What&rsquo;s included</p>
+      <ul className="space-y-1.5">
+        {tier.inclusions.map((item, i) => (
+          <li key={i} className="text-[12px] text-foreground leading-snug flex gap-2">
+            <span className={recommended ? 'text-accent mt-0.5 shrink-0' : 'text-emerald-600 mt-0.5 shrink-0'}>✓</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
