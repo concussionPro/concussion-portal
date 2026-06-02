@@ -140,7 +140,7 @@ function ProspectSidebar() {
         <SidebarItem href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} label="Learning Suite" icon={BookOpen} />
         <SidebarItem label="SCAT Forms" icon={Activity} />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
-        <SidebarItem label="Reference Library" icon={Library} />
+        <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
         <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
         <SidebarItem label="Outreach Kit" icon={Stethoscope} locked />
         <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
@@ -306,16 +306,15 @@ function ProspectBento() {
         external
       />
       <Tile
-        href="/references"
+        href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`}
         icon={Library}
         iconTone="amber"
         label="Reference Library"
         title="Amsterdam 2023 · AIS · RACGP · Cochrane"
         stat="140+"
         statSuffix="peer-reviewed sources"
-        badge={{ text: 'Open', tone: 'emerald' }}
+        badge={{ text: 'Preview', tone: 'emerald' }}
         span2
-        external
       />
       <Tile
         icon={FileText}

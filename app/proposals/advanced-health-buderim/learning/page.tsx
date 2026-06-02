@@ -177,7 +177,7 @@ function ProspectSidebar() {
         <SidebarItem label="Learning Suite" icon={BookOpen} active />
         <SidebarItem label="SCAT Forms" icon={Activity} />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
-        <SidebarItem label="Reference Library" icon={Library} />
+        <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
         <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
         <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
       </nav>
