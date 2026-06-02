@@ -2,16 +2,71 @@
 
 import { FillableDoc, Fld } from './FillableDoc'
 import type { OutreachTemplate } from '@/data/hub-program-content'
+import { Lock, ArrowRight } from 'lucide-react'
 
-export function OutreachToolkitDoc({ templates }: { templates: OutreachTemplate[] }) {
+/**
+ * `previewedSlugs` — when provided, only templates in the array render in full.
+ * Others render as locked teasers. Used by cold-pitch prospect portals.
+ */
+export function OutreachToolkitDoc({
+  templates,
+  previewedSlugs,
+  unlockHref = '/pricing',
+}: {
+  templates: OutreachTemplate[]
+  previewedSlugs?: string[]
+  unlockHref?: string
+}) {
+  const isPreviewMode = Array.isArray(previewedSlugs)
+  const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
   return (
     <FillableDoc storageKey="outreach-kit">
       <Cover />
-      <TableOfContents templates={templates} />
-      {templates.map((t) => (
-        <OutreachBlock key={t.slug} template={t} />
-      ))}
+      <TableOfContents templates={templates} isVisible={isVisible} />
+      {templates.map((t) =>
+        isVisible(t.slug)
+          ? <OutreachBlock key={t.slug} template={t} />
+          : <LockedOutreachCard key={t.slug} template={t} unlockHref={unlockHref} />
+      )}
     </FillableDoc>
+  )
+}
+
+function LockedOutreachCard({ template, unlockHref }: { template: OutreachTemplate; unlockHref: string }) {
+  return (
+    <article id={template.slug} className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-7 mb-6 opacity-95 print:break-before-page">
+      <div className="flex items-start gap-4">
+        <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+          <Lock className="w-5 h-5 text-amber-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="text-[9px] uppercase tracking-[0.1em] font-bold bg-amber-100 text-amber-800 px-2 py-1 rounded">
+              Locked · sample only
+            </span>
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
+              {template.channel.replace('-', ' ')}
+            </span>
+          </div>
+          <h2 className="text-lg font-bold text-foreground tracking-tight leading-tight mb-2">
+            {template.title}
+          </h2>
+          <p className="text-[12.5px] text-muted-foreground leading-relaxed mb-1">
+            <strong className="text-foreground">When to use.</strong> {template.purpose}
+          </p>
+          <p className="text-[11.5px] text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">Recipient:</strong> {template.audience}
+          </p>
+          <a
+            href={unlockHref}
+            className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"
+          >
+            Unlock with Hub Program
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+    </article>
   )
 }
 
@@ -51,18 +106,30 @@ function Cover() {
   )
 }
 
-function TableOfContents({ templates }: { templates: OutreachTemplate[] }) {
+function TableOfContents({
+  templates,
+  isVisible,
+}: {
+  templates: OutreachTemplate[]
+  isVisible: (slug: string) => boolean
+}) {
   return (
     <section className="bg-white rounded-2xl border border-accent/10 p-5 sm:p-6 mb-6 shadow-sm print:shadow-none print:border-0 print:rounded-none print:break-after-page">
       <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-3">Contents</p>
       <ol className="divide-y divide-accent/8">
         {templates.map((t, i) => (
           <li key={t.slug}>
-            <a href={`#${t.slug}`} className="flex items-baseline gap-3 py-3 hover:text-accent transition-colors">
+            <a
+              href={`#${t.slug}`}
+              className={`flex items-baseline gap-3 py-3 transition-colors ${isVisible(t.slug) ? 'hover:text-accent' : 'opacity-65 hover:opacity-90'}`}
+            >
               <span className="text-[11px] font-mono text-accent w-7 shrink-0">
                 {String(i + 1).padStart(2, '0')}
               </span>
-              <span className="text-sm font-semibold text-foreground flex-1">{t.title}</span>
+              <span className="text-sm font-semibold text-foreground flex-1 inline-flex items-center gap-1.5">
+                {t.title}
+                {!isVisible(t.slug) && <Lock className="w-3 h-3 text-amber-600" />}
+              </span>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 {t.channel.replace('-', ' ')}
               </span>

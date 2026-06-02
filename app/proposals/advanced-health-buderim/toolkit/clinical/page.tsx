@@ -46,6 +46,8 @@ export default async function ClinicalToolkitPage({
           <ClinicalToolkitDoc
             templates={DISCHARGE_TEMPLATES}
             principles={DOCUMENTATION_PRINCIPLES}
+            previewedSlugs={['gp-handover-letter']}
+            unlockHref={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}#pricing`}
           />
         </div>
       </main>

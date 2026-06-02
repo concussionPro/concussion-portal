@@ -43,7 +43,11 @@ export default async function OutreachKitPage({
             Back to toolkit
           </Link>
 
-          <OutreachToolkitDoc templates={OUTREACH_TEMPLATES} />
+          <OutreachToolkitDoc
+            templates={OUTREACH_TEMPLATES}
+            previewedSlugs={['generic-capability-one-pager']}
+            unlockHref={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}#pricing`}
+          />
         </div>
       </main>
     </div>
