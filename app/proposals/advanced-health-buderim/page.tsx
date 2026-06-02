@@ -3,7 +3,7 @@ import { PrintButton } from './PrintButton'
 
 export const metadata: Metadata = {
   title: 'Concussion Hub Programme — Advanced Health Buderim',
-  description: 'On-site concussion + AI training proposal for Advanced Health, Buderim QLD. Full clinical flow from intake to discharge.',
+  description: 'On-site concussion training proposal for Advanced Health, Buderim QLD. Clinical mastery + local-hub positioning.',
   robots: 'noindex, nofollow',
 }
 
@@ -11,7 +11,7 @@ export default function AdvancedHealthProposal() {
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white">
 
-      {/* Print action bar — hidden when printing */}
+      {/* Print bar */}
       <div className="print:hidden bg-white border-b border-slate-200">
         <div className="max-w-[820px] mx-auto px-6 py-3 flex items-center justify-between gap-3">
           <p className="text-xs text-slate-600">
@@ -33,7 +33,7 @@ export default function AdvancedHealthProposal() {
               Concussion Hub Programme
             </h1>
             <p className="text-[13px] text-slate-700 leading-snug">
-              On-site training + medicolegal protection package for <strong>Advanced Health Pain &amp; Injury Clinic</strong>, Buderim QLD
+              Clinical mastery + local-hub positioning for <strong>Advanced Health Pain &amp; Injury Clinic</strong>, Buderim QLD
             </p>
           </div>
           <div className="text-right shrink-0">
@@ -45,27 +45,82 @@ export default function AdvancedHealthProposal() {
           </div>
         </header>
 
-        {/* MEDICOLEGAL HOOK — opens with the fear / value driver, not the CPD pitch */}
-        <section className="mb-5 rounded-lg border-2 border-red-200 bg-red-50/40 p-3.5">
-          <p className="text-[10px] uppercase tracking-wider text-red-800 font-bold mb-1.5">
-            Why this matters now
+        {/* THE OPPORTUNITY — clinical leadership framing, not fear */}
+        <section className="mb-5 rounded-lg border-2 border-teal-200 bg-teal-50/40 p-3.5">
+          <p className="text-[10px] uppercase tracking-wider text-teal-800 font-bold mb-1.5">
+            The opportunity
           </p>
           <p className="text-[12px] text-slate-800 leading-relaxed">
-            A missed concussion that turns into a complaint, an AHPRA notification, an NDIS audit on AI-generated reports, or an indemnity claim &mdash; all of these are increasingly common and avoidable. The Concussion Hub Programme is built around <strong>defensible documentation and standardised clinical decisions</strong> across the whole patient journey. Every role (admin to discharge) works the same playbook. Every note your team writes survives audit.
+            Concussion is one of the most undertaught conditions in Australian healthcare &mdash; and one of the highest-volume sports injuries on the Sunshine Coast. Most clinics aren&rsquo;t trained to manage it confidently. Your team can be the one that is. The Concussion Hub Programme gives Advanced Health <strong>clinical mastery in concussion diagnosis and rehab</strong>, and the positioning to become the Sunshine Coast&rsquo;s referral destination for sports teams, schools and local GPs.
           </p>
         </section>
 
-        {/* THE OPPORTUNITY */}
-        <section className="mb-5">
-          <p className="text-[12px] text-slate-800 leading-relaxed">
-            Advanced Health has the complete clinical flow a concussion management hub needs &mdash; reception triage, osteopathic diagnosis and treatment, exercise physiology rehab, and structured discharge. Most clinics don&rsquo;t. This proposal turns that existing workflow into a coordinated, audit-safe concussion-management capability that fits Monday&rsquo;s schedule and positions Advanced Health as the Sunshine Coast referral destination for head injury.
+        {/* THREE OUTCOMES YOUR TEAM GAINS — the new differentiators */}
+        <section className="mb-6">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-teal-700 mb-3">
+            What your team will be able to do
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <OutcomeCard
+              icon="🧠"
+              label="Diagnose with confidence"
+              body="Hands-on SCAT6 and SCOAT6 administration. Complete VOMS deep-dive. BESS scored reliably. Cervical contribution assessment integrated into the same consult. Your osteos finish the day confident on the most undertaught condition in their scope."
+              primary
+            />
+            <OutcomeCard
+              icon="🏃"
+              label="Deliver structured rehab"
+              body="Buffalo Treadmill Test for sub-symptom-threshold aerobic prescription. VOR / gaze-stability progression. Amsterdam 2023 six-step return-to-play, return-to-work, return-to-school. Your EPs leave with a complete active-rehab toolkit most clinicians have never been formally taught."
+              primary
+            />
+            <OutcomeCard
+              icon="🎯"
+              label="Own the local referral flow"
+              body="Concussion training is rare enough that one trained clinic becomes the obvious referral destination. Outreach package, introduction templates and capability one-pagers — turn the clinical capability into ongoing referrals from local GPs, sports clubs and schools."
+              primary
+            />
+          </div>
+        </section>
+
+        {/* BECOME THE LOCAL HUB — sports + GP referral flow */}
+        <section className="mb-6 rounded-lg border border-amber-200 bg-amber-50/40 p-4">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-800 mb-2">
+            Become the Sunshine Coast&rsquo;s concussion clinic
+          </h2>
+          <p className="text-[12px] text-slate-800 leading-relaxed mb-3">
+            One trained clinic per region becomes the natural concussion referral destination. The Hub Programme builds out that positioning explicitly &mdash; not just the training, but the relationships and referral pathways that turn it into patient volume.
+          </p>
+          <div className="grid grid-cols-2 gap-3 text-[11px]">
+            <div>
+              <p className="font-bold text-slate-900 mb-1">Sports teams + clubs</p>
+              <ul className="space-y-0.5 text-slate-700">
+                <li>• Sunshine Coast Falcons (Q-Cup rugby league)</li>
+                <li>• Junior rugby league + AFL + soccer programs</li>
+                <li>• Surf life saving clubs (Maroochydore → Caloundra)</li>
+                <li>• Mooloolaba triathlon + cycling clubs</li>
+                <li>• Pre-season baseline testing as a paid service</li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 mb-1">Local schools + GPs</p>
+              <ul className="space-y-0.5 text-slate-700">
+                <li>• Matthew Flinders Anglican College</li>
+                <li>• Sunshine Coast Grammar</li>
+                <li>• Immanuel Lutheran, Pacific Lutheran</li>
+                <li>• Local GP practices needing a referral path for concussion rehab</li>
+                <li>• University of the Sunshine Coast sports program</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-[11px] text-slate-700 leading-snug mt-3 italic">
+            We provide editable email templates, capability one-pagers, phone scripts and meeting agendas so your team starts building these relationships <strong>the week after training</strong> &mdash; no DIY work required.
           </p>
         </section>
 
-        {/* THE HUB — 4-stage flow */}
+        {/* THE 4-STAGE HUB FLOW — clinical stages emphasized */}
         <section className="mb-5">
           <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-teal-700 mb-3">
-            The Concussion Hub — Trained Role-by-Role
+            How it&rsquo;s delivered — role-by-role on-site at Buderim
           </h2>
           <div className="grid grid-cols-4 gap-2">
             <FlowStage
@@ -73,99 +128,103 @@ export default function AdvancedHealthProposal() {
               roleLabel="Intake"
               team="Reception + admin"
               items={[
-                'Phone-triage script (fast-track vs schedule)',
-                'Red-flag identification → ED transfer',
-                'Intake form additions for head injury',
-                'Privacy Act-safe AI documentation workflows',
-                'Patient / parent waiting-room leaflet',
-                '1-hr Admin Micro-Course (B2B only)',
+                'Phone triage script',
+                'Red-flag identification',
+                'Intake form additions',
+                'Booking flow for concussion priority',
+                '1-hr admin micro-course',
               ]}
             />
             <FlowStage
               num="02"
-              roleLabel="Diagnosis + Treatment"
-              team="The 9 osteopaths"
+              roleLabel="Diagnosis"
+              team="The 9 osteopaths — hands-on"
               items={[
-                'SCAT6 + SCOAT6 (acute + subacute)',
-                'VOMS deep-dive (hands-on)',
+                'SCAT6 + SCOAT6 admin',
+                'VOMS deep-dive',
                 'BESS scoring',
-                'Cervical contribution (osteo focus)',
-                'Acute return-to-activity decisions',
-                'Paediatric concussion + red flags',
-                '14 CPD hours per clinician',
+                'Cervical contribution',
+                'Acute return-to-activity',
+                'Paediatric concussion',
+                '14 CPD hours',
               ]}
+              highlight
             />
             <FlowStage
               num="03"
               roleLabel="Rehab"
               team="The EP team"
               items={[
-                'Buffalo Concussion Treadmill Test',
-                'Sub-threshold aerobic prescription',
-                'VOR / gaze stability progression',
-                'Amsterdam 2023 6-step return-to-play',
-                'Return-to-work + return-to-school',
+                'Buffalo Treadmill Test',
+                'Sub-threshold aerobic Rx',
+                'VOR / gaze stability',
+                'Amsterdam 2023 RTP',
+                'Return-to-work / school',
                 'Symptom-tracking tools',
-                'Escalation back to osteos',
+                'Escalation criteria',
               ]}
+              highlight
             />
             <FlowStage
               num="04"
               roleLabel="Discharge + Referral"
               team="Whole team"
               items={[
-                'GP handover (medicolegal-clean)',
-                'School / coach RTP authorisation',
-                'Parent symptom-management plan',
-                'Sports club RTP certificate',
-                'NDIS-safe report template',
-                'WorkCover / insurer documentation',
-                'Audit-defensible across the board',
+                'GP handover letter',
+                'School / coach RTP form',
+                'Parent management plan',
+                'Sports club RTP cert',
+                'Six clinic-licensed templates',
+                'Consistent across roles',
               ]}
-              highlight
             />
           </div>
         </section>
 
-        {/* DIFFERENTIATORS — three pillars, prominently displayed */}
-        <section className="mb-5">
+        {/* PORTAL PLATFORM ACCESS — ongoing value beyond the training day */}
+        <section className="mb-5 rounded-lg border border-slate-300 bg-slate-50 p-4">
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div className="flex-1">
+              <p className="text-[10px] uppercase tracking-wider text-slate-600 font-bold mb-1">
+                Not just a training day &mdash; an ongoing platform
+              </p>
+              <p className="text-[12px] text-slate-800 leading-relaxed">
+                Each clinician gets their own login to the CEA platform with permanent access to the courses, clinical references, fillable forms and CPD tracking. New evidence (Amsterdam / AIS updates) flows into the platform; your team stays current.
+              </p>
+            </div>
+            <a
+              href="https://portal.concussion-education-australia.com"
+              className="shrink-0 text-[10px] font-semibold text-teal-700 underline"
+            >
+              portal.concussion-education-australia.com
+            </a>
+          </div>
+          <div className="grid grid-cols-4 gap-2 text-[10.5px]">
+            <PortalItem title="Concussion Clinical Mastery" detail="Full online course, lifetime access per clinician — A$497 standalone value × team" />
+            <PortalItem title="AI in Clinical Practice" detail="3 CPD hours on AHPRA-aligned AI use in clinical notes — launching 17 June, included" />
+            <PortalItem title="Fillable SCAT6 + SCOAT6" detail="Web-based + downloadable auto-scoring forms (Adult, Child, SCOAT). Updated as consensus changes." />
+            <PortalItem title="Reference library + CPD tracking" detail="140+ peer-reviewed citations, AIS / Amsterdam position statements, per-clinician CPD dashboard." />
+          </div>
+        </section>
+
+        {/* SUPPORTING INFRASTRUCTURE — the bits that make it stick (medicolegal now SECONDARY) */}
+        <section className="mb-6">
           <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-teal-700 mb-3">
-            What you get that no other CPD provider offers
+            What makes the clinical capability stick
           </h2>
           <div className="grid grid-cols-3 gap-3">
-            <Differentiator
-              colour="red"
-              icon="⚖"
-              label="Medicolegal protection"
-              body="Every discharge document is built to be AHPRA-, NDIS-, WorkCover- and indemnity-insurer-defensible. Standardised across the whole team. If a clinical decision is ever challenged, your documentation holds up."
-            />
-            <Differentiator
-              colour="teal"
-              icon="📋"
+            <SupportCard
               label="Plug-and-play templates"
-              body="Six discharge templates pre-filled with your clinic branding. Six outreach templates for schools, sports clubs and GPs. Your team starts using them on day one. No DIY editing required."
+              body="Six discharge documents pre-filled with your clinic branding (GP letter, school RTP, parent plan, sports club cert, NDIS report, insurer doc). Six outreach templates for schools, sports clubs and GPs. Day-one ready."
             />
-            <Differentiator
-              colour="amber"
-              icon="🎯"
-              label="Local referral flow"
-              body="Outreach package pre-built for Sunshine Coast — Matthew Flinders, SC Grammar, Immanuel, Sunshine Coast Falcons, surf life saving, triathlon clubs, GP networks. Email sequences, phone scripts, meeting agendas, follow-up tracker — everything ready to send."
+            <SupportCard
+              label="Admin coordination"
+              body="A custom 1-hour Concussion Workflow micro-course for reception and admin (not available in our public catalogue) gets your front-of-house aligned with the clinical playbook. Phone triage, intake, booking priority, template management."
             />
-          </div>
-        </section>
-
-        {/* ADMIN MICRO-COURSE CALLOUT — emphasises B2B-only value */}
-        <section className="mb-5 rounded-lg border border-slate-300 bg-slate-50 p-3 flex items-start gap-3">
-          <div className="shrink-0 w-10 h-10 rounded-full bg-teal-700 text-white flex items-center justify-center text-[13px] font-bold">
-            1hr
-          </div>
-          <div className="flex-1">
-            <p className="text-[11px] font-bold text-slate-900 mb-0.5">
-              Concussion Workflow for Admin + Reception
-            </p>
-            <p className="text-[11px] text-slate-700 leading-snug">
-              Custom 1-hour online module designed for non-clinical staff &mdash; phone triage, red-flag escalation, intake form management, Privacy Act-safe handling of AI-generated notes, template management. <strong>Not available publicly</strong>; included only in B2B Hub Complete engagements. Brings the whole front-of-house in line with the clinical playbook.
-            </p>
+            <SupportCard
+              label="Defensible documentation"
+              body="Every template is AHPRA-, NDIS-, WorkCover- and indemnity-insurer-defensible. Standardised across the team. A genuine bonus — your clinical confidence is backed by paperwork that holds up."
+            />
           </div>
         </section>
 
@@ -204,46 +263,100 @@ export default function AdvancedHealthProposal() {
             />
           </div>
           <p className="text-[10px] text-slate-500 italic mt-2 leading-snug">
-            Pricing scoped for ~10-14 clinicians (osteo + EP + myo + admin). Larger teams or multi-location delivery scoped on request. GST exclusive.
+            Larger teams or multi-location delivery scoped on request. GST exclusive.
           </p>
+
+          {/* Per-clinician value comparison */}
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p className="text-[10px] uppercase tracking-wider text-slate-600 font-bold mb-2">
+              Per-clinician math &mdash; vs individual retail
+            </p>
+            <p className="text-[10.5px] text-slate-700 leading-snug mb-2">
+              Individual CCM Complete is <strong>A$1,400 per clinician</strong> at retail. Even Hub Foundation works out cheaper per clinician at Advanced Health&rsquo;s team size, before counting the on-site delivery, templates and ongoing portal access.
+            </p>
+            <table className="w-full text-[10.5px] border-collapse">
+              <thead>
+                <tr className="border-b border-slate-300">
+                  <th className="text-left py-1.5 font-semibold text-slate-700">Team size</th>
+                  <th className="text-right py-1.5 px-2 font-semibold text-slate-700">Individual @ A$1,400 each</th>
+                  <th className="text-right py-1.5 px-2 font-semibold text-teal-700">Hub Foundation per clinician</th>
+                  <th className="text-right py-1.5 px-2 font-semibold text-teal-800">Hub Complete per clinician</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-700">
+                <tr className="border-b border-slate-200">
+                  <td className="py-1.5">8 clinicians</td>
+                  <td className="text-right py-1.5 px-2">A$11,200</td>
+                  <td className="text-right py-1.5 px-2 font-semibold">A$1,000</td>
+                  <td className="text-right py-1.5 px-2 font-semibold">A$1,563</td>
+                </tr>
+                <tr className="border-b border-slate-200 bg-white">
+                  <td className="py-1.5">12 clinicians</td>
+                  <td className="text-right py-1.5 px-2">A$16,800</td>
+                  <td className="text-right py-1.5 px-2 font-semibold">A$667</td>
+                  <td className="text-right py-1.5 px-2 font-semibold">A$1,042</td>
+                </tr>
+                <tr className="border-b border-slate-200 bg-teal-50/40">
+                  <td className="py-1.5 font-semibold">16 clinicians (Advanced Health published team)</td>
+                  <td className="text-right py-1.5 px-2">A$22,400</td>
+                  <td className="text-right py-1.5 px-2 font-bold text-teal-800">A$500</td>
+                  <td className="text-right py-1.5 px-2 font-bold text-teal-800">A$781</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="text-[9.5px] text-slate-500 italic mt-2 leading-snug">
+              Individual retail comparison uses CCM Complete (A$1,400). Per-clinician Hub price excludes the templates, outreach package, admin micro-course, 30-day support, on-site delivery and ongoing platform updates &mdash; all of which are bundled in.
+            </p>
+          </div>
         </section>
 
-        {/* OUTCOMES */}
+        {/* OUTCOMES — clinical + business framing */}
         <section className="mb-5 rounded-lg border border-teal-200 bg-teal-50/40 p-3">
           <p className="text-[10px] uppercase tracking-wider text-teal-800 font-bold mb-1.5">
             What success looks like at 6 months
           </p>
           <div className="grid grid-cols-3 gap-3 text-[11px] text-slate-700">
             <div>
-              <p className="font-semibold text-slate-900 mb-0.5">Audit-safe across the board</p>
-              <p className="leading-snug">Every note, every discharge, every referral document is AHPRA-, NDIS-, WorkCover-defensible. Indemnity exposure materially reduced.</p>
+              <p className="font-semibold text-slate-900 mb-0.5">Clinical confidence</p>
+              <p className="leading-snug">Every clinician confident on SCAT6, VOMS, BESS and structured rehab. The conditions your team was guessing on six months ago are now your strongest clinical capability.</p>
             </div>
             <div>
               <p className="font-semibold text-slate-900 mb-0.5">The local concussion clinic</p>
-              <p className="leading-snug">Sunshine Coast schools, sports clubs and GPs know Advanced Health is the concussion-trained referral destination in the region.</p>
+              <p className="leading-snug">Sunshine Coast schools, sports clubs and GPs know Advanced Health is the concussion-trained referral destination. New patients flowing in from referral relationships you didn&rsquo;t have before.</p>
             </div>
             <div>
-              <p className="font-semibold text-slate-900 mb-0.5">One team, one playbook</p>
-              <p className="leading-snug">Reception to discharge: every role works the same concussion management protocol. Handoffs are documented, consistent, and defensible.</p>
+              <p className="font-semibold text-slate-900 mb-0.5">Audit-safe by default</p>
+              <p className="leading-snug">Every note, every discharge, every referral document is AHPRA-, NDIS- and WorkCover-defensible. The clinical capability you&rsquo;ve built is backed by documentation that holds up.</p>
             </div>
           </div>
         </section>
 
         {/* CTA + FOOTER */}
-        <section className="border-t border-slate-200 pt-4">
-          <div className="flex items-end justify-between gap-4">
+        <section className="border-t-2 border-teal-700 pt-5">
+          <div className="grid grid-cols-[1fr_auto] gap-5 items-center">
             <div>
-              <p className="text-[12px] font-semibold text-slate-900 mb-1">
-                Next step — a 20-minute scoping call
+              <p className="text-[14px] font-bold text-slate-900 mb-1">
+                Book a 20-minute scoping call
               </p>
               <p className="text-[11px] text-slate-700 leading-snug">
                 Pick a window that suits. I&rsquo;ll come back with a tailored one-page proposal for the exact team and topic mix you want included.
               </p>
             </div>
-            <div className="text-right shrink-0">
-              <p className="text-[11px] font-semibold text-slate-800">Zac Lewis</p>
-              <p className="text-[10px] text-slate-600">zac@concussion-education-australia.com</p>
-              <p className="text-[10px] text-teal-700 mt-0.5">portal.concussion-education-australia.com</p>
+            <a
+              href="https://cal.com/zac-lewis-so8zjs/30min"
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-lg bg-teal-700 text-white text-[12px] font-bold hover:bg-teal-800 transition-colors whitespace-nowrap shadow-md no-underline print:bg-white print:text-teal-700 print:border-2 print:border-teal-700"
+            >
+              Book a call → cal.com/zac-lewis-so8zjs/30min
+            </a>
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between gap-4 text-[10px] text-slate-600">
+            <div>
+              <p className="font-semibold text-slate-800">Zac Lewis · AHPRA-registered Osteopath</p>
+              <p>Founder, Concussion Education Australia</p>
+            </div>
+            <div className="text-right">
+              <p>zac@concussion-education-australia.com</p>
+              <p className="text-teal-700">portal.concussion-education-australia.com</p>
             </div>
           </div>
         </section>
@@ -274,7 +387,7 @@ function FlowStage({
   return (
     <div
       className={`rounded-lg border p-2.5 ${
-        highlight ? 'border-teal-300 bg-teal-50/60' : 'border-slate-200 bg-white'
+        highlight ? 'border-teal-400 bg-teal-50/60' : 'border-slate-200 bg-white'
       }`}
     >
       <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{num}</p>
@@ -294,29 +407,41 @@ function FlowStage({
   )
 }
 
-function Differentiator({
-  colour,
+function OutcomeCard({
   icon,
   label,
   body,
+  primary,
 }: {
-  colour: 'red' | 'teal' | 'amber'
   icon: string
   label: string
   body: string
+  primary?: boolean
 }) {
-  const colourMap = {
-    red: { border: 'border-red-200', bg: 'bg-red-50/50', text: 'text-red-800' },
-    teal: { border: 'border-teal-200', bg: 'bg-teal-50/50', text: 'text-teal-800' },
-    amber: { border: 'border-amber-200', bg: 'bg-amber-50/50', text: 'text-amber-800' },
-  }
-  const c = colourMap[colour]
   return (
-    <div className={`rounded-lg border ${c.border} ${c.bg} p-3`}>
+    <div className={`rounded-lg border ${primary ? 'border-teal-300 bg-teal-50/30' : 'border-slate-200 bg-slate-50'} p-3`}>
       <div className="flex items-center gap-2 mb-1.5">
         <span className="text-[18px] leading-none">{icon}</span>
-        <p className={`text-[11px] font-bold uppercase tracking-wide ${c.text}`}>{label}</p>
+        <p className={`text-[11px] font-bold uppercase tracking-wide ${primary ? 'text-teal-800' : 'text-slate-800'}`}>{label}</p>
       </div>
+      <p className="text-[10.5px] text-slate-700 leading-snug">{body}</p>
+    </div>
+  )
+}
+
+function PortalItem({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="rounded border border-slate-200 bg-white p-2">
+      <p className="text-[10px] font-bold text-slate-900 mb-0.5">{title}</p>
+      <p className="text-[9.5px] text-slate-600 leading-snug">{detail}</p>
+    </div>
+  )
+}
+
+function SupportCard({ label, body }: { label: string; body: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-3">
+      <p className="text-[11px] font-bold text-slate-900 mb-1.5">{label}</p>
       <p className="text-[10.5px] text-slate-700 leading-snug">{body}</p>
     </div>
   )
