@@ -47,6 +47,7 @@ export default async function ClinicalToolkitPage({
             templates={DISCHARGE_TEMPLATES}
             principles={DOCUMENTATION_PRINCIPLES}
             previewedSlugs={['gp-handover-letter']}
+            previewSectionLimit={1}
             unlockHref={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}#pricing`}
             defaultValues={{
               clinic_name: 'Advanced Health Pain & Injury Clinic',

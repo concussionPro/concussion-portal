@@ -4,6 +4,7 @@ import {
   FileText,
   ArrowLeft,
   Mail,
+  GraduationCap,
   Lock,
 } from 'lucide-react'
 import { ToolkitSidebar } from './_sidebar'
@@ -75,11 +76,14 @@ export default async function ToolkitLauncher({
               meta="6 templates"
               icon={Mail}
             />
-            <LockedCard
+            <ToolkitCard
+              href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`}
               kind="Training"
+              kindTone="amber"
               title="Front-Desk Micro-Course"
-              detail="Eight modules for reception & admin. Activates on enrolment."
+              detail="Eight modules for reception & admin. View only — full course + downloadable certificate activates on enrolment."
               meta="8 modules · ~1 hr"
+              icon={GraduationCap}
             />
           </div>
 

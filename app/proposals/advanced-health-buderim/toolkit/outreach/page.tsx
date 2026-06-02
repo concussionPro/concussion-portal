@@ -46,6 +46,7 @@ export default async function OutreachKitPage({
           <OutreachToolkitDoc
             templates={OUTREACH_TEMPLATES}
             previewedSlugs={['generic-capability-one-pager']}
+            previewSectionLimit={1}
             unlockHref={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}#pricing`}
             defaultValues={{
               clinic_name: 'Advanced Health Pain & Injury Clinic',

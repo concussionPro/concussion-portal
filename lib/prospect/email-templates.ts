@@ -149,8 +149,36 @@ export function mergeTemplate(
   return { subject, body }
 }
 
-function mergeVariables(str: string, vars: Record<string, string>): string {
-  return str.replace(/\{([a-z_]+)\}/g, (m, key) => (key in vars ? vars[key] : m))
+/**
+ * Resolve {variable} tokens in a template string.
+ *
+ * Reliability rule: if a variable is missing OR is an empty/whitespace value,
+ * the token is REMOVED entirely (not left as `{token}` and not replaced with
+ * a placeholder string). The surrounding sentence may need a little cleanup
+ * (double spaces collapsed) but the email never ships with raw {clinic_name}
+ * or similar literal artefacts visible to the recipient.
+ *
+ * If you can't reliably populate a value (e.g. you don't know the contact's
+ * first name or the principal's role), pass `undefined` or an empty string —
+ * the engine will gracefully degrade the sentence rather than leak a
+ * placeholder.
+ */
+function mergeVariables(str: string, vars: Record<string, string | undefined>): string {
+  const replaced = str.replace(/\{([a-z_]+)\}/g, (_m, key) => {
+    const value = vars[key]
+    if (value && value.trim().length > 0) return value
+    return ''
+  })
+  // Tidy up artefacts from removed tokens: double spaces, leading punctuation
+  // gaps, dangling commas before periods, empty parentheses.
+  return replaced
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\(\s*\)/g, '')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/,\s*([,.])/g, '$1')
+    .replace(/\s*\n\s*/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 /**

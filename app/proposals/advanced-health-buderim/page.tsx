@@ -337,12 +337,14 @@ function ProspectBento() {
         badge={{ text: 'Preview', tone: 'emerald' }}
       />
       <Tile
+        href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`}
         icon={BookMarked}
         iconTone="amber"
         label="Admin Workflow"
         title="Reception micro-course"
         stat="1 hr"
         statSuffix="phone triage · intake · AI"
+        badge={{ text: 'View only', tone: 'emerald' }}
       />
     </div>
   )

@@ -19,12 +19,17 @@ export function ClinicalToolkitDoc({
   templates,
   principles,
   previewedSlugs,
+  previewSectionLimit,
   unlockHref = '/pricing',
   defaultValues,
 }: {
   templates: DischargeTemplate[]
   principles: Principles
   previewedSlugs?: string[]
+  /** When set, visible templates render only this many body sections then
+   *  show a "rest unlocks with Hub Program" card. Prevents the prospect
+   *  from extracting a complete usable document. */
+  previewSectionLimit?: number
   unlockHref?: string
   /** Pre-populated field values for prospect-branded previews. */
   defaultValues?: Record<string, string>
@@ -37,7 +42,7 @@ export function ClinicalToolkitDoc({
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
         isVisible(t.slug)
-          ? <TemplateBlock key={t.slug} template={t} />
+          ? <TemplateBlock key={t.slug} template={t} sectionLimit={previewSectionLimit} unlockHref={unlockHref} />
           : <LockedTemplateCard key={t.slug} template={t} unlockHref={unlockHref} />
       )}
       <PrinciplesBlock principles={principles} />
@@ -168,7 +173,21 @@ function TableOfContents({
 // TEMPLATE BLOCK
 // ─────────────────────────────────────────────────────────────────────────────
 
-function TemplateBlock({ template }: { template: DischargeTemplate }) {
+function TemplateBlock({
+  template,
+  sectionLimit,
+  unlockHref = '/pricing',
+}: {
+  template: DischargeTemplate
+  sectionLimit?: number
+  unlockHref?: string
+}) {
+  const totalSections = template.sections.length
+  const sectionsToRender = sectionLimit
+    ? template.sections.slice(0, sectionLimit)
+    : template.sections
+  const hiddenSectionCount = totalSections - sectionsToRender.length
+  const isTruncated = hiddenSectionCount > 0
   return (
     <article id={template.slug} className="bg-white rounded-2xl border border-accent/10 p-6 sm:p-9 mb-6 shadow-sm print:shadow-none print:border-0 print:rounded-none print:break-before-page">
       {/* Letterhead */}
@@ -192,6 +211,11 @@ function TemplateBlock({ template }: { template: DischargeTemplate }) {
         <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
           {template.estimatedReadMinutes} min read
         </span>
+        {isTruncated && (
+          <span className="text-[9px] uppercase tracking-wider font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+            Excerpt only
+          </span>
+        )}
       </div>
 
       {/* Title */}
@@ -210,19 +234,62 @@ function TemplateBlock({ template }: { template: DischargeTemplate }) {
       {/* Pre-issue checklist */}
       <PreIssueChecklist />
 
-      {/* Body */}
+      {/* Body — possibly truncated for prospect preview */}
       <div className="mt-5 space-y-1">
-        {template.sections.map((section, i) => (
+        {sectionsToRender.map((section, i) => (
           <SectionRenderer key={i} heading={section.heading} body={section.body} />
         ))}
       </div>
 
-      {/* Sign-off */}
-      <SignOffBlock />
+      {isTruncated && (
+        <TruncatedSectionLock
+          hiddenSectionCount={hiddenSectionCount}
+          unlockHref={unlockHref}
+        />
+      )}
 
-      {/* Compliance footer */}
-      <ComplianceFooter items={template.complianceFooter} />
+      {/* Sign-off + compliance footer are part of the full template — hidden
+          in excerpt mode to prevent the prospect from extracting a complete
+          usable document. */}
+      {!isTruncated && (
+        <>
+          <SignOffBlock />
+          <ComplianceFooter items={template.complianceFooter} />
+        </>
+      )}
     </article>
+  )
+}
+
+function TruncatedSectionLock({
+  hiddenSectionCount,
+  unlockHref,
+}: {
+  hiddenSectionCount: number
+  unlockHref: string
+}) {
+  return (
+    <div className="mt-6 rounded-xl bg-amber-50/60 border border-amber-200 p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+          <Lock className="w-4 h-4 text-amber-700" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground mb-1">
+            {hiddenSectionCount} more section{hiddenSectionCount > 1 ? 's' : ''} + sign-off + compliance footer locked
+          </p>
+          <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">
+            This excerpt shows the structure. The full template — management plan, follow-up, sign-off block and AHPRA-aligned compliance footer — activates per clinician with the Hub Program.
+          </p>
+          <a
+            href={unlockHref}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"
+          >
+            Unlock the full template →
+          </a>
+        </div>
+      </div>
+    </div>
   )
 }
 

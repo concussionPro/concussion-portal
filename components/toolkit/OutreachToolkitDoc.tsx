@@ -11,11 +11,13 @@ import { Lock, ArrowRight } from 'lucide-react'
 export function OutreachToolkitDoc({
   templates,
   previewedSlugs,
+  previewSectionLimit,
   unlockHref = '/pricing',
   defaultValues,
 }: {
   templates: OutreachTemplate[]
   previewedSlugs?: string[]
+  previewSectionLimit?: number
   unlockHref?: string
   defaultValues?: Record<string, string>
 }) {
@@ -27,7 +29,7 @@ export function OutreachToolkitDoc({
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
         isVisible(t.slug)
-          ? <OutreachBlock key={t.slug} template={t} />
+          ? <OutreachBlock key={t.slug} template={t} sectionLimit={previewSectionLimit} unlockHref={unlockHref} />
           : <LockedOutreachCard key={t.slug} template={t} unlockHref={unlockHref} />
       )}
     </FillableDoc>
@@ -143,7 +145,19 @@ function TableOfContents({
   )
 }
 
-function OutreachBlock({ template }: { template: OutreachTemplate }) {
+function OutreachBlock({
+  template,
+  sectionLimit,
+  unlockHref = '/pricing',
+}: {
+  template: OutreachTemplate
+  sectionLimit?: number
+  unlockHref?: string
+}) {
+  const totalSections = template.sections.length
+  const sectionsToRender = sectionLimit ? template.sections.slice(0, sectionLimit) : template.sections
+  const hiddenSectionCount = totalSections - sectionsToRender.length
+  const isTruncated = hiddenSectionCount > 0
   return (
     <article id={template.slug} className="bg-white rounded-2xl border border-accent/10 p-6 sm:p-9 mb-6 shadow-sm print:shadow-none print:border-0 print:rounded-none print:break-before-page">
       {/* Letterhead */}
@@ -192,9 +206,9 @@ function OutreachBlock({ template }: { template: OutreachTemplate }) {
         </div>
       )}
 
-      {/* Body */}
+      {/* Body — possibly truncated */}
       <div className="mt-4 space-y-1">
-        {template.sections.map((section, i) => (
+        {sectionsToRender.map((section, i) => (
           <div key={i} className="my-3">
             {section.heading && (
               <h3 className="text-sm font-bold text-foreground tracking-tight mt-4 mb-1.5">
@@ -210,20 +224,45 @@ function OutreachBlock({ template }: { template: OutreachTemplate }) {
         ))}
       </div>
 
-      {/* Follow-up schedule */}
-      {template.followUpSchedule && template.followUpSchedule.length > 0 && (
+      {isTruncated && (
+        <div className="mt-6 rounded-xl bg-amber-50/60 border border-amber-200 p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+              <Lock className="w-4 h-4 text-amber-700" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground mb-1">
+                Full outreach template + follow-up schedule + advertising compliance note locked
+              </p>
+              <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">
+                This excerpt shows the structure. The full template with editable body, sequence cadence and AHPRA-aligned advertising review notes activates with the Hub Program.
+              </p>
+              <a
+                href={unlockHref}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"
+              >
+                Unlock the full template →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Follow-up + compliance note hidden in excerpt mode to prevent extraction */}
+      {!isTruncated && template.followUpSchedule && template.followUpSchedule.length > 0 && (
         <FollowUpSchedule schedule={template.followUpSchedule} />
       )}
 
-      {/* Compliance note (advertising-aware) */}
-      <div className="mt-6 rounded-lg bg-slate-50 border border-slate-200 p-4 print:break-inside-avoid">
-        <p className="text-[9px] uppercase tracking-[0.14em] font-bold text-slate-700 mb-2">
-          Advertising compliance note
-        </p>
-        <p className="text-[11.5px] text-slate-600 leading-relaxed">
-          This outreach material describes the clinic&rsquo;s capability and training. No specific clinical-outcome claims, comparative statements about other providers, or testimonials about treatment results are included. AHPRA advertising guidelines (s.133 National Law) apply — review any locally-added testimonials or claims before sending. Use the clinic letterhead and treating clinician name on outbound copies.
-        </p>
-      </div>
+      {!isTruncated && (
+        <div className="mt-6 rounded-lg bg-slate-50 border border-slate-200 p-4 print:break-inside-avoid">
+          <p className="text-[9px] uppercase tracking-[0.14em] font-bold text-slate-700 mb-2">
+            Advertising compliance note
+          </p>
+          <p className="text-[11.5px] text-slate-600 leading-relaxed">
+            This outreach material describes the clinic&rsquo;s capability and training. No specific clinical-outcome claims, comparative statements about other providers, or testimonials about treatment results are included. AHPRA advertising guidelines (s.133 National Law) apply — review any locally-added testimonials or claims before sending. Use the clinic letterhead and treating clinician name on outbound copies.
+          </p>
+        </div>
+      )}
     </article>
   )
 }

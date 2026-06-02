@@ -35,8 +35,11 @@ interface Ref {
 // Curated subset for the prospect preview. The full library has 140+ entries
 // across pathophysiology, assessment, PPCS, vestibular, exercise, paediatric,
 // medicolegal, return-to-play, and AI/documentation categories.
+// Curated preview: 10 landmark references — enough to demonstrate the
+// library's depth + clinical anchoring without giving away the full 140+
+// catalogue. The full library activates with the Hub Program.
 const PROSPECT_REFS: Record<string, Ref[]> = {
-  'Consensus statements + position papers': [
+  'Consensus statements': [
     {
       authors: 'Patricios, J. S., et al.',
       year: '2023',
@@ -51,51 +54,16 @@ const PROSPECT_REFS: Record<string, Ref[]> = {
       journal: 'British Journal of Sports Medicine, 57(11), 622-631',
       doi: '10.1136/bjsports-2023-107036',
     },
-    {
-      authors: 'McCrory, P., Meeuwisse, W. H., Aubry, M., et al.',
-      year: '2017',
-      title: 'Consensus statement on concussion in sport: 5th International Conference on Concussion in Sport, Berlin 2016',
-      journal: 'British Journal of Sports Medicine, 51(11), 838-847',
-      doi: '10.1136/bjsports-2017-097699',
-    },
-    {
-      authors: 'Concussion in Sport Australia',
-      year: '2023',
-      title: 'Concussion guidelines for youth and community sport',
-      journal: 'Concussion in Sport Australia',
-      url: 'https://www.concussioninsport.gov.au',
-    },
   ],
-  'Pathophysiology + mechanisms': [
+  'Pathophysiology': [
     {
       authors: 'Giza, C. C., & Hovda, D. A.',
       year: '2014',
       title: 'The new neurometabolic cascade of concussion',
       journal: 'Neurosurgery, 75(S4), S24-S33',
     },
-    {
-      authors: 'MacFarlane, M. P., & Glenn, T. C.',
-      year: '2015',
-      title: 'Neurochemical cascade of concussion',
-      journal: 'Brain Injury, 29(2), 139-153',
-      doi: '10.3109/02699052.2014.965208',
-    },
-    {
-      authors: 'Maugans, T. A., Farley, C., Altaye, M., Leach, J., & Cecil, K. M.',
-      year: '2012',
-      title: 'Pediatric sports-related concussion produces cerebral blood flow alterations',
-      journal: 'Pediatrics, 129(1), 28-37',
-      doi: '10.1542/peds.2011-2083',
-    },
-    {
-      authors: 'McKee, A. C., & Daneshvar, D. H.',
-      year: '2015',
-      title: 'The neuropathology of traumatic brain injury',
-      journal: 'Handbook of Clinical Neurology, 127, 45-66',
-      doi: '10.1016/B978-0-444-52892-6.00004-0',
-    },
   ],
-  'Assessment tools (VOMS, BESS, King-Devick)': [
+  'Assessment tools': [
     {
       authors: 'Mucha, A., Collins, M. W., Elbin, R. J., Furman, J. M., & Coppel, D. B.',
       year: '2014',
@@ -110,42 +78,14 @@ const PROSPECT_REFS: Record<string, Ref[]> = {
       journal: 'Sports Health, 3(3), 287-295',
       doi: '10.1177/1941738111403122',
     },
-    {
-      authors: 'Galetta, K. M., Liu, M., Leong, D. F., Ventura, R. E., Galetta, S. L., & Balcer, L. J.',
-      year: '2016',
-      title: 'The King-Devick test of rapid number naming for concussion detection: Meta-analysis and systematic review',
-      journal: 'Concussion, 1(2), cnc.15.8',
-      doi: '10.2217/cnc.15.8',
-    },
-    {
-      authors: 'Toong, T., Wilson, K. E., Hunt, A. W., et al.',
-      year: '2021',
-      title: 'Sensitivity and specificity of a multimodal approach for concussion assessment in youth athletes',
-      journal: 'Journal of Sport Rehabilitation, 30(6), 850-859',
-      doi: '10.1123/jsr.2020-0279',
-    },
   ],
-  'Persistent post-concussion symptoms + phenotypes': [
+  'PPCS + phenotypes': [
     {
       authors: 'Craton, N., Ali, H., & Lenoski, S.',
       year: '2017',
       title: 'COACH CV: The seven clinical phenotypes of concussion',
       journal: 'Cureus, 9(9), e1771',
       doi: '10.7759/cureus.1771',
-    },
-    {
-      authors: 'Ellis, M. J., Leddy, J. J., & Willer, B.',
-      year: '2015',
-      title: 'Physiological, vestibulo-ocular and cervicogenic post-concussion disorders: An evidence-based classification system',
-      journal: 'Brain Injury, 29(2), 238-248',
-      doi: '10.3109/02699052.2014.965207',
-    },
-    {
-      authors: 'Leddy, J. J., Sandhu, H., Sodhi, V., Baker, J. G., & Willer, B.',
-      year: '2012',
-      title: 'Rehabilitation of concussion and post-concussion syndrome',
-      journal: 'Sports Health, 4(2), 147-154',
-      doi: '10.1177/1941738111433673',
     },
   ],
   'Exercise + return-to-play': [
@@ -156,35 +96,14 @@ const PROSPECT_REFS: Record<string, Ref[]> = {
       journal: 'JAMA Pediatrics, 173(4), 319-325',
       doi: '10.1001/jamapediatrics.2018.4397',
     },
-    {
-      authors: 'Haider, M. N., Leddy, J. J., Pavlesen, S., et al.',
-      year: '2018',
-      title: 'A systematic review of criteria used to define recovery from sport-related concussion in youth athletes',
-      journal: 'British Journal of Sports Medicine, 52(18), 1179-1190',
-      doi: '10.1136/bjsports-2016-096551',
-    },
-    {
-      authors: 'Buffalo Concussion Treadmill Test protocol',
-      year: '2022',
-      title: 'Standardised protocol for sub-symptom-threshold aerobic exercise prescription post-concussion',
-      journal: 'University at Buffalo Concussion Management Clinic',
-      url: 'https://medicine.buffalo.edu/departments/orthopaedics/divisions/concussion-clinic.html',
-    },
   ],
-  'Cervical contribution + vestibular rehab': [
+  'Cervical + vestibular rehab': [
     {
       authors: 'Schneider, K. J., Meeuwisse, W. H., Nettel-Aguirre, A., et al.',
       year: '2014',
       title: 'Cervicovestibular rehabilitation in sport-related concussion: A randomised controlled trial',
       journal: 'British Journal of Sports Medicine, 48(17), 1294-1298',
       doi: '10.1136/bjsports-2013-093267',
-    },
-    {
-      authors: 'Cheever, K. M., McDevitt, J., Phillips, J., & Kawata, K.',
-      year: '2021',
-      title: 'The role of cervical symptoms in post-concussion management',
-      journal: 'Sports Medicine, 51(9), 1875-1891',
-      doi: '10.1007/s40279-021-01469-y',
     },
   ],
   'Paediatric concussion': [
