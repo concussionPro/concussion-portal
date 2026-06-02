@@ -312,7 +312,7 @@ function EndOfTrialPitch() {
             rel="noopener"
             className="inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"
           >
-            Book 20-min scoping call
+            Book call
             <ArrowUpRight className="w-4 h-4" />
           </a>
           <p className="text-[11px] text-muted-foreground">
@@ -375,7 +375,7 @@ function ProspectSidebar() {
         <SidebarItem href={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}`} label="Dashboard" icon={Home} />
         <SidebarItem href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} label="Learning Suite" icon={BookOpen} active />
         <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
-        <SidebarItem href="/scat-forms" label="Baseline Testing" icon={TrendingUp} external />
+        <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem href="/references" label="Reference Library" icon={Library} external />
         <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
         <SidebarItem label="Admin Workflow" icon={BookMarked} locked />

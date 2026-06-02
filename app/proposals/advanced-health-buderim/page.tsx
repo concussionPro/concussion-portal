@@ -139,7 +139,7 @@ function ProspectSidebar() {
         <SidebarItem label="Dashboard" icon={Home} active />
         <SidebarItem href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} label="Learning Suite" icon={BookOpen} />
         <SidebarItem label="SCAT Forms" icon={Activity} />
-        <SidebarItem label="Baseline Testing" icon={TrendingUp} />
+        <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem label="Reference Library" icon={Library} />
         <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
         <SidebarItem label="Outreach Kit" icon={Stethoscope} locked />
@@ -351,61 +351,34 @@ function ProspectBento() {
 
 function OnsiteHubHeadline() {
   return (
-    <section className="mb-6">
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-rose-600 via-rose-700 to-orange-700 text-white shadow-xl">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_right,white,transparent_60%)]" />
-        <div className="relative p-6 sm:p-9">
-          <div className="flex items-center gap-2 mb-3">
+    <a
+      href="#pricing"
+      className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-accent-dark via-accent-dark to-accent text-white shadow-lg group hover:shadow-xl transition-shadow"
+    >
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_60%)]" />
+      <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
               <GraduationCap className="w-4 h-4" strokeWidth={2} />
             </div>
-            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/95">
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">
               The day at Buderim · highest-value product
             </p>
           </div>
-
-          <h3 className="text-3xl sm:text-4xl font-bold leading-[1.05] mb-3 max-w-2xl">
-            One full practical day. Your team trained on your own cases.
+          <h3 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">
+            On-site Hub Day · your team trained on your own cases
           </h3>
-          <p className="text-sm text-white/90 leading-relaxed mb-5 max-w-2xl">
-            Zac delivers in-clinic at Buderim. Online pre-work opens 3 weeks prior so the on-site day is hands-on from the first hour — SCAT6 + SCOAT6 stations, cervical &amp; vestibular examination, acute and PPCS pathways, and your team&rsquo;s referral &amp; discharge workflow embedded by the end of the day.
+          <p className="text-sm text-white/85 leading-relaxed">
+            Full practical day in-clinic. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
           </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-            <DayStep num="01" label="Calibrate" detail="Team baseline + case review" />
-            <DayStep num="02" label="Assess" detail="SCAT6 / SCOAT6 stations" />
-            <DayStep num="03" label="Manage" detail="Acute + persistent pathways" />
-            <DayStep num="04" label="Embed" detail="Referral &amp; discharge workflow" />
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-white/20">
-            <FactBlock label="Format" value="1 full day · in-clinic" />
-            <FactBlock label="Pre-work" value="8 hrs online modules" />
-            <FactBlock label="CPD" value="14 hrs · OA-endorsed" />
-            <FactBlock label="When" value="Weekday that suits you" />
-          </div>
+        </div>
+        <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent-dark px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
+          See pricing
+          <ArrowUpRight className="w-4 h-4" />
         </div>
       </div>
-    </section>
-  )
-}
-
-function DayStep({ num, label, detail }: { num: string; label: string; detail: string }) {
-  return (
-    <div className="rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 p-3">
-      <p className="text-[9px] uppercase tracking-wider font-bold text-white/70 mb-0.5">{num}</p>
-      <p className="text-sm font-bold leading-tight">{label}</p>
-      <p className="text-[11px] text-white/80 leading-snug mt-0.5">{detail}</p>
-    </div>
-  )
-}
-
-function FactBlock({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[9px] uppercase tracking-wider font-bold text-white/70 mb-0.5">{label}</p>
-      <p className="text-[13px] font-semibold leading-tight">{value}</p>
-    </div>
+    </a>
   )
 }
 
@@ -443,17 +416,43 @@ const COHORT_TIERS = [
 
 function PricingTiers() {
   return (
-    <section className="mt-8">
-      <div className="mb-5">
+    <section id="pricing" className="mt-8 scroll-mt-8">
+      <div className="mb-4">
         <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
           Investment · you choose the cohort
         </p>
         <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
           On-site training at Buderim
         </h3>
-        <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-          Public course rate is A$1,400 per clinician. Run it on-site at {CLINIC.shortName} and the whole team trains together — per-clinician rate drops the more of you train. Minimum 8 clinicians.
-        </p>
+      </div>
+
+      <div className="mb-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-5 sm:p-6 shadow-md">
+        <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-4 sm:gap-6 items-center">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/60 mb-1">
+              Public course rate
+            </p>
+            <p className="text-3xl sm:text-4xl font-bold leading-none">
+              A$1,400
+              <span className="text-sm font-medium text-white/70 ml-1">/ clinician</span>
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center justify-center">
+            <span className="text-2xl text-white/40">→</span>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-emerald-300 mb-1">
+              On-site cohort · {CLINIC.shortName}
+            </p>
+            <p className="text-3xl sm:text-4xl font-bold leading-none text-emerald-300">
+              From A$900
+              <span className="text-sm font-medium text-white/80 ml-1">/ clinician</span>
+            </p>
+            <p className="text-[11px] text-white/70 mt-1">
+              Save up to A$500/clinician · whole team trains together on your own cases
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -486,7 +485,7 @@ function PricingTiers() {
 
       <div className="mt-5 glass-premium rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
         <p className="text-xs text-muted-foreground leading-relaxed flex-1 min-w-[200px]">
-          All prices + GST. Cohort size confirmed on the 20-min scoping call alongside a date that suits the clinic.
+          All prices + GST. Cohort size confirmed on a 20-min call alongside a date that suits the clinic.
         </p>
         <a
           href="https://cal.com/zac-lewis-so8zjs/30min"
@@ -494,7 +493,7 @@ function PricingTiers() {
           rel="noopener"
           className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors shadow-md"
         >
-          Book scoping call
+          Book call
           <ArrowUpRight className="w-4 h-4" />
         </a>
       </div>
@@ -504,43 +503,44 @@ function PricingTiers() {
 
 function CohortCard({ tier }: { tier: (typeof COHORT_TIERS)[number] }) {
   const recommended = 'recommended' in tier && tier.recommended
+  const savePerClinician = 1400 - tier.perClinician
   return (
     <div
-      className={`relative rounded-2xl p-5 sm:p-6 overflow-hidden border ${
+      className={`relative rounded-xl p-4 overflow-hidden border ${
         recommended
           ? 'bg-gradient-to-br from-accent/8 via-accent/3 to-white border-2 border-accent shadow-md'
           : 'glass-premium border-accent/8'
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <p className="stat-label mb-0">{tier.name}</p>
-        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${recommended ? 'bg-accent text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${recommended ? 'bg-accent text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
           {tier.badge}
         </span>
       </div>
 
-      <p className={`text-4xl sm:text-5xl font-bold leading-none mb-1 ${recommended ? 'text-accent' : 'text-foreground'}`}>
-        {tier.clinicians}
-      </p>
-      <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-4">
-        clinicians
-      </p>
-
-      <div className="space-y-1 mb-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="text-xs text-muted-foreground">Per clinician</span>
-          <span className="text-base font-bold text-foreground">A${tier.perClinician.toLocaleString()}</span>
-        </div>
-        <div className="flex items-baseline justify-between gap-3 pt-2 border-t border-accent/8">
-          <span className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Total</span>
-          <span className={`text-xl font-bold ${recommended ? 'text-accent' : 'text-foreground'}`}>
-            A${tier.total.toLocaleString()}
-          </span>
-        </div>
-        <p className="text-[10px] text-muted-foreground">+ GST</p>
+      <div className="flex items-baseline gap-1.5 mb-2">
+        <p className={`text-2xl font-bold leading-none ${recommended ? 'text-accent' : 'text-foreground'}`}>
+          {tier.clinicians}
+        </p>
+        <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
+          clinicians
+        </p>
       </div>
 
-      <p className="text-[11px] text-muted-foreground leading-snug">{tier.detail}</p>
+      <div className="flex items-baseline justify-between gap-2 pb-1.5 border-b border-accent/8">
+        <span className="text-[11px] text-muted-foreground">Per clinician</span>
+        <span className="text-sm font-bold text-foreground">A${tier.perClinician.toLocaleString()}</span>
+      </div>
+      <div className="flex items-baseline justify-between gap-2 pt-1.5">
+        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Total + GST</span>
+        <span className={`text-base font-bold ${recommended ? 'text-accent' : 'text-foreground'}`}>
+          A${tier.total.toLocaleString()}
+        </span>
+      </div>
+      <p className="text-[10px] text-emerald-700 font-semibold mt-1.5">
+        Save A${savePerClinician}/clinician vs public rate
+      </p>
     </div>
   )
 }
