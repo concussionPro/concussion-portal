@@ -175,7 +175,7 @@ function ProspectSidebar() {
       <nav className="flex-1 space-y-1">
         <SidebarItem href={`/proposals/advanced-health-buderim?k=${ACCESS_KEY}`} label="Dashboard" icon={Home} />
         <SidebarItem label="Learning Suite" icon={BookOpen} active />
-        <SidebarItem label="SCAT Forms" icon={Activity} />
+        <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
         <SidebarItem label="Clinical Toolkit" icon={FileText} locked />

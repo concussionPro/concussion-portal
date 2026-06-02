@@ -138,7 +138,7 @@ function ProspectSidebar() {
       <nav className="flex-1 space-y-1">
         <SidebarItem label="Dashboard" icon={Home} active />
         <SidebarItem href={`/proposals/advanced-health-buderim/learning?k=${ACCESS_KEY}`} label="Learning Suite" icon={BookOpen} />
-        <SidebarItem label="SCAT Forms" icon={Activity} />
+        <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
         <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
@@ -352,16 +352,16 @@ function OnsiteHubHeadline() {
   return (
     <a
       href="#pricing"
-      className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-accent-dark via-accent-dark to-accent text-white shadow-lg group hover:shadow-xl transition-shadow"
+      className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg group hover:shadow-xl transition-shadow"
     >
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_60%)]" />
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,#fbbf24,transparent_60%)]" />
       <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
-              <GraduationCap className="w-4 h-4" strokeWidth={2} />
+            <div className="w-8 h-8 rounded-lg bg-amber-400/20 backdrop-blur flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-amber-300" strokeWidth={2} />
             </div>
-            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-300">
               The day at Buderim · highest-value product
             </p>
           </div>
@@ -372,7 +372,7 @@ function OnsiteHubHeadline() {
             Full practical day in-clinic. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
           </p>
         </div>
-        <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent-dark px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
+        <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-300 text-slate-900 px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
           See pricing
           <ArrowUpRight className="w-4 h-4" />
         </div>
@@ -425,33 +425,21 @@ function PricingTiers() {
         </h3>
       </div>
 
-      <div className="mb-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-5 sm:p-6 shadow-md">
-        <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-4 sm:gap-6 items-center">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/60 mb-1">
-              Public course rate
-            </p>
-            <p className="text-3xl sm:text-4xl font-bold leading-none">
-              A$1,400
-              <span className="text-sm font-medium text-white/70 ml-1">/ clinician</span>
-            </p>
-          </div>
-          <div className="hidden sm:flex items-center justify-center">
-            <span className="text-2xl text-white/40">→</span>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-emerald-300 mb-1">
-              On-site cohort · {CLINIC.shortName}
-            </p>
-            <p className="text-3xl sm:text-4xl font-bold leading-none text-emerald-300">
-              From A$900
-              <span className="text-sm font-medium text-white/80 ml-1">/ clinician</span>
-            </p>
-            <p className="text-[11px] text-white/70 mt-1">
-              Save up to A$500/clinician · whole team trains together on your own cases
-            </p>
-          </div>
+      <div className="mb-4 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-4 py-3 shadow-sm flex items-center gap-3 sm:gap-5 flex-wrap">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[9px] uppercase tracking-wider font-bold text-white/50">Public rate</span>
+          <span className="text-base font-bold">A$1,400</span>
+          <span className="text-[10px] text-white/60">/ clinician</span>
         </div>
+        <span className="text-white/30 text-sm">→</span>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-300/80">On-site cohort</span>
+          <span className="text-base font-bold text-emerald-300">From A$900</span>
+          <span className="text-[10px] text-white/60">/ clinician</span>
+        </div>
+        <span className="text-[10px] text-white/60 sm:ml-auto">
+          Save up to A$500/clinician · whole team trains on your own cases
+        </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
