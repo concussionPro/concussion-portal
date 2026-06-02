@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { OutreachToolkitDoc } from '@/components/toolkit/OutreachToolkitDoc'
+import { DownloadButton } from '@/components/toolkit/DownloadButton'
 import { OUTREACH_TEMPLATES } from '@/data/hub-program-content'
 import { Lock, ArrowRight } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
@@ -71,6 +72,9 @@ function Shell() {
       <Sidebar />
       <main className="flex-1 ml-0 md:ml-64 print:ml-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 print:py-0 print:px-8 print:max-w-none">
+          <div className="print:hidden flex items-center justify-end mb-4">
+            <DownloadButton kit="outreach" label="Download Outreach Kit (ZIP)" />
+          </div>
           <OutreachToolkitDoc templates={OUTREACH_TEMPLATES} />
         </div>
       </main>

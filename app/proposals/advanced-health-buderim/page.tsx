@@ -34,14 +34,6 @@ const CLINIC = {
   },
 }
 
-const TEAM_TOTAL =
-  CLINIC.team.osteopaths +
-  CLINIC.team.exercisePhys +
-  CLINIC.team.myotherapists +
-  CLINIC.team.remedialMassage +
-  CLINIC.team.practiceManager +
-  CLINIC.team.admin
-
 export const metadata: Metadata = {
   title: 'Concussion Hub Program — Advanced Health Buderim',
   description: 'Working preview portal for Advanced Health Pain & Injury Clinic, Buderim QLD.',
@@ -373,7 +365,7 @@ function OnsiteHubHeadline() {
             </p>
           </div>
           <h3 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">
-            On-site Hub Day · your team trained on your own cases
+            On-site Practical Skills · your team trained on your own cases
           </h3>
           <p className="text-sm text-white/85 leading-relaxed">
             Full practical day in-clinic. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.

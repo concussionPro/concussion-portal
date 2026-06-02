@@ -10,12 +10,6 @@ import { ToolkitSidebar } from './_sidebar'
 
 const ACCESS_KEY = 'ah2026'
 
-const CLINIC = {
-  shortName: 'Advanced Health',
-  city: 'Buderim',
-  state: 'QLD',
-}
-
 export const metadata: Metadata = {
   title: 'Hub Program Toolkit — Advanced Health',
   description: 'Clinical, outreach, and admin toolkit for Advanced Health Pain & Injury Clinic.',

@@ -15,13 +15,18 @@ export function FillableDoc({ storageKey, children }: { storageKey: string; chil
   const [values, setValues] = useState<Record<string, string>>({})
   const [hydrated, setHydrated] = useState(false)
 
-  // Hydrate from localStorage on mount
+  // Hydrate from localStorage on mount. setState inside the effect is the
+  // canonical pattern for client-only init — no SSR mismatch because
+  // FillableField inputs render empty until hydration completes.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(`hubfill:${storageKey}`)
       if (raw) {
         const parsed = JSON.parse(raw)
-        if (parsed && typeof parsed === 'object') setValues(parsed)
+        if (parsed && typeof parsed === 'object') {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setValues(parsed)
+        }
       }
     } catch {
       // ignore parse errors

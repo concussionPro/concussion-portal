@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 import { ClinicalToolkitDoc } from '@/components/toolkit/ClinicalToolkitDoc'
+import { DownloadButton } from '@/components/toolkit/DownloadButton'
 import { DISCHARGE_TEMPLATES, DOCUMENTATION_PRINCIPLES } from '@/data/hub-program-content'
 import { Lock, ArrowLeft, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
@@ -79,13 +80,16 @@ function Shell() {
       <Sidebar />
       <main className="flex-1 ml-0 md:ml-64 print:ml-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 print:py-0 print:px-8 print:max-w-none">
-          <Link
-            href="/clinical-toolkit"
-            className="print:hidden inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors mb-4"
-          >
-            <ArrowLeft className="w-3 h-3" />
-            Back to Clinical Toolkit
-          </Link>
+          <div className="print:hidden flex items-center justify-between gap-3 mb-4">
+            <Link
+              href="/clinical-toolkit"
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Back to Clinical Toolkit
+            </Link>
+            <DownloadButton kit="clinical" label="Download Clinical Toolkit (ZIP)" />
+          </div>
           <ClinicalToolkitDoc templates={DISCHARGE_TEMPLATES} principles={DOCUMENTATION_PRINCIPLES} />
         </div>
       </main>
