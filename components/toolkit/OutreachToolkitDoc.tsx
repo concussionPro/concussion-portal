@@ -97,7 +97,7 @@ function Cover() {
         Six referral-building templates for the post-training outreach push. Edit fields per recipient, run as a sequenced campaign across schools, clubs and GP practices in your catchment.
       </p>
 
-      <div className="mt-5 rounded-lg bg-accent/[0.04] border border-accent/15 border-l-4 border-l-accent p-3 sm:p-4">
+      <div className="mt-5 rounded-lg bg-accent/[0.04] border border-accent/15 border-l-2 border-l-accent p-3 sm:p-4">
         <p className="text-xs text-foreground leading-relaxed">
           <strong>Fillable:</strong> populate clinic name, contact details, recipient names. Same-name fields fill together; entries persist on reload. <strong>Clear fields</strong> resets between recipients.
         </p>

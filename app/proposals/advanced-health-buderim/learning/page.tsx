@@ -78,7 +78,7 @@ export default async function ProspectLearningSuite({
           {/* M1 — TRIAL OPEN */}
           <Link
             href={`/proposals/advanced-health-buderim/learning/module-1?k=${ACCESS_KEY}`}
-            className="block glass-premium rounded-2xl p-5 sm:p-6 mb-4 border-l-4 border-l-accent hover:shadow-md transition-shadow group"
+            className="block glass-premium rounded-2xl p-5 sm:p-6 mb-4 border-l-2 border-l-accent hover:shadow-md transition-shadow group"
           >
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center shrink-0">
@@ -178,8 +178,8 @@ function ProspectSidebar() {
         <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
-        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/clinical?k=${ACCESS_KEY}`} label="Clinical Toolkit" icon={FileText} />
-        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`} label="Admin Workflow" icon={BookMarked} />
+        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
+        <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
       </nav>
 
       <div className="pt-5 border-t border-white/30">

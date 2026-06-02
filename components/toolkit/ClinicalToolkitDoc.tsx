@@ -111,7 +111,7 @@ function Cover() {
         Six concussion discharge and handover templates — structured against the 2023 Amsterdam Consensus Statement, AHPRA-aligned, and built for clinician sign-off. Each is fillable, then printed or saved to PDF on your clinic letterhead.
       </p>
 
-      <div className="mt-5 rounded-lg bg-accent/[0.04] border border-accent/15 border-l-4 border-l-accent p-3 sm:p-4">
+      <div className="mt-5 rounded-lg bg-accent/[0.04] border border-accent/15 border-l-2 border-l-accent p-3 sm:p-4">
         <p className="text-xs text-foreground leading-relaxed">
           <strong>Fillable:</strong> type directly into the highlighted fields and use <strong>Save as PDF</strong>. Fields with the same label (e.g. clinic name) fill together, and your entries are kept if you reload. <strong>Clear fields</strong> resets the document. Every clinical template carries a sign-off block and a compliance &amp; disclaimer note.
         </p>

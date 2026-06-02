@@ -51,7 +51,7 @@ function Cover({ totalMinutes, moduleCount }: { totalMinutes: number; moduleCoun
         <Stat label="Certificate" value="On pass" />
       </div>
 
-      <div className="mt-5 rounded-lg bg-accent/[0.04] border border-accent/15 border-l-4 border-l-accent p-3 sm:p-4">
+      <div className="mt-5 rounded-lg bg-accent/[0.04] border border-accent/15 border-l-2 border-l-accent p-3 sm:p-4">
         <p className="text-xs text-foreground leading-relaxed">
           <strong>For:</strong> Reception, practice manager, administration. Not a clinical course. The course teaches admin staff to <em>recognise the pattern and route correctly</em> — not diagnose.
         </p>
@@ -155,7 +155,7 @@ function KnowledgeCheck({
   check: { question: string; options: string[]; correctIndex: number; rationale: string }
 }) {
   return (
-    <div className="mt-6 rounded-lg border-2 border-accent bg-accent/[0.04] p-4 sm:p-5 print:break-inside-avoid">
+    <div className="mt-6 rounded-lg border border-accent/40 ring-1 ring-accent/20 bg-accent/[0.04] p-4 sm:p-5 print:break-inside-avoid">
       <p className="text-[9px] uppercase tracking-[0.14em] font-bold text-accent mb-3">
         Knowledge check
       </p>
@@ -169,7 +169,7 @@ function KnowledgeCheck({
             <li key={i} className="flex items-start gap-2.5">
               <span className={`shrink-0 w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center mt-0.5 ${
                 isCorrect
-                  ? 'bg-accent text-white border-2 border-accent'
+                  ? 'bg-accent text-white border border-accent'
                   : 'bg-white border border-slate-300 text-slate-500'
               }`}>
                 {String.fromCharCode(65 + i)}
@@ -207,7 +207,7 @@ function Certificate({ moduleCount, totalMinutes }: { moduleCount: number; total
         {moduleCount} modules · ~{Math.round(totalMinutes / 60 * 10) / 10} hours · knowledge check pass mark 8/10
       </p>
 
-      <div className="rounded-xl bg-gradient-to-br from-accent/8 via-white to-white border-2 border-accent/20 p-6 sm:p-8 my-4">
+      <div className="rounded-xl bg-gradient-to-br from-accent/8 via-white to-white border border-accent/25 ring-1 ring-accent/15 p-6 sm:p-8 my-4">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">This certifies that</p>
         <div className="mb-4">
           <Fld name="staff_name" placeholder="staff member name" />

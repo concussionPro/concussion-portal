@@ -92,7 +92,7 @@ export default async function ToolkitLauncher({
             />
           </div>
 
-          <div className="mt-8 rounded-xl bg-accent/5 border border-accent/15 border-l-4 border-l-accent p-4 sm:p-5">
+          <div className="mt-8 rounded-xl bg-accent/5 border border-accent/15 border-l-2 border-l-accent p-4 sm:p-5">
             <p className="text-sm font-bold text-foreground mb-1">Fillable &amp; compliant</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Type into the highlighted fields — matching fields (e.g. clinic name) fill together and persist on reload. Every clinical template carries a clinician checklist, sign-off block, and a compliance &amp; disclaimer note covering scope of practice, emergency red flags, and privacy / consent handling.

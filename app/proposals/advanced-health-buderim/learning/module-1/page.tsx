@@ -144,7 +144,7 @@ function QuizCheckpoint({
 }) {
   return (
     <section className="mt-8">
-      <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50/80 to-orange-50/40 p-5 sm:p-7 shadow-sm">
+      <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50/80 to-orange-50/40 p-5 sm:p-7 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-amber-200/60 flex items-center justify-center">
             <CheckCircle2 className="w-4 h-4 text-amber-700" strokeWidth={2.2} />
@@ -229,7 +229,7 @@ function ContentLine({ line }: { line: string }) {
   const calloutMatch = line.match(/^\[CALLOUT:\s*(\w+)\s*\|\s*([\s\S]+)\]$/)
   if (calloutMatch) {
     return (
-      <div className="rounded-lg border-l-4 border-l-accent bg-accent/5 px-4 py-3 my-3">
+      <div className="rounded-lg border-l-2 border-l-accent bg-accent/5 px-4 py-3 my-3">
         <p className="text-[13px] text-foreground leading-relaxed">{calloutMatch[2]}</p>
       </div>
     )
@@ -281,7 +281,7 @@ function ContentLine({ line }: { line: string }) {
 function EndOfTrialPitch() {
   return (
     <section className="mt-10 space-y-6">
-      <div className="rounded-2xl bg-gradient-to-br from-accent/8 via-accent/5 to-white border-2 border-accent/20 p-6 sm:p-8">
+      <div className="rounded-2xl bg-gradient-to-br from-accent/8 via-accent/5 to-white border border-accent/25 ring-1 ring-accent/15 p-6 sm:p-8">
         <div className="flex items-center gap-2 mb-3">
           <CheckCircle2 className="w-5 h-5 text-accent" />
           <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent">
@@ -377,8 +377,8 @@ function ProspectSidebar() {
         <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
-        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/clinical?k=${ACCESS_KEY}`} label="Clinical Toolkit" icon={FileText} />
-        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`} label="Admin Workflow" icon={BookMarked} />
+        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
+        <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
       </nav>
 
       <div className="pt-5 border-t border-white/30">

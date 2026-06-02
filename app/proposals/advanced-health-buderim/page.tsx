@@ -144,9 +144,9 @@ function ProspectSidebar() {
         <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
-        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/clinical?k=${ACCESS_KEY}`} label="Clinical Toolkit" icon={FileText} />
-        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/outreach?k=${ACCESS_KEY}`} label="Outreach Kit" icon={Stethoscope} />
-        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`} label="Admin Workflow" icon={BookMarked} />
+        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
+        <SidebarItem label="Outreach Kit" icon={Stethoscope} locked />
+        <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
       </nav>
 
       <div className="pt-5 border-t border-white/30">
@@ -457,7 +457,7 @@ function PricingTiers() {
         ))}
       </div>
 
-      <div className="mt-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white to-white border-2 border-emerald-200 p-5">
+      <div className="mt-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white to-white border border-emerald-300/60 p-5">
         <div className="flex items-start gap-3 flex-wrap">
           <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
             <span className="text-emerald-700 font-bold">+</span>
@@ -502,10 +502,10 @@ function CohortCard({ tier }: { tier: (typeof COHORT_TIERS)[number] }) {
   const savePerClinician = 1400 - tier.perClinician
   return (
     <div
-      className={`relative rounded-xl p-4 overflow-hidden border ${
+      className={`relative rounded-xl p-4 overflow-hidden ${
         recommended
-          ? 'bg-gradient-to-br from-accent/8 via-accent/3 to-white border-2 border-accent shadow-md'
-          : 'glass-premium border-accent/8'
+          ? 'bg-gradient-to-br from-accent/8 via-accent/3 to-white border border-accent/40 ring-1 ring-accent/30 shadow-md'
+          : 'glass-premium border border-accent/8'
       }`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -626,7 +626,7 @@ function Tile({
     span2 ? 'bento-span-2' : '',
     locked ? 'opacity-85' : '',
     isLink ? 'group block hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200' : '',
-    accent ? 'border-l-4 border-l-accent' : '',
+    accent ? 'ring-1 ring-accent/30' : '',
   ].filter(Boolean).join(' ')
 
   const inner = (
