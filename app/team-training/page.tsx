@@ -48,6 +48,9 @@ export default function TeamTrainingLanding() {
           <p className="text-lg text-emerald-50 mb-2 max-w-2xl">
             Bring CEA&apos;s flagship training to your team — on-site, live online, or hybrid. Concussion Clinical Mastery + AI in Clinical Practice delivered around your workflow.
           </p>
+          <p className="text-sm text-emerald-100 max-w-2xl mb-2">
+            We&rsquo;ve helped many clinics become the local hub for concussion management — the practice GPs, sports clubs, and schools refer to when a head injury happens.
+          </p>
           <p className="text-sm text-emerald-100 max-w-2xl">
             AHPRA-aligned. Osteopathy Australia endorsed. Per-clinician certification and CPD records included.
           </p>
@@ -105,6 +108,37 @@ export default function TeamTrainingLanding() {
                 </div>
               </li>
             </ul>
+          </section>
+
+          {/* Become the local hub — outreach + positioning */}
+          <section className="bg-gradient-to-br from-teal-50/70 to-emerald-50/40 rounded-xl shadow-sm border-2 border-teal-200 p-7">
+            <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-teal-700" />
+              After training: become the local hub for concussion management
+            </h2>
+            <p className="text-sm text-slate-700 leading-relaxed mb-4">
+              Most clinics in a given postcode don&apos;t have a single clinician with structured concussion training. That&apos;s a positioning advantage. After we train your team, we help you tell the local sports clubs, GPs, schools, and medical centres that there&apos;s now an AHPRA-aligned concussion-trained team in their area.
+            </p>
+            <p className="text-sm font-semibold text-slate-900 mb-2">Post-training outreach support includes:</p>
+            <ul className="space-y-2 text-sm text-slate-700">
+              {[
+                { t: 'Referral pathway intro pack', d: 'Editable letter + capability one-pager for outreach to local GP practices, sports physios, and medical centres. Positions your clinic as the concussion-management referral destination in your radius.' },
+                { t: 'Sports club + school outreach templates', d: 'Email + handout templates for introducing your clinic to local football, rugby, AFL, junior sports, and school sport programs. Includes a "concussion-trained clinic" briefing they can give parents and coaches.' },
+                { t: 'Co-branded credibility assets', d: 'CEA-trained badge for your website + waiting-room poster. Verifiable certification per clinician. Listing on CEA’s referral page (when launched).' },
+                { t: 'Optional LinkedIn / press launch kit', d: '"Our clinic now offers structured concussion management" announcement template — for clinics that want to lean into the positioning publicly.' },
+              ].map((row, i) => (
+                <li key={i} className="flex gap-3">
+                  <div className="shrink-0 w-5 h-5 rounded-full bg-teal-700 text-white text-[10px] font-bold flex items-center justify-center mt-0.5">{i + 1}</div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{row.t}</p>
+                    <p className="text-xs text-slate-600 leading-relaxed">{row.d}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-slate-600 italic mt-4 leading-relaxed">
+              The training is the credential. The outreach is what turns it into local referral flow. We&apos;ve seen this work best for clinics in regional towns and outer metro suburbs where there&apos;s no obvious &ldquo;concussion clinic&rdquo; nearby — and for sports-medicine-focused practices wanting to formalise relationships with local clubs.
+            </p>
           </section>
 
           <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-7">
