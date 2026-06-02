@@ -340,14 +340,12 @@ function ProspectBento() {
         badge={{ text: 'Preview', tone: 'emerald' }}
       />
       <Tile
-        href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`}
         icon={BookMarked}
         iconTone="amber"
         label="Admin Workflow"
         title="Reception micro-course"
         stat="1 hr"
         statSuffix="phone triage · intake · AI"
-        badge={{ text: 'Preview', tone: 'emerald' }}
       />
     </div>
   )
@@ -481,7 +479,7 @@ function PricingTiers() {
 
       <div className="mt-5 glass-premium rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
         <p className="text-xs text-muted-foreground leading-relaxed flex-1 min-w-[200px]">
-          All prices + GST. Cohort size confirmed on a 20-min call alongside a date that suits the clinic.
+          All prices include GST. Cohort size confirmed on a 20-min call alongside a date that suits the clinic.
         </p>
         <a
           href="https://cal.com/zac-lewis-so8zjs/30min"
@@ -529,7 +527,7 @@ function CohortCard({ tier }: { tier: (typeof COHORT_TIERS)[number] }) {
         <span className="text-sm font-bold text-foreground">A${tier.perClinician.toLocaleString()}</span>
       </div>
       <div className="flex items-baseline justify-between gap-2 pt-1.5">
-        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Total + GST</span>
+        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Total (GST incl.)</span>
         <span className={`text-base font-bold ${recommended ? 'text-accent' : 'text-foreground'}`}>
           A${tier.total.toLocaleString()}
         </span>
@@ -760,11 +758,7 @@ function Testimonials() {
 const FAQS = [
   {
     q: 'When can we run the on-site day?',
-    a: 'A weekday that suits the clinic. Online pre-work opens ~3 weeks beforehand so the on-site day is hands-on from the first hour. Most clinics schedule 6–10 weeks out.',
-  },
-  {
-    q: 'What if a staff member can\'t attend on the day?',
-    a: 'Substitutes are welcome. The online pre-work modules sit in their portal account with lifetime access — they catch up in their own time and progress through the same certificate workflow as the rest of the team.',
+    a: 'A weekday or Saturday — whichever suits the clinic better. Online pre-work opens ~3 weeks beforehand so the on-site day is hands-on from the first hour. Most clinics schedule 6–10 weeks out.',
   },
   {
     q: 'Will the team get AHPRA-aligned CPD certificates?',
@@ -776,15 +770,15 @@ const FAQS = [
   },
   {
     q: 'Is GST included? How do we pay?',
-    a: 'All cohort prices are quoted + GST. Standard structure is 50% deposit on booking, 50% on completion of the on-site day. Tax invoice issued with each payment. Most clinics treat it as professional development for the practice.',
+    a: 'All cohort prices include GST. Standard structure is 50% deposit on booking, 50% on completion of the on-site day. Tax invoice issued with each payment. Most clinics treat it as professional development for the practice.',
   },
   {
     q: 'Can we add more clinicians later?',
     a: 'Yes — per-clinician rate scales with cohort size. If a new clinician joins after the on-site day, their portal seat can be added at the discounted rate that matches the original cohort tier.',
   },
   {
-    q: 'What happens if we reschedule?',
-    a: 'Full flexibility — you can reschedule the on-site day to a future date at no extra cost. There\'s no expiry on the online portal access.',
+    q: 'What happens if we need to reschedule?',
+    a: 'Reschedule the on-site day to a future date at no extra cost, provided notice is given more than 2 weeks before the scheduled date. Reschedules inside the 2-week window are case-by-case (Zac may have travel locked in). No expiry on online portal access either way.',
   },
   {
     q: 'How do we know this is right for our clinic?',

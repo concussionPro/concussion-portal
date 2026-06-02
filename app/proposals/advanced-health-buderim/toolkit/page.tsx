@@ -4,7 +4,7 @@ import {
   FileText,
   ArrowLeft,
   Mail,
-  GraduationCap,
+  Lock,
 } from 'lucide-react'
 import { ToolkitSidebar } from './_sidebar'
 
@@ -81,14 +81,11 @@ export default async function ToolkitLauncher({
               meta="6 templates"
               icon={Mail}
             />
-            <ToolkitCard
-              href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`}
+            <LockedCard
               kind="Training"
-              kindTone="amber"
               title="Front-Desk Micro-Course"
-              detail="Eight modules for reception & admin — recognition, triage, red flags, intake, safe AI, booking, knowledge check."
+              detail="Eight modules for reception & admin. Activates on enrolment."
               meta="8 modules · ~1 hr"
-              icon={GraduationCap}
             />
           </div>
 
@@ -156,6 +153,37 @@ function ToolkitCard({
         <span className="text-xs font-bold text-accent group-hover:translate-x-0.5 transition-transform">Open →</span>
       </div>
     </Link>
+  )
+}
+
+function LockedCard({
+  kind,
+  title,
+  detail,
+  meta,
+}: {
+  kind: string
+  title: string
+  detail: string
+  meta: string
+}) {
+  return (
+    <div className="block glass-premium rounded-2xl p-5 opacity-80 relative">
+      <div className="flex items-start justify-between mb-3">
+        <span className="text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-1 rounded bg-slate-100 text-slate-600 border border-slate-200">
+          {kind}
+        </span>
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/60 to-slate-100/40 flex items-center justify-center">
+          <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+        </div>
+      </div>
+      <h3 className="text-lg font-bold text-muted-foreground mb-2 leading-tight">{title}</h3>
+      <p className="text-xs text-muted-foreground leading-relaxed mb-4">{detail}</p>
+      <div className="flex items-center justify-between pt-3 border-t border-accent/8">
+        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{meta}</span>
+        <span className="text-[10px] uppercase tracking-wider font-bold text-amber-700">Hub Program</span>
+      </div>
+    </div>
   )
 }
 
