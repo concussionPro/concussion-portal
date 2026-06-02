@@ -144,9 +144,9 @@ function ProspectSidebar() {
         <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
         <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
         <SidebarItem href={`/proposals/advanced-health-buderim/references?k=${ACCESS_KEY}`} label="Reference Library" icon={Library} />
-        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
-        <SidebarItem label="Outreach Kit" icon={Stethoscope} locked />
-        <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
+        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/clinical?k=${ACCESS_KEY}`} label="Clinical Toolkit" icon={FileText} />
+        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/outreach?k=${ACCESS_KEY}`} label="Outreach Kit" icon={Stethoscope} />
+        <SidebarItem href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`} label="Admin Workflow" icon={BookMarked} />
       </nav>
 
       <div className="pt-5 border-t border-white/30">
@@ -320,28 +320,34 @@ function ProspectBento() {
         span2
       />
       <Tile
+        href={`/proposals/advanced-health-buderim/toolkit/clinical?k=${ACCESS_KEY}`}
         icon={FileText}
         iconTone="amber"
         label="Clinical Toolkit"
         title="Discharge templates"
         stat="6"
         statSuffix="clinic-branded docs"
+        badge={{ text: 'Preview', tone: 'emerald' }}
       />
       <Tile
+        href={`/proposals/advanced-health-buderim/toolkit/outreach?k=${ACCESS_KEY}`}
         icon={Stethoscope}
         iconTone="amber"
         label="Outreach Kit"
         title="Schools · clubs · GPs"
         stat="6"
         statSuffix="templates + scripts"
+        badge={{ text: 'Preview', tone: 'emerald' }}
       />
       <Tile
+        href={`/proposals/advanced-health-buderim/toolkit/admin?k=${ACCESS_KEY}`}
         icon={BookMarked}
         iconTone="amber"
         label="Admin Workflow"
         title="Reception micro-course"
         stat="1 hr"
         statSuffix="phone triage · intake · AI"
+        badge={{ text: 'Preview', tone: 'emerald' }}
       />
     </div>
   )
