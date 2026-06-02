@@ -758,6 +758,14 @@ const FAQS = [
     a: 'A weekday or Saturday — whichever suits the clinic better. Online pre-work opens ~3 weeks beforehand so the on-site day is hands-on from the first hour. Most clinics schedule 6–10 weeks out.',
   },
   {
+    q: 'What if our team is smaller than 8?',
+    a: 'Two options. Most clinics in this position invite a physio or EP from a neighbouring practice to round out the cohort — it builds a natural referral pathway with the second clinic and works out well for both. Alternatively, we can scope a 6-clinician engagement at A$1,100/head (A$6,600 + GST, GST inclusive). Raise it on the scoping call.',
+  },
+  {
+    q: 'We have two locations — how does the on-site day work?',
+    a: 'The full-day training runs at one site. Most multi-location teams send everyone to the lead clinic for the day — it\'s a one-off and the positioning unlocks across both locations afterward. If a split-day arrangement is preferable (half-day at each site), we can scope that on the call.',
+  },
+  {
     q: 'Will the team get AHPRA-aligned CPD certificates?',
     a: 'Yes — each clinician receives an individual certificate showing completion date, CPD hours, and a unique certificate ID. Logged under "Educational Activity — Reviewing & Reflecting" in your AHPRA CPD portfolio. Endorsed by Osteopathy Australia, content is universal across osteopath / physio / GP / sports medicine / exercise physiology.',
   },
@@ -876,7 +884,7 @@ function ZacCredibility() {
             Delivered by
           </p>
           <p className="text-base sm:text-lg font-bold text-foreground leading-tight">
-            Dr Zac Lewis · B.Clin.Sci., M.Ost.Med.
+            Zac Lewis · B.Clin.Sci., M.Ost.Med.
           </p>
           <p className="text-xs text-muted-foreground mb-2">
             AHPRA-registered Osteopath · Course Director, Concussion Education Australia
