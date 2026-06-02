@@ -1,295 +1,197 @@
 # Cold Outreach Target List — Hub Program
 
-**Purpose:** Prioritised target clinics for the Concussion Hub Program cold outreach engine. Filtered for 8+ clinicians, multi-disciplinary mix, sports-rehab adjacency, and travel-cost efficiency from Byron Bay.
+**Scope:** Large physiotherapy practices and exercise rehabilitation groups, 8+ clinicians, multi-disc preferred. **Excludes** hospital networks and sports medicine specialists.
 
-**Use:** Engine target list. Each clinic researched → `ProspectClinic` row created → portal URL generated → T1 send via `/api/admin/prospect-send`.
-
-**Last reviewed:** 2026-06-03 (initial draft)
+**Last reviewed:** 2026-06-03
 
 ---
 
-## Strategy filters
+## Strategy filters (in scope only)
 
-A clinic enters the target list only if all of these hold:
+A clinic enters this list only if all of these hold:
 
-1. **8+ clinicians total** (osteo, physio, EP, myo/RMT, sports med, GP). Smaller cohorts are redirected to public workshops per the small-cohort FAQ.
-2. **Multi-disciplinary mix** — single-disciplinary practices (physio-only of 10) are P3; mixed practices are P1.
-3. **Not already specialised in concussion** — if their site already lists "concussion clinic" / "VOMS / SCAT6 / vestibular rehab" as a primary service, deprioritise. They've solved it.
-4. **In a catchment with concussion volume** — strong school sport, contact sport, surf/water sport, cycling, or motor vehicle accident exposure.
-5. **Current CPD culture** — university affiliations, hosting clinical students, active LinkedIn, multi-site = signal they value training.
-6. **Approvable contact** — at least one of: practice principal email, principal LinkedIn, general enquiries email tied to a named person.
-
-Disqualifiers:
-- Less than 8 clinicians (route to public workshop)
-- Single-discipline physio-only of 15+ (different sales motion — they have niche expertise already)
-- Hospital-employed group (procurement is bureaucratic; long sales cycle)
-- Already a partner / past customer
-- Multi-clinic franchise with central marketing (the local manager can't say yes)
+1. **8+ clinicians total** (physio, EP, osteo, myo/RMT — admin doesn't count toward minimum). Under-8 → public workshop redirect per FAQ.
+2. **Physio-led OR EP-led OR multi-disc allied health**. Single-discipline osteo practices go on a separate list.
+3. **NOT a sports medicine specialist clinic.** Sports med doctors run a different sales motion (out of scope per direction).
+4. **NOT a hospital network.** Procurement is bureaucratic; long sales cycle (out of scope per direction).
+5. **NOT already concussion-specialised.** If their homepage advertises "concussion clinic" / "vestibular rehab" as a primary service, deprioritise.
+6. **Approvable contact** — practice principal email/LinkedIn or named senior clinician.
 
 ---
 
-## Region tiers (travel-cost optimised from Byron Bay)
+## Region tiers (travel from Byron Bay)
 
-| Tier | Drive band | Travel surcharge | Strategic priority |
-|---|---|---|---|
-| **R1 — Northern Rivers + SE QLD** | within-2hr | A$0 | Highest. Same-day on-site possible. Multiple sends per week. |
-| **R2 — Sunshine Coast + Brisbane** | 2-4hr | A$300 | High. Same-day or overnight. Heavy sports culture. |
-| **R3 — Mid NSW Coast + Toowoomba** | 4-6hr | A$600 | Medium. Overnight required. |
-| **R4 — Sydney + Hunter** | 6-10hr or flight | A$1,000-1,500 | Medium. Flight + 1 night. |
-| **R5 — Melbourne** | flight | A$1,500 | Medium. Flight + 1 night. |
-| **R6 — Other capitals** | flight | A$2,500 | Low. Larger groups only. |
-
----
-
-## Tier R1 — Northern Rivers + SE QLD (highest priority)
-
-### P1 — multi-disciplinary, 10+ clinicians
-
-| Clinic | City | Why it fits | Notes |
-|---|---|---|---|
-| Sports & Spinal Physiotherapy | Gold Coast (multi-loc) | Multi-clinic, sports-rehab focus, high volume. | Verify principal contact. |
-| Sphere Health | Burleigh Heads / Robina | Multi-disc (osteo + physio + EP + myo). High-end branding. | Verify team count. |
-| POGO Physio | Gold Coast (5+ locations) | Network of clinics, multi-disciplinary, runs CPD events. | Multi-site — pitch to head of clinical. |
-| iMove Physio | Brisbane (multi-loc) | Multi-disc, large team, hosts student placements. | |
-| Movement Solutions | Brisbane / Toowoomba | Allied health group with osteo + physio + EP. | |
-
-### P2 — sports medicine specialists, may already have partial coverage
-
-| Clinic | City | Note |
+| Tier | Drive band | Travel surcharge |
 |---|---|---|
-| Brisbane Sports Medicine | Brisbane CBD | Sports med doctors + AHP. Verify if they already run concussion. |
-| Sports Performance Centre | Brisbane | Performance-focused; concussion ROI through return-to-sport billing. |
-| Gold Coast Sports Medicine | Gold Coast | Established. Verify whether already partnered with AFL/NRL programs. |
-
-### Tweed Heads / Lismore (within 1hr of Byron)
-
-| Clinic | Note |
-|---|---|
-| Northcoast Sports Medicine | Verify whether multi-disc and 8+. |
-| ConditionMe Physiotherapy | Multi-loc Gold Coast / Tweed. |
-| Northern Rivers Spinal Centre | Local — easy travel. |
+| R1 | within 2hr (Northern Rivers + SE QLD Gold Coast) | A$0 |
+| R2 | 2-4hr (Sunshine Coast + Brisbane metro) | A$300 |
+| R3 | 4-6hr (Toowoomba + Mid NSW Coast) | A$600 |
+| R4 | flight (Sydney + Hunter) | A$1,500 |
+| R5 | flight (Melbourne) | A$1,500 |
 
 ---
 
-## Tier R2 — Sunshine Coast + Brisbane (A$300 travel)
+## Full target list — 35 prospects, sortable by metrics
 
-### Sunshine Coast (active engagement potential — Advanced Health is the existing warm lead)
+Columns:
+- **Est. cohort** — expected cohort size if they buy (drives tier recommendation)
+- **Reco tier** — pricing tier we'd lead with (Essential 8 / Recommended 10 / Full team 12)
+- **Gross** — cohort total at recommended tier (GST inclusive, all-in)
+- **Travel** — surcharge from region tier
+- **Net** — Gross − Travel (= cash to clinic operations + Zac)
+- **Discipline emphasis** — drives T1 opening-line variant
+- **Confidence** — H/M/L on team size + multi-disc fit (M/L need pre-research before send)
 
-| Clinic | City | Note |
+### P1 — first wave (15 prospects, R1-R2 only, lowest travel + highest catchment fit)
+
+| # | Clinic | Region | Tier | Est. cohort | Reco tier | Gross AUD | Travel | Net AUD | Discipline emphasis | Confidence |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | POGO Physio (Gold Coast HQ) | Gold Coast | R1 | 12-15 | Full team | 10,800 | 0 | 10,800 | physio | H |
+| 2 | Sports & Spinal Physiotherapy (GC) | Gold Coast | R1 | 10-12 | Recommended | 9,500 | 0 | 9,500 | physio | H |
+| 3 | ConditionMe Physiotherapy | Gold Coast | R1 | 10 | Recommended | 9,500 | 0 | 9,500 | physio | M |
+| 4 | Sphere Health (Burleigh + Robina) | Gold Coast | R1 | 12 | Full team | 10,800 | 0 | 10,800 | mixed (physio + EP + osteo) | M |
+| 5 | Active Rehabilitation Physiotherapy | Northern Rivers | R1 | 8-10 | Recommended | 9,500 | 0 | 9,500 | physio | M |
+| 6 | iMove Physio (Brisbane HQ) | Brisbane | R2 | 12-15 | Full team | 10,800 | 300 | 10,500 | physio | H |
+| 7 | Springwood Health | Brisbane (Springwood) | R2 | 10 | Recommended | 9,500 | 300 | 9,200 | mixed | M |
+| 8 | Movement Solutions Brisbane | Brisbane | R2 | 10-12 | Recommended | 9,500 | 300 | 9,200 | mixed | M |
+| 9 | Optimum Health Solutions | Brisbane | R2 | 10 | Recommended | 9,500 | 300 | 9,200 | mixed | M |
+| 10 | Banyo Physiotherapy & Sports Injury | Brisbane (Banyo) | R2 | 8 | Essential | 8,000 | 300 | 7,700 | physio | M |
+| 11 | Beachside Family Physiotherapy | Sunshine Coast (Maroochydore) | R2 | 10 | Recommended | 9,500 | 300 | 9,200 | physio | M |
+| 12 | Kawana Physiotherapy | Sunshine Coast (Kawana) | R2 | 8 | Essential | 8,000 | 300 | 7,700 | physio | M |
+| 13 | NextGen Physio | Sunshine Coast (Maroochydore) | R2 | 10 | Recommended | 9,500 | 300 | 9,200 | physio | L |
+| 14 | Coastal Sports & Spinal | Sunshine Coast (multi-loc) | R2 | 10 | Recommended | 9,500 | 300 | 9,200 | physio | L |
+| 15 | Active Solutions Health Group | Brisbane | R2 | 10 | Recommended | 9,500 | 300 | 9,200 | mixed (EP-led) | L |
+
+**P1 wave totals:**
+- Reachable cohort revenue: A$144,300 if every prospect converts at recommended tier
+- Realistic conversion rate (cold B2B, healthcare): 6-10% close on T1-T3 sequence → 1-2 deals
+- Expected first-wave revenue: **A$9,000 – A$20,000** with travel surcharges of A$2,400-4,000
+
+### P2 — second wave (10 prospects, expanded R2-R3, regional anchors)
+
+| # | Clinic | Region | Tier | Est. cohort | Reco tier | Gross AUD | Travel | Net AUD | Discipline emphasis | Confidence |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 16 | Allied Health Plus | Toowoomba | R3 | 10 | Recommended | 9,500 | 600 | 8,900 | mixed | M |
+| 17 | North Queensland Physio Centre | Toowoomba | R3 | 10 | Recommended | 9,500 | 600 | 8,900 | physio | M |
+| 18 | Coffs Harbour Sports & Spinal | Coffs Harbour | R3 | 8-10 | Recommended | 9,500 | 600 | 8,900 | physio | M |
+| 19 | Port Macquarie Physiotherapy | Port Macquarie | R3 | 8 | Essential | 8,000 | 600 | 7,400 | physio | L |
+| 20 | Mojo Health (EP-led, multi-loc) | Brisbane / GC | R1-R2 | 10 | Recommended | 9,500 | 300 | 9,200 | EP | M |
+| 21 | LiveWell Exercise Physiology | Brisbane | R2 | 8 | Essential | 8,000 | 300 | 7,700 | EP | L |
+| 22 | Stride Exercise Physiology | Brisbane / GC | R2 | 8 | Essential | 8,000 | 300 | 7,700 | EP | L |
+| 23 | BodyHQ Exercise Physiology | Sunshine Coast | R2 | 8 | Essential | 8,000 | 300 | 7,700 | EP | L |
+| 24 | Rebound Exercise Physiology | Brisbane | R2 | 8 | Essential | 8,000 | 300 | 7,700 | EP | L |
+| 25 | Active Rehab Group (multi-loc) | SE QLD | R1-R2 | 10 | Recommended | 9,500 | 300 | 9,200 | EP | M |
+
+**P2 wave: heavier EP focus** — Hub Program's structured rehab pathway (BCTT, sub-symptom-threshold, RTP) is the under-built half of recovery and the strongest pitch for EP-led practices. Discipline-aware T1 opening lands hardest here.
+
+### P3 — third wave (10 prospects, R4-R5 flights — only after wave 1+2 metrics clean)
+
+| # | Clinic | Region | Tier | Est. cohort | Reco tier | Gross AUD | Travel | Net AUD | Discipline emphasis | Confidence |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 26 | Sports & Spinal Physio (Sydney multi-loc) | Sydney | R4 | 12 | Full team | 10,800 | 1,500 | 9,300 | physio | H |
+| 27 | iMove Physio (Sydney) | Sydney | R4 | 12 | Full team | 10,800 | 1,500 | 9,300 | physio | M |
+| 28 | PhysioFit Australia (Sydney HQ) | Sydney | R4 | 10 | Recommended | 9,500 | 1,500 | 8,000 | physio | M |
+| 29 | Bondi Junction Physiotherapy | Sydney (Bondi) | R4 | 10 | Recommended | 9,500 | 1,500 | 8,000 | physio | M |
+| 30 | Inner West Health Group | Sydney (Inner West) | R4 | 12 | Full team | 10,800 | 1,500 | 9,300 | mixed | M |
+| 31 | Stellar Health Group | Melbourne (multi-loc) | R5 | 12-15 | Full team | 10,800 | 1,500 | 9,300 | mixed | H |
+| 32 | iMove Physio (Melbourne) | Melbourne | R5 | 12 | Full team | 10,800 | 1,500 | 9,300 | physio | M |
+| 33 | Physio Inq (Melbourne HQ) | Melbourne | R5 | 10 | Recommended | 9,500 | 1,500 | 8,000 | physio | L |
+| 34 | Body Logic Physiotherapy | Melbourne | R5 | 8-10 | Recommended | 9,500 | 1,500 | 8,000 | physio | L |
+| 35 | Active Physio Group (Melbourne) | Melbourne | R5 | 10 | Recommended | 9,500 | 1,500 | 8,000 | physio | L |
+
+---
+
+## Reachable revenue summary
+
+| Wave | Prospects | Total gross at recommended tier | Total net (after travel) | Travel exposure |
+|---|---|---|---|---|
+| P1 (R1-R2) | 15 | A$143,700 | A$140,100 | A$3,600 |
+| P2 (R3 + EP) | 10 | A$87,500 | A$83,300 | A$4,200 |
+| P3 (R4-R5 flights) | 10 | A$101,500 | A$86,500 | A$15,000 |
+| **Total reachable** | **35** | **A$332,700** | **A$309,900** | **A$22,800** |
+
+**At a realistic 6-10% T1-T3 conversion rate**, the full 35-prospect list closes ~2-4 deals → **A$18,000 – A$40,000 revenue, A$15,000 – A$35,000 net of travel**.
+
+This is the first cohort cycle. Second + third cycles compound on warmed-up reputation, refined templates, and accumulated case studies.
+
+---
+
+## Confidence tagging
+
+- **H** (high) — well-known multi-loc group, public team page, confirmed multi-disc, contact identifiable.
+- **M** (medium) — plausible 8+ multi-disc fit; team page needs verification before T1 send.
+- **L** (low) — name plausible but team size / mix unconfirmed. Pre-research required (LLM team-page extraction or manual look).
+
+Engine workflow:
+- L confidence → `prospect-research` LLM endpoint runs first → if team size < 8 or single-disc, drop or move to public-workshop redirect list.
+- M confidence → manual 5-min check before insert + send.
+- H confidence → insert + test-send + production-send.
+
+---
+
+## Discipline emphasis distribution
+
+| Emphasis | Count | Why it matters |
 |---|---|---|
-| Advanced Health Pain & Injury Clinic | Buderim | ✅ ACTIVE LEAD (Lauren Kidston). Live engagement. |
-| Sunshine Coast Sports Medicine Clinic | Mooloolaba | Established sports med. Verify team count. |
-| Beachside Family Physiotherapy | Maroochydore | Larger family practice. |
-| Kawana Physiotherapy | Kawana | Sports-adjacent. |
-| NextGen Physio | Maroochydore | Modern multi-clinic. |
-| Caloundra Health | Caloundra | Multi-disc. |
-
-### Brisbane metro
-
-| Clinic | Suburb | Why |
-|---|---|---|
-| Springwood Health | Springwood (south) | Multi-disc, larger team. |
-| iMove Physio | multiple metro locations | Hosts students. |
-| Optimum Health Solutions | Brisbane | Multi-disc allied health. |
-| Tindall Gask Bentley Rehabilitation | Brisbane | Insurer-aligned rehab group; WorkCover-heavy presentations. |
-| Banyo Physiotherapy & Sports Injury Clinic | Banyo | Sports-focused. |
-| Sphere Health (Brisbane sites) | multi-site | Premium multi-disc. |
+| physio | 19 | Largest segment. T1 opening line: *"…physios working sideline and return-to-play means concussion presentations are on the books regularly."* |
+| EP | 6 | EP-led practices. T1 opening: *"…EP-led concussion rehab is the underbuilt half of the recovery pathway."* |
+| mixed | 10 | Multi-disc allied health. T1 opening: *"…the team composition concussion management is designed for."* |
 
 ---
 
-## Tier R3 — Toowoomba + mid NSW coast (A$600 travel)
+## Excluded categories (per direction)
 
-| Clinic | City | Why |
-|---|---|---|
-| Allied Health Plus | Toowoomba | Multi-disc, regional anchor. |
-| North Queensland Physio Centre | Toowoomba | Established; regional sports volume. |
-| Coffs Harbour Sports & Spinal | Coffs Harbour | Coastal — surf + sport. |
-| Port Macquarie Sports Medicine | Port Macquarie | Coastal sports town. |
-| Newcastle Sports Medicine (NSM) | Newcastle | Sports town — Hunter cohort. |
+These were in the previous draft and have been removed:
 
----
-
-## Tier R4 — Sydney + Hunter (flight, A$1,000-1,500)
-
-Higher-priority Sydney prospects justify the flight + 1 night stay. Threshold: 12+ clinicians OR university affiliation.
-
-| Clinic | Suburb / region | Why |
-|---|---|---|
-| Sydney Sports Medicine Centre (Olympic Park) | Sydney Olympic Park | Tier-1 sports medicine, multi-disc, NRL/AFL adjacency. |
-| Manly Sports Medicine | Manly | Beach + contact sport catchment. |
-| Bondi Junction Physiotherapy & Sports Medicine | Bondi Junction | Sports-rehab volume. |
-| Sports & Spinal Physio (Sydney sites) | multi-loc | Cross-state group. |
-| Penrith Sports Medicine | Penrith | Western Sydney sports volume. |
-| PhysioFit | Multi-loc | Volume player. |
-| Macquarie University Health Sciences Clinic | North Ryde | University clinical placement program — high CPD culture. |
-| Bond University Physiotherapy Clinic | Robina (technically R2) | Uni partnership; cross-link to Gold Coast. |
+- ❌ Hospital networks (Greenslopes, Wesley, Ramsay, HCA, etc.) — long procurement, out of scope
+- ❌ Sports medicine specialists (Sydney Sports Medicine Centre, Olympic Park, Brisbane Sports Medicine, etc.) — different sales motion, out of scope
+- ❌ Sports orgs (AFL/NRL clubs, state institutes) — require warm intros, separate workflow
+- ❌ Universities (Bond, Griffith, QUT, etc.) — separate workflow targeted at supervisor CPD; kept on a parking list for later
 
 ---
 
-## Tier R5 — Melbourne (flight, A$1,500)
+## P1 send sequence (first 3 weeks)
 
-Threshold: 15+ clinicians OR sports-org-affiliated.
+Pace: 5 sends/day, Mon-Wed-Thu mornings (9-11am AEST highest open rate for healthcare professionals). 3 cycles to complete 15-prospect first wave.
 
-| Clinic | Suburb | Why |
-|---|---|---|
-| Olympic Park Sports Medicine Centre | Melbourne | The benchmark — multi-disc, sports-org-linked. Verify if already partner. |
-| Lakeside Sports Medicine Centre | Albert Park | Olympic Park spillover. |
-| Melbourne Sports Medicine Clinic | East Melbourne | Sports volume. |
-| Sportsmed Biologic | Melbourne | Multi-disc + research-aware. |
-| Stellar Health Group | Multi-loc | Premium multi-disc. |
-| iMove Physio (Melbourne) | Multi-loc | Volume. |
-| RMIT Health Clinic | Melbourne CBD | Uni clinic — CPD culture. |
-| ACU Sports Performance Clinic | Strathfield (NSW) / Melbourne | Uni clinical training. |
+**Week 1** (Mon-Wed-Thu): clinics #1-5 (R1 Gold Coast + Northern Rivers — zero travel)
+**Week 2** (Mon-Wed-Thu): clinics #6-10 (R2 Brisbane metro)
+**Week 3** (Mon-Wed-Thu): clinics #11-15 (R2 Sunshine Coast + remaining Brisbane)
+
+T2 follow-ups dispatch 5-7 days after T1 (only to prospects who opened T1 but didn't reply).
+T3 final-check 10 days after T2.
+
+Total first-wave sequence: ~6 weeks from first send to last T3.
 
 ---
 
-## Sports-org adjacencies (separate sales motion — large groups, longer cycles)
+## Pre-send gates
 
-Not P1 for the cold engine — these need warm intros. But each represents a 20+ person cohort if it lands.
+Before T1 dispatch on any clinic:
 
-| Org | Cohort potential |
-|---|---|
-| AFL clubs — Lions (BNE), Suns (GC), Swans (SYD), Giants (SYD), Demons / Saints / Pies / Tigers / Bombers / Roos / Hawks / Cats / Crows / Eagles / Power / Dockers (MEL/PER/ADL) | Each ~20-30 medical + S&C staff |
-| NRL clubs — Broncos, Titans, Cowboys, Roosters, Storm, Rabbitohs, Sharks, Eels, Bulldogs, Tigers, Warriors, Dragons, Knights, Sea Eagles, Panthers, Raiders | Each ~15-25 medical + S&C |
-| State Institutes — NSWIS, QAS, VIS, SASI, WAIS, NTIS, TIS, ACTAS | Each ~30-50 |
-| AIS (Canberra) | Tier-1, multi-discipline |
-| Super Netball clubs | ~10-15 per |
-| AFLW / NRLW clubs | smaller squads but high CPD demand |
+1. ✅ **Public workshop dates locked** (Melbourne / Sydney / Brisbane) — small-cohort FAQ promises them; FAQ must not strand under-8 enquirers
+2. ✅ **T1 template signed off** in `email_template_signoff` table
+3. ✅ **DMARC/SPF/DKIM** verified passing via Gmail postmaster tools
+4. ✅ **Test send to Zac's inbox** for prospect #1 with all merge variables resolved
+5. ✅ **`/p/[token]` portal renders cleanly** for prospect #1 with their real data
+6. ✅ **Suppression table empty** — no leftover dev/test addresses to leak
 
-**Engine treatment:** flag as `sports-org` in `ProspectClinic.notes`. Do NOT bulk-send T1 to these — they need a warm intro from Zac or a referee. Manual one-off send instead.
+Any gate breach → pause + diagnose before resuming.
 
 ---
 
-## University clinical placement programs (high-conversion category)
-
-Universities running clinical placement clinics have:
-- Mandated CPD for supervisors
-- Big team (10-30+ allied health supervisors)
-- Hosting culture
-- Often free meeting rooms for the on-site day
-
-| Uni | Clinic | Why |
-|---|---|---|
-| Macquarie University | Health Sciences Clinic | Multi-disc clinical training. |
-| University of Sydney | Sports & Exercise Med Clinic | Tier-1. |
-| Bond University | Physiotherapy + Health Clinic | Verified Gold Coast — low travel. |
-| Australian Catholic Uni (ACU) | Sports Performance Clinic | Multi-campus. |
-| RMIT | Health Sciences Clinic | Melbourne. |
-| UTS | Health Clinic | Sydney. |
-| Western Sydney Uni | School of Health Sciences Clinic | High volume. |
-| Griffith Uni | Sports Medicine Clinic | Gold Coast / Brisbane — low travel. |
-| QUT | Health Clinic | Brisbane — low travel. |
-| Charles Sturt Uni | Allied Health Clinic | Regional Wagga / Albury / Orange. |
-
-Pitch variant: emphasise *"your supervisors get accredited concussion training before next semester's clinical placements — students see best-practice concussion management modelled from day one."*
-
----
-
-## Hospital networks + rehab groups (lower priority — procurement is slow)
-
-Long sales cycle, multi-stakeholder, but high contract value when they convert.
-
-| Network | Region | Note |
-|---|---|---|
-| Greenslopes Private rehab | Brisbane | |
-| Wesley Hospital rehab | Brisbane | |
-| St Andrew's War Memorial rehab | Brisbane | |
-| HCA hospital network rehab | National | Multi-hospital — if it lands, multiple sites. |
-| Ramsay Health rehab | National | |
-| Macquarie Health Corp | NSW | |
-| Calvary Health Care rehab | National | |
-
-**Engine treatment:** flag as `hospital-network` in `ProspectClinic.notes`. T1 send acceptable but expect long timeline.
-
----
-
-## P1 cold-send sequence (first wave — 15 prospects)
-
-The first 15 cold sends should be Tier R1-R2 (low travel, high concussion-volume catchment, multi-disciplinary). Pace: 5/day Mon-Wed-Thu mornings = 3 weeks to complete first wave.
-
-| # | Region | Clinic | Discipline emphasis |
-|---|---|---|---|
-| 1 | R1 (GC) | Sports & Spinal Physiotherapy | physio-led |
-| 2 | R1 (GC) | Sphere Health Burleigh | mixed |
-| 3 | R1 (GC) | POGO Physio (Gold Coast head) | physio-led |
-| 4 | R1 (GC) | ConditionMe | mixed |
-| 5 | R1 (Tweed) | Northcoast Sports Medicine | sports-med-led |
-| 6 | R2 (Sun Coast) | Sunshine Coast Sports Medicine | mixed |
-| 7 | R2 (Sun Coast) | Beachside Family Physiotherapy | physio-led |
-| 8 | R2 (Sun Coast) | Kawana Physiotherapy | physio-led |
-| 9 | R2 (BNE) | iMove Physio (Brisbane head) | physio-led |
-| 10 | R2 (BNE) | Springwood Health | mixed |
-| 11 | R2 (BNE) | Movement Solutions | mixed |
-| 12 | R2 (BNE) | Sphere Health Brisbane | mixed |
-| 13 | R1 (GC) | Bond University Physiotherapy Clinic | mixed (uni) |
-| 14 | R2 (BNE) | Griffith Uni Sports Medicine Clinic | mixed (uni) |
-| 15 | R2 (BNE) | QUT Health Clinic | mixed (uni) |
-
-After T1 sequence completes for these 15, T2 follow-ups dispatch 5-7 days later (only to prospects who opened T1 but didn't reply). T3 final-check goes 10 days after T2.
-
-**Expected throughput:**
-- 15 T1 sends → ~5 opens (35% open rate target) → ~2 replies (~13% reply rate from openers)
-- 1 reply → ~40% book a call → 1 booked call in first wave
-- Of booked calls, ~30% close → realistically 0-1 closed deal in first wave
-- More importantly: pipeline data + email warmup curve for waves 2-4
-
----
-
-## P2 second wave — Sydney + Melbourne flights (15 prospects)
-
-After first wave is in flight and engagement metrics are clean (no >3% bounce, <0.3% complaint), open up to R4-R5.
-
-Trigger on:
-- 30+ T1s sent without spam complaints
-- DMARC + SPF + DKIM all reading as `pass` on Gmail check
-- At least 1 successful test send to Zac confirming render quality
-- Public workshop fallback link working (for under-8 cohorts redirected)
-
----
-
-## What NOT to do in the cold engine
-
-- **No batch sends.** Each prospect goes through `/api/admin/prospect-send` individually. Daily cap stays at 5 for the first 3 weeks, then 10, then 15.
-- **No template re-use without per-prospect personalisation.** The merge MUST resolve: clinic_name, region, contact_first_name, team_breakdown, AND one named local target (sports club / school / GP catchment).
-- **No subject-line A/B testing in the first wave.** Stick with one template, generate signal first.
-- **No sending to a clinic that lists "concussion clinic" on their homepage.** They've already invested elsewhere — pitch is irrelevant.
-- **No sending to franchises where the local manager can't authorise a cohort budget.** Skip Back In Motion / Achieve Physiotherapy / similar franchise networks unless the head office gives explicit per-site authority.
-- **No sending to hospital networks before tier R1-R2 conversion has been proven.** Sales cycle mismatch.
-
----
-
-## Open questions / decisions before first send
-
-1. **Public workshop dates** — small-cohort FAQ promises public workshops. Need Melbourne / Sydney / Brisbane dates locked + bookable before any T1 goes out (so the FAQ doesn't strand under-8 enquiries).
-2. **Bond University / Griffith Uni / QUT** — local enough to send first, but verify if Zac has any existing relationships that would change the approach.
-3. **Cold prospect intake form vs direct portal URL** — per earlier feedback, cold sends could route through a brief intake form rather than a direct `/p/[token]` URL. Decision: ship first wave with direct URL (faster signal), revisit at wave 3.
-
----
-
-## KPIs — what we measure
-
-Per cohort of 15 P1 sends:
+## KPI floors (per wave, engine pauses on breach)
 
 | Metric | Target | Floor |
 |---|---|---|
-| T1 delivery rate | ≥98% | ≥95% |
-| T1 open rate | ≥35% | ≥25% |
-| T1 click-through to portal | ≥15% of opens | ≥10% |
-| Portal multi-visit rate | ≥30% of clicks | ≥20% |
+| Delivery rate | ≥98% | ≥95% |
+| Open rate | ≥35% | ≥25% |
+| Click-through to portal | ≥15% of opens | ≥10% |
+| Multi-visit rate | ≥30% of clicks | ≥20% |
 | Reply rate from opens | ≥8% | ≥4% |
-| Call booking rate from replies | ≥40% | ≥25% |
-| Close rate from calls | ≥30% | ≥15% |
+| Book rate from replies | ≥40% | ≥25% |
+| Close rate from books | ≥30% | ≥15% |
 | Hard bounce rate | <2% | <5% |
 | Spam complaint rate | <0.1% | <0.3% |
 
-Floor breaches pause the engine pending diagnosis.
-
----
-
-## Next actions
-
-1. **Verify the P1 list.** Confirm 8+ clinicians + multi-disciplinary for each of the 15 first-wave clinics. Engine `research-prospect` LLM endpoint should automate this — until then, manual verification per clinic.
-2. **Lock public workshop dates** for the small-cohort FAQ.
-3. **Sign off T1 template** in production: `UPDATE email_template_signoff SET signed_off_at=NOW(), signed_off_by='Zac' WHERE slug='initial'`.
-4. **Test send** to Zac's inbox for clinic #1 — verify all merge fields resolve, portal renders cleanly, headers are correct.
-5. **Send for real** — start with #1, wait 24 hours, watch deliverability dashboard, then proceed.
+If complaint rate breaches 0.3% in any 24-hour window, **stop all sends**, audit content, re-warm domain reputation over 2 weeks before resuming.
