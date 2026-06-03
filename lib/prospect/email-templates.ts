@@ -49,16 +49,12 @@ const BASE_HTML_STYLE = `
   ul.points { margin: 4px 0 16px; padding: 0; list-style: none; }
   ul.points li { font-size: 14.5px; line-height: 1.5; color: #1a2332; padding: 4px 0 4px 22px; position: relative; }
   ul.points li::before { content: ""; position: absolute; left: 4px; top: 13px; width: 6px; height: 6px; border-radius: 3px; background: #0d7377; }
-  .bento { width: 100%; border-collapse: separate; border-spacing: 8px 0; margin: 14px -8px 4px; }
-  .stat { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 0; vertical-align: top; width: 33.33%; box-shadow: 0 4px 12px -4px rgba(15,23,42,0.12), 0 1px 3px rgba(15,23,42,0.04); text-align: left; overflow: hidden; }
-  .stat-inner { padding: 14px 16px 16px; display: block; }
-  .stat-bar { height: 4px; display: block; }
-  .stat-bar.teal { background: linear-gradient(90deg, #0d7377 0%, #14b8a6 100%); }
-  .stat-bar.amber { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
-  .stat-bar.indigo { background: linear-gradient(90deg, #4f46e5 0%, #818cf8 100%); }
-  .stat .v { font-size: 30px; font-weight: 800; color: #0f172a; line-height: 1; letter-spacing: -0.025em; display: block; margin-top: 6px; }
-  .stat .l { font-size: 10px; color: #0a5a5e; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; display: block; }
-  .stat .sub { font-size: 11.5px; color: #64748b; margin-top: 6px; line-height: 1.4; display: block; font-weight: 500; }
+  .bento { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin: 16px -10px 4px; }
+  .stat { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px 20px 22px; vertical-align: top; width: 33.33%; text-align: left; }
+  .stat .headline { display: block; line-height: 1; margin-bottom: 14px; }
+  .stat .num { font-size: 36px; font-weight: 800; color: #1e3a8a; letter-spacing: -0.03em; line-height: 1; }
+  .stat .unit { font-size: 15px; font-weight: 700; color: #1e3a8a; margin-left: 4px; letter-spacing: -0.01em; }
+  .stat .sub { font-size: 13px; color: #64748b; line-height: 1.5; display: block; font-weight: 500; }
   .cta { display: inline-block; background: linear-gradient(135deg, #0d7377 0%, #0a5a5e 100%); color: #ffffff !important; padding: 16px 30px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 16px 0 4px; box-shadow: 0 8px 16px -6px rgba(13,115,119,0.45), 0 2px 4px -1px rgba(15,23,42,0.08); letter-spacing: 0.01em; }
   .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 6px; }
   .secondary a { color: #0a5a5e; font-weight: 600; }
@@ -101,28 +97,16 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
         <td class="stat">
-          <div class="stat-bar teal"></div>
-          <div class="stat-inner">
-            <span class="l">On-site training</span>
-            <span class="v">1 day</span>
-            <span class="sub">Your clinic · whole multi-disc team · your real cases</span>
-          </div>
+          <span class="headline"><span class="num">1</span><span class="unit"> day</span></span>
+          <span class="sub">On-site, your clinic, whole multi-disc team, real cases</span>
         </td>
         <td class="stat">
-          <div class="stat-bar amber"></div>
-          <div class="stat-inner">
-            <span class="l">Comprehensive content</span>
-            <span class="v">8 modules</span>
-            <span class="sub">SCAT6 · SCOAT6 · VOMS · oculomotor · BESS · cervical · RTP + clinical toolkit</span>
-          </div>
+          <span class="headline"><span class="num">8</span><span class="unit"> modules</span></span>
+          <span class="sub">SCAT6 · SCOAT6 · VOMS · oculomotor · BESS · cervical · RTP + toolkit</span>
         </td>
         <td class="stat">
-          <div class="stat-bar indigo"></div>
-          <div class="stat-inner">
-            <span class="l">CEA · OA endorsed</span>
-            <span class="v">14 CPD</span>
-            <span class="sub">Per clinician · AHPRA-aligned</span>
-          </div>
+          <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
+          <span class="sub">CEA · OA endorsed · per clinician · AHPRA-aligned</span>
         </td>
       </tr></table>
 
