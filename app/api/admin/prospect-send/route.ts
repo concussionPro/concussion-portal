@@ -78,6 +78,17 @@ export async function POST(req: NextRequest) {
         { status: 403 },
       )
     }
+    // Belt-and-braces: refuse to send to any clinic already in an opt-out
+    // status, independent of the email_suppression table. Catches the case
+    // where a clinic was marked 'lost'/'bounced' but the suppression row
+    // never got written (the /api/prospect/unsubscribe 404 era — before
+    // 2026-06-04 the One-Click POST never reached our suppression writer).
+    if (clinic.status === 'lost' || clinic.status === 'bounced') {
+      return NextResponse.json(
+        { error: 'Clinic is in opt-out status', status: clinic.status },
+        { status: 409 },
+      )
+    }
     if (await isSuppressed(clinic.contactEmail)) {
       return NextResponse.json(
         { error: 'Recipient is on the suppression list', email: clinic.contactEmail },
