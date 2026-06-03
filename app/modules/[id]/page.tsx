@@ -366,9 +366,19 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
   useEffect(() => {
     if (module && moduleProgress) {
       const canComplete = canMarkModuleComplete(moduleId)
-      setShowCompleteButton(canComplete && !isModuleComplete(moduleId))
+      const alreadyComplete = isModuleComplete(moduleId)
+      // AUTO-COMPLETE on quiz pass (75%+) — was requiring a manual button click
+      // which most users miss. Result: paid users who finished content showed
+      // as 'barely finished' in admin, and upgrade pitches gated on completion
+      // count never fired (SCAT-free → paid upsell, almost-done nurture etc).
+      // The button stays visible as a redundant affordance, but completion
+      // now fires automatically the moment quiz pass criteria are met.
+      if (canComplete && !alreadyComplete) {
+        markModuleComplete(moduleId)
+      }
+      setShowCompleteButton(canComplete && !alreadyComplete)
     }
-  }, [module, moduleProgress, moduleId, canMarkModuleComplete, isModuleComplete])
+  }, [module, moduleProgress, moduleId, canMarkModuleComplete, isModuleComplete, markModuleComplete])
 
   // Show loading state while fetching module
   if (moduleLoading) {
