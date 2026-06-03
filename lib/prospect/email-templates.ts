@@ -15,15 +15,15 @@ const STANDARD_POINTS = `<ul class="points">
 </ul>`
 
 const T1_OPENING_VARIANTS: Record<Discipline, string> = {
-  physiotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
-  osteopaths: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
-  generalPractitioners: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
-  sportsMedicineDoctors: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
-  exercisePhys: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
-  myotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
-  remedialMassage: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
-  practiceManager: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
-  admin: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  physiotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  osteopaths: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  generalPractitioners: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  sportsMedicineDoctors: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  exercisePhys: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  myotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  remedialMassage: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  practiceManager: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  admin: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
 }
 
 /**
@@ -86,7 +86,7 @@ const BASE_HTML_STYLE = `
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     slug: 'initial',
-    subjectTemplate: '{clinic_short_name} · become the concussion hub for {region} (OA-endorsed team training · 14 CPD)',
+    subjectTemplate: '{clinic_short_name} · become the concussion hub for {region_phrase} (OA-endorsed team training · 14 CPD)',
     /**
      * Visual T1 — HTML email. Short text + bento stats + dashboard screenshot
      * + one CTA. The text-only fallback (used by plain-text email clients)
@@ -230,8 +230,16 @@ export function mergeTemplate(
 </ul>`
   }
 
+  // Region phrasing — single source of truth for "for {region_phrase}" copy.
+  // Some regions need the definite article to sound natural ("the Gold Coast"),
+  // others don't ("Brisbane"). Anything unmapped falls back to {city} which
+  // always works (every clinic has a city). Better to use the city than emit
+  // grammatically wrong copy.
+  const regionPhrase = naturalRegionPhrase(clinic.region) ?? clinic.city
+
   openingBlock = openingBlock
     .replace(/\{clinic_short_name\}/g, clinic.shortName)
+    .replace(/\{region_phrase\}/g, regionPhrase)
     .replace(/\{region\}/g, clinic.region)
     .replace(/\{city\}/g, clinic.city)
     .replace(/\{nearest_metro\}/g, nearestMetro)
@@ -265,6 +273,7 @@ export function mergeTemplate(
     clinic_name: clinic.name,
     clinic_short_name: clinic.shortName,
     region: clinic.region,
+    region_phrase: regionPhrase,
     city: clinic.city,
     contact_first_name: clinic.contactFirstName,
     contact_full_name: clinic.contactFullName,
@@ -290,6 +299,35 @@ export function mergeTemplate(
  * email never ships with raw merge artefacts visible. Whitespace + dangling
  * punctuation cleaned up.
  */
+/**
+ * Returns the natural sentence form of a region — with article when needed.
+ * Only returns a phrase for regions explicitly mapped. Unknown regions
+ * return null so the caller can fall back to {city} rather than emit
+ * grammatically broken copy. Bias: don't risk it.
+ *
+ * To extend: add the raw `region` value from prospect_clinics here.
+ * Match the actual data in `data/prospect-targets.ts`.
+ */
+function naturalRegionPhrase(region: string): string | null {
+  const phrases: Record<string, string> = {
+    'Gold Coast': 'the Gold Coast',
+    'Sunshine Coast': 'the Sunshine Coast',
+    'Sunshine Coast + Gold Coast': 'the Sunshine Coast + Gold Coast',
+    'Northern Rivers': 'the Northern Rivers',
+    'Mid North Coast': 'the Mid North Coast',
+    'Newcastle / Hunter': 'Newcastle',
+    'Canberra / ACT': 'Canberra',
+    Brisbane: 'Brisbane',
+    Adelaide: 'Adelaide',
+    Melbourne: 'Melbourne',
+    Sydney: 'Sydney',
+    Perth: 'Perth',
+    Hobart: 'Hobart',
+    Darwin: 'Darwin',
+  }
+  return phrases[region] ?? null
+}
+
 function mergeVariables(str: string, vars: Record<string, string | undefined>): string {
   const replaced = str.replace(/\{([a-z_]+)\}/g, (_m, key) => {
     const value = vars[key]
