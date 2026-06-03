@@ -113,6 +113,9 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           {/* Team snapshot bento */}
           <TeamSnapshot clinic={clinic} clinicalCount={clinical} totalCount={total} />
 
+          {/* Multidisciplinary integration value frame */}
+          <MultidisciplinaryIntegration clinic={clinic} />
+
           {/* Pricing */}
           <PricingTiers clinic={clinic} pricing={pricing} />
 
@@ -290,6 +293,35 @@ function TeamSnapshot({ clinic, clinicalCount, totalCount }: { clinic: ProspectC
           (t.practiceManager + t.admin) && `${t.practiceManager + t.admin} admin`,
         ].filter(Boolean).join(' · ')}
       </p>
+    </section>
+  )
+}
+
+function MultidisciplinaryIntegration({ clinic }: { clinic: ProspectClinic }) {
+  return (
+    <section className="rounded-2xl p-5 sm:p-6 mb-6 bg-gradient-to-br from-accent/8 via-white to-accent/4 border border-accent/15">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">
+        Multidisciplinary integration
+      </p>
+      <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mb-2 leading-tight">
+        Your whole team activated for the best concussion outcomes.
+      </h3>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-4 max-w-2xl">
+        Concussion isn&apos;t a single-discipline problem. Acute assessment, vestibular, cervical, sub-symptom-threshold aerobic, return-to-play clearance, and discharge documentation each sit with a different clinician on the {clinic.shortName} floor. The Hub Program trains the protocol across the team so the case stays in-house from diagnosis to discharge.
+      </p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { role: 'Physio', covers: 'Vestibular · cervical · neuro-assessment · RTP graded exposure' },
+          { role: 'EP', covers: 'Sub-symptom-threshold aerobic · graded exercise progression' },
+          { role: 'Osteo / Myo', covers: 'Cervico-mandibular · manual therapy · cranial-load patterns' },
+          { role: 'Admin', covers: 'GP letters · NDIS · school + club correspondence · billing flow' },
+        ].map(({ role, covers }) => (
+          <div key={role} className="rounded-xl bg-white/70 border border-accent/10 p-3">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-accent">{role}</p>
+            <p className="text-[11.5px] text-foreground/85 leading-snug mt-1">{covers}</p>
+          </div>
+        ))}
+      </div>
     </section>
   )
 }

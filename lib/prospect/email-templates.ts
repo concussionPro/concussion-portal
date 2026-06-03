@@ -124,7 +124,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
       <span class="secondary">Or book 30 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
 
-      <p style="margin: 22px 0 0; font-size: 13px; color: #64748b; line-height: 1.55;">CEA delivers the full system on-site — clinical training (physios, EPs, osteos), admin SOPs, document templates (GP letters, sideline cards, NDIS, RTP plans), and marketing + referral assets to anchor your clinic as the local GP, school + club concussion authority.</p>
+      <p style="margin: 22px 0 0; font-size: 13px; color: #64748b; line-height: 1.55;"><strong style="color: #0a5a5e;">Multidisciplinary integration</strong> — your whole team activated for the best concussion outcomes. CEA delivers it on-site: clinical training (physios, EPs, osteos), admin SOPs, document templates, and marketing + referral assets to anchor your clinic as the local concussion authority.</p>
 
       <div class="sig">
         <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, CEA
