@@ -4,68 +4,65 @@ import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount } fro
 /**
  * Discipline-aware T1 opening line. Single sentence — sets context fast.
  */
-interface OpeningSet {
-  lead: string
-  pointOne: string
-  pointTwo: string
-  pointThree: string
-}
-
-const T1_OPENING_VARIANTS: Record<Discipline, OpeningSet> = {
-  physiotherapists: {
-    lead: 'The 2024 AIS/SMA concussion guidelines just shifted under you.',
-    pointOne: '21-day RTP stand-down — now mandatory for community sport',
-    pointTwo: 'Physios explicitly named as clearance providers',
-    pointThree: 'Most clinics aren\'t set up to deliver the protocol',
-  },
-  osteopaths: {
-    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
-    pointOne: '21-day RTP stand-down — now mandatory for community sport',
-    pointTwo: 'Multi-disc allied health teams positioned to own the protocol',
-    pointThree: 'Most clinics still refer the structured cases out',
-  },
-  generalPractitioners: {
-    lead: 'The 2024 AIS/SMA guidelines named GPs for concussion RTP clearance.',
-    pointOne: '21-day RTP stand-down — mandatory under new guidelines',
-    pointTwo: 'GPs explicitly named as clearance providers',
-    pointThree: '60% of AU GPs report undertraining in the protocol (RACGP)',
-  },
-  sportsMedicineDoctors: {
-    lead: 'The 2024 AIS/SMA guidelines made sports med the clearance hub.',
-    pointOne: '21-day RTP stand-down — mandatory community sport',
-    pointTwo: 'Sports medicine = diagnostic + clearance hub',
-    pointThree: 'Most {region} cases still route via ED first',
-  },
-  exercisePhys: {
-    lead: 'The 2024 AIS/SMA guidelines surfaced the EP-led half of concussion recovery.',
-    pointOne: '21-day RTP stand-down — mandatory community sport',
-    pointTwo: 'Sub-symptom-threshold aerobic drives clearance progression',
-    pointThree: 'It\'s the EP-led half most clinics skip',
-  },
-  myotherapists: {
-    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
-    pointOne: '21-day RTP stand-down — now mandatory for community sport',
-    pointTwo: 'Multi-disc clinics with manual-therapy depth own the pathway',
-    pointThree: 'Most still refer the structured cases out',
-  },
-  remedialMassage: {
-    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
-    pointOne: '21-day RTP stand-down — now mandatory for community sport',
-    pointTwo: 'Multi-disc clinics with manual-therapy depth own the pathway',
-    pointThree: 'Most still refer the structured cases out',
-  },
-  practiceManager: {
-    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
-    pointOne: '21-day RTP stand-down — now mandatory for community sport',
-    pointTwo: 'Multi-clinician practices are positioned to capture the protocol',
-    pointThree: 'Most clinics still refer the structured cases out',
-  },
-  admin: {
-    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
-    pointOne: '21-day RTP stand-down — now mandatory for community sport',
-    pointTwo: 'Multi-clinician practices are positioned to capture the protocol',
-    pointThree: 'Most clinics still refer the structured cases out',
-  },
+/**
+ * Each variant is a complete HTML block: lead sentence + 3 dot-points.
+ * Token replacement happens on the merged HTML at substitution time.
+ */
+const T1_OPENING_VARIANTS: Record<Discipline, string> = {
+  physiotherapists: `<p class="lead">The 2024 AIS/SMA concussion guidelines just shifted under you.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — now mandatory community sport</li>
+  <li>Physios explicitly named as clearance providers</li>
+  <li>Most clinics aren't set up to deliver the protocol</li>
+</ul>`,
+  osteopaths: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — now mandatory community sport</li>
+  <li>Multi-disc allied health teams positioned to own the protocol</li>
+  <li>Most clinics still refer the structured cases out</li>
+</ul>`,
+  generalPractitioners: `<p class="lead">The 2024 AIS/SMA guidelines named GPs for concussion RTP clearance.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — mandatory under new guidelines</li>
+  <li>GPs explicitly named as clearance providers</li>
+  <li>60% of AU GPs report undertraining in the protocol (RACGP)</li>
+</ul>`,
+  sportsMedicineDoctors: `<p class="lead">The 2024 AIS/SMA guidelines made sports med the clearance hub.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — mandatory community sport</li>
+  <li>Sports medicine = diagnostic + clearance hub</li>
+  <li>Most {region} cases still route via ED first</li>
+</ul>`,
+  exercisePhys: `<p class="lead">The 2024 AIS/SMA guidelines surfaced the EP-led half of concussion recovery.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — mandatory community sport</li>
+  <li>Sub-symptom-threshold aerobic drives clearance progression</li>
+  <li>It's the EP-led half most clinics skip</li>
+</ul>`,
+  myotherapists: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — now mandatory community sport</li>
+  <li>Multi-disc clinics with manual-therapy depth own the pathway</li>
+  <li>Most still refer the structured cases out</li>
+</ul>`,
+  remedialMassage: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — now mandatory community sport</li>
+  <li>Multi-disc clinics with manual-therapy depth own the pathway</li>
+  <li>Most still refer the structured cases out</li>
+</ul>`,
+  practiceManager: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — now mandatory community sport</li>
+  <li>Multi-clinician practices are positioned to capture the protocol</li>
+  <li>Most clinics still refer the structured cases out</li>
+</ul>`,
+  admin: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — now mandatory community sport</li>
+  <li>Multi-clinician practices are positioned to capture the protocol</li>
+  <li>Most clinics still refer the structured cases out</li>
+</ul>`,
 }
 
 /**
@@ -136,12 +133,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p class="lead">{opening_line_lead}</p>
-      <ul class="points">
-        <li>{point_one}</li>
-        <li>{point_two}</li>
-        <li>{point_three}</li>
-      </ul>
+      {opening_block}
 
       <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
@@ -262,31 +254,31 @@ export function mergeTemplate(
   const discipline = clinic.contactDiscipline
   const nearestMetro = options.nearestMetro ?? options.networkVariant?.nearestMetro ?? 'Sydney or Brisbane'
 
-  const set = template.openingVariants[discipline]
-  let lead = set.lead
-  let pointOne = set.pointOne
-  const pointTwo = set.pointTwo
-  let pointThree = set.pointThree
+  // Pick the discipline-aware HTML opening (lead + bullets). Regional and
+  // network variants override the lead + first/third bullets with their angle.
+  let openingBlock = template.openingVariants[discipline] ?? template.openingVariants.physiotherapists
 
   if (options.networkVariant) {
-    lead = `${options.networkVariant.networkSize} locations across ${clinic.region} — one trained model rolls out everywhere.`
-    pointOne = '21-day RTP stand-down — now mandatory community sport (AIS 2024)'
-    pointThree = 'Network rollout: one curriculum, one protocol, every clinic'
+    openingBlock = `<p class="lead">${options.networkVariant.networkSize} locations across ${clinic.region} — one trained model rolls out everywhere.</p>
+<ul class="points">
+  <li>21-day RTP stand-down — now mandatory community sport (AIS 2024)</li>
+  <li>Physios + GPs explicitly named as clearance providers</li>
+  <li>Network rollout: one curriculum, one protocol, every clinic</li>
+</ul>`
   } else if (options.regionalVariant) {
-    lead = `I'm based in Byron Bay — I'll bring the full-day training to ${clinic.city}.`
-    pointOne = `No travel to ${nearestMetro} — your clinic, your cases, your whole team in one day`
-    pointThree = `Most concussion CPD requires team travel to ${nearestMetro} + overnight stays`
+    openingBlock = `<p class="lead">I'm based in Byron Bay — I'll bring the full-day training to ${clinic.city}.</p>
+<ul class="points">
+  <li>No travel to ${nearestMetro} — your clinic, your cases, your whole team in one day</li>
+  <li>2024 AIS/SMA: 21-day RTP stand-down now mandatory community sport</li>
+  <li>Most concussion CPD requires team travel to ${nearestMetro} + overnight stays</li>
+</ul>`
   }
 
-  const replaceTokens = (s: string) =>
-    s
-      .replace(/\{clinic_short_name\}/g, clinic.shortName)
-      .replace(/\{region\}/g, clinic.region)
-      .replace(/\{city\}/g, clinic.city)
-      .replace(/\{nearest_metro\}/g, nearestMetro)
-      .replace(/\{osteo_count\}/g, String(clinic.team.osteopaths))
-      .replace(/\{physio_count\}/g, String(clinic.team.physiotherapists))
-      .replace(/\{ep_count\}/g, String(clinic.team.exercisePhys))
+  openingBlock = openingBlock
+    .replace(/\{clinic_short_name\}/g, clinic.shortName)
+    .replace(/\{region\}/g, clinic.region)
+    .replace(/\{city\}/g, clinic.city)
+    .replace(/\{nearest_metro\}/g, nearestMetro)
 
   const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}`
   const unsubscribeLinkOnly = `${baseUrl}/api/prospect/unsubscribe?t=${unsubscribeToken}`
@@ -322,10 +314,7 @@ export function mergeTemplate(
     contact_full_name: clinic.contactFullName,
     team_breakdown: teamBreakdownString(clinic.team),
     team_total: String(teamTotal(clinic.team)),
-    opening_line_lead: replaceTokens(lead),
-    point_one: replaceTokens(pointOne),
-    point_two: replaceTokens(pointTwo),
-    point_three: replaceTokens(pointThree),
+    opening_block: openingBlock,
     portal_url: htmlEncodeUrl(portalUrl),
     access_key: clinic.accessKey,
     slug: clinic.slug,
