@@ -8,61 +8,22 @@ import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount } fro
  * Each variant is a complete HTML block: lead sentence + 3 dot-points.
  * Token replacement happens on the merged HTML at substitution time.
  */
+const STANDARD_POINTS = `<ul class="points">
+  <li>AHPRA-compliant protocols your whole team can run with confidence</li>
+  <li>Concussion-specific neuro-assessment — VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6</li>
+  <li>Evidence-based care anchored in the 2026 AIS/SMA + Amsterdam consensus</li>
+</ul>`
+
 const T1_OPENING_VARIANTS: Record<Discipline, string> = {
-  physiotherapists: `<p class="lead">Under the 2026 AU concussion rules, most clinics still refer the RTP clearance out — and miss the case.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>Physios named as the clearance provider</li>
-  <li>Schools + clubs are asking "who runs your protocol?"</li>
-</ul>`,
-  osteopaths: `<p class="lead">Under the 2026 AU concussion rules, most multi-disc clinics still refer the RTP clearance out — and miss the case.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>Multi-disc allied health teams are positioned to own the protocol</li>
-  <li>Schools + clubs are asking "who runs your protocol?"</li>
-</ul>`,
-  generalPractitioners: `<p class="lead">Under the 2026 AU concussion rules, most practices still don't run the structured RTP pathway.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>GPs named as the clearance provider</li>
-  <li>60% of AU GPs report undertraining in the protocol (RACGP)</li>
-</ul>`,
-  sportsMedicineDoctors: `<p class="lead">Under the 2026 AU concussion rules, most {region} cases still route via ED + primary care first.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>Sports medicine = diagnostic + clearance hub</li>
-  <li>Schools + clubs are asking "who runs your protocol?"</li>
-</ul>`,
-  exercisePhys: `<p class="lead">Under the 2026 AU concussion rules, most clinics still skip the EP-led half of clearance.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>Sub-symptom-threshold aerobic drives clearance progression</li>
-  <li>It's the EP-led half most clinics don't deliver</li>
-</ul>`,
-  myotherapists: `<p class="lead">Under the 2026 AU concussion rules, most multi-disc clinics still refer the RTP clearance out.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>Manual-therapy depth + multi-disc team = positioned to own the protocol</li>
-  <li>Schools + clubs are asking "who runs your protocol?"</li>
-</ul>`,
-  remedialMassage: `<p class="lead">Under the 2026 AU concussion rules, most multi-disc clinics still refer the RTP clearance out.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>Manual-therapy depth + multi-disc team = positioned to own the protocol</li>
-  <li>Schools + clubs are asking "who runs your protocol?"</li>
-</ul>`,
-  practiceManager: `<p class="lead">Under the 2026 AU concussion rules, most multi-clinician practices still refer the RTP clearance out.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>Multi-clinician practices are positioned to capture the protocol</li>
-  <li>Schools + clubs are asking "who runs your protocol?"</li>
-</ul>`,
-  admin: `<p class="lead">Under the 2026 AU concussion rules, most multi-clinician practices still refer the RTP clearance out.</p>
-<ul class="points">
-  <li>21-day mandatory RTP stand-down · community sport</li>
-  <li>Multi-clinician practices are positioned to capture the protocol</li>
-  <li>Schools + clubs are asking "who runs your protocol?"</li>
-</ul>`,
+  physiotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  osteopaths: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  generalPractitioners: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  sportsMedicineDoctors: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  exercisePhys: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  myotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  remedialMassage: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  practiceManager: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
+  admin: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region}.</p>${STANDARD_POINTS}`,
 }
 
 /**
@@ -120,7 +81,7 @@ const BASE_HTML_STYLE = `
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     slug: 'initial',
-    subjectTemplate: '{clinic_short_name} · on-site concussion training for your team (OA endorsed · 14 CPD · SCAT6/VOMS/BESS)',
+    subjectTemplate: '{clinic_short_name} · become the concussion hub for {region} (OA-endorsed team training · 14 CPD)',
     /**
      * Visual T1 — HTML email. Short text + bento stats + dashboard screenshot
      * + one CTA. The text-only fallback (used by plain-text email clients)
