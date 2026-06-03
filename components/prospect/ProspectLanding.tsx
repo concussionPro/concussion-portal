@@ -23,6 +23,7 @@ import {
   Stethoscope,
   BookMarked,
   Lock,
+  Mail,
 } from 'lucide-react'
 import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
 import { computePricing, teamTotal, clinicalCount } from '@/lib/prospect/pricing'
