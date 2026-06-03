@@ -158,6 +158,10 @@ interface ProspectRow {
   totalPortalViews: number
   firstPortalViewAt: string | null
   lastPortalViewAt: string | null
+  scheduledSendAt: string | null
+  nextTemplateSlug: string | null
+  priorityWave: string | null
+  pitchVariant: string | null
   sends: ProspectSend[]
 }
 interface ProspectAggregates {
@@ -726,6 +730,40 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
   )
 }
 
+function BreakdownCard({ title, data, icon: Icon }: { title: string; data: Record<string, number>; icon: React.ElementType }) {
+  const entries = Object.entries(data).sort((a, b) => b[1] - a[1])
+  const total = entries.reduce((acc, [, v]) => acc + v, 0)
+  if (entries.length === 0) {
+    return (
+      <div className="card rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-3"><Icon size={14} className="text-[var(--accent)]" /><span className="text-xs uppercase tracking-wider font-semibold text-[var(--muted-foreground)]">{title}</span></div>
+        <p className="text-xs text-[var(--muted-foreground)]">No data.</p>
+      </div>
+    )
+  }
+  return (
+    <div className="card rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-3"><Icon size={14} className="text-[var(--accent)]" /><span className="text-xs uppercase tracking-wider font-semibold text-[var(--muted-foreground)]">{title}</span></div>
+      <ul className="space-y-2">
+        {entries.map(([label, count]) => {
+          const pct = total > 0 ? (count / total) * 100 : 0
+          return (
+            <li key={label}>
+              <div className="flex items-center justify-between text-xs mb-0.5">
+                <span className="text-[var(--foreground)] font-semibold capitalize">{label}</span>
+                <span className="text-[var(--muted-foreground)]">{count} · {pct.toFixed(0)}%</span>
+              </div>
+              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 /**
  * Inline add-form for the Interest Registrations section. Lets Zac paste a
  * Squarespace form-submission email's contents directly into the analytics
@@ -965,6 +1003,10 @@ export default function AnalyticsDashboard() {
   // B2B prospects data
   const [prospectsData, setProspectsData] = useState<ProspectsData | null>(null)
   const [prospectsError, setProspectsError] = useState<string | null>(null)
+  const [prospectsSubTab, setProspectsSubTab] = useState<'overview' | 'schedule' | 'pipeline' | 'breakdowns' | 'queue'>('overview')
+  const [selectedProspectId, setSelectedProspectId] = useState<number | null>(null)
+  const [bootstrapBusy, setBootstrapBusy] = useState(false)
+  const [bootstrapMessage, setBootstrapMessage] = useState<string | null>(null)
 
 
   const fetchData = useCallback(
@@ -2556,6 +2598,30 @@ export default function AnalyticsDashboard() {
 
             {/* ── B2B Prospects ────────────────────────────────────────── */}
             {activeTab === 'prospects' && (() => {
+              const runBootstrap = async (url: string, label: string, payload?: object) => {
+                setBootstrapBusy(true)
+                setBootstrapMessage(`${label} running…`)
+                try {
+                  const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload ?? {}),
+                    cache: 'no-store',
+                  })
+                  const json = await res.json()
+                  if (!res.ok) {
+                    setBootstrapMessage(`${label} failed: ${json.error ?? res.status}`)
+                  } else {
+                    setBootstrapMessage(`${label} done. Reload to see data.`)
+                    loadAll()
+                  }
+                } catch (err) {
+                  setBootstrapMessage(`${label} network error: ${err instanceof Error ? err.message : String(err)}`)
+                } finally {
+                  setBootstrapBusy(false)
+                }
+              }
+
               if (prospectsError) {
                 return (
                   <div className="card rounded-2xl p-6 border-rose-200 bg-rose-50/50">
@@ -2578,12 +2644,33 @@ export default function AnalyticsDashboard() {
               }
               if (prospectsData.status === 'schema-not-applied') {
                 return (
-                  <div className="card rounded-2xl p-6 border-amber-200 bg-amber-50/50">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Schema not applied</h3>
-                        <p className="text-sm text-[var(--muted-foreground)]">{prospectsData.message ?? 'Run lib/prospect/schema.sql against production Postgres to create prospect_clinics + related tables.'}</p>
+                  <div className="space-y-4">
+                    <div className="card rounded-2xl p-6 border-amber-200 bg-amber-50/50">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Schema not applied</h3>
+                          <p className="text-sm text-[var(--muted-foreground)] mb-3">{prospectsData.message ?? 'Run lib/prospect/schema.sql against production Postgres.'}</p>
+                          <div className="flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => runBootstrap('/api/admin/prospect-schema-bootstrap', 'Apply schema')}
+                              disabled={bootstrapBusy}
+                              className="px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50"
+                            >
+                              {bootstrapBusy ? 'Working…' : '1. Apply schema now'}
+                            </button>
+                            <button
+                              onClick={() => runBootstrap('/api/admin/prospect-bootstrap-targets', 'Seed targets')}
+                              disabled={bootstrapBusy}
+                              className="px-4 py-2 rounded-lg text-sm font-semibold bg-[var(--accent)] text-white hover:opacity-90 disabled:opacity-50"
+                            >
+                              2. Seed P1-P5 target list + schedule
+                            </button>
+                          </div>
+                          {bootstrapMessage && (
+                            <p className="text-xs text-[var(--foreground)] mt-3 font-mono">{bootstrapMessage}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2597,176 +2684,434 @@ export default function AnalyticsDashboard() {
                 funnel: { totalSends: 0, totalOpens: 0, totalClicks: 0, totalViews: 0, totalReplies: 0, wins: 0, sendOpenRate: 0, openClickRate: 0, sendReplyRate: 0, replyToWinRate: 0 },
               }
 
-              // Engagement score for re-engage queue
+              const fmt$ = (n: number) => `A$${n.toLocaleString('en-AU')}`
+
+              if (prospects.length === 0) {
+                return (
+                  <div className="space-y-4">
+                    <div className="card rounded-2xl p-8 text-center">
+                      <Building2 size={32} className="mx-auto text-[var(--muted-foreground)] opacity-50 mb-3" />
+                      <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">No prospects yet</h3>
+                      <p className="text-sm text-[var(--muted-foreground)] mb-4">Schema is applied but no prospects loaded. Seed the P1-P5 target list to start tracking.</p>
+                      <button
+                        onClick={() => runBootstrap('/api/admin/prospect-bootstrap-targets', 'Seed targets')}
+                        disabled={bootstrapBusy}
+                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-[var(--accent)] text-white hover:opacity-90 disabled:opacity-50"
+                      >
+                        {bootstrapBusy ? 'Seeding…' : 'Seed P1-P5 target list + schedule'}
+                      </button>
+                      {bootstrapMessage && (
+                        <p className="text-xs text-[var(--muted-foreground)] mt-3 font-mono">{bootstrapMessage}</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              }
+
+              // Derived data sets for sub-tabs
               const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000
               const reEngageQueue = prospects
                 .filter(p => p.replies === 0 && (p.totalOpens > 0 || p.totalClicks > 0 || p.totalPortalViews > 0))
                 .filter(p => !p.lastSentAt || new Date(p.lastSentAt).getTime() < fourteenDaysAgo)
                 .map(p => ({ ...p, engagementScore: p.totalPortalViews * 3 + p.totalClicks * 2 + p.totalOpens }))
                 .sort((a, b) => b.engagementScore - a.engagementScore)
-                .slice(0, 15)
-
-              const upcomingOutreach = prospects
-                .filter(p => p.status === 'approved' || p.status === 'researching')
-                .sort((a, b) => b.recoCohortTotal - a.recoCohortTotal)
-                .slice(0, 20)
 
               const sentTable = prospects
                 .filter(p => p.totalSends > 0)
                 .sort((a, b) => (b.lastSentAt ? new Date(b.lastSentAt).getTime() : 0) - (a.lastSentAt ? new Date(a.lastSentAt).getTime() : 0))
 
-              const fmt$ = (n: number) => `A$${n.toLocaleString('en-AU')}`
+              // Schedule view — group prospects by scheduled_send_at day
+              const scheduleByDay = new Map<string, ProspectRow[]>()
+              for (const p of prospects) {
+                if (!p.scheduledSendAt) continue
+                if (p.totalSends > 0) continue // already sent
+                const dayKey = new Date(p.scheduledSendAt).toISOString().slice(0, 10)
+                if (!scheduleByDay.has(dayKey)) scheduleByDay.set(dayKey, [])
+                scheduleByDay.get(dayKey)!.push(p)
+              }
+              const scheduleDays = [...scheduleByDay.entries()]
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .slice(0, 30) // next 30 days
+
+              const FUNNEL_STAGES = [
+                { key: 'researching', label: 'Researching', colour: 'bg-slate-400' },
+                { key: 'approved', label: 'Approved', colour: 'bg-blue-500' },
+                { key: 'sent', label: 'Sent', colour: 'bg-indigo-500' },
+                { key: 'opened', label: 'Opened', colour: 'bg-violet-500' },
+                { key: 'engaged', label: 'Engaged', colour: 'bg-purple-500' },
+                { key: 'replied', label: 'Replied', colour: 'bg-amber-500' },
+                { key: 'won', label: 'Won', colour: 'bg-emerald-500' },
+              ]
+              const funnelMax = Math.max(...FUNNEL_STAGES.map(s => agg.byStatus[s.key] ?? 0), 1)
+
+              // Drill-down selected prospect
+              const selectedProspect = prospects.find(p => p.id === selectedProspectId) ?? null
+
+              const subTabs: Array<{ id: typeof prospectsSubTab; label: string; icon: React.ElementType }> = [
+                { id: 'overview', label: 'Overview', icon: BarChart2 },
+                { id: 'schedule', label: 'Schedule', icon: Clock },
+                { id: 'pipeline', label: 'Pipeline', icon: TrendingUp },
+                { id: 'breakdowns', label: 'Breakdowns', icon: MapPin },
+                { id: 'queue', label: 'Queue & Activity', icon: Activity },
+              ]
 
               return (
                 <div className="space-y-6">
-                  {/* Pipeline summary stats */}
-                  <div>
-                    <SectionTitle title="Pipeline" subtitle="All prospects across every stage" />
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div className="card rounded-xl p-4">
-                        <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Prospects</div>
-                        <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{prospects.length}</div>
-                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.byStatus.researching ?? 0} researching · {agg.byStatus.approved ?? 0} approved</div>
-                      </div>
-                      <div className="card rounded-xl p-4">
-                        <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Weighted pipeline</div>
-                        <div className="text-2xl font-bold text-[var(--accent)] mt-1">{fmt$(agg.revenue.weightedPipeline)}</div>
-                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">of {fmt$(agg.revenue.totalRevenuePotential)} potential</div>
-                      </div>
-                      <div className="card rounded-xl p-4">
-                        <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Engagement</div>
-                        <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{agg.funnel.totalOpens} opens</div>
-                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.funnel.totalClicks} clicks · {agg.funnel.totalViews} portal views</div>
-                      </div>
-                      <div className="card rounded-xl p-4">
-                        <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Replies / Wins</div>
-                        <div className="text-2xl font-bold text-emerald-600 mt-1">{agg.funnel.totalReplies} / {agg.revenue.wins}</div>
-                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{(agg.funnel.sendOpenRate * 100).toFixed(0)}% open · {(agg.funnel.sendReplyRate * 100).toFixed(1)}% reply</div>
-                      </div>
+                  {/* Header strip — pipeline summary always visible */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="card rounded-xl p-4">
+                      <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Prospects</div>
+                      <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{prospects.length}</div>
+                      <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.byStatus.researching ?? 0} researching · {agg.byStatus.approved ?? 0} approved</div>
+                    </div>
+                    <div className="card rounded-xl p-4">
+                      <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Weighted pipeline</div>
+                      <div className="text-2xl font-bold text-[var(--accent)] mt-1">{fmt$(agg.revenue.weightedPipeline)}</div>
+                      <div className="text-xs text-[var(--muted-foreground)] mt-0.5">of {fmt$(agg.revenue.totalRevenuePotential)} potential</div>
+                    </div>
+                    <div className="card rounded-xl p-4">
+                      <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Engagement</div>
+                      <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{agg.funnel.totalOpens} opens</div>
+                      <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.funnel.totalClicks} clicks · {agg.funnel.totalViews} portal views</div>
+                    </div>
+                    <div className="card rounded-xl p-4">
+                      <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Replies / Wins</div>
+                      <div className="text-2xl font-bold text-emerald-600 mt-1">{agg.funnel.totalReplies} / {agg.revenue.wins}</div>
+                      <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{(agg.funnel.sendOpenRate * 100).toFixed(0)}% open · {(agg.funnel.sendReplyRate * 100).toFixed(1)}% reply</div>
                     </div>
                   </div>
 
-                  {/* Re-engage queue */}
-                  {reEngageQueue.length > 0 && (
-                    <div>
-                      <SectionTitle title="Re-engage queue" subtitle="Engaged but no reply · last contact 14+ days ago" />
-                      <div className="card rounded-2xl overflow-hidden">
-                        <table className="w-full text-sm">
-                          <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
-                            <tr>
-                              <th className="text-left px-4 py-3 font-semibold">Clinic</th>
-                              <th className="text-left px-4 py-3 font-semibold">Region</th>
-                              <th className="text-right px-4 py-3 font-semibold">Score</th>
-                              <th className="text-right px-4 py-3 font-semibold">Last activity</th>
-                              <th className="text-right px-4 py-3 font-semibold">Pipeline value</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {reEngageQueue.map(p => (
-                              <tr key={p.id} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.02)]">
-                                <td className="px-4 py-3">
-                                  <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
-                                  <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName} · {p.contactDiscipline}</div>
-                                </td>
-                                <td className="px-4 py-3 text-[var(--muted-foreground)]">{p.region}, {p.state}</td>
-                                <td className="px-4 py-3 text-right font-bold text-[var(--accent)]">{p.engagementScore}</td>
-                                <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">
-                                  {p.lastPortalViewAt ? `viewed ${timeAgo(new Date(p.lastPortalViewAt).getTime())}` : p.lastSentAt ? `sent ${timeAgo(new Date(p.lastSentAt).getTime())}` : '—'}
-                                </td>
-                                <td className="px-4 py-3 text-right font-semibold">{fmt$(p.recoCohortTotal)}</td>
+                  {/* Sub-tab nav */}
+                  <div className="flex gap-1 border-b border-[rgba(13,115,119,0.1)] overflow-x-auto">
+                    {subTabs.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        onClick={() => setProspectsSubTab(id)}
+                        className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                          prospectsSubTab === id
+                            ? 'border-[var(--accent)] text-[var(--accent)]'
+                            : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                        }`}
+                      >
+                        <Icon size={14} />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* ── Overview ── */}
+                  {prospectsSubTab === 'overview' && (
+                    <div className="space-y-6">
+                      {/* Top 10 by weighted value */}
+                      <div>
+                        <SectionTitle title="Top weighted prospects" subtitle="Highest expected-value prospects · weighted by stage probability" />
+                        <div className="card rounded-2xl overflow-hidden">
+                          <table className="w-full text-sm">
+                            <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                              <tr>
+                                <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                                <th className="text-left px-4 py-3 font-semibold">Region</th>
+                                <th className="text-left px-4 py-3 font-semibold">Wave</th>
+                                <th className="text-left px-4 py-3 font-semibold">Variant</th>
+                                <th className="text-right px-4 py-3 font-semibold">Cohort</th>
+                                <th className="text-right px-4 py-3 font-semibold">Weighted</th>
+                                <th className="text-left px-4 py-3 font-semibold">Status</th>
+                                <th className="text-left px-4 py-3 font-semibold"></th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {[...prospects].sort((a, b) => b.weightedPipelineValue - a.weightedPipelineValue).slice(0, 10).map(p => (
+                                <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer">
+                                  <td className="px-4 py-3">
+                                    <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                    <div className="text-xs text-[var(--muted-foreground)]">{p.contactDiscipline} · {p.clinicalCount} clinical</div>
+                                  </td>
+                                  <td className="px-4 py-3 text-[var(--muted-foreground)] text-xs">{p.region}, {p.state}</td>
+                                  <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-slate-100 font-semibold">{p.priorityWave ?? '—'}</span></td>
+                                  <td className="px-4 py-3 text-xs capitalize text-[var(--muted-foreground)]">{p.pitchVariant ?? 'metro'}</td>
+                                  <td className="px-4 py-3 text-right font-semibold">{fmt$(p.recoCohortTotal)}</td>
+                                  <td className="px-4 py-3 text-right font-bold text-[var(--accent)]">{fmt$(p.weightedPipelineValue)}</td>
+                                  <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
+                                  <td className="px-4 py-3 text-xs text-[var(--muted-foreground)]">→</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Upcoming outreach */}
-                  {upcomingOutreach.length > 0 && (
-                    <div>
-                      <SectionTitle title="Upcoming outreach" subtitle="Approved / researching prospects awaiting first send · sorted by cohort value" />
-                      <div className="card rounded-2xl overflow-hidden">
-                        <table className="w-full text-sm">
-                          <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
-                            <tr>
-                              <th className="text-left px-4 py-3 font-semibold">Clinic</th>
-                              <th className="text-left px-4 py-3 font-semibold">Region</th>
-                              <th className="text-right px-4 py-3 font-semibold">Team</th>
-                              <th className="text-left px-4 py-3 font-semibold">Cohort</th>
-                              <th className="text-right px-4 py-3 font-semibold">Total</th>
-                              <th className="text-left px-4 py-3 font-semibold">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {upcomingOutreach.map(p => (
-                              <tr key={p.id} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.02)]">
-                                <td className="px-4 py-3">
-                                  <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
-                                  <div className="text-xs text-[var(--muted-foreground)]">{p.city}</div>
-                                </td>
-                                <td className="px-4 py-3 text-[var(--muted-foreground)]">{p.region}, {p.state}</td>
-                                <td className="px-4 py-3 text-right">{p.clinicalCount}<span className="text-xs text-[var(--muted-foreground)]"> / {p.totalCount}</span></td>
-                                <td className="px-4 py-3 text-xs">{p.cohortRecommendation} · {p.recoCohortClinicians}</td>
-                                <td className="px-4 py-3 text-right font-semibold">{fmt$(p.recoCohortTotal)}</td>
-                                <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                  {/* ── Schedule ── */}
+                  {prospectsSubTab === 'schedule' && (
+                    <div className="space-y-6">
+                      <div className="card rounded-2xl p-4 bg-[rgba(13,115,119,0.03)]">
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          Schedule is auto-generated: P1 first, Mon/Wed/Fri only, ≤5 sends per day. Re-run <code className="px-1.5 py-0.5 bg-white rounded">/api/admin/prospect-bootstrap-targets</code> with <code>{`{"startDate":"YYYY-MM-DD"}`}</code> to rebuild.
+                        </p>
+                      </div>
+                      {scheduleDays.length === 0 ? (
+                        <div className="card rounded-2xl p-6 text-center text-sm text-[var(--muted-foreground)]">No scheduled sends — all prospects already sent or no schedule applied.</div>
+                      ) : (
+                        <div className="space-y-3">
+                          {scheduleDays.map(([day, items]) => {
+                            const date = new Date(day + 'T00:00:00')
+                            const weekday = date.toLocaleDateString('en-AU', { weekday: 'long' })
+                            const dateLabel = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+                            const dayTotal = items.reduce((acc, p) => acc + p.recoCohortTotal, 0)
+                            return (
+                              <div key={day} className="card rounded-2xl overflow-hidden">
+                                <div className="px-4 py-3 bg-[rgba(13,115,119,0.04)] flex items-center justify-between">
+                                  <div>
+                                    <div className="text-sm font-bold text-[var(--foreground)]">{weekday}, {dateLabel}</div>
+                                    <div className="text-xs text-[var(--muted-foreground)]">{items.length} send{items.length === 1 ? '' : 's'} · {fmt$(dayTotal)} potential</div>
+                                  </div>
+                                </div>
+                                <table className="w-full text-sm">
+                                  <tbody>
+                                    {items.map(p => (
+                                      <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer">
+                                        <td className="px-4 py-2.5">
+                                          <span className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider">{p.priorityWave ?? '—'}</span>
+                                        </td>
+                                        <td className="px-4 py-2.5">
+                                          <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                          <div className="text-xs text-[var(--muted-foreground)]">{p.city}, {p.state}</div>
+                                        </td>
+                                        <td className="px-4 py-2.5 text-xs"><span className="px-2 py-0.5 rounded-full bg-slate-100 font-semibold capitalize">{p.pitchVariant ?? 'metro'}</span></td>
+                                        <td className="px-4 py-2.5 text-right text-xs">{p.clinicalCount} clinical</td>
+                                        <td className="px-4 py-2.5 text-right font-semibold">{fmt$(p.recoCohortTotal)}</td>
+                                        <td className="px-4 py-2.5 text-right text-xs text-[var(--muted-foreground)]">{p.nextTemplateSlug ?? 'initial'}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Pipeline funnel ── */}
+                  {prospectsSubTab === 'pipeline' && (
+                    <div className="space-y-6">
+                      <div>
+                        <SectionTitle title="Pipeline funnel" subtitle="Prospect count + conversion rate at each stage" />
+                        <div className="card rounded-2xl p-6 space-y-3">
+                          {FUNNEL_STAGES.map(stage => {
+                            const count = agg.byStatus[stage.key] ?? 0
+                            const widthPct = (count / funnelMax) * 100
+                            const stageRevenue = prospects
+                              .filter(p => p.status === stage.key)
+                              .reduce((acc, p) => acc + p.recoCohortTotal, 0)
+                            return (
+                              <div key={stage.key} className="flex items-center gap-3">
+                                <div className="w-24 text-xs font-semibold text-[var(--foreground)]">{stage.label}</div>
+                                <div className="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
+                                  <div className={`absolute inset-y-0 left-0 ${stage.colour} flex items-center justify-end pr-3 text-xs font-bold text-white`} style={{ width: `${widthPct}%`, minWidth: count > 0 ? '40px' : 0 }}>
+                                    {count > 0 && count}
+                                  </div>
+                                </div>
+                                <div className="w-32 text-xs text-right text-[var(--muted-foreground)]">{fmt$(stageRevenue)}</div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="card rounded-xl p-4">
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Send → Open conversion</div>
+                          <div className="text-3xl font-bold text-[var(--accent)]">{(agg.funnel.sendOpenRate * 100).toFixed(1)}%</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalOpens} opens / {agg.funnel.totalSends} sends</div>
+                        </div>
+                        <div className="card rounded-xl p-4">
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Open → Click conversion</div>
+                          <div className="text-3xl font-bold text-[var(--accent)]">{(agg.funnel.openClickRate * 100).toFixed(1)}%</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalClicks} clicks / {agg.funnel.totalOpens} opens</div>
+                        </div>
+                        <div className="card rounded-xl p-4">
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Send → Reply conversion</div>
+                          <div className="text-3xl font-bold text-amber-600">{(agg.funnel.sendReplyRate * 100).toFixed(2)}%</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalReplies} replies / {agg.funnel.totalSends} sends</div>
+                        </div>
+                        <div className="card rounded-xl p-4">
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Reply → Win conversion</div>
+                          <div className="text-3xl font-bold text-emerald-600">{(agg.funnel.replyToWinRate * 100).toFixed(1)}%</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.revenue.wins} wins / {agg.funnel.totalReplies} replies</div>
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Sent outreach */}
-                  {sentTable.length > 0 && (
-                    <div>
-                      <SectionTitle title="Outreach sent" subtitle="Every prospect with at least one send · most recent first" />
-                      <div className="card rounded-2xl overflow-hidden overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
-                            <tr>
-                              <th className="text-left px-4 py-3 font-semibold">Clinic</th>
-                              <th className="text-left px-4 py-3 font-semibold">Location</th>
-                              <th className="text-right px-4 py-3 font-semibold">Clinicians</th>
-                              <th className="text-left px-4 py-3 font-semibold">Cohort tier</th>
-                              <th className="text-right px-4 py-3 font-semibold">Sends</th>
-                              <th className="text-right px-4 py-3 font-semibold">Opens / Clicks</th>
-                              <th className="text-right px-4 py-3 font-semibold">Portal views</th>
-                              <th className="text-right px-4 py-3 font-semibold">Replies</th>
-                              <th className="text-right px-4 py-3 font-semibold">Last sent</th>
-                              <th className="text-left px-4 py-3 font-semibold">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sentTable.map(p => (
-                              <tr key={p.id} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.02)]">
-                                <td className="px-4 py-3">
-                                  <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
-                                  <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName}</div>
-                                </td>
-                                <td className="px-4 py-3 text-[var(--muted-foreground)] text-xs">{p.city}, {p.state}<div>{p.region}</div></td>
-                                <td className="px-4 py-3 text-right">{p.clinicalCount}<span className="text-xs text-[var(--muted-foreground)]"> / {p.totalCount}</span></td>
-                                <td className="px-4 py-3 text-xs">{p.cohortRecommendation}<div className="text-[var(--muted-foreground)]">{fmt$(p.recoCohortTotal)}</div></td>
-                                <td className="px-4 py-3 text-right">{p.totalSends}</td>
-                                <td className="px-4 py-3 text-right">{p.totalOpens} / {p.totalClicks}</td>
-                                <td className="px-4 py-3 text-right">{p.totalPortalViews}</td>
-                                <td className="px-4 py-3 text-right">{p.replies > 0 ? <span className="font-bold text-emerald-600">{p.replies}</span> : '—'}</td>
-                                <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">{p.lastSentAt ? timeAgo(new Date(p.lastSentAt).getTime()) : '—'}<div>{p.lastSentTemplate}</div></td>
-                                <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                  {/* ── Breakdowns ── */}
+                  {prospectsSubTab === 'breakdowns' && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <BreakdownCard title="By region" data={agg.byRegion} icon={MapPin} />
+                      <BreakdownCard title="By cohort tier" data={agg.byCohort} icon={Target} />
+                      <BreakdownCard title="By travel band" data={agg.byTravelBand} icon={Globe} />
+                      <BreakdownCard title="By priority wave" data={prospects.reduce<Record<string, number>>((acc, p) => {
+                        const k = p.priorityWave ?? 'unassigned'
+                        acc[k] = (acc[k] ?? 0) + 1
+                        return acc
+                      }, {})} icon={Flame} />
+                      <BreakdownCard title="By discipline" data={prospects.reduce<Record<string, number>>((acc, p) => {
+                        acc[p.contactDiscipline] = (acc[p.contactDiscipline] ?? 0) + 1
+                        return acc
+                      }, {})} icon={Users} />
+                      <BreakdownCard title="By pitch variant" data={prospects.reduce<Record<string, number>>((acc, p) => {
+                        const k = p.pitchVariant ?? 'metro'
+                        acc[k] = (acc[k] ?? 0) + 1
+                        return acc
+                      }, {})} icon={MousePointer} />
                     </div>
                   )}
 
-                  {prospects.length === 0 && (
-                    <div className="card rounded-2xl p-8 text-center">
-                      <Building2 size={32} className="mx-auto text-[var(--muted-foreground)] opacity-50 mb-3" />
-                      <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">No prospects yet</h3>
-                      <p className="text-sm text-[var(--muted-foreground)]">Bulk-insert your P1 list via <code className="text-xs bg-[rgba(13,115,119,0.06)] px-1.5 py-0.5 rounded">/api/admin/prospect-bulk-create</code> to start tracking B2B outreach here.</p>
+                  {/* ── Queue & Activity (combines re-engage queue + sent table + drill-down) ── */}
+                  {prospectsSubTab === 'queue' && (
+                    <div className="space-y-6">
+                      {/* Drill-down modal */}
+                      {selectedProspect && (
+                        <div className="card rounded-2xl p-6 border-[rgba(13,115,119,0.25)] bg-[rgba(13,115,119,0.02)]">
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Drill-down · {selectedProspect.priorityWave}</div>
+                              <h3 className="text-xl font-bold text-[var(--foreground)] mt-1">{selectedProspect.shortName}</h3>
+                              <p className="text-sm text-[var(--muted-foreground)]">{selectedProspect.contactFullName} · {selectedProspect.contactRole ?? selectedProspect.contactDiscipline} · {selectedProspect.contactEmail}</p>
+                              <p className="text-xs text-[var(--muted-foreground)] mt-1">{selectedProspect.city}, {selectedProspect.state} · {selectedProspect.region}</p>
+                            </div>
+                            <button onClick={() => setSelectedProspectId(null)} className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Close ×</button>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                            <div className="bg-white rounded-lg p-3">
+                              <div className="text-xs text-[var(--muted-foreground)]">Team</div>
+                              <div className="text-lg font-bold">{selectedProspect.clinicalCount} clinical</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">of {selectedProspect.totalCount} total</div>
+                            </div>
+                            <div className="bg-white rounded-lg p-3">
+                              <div className="text-xs text-[var(--muted-foreground)]">Cohort</div>
+                              <div className="text-lg font-bold capitalize">{selectedProspect.cohortRecommendation}</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">{fmt$(selectedProspect.recoCohortTotal)}</div>
+                            </div>
+                            <div className="bg-white rounded-lg p-3">
+                              <div className="text-xs text-[var(--muted-foreground)]">Engagement</div>
+                              <div className="text-lg font-bold">{selectedProspect.totalOpens}/{selectedProspect.totalClicks}/{selectedProspect.totalPortalViews}</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">opens / clicks / views</div>
+                            </div>
+                            <div className="bg-white rounded-lg p-3">
+                              <div className="text-xs text-[var(--muted-foreground)]">Status</div>
+                              <div className="text-lg font-bold capitalize">{selectedProspect.status}</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">{selectedProspect.scheduledSendAt ? `scheduled ${new Date(selectedProspect.scheduledSendAt).toLocaleDateString('en-AU')}` : 'no schedule'}</div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-wrap mb-4">
+                            <a href={`https://portal.concussion-education-australia.com/p/${selectedProspect.slug}?k=${(selectedProspect as ProspectRow & { accessKey?: string }).accessKey ?? ''}`} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-[rgba(13,115,119,0.2)] hover:bg-[rgba(13,115,119,0.04)] flex items-center gap-1.5">
+                              <ExternalLink size={12} /> Open prospect portal
+                            </a>
+                            <a href={`mailto:${selectedProspect.contactEmail}?subject=${encodeURIComponent('Following up — concussion training for ' + selectedProspect.shortName)}`} className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-[rgba(13,115,119,0.2)] hover:bg-[rgba(13,115,119,0.04)] flex items-center gap-1.5">
+                              <Mail size={12} /> Personal nudge
+                            </a>
+                          </div>
+                          <div className="bg-white rounded-lg p-3">
+                            <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-2">Send history ({selectedProspect.sends.length})</div>
+                            {selectedProspect.sends.length === 0 ? (
+                              <p className="text-xs text-[var(--muted-foreground)]">No sends yet.</p>
+                            ) : (
+                              <ul className="space-y-2">
+                                {selectedProspect.sends.map(s => (
+                                  <li key={s.id} className="text-xs border-l-2 border-[rgba(13,115,119,0.2)] pl-3">
+                                    <div className="font-semibold text-[var(--foreground)]">{s.subject}</div>
+                                    <div className="text-[var(--muted-foreground)]">{new Date(s.sentAt).toLocaleString('en-AU')} · {s.templateSlug} · {s.openedCount} opens · {s.clickedCount} clicks{s.repliedAt ? ` · replied ${new Date(s.repliedAt).toLocaleDateString('en-AU')}` : ''}</div>
+                                    <div className="text-[var(--muted-foreground)] mt-1 line-clamp-2 opacity-70">{s.bodyPreview}</div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Re-engage queue */}
+                      {reEngageQueue.length > 0 && (
+                        <div>
+                          <SectionTitle title="Re-engage queue" subtitle="Engaged but no reply · last contact 14+ days ago · ranked by engagement score" />
+                          <div className="card rounded-2xl overflow-hidden">
+                            <table className="w-full text-sm">
+                              <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                                <tr>
+                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Region</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Score</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Last activity</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Value</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {reEngageQueue.map(p => (
+                                  <tr key={p.id} onClick={() => setSelectedProspectId(p.id)} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer">
+                                    <td className="px-4 py-3">
+                                      <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                      <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName} · {p.contactDiscipline}</div>
+                                    </td>
+                                    <td className="px-4 py-3 text-[var(--muted-foreground)]">{p.region}, {p.state}</td>
+                                    <td className="px-4 py-3 text-right font-bold text-[var(--accent)]">{p.engagementScore}</td>
+                                    <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">
+                                      {p.lastPortalViewAt ? `viewed ${timeAgo(new Date(p.lastPortalViewAt).getTime())}` : p.lastSentAt ? `sent ${timeAgo(new Date(p.lastSentAt).getTime())}` : '—'}
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-semibold">{fmt$(p.recoCohortTotal)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sent outreach */}
+                      {sentTable.length > 0 && (
+                        <div>
+                          <SectionTitle title="Outreach sent" subtitle="Every prospect with at least one send · most recent first · click to drill in" />
+                          <div className="card rounded-2xl overflow-hidden overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                                <tr>
+                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Location</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Team</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Cohort</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Sends</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Opens / Clicks</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Views</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Replies</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Last sent</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sentTable.map(p => (
+                                  <tr key={p.id} onClick={() => setSelectedProspectId(p.id)} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer">
+                                    <td className="px-4 py-3">
+                                      <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                      <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName}</div>
+                                    </td>
+                                    <td className="px-4 py-3 text-[var(--muted-foreground)] text-xs">{p.city}, {p.state}<div>{p.region}</div></td>
+                                    <td className="px-4 py-3 text-right">{p.clinicalCount}<span className="text-xs text-[var(--muted-foreground)]"> / {p.totalCount}</span></td>
+                                    <td className="px-4 py-3 text-xs capitalize">{p.cohortRecommendation}<div className="text-[var(--muted-foreground)]">{fmt$(p.recoCohortTotal)}</div></td>
+                                    <td className="px-4 py-3 text-right">{p.totalSends}</td>
+                                    <td className="px-4 py-3 text-right">{p.totalOpens} / {p.totalClicks}</td>
+                                    <td className="px-4 py-3 text-right">{p.totalPortalViews}</td>
+                                    <td className="px-4 py-3 text-right">{p.replies > 0 ? <span className="font-bold text-emerald-600">{p.replies}</span> : '—'}</td>
+                                    <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">{p.lastSentAt ? timeAgo(new Date(p.lastSentAt).getTime()) : '—'}<div>{p.lastSentTemplate}</div></td>
+                                    <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

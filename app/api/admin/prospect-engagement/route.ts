@@ -37,6 +37,10 @@ interface ClinicDbRow {
   notes: string | null
   created_at: string
   updated_at: string
+  scheduled_send_at: string | null
+  next_template_slug: string | null
+  priority_wave: string | null
+  pitch_variant: string | null
 }
 
 interface OutreachLogRow {
@@ -181,6 +185,10 @@ export async function GET(req: NextRequest) {
         notes: c.notes,
         createdAt: c.created_at,
         updatedAt: c.updated_at,
+        scheduledSendAt: c.scheduled_send_at,
+        nextTemplateSlug: c.next_template_slug,
+        priorityWave: c.priority_wave,
+        pitchVariant: c.pitch_variant,
         // outreach summary
         totalSends: sends.length,
         totalOpens,
