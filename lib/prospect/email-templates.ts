@@ -86,7 +86,7 @@ const BASE_HTML_STYLE = `
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     slug: 'initial',
-    subjectTemplate: '{clinic_short_name} · become the concussion hub for {region_phrase} (OA-endorsed team training · 14 CPD)',
+    subjectTemplate: '{clinic_short_name} · become the concussion hub for {city} (OA-endorsed team training · 14 CPD)',
     /**
      * Visual T1 — HTML email. Short text + bento stats + dashboard screenshot
      * + one CTA. The text-only fallback (used by plain-text email clients)
