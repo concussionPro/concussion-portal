@@ -42,21 +42,27 @@ export async function GET(req: NextRequest) {
     ? { ...clinic, contactDiscipline: disciplineOverride }
     : clinic
 
-  const rendered = mergeTemplate(template, c, BASE_URL, 'preview-' + Date.now().toString(36), {
-    regionalVariant: variant === 'regional',
-    networkVariant: variant === 'network' && networkSize ? { networkSize, nearestMetro } : undefined,
-    nearestMetro,
-  })
+  try {
+    const rendered = mergeTemplate(template, c, BASE_URL, 'preview-' + Date.now().toString(36), {
+      regionalVariant: variant === 'regional',
+      networkVariant: variant === 'network' && networkSize ? { networkSize, nearestMetro } : undefined,
+      nearestMetro,
+    })
 
-  if (renderMode === 'json') {
-    return NextResponse.json({ ok: true, subject: rendered.subject, html: rendered.html, text: rendered.text })
+    if (renderMode === 'json') {
+      return NextResponse.json({ ok: true, subject: rendered.subject, html: rendered.html, text: rendered.text })
+    }
+
+    return new NextResponse(rendered.html, {
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'x-email-subject': rendered.subject,
+      },
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    const stack = err instanceof Error ? err.stack : ''
+    console.error('[prospect-email-preview] FAILED:', message, stack)
+    return NextResponse.json({ error: 'mergeTemplate failed', message, stack: stack?.split('\n').slice(0, 8) }, { status: 500 })
   }
-
-  // Return raw HTML so it can be opened in a browser tab
-  return new NextResponse(rendered.html, {
-    headers: {
-      'content-type': 'text/html; charset=utf-8',
-      'x-email-subject': rendered.subject,
-    },
-  })
 }
