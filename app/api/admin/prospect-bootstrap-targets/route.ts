@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
   for (const target of PROSPECT_TARGETS) {
     try {
-      const scheduledAt = schedule.get(target.slug)!
+      const scheduledAt = schedule.get(target.slug) // undefined for archived
       if (dryRun) {
         results.push({
           slug: target.slug,
@@ -66,9 +66,29 @@ export async function POST(req: NextRequest) {
 
       const existing = await getClinicBySlug(target.slug)
       if (existing) {
+        // Full refresh: update every field that may have changed since the
+        // initial seed (research agent's findings, archive flag, contact
+        // email source, team counts etc).
         await sql`
           UPDATE prospect_clinics
-          SET scheduled_send_at = ${scheduledAt.toISOString()},
+          SET
+              name = ${target.name},
+              short_name = ${target.shortName},
+              city = ${target.city},
+              state = ${target.state},
+              region = ${target.region},
+              contact_first_name = ${target.contactFirstName},
+              contact_full_name = ${target.contactFullName},
+              contact_email = ${target.contactEmail},
+              contact_role = ${target.contactRole ?? null},
+              contact_discipline = ${target.contactDiscipline},
+              clinic_website_url = ${target.clinicWebsiteUrl},
+              team = ${JSON.stringify(target.team)}::jsonb,
+              travel_band = ${target.travelBand},
+              cohort_recommendation = ${target.cohortRecommendation},
+              status = ${target.status},
+              notes = ${target.notes ?? null},
+              scheduled_send_at = ${scheduledAt?.toISOString() ?? null},
               next_template_slug = COALESCE(next_template_slug, 'initial'),
               priority_wave = ${target.priorityWave},
               pitch_variant = ${target.pitchVariant},
@@ -81,7 +101,7 @@ export async function POST(req: NextRequest) {
           skipped: true,
           id: existing.id,
           accessKey: existing.accessKey,
-          scheduledFor: scheduledAt.toISOString(),
+          scheduledFor: scheduledAt?.toISOString(),
         })
         continue
       }
@@ -111,10 +131,10 @@ export async function POST(req: NextRequest) {
         notes: target.notes,
       })
 
-      // Set schedule + priority on the new row
+      // Set schedule + priority on the new row (skip schedule if archived)
       await sql`
         UPDATE prospect_clinics
-        SET scheduled_send_at = ${scheduledAt.toISOString()},
+        SET scheduled_send_at = ${scheduledAt?.toISOString() ?? null},
             next_template_slug = 'initial',
             priority_wave = ${target.priorityWave},
             pitch_variant = ${target.pitchVariant},
@@ -127,7 +147,7 @@ export async function POST(req: NextRequest) {
         ok: true,
         id: created.id,
         accessKey: created.accessKey,
-        scheduledFor: scheduledAt.toISOString(),
+        scheduledFor: scheduledAt?.toISOString(),
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
