@@ -260,7 +260,7 @@ function ZacCredibility() {
             B.Clin.Sci., M.Ost.Med. · AHPRA-registered · Course Director, Concussion Education Australia
           </p>
           <p className="text-[12.5px] text-foreground leading-relaxed">
-            Over a decade specialising in concussion management — including work with national and professional ice-hockey leagues across New Zealand and Canada. Course director and clinical mentor to early-career clinicians Australia-wide.
+            Over a decade specialising in concussion — work with national + professional ice-hockey leagues across New Zealand and Canada, and quietly upskilling allied health teams across Australia on diagnosis, structured management, and return-to-play clearance.
           </p>
         </div>
       </div>
