@@ -40,24 +40,22 @@ const T1_NETWORK_OPENING =
   'Saw your team page — {network_size} locations across {region} is the kind of network that benefits from one trained clinical model rolled out everywhere, not a piecemeal CPD spend.'
 
 const BASE_HTML_STYLE = `
-  body { margin:0; padding:0; background:#f8fafc; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#1a2332; }
-  .wrap { max-width: 600px; margin: 0 auto; padding: 32px 16px; }
-  .card { background: #ffffff; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; }
-  h1 { font-size: 24px; line-height: 1.2; margin: 0 0 12px; font-weight: 800; letter-spacing: -0.01em; color: #0a5a5e; }
+  body { margin:0; padding:0; background:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#1a2332; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
+  .card { background: #ffffff; border-radius: 18px; padding: 28px 28px 24px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
   p { font-size: 15px; line-height: 1.55; margin: 0 0 14px; color: #1a2332; }
-  .muted { color: #64748b; font-size: 13px; }
-  .bento { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; }
-  .stat { background: #f1f5f9; border-radius: 10px; padding: 12px 14px; }
-  .stat .v { font-size: 18px; font-weight: 800; color: #0a5a5e; line-height: 1.1; }
-  .stat .l { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; font-weight: 600; }
-  .cta { display: inline-block; background: #0d7377; color: #ffffff; padding: 14px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 16px 0; }
-  .cta:hover { background: #0a5a5e; }
-  .secondary { display: block; font-size: 13px; color: #475569; margin-top: 12px; }
+  .bento { display: table; width: 100%; border-spacing: 6px 0; margin: 12px -6px 4px; }
+  .bento-row { display: table-row; }
+  .stat { display: table-cell; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 14px; vertical-align: top; width: 33%; }
+  .stat .v { font-size: 22px; font-weight: 800; color: #0a5a5e; line-height: 1.05; letter-spacing: -0.01em; }
+  .stat .l { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 5px; font-weight: 600; line-height: 1.3; }
+  .cta { display: inline-block; background: #0d7377; color: #ffffff; padding: 14px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 14px 0 4px; }
+  .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 6px; }
   .secondary a { color: #0a5a5e; }
-  .preview-img { display: block; width: 100%; max-width: 568px; height: auto; border-radius: 12px; border: 1px solid #e2e8f0; margin: 16px 0; }
-  .sig { font-size: 13px; color: #475569; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; line-height: 1.5; }
-  .sig strong { color: #1a2332; }
-  .unsub { font-size: 11px; color: #94a3b8; margin-top: 12px; }
+  .preview-img { display: block; width: 100%; max-width: 540px; height: auto; border-radius: 14px; border: 1px solid #e2e8f0; margin: 14px 0 4px; }
+  .sig { font-size: 12px; color: #64748b; margin-top: 20px; padding-top: 14px; border-top: 1px solid #f1f5f9; line-height: 1.55; }
+  .sig strong { color: #1a2332; font-size: 13px; }
+  .unsub { font-size: 11px; color: #cbd5e1; margin-top: 10px; }
   .unsub a { color: #94a3b8; text-decoration: underline; }
 `
 
@@ -77,26 +75,21 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>{opening_line}</p>
+      <p>{opening_line} I built a private dashboard for {clinic_short_name} — sample module, fillable templates, your team's pricing.</p>
 
-      <div class="bento">
-        <div class="stat"><div class="v">14</div><div class="l">CPD hrs · OA endorsed</div></div>
-        <div class="stat"><div class="v">8 modules</div><div class="l">Online + on-site at your clinic</div></div>
-        <div class="stat"><div class="v">A$1,000</div><div class="l">Per clinician on-site (vs A$1,400 public)</div></div>
-        <div class="stat"><div class="v">1 day</div><div class="l">Whole team trained together</div></div>
-      </div>
+      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="540" height="284" /></a>
 
-      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview portal" class="preview-img" width="568" height="298" /></a>
+      <div class="bento"><div class="bento-row">
+        <div class="stat"><div class="v">180,000+</div><div class="l">AU sport-related concussions / year (AIS)</div></div>
+        <div class="stat"><div class="v">6&ndash;10</div><div class="l">Sessions per case · assessment → return-to-play</div></div>
+        <div class="stat"><div class="v">1 day</div><div class="l">On-site, whole team trained · 14 CPD · OA endorsed</div></div>
+      </div></div>
 
-      <p style="font-size:13px;color:#475569;">A private preview portal for {clinic_short_name} — sample module, fillable templates, pricing for your team size.</p>
-
-      <a href="{portal_url}" class="cta">Open your preview →</a>
+      <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
       <span class="secondary">Or book 20 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
 
       <div class="sig">
-        <strong>Zac Lewis, Osteopath</strong> · B.Clin.Sci., M.Ost.Med.<br/>
-        AHPRA-registered · Founder, Concussion Education Australia<br/>
-        Worked with national + professional ice-hockey leagues in NZ &amp; Canada
+        <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, CEA
       </div>
 
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
@@ -116,19 +109,20 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>Following up on my note from last week. Two things worth the 5-minute skim even if a cohort isn't right for {clinic_short_name} this year:</p>
+      <p>Following up — preview dashboard for {clinic_short_name} is still live:</p>
 
-      <div class="bento">
-        <div class="stat"><div class="v">Module 1</div><div class="l">Free trial · interactive quiz</div></div>
+      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="540" height="284" /></a>
+
+      <div class="bento"><div class="bento-row">
+        <div class="stat"><div class="v">Module 1</div><div class="l">Free interactive trial · 30 min</div></div>
         <div class="stat"><div class="v">140+</div><div class="l">Peer-reviewed references</div></div>
-      </div>
+        <div class="stat"><div class="v">14 CPD</div><div class="l">OA endorsed · on-site at your clinic</div></div>
+      </div></div>
 
-      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview portal" class="preview-img" width="568" height="298" /></a>
-
-      <a href="{portal_url}" class="cta">Open your preview →</a>
+      <a href="{portal_url}" class="cta">Open dashboard →</a>
       <span class="secondary">Or book 20 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
 
-      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, Concussion Education Australia</div>
+      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA</div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
     </div>
   </div>
@@ -205,6 +199,9 @@ export function mergeTemplate(
   // Build OG image URL with FULL query-string payload so the image renders
   // even when the prospect isn't in the DB (sample sends, previews). The
   // route prefers DB lookup by slug, falls back to query params if not found.
+  // Cache-bust each send so Gmail's image proxy (ci3.googleusercontent.com)
+  // doesn't serve a stale 4xx from a previous attempt. The OG route ignores
+  // the `v` param.
   const ogParams = new URLSearchParams({
     slug: clinic.slug,
     name: clinic.shortName,
@@ -213,6 +210,7 @@ export function mergeTemplate(
     region: clinic.region,
     breakdown: teamBreakdownString(clinic.team),
     clinical: String(clinicalCount(clinic.team)),
+    v: Date.now().toString(36),
   })
   const ogImageUrl = `${baseUrl}/api/prospect/og-image?${ogParams.toString()}`
 
