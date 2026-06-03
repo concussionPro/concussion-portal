@@ -1,5 +1,5 @@
 import type { EmailTemplate, Discipline, ProspectClinic } from './types'
-import { dominantDiscipline, teamBreakdownString, teamTotal } from './pricing'
+import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount } from './pricing'
 
 /**
  * Discipline-aware T1 opening line. Single sentence — sets context fast.
@@ -86,7 +86,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
         <div class="stat"><div class="v">1 day</div><div class="l">Whole team trained together</div></div>
       </div>
 
-      <a href="{portal_url}"><img src="{base_url}/api/prospect/og-image?slug={slug}" alt="{clinic_short_name} preview portal" class="preview-img" /></a>
+      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview portal" class="preview-img" width="568" height="298" /></a>
 
       <p style="font-size:13px;color:#475569;">A private preview portal for {clinic_short_name} — sample module, fillable templates, pricing for your team size.</p>
 
@@ -123,7 +123,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
         <div class="stat"><div class="v">140+</div><div class="l">Peer-reviewed references</div></div>
       </div>
 
-      <a href="{portal_url}"><img src="{base_url}/api/prospect/og-image?slug={slug}" alt="{clinic_short_name} preview portal" class="preview-img" /></a>
+      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview portal" class="preview-img" width="568" height="298" /></a>
 
       <a href="{portal_url}" class="cta">Open your preview →</a>
       <span class="secondary">Or book 20 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
@@ -202,6 +202,20 @@ export function mergeTemplate(
   const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}`
   const unsubscribeLinkOnly = `${baseUrl}/api/prospect/unsubscribe?t=${unsubscribeToken}`
 
+  // Build OG image URL with FULL query-string payload so the image renders
+  // even when the prospect isn't in the DB (sample sends, previews). The
+  // route prefers DB lookup by slug, falls back to query params if not found.
+  const ogParams = new URLSearchParams({
+    slug: clinic.slug,
+    name: clinic.shortName,
+    city: clinic.city,
+    state: clinic.state,
+    region: clinic.region,
+    breakdown: teamBreakdownString(clinic.team),
+    clinical: String(clinicalCount(clinic.team)),
+  })
+  const ogImageUrl = `${baseUrl}/api/prospect/og-image?${ogParams.toString()}`
+
   const variables: Record<string, string | undefined> = {
     base_url: baseUrl,
     clinic_name: clinic.name,
@@ -218,6 +232,7 @@ export function mergeTemplate(
     slug: clinic.slug,
     unsubscribe_link_only: unsubscribeLinkOnly,
     nearest_metro: nearestMetro,
+    og_image_url: ogImageUrl,
   }
 
   const subject = mergeVariables(template.subjectTemplate, variables)

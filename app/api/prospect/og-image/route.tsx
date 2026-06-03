@@ -17,20 +17,65 @@ import { teamBreakdownString, clinicalCount } from '@/lib/prospect/pricing'
 
 export const runtime = 'edge' // ImageResponse needs edge runtime
 
+interface RenderData {
+  shortName: string
+  city: string
+  state: string
+  region: string
+  breakdown: string
+  clinical: number
+}
+
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const slug = url.searchParams.get('slug')
-  if (!slug) {
-    return new Response('Missing slug', { status: 400 })
+
+  let data: RenderData | null = null
+
+  // Path 1 — DB-backed prospect (production sends)
+  if (slug) {
+    try {
+      const clinic = await getClinicBySlug(slug)
+      if (clinic) {
+        data = {
+          shortName: clinic.shortName,
+          city: clinic.city,
+          state: clinic.state,
+          region: clinic.region,
+          breakdown: teamBreakdownString(clinic.team),
+          clinical: clinicalCount(clinic.team),
+        }
+      }
+    } catch {
+      // DB unreachable or schema missing — fall through to query-param path
+    }
   }
 
-  const clinic = await getClinicBySlug(slug)
-  if (!clinic) {
-    return new Response('Not found', { status: 404 })
+  // Path 2 — Query-param fallback (samples + previews, no DB dependency)
+  if (!data) {
+    const name = url.searchParams.get('name')
+    const city = url.searchParams.get('city')
+    const state = url.searchParams.get('state')
+    const region = url.searchParams.get('region')
+    const breakdown = url.searchParams.get('breakdown') ?? url.searchParams.get('team')
+    const clinicalStr = url.searchParams.get('clinical')
+    if (name && city && state && region && breakdown && clinicalStr) {
+      data = {
+        shortName: name,
+        city,
+        state,
+        region,
+        breakdown,
+        clinical: parseInt(clinicalStr, 10) || 0,
+      }
+    }
   }
 
-  const breakdown = teamBreakdownString(clinic.team)
-  const clinical = clinicalCount(clinic.team)
+  if (!data) {
+    return new Response('Missing clinic data — pass ?slug=<db-slug> or all of ?name&city&state&region&breakdown&clinical', { status: 400 })
+  }
+
+  const { shortName, city, state, region, breakdown, clinical } = data
 
   return new ImageResponse(
     (
@@ -83,17 +128,17 @@ export async function GET(req: NextRequest) {
               Prepared for
             </div>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#1a2332', marginTop: 4 }}>
-              {clinic.shortName}
+              {shortName}
             </div>
             <div style={{ fontSize: 11, color: '#64748b' }}>
-              {clinic.city}, {clinic.state}
+              {city}, {state}
             </div>
           </div>
         </div>
 
         {/* Eyebrow */}
         <div style={{ fontSize: 12, color: '#0a5a5e', letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 12, display: 'flex' }}>
-          Concussion Hub Program · {clinic.city}, {clinic.state}
+          Concussion Hub Program · {city}, {state}
         </div>
 
         {/* Big headline — clinic name */}
@@ -108,7 +153,7 @@ export async function GET(req: NextRequest) {
             display: 'flex',
           }}
         >
-          {clinic.shortName} Dashboard
+          {shortName} Dashboard
         </div>
 
         {/* Tagline */}
@@ -122,7 +167,7 @@ export async function GET(req: NextRequest) {
             display: 'flex',
           }}
         >
-          Become the first call for concussion on the {clinic.region}.
+          Become the first call for concussion on the {region}.
         </div>
 
         {/* Team stat */}

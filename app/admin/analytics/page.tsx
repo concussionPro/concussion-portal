@@ -111,7 +111,73 @@ interface Insight {
 }
 
 type Period = '24h' | '7d' | '30d' | '90d'
-type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'google-ads'
+type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'google-ads' | 'prospects'
+
+interface ProspectSend {
+  id: number
+  templateSlug: string
+  subject: string
+  bodyPreview: string
+  sentAt: string
+  resendEmailId: string | null
+  openedCount: number
+  clickedCount: number
+  repliedAt: string | null
+  replyText: string | null
+  replySentiment: string | null
+}
+interface ProspectRow {
+  id: number
+  slug: string
+  shortName: string
+  city: string
+  state: string
+  region: string
+  contactFirstName: string
+  contactFullName: string
+  contactEmail: string
+  contactRole: string | null
+  contactDiscipline: string
+  clinicalCount: number
+  totalCount: number
+  cohortRecommendation: string
+  recoCohortClinicians: number
+  recoCohortPerClinician: number
+  recoCohortTotal: number
+  weightedPipelineValue: number
+  travelBand: string
+  travelSurcharge: number
+  status: string
+  totalSends: number
+  totalOpens: number
+  totalClicks: number
+  replies: number
+  lastSentAt: string | null
+  lastSentTemplate: string | null
+  lastSentSubject: string | null
+  totalPortalViews: number
+  firstPortalViewAt: string | null
+  lastPortalViewAt: string | null
+  sends: ProspectSend[]
+}
+interface ProspectAggregates {
+  byStatus: Record<string, number>
+  byRegion: Record<string, number>
+  byCohort: Record<string, number>
+  byTravelBand: Record<string, number>
+  revenue: { totalRevenuePotential: number; weightedPipeline: number; wins: number }
+  funnel: {
+    totalSends: number; totalOpens: number; totalClicks: number; totalViews: number; totalReplies: number; wins: number
+    sendOpenRate: number; openClickRate: number; sendReplyRate: number; replyToWinRate: number
+  }
+}
+interface ProspectsData {
+  count: number
+  prospects: ProspectRow[]
+  aggregates?: ProspectAggregates
+  status?: string
+  message?: string
+}
 
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -896,6 +962,10 @@ export default function AnalyticsDashboard() {
   const [usersError, setUsersError] = useState<string | null>(null)
   const [usersFilter, setUsersFilter] = useState<'all' | 'preview' | 'paid'>('all')
 
+  // B2B prospects data
+  const [prospectsData, setProspectsData] = useState<ProspectsData | null>(null)
+  const [prospectsError, setProspectsError] = useState<string | null>(null)
+
 
   const fetchData = useCallback(
     async (type: string, extra: Record<string, string> = {}): Promise<any> => {
@@ -941,10 +1011,11 @@ export default function AnalyticsDashboard() {
 
       // Fetch additional admin data (separate endpoints)
       try {
-        const [poolRes, preseasonRes, usersRes] = await Promise.allSettled([
+        const [poolRes, preseasonRes, usersRes, prospectsRes] = await Promise.allSettled([
           fetch('/api/admin/ready-to-train', { cache: 'no-store' }),
           fetch('/api/admin/preseason', { cache: 'no-store' }),
           fetch('/api/admin/emails', { cache: 'no-store' }),
+          fetch('/api/admin/prospect-engagement', { cache: 'no-store' }),
         ])
 
         if (poolRes.status === 'fulfilled' && poolRes.value.ok) {
@@ -974,6 +1045,19 @@ export default function AnalyticsDashboard() {
           const statusCode = usersRes.status === 'fulfilled' ? usersRes.value.status : 'network error'
           setUsersError(`Database connection failed (${statusCode}). Check POSTGRES_URL env var.`)
         }
+        if (prospectsRes.status === 'fulfilled' && prospectsRes.value.ok) {
+          const prospectsJson = await prospectsRes.value.json()
+          if (prospectsJson.ok) {
+            setProspectsData(prospectsJson as ProspectsData)
+            setProspectsError(null)
+          } else {
+            setProspectsError(prospectsJson.error || 'Failed to load prospects')
+          }
+        } else if (prospectsRes.status === 'fulfilled') {
+          setProspectsError(`Prospects endpoint failed (${prospectsRes.value.status})`)
+        } else {
+          setProspectsError('Prospects endpoint network error')
+        }
       } catch (err) {
         console.warn('[Analytics] Admin data load error:', err)
       }
@@ -1002,6 +1086,7 @@ export default function AnalyticsDashboard() {
     { id: 'retargeting', label: 'Retargeting', icon: Target },
     { id: 'pool', label: 'Ready to Train', icon: MapPin },
     { id: 'preseason', label: 'Preseason', icon: Building2 },
+    { id: 'prospects', label: 'B2B Prospects', icon: Building2 },
     { id: 'users', label: 'Users', icon: Mail },
     { id: 'report', label: 'Daily Report', icon: Newspaper },
     { id: 'google-ads', label: 'Google Ads', icon: DollarSign },
@@ -2465,6 +2550,225 @@ export default function AnalyticsDashboard() {
                       ))}
                     </div>
                   </div>
+                </div>
+              )
+            })()}
+
+            {/* ── B2B Prospects ────────────────────────────────────────── */}
+            {activeTab === 'prospects' && (() => {
+              if (prospectsError) {
+                return (
+                  <div className="card rounded-2xl p-6 border-rose-200 bg-rose-50/50">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Could not load prospect engagement data</h3>
+                        <p className="text-sm text-[var(--muted-foreground)]">{prospectsError}</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+              if (!prospectsData) {
+                return (
+                  <div className="card rounded-2xl p-6">
+                    <p className="text-sm text-[var(--muted-foreground)]">Loading prospect data…</p>
+                  </div>
+                )
+              }
+              if (prospectsData.status === 'schema-not-applied') {
+                return (
+                  <div className="card rounded-2xl p-6 border-amber-200 bg-amber-50/50">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">Schema not applied</h3>
+                        <p className="text-sm text-[var(--muted-foreground)]">{prospectsData.message ?? 'Run lib/prospect/schema.sql against production Postgres to create prospect_clinics + related tables.'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              const { prospects, aggregates } = prospectsData
+              const agg = aggregates ?? {
+                byStatus: {}, byRegion: {}, byCohort: {}, byTravelBand: {},
+                revenue: { totalRevenuePotential: 0, weightedPipeline: 0, wins: 0 },
+                funnel: { totalSends: 0, totalOpens: 0, totalClicks: 0, totalViews: 0, totalReplies: 0, wins: 0, sendOpenRate: 0, openClickRate: 0, sendReplyRate: 0, replyToWinRate: 0 },
+              }
+
+              // Engagement score for re-engage queue
+              const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000
+              const reEngageQueue = prospects
+                .filter(p => p.replies === 0 && (p.totalOpens > 0 || p.totalClicks > 0 || p.totalPortalViews > 0))
+                .filter(p => !p.lastSentAt || new Date(p.lastSentAt).getTime() < fourteenDaysAgo)
+                .map(p => ({ ...p, engagementScore: p.totalPortalViews * 3 + p.totalClicks * 2 + p.totalOpens }))
+                .sort((a, b) => b.engagementScore - a.engagementScore)
+                .slice(0, 15)
+
+              const upcomingOutreach = prospects
+                .filter(p => p.status === 'approved' || p.status === 'researching')
+                .sort((a, b) => b.recoCohortTotal - a.recoCohortTotal)
+                .slice(0, 20)
+
+              const sentTable = prospects
+                .filter(p => p.totalSends > 0)
+                .sort((a, b) => (b.lastSentAt ? new Date(b.lastSentAt).getTime() : 0) - (a.lastSentAt ? new Date(a.lastSentAt).getTime() : 0))
+
+              const fmt$ = (n: number) => `A$${n.toLocaleString('en-AU')}`
+
+              return (
+                <div className="space-y-6">
+                  {/* Pipeline summary stats */}
+                  <div>
+                    <SectionTitle title="Pipeline" subtitle="All prospects across every stage" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="card rounded-xl p-4">
+                        <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Prospects</div>
+                        <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{prospects.length}</div>
+                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.byStatus.researching ?? 0} researching · {agg.byStatus.approved ?? 0} approved</div>
+                      </div>
+                      <div className="card rounded-xl p-4">
+                        <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Weighted pipeline</div>
+                        <div className="text-2xl font-bold text-[var(--accent)] mt-1">{fmt$(agg.revenue.weightedPipeline)}</div>
+                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">of {fmt$(agg.revenue.totalRevenuePotential)} potential</div>
+                      </div>
+                      <div className="card rounded-xl p-4">
+                        <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Engagement</div>
+                        <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{agg.funnel.totalOpens} opens</div>
+                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.funnel.totalClicks} clicks · {agg.funnel.totalViews} portal views</div>
+                      </div>
+                      <div className="card rounded-xl p-4">
+                        <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Replies / Wins</div>
+                        <div className="text-2xl font-bold text-emerald-600 mt-1">{agg.funnel.totalReplies} / {agg.revenue.wins}</div>
+                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{(agg.funnel.sendOpenRate * 100).toFixed(0)}% open · {(agg.funnel.sendReplyRate * 100).toFixed(1)}% reply</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Re-engage queue */}
+                  {reEngageQueue.length > 0 && (
+                    <div>
+                      <SectionTitle title="Re-engage queue" subtitle="Engaged but no reply · last contact 14+ days ago" />
+                      <div className="card rounded-2xl overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                            <tr>
+                              <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                              <th className="text-left px-4 py-3 font-semibold">Region</th>
+                              <th className="text-right px-4 py-3 font-semibold">Score</th>
+                              <th className="text-right px-4 py-3 font-semibold">Last activity</th>
+                              <th className="text-right px-4 py-3 font-semibold">Pipeline value</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {reEngageQueue.map(p => (
+                              <tr key={p.id} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.02)]">
+                                <td className="px-4 py-3">
+                                  <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                  <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName} · {p.contactDiscipline}</div>
+                                </td>
+                                <td className="px-4 py-3 text-[var(--muted-foreground)]">{p.region}, {p.state}</td>
+                                <td className="px-4 py-3 text-right font-bold text-[var(--accent)]">{p.engagementScore}</td>
+                                <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">
+                                  {p.lastPortalViewAt ? `viewed ${timeAgo(new Date(p.lastPortalViewAt).getTime())}` : p.lastSentAt ? `sent ${timeAgo(new Date(p.lastSentAt).getTime())}` : '—'}
+                                </td>
+                                <td className="px-4 py-3 text-right font-semibold">{fmt$(p.recoCohortTotal)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Upcoming outreach */}
+                  {upcomingOutreach.length > 0 && (
+                    <div>
+                      <SectionTitle title="Upcoming outreach" subtitle="Approved / researching prospects awaiting first send · sorted by cohort value" />
+                      <div className="card rounded-2xl overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                            <tr>
+                              <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                              <th className="text-left px-4 py-3 font-semibold">Region</th>
+                              <th className="text-right px-4 py-3 font-semibold">Team</th>
+                              <th className="text-left px-4 py-3 font-semibold">Cohort</th>
+                              <th className="text-right px-4 py-3 font-semibold">Total</th>
+                              <th className="text-left px-4 py-3 font-semibold">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {upcomingOutreach.map(p => (
+                              <tr key={p.id} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.02)]">
+                                <td className="px-4 py-3">
+                                  <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                  <div className="text-xs text-[var(--muted-foreground)]">{p.city}</div>
+                                </td>
+                                <td className="px-4 py-3 text-[var(--muted-foreground)]">{p.region}, {p.state}</td>
+                                <td className="px-4 py-3 text-right">{p.clinicalCount}<span className="text-xs text-[var(--muted-foreground)]"> / {p.totalCount}</span></td>
+                                <td className="px-4 py-3 text-xs">{p.cohortRecommendation} · {p.recoCohortClinicians}</td>
+                                <td className="px-4 py-3 text-right font-semibold">{fmt$(p.recoCohortTotal)}</td>
+                                <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sent outreach */}
+                  {sentTable.length > 0 && (
+                    <div>
+                      <SectionTitle title="Outreach sent" subtitle="Every prospect with at least one send · most recent first" />
+                      <div className="card rounded-2xl overflow-hidden overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                            <tr>
+                              <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                              <th className="text-left px-4 py-3 font-semibold">Location</th>
+                              <th className="text-right px-4 py-3 font-semibold">Clinicians</th>
+                              <th className="text-left px-4 py-3 font-semibold">Cohort tier</th>
+                              <th className="text-right px-4 py-3 font-semibold">Sends</th>
+                              <th className="text-right px-4 py-3 font-semibold">Opens / Clicks</th>
+                              <th className="text-right px-4 py-3 font-semibold">Portal views</th>
+                              <th className="text-right px-4 py-3 font-semibold">Replies</th>
+                              <th className="text-right px-4 py-3 font-semibold">Last sent</th>
+                              <th className="text-left px-4 py-3 font-semibold">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sentTable.map(p => (
+                              <tr key={p.id} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.02)]">
+                                <td className="px-4 py-3">
+                                  <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                  <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName}</div>
+                                </td>
+                                <td className="px-4 py-3 text-[var(--muted-foreground)] text-xs">{p.city}, {p.state}<div>{p.region}</div></td>
+                                <td className="px-4 py-3 text-right">{p.clinicalCount}<span className="text-xs text-[var(--muted-foreground)]"> / {p.totalCount}</span></td>
+                                <td className="px-4 py-3 text-xs">{p.cohortRecommendation}<div className="text-[var(--muted-foreground)]">{fmt$(p.recoCohortTotal)}</div></td>
+                                <td className="px-4 py-3 text-right">{p.totalSends}</td>
+                                <td className="px-4 py-3 text-right">{p.totalOpens} / {p.totalClicks}</td>
+                                <td className="px-4 py-3 text-right">{p.totalPortalViews}</td>
+                                <td className="px-4 py-3 text-right">{p.replies > 0 ? <span className="font-bold text-emerald-600">{p.replies}</span> : '—'}</td>
+                                <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">{p.lastSentAt ? timeAgo(new Date(p.lastSentAt).getTime()) : '—'}<div>{p.lastSentTemplate}</div></td>
+                                <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {prospects.length === 0 && (
+                    <div className="card rounded-2xl p-8 text-center">
+                      <Building2 size={32} className="mx-auto text-[var(--muted-foreground)] opacity-50 mb-3" />
+                      <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">No prospects yet</h3>
+                      <p className="text-sm text-[var(--muted-foreground)]">Bulk-insert your P1 list via <code className="text-xs bg-[rgba(13,115,119,0.06)] px-1.5 py-0.5 rounded">/api/admin/prospect-bulk-create</code> to start tracking B2B outreach here.</p>
+                    </div>
+                  )}
                 </div>
               )
             })()}
