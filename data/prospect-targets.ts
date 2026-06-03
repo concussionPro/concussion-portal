@@ -125,7 +125,7 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     team: team({ physiotherapists: 4, remedialMassage: 1, practiceManager: 1, admin: 2 }),
     travelBand: 'within-2hr', cohortRecommendation: 'essential',
     status: 'researching', priorityWave: 'P1', pitchVariant: 'metro',
-    notes: 'VERIFIED. Uwe Schwiersch principal. Smaller than claimed 7-clinic network. Verify branch counts.',
+    notes: 'WORKSHOP-TIER. 5 clinical incl. remedial — workshop-tier (route to Melbourne workshop, not on-site cohort). (Original: VERIFIED. Uwe Schwiersch principal. Smaller than claimed 7-clinic network. Verify branch counts.)',
   },
   {
     slug: 'enhanced-living-sunshine-coast',
@@ -185,7 +185,7 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     team: team({ physiotherapists: 9 }),
     travelBand: 'within-4hr', cohortRecommendation: 'essential',
     status: 'researching', priorityWave: 'P2', pitchVariant: 'metro',
-    notes: 'VERIFIED. PAEDIATRIC-focused — concussion fit = school/youth-sport angle, not adult sports. Consider before sending.',
+    notes: 'WORKSHOP-TIER. PAEDIATRIC-focused — workshop-tier for 1-2 youth-sport practitioners. Not on-site adult-sport fit. (Original: VERIFIED. PAEDIATRIC-focused — concussion fit = school/youth-sport angle, not adult sports. Consider before sending.)',
   },
   {
     slug: 'brisbane-physio-clinic-wynnum',
@@ -206,14 +206,14 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     name: 'Brisbane Physiotherapy & Podiatry', shortName: 'Brisbane Physio & Podiatry',
     city: 'Albion', state: 'QLD', region: 'Brisbane',
     contactFirstName: 'Damian', contactFullName: 'Damian Lazzaro',
-    contactEmail: 'reception@brisbanephysiotherapy.com', contactEmailSource: 'website',
+    contactEmail: 'damian@brisbanephysiotherapy.com', contactEmailSource: 'linkedin',
     contactRole: 'Principal',
     contactDiscipline: 'physiotherapists',
     clinicWebsiteUrl: 'https://brisbanephysiotherapy.com',
     team: team({ physiotherapists: 8, practiceManager: 1, admin: 6 }),
     travelBand: 'within-4hr', cohortRecommendation: 'essential',
-    status: 'approved', priorityWave: 'P2', pitchVariant: 'network', networkSize: 2,
-    notes: 'VERIFIED. Damian Lazzaro. 25 years. Albion + West End. 8 physios + 2 podiatrists.',
+    status: 'researching', priorityWave: 'P2', pitchVariant: 'network', networkSize: 2,
+    notes: 'WORKSHOP-TIER. 8 physios + podiatry only — not multi-disc enough for on-site. Workshop-tier: send 1-2 delegates to Melbourne workshop. (Original: VERIFIED. Damian Lazzaro. 25 years. Albion + West End. 8 physios + 2 podiatrists.)',
   },
   {
     slug: 'physioworks-brisbane',
@@ -283,7 +283,7 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     team: team({ physiotherapists: 3, exercisePhys: 1, practiceManager: 1, admin: 1 }),
     travelBand: 'within-4hr', cohortRecommendation: 'essential',
     status: 'researching', priorityWave: 'P2', pitchVariant: 'metro',
-    notes: 'VERIFIED. Dr Myles Burfield founder. Sports-physio specialists. Small but sharp fit.',
+    notes: 'WORKSHOP-TIER. 4 clinical — too small for cohort. Workshop-tier individual clinicians. (Original: VERIFIED. Dr Myles Burfield founder. Sports-physio specialists. Small but sharp fit.)',
   },
   {
     slug: 'prime-physio-brisbane',
@@ -468,8 +468,8 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     clinicWebsiteUrl: 'https://coastalphysiogroup.com.au',
     team: team({ physiotherapists: 9 }),
     travelBand: 'within-10hr', cohortRecommendation: 'essential',
-    status: 'approved', priorityWave: 'P3', pitchVariant: 'regional', nearestMetro: 'Sydney',
-    notes: 'VERIFIED. 3 partners (E Ward hand therapist + R Todd + M Ward). 30+ years. N Gosford + Erina.',
+    status: 'researching', priorityWave: 'P3', pitchVariant: 'regional', nearestMetro: 'Sydney',
+    notes: 'WORKSHOP-TIER. 9 physios but single-disc — workshop-tier (send 2-3 to Melbourne). (Original: VERIFIED. 3 partners (E Ward hand therapist + R Todd + M Ward). 30+ years. N Gosford + Erina.)',
   },
   {
     slug: 'thrive-physio-erina',
@@ -483,7 +483,7 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     team: team({ physiotherapists: 4, remedialMassage: 1 }),
     travelBand: 'within-10hr', cohortRecommendation: 'essential',
     status: 'researching', priorityWave: 'P3', pitchVariant: 'regional', nearestMetro: 'Sydney',
-    notes: 'VERIFIED. 6 named practitioners. 25 years. Award-winning. Central Coast Highway.',
+    notes: 'WORKSHOP-TIER. 5 clinical — workshop-tier. (Original: VERIFIED. 6 named practitioners. 25 years. Award-winning. Central Coast Highway.)',
   },
   {
     slug: 'hills-street-sports-medicine',
@@ -510,8 +510,8 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     clinicWebsiteUrl: 'https://momentumtherapies.com.au',
     team: team({ osteopaths: 1 }),
     travelBand: 'flight-domestic', cohortRecommendation: 'essential',
-    status: 'researching', priorityWave: 'P3', pitchVariant: 'regional', nearestMetro: 'Sydney',
-    notes: 'VERIFIED. Inez Tolley solo osteo. WAY smaller than seed estimate. Single-clinician — TOO SMALL for cohort, route to public workshop.',
+    status: 'archived', priorityWave: 'P3', pitchVariant: 'regional', nearestMetro: 'Sydney',
+    notes: 'ARCHIVED. SOLO osteo (1 clinician) — not even workshop-tier; no team to train. Archive. (Original: VERIFIED. Inez Tolley solo osteo. WAY smaller than seed estimate. Single-clinician — TOO SMALL for cohort, route to public workshop.)',
   },
   {
     slug: 'the-canberra-physio-clinic',
@@ -612,8 +612,8 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     clinicWebsiteUrl: 'https://optimisehealth.com.au',
     team: team({ physiotherapists: 4, exercisePhys: 2 }),
     travelBand: 'within-6hr', cohortRecommendation: 'essential',
-    status: 'approved', priorityWave: 'P4', pitchVariant: 'regional', nearestMetro: 'Brisbane',
-    notes: 'VERIFIED. Pieter Van Der Kooij director. Physio + podiatry + custom orthotics + pilates + sports. Toowoomba + Warwick.',
+    status: 'researching', priorityWave: 'P4', pitchVariant: 'regional', nearestMetro: 'Brisbane',
+    notes: 'WORKSHOP-TIER. 6 clinical — workshop-tier. (Original: VERIFIED. Pieter Van Der Kooij director. Physio + podiatry + custom orthotics + pilates + sports. Toowoomba + Warwick.)',
   },
   {
     slug: 'city-sports-spinal',
@@ -789,7 +789,7 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     team: team({ physiotherapists: 2, sportsMedicineDoctors: 1, remedialMassage: 3, practiceManager: 1, admin: 1 }),
     travelBand: 'within-4hr', cohortRecommendation: 'essential',
     status: 'researching', priorityWave: 'P3', pitchVariant: 'regional', nearestMetro: 'Sydney',
-    notes: 'TIER 3. Dr Ross Cairns sports physician. Small but sports-physician-led — strong concussion fit. Verify team size.',
+    notes: 'WORKSHOP-TIER. 6 clinical — workshop-tier. (Original: TIER 3. Dr Ross Cairns sports physician. Small but sports-physician-led — strong concussion fit. Verify team size.)',
   },
   {
     slug: 'nqpc-townsville',
@@ -803,7 +803,7 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     team: team({ physiotherapists: 10, practiceManager: 1, admin: 2 }),
     travelBand: 'flight-far', cohortRecommendation: 'recommended',
     status: 'researching', priorityWave: 'P5', pitchVariant: 'regional', nearestMetro: 'Brisbane',
-    notes: 'TIER 2. Steve Sartori principal. 20+ years. Works with North QLD Cowboys. Sports injury specialist. Far for on-site — route to fly-up day or workshop.',
+    notes: 'WORKSHOP-TIER. 10 physios single-disc — workshop-tier; Townsville flight uneconomic for on-site. (Original: TIER 2. Steve Sartori principal. 20+ years. Works with North QLD Cowboys. Sports injury specialist. Far for on-site — route to fly-up day or workshop.)',
   },
 
   // ─────────────────────────────────────────────────────────────────────
@@ -851,7 +851,7 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
     team: team({ physiotherapists: 5 }),
     travelBand: 'flight-far', cohortRecommendation: 'essential',
     status: 'researching', priorityWave: 'P5', pitchVariant: 'metro',
-    notes: 'VERIFIED. 5 physios listed. No founder identified. Small fit — verify size before send.',
+    notes: 'WORKSHOP-TIER. 5 physios single-disc — workshop-tier (Adelaide travel uneconomic anyway). (Original: VERIFIED. 5 physios listed. No founder identified. Small fit — verify size before send.)',
   },
   {
     slug: 'adelaide-physio-co',
