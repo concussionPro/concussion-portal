@@ -5,7 +5,8 @@
  *
  * Run: npx tsx scripts/send-real-clinic-sample.ts
  */
-import 'dotenv/config'
+import { config } from 'dotenv'
+config({ path: '.env.local' })
 import { Resend } from 'resend'
 import { EMAIL_TEMPLATES, mergeTemplate } from '../lib/prospect/email-templates'
 import type { ProspectClinic } from '../lib/prospect/types'

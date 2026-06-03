@@ -1,45 +1,73 @@
 /**
  * GET /api/admin/prospect-engagement
  *
- * Returns engagement metrics for all prospects + per-prospect drill-down.
- * Used by the admin pipeline dashboard.
+ * Returns rich engagement metrics for every prospect — clinic details,
+ * team breakdown, location, cohort tier recommendation, travel band,
+ * full email send history, opens/clicks/views, and last-activity signals.
  *
- * Optional ?clinicId=N narrows to a single clinic.
+ * Optional ?clinicId=N narrows to one clinic.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
+import type { ClinicTeam, CohortRecommendation, TravelBand } from '@/lib/prospect/types'
+import { teamTotal, clinicalCount, computePricing } from '@/lib/prospect/pricing'
 
-interface EngagementRow {
+interface ClinicDbRow {
   id: number
   slug: string
+  access_key: string
+  name: string
   short_name: string
-  contact_email: string
-  status: string
+  city: string
+  state: string
   region: string
+  contact_first_name: string
+  contact_full_name: string
+  contact_email: string
+  contact_role: string | null
+  contact_discipline: string
+  team: ClinicTeam
   travel_band: string
-  last_sent_at: string | null
-  last_sent_template: string | null
-  total_sends: number
-  total_opens: number
-  total_clicks: number
-  total_portal_views: number
-  first_portal_view_at: string | null
-  last_portal_view_at: string | null
-  reply_count: number
+  travel_surcharge: number
+  cohort_recommendation: string
+  status: string
+  research_source: string
+  valid_until: string
+  notes: string | null
+  created_at: string
   updated_at: string
+}
+
+interface OutreachLogRow {
+  id: number
+  clinic_id: number
+  template_slug: string
+  email_subject: string
+  email_body: string
+  sent_at: string
+  resend_email_id: string | null
+  opened_count: number | string
+  clicked_count: number | string
+  replied_at: string | null
+  reply_text: string | null
+  reply_sentiment: string | null
+}
+
+interface PortalViewRow {
+  clinic_id: number
+  total: string
+  first_viewed_at: string | null
+  last_viewed_at: string | null
 }
 
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const url = new URL(req.url)
-  const clinicIdFilter = url.searchParams.get('clinicId')
 
   try {
-    // Bootstrap check — if the cold-outreach tables haven't been migrated
-    // yet, return empty + a clear status so the dashboard doesn't 500.
+    // Bootstrap check — schema not applied → empty + clear status
     const { rows: tableCheck } = await sql<{ exists: boolean }>`
       SELECT EXISTS (
         SELECT 1 FROM information_schema.tables
@@ -52,57 +80,212 @@ export async function GET(req: NextRequest) {
         count: 0,
         prospects: [],
         status: 'schema-not-applied',
-        message: 'Run lib/prospect/schema.sql against the production Postgres to create prospect_clinics + related tables. The dashboard will populate once prospects are inserted.',
+        message: 'Run lib/prospect/schema.sql against the production Postgres to create prospect_clinics + related tables.',
       })
     }
 
+    const url = new URL(req.url)
+    const clinicIdFilter = url.searchParams.get('clinicId')
     const filterId = clinicIdFilter ? parseInt(clinicIdFilter, 10) : null
-    const result = filterId !== null && !isNaN(filterId)
-      ? await sql<EngagementRow>`
-          SELECT
-            c.id, c.slug, c.short_name, c.contact_email, c.status, c.region, c.travel_band, c.updated_at,
-            (SELECT MAX(sent_at) FROM prospect_outreach_log WHERE clinic_id = c.id) AS last_sent_at,
-            (SELECT template_slug FROM prospect_outreach_log WHERE clinic_id = c.id ORDER BY sent_at DESC LIMIT 1) AS last_sent_template,
-            (SELECT COUNT(*) FROM prospect_outreach_log WHERE clinic_id = c.id) AS total_sends,
-            (SELECT COALESCE(SUM(opened_count), 0) FROM prospect_outreach_log WHERE clinic_id = c.id) AS total_opens,
-            (SELECT COALESCE(SUM(clicked_count), 0) FROM prospect_outreach_log WHERE clinic_id = c.id) AS total_clicks,
-            (SELECT COUNT(*) FROM prospect_portal_views WHERE clinic_id = c.id) AS total_portal_views,
-            (SELECT MIN(viewed_at) FROM prospect_portal_views WHERE clinic_id = c.id) AS first_portal_view_at,
-            (SELECT MAX(viewed_at) FROM prospect_portal_views WHERE clinic_id = c.id) AS last_portal_view_at,
-            (SELECT COUNT(*) FROM prospect_outreach_log WHERE clinic_id = c.id AND replied_at IS NOT NULL) AS reply_count
-          FROM prospect_clinics c
-          WHERE c.id = ${filterId}
-          ORDER BY c.updated_at DESC
-        `
-      : await sql<EngagementRow>`
-          SELECT
-            c.id, c.slug, c.short_name, c.contact_email, c.status, c.region, c.travel_band, c.updated_at,
-            (SELECT MAX(sent_at) FROM prospect_outreach_log WHERE clinic_id = c.id) AS last_sent_at,
-            (SELECT template_slug FROM prospect_outreach_log WHERE clinic_id = c.id ORDER BY sent_at DESC LIMIT 1) AS last_sent_template,
-            (SELECT COUNT(*) FROM prospect_outreach_log WHERE clinic_id = c.id) AS total_sends,
-            (SELECT COALESCE(SUM(opened_count), 0) FROM prospect_outreach_log WHERE clinic_id = c.id) AS total_opens,
-            (SELECT COALESCE(SUM(clicked_count), 0) FROM prospect_outreach_log WHERE clinic_id = c.id) AS total_clicks,
-            (SELECT COUNT(*) FROM prospect_portal_views WHERE clinic_id = c.id) AS total_portal_views,
-            (SELECT MIN(viewed_at) FROM prospect_portal_views WHERE clinic_id = c.id) AS first_portal_view_at,
-            (SELECT MAX(viewed_at) FROM prospect_portal_views WHERE clinic_id = c.id) AS last_portal_view_at,
-            (SELECT COUNT(*) FROM prospect_outreach_log WHERE clinic_id = c.id AND replied_at IS NOT NULL) AS reply_count
-          FROM prospect_clinics c
-          ORDER BY
-            CASE c.status
-              WHEN 'replied' THEN 1
-              WHEN 'engaged' THEN 2
-              WHEN 'opened' THEN 3
-              WHEN 'sent' THEN 4
-              WHEN 'approved' THEN 5
-              WHEN 'researching' THEN 6
-              ELSE 7
-            END,
-            c.updated_at DESC
-        `
 
-    return NextResponse.json({ ok: true, count: result.rows.length, prospects: result.rows })
+    // Pull all three tables in parallel
+    const [clinics, outreach, views] = await Promise.all([
+      filterId !== null && !isNaN(filterId)
+        ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
+        : sql<ClinicDbRow>`SELECT * FROM prospect_clinics`,
+      filterId !== null && !isNaN(filterId)
+        ? sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log WHERE clinic_id = ${filterId} ORDER BY sent_at DESC`
+        : sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log ORDER BY sent_at DESC`,
+      filterId !== null && !isNaN(filterId)
+        ? sql<PortalViewRow>`
+            SELECT clinic_id, COUNT(*)::text AS total,
+              MIN(viewed_at) AS first_viewed_at, MAX(viewed_at) AS last_viewed_at
+            FROM prospect_portal_views WHERE clinic_id = ${filterId} GROUP BY clinic_id`
+        : sql<PortalViewRow>`
+            SELECT clinic_id, COUNT(*)::text AS total,
+              MIN(viewed_at) AS first_viewed_at, MAX(viewed_at) AS last_viewed_at
+            FROM prospect_portal_views GROUP BY clinic_id`,
+    ])
+
+    // Index helpers
+    const outreachByClinic = new Map<number, OutreachLogRow[]>()
+    for (const o of outreach.rows) {
+      if (!outreachByClinic.has(o.clinic_id)) outreachByClinic.set(o.clinic_id, [])
+      outreachByClinic.get(o.clinic_id)!.push(o)
+    }
+    const viewsByClinic = new Map<number, PortalViewRow>()
+    for (const v of views.rows) viewsByClinic.set(v.clinic_id, v)
+
+    // Build rich rows
+    const prospects = clinics.rows.map((c) => {
+      const sends = outreachByClinic.get(c.id) ?? []
+      const view = viewsByClinic.get(c.id)
+      const totalOpens = sends.reduce((acc, s) => acc + (typeof s.opened_count === 'string' ? parseInt(s.opened_count, 10) : s.opened_count), 0)
+      const totalClicks = sends.reduce((acc, s) => acc + (typeof s.clicked_count === 'string' ? parseInt(s.clicked_count, 10) : s.clicked_count), 0)
+      const replies = sends.filter((s) => s.replied_at).length
+      const lastSent = sends[0] // already ORDER BY sent_at DESC
+
+      const pricing = computePricing(c.team, c.travel_band as TravelBand)
+      const recoTier = c.cohort_recommendation as CohortRecommendation
+      const recoCohort = pricing.cohortTiers.find((t) =>
+        t.name === (recoTier === 'essential' ? 'Essential' : recoTier === 'full-team' ? 'Full team' : 'Recommended'),
+      )!
+
+      const stageProb: Record<string, number> = {
+        researching: 0,
+        approved: 0.05,
+        sent: 0.05,
+        opened: 0.1,
+        engaged: 0.2,
+        replied: 0.5,
+        won: 1,
+        lost: 0,
+        archived: 0,
+      }
+      const weightedValue = Math.round(recoCohort.total * (stageProb[c.status] ?? 0))
+
+      return {
+        // identifiers
+        id: c.id,
+        slug: c.slug,
+        accessKey: c.access_key,
+        name: c.name,
+        shortName: c.short_name,
+        // location
+        city: c.city,
+        state: c.state,
+        region: c.region,
+        // contact
+        contactFirstName: c.contact_first_name,
+        contactFullName: c.contact_full_name,
+        contactEmail: c.contact_email,
+        contactRole: c.contact_role,
+        contactDiscipline: c.contact_discipline,
+        // team
+        team: c.team,
+        clinicalCount: clinicalCount(c.team),
+        totalCount: teamTotal(c.team),
+        // tier + pricing
+        cohortRecommendation: c.cohort_recommendation,
+        recoCohortClinicians: recoCohort.clinicians,
+        recoCohortPerClinician: recoCohort.perClinician,
+        recoCohortTotal: recoCohort.total,
+        weightedPipelineValue: weightedValue,
+        // travel
+        travelBand: c.travel_band,
+        travelSurcharge: c.travel_surcharge,
+        // status + lifecycle
+        status: c.status,
+        researchSource: c.research_source,
+        validUntil: c.valid_until,
+        notes: c.notes,
+        createdAt: c.created_at,
+        updatedAt: c.updated_at,
+        // outreach summary
+        totalSends: sends.length,
+        totalOpens,
+        totalClicks,
+        replies,
+        lastSentAt: lastSent?.sent_at ?? null,
+        lastSentTemplate: lastSent?.template_slug ?? null,
+        lastSentSubject: lastSent?.email_subject ?? null,
+        // portal
+        totalPortalViews: view ? parseInt(view.total, 10) : 0,
+        firstPortalViewAt: view?.first_viewed_at ?? null,
+        lastPortalViewAt: view?.last_viewed_at ?? null,
+        // per-send detail (most recent first)
+        sends: sends.map((s) => ({
+          id: s.id,
+          templateSlug: s.template_slug,
+          subject: s.email_subject,
+          bodyPreview: s.email_body.slice(0, 600),
+          sentAt: s.sent_at,
+          resendEmailId: s.resend_email_id,
+          openedCount: typeof s.opened_count === 'string' ? parseInt(s.opened_count, 10) : s.opened_count,
+          clickedCount: typeof s.clicked_count === 'string' ? parseInt(s.clicked_count, 10) : s.clicked_count,
+          repliedAt: s.replied_at,
+          replyText: s.reply_text,
+          replySentiment: s.reply_sentiment,
+        })),
+      }
+    })
+
+    // Aggregations
+    const aggregates = buildAggregates(prospects)
+
+    return NextResponse.json({
+      ok: true,
+      count: prospects.length,
+      prospects,
+      aggregates,
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: 'Query failed', detail: message }, { status: 500 })
+  }
+}
+
+function buildAggregates(prospects: Array<{
+  status: string
+  region: string
+  cohortRecommendation: string
+  travelBand: string
+  recoCohortTotal: number
+  weightedPipelineValue: number
+  totalSends: number
+  totalOpens: number
+  totalClicks: number
+  totalPortalViews: number
+  replies: number
+}>) {
+  const byStatus: Record<string, number> = {}
+  const byRegion: Record<string, number> = {}
+  const byCohort: Record<string, number> = {}
+  const byTravelBand: Record<string, number> = {}
+  let totalRevenuePotential = 0
+  let weightedPipeline = 0
+  let totalSends = 0
+  let totalOpens = 0
+  let totalClicks = 0
+  let totalViews = 0
+  let totalReplies = 0
+  let wins = 0
+
+  for (const p of prospects) {
+    byStatus[p.status] = (byStatus[p.status] ?? 0) + 1
+    byRegion[p.region] = (byRegion[p.region] ?? 0) + 1
+    byCohort[p.cohortRecommendation] = (byCohort[p.cohortRecommendation] ?? 0) + 1
+    byTravelBand[p.travelBand] = (byTravelBand[p.travelBand] ?? 0) + 1
+    if (!['lost', 'archived'].includes(p.status)) {
+      totalRevenuePotential += p.recoCohortTotal
+    }
+    weightedPipeline += p.weightedPipelineValue
+    totalSends += p.totalSends
+    totalOpens += p.totalOpens
+    totalClicks += p.totalClicks
+    totalViews += p.totalPortalViews
+    totalReplies += p.replies
+    if (p.status === 'won') wins += 1
+  }
+
+  const sendOpenRate = totalSends > 0 ? totalOpens / totalSends : 0
+  const openClickRate = totalOpens > 0 ? totalClicks / totalOpens : 0
+  const sendReplyRate = totalSends > 0 ? totalReplies / totalSends : 0
+  const replyToWinRate = totalReplies > 0 ? wins / totalReplies : 0
+
+  return {
+    byStatus,
+    byRegion,
+    byCohort,
+    byTravelBand,
+    revenue: {
+      totalRevenuePotential,
+      weightedPipeline,
+      wins,
+    },
+    funnel: {
+      totalSends, totalOpens, totalClicks, totalViews, totalReplies, wins,
+      sendOpenRate, openClickRate, sendReplyRate, replyToWinRate,
+    },
   }
 }
