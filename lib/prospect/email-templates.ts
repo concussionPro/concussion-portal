@@ -91,7 +91,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
     <div class="card">
       <p>Hi {contact_first_name},</p>
       {opening_block}
-      <p style="margin: 14px 0 4px; font-size: 14px; color: #475569;">CEA brings the protocol on-site to your whole team — physios, EPs, osteos, admin — in one day.</p>
+      <p style="margin: 14px 0 4px; font-size: 14px; color: #475569;">CEA delivers the full system on-site — clinical training (physios, EPs, osteos), admin SOPs, document templates (GP letters, sideline cards, NDIS, RTP plans), and marketing + referral assets to anchor your clinic as the local GP, school + club concussion authority.</p>
 
       <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
