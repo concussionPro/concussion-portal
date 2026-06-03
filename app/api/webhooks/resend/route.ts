@@ -28,7 +28,9 @@ interface ResendWebhookEvent {
     to: string[]
     subject: string
     created_at: string
-    tags?: Array<{ name: string; value: string }>
+    // Resend uses object form in webhook payloads, but the send API accepts
+    // array form. Type both for safety.
+    tags?: Array<{ name: string; value: string }> | Record<string, string>
     click?: { link: string }
   }
 }
@@ -144,11 +146,17 @@ export async function POST(request: NextRequest) {
 
     const eventType = type.replace('email.', '')
 
-    // Parse tags from array format [{name, value}] to key-value
+    // Parse tags — Resend's webhook payload returns tags as an OBJECT
+    // ({"prospect-id": "5"}), not the array form ([{name, value}]) used when
+    // sending. Handle both for safety.
     const tags: Record<string, string> = {}
     if (Array.isArray(data.tags)) {
       for (const t of data.tags) {
         tags[t.name] = t.value
+      }
+    } else if (data.tags && typeof data.tags === 'object') {
+      for (const [k, v] of Object.entries(data.tags as Record<string, unknown>)) {
+        if (typeof v === 'string') tags[k] = v
       }
     }
 
