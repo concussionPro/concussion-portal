@@ -51,11 +51,24 @@ export async function POST(req: NextRequest) {
       AND contact_email <> ''
   `
 
-  // 2. Recipients with a complaint event (CEA project only).
+  // 2. Recipients with a complaint or bounce event (CEA project only).
+  // Hard bounces auto-suppress via the webhook prospect branch, but bounces
+  // outside that branch (nurture, sample sends, pre-webhook-tagging era)
+  // don't. Recipients with a complaint event from any channel are caught
+  // here too — the user-level nurture flag (nurture_unsubscribed) is set
+  // by the webhook but email_suppression isn't, so cold outreach to a
+  // historic nurture complainer would still go through.
   const { rows: complainedRecipients } = await sql<{ recipient: string }>`
     SELECT DISTINCT LOWER(recipient) AS recipient
     FROM email_events
     WHERE event_type = 'complained'
+      AND COALESCE(project, 'cea') = 'cea'
+      AND recipient IS NOT NULL
+  `
+  const { rows: bouncedRecipients } = await sql<{ recipient: string }>`
+    SELECT DISTINCT LOWER(recipient) AS recipient
+    FROM email_events
+    WHERE event_type = 'bounced'
       AND COALESCE(project, 'cea') = 'cea'
       AND recipient IS NOT NULL
   `
@@ -64,6 +77,7 @@ export async function POST(req: NextRequest) {
   const allEmailsToCheck = [
     ...optOutClinics.map((c) => c.contact_email),
     ...complainedRecipients.map((r) => r.recipient),
+    ...bouncedRecipients.map((r) => r.recipient),
   ]
   const uniqueEmails = [...new Set(allEmailsToCheck)]
 
@@ -96,6 +110,15 @@ export async function POST(req: NextRequest) {
     })
     alreadySuppressed.add(r.recipient)
   }
+  for (const r of bouncedRecipients) {
+    if (alreadySuppressed.has(r.recipient)) continue
+    toAdd.push({
+      email: r.recipient,
+      reason: 'hard-bounce',
+      source: 'repair:email-events-bounce',
+    })
+    alreadySuppressed.add(r.recipient)
+  }
 
   let inserted = 0
   if (!dryRun) {
@@ -114,6 +137,7 @@ export async function POST(req: NextRequest) {
       mode: dryRun ? 'dry-run' : 'applied',
       optOutClinics: optOutClinics.length,
       complainedRecipients: complainedRecipients.length,
+      bouncedRecipients: bouncedRecipients.length,
       alreadyCovered: uniqueEmails.length - toAdd.length,
       wouldAdd: toAdd.length,
       inserted,
