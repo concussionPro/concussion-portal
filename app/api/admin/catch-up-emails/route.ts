@@ -186,11 +186,47 @@ async function handleCatchUp(request: NextRequest, dryRun: boolean) {
 
     if (!html || !subject || !auditKey) { skipped++; continue }
 
-    // Dedup — check if catch-up already sent (don't INSERT on dry run)
+    // Dedup — check BOTH the catch-up audit key AND the corresponding
+    // original-sequence audit key. Without checking the original key, a
+    // user who already received the upsell via the regular cron / certificate
+    // route would get it twice. Map below mirrors the catch-up keys to the
+    // upstream sources:
+    //
+    //   catchup_scat_complete_*     → scat_completion_upsell_*  (from /api/certificate)
+    //   catchup_almost_done_*       → almost_done_*             (nurture cron 7/8)
+    //   catchup_scat_engagement_*   → scat_day10_engagement_*   (nurture cron)
+    //   catchup_scat_day14_*        → scat_day14_*              (SCAT mastery seq)
+    //   catchup_paid_day3_*         → scat_day3_* / paid_day3_* (post-purchase seq)
+    //   catchup_free_almost_*       → (no upstream original — catch-up only)
+    //   catchup_free_reengagement_* → (no upstream original)
+    //   catchup_paid_reengagement_* → reengagement_* (if regular cron has it)
+    const originalAuditKeys: string[] = (() => {
+      const map: Record<string, string[]> = {
+        scat_complete: [`scat_completion_upsell_${user.id}`],
+        almost_done: [`almost_done_${user.id}`],
+        scat_engagement: [`scat_day10_engagement_${user.id}`],
+        scat_day14: [`scat_day14_${user.id}`],
+        paid_day3: [`scat_day3_${user.id}`, `paid_day3_${user.id}`],
+        paid_reengagement: [`reengagement_${user.id}`],
+      }
+      // Extract the variant from the catch-up audit key (e.g. catchup_scat_complete_abc → scat_complete)
+      for (const variant of Object.keys(map)) {
+        if (auditKey?.startsWith(`catchup_${variant}_`)) return map[variant]
+      }
+      return []
+    })()
+
+    const auditKeysToCheck = [auditKey, ...originalAuditKeys]
+    const auditKeysJson = JSON.stringify(auditKeysToCheck)
     const { rows: existingAudit } = await sql`
-      SELECT 1 FROM email_audit_log WHERE audit_key = ${auditKey} LIMIT 1
+      SELECT audit_key FROM email_audit_log
+      WHERE audit_key = ANY(SELECT jsonb_array_elements_text(${auditKeysJson}::jsonb))
+      LIMIT 1
     `
-    if (existingAudit.length > 0) { skipped++; continue }
+    if (existingAudit.length > 0) {
+      skipped++
+      continue
+    }
 
     html = html.replace('{{unsubscribe_url}}', unsubscribeUrl)
 
