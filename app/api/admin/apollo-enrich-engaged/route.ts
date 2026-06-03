@@ -78,31 +78,44 @@ interface ApolloContact {
 }
 
 const ICP_KEYWORDS = ['physiotherapy', 'osteopathy', 'allied health', 'sports medicine', 'exercise physiology', 'physiotherapist', 'osteopath']
-const MIN_EMPLOYEES = 8
 
+// Domains that look like prospects but are wrong-fit and would dilute the pool.
+const DOMAIN_BLOCKLIST = [
+  '.edu.au', '.edu', 'students.',         // Students / academia
+  '.gov.au', '.gov',                       // Government
+  '.health.nsw.gov.au', '.health.qld.gov.au', '.health.vic.gov.au', // Public health districts
+  'bhs.com', 'bdh.com', 'nbh.com',         // Hospital systems
+  'sarahkey.com',                          // UK practitioner aggregator
+  'apa.org', 'osteopathy.org',             // Professional bodies — not clinics
+  'nrlfans', 'afl.com',                    // Sports orgs (separate pipeline)
+]
+
+function isBlocklistedDomain(email: string): boolean {
+  const lower = email.toLowerCase()
+  return DOMAIN_BLOCKLIST.some((d) => lower.includes(d))
+}
+
+/**
+ * For REPLIED contacts (already engaged with Zac), the qualification is the
+ * reply itself. Skip the strict 8+ employee gate (Apollo's lite payload
+ * doesn't populate that field anyway). Apply only:
+ *  - AU (location filter — already applied server-side)
+ *  - Email present + not on domain blocklist
+ *  - Has a clinic-looking organization (or solo clinician email)
+ */
 function matchesIcp(c: ApolloContact): { fit: boolean; reasons: string[] } {
   const reasons: string[] = []
+  const email = (c.email || '').toLowerCase()
+  if (!email) return { fit: false, reasons: ['no email'] }
+  if (isBlocklistedDomain(email)) return { fit: false, reasons: ['blocklisted-domain'] }
+
   const org = c.organization || {}
   const country = (c.country || org.country || '').toLowerCase()
-  if (!country.includes('australia') && !country.includes('au')) {
-    return { fit: false, reasons: ['not-AU'] }
+  if (country && !country.includes('australia') && !country.includes('au')) {
+    return { fit: false, reasons: [`country=${country}`] }
   }
-  const employees = org.estimated_num_employees ?? 0
-  if (employees < MIN_EMPLOYEES) {
-    return { fit: false, reasons: [`only ${employees} employees`] }
-  }
-  const blob = [
-    org.name,
-    org.industry,
-    ...(org.industries || []),
-    ...(org.keywords || []),
-    c.title,
-  ].filter(Boolean).join(' ').toLowerCase()
-  const hits = ICP_KEYWORDS.filter((k) => blob.includes(k))
-  if (hits.length === 0) {
-    return { fit: false, reasons: ['no ICP keyword match'] }
-  }
-  reasons.push(`employees=${employees}`, `keywords=[${hits.join(',')}]`)
+
+  reasons.push('replied', 'AU', 'clean-domain')
   return { fit: true, reasons }
 }
 
