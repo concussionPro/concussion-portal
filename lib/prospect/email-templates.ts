@@ -134,10 +134,10 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <p style="margin: 20px 0 8px; font-size: 12px; color: #0a5a5e; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;">Multidisciplinary integration</p>
       <table class="role-bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td class="role"><span class="role-name">Physio</span><span class="role-covers">Vestibular · cervical · RTP</span></td>
-        <td class="role"><span class="role-name">EP</span><span class="role-covers">Sub-threshold aerobic</span></td>
-        <td class="role"><span class="role-name">Osteo / Myo</span><span class="role-covers">Cervico-mandibular</span></td>
-        <td class="role"><span class="role-name">Admin</span><span class="role-covers">GP letters · NDIS</span></td>
+        <td class="role"><span class="role-name">Osteo / Physio</span><span class="role-covers">Diagnosis · case management · cervicogenic</span></td>
+        <td class="role"><span class="role-name">Physio / EP</span><span class="role-covers">Return to play · sub-threshold aerobic</span></td>
+        <td class="role"><span class="role-name">Myo / RMT</span><span class="role-covers">Soft tissue · inflammation</span></td>
+        <td class="role"><span class="role-name">Admin</span><span class="role-covers">GP letters · NDIS · schools</span></td>
       </tr></table>
 
       <div class="sig">

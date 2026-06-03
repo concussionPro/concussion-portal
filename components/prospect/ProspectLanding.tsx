@@ -311,9 +311,9 @@ function MultidisciplinaryIntegration({ clinic }: { clinic: ProspectClinic }) {
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { role: 'Physio', covers: 'Vestibular · cervical · neuro-assessment · RTP graded exposure' },
-          { role: 'EP', covers: 'Sub-symptom-threshold aerobic · graded exercise progression' },
-          { role: 'Osteo / Myo', covers: 'Cervico-mandibular · manual therapy · cranial-load patterns' },
+          { role: 'Osteo / Physio', covers: 'Diagnosis · case management · cervicogenic patterns · neuro-assessment' },
+          { role: 'Physio / EP', covers: 'Sub-symptom-threshold aerobic · graded exercise · return-to-play clearance' },
+          { role: 'Myo / RMT', covers: 'Massage · soft tissue · inflammation management' },
           { role: 'Admin', covers: 'GP letters · NDIS · school + club correspondence · billing flow' },
         ].map(({ role, covers }) => (
           <div key={role} className="rounded-xl bg-white/70 border border-accent/10 p-3">
