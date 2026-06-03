@@ -187,8 +187,12 @@ export async function POST(req: NextRequest) {
   const inserts: Array<{ slug: string; email: string; name: string; clinic: string; employees: number }> = []
   if (qualified.length > 0) {
     const emails = qualified.map((c) => c.email).filter(Boolean) as string[]
+    // sql tagged template doesn't accept array literals — fall back to a plain
+    // ANY-clause via a json-encoded string + cast on the SQL side.
+    const emailsJson = JSON.stringify(emails)
     const { rows: existing } = await sql<{ contact_email: string; slug: string }>`
-      SELECT contact_email, slug FROM prospect_clinics WHERE contact_email = ANY(${emails as unknown as string[]})
+      SELECT contact_email, slug FROM prospect_clinics
+      WHERE contact_email = ANY (SELECT jsonb_array_elements_text(${emailsJson}::jsonb))
     `
     const existingEmails = new Set(existing.map((e) => e.contact_email.toLowerCase()))
 
