@@ -40,22 +40,22 @@ const T1_NETWORK_OPENING =
   'Saw your team page — {network_size} locations across {region} is the kind of network that benefits from one trained clinical model rolled out everywhere, not a piecemeal CPD spend.'
 
 const BASE_HTML_STYLE = `
-  body { margin:0; padding:0; background:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#1a2332; }
-  .wrap { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
-  .card { background: #ffffff; border-radius: 18px; padding: 28px 28px 24px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-  p { font-size: 15px; line-height: 1.55; margin: 0 0 14px; color: #1a2332; }
-  .bento { display: table; width: 100%; border-spacing: 6px 0; margin: 12px -6px 4px; }
+  body { margin:0; padding:0; background:#eef2f6; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 28px 16px; }
+  .card { background: #ffffff; border-radius: 20px; padding: 32px 30px 26px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px -10px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.06); }
+  p { font-size: 15px; line-height: 1.6; margin: 0 0 14px; color: #1a2332; }
+  .bento { display: table; width: 100%; border-spacing: 8px 0; margin: 16px -8px 6px; }
   .bento-row { display: table-row; }
-  .stat { display: table-cell; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 14px; vertical-align: top; width: 33%; }
-  .stat .v { font-size: 22px; font-weight: 800; color: #0a5a5e; line-height: 1.05; letter-spacing: -0.01em; }
-  .stat .l { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 5px; font-weight: 600; line-height: 1.3; }
-  .cta { display: inline-block; background: #0d7377; color: #ffffff; padding: 14px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 14px 0 4px; }
-  .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 6px; }
-  .secondary a { color: #0a5a5e; }
-  .preview-img { display: block; width: 100%; max-width: 540px; height: auto; border-radius: 14px; border: 1px solid #e2e8f0; margin: 14px 0 4px; }
-  .sig { font-size: 12px; color: #64748b; margin-top: 20px; padding-top: 14px; border-top: 1px solid #f1f5f9; line-height: 1.55; }
-  .sig strong { color: #1a2332; font-size: 13px; }
-  .unsub { font-size: 11px; color: #cbd5e1; margin-top: 10px; }
+  .stat { display: table-cell; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 70%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 16px; vertical-align: top; width: 33%; box-shadow: inset 0 -1px 0 rgba(15,23,42,0.04), 0 2px 4px -2px rgba(15,23,42,0.06); }
+  .stat .v { font-size: 24px; font-weight: 800; color: #0a5a5e; line-height: 1.05; letter-spacing: -0.02em; }
+  .stat .l { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; font-weight: 700; line-height: 1.35; }
+  .cta { display: inline-block; background: linear-gradient(135deg, #0d7377 0%, #0a5a5e 100%); color: #ffffff; padding: 16px 32px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 18px 0 6px; box-shadow: 0 8px 16px -6px rgba(13,115,119,0.45), 0 2px 4px -1px rgba(15,23,42,0.08); letter-spacing: 0.01em; }
+  .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 8px; }
+  .secondary a { color: #0a5a5e; font-weight: 600; }
+  .preview-img { display: block; width: 100%; max-width: 540px; height: auto; border-radius: 16px; border: 1px solid #e2e8f0; margin: 16px 0 6px; box-shadow: 0 16px 36px -16px rgba(15,23,42,0.25), 0 4px 10px -4px rgba(15,23,42,0.1); }
+  .sig { font-size: 12px; color: #64748b; margin-top: 22px; padding-top: 16px; border-top: 1px solid #eef2f6; line-height: 1.55; }
+  .sig strong { color: #0f172a; font-size: 13px; }
+  .unsub { font-size: 11px; color: #cbd5e1; margin-top: 12px; }
   .unsub a { color: #94a3b8; text-decoration: underline; }
 `
 
