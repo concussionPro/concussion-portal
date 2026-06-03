@@ -216,6 +216,12 @@ export function mergeTemplate(
   })
   const ogImageUrl = `${baseUrl}/api/prospect/og-image?${ogParams.toString()}`
 
+  // HTML-encode `&` → `&amp;` for any URL going inside an HTML attribute.
+  // Email clients (Gmail, Outlook) parse `src="...&..."` strictly — raw `&`
+  // truncates the URL after the first param. Plain-text fallback uses the
+  // raw URL (htmlToPlainText decodes &amp; back to &).
+  const htmlEncodeUrl = (u: string) => u.replace(/&/g, '&amp;')
+
   const variables: Record<string, string | undefined> = {
     base_url: baseUrl,
     clinic_name: clinic.name,
@@ -227,12 +233,12 @@ export function mergeTemplate(
     team_breakdown: teamBreakdownString(clinic.team),
     team_total: String(teamTotal(clinic.team)),
     opening_line: opening,
-    portal_url: portalUrl,
+    portal_url: htmlEncodeUrl(portalUrl),
     access_key: clinic.accessKey,
     slug: clinic.slug,
-    unsubscribe_link_only: unsubscribeLinkOnly,
+    unsubscribe_link_only: htmlEncodeUrl(unsubscribeLinkOnly),
     nearest_metro: nearestMetro,
-    og_image_url: ogImageUrl,
+    og_image_url: htmlEncodeUrl(ogImageUrl),
   }
 
   const subject = mergeVariables(template.subjectTemplate, variables)

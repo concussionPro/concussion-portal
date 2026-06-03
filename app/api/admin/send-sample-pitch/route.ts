@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { isAdminRequest } from '@/lib/require-admin'
 import { EMAIL_TEMPLATES, mergeTemplate } from '@/lib/prospect/email-templates'
+import { getClinicBySlug } from '@/lib/prospect/repo'
 import type { ProspectClinic, Discipline } from '@/lib/prospect/types'
 
 const SAMPLE_CLINIC_BASE: Omit<ProspectClinic, 'contactDiscipline' | 'team'> = {
@@ -158,10 +159,17 @@ export async function POST(req: NextRequest) {
   const templateSlug = body.templateSlug ?? 'initial'
 
   const setup = SAMPLE_TEAMS[discipline]
-  const clinic: ProspectClinic = {
-    ...SAMPLE_CLINIC_BASE,
-    contactDiscipline: setup.contactDiscipline,
-    team: setup.team,
+  // If the sample slug already exists in the DB (e.g. POGO was seeded), use
+  // the real accessKey + team — sample emails must produce a portal URL the
+  // recipient can actually open without hitting the AccessWall.
+  let clinic: ProspectClinic
+  try {
+    const dbClinic = await getClinicBySlug(SAMPLE_CLINIC_BASE.slug)
+    clinic = dbClinic
+      ? { ...dbClinic, contactDiscipline: setup.contactDiscipline }
+      : { ...SAMPLE_CLINIC_BASE, contactDiscipline: setup.contactDiscipline, team: setup.team }
+  } catch {
+    clinic = { ...SAMPLE_CLINIC_BASE, contactDiscipline: setup.contactDiscipline, team: setup.team }
   }
 
   const template = EMAIL_TEMPLATES.find((t) => t.slug === templateSlug)
