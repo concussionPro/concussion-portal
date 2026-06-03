@@ -1,16 +1,13 @@
 /**
  * GET /api/prospect/og-image?slug=<slug>&name=&city=&state=&region=&breakdown=&clinical=
  *
- * 1200x630 landscape PNG designed to look like a screenshot of the prospect's
- * private dashboard. Used as the hero image in cold outreach emails.
+ * 1200x630 landscape PNG — hero image for cold outreach emails.
  *
- * Resolution order:
- *  1. DB lookup by slug (production sends — real prospect_clinics row)
- *  2. Query-param fallback (samples + previews without DB rows)
+ * Resolution: DB lookup by slug, query-param fallback for samples/previews.
  *
- * Cached via standard CDN headers. Email clients (Gmail proxy etc.) cache
- * by URL — mergeTemplate appends a unique `v=` param per send to defeat
- * stale-error caching.
+ * Edge runtime + next/og (satori). Satori is fussy — every container with
+ * children must have `display: 'flex'`. Avoid emoji, complex shadows,
+ * unsupported CSS. Keep nesting shallow.
  */
 import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
@@ -48,7 +45,7 @@ export async function GET(req: NextRequest) {
         }
       }
     } catch {
-      // DB unreachable or schema missing — fall through to query-param path
+      // fall through
     }
   }
 
@@ -72,11 +69,10 @@ export async function GET(req: NextRequest) {
   }
 
   if (!data) {
-    return new Response('Missing clinic data — pass ?slug=<db-slug> or all of ?name&city&state&region&breakdown&clinical', { status: 400 })
+    return new Response('Missing clinic data', { status: 400 })
   }
 
   const { shortName, city, state, region, breakdown, clinical } = data
-  const slugForUrl = slug ?? shortName.toLowerCase().replace(/\s+/g, '-')
 
   return new ImageResponse(
     (
@@ -86,114 +82,111 @@ export async function GET(req: NextRequest) {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          background: '#f1f5f9',
+          background: '#0f172a',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
-        {/* ── Browser chrome ────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', background: '#e2e8f0', borderBottom: '1px solid #cbd5e1' }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <div style={{ width: 12, height: 12, borderRadius: 6, background: '#ef4444' }} />
-            <div style={{ width: 12, height: 12, borderRadius: 6, background: '#f59e0b' }} />
-            <div style={{ width: 12, height: 12, borderRadius: 6, background: '#10b981' }} />
+        {/* App header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '24px 40px',
+            background: '#0a5a5e',
+            color: 'white',
+          }}
+        >
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              background: '#0d7377',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: 22,
+              color: 'white',
+            }}
+          >
+            C
           </div>
-          <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8, padding: '6px 14px', fontSize: 13, color: '#64748b', display: 'flex' }}>
-            🔒 portal.concussion-education-australia.com/p/{slugForUrl}
-          </div>
-        </div>
-
-        {/* ── App header ────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '18px 28px', background: '#ffffff', borderBottom: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg, #0d7377, #0a5a5e)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 20 }}>C</div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#1a2332' }}>Concussion <span style={{ color: '#0d7377' }}>Education Australia</span></div>
-              <div style={{ fontSize: 11, color: '#64748b', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 2 }}>Hub Program · Private Preview</div>
+          <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 14 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, display: 'flex' }}>Concussion Education Australia</div>
+            <div style={{ fontSize: 11, color: '#a7c5c7', letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: 2, display: 'flex' }}>
+              Hub Program · Private Dashboard
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: 10, color: '#64748b', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Prepared for</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1a2332', marginTop: 2 }}>{shortName}</div>
+            <div style={{ fontSize: 10, color: '#a7c5c7', letterSpacing: '0.18em', textTransform: 'uppercase', display: 'flex' }}>
+              Prepared for
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2, display: 'flex' }}>{shortName}</div>
           </div>
         </div>
 
-        {/* ── Body: sidebar + content ──────────────────────────────── */}
-        <div style={{ display: 'flex', flex: 1, background: '#ffffff' }}>
-          {/* Sidebar */}
-          <div style={{ width: 180, background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '18px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {[
-              { label: 'Overview', active: true },
-              { label: 'Modules', active: false },
-              { label: 'Toolkit', active: false },
-              { label: 'References', active: false },
-              { label: 'Pricing', active: false },
-              { label: 'Activate', active: false },
-            ].map((item) => (
-              <div key={item.label} style={{
-                fontSize: 13,
-                padding: '8px 12px',
-                borderRadius: 8,
-                background: item.active ? '#0d7377' : 'transparent',
-                color: item.active ? 'white' : '#475569',
-                fontWeight: item.active ? 700 : 500,
-                display: 'flex',
-              }}>{item.label}</div>
-            ))}
+        {/* Body */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            background: '#f8fafc',
+            padding: '40px 48px',
+          }}
+        >
+          <div style={{ display: 'flex', fontSize: 13, color: '#0a5a5e', letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>
+            Concussion Hub Program · {region}
+          </div>
+          <div style={{ display: 'flex', fontSize: 64, fontWeight: 800, color: '#0f172a', lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: 6 }}>
+            {shortName}
+          </div>
+          <div style={{ display: 'flex', fontSize: 22, color: '#475569', fontWeight: 500, marginBottom: 32 }}>
+            {clinical} clinical · {city}, {state}
           </div>
 
-          {/* Content */}
-          <div style={{ flex: 1, padding: '20px 28px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 11, color: '#0a5a5e', letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 6, display: 'flex' }}>
-              Dashboard
-            </div>
-            <div style={{ fontSize: 40, fontWeight: 800, color: '#1a2332', lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: 4, display: 'flex' }}>
-              {shortName}
-            </div>
-            <div style={{ fontSize: 14, color: '#64748b', marginBottom: 18, display: 'flex' }}>
-              {clinical} clinical · {city}, {state} · {region}
-            </div>
+          {/* 3 KPI tiles */}
+          <div style={{ display: 'flex', gap: 14, marginBottom: 28 }}>
+            <Tile label="Your team" value={`${clinical} clinical`} sub={breakdown} />
+            <Tile label="CPD" value="14 hrs · OA" sub="Osteopathy Australia endorsed" />
+            <Tile label="Format" value="1 day on-site" sub="Whole team trained together" />
+          </div>
 
-            {/* 3-tile KPI row */}
-            <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-              <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 9, color: '#64748b', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600 }}>Your team</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: '#0a5a5e', marginTop: 4 }}>{clinical} clinical</div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, display: 'flex' }}>{breakdown}</div>
+          {/* CTA strip */}
+          <div
+            style={{
+              marginTop: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: 14,
+              padding: '18px 24px',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', fontSize: 12, color: '#94a3b8', letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700 }}>
+                Next
               </div>
-              <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 9, color: '#64748b', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600 }}>CPD</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: '#0a5a5e', marginTop: 4 }}>14 hrs · OA</div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>Osteopathy Australia endorsed</div>
-              </div>
-              <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 9, color: '#64748b', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600 }}>Format</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: '#0a5a5e', marginTop: 4 }}>1 day on-site</div>
-                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>Whole team trained together</div>
-              </div>
-            </div>
-
-            {/* Mini section cards */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-              <div style={{ flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Module 1 trial</div>
-                <div style={{ fontSize: 12, color: '#1a2332', marginTop: 2 }}>Free interactive sample</div>
-              </div>
-              <div style={{ flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Clinical templates</div>
-                <div style={{ fontSize: 12, color: '#1a2332', marginTop: 2 }}>GP letter · SCAT6 · RTP</div>
-              </div>
-              <div style={{ flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>References</div>
-                <div style={{ fontSize: 12, color: '#1a2332', marginTop: 2 }}>140+ peer-reviewed</div>
+              <div style={{ display: 'flex', fontSize: 18, color: '#0f172a', fontWeight: 700, marginTop: 4 }}>
+                Open Module 1 · Templates · Pricing
               </div>
             </div>
-
-            {/* CTA pill */}
-            <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>AHPRA-aligned · GST inclusive · valid 60 days</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0d7377', color: 'white', padding: '10px 20px', borderRadius: 10, fontSize: 14, fontWeight: 700 }}>
-                Open dashboard <span style={{ fontSize: 16 }}>↗</span>
-              </div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: '#0d7377',
+                color: 'white',
+                padding: '14px 26px',
+                borderRadius: 12,
+                fontSize: 18,
+                fontWeight: 700,
+              }}
+            >
+              Open dashboard
             </div>
           </div>
         </div>
@@ -206,5 +199,31 @@ export async function GET(req: NextRequest) {
         'cache-control': 'public, max-age=3600, s-maxage=3600',
       },
     },
+  )
+}
+
+function Tile({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: 14,
+        padding: '20px 22px',
+      }}
+    >
+      <div style={{ display: 'flex', fontSize: 11, color: '#64748b', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>
+        {label}
+      </div>
+      <div style={{ display: 'flex', fontSize: 30, fontWeight: 800, color: '#0a5a5e', marginTop: 8, letterSpacing: '-0.01em' }}>
+        {value}
+      </div>
+      <div style={{ display: 'flex', fontSize: 13, color: '#475569', marginTop: 6, lineHeight: 1.4 }}>
+        {sub}
+      </div>
+    </div>
   )
 }
