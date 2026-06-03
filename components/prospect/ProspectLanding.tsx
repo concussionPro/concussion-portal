@@ -506,7 +506,7 @@ function BookingEmbed() {
       <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Book the call</p>
       <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">Pick a time that suits</h3>
       <p className="text-sm text-muted-foreground mb-5 max-w-xl">
-        20 minutes · we walk through your team mix, the catchment opportunity, and a delivery date.
+        30 minutes · we walk through your team mix, the catchment opportunity, and a delivery date.
       </p>
       <a
         href="https://cal.com/zac-lewis-so8zjs/30min"
@@ -520,7 +520,7 @@ function BookingEmbed() {
               <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
                 <Activity className="w-4 h-4" strokeWidth={2} />
               </div>
-              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">cal.com · 20 minutes</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">cal.com · 30 minutes</p>
             </div>
             <h4 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">Book a call with Zac</h4>
             <p className="text-sm text-white/85 leading-relaxed">

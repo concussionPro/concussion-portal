@@ -40,23 +40,31 @@ const T1_NETWORK_OPENING =
   'Saw your team page — {network_size} locations across {region} is the kind of network that benefits from one trained clinical model rolled out everywhere, not a piecemeal CPD spend.'
 
 const BASE_HTML_STYLE = `
-  body { margin:0; padding:0; background:#eef2f6; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a; }
-  .wrap { max-width: 600px; margin: 0 auto; padding: 28px 16px; }
-  .card { background: #ffffff; border-radius: 20px; padding: 32px 30px 26px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px -10px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.06); }
+  body { margin:0; padding:0; background:#eef2f6; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 24px 12px; }
+  .card { background: #ffffff; border-radius: 20px; padding: 28px 26px 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px -10px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.06); }
   p { font-size: 15px; line-height: 1.6; margin: 0 0 14px; color: #1a2332; }
-  .bento { display: table; width: 100%; border-spacing: 8px 0; margin: 16px -8px 6px; }
-  .bento-row { display: table-row; }
-  .stat { display: table-cell; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 70%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 16px; vertical-align: top; width: 33%; box-shadow: inset 0 -1px 0 rgba(15,23,42,0.04), 0 2px 4px -2px rgba(15,23,42,0.06); }
+  .bento { width: 100%; border-collapse: separate; border-spacing: 8px 0; margin: 14px -8px 4px; }
+  .stat { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 70%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 14px; vertical-align: top; width: 33.33%; box-shadow: inset 0 -1px 0 rgba(15,23,42,0.04), 0 2px 4px -2px rgba(15,23,42,0.06); text-align: left; }
   .stat .v { font-size: 24px; font-weight: 800; color: #0a5a5e; line-height: 1.05; letter-spacing: -0.02em; }
-  .stat .l { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; font-weight: 700; line-height: 1.35; }
-  .cta { display: inline-block; background: linear-gradient(135deg, #0d7377 0%, #0a5a5e 100%); color: #ffffff; padding: 16px 32px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 18px 0 6px; box-shadow: 0 8px 16px -6px rgba(13,115,119,0.45), 0 2px 4px -1px rgba(15,23,42,0.08); letter-spacing: 0.01em; }
-  .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 8px; }
+  .stat .l { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 5px; font-weight: 700; line-height: 1.35; }
+  .cta { display: inline-block; background: linear-gradient(135deg, #0d7377 0%, #0a5a5e 100%); color: #ffffff !important; padding: 16px 30px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 16px 0 4px; box-shadow: 0 8px 16px -6px rgba(13,115,119,0.45), 0 2px 4px -1px rgba(15,23,42,0.08); letter-spacing: 0.01em; }
+  .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 6px; }
   .secondary a { color: #0a5a5e; font-weight: 600; }
-  .preview-img { display: block; width: 100%; max-width: 540px; height: auto; border-radius: 16px; border: 1px solid #e2e8f0; margin: 16px 0 6px; box-shadow: 0 16px 36px -16px rgba(15,23,42,0.25), 0 4px 10px -4px rgba(15,23,42,0.1); }
-  .sig { font-size: 12px; color: #64748b; margin-top: 22px; padding-top: 16px; border-top: 1px solid #eef2f6; line-height: 1.55; }
+  .preview-img { display: block; width: 100%; max-width: 100%; height: auto; border-radius: 14px; border: 1px solid #e2e8f0; margin: 14px 0 6px; box-shadow: 0 16px 36px -16px rgba(15,23,42,0.25), 0 4px 10px -4px rgba(15,23,42,0.1); }
+  .sig { font-size: 12px; color: #64748b; margin-top: 20px; padding-top: 14px; border-top: 1px solid #eef2f6; line-height: 1.55; }
   .sig strong { color: #0f172a; font-size: 13px; }
   .unsub { font-size: 11px; color: #cbd5e1; margin-top: 12px; }
   .unsub a { color: #94a3b8; text-decoration: underline; }
+  @media only screen and (max-width: 480px) {
+    .wrap { padding: 16px 8px !important; }
+    .card { padding: 22px 20px !important; border-radius: 18px !important; }
+    .bento { display: block !important; border-spacing: 0 !important; margin: 12px 0 4px !important; }
+    .stat { display: block !important; width: 100% !important; box-sizing: border-box !important; margin-bottom: 8px !important; }
+    .cta { display: block !important; text-align: center; padding: 16px 20px !important; }
+    p { font-size: 16px !important; }
+    .stat .v { font-size: 22px !important; }
+  }
 `
 
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
@@ -70,23 +78,23 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
      * as the structured body so subject merging still works server-side.
      */
     bodyTemplate: `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><style>${BASE_HTML_STYLE}</style></head>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${BASE_HTML_STYLE}</style></head>
 <body>
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
       <p>{opening_line} I built a private dashboard for {clinic_short_name} — sample module, fillable templates, your team's pricing.</p>
 
-      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="540" height="284" /></a>
+      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
-      <div class="bento"><div class="bento-row">
-        <div class="stat"><div class="v">180,000+</div><div class="l">AU sport-related concussions / year (AIS)</div></div>
-        <div class="stat"><div class="v">6&ndash;10</div><div class="l">Sessions per case · assessment → return-to-play</div></div>
-        <div class="stat"><div class="v">1 day</div><div class="l">On-site, whole team trained · 14 CPD · OA endorsed</div></div>
-      </div></div>
+      <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td class="stat"><div class="v">180k+</div><div class="l">AU concussions / yr</div></td>
+        <td class="stat"><div class="v">6&ndash;10</div><div class="l">Sessions per case</div></td>
+        <td class="stat"><div class="v">1 day</div><div class="l">On-site · 14 CPD</div></td>
+      </tr></table>
 
       <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
-      <span class="secondary">Or book 20 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
+      <span class="secondary">Or book 30 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
 
       <div class="sig">
         <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, CEA
@@ -104,23 +112,23 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
     slug: 'followup',
     subjectTemplate: 'Re: {clinic_short_name} concussion training — {region}',
     bodyTemplate: `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><style>${BASE_HTML_STYLE}</style></head>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${BASE_HTML_STYLE}</style></head>
 <body>
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
       <p>Following up — preview dashboard for {clinic_short_name} is still live:</p>
 
-      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="540" height="284" /></a>
+      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
-      <div class="bento"><div class="bento-row">
-        <div class="stat"><div class="v">Module 1</div><div class="l">Free interactive trial · 30 min</div></div>
-        <div class="stat"><div class="v">140+</div><div class="l">Peer-reviewed references</div></div>
-        <div class="stat"><div class="v">14 CPD</div><div class="l">OA endorsed · on-site at your clinic</div></div>
-      </div></div>
+      <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td class="stat"><div class="v">Module 1</div><div class="l">Free trial · 30 min</div></td>
+        <td class="stat"><div class="v">140+</div><div class="l">Peer-reviewed refs</div></td>
+        <td class="stat"><div class="v">14 CPD</div><div class="l">OA endorsed</div></td>
+      </tr></table>
 
       <a href="{portal_url}" class="cta">Open dashboard →</a>
-      <span class="secondary">Or book 20 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
+      <span class="secondary">Or book 30 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
 
       <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA</div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
@@ -199,18 +207,15 @@ export function mergeTemplate(
   // Build OG image URL with FULL query-string payload so the image renders
   // even when the prospect isn't in the DB (sample sends, previews). The
   // route prefers DB lookup by slug, falls back to query params if not found.
-  // Cache-bust each send so Gmail's image proxy (ci3.googleusercontent.com)
-  // doesn't serve a stale 4xx from a previous attempt. The OG route ignores
-  // the `v` param.
+  // Cache-bust pinned to the current deploy SHA. Bumps once per deploy and
+  // stays stable across sends — that lets Vercel CDN + Gmail's proxy serve
+  // the cached PNG from the second send onwards instead of re-running
+  // microlink every time. Falls back to a daily bucket if SHA missing.
+  const deployVersion =
+    process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? new Date().toISOString().slice(0, 10)
   const ogParams = new URLSearchParams({
     slug: clinic.slug,
-    name: clinic.shortName,
-    city: clinic.city,
-    state: clinic.state,
-    region: clinic.region,
-    breakdown: teamBreakdownString(clinic.team),
-    clinical: String(clinicalCount(clinic.team)),
-    v: Date.now().toString(36),
+    v: deployVersion,
   })
   const ogImageUrl = `${baseUrl}/api/prospect/og-image?${ogParams.toString()}`
 
