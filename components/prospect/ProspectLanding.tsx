@@ -125,11 +125,8 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           {/* Local hub */}
           <LocalHubSection clinic={clinic} />
 
-          {/* Public workshop fallback — for clinics without enough team interest */}
-          <PublicWorkshopFallback />
-
-          {/* Booking */}
-          <BookingEmbed />
+          {/* Booking + reply CTAs (consolidated; workshop fallback removed — on-site only) */}
+          <NextStepCTA clinic={clinic} />
 
           {/* Footer */}
           <SocialProofFooter />
@@ -493,78 +490,70 @@ function LocalList({ title, items }: { title: string; items: { name: string }[] 
   )
 }
 
-function PublicWorkshopFallback() {
+/**
+ * Single Next-Step CTA — consolidates the prior PublicWorkshopFallback +
+ * BookingEmbed. On-site only (workshop fallback removed per Zac directive).
+ * Two side-by-side options: a 30-min call, or just reply directly. Reply
+ * is the lower-friction default for cold-outreach response — calendar is
+ * an option, not the only path.
+ */
+function NextStepCTA({ clinic }: { clinic: ProspectClinic }) {
+  const mailtoSubject = encodeURIComponent(`Re: Concussion training for ${clinic.shortName}`)
   return (
     <section className="mt-10">
-      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Not enough team interest?</p>
-      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">Send delegates to the next public workshop</h3>
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Next step</p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
+        Reply or book a call
+      </h3>
       <p className="text-sm text-muted-foreground mb-5 max-w-xl">
-        If your cohort isn&apos;t there yet, individual clinicians can join the next public workshop instead — same 14 CPD, same content, half-day theory + half-day practical.
+        Two ways to take this further. No pre-call form, no contract.
       </p>
-      <a
-        href="https://concussion-education-australia.com/workshops/melbourne-2026-06-13"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block rounded-2xl bg-gradient-to-br from-amber-50 via-white to-amber-50/30 border-2 border-amber-200 hover:border-amber-300 shadow-sm hover:shadow-md transition-all group"
-      >
-        <div className="p-6 sm:p-7 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-amber-700" strokeWidth={2} />
-              </div>
-              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-700">Saturday 13 June 2026 · Melbourne CBD</p>
-            </div>
-            <h4 className="text-xl sm:text-2xl font-bold mb-1 leading-tight text-foreground">
-              Melbourne public workshop — A$1,400 per clinician
-            </h4>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Catering included · early-bird closes 31 May 2026 · seat-limited.
-            </p>
-          </div>
-          <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-500 text-white px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
-            See workshop
-            <ArrowUpRight className="w-4 h-4" />
-          </div>
-        </div>
-      </a>
-    </section>
-  )
-}
-
-function BookingEmbed() {
-  return (
-    <section className="mt-10">
-      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Book the call</p>
-      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">Pick a time that suits</h3>
-      <p className="text-sm text-muted-foreground mb-5 max-w-xl">
-        30 minutes · we walk through your team mix, the catchment opportunity, and a delivery date.
-      </p>
-      <a
-        href="https://cal.com/zac-lewis-so8zjs/30min"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group"
-      >
-        <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
-          <div className="min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <a
+          href={`mailto:zac@concussion-education-australia.com?subject=${mailtoSubject}`}
+          className="block rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group"
+        >
+          <div className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
-                <Activity className="w-4 h-4" strokeWidth={2} />
+                <Mail className="w-4 h-4" strokeWidth={2} />
               </div>
-              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">cal.com · 30 minutes</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">Reply directly</p>
             </div>
-            <h4 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">Book a call with Zac</h4>
-            <p className="text-sm text-white/85 leading-relaxed">
-              Direct calendar — pick a slot that works. No pre-call form.
+            <h4 className="text-lg sm:text-xl font-bold mb-1 leading-tight">Just email Zac</h4>
+            <p className="text-[13px] text-white/85 leading-relaxed">
+              Ask anything — team mix, scheduling, scope. I&apos;ll answer the same day.
             </p>
+            <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold bg-white text-accent px-4 py-2 rounded-lg shadow-md group-hover:scale-[1.02] transition-transform">
+              Open email
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
           </div>
-          <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
-            Open calendar
-            <ArrowUpRight className="w-4 h-4" />
+        </a>
+        <a
+          href="https://cal.com/zac-lewis-so8zjs/30min"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-2xl bg-white border-2 border-accent/20 hover:border-accent/40 shadow-md hover:shadow-lg transition-all group"
+        >
+          <div className="p-5 sm:p-6">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-accent" strokeWidth={2} />
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent">cal.com · 30 minutes</p>
+            </div>
+            <h4 className="text-lg sm:text-xl font-bold text-foreground mb-1 leading-tight">Book a call</h4>
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
+              Direct calendar — pick a slot that works for {clinic.shortName}.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold bg-accent text-white px-4 py-2 rounded-lg shadow-md group-hover:scale-[1.02] transition-transform">
+              Open calendar
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
           </div>
-        </div>
-      </a>
+        </a>
+      </div>
     </section>
   )
 }

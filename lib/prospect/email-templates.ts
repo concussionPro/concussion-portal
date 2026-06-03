@@ -130,7 +130,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       </tr></table>
 
       <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
-      <span class="secondary">Or book 30 min: <a href="{cal_booking_url}">cal.com/zac-lewis-so8zjs</a></span>
+      <span class="secondary">Or just reply with questions · book 30 min <a href="{cal_booking_url}">cal.com/zac-lewis-so8zjs</a></span>
 
       <p style="margin: 20px 0 8px; font-size: 12px; color: #0a5a5e; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;">Multidisciplinary integration</p>
       <table class="role-bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
