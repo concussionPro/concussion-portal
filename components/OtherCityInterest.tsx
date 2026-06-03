@@ -17,6 +17,7 @@ export function OtherCityInterest() {
   const [selection, setSelection] = useState<Selection>('sydney')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [clinicianCount, setClinicianCount] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -37,6 +38,7 @@ export function OtherCityInterest() {
           body: JSON.stringify({
             email,
             name,
+            teamSize: clinicianCount.trim() || undefined,
             notes: 'Inquired via /pricing page team-training pill — wants a follow-up call.',
           }),
         })
@@ -147,6 +149,19 @@ export function OtherCityInterest() {
               className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
             />
           </div>
+
+          {isTeam && (
+            <input
+              type="number"
+              min={1}
+              max={200}
+              required
+              value={clinicianCount}
+              onChange={(e) => setClinicianCount(e.target.value)}
+              placeholder="How many clinicians? (min 8 for on-site)"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+            />
+          )}
 
           <button
             type="submit"
