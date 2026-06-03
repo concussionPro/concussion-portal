@@ -9,59 +9,59 @@ import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount } fro
  * Token replacement happens on the merged HTML at substitution time.
  */
 const T1_OPENING_VARIANTS: Record<Discipline, string> = {
-  physiotherapists: `<p class="lead">The 2024 AIS/SMA concussion guidelines just shifted under you.</p>
+  physiotherapists: `<p class="lead">Under the 2026 AU concussion rules, most clinics still refer the RTP clearance out — and miss the case.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — now mandatory community sport</li>
-  <li>Physios explicitly named as clearance providers</li>
-  <li>Most clinics aren't set up to deliver the protocol</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
+  <li>Physios named as the clearance provider</li>
+  <li>Schools + clubs are asking "who runs your protocol?"</li>
 </ul>`,
-  osteopaths: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+  osteopaths: `<p class="lead">Under the 2026 AU concussion rules, most multi-disc clinics still refer the RTP clearance out — and miss the case.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — now mandatory community sport</li>
-  <li>Multi-disc allied health teams positioned to own the protocol</li>
-  <li>Most clinics still refer the structured cases out</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
+  <li>Multi-disc allied health teams are positioned to own the protocol</li>
+  <li>Schools + clubs are asking "who runs your protocol?"</li>
 </ul>`,
-  generalPractitioners: `<p class="lead">The 2024 AIS/SMA guidelines named GPs for concussion RTP clearance.</p>
+  generalPractitioners: `<p class="lead">Under the 2026 AU concussion rules, most practices still don't run the structured RTP pathway.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — mandatory under new guidelines</li>
-  <li>GPs explicitly named as clearance providers</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
+  <li>GPs named as the clearance provider</li>
   <li>60% of AU GPs report undertraining in the protocol (RACGP)</li>
 </ul>`,
-  sportsMedicineDoctors: `<p class="lead">The 2024 AIS/SMA guidelines made sports med the clearance hub.</p>
+  sportsMedicineDoctors: `<p class="lead">Under the 2026 AU concussion rules, most {region} cases still route via ED + primary care first.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — mandatory community sport</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
   <li>Sports medicine = diagnostic + clearance hub</li>
-  <li>Most {region} cases still route via ED first</li>
+  <li>Schools + clubs are asking "who runs your protocol?"</li>
 </ul>`,
-  exercisePhys: `<p class="lead">The 2024 AIS/SMA guidelines surfaced the EP-led half of concussion recovery.</p>
+  exercisePhys: `<p class="lead">Under the 2026 AU concussion rules, most clinics still skip the EP-led half of clearance.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — mandatory community sport</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
   <li>Sub-symptom-threshold aerobic drives clearance progression</li>
-  <li>It's the EP-led half most clinics skip</li>
+  <li>It's the EP-led half most clinics don't deliver</li>
 </ul>`,
-  myotherapists: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+  myotherapists: `<p class="lead">Under the 2026 AU concussion rules, most multi-disc clinics still refer the RTP clearance out.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — now mandatory community sport</li>
-  <li>Multi-disc clinics with manual-therapy depth own the pathway</li>
-  <li>Most still refer the structured cases out</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
+  <li>Manual-therapy depth + multi-disc team = positioned to own the protocol</li>
+  <li>Schools + clubs are asking "who runs your protocol?"</li>
 </ul>`,
-  remedialMassage: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+  remedialMassage: `<p class="lead">Under the 2026 AU concussion rules, most multi-disc clinics still refer the RTP clearance out.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — now mandatory community sport</li>
-  <li>Multi-disc clinics with manual-therapy depth own the pathway</li>
-  <li>Most still refer the structured cases out</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
+  <li>Manual-therapy depth + multi-disc team = positioned to own the protocol</li>
+  <li>Schools + clubs are asking "who runs your protocol?"</li>
 </ul>`,
-  practiceManager: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+  practiceManager: `<p class="lead">Under the 2026 AU concussion rules, most multi-clinician practices still refer the RTP clearance out.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — now mandatory community sport</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
   <li>Multi-clinician practices are positioned to capture the protocol</li>
-  <li>Most clinics still refer the structured cases out</li>
+  <li>Schools + clubs are asking "who runs your protocol?"</li>
 </ul>`,
-  admin: `<p class="lead">The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.</p>
+  admin: `<p class="lead">Under the 2026 AU concussion rules, most multi-clinician practices still refer the RTP clearance out.</p>
 <ul class="points">
-  <li>21-day RTP stand-down — now mandatory community sport</li>
+  <li>21-day mandatory RTP stand-down · community sport</li>
   <li>Multi-clinician practices are positioned to capture the protocol</li>
-  <li>Most clinics still refer the structured cases out</li>
+  <li>Schools + clubs are asking "who runs your protocol?"</li>
 </ul>`,
 }
 
@@ -120,7 +120,7 @@ const BASE_HTML_STYLE = `
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     slug: 'initial',
-    subjectTemplate: 'AIS/SMA named physios for the 21-day RTP clearance — {clinic_short_name} ready?',
+    subjectTemplate: '{clinic_short_name} · on-site concussion training for your team (OA endorsed · 14 CPD · SCAT6/VOMS/BESS)',
     /**
      * Visual T1 — HTML email. Short text + bento stats + dashboard screenshot
      * + one CTA. The text-only fallback (used by plain-text email clients)
@@ -134,6 +134,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
     <div class="card">
       <p>Hi {contact_first_name},</p>
       {opening_block}
+      <p style="margin: 14px 0 4px; font-size: 14px; color: #475569;">CEA brings the protocol on-site to your whole team — physios, EPs, osteos, admin — in one day.</p>
 
       <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
@@ -141,25 +142,25 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
         <td class="stat">
           <div class="stat-bar teal"></div>
           <div class="stat-inner">
-            <span class="l">RTP stand-down</span>
-            <span class="v">21 days</span>
-            <span class="sub">Mandatory · AIS 2024</span>
+            <span class="l">On-site training</span>
+            <span class="v">1 day</span>
+            <span class="sub">Your clinic · whole multi-disc team · your real cases</span>
           </div>
         </td>
         <td class="stat">
           <div class="stat-bar amber"></div>
           <div class="stat-inner">
-            <span class="l">Clearance provider</span>
-            <span class="v">Named</span>
-            <span class="sub">Physios + GPs explicitly</span>
+            <span class="l">Comprehensive content</span>
+            <span class="v">8 modules</span>
+            <span class="sub">SCAT6 · SCOAT6 · VOMS · oculomotor · BESS · cervical · RTP + clinical toolkit</span>
           </div>
         </td>
         <td class="stat">
           <div class="stat-bar indigo"></div>
           <div class="stat-inner">
-            <span class="l">CPD · OA endorsed</span>
-            <span class="v">14 hrs</span>
-            <span class="sub">One day on-site</span>
+            <span class="l">CEA · OA endorsed</span>
+            <span class="v">14 CPD</span>
+            <span class="sub">Per clinician · AHPRA-aligned</span>
           </div>
         </td>
       </tr></table>
