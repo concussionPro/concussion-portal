@@ -49,12 +49,21 @@ const BASE_HTML_STYLE = `
   ul.points { margin: 4px 0 16px; padding: 0; list-style: none; }
   ul.points li { font-size: 14.5px; line-height: 1.5; color: #1a2332; padding: 4px 0 4px 22px; position: relative; }
   ul.points li::before { content: ""; position: absolute; left: 4px; top: 13px; width: 6px; height: 6px; border-radius: 3px; background: #0d7377; }
-  .bento { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin: 16px -10px 4px; }
-  .stat { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px 20px 22px; vertical-align: top; width: 33.33%; text-align: left; }
+  .bento { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin: 18px -10px 6px; }
+  .stat { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 22px 22px 24px; vertical-align: top; width: 33.33%; text-align: left; box-shadow: 0 10px 24px -10px rgba(15,23,42,0.18), 0 2px 6px -2px rgba(15,23,42,0.06); position: relative; }
+  .stat.teal { background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%); border-left: 4px solid #14b8a6; }
+  .stat.amber { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 4px solid #f59e0b; }
+  .stat.indigo { background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%); border-left: 4px solid #6366f1; }
   .stat .headline { display: block; line-height: 1; margin-bottom: 14px; }
-  .stat .num { font-size: 36px; font-weight: 800; color: #1e3a8a; letter-spacing: -0.03em; line-height: 1; }
-  .stat .unit { font-size: 15px; font-weight: 700; color: #1e3a8a; margin-left: 4px; letter-spacing: -0.01em; }
-  .stat .sub { font-size: 13px; color: #64748b; line-height: 1.5; display: block; font-weight: 500; }
+  .stat .num { font-size: 44px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+  .stat.teal .num { color: #0a5a5e; }
+  .stat.amber .num { color: #b45309; }
+  .stat.indigo .num { color: #4338ca; }
+  .stat .unit { font-size: 15px; font-weight: 700; margin-left: 5px; letter-spacing: -0.01em; }
+  .stat.teal .unit { color: #0a5a5e; }
+  .stat.amber .unit { color: #b45309; }
+  .stat.indigo .unit { color: #4338ca; }
+  .stat .sub { font-size: 13px; color: #475569; line-height: 1.5; display: block; font-weight: 500; }
   .cta { display: inline-block; background: linear-gradient(135deg, #0d7377 0%, #0a5a5e 100%); color: #ffffff !important; padding: 16px 30px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 16px 0 4px; box-shadow: 0 8px 16px -6px rgba(13,115,119,0.45), 0 2px 4px -1px rgba(15,23,42,0.08); letter-spacing: 0.01em; }
   .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 6px; }
   .secondary a { color: #0a5a5e; font-weight: 600; }
@@ -91,20 +100,19 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
     <div class="card">
       <p>Hi {contact_first_name},</p>
       {opening_block}
-      <p style="margin: 14px 0 4px; font-size: 14px; color: #475569;">CEA delivers the full system on-site — clinical training (physios, EPs, osteos), admin SOPs, document templates (GP letters, sideline cards, NDIS, RTP plans), and marketing + referral assets to anchor your clinic as the local GP, school + club concussion authority.</p>
 
       <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
       <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td class="stat">
+        <td class="stat teal">
           <span class="headline"><span class="num">1</span><span class="unit"> day</span></span>
           <span class="sub">On-site, your clinic, whole multi-disc team, real cases</span>
         </td>
-        <td class="stat">
+        <td class="stat amber">
           <span class="headline"><span class="num">8</span><span class="unit"> modules</span></span>
           <span class="sub">SCAT6 · SCOAT6 · VOMS · oculomotor · BESS · cervical · RTP + toolkit</span>
         </td>
-        <td class="stat">
+        <td class="stat indigo">
           <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
           <span class="sub">CEA · OA endorsed · per clinician · AHPRA-aligned</span>
         </td>
@@ -112,6 +120,8 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
       <span class="secondary">Or book 30 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
+
+      <p style="margin: 22px 0 0; font-size: 13px; color: #64748b; line-height: 1.55;">CEA delivers the full system on-site — clinical training (physios, EPs, osteos), admin SOPs, document templates (GP letters, sideline cards, NDIS, RTP plans), and marketing + referral assets to anchor your clinic as the local GP, school + club concussion authority.</p>
 
       <div class="sig">
         <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, CEA
