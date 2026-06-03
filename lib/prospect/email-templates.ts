@@ -15,15 +15,15 @@ const STANDARD_POINTS = `<ul class="points">
 </ul>`
 
 const T1_OPENING_VARIANTS: Record<Discipline, string> = {
-  physiotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
-  osteopaths: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
-  generalPractitioners: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
-  sportsMedicineDoctors: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
-  exercisePhys: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
-  myotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
-  remedialMassage: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
-  practiceManager: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
-  admin: `<p class="lead">From diagnosis to discharge — become the concussion hub for {region_phrase}.</p>${STANDARD_POINTS}`,
+  physiotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  osteopaths: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  generalPractitioners: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  sportsMedicineDoctors: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  exercisePhys: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  myotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  remedialMassage: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  practiceManager: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  admin: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
 }
 
 /**
