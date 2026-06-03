@@ -51,10 +51,37 @@ export async function GET(req: NextRequest) {
   `
   const scatCertUserIds = new Set(scatCertRows.map((r) => r.audit_key.replace('scat_completion_upsell_', '')))
 
-  // 2. All users with progress data
-  const { rows: progressRows } = await sql<{ user_id: string; progress: UserProgress }>`
-    SELECT user_id, progress FROM user_progress
+  // 2. Pull users + their progress + their accessLevel so we can split by tier.
+  // Earlier version queried user_progress alone and conflated "user with any
+  // progress record" with "paid user", which gave a wildly misleading "56
+  // paid users never started". Truth: many of those have access_level = preview.
+  const { rows: progressRows } = await sql<{
+    user_id: string
+    progress: UserProgress
+    access_level: string
+    email: string | null
+  }>`
+    SELECT
+      up.user_id,
+      up.progress,
+      COALESCE(u.access_level, 'unknown') AS access_level,
+      u.email
+    FROM user_progress up
+    LEFT JOIN users u ON u.id = up.user_id
   `
+
+  // Also pull paid users who have NO progress row at all — they bought but
+  // never touched the course. That's the genuine "ghost paid users" bucket.
+  const { rows: paidUsersAll } = await sql<{ id: string; email: string; access_level: string }>`
+    SELECT id, email, access_level
+    FROM users
+    WHERE access_level IN ('online-only', 'full-course')
+  `
+  const paidUsersAllIds = new Set(paidUsersAll.map((u) => u.id))
+  const paidUsersWithProgress = new Set(
+    progressRows.filter((r) => r.access_level === 'online-only' || r.access_level === 'full-course').map((r) => r.user_id),
+  )
+  const paidUsersZeroProgressRecord = [...paidUsersAllIds].filter((id) => !paidUsersWithProgress.has(id))
 
   const scatBuckets = {
     progressShowsAll3Completed: [] as Array<{ userId: string }>,
@@ -131,6 +158,33 @@ export async function GET(req: NextRequest) {
     if (!userIdsInProgressTable.has(id)) certHasNoProgressRow.push(id)
   }
 
+  // Split paid-course completion stats by access_level. The earlier version
+  // looked at ALL users (free + paid) and reported "56 with no progress" as
+  // if they were paid customers — that was free-preview users dominating
+  // the dataset.
+  const byTier = {
+    'preview': { all8: 0, partial: 0, none: 0, total: 0 },
+    'online-only': { all8: 0, partial: 0, none: 0, total: 0 },
+    'full-course': { all8: 0, partial: 0, none: 0, total: 0 },
+    'unknown': { all8: 0, partial: 0, none: 0, total: 0 },
+  } as Record<string, { all8: number; partial: number; none: number; total: number }>
+
+  for (const row of progressRows) {
+    const tier = row.access_level || 'unknown'
+    if (!byTier[tier]) byTier[tier] = { all8: 0, partial: 0, none: 0, total: 0 }
+    byTier[tier].total += 1
+    const p = row.progress || {}
+    let paidCompleted = 0
+    let paidStarted = 0
+    for (const m of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      if (p[String(m)]?.completed) paidCompleted += 1
+      if (p[String(m)]) paidStarted += 1
+    }
+    if (paidCompleted === 8) byTier[tier].all8 += 1
+    else if (paidStarted > 0 || paidCompleted > 0) byTier[tier].partial += 1
+    else byTier[tier].none += 1
+  }
+
   return NextResponse.json({
     scat: {
       certUsers: scatCertUserIds.size,
@@ -141,11 +195,10 @@ export async function GET(req: NextRequest) {
       certUsersWithoutFullProgressCompletion: certWithoutProgress.length,
       certUsersWithNoProgressRowAtAll: certHasNoProgressRow.length,
     },
-    paid: {
-      progressShowsAll8Completed: paidBuckets.progressShowsAll8Completed.length,
-      progressShowsPartial: paidBuckets.progressShowsPartial.length,
-      progressShowsNone: paidBuckets.progressShowsNone.length,
-    },
+    paidByTier: byTier,
+    paidUsersTotal: paidUsersAll.length,
+    paidUsersWithNoProgressRow: paidUsersZeroProgressRecord.length,
+    paidUsersZeroProgressIds: paidUsersZeroProgressRecord.slice(0, 50),
     totalUsersWithProgressRecord: progressRows.length,
     scatCertUserIds: [...scatCertUserIds].slice(0, 50),
     samples: {
