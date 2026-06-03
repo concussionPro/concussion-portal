@@ -86,7 +86,10 @@ const BASE_HTML_STYLE = `
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     slug: 'initial',
-    subjectTemplate: '{clinic_short_name} · become the concussion hub for {city} (OA-endorsed team training · 14 CPD)',
+    // Short, question-form, location-personalised. Research benchmark: questions
+    // hit ~46% open vs ~21% statements; <50 chars stays visible on mobile.
+    // Variants rotate per-send for A/B (subjectVariant column on prospect).
+    subjectTemplate: '{subject_variant}',
     /**
      * Visual T1 — HTML email. Short text + bento stats + dashboard screenshot
      * + one CTA. The text-only fallback (used by plain-text email clients)
@@ -214,6 +217,18 @@ export function mergeTemplate(
   // network variants override the lead + first/third bullets with their angle.
   let openingBlock = template.openingVariants[discipline] ?? template.openingVariants.physiotherapists
 
+  // Subject-line variants (research-backed: short, question, location-personalised, <50 chars).
+  // Pick deterministically from slug so the same prospect always gets the same
+  // variant on retries; rotates across the prospect cohort for A/B insight.
+  const subjectVariants = [
+    `Concussion hub for ${clinic.city}?`,
+    `${clinic.city}'s concussion pathway?`,
+    `Become ${clinic.city}'s concussion authority?`,
+    `2026 RTP clearance for ${clinic.shortName}?`,
+  ]
+  const variantIdx = clinic.slug.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % subjectVariants.length
+  const subjectVariant = subjectVariants[variantIdx]
+
   if (options.networkVariant) {
     openingBlock = `<p class="lead">${options.networkVariant.networkSize} locations across ${clinic.region} — one trained model rolls out everywhere.</p>
 <ul class="points">
@@ -286,6 +301,7 @@ export function mergeTemplate(
     unsubscribe_link_only: htmlEncodeUrl(unsubscribeLinkOnly),
     nearest_metro: nearestMetro,
     og_image_url: htmlEncodeUrl(ogImageUrl),
+    subject_variant: subjectVariant,
   }
 
   const subject = mergeVariables(template.subjectTemplate, variables)
