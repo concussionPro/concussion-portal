@@ -22,19 +22,21 @@ import { isAdminRequest } from '@/lib/require-admin'
 
 const APOLLO_BASE = 'https://api.apollo.io/api/v1'
 
-async function apollo<T>(path: string, body?: object, method: 'GET' | 'POST' = 'GET'): Promise<T> {
+async function apollo<T>(path: string, body?: object): Promise<T> {
   const key = process.env.APOLLO_API_KEY
   if (!key) throw new Error('APOLLO_API_KEY env var not set')
   const url = `${APOLLO_BASE}${path}`
+  // Apollo's search endpoints all expect POST with JSON body — empty body
+  // is fine; URL params are ignored.
   const res = await fetch(url, {
-    method,
+    method: 'POST',
     headers: {
       accept: 'application/json',
       'Cache-Control': 'no-cache',
       'Content-Type': 'application/json',
       'X-Api-Key': key,
     },
-    body: body && method === 'POST' ? JSON.stringify(body) : undefined,
+    body: JSON.stringify(body ?? {}),
   })
   if (!res.ok) {
     const detail = await res.text().catch(() => '')
@@ -136,42 +138,53 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'APOLLO_API_KEY env var not set on production deploy' }, { status: 500 })
   }
 
-  // Pull replied contacts (paginate as needed)
+  // Apollo's /contacts/search filters take JSON body. q_keywords is a single
+  // keyword string (no boolean OR). We loop the ICP keywords and dedup
+  // results to cover the whole AU allied-health space.
   const replied: ApolloContact[] = []
-  let page = 1
-  const maxPages = 5
-  while (page <= maxPages) {
-    try {
-      const result = await apollo<{ contacts?: ApolloContact[]; pagination?: { total_pages?: number; page?: number } }>(
-        '/contacts/search',
-        {
-          per_page: perPage,
-          page,
-          'person_locations[]': 'Australia',
-          q_keywords: ICP_KEYWORDS.join(' OR '),
-          // Apollo doesn't have a clean "replied=true" search filter — most
-          // accounts surface this via contact_stage_names or emailer_campaign_status.
-          // We over-fetch then filter post-hoc.
-        },
-        'POST',
-      )
-      const items = result.contacts || []
-      replied.push(...items)
-      const totalPages = result.pagination?.total_pages || 1
-      if (page >= totalPages) break
-      page += 1
-    } catch (err) {
-      return NextResponse.json({ error: 'apollo search failed', detail: err instanceof Error ? err.message : String(err) }, { status: 502 })
+  const seenIds = new Set<string>()
+  let totalApiCalls = 0
+  const maxPagesPerKw = 3 // ceiling on cost
+
+  for (const kw of ICP_KEYWORDS.slice(0, 5)) {
+    let page = 1
+    while (page <= maxPagesPerKw) {
+      try {
+        const result = await apollo<{ contacts?: ApolloContact[]; pagination?: { total_pages?: number; page?: number; total_entries?: number } }>(
+          '/contacts/search',
+          {
+            q_keywords: kw,
+            person_locations: ['Australia'],
+            // Replied stage — this is what Apollo's CRM auto-applies when a
+            // contact replies in any sequence. 7454 in the account.
+            contact_stage_names: ['Replied'],
+            page,
+            per_page: perPage,
+          },
+        )
+        totalApiCalls += 1
+        const items = result.contacts || []
+        for (const c of items) {
+          if (c.id && !seenIds.has(c.id)) {
+            seenIds.add(c.id)
+            replied.push(c)
+          }
+        }
+        const totalPages = result.pagination?.total_pages || 1
+        if (page >= totalPages || items.length === 0) break
+        page += 1
+      } catch (err) {
+        return NextResponse.json({ error: 'apollo search failed', detail: err instanceof Error ? err.message : String(err), kw, page }, { status: 502 })
+      }
     }
   }
 
-  // Filter to replied OR finished-without-unsub
+  // Apollo's contact_stage_names: ['Replied'] filter already scoped server-side.
+  // Post-filter: drop bounced/unsubscribed if those flags are set.
   const engaged = replied.filter((c) => {
     const s = c.emailer_campaign_status || {}
     if (s.bounced || s.unsubscribed) return false
-    if (s.replied) return true
-    if (body.includeFinishedNoUnsub && s.finished) return true
-    return false
+    return true
   })
 
   // Apply ICP gate
@@ -216,7 +229,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       summary: {
         mode: 'dry-run',
-        totalRepliedFetched: replied.length,
+        apolloCalls: totalApiCalls,
+        totalAuContactsFetched: replied.length,
         engagedAfterStatusFilter: engaged.length,
         qualifiedAfterIcp: qualified.length,
         rejectedAfterIcp: rejected.length,
