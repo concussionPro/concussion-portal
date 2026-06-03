@@ -95,12 +95,19 @@ export interface ProspectClinic {
 
 export type EmailTemplateSlug = 'initial' | 'followup' | 'final'
 
+export interface OpeningSet {
+  lead: string
+  pointOne: string
+  pointTwo: string
+  pointThree: string
+}
+
 export interface EmailTemplate {
   slug: EmailTemplateSlug
   subjectTemplate: string
   bodyTemplate: string
   /** Discipline-aware opening line variants used inside bodyTemplate. */
-  openingVariants: Record<Discipline, string>
+  openingVariants: Record<Discipline, OpeningSet>
   signedOffAt: Date | null
   signedOffBy: string | null
 }

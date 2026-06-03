@@ -4,25 +4,68 @@ import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount } fro
 /**
  * Discipline-aware T1 opening line. Single sentence — sets context fast.
  */
-const T1_OPENING_VARIANTS: Record<Discipline, string> = {
-  physiotherapists:
-    '2024 AIS/SMA guidelines named physios for the mandatory 21-day RTP clearance. Most clinics still aren\'t set up to deliver the protocol.',
-  osteopaths:
-    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-disc osteo clinics are positioned to own the pathway — most still refer it out.',
-  generalPractitioners:
-    '2024 AIS/SMA guidelines named GPs as concussion RTP clearance providers — but 60% of AU GPs report undertraining in the protocol (RACGP).',
-  sportsMedicineDoctors:
-    '2024 AIS/SMA made sports medicine the diagnostic + RTP-clearance hub under a mandatory 21-day stand-down. Most {region} cases still route via ED first.',
-  exercisePhys:
-    '2024 AIS guidelines mandated 21-day stand-down. Sub-symptom-threshold aerobic progression drives the RTP clearance — and it\'s the EP-led half most clinics skip.',
-  myotherapists:
-    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-disc clinics with manual-therapy depth are positioned to own it — most refer it out.',
-  remedialMassage:
-    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-disc clinics with manual-therapy depth are positioned to own it — most refer it out.',
-  practiceManager:
-    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-clinician practices are positioned to capture the pathway — most refer it out.',
-  admin:
-    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-clinician practices are positioned to capture the pathway — most refer it out.',
+interface OpeningSet {
+  lead: string
+  pointOne: string
+  pointTwo: string
+  pointThree: string
+}
+
+const T1_OPENING_VARIANTS: Record<Discipline, OpeningSet> = {
+  physiotherapists: {
+    lead: 'The 2024 AIS/SMA concussion guidelines just shifted under you.',
+    pointOne: '21-day RTP stand-down — now mandatory for community sport',
+    pointTwo: 'Physios explicitly named as clearance providers',
+    pointThree: 'Most clinics aren\'t set up to deliver the protocol',
+  },
+  osteopaths: {
+    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
+    pointOne: '21-day RTP stand-down — now mandatory for community sport',
+    pointTwo: 'Multi-disc allied health teams positioned to own the protocol',
+    pointThree: 'Most clinics still refer the structured cases out',
+  },
+  generalPractitioners: {
+    lead: 'The 2024 AIS/SMA guidelines named GPs for concussion RTP clearance.',
+    pointOne: '21-day RTP stand-down — mandatory under new guidelines',
+    pointTwo: 'GPs explicitly named as clearance providers',
+    pointThree: '60% of AU GPs report undertraining in the protocol (RACGP)',
+  },
+  sportsMedicineDoctors: {
+    lead: 'The 2024 AIS/SMA guidelines made sports med the clearance hub.',
+    pointOne: '21-day RTP stand-down — mandatory community sport',
+    pointTwo: 'Sports medicine = diagnostic + clearance hub',
+    pointThree: 'Most {region} cases still route via ED first',
+  },
+  exercisePhys: {
+    lead: 'The 2024 AIS/SMA guidelines surfaced the EP-led half of concussion recovery.',
+    pointOne: '21-day RTP stand-down — mandatory community sport',
+    pointTwo: 'Sub-symptom-threshold aerobic drives clearance progression',
+    pointThree: 'It\'s the EP-led half most clinics skip',
+  },
+  myotherapists: {
+    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
+    pointOne: '21-day RTP stand-down — now mandatory for community sport',
+    pointTwo: 'Multi-disc clinics with manual-therapy depth own the pathway',
+    pointThree: 'Most still refer the structured cases out',
+  },
+  remedialMassage: {
+    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
+    pointOne: '21-day RTP stand-down — now mandatory for community sport',
+    pointTwo: 'Multi-disc clinics with manual-therapy depth own the pathway',
+    pointThree: 'Most still refer the structured cases out',
+  },
+  practiceManager: {
+    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
+    pointOne: '21-day RTP stand-down — now mandatory for community sport',
+    pointTwo: 'Multi-clinician practices are positioned to capture the protocol',
+    pointThree: 'Most clinics still refer the structured cases out',
+  },
+  admin: {
+    lead: 'The 2024 AIS/SMA concussion guidelines shifted the clearance pathway.',
+    pointOne: '21-day RTP stand-down — now mandatory for community sport',
+    pointTwo: 'Multi-clinician practices are positioned to capture the protocol',
+    pointThree: 'Most clinics still refer the structured cases out',
+  },
 }
 
 /**
@@ -43,11 +86,21 @@ const BASE_HTML_STYLE = `
   body { margin:0; padding:0; background:#eef2f6; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a; -webkit-font-smoothing:antialiased; }
   .wrap { max-width: 600px; margin: 0 auto; padding: 24px 12px; }
   .card { background: #ffffff; border-radius: 20px; padding: 28px 26px 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px -10px rgba(15,23,42,0.12), 0 2px 6px -2px rgba(15,23,42,0.06); }
-  p { font-size: 15px; line-height: 1.6; margin: 0 0 14px; color: #1a2332; }
+  p { font-size: 15px; line-height: 1.55; margin: 0 0 12px; color: #1a2332; }
+  .lead { font-size: 16px; font-weight: 700; line-height: 1.4; margin: 4px 0 10px; color: #0f172a; }
+  ul.points { margin: 4px 0 16px; padding: 0; list-style: none; }
+  ul.points li { font-size: 14.5px; line-height: 1.5; color: #1a2332; padding: 4px 0 4px 22px; position: relative; }
+  ul.points li::before { content: ""; position: absolute; left: 4px; top: 13px; width: 6px; height: 6px; border-radius: 3px; background: #0d7377; }
   .bento { width: 100%; border-collapse: separate; border-spacing: 8px 0; margin: 14px -8px 4px; }
-  .stat { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 70%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 14px; vertical-align: top; width: 33.33%; box-shadow: inset 0 -1px 0 rgba(15,23,42,0.04), 0 2px 4px -2px rgba(15,23,42,0.06); text-align: left; }
-  .stat .v { font-size: 24px; font-weight: 800; color: #0a5a5e; line-height: 1.05; letter-spacing: -0.02em; }
-  .stat .l { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 5px; font-weight: 700; line-height: 1.35; }
+  .stat { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 0; vertical-align: top; width: 33.33%; box-shadow: 0 4px 12px -4px rgba(15,23,42,0.12), 0 1px 3px rgba(15,23,42,0.04); text-align: left; overflow: hidden; }
+  .stat-inner { padding: 14px 16px 16px; display: block; }
+  .stat-bar { height: 4px; display: block; }
+  .stat-bar.teal { background: linear-gradient(90deg, #0d7377 0%, #14b8a6 100%); }
+  .stat-bar.amber { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
+  .stat-bar.indigo { background: linear-gradient(90deg, #4f46e5 0%, #818cf8 100%); }
+  .stat .v { font-size: 30px; font-weight: 800; color: #0f172a; line-height: 1; letter-spacing: -0.025em; display: block; margin-top: 6px; }
+  .stat .l { font-size: 10px; color: #0a5a5e; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; display: block; }
+  .stat .sub { font-size: 11.5px; color: #64748b; margin-top: 6px; line-height: 1.4; display: block; font-weight: 500; }
   .cta { display: inline-block; background: linear-gradient(135deg, #0d7377 0%, #0a5a5e 100%); color: #ffffff !important; padding: 16px 30px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 16px 0 4px; box-shadow: 0 8px 16px -6px rgba(13,115,119,0.45), 0 2px 4px -1px rgba(15,23,42,0.08); letter-spacing: 0.01em; }
   .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 6px; }
   .secondary a { color: #0a5a5e; font-weight: 600; }
@@ -60,10 +113,10 @@ const BASE_HTML_STYLE = `
     .wrap { padding: 16px 8px !important; }
     .card { padding: 22px 20px !important; border-radius: 18px !important; }
     .bento { display: block !important; border-spacing: 0 !important; margin: 12px 0 4px !important; }
-    .stat { display: block !important; width: 100% !important; box-sizing: border-box !important; margin-bottom: 8px !important; }
+    .stat { display: block !important; width: 100% !important; box-sizing: border-box !important; margin-bottom: 10px !important; }
     .cta { display: block !important; text-align: center; padding: 16px 20px !important; }
-    p { font-size: 16px !important; }
-    .stat .v { font-size: 22px !important; }
+    p, .lead { font-size: 16px !important; }
+    .stat .v { font-size: 28px !important; }
   }
 `
 
@@ -83,14 +136,40 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>{opening_line} Built {clinic_short_name} a preview dashboard — the protocol, your team pricing.</p>
+      <p class="lead">{opening_line_lead}</p>
+      <ul class="points">
+        <li>{point_one}</li>
+        <li>{point_two}</li>
+        <li>{point_three}</li>
+      </ul>
 
       <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
       <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td class="stat"><div class="v">21 days</div><div class="l">Mandatory community-sport RTP stand-down (AIS 2024)</div></td>
-        <td class="stat"><div class="v">Named</div><div class="l">Physios + GPs explicitly listed as clearance providers</div></td>
-        <td class="stat"><div class="v">14 CPD</div><div class="l">OA endorsed · the protocol to deliver it</div></td>
+        <td class="stat">
+          <div class="stat-bar teal"></div>
+          <div class="stat-inner">
+            <span class="l">RTP stand-down</span>
+            <span class="v">21 days</span>
+            <span class="sub">Mandatory · AIS 2024</span>
+          </div>
+        </td>
+        <td class="stat">
+          <div class="stat-bar amber"></div>
+          <div class="stat-inner">
+            <span class="l">Clearance provider</span>
+            <span class="v">Named</span>
+            <span class="sub">Physios + GPs explicitly</span>
+          </div>
+        </td>
+        <td class="stat">
+          <div class="stat-bar indigo"></div>
+          <div class="stat-inner">
+            <span class="l">CPD · OA endorsed</span>
+            <span class="v">14 hrs</span>
+            <span class="sub">One day on-site</span>
+          </div>
+        </td>
       </tr></table>
 
       <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
@@ -183,23 +262,31 @@ export function mergeTemplate(
   const discipline = clinic.contactDiscipline
   const nearestMetro = options.nearestMetro ?? options.networkVariant?.nearestMetro ?? 'Sydney or Brisbane'
 
-  let opening: string
+  const set = template.openingVariants[discipline]
+  let lead = set.lead
+  let pointOne = set.pointOne
+  const pointTwo = set.pointTwo
+  let pointThree = set.pointThree
+
   if (options.networkVariant) {
-    opening = T1_NETWORK_OPENING
-      .replace(/\{network_size\}/g, String(options.networkVariant.networkSize))
-      .replace(/\{region\}/g, clinic.region)
+    lead = `${options.networkVariant.networkSize} locations across ${clinic.region} — one trained model rolls out everywhere.`
+    pointOne = '21-day RTP stand-down — now mandatory community sport (AIS 2024)'
+    pointThree = 'Network rollout: one curriculum, one protocol, every clinic'
   } else if (options.regionalVariant) {
-    opening = T1_REGIONAL_OPENING
-      .replace(/\{nearest_metro\}/g, nearestMetro)
-      .replace(/\{city\}/g, clinic.city)
-  } else {
-    opening = template.openingVariants[discipline]
+    lead = `I'm based in Byron Bay — I'll bring the full-day training to ${clinic.city}.`
+    pointOne = `No travel to ${nearestMetro} — your clinic, your cases, your whole team in one day`
+    pointThree = `Most concussion CPD requires team travel to ${nearestMetro} + overnight stays`
+  }
+
+  const replaceTokens = (s: string) =>
+    s
       .replace(/\{clinic_short_name\}/g, clinic.shortName)
       .replace(/\{region\}/g, clinic.region)
+      .replace(/\{city\}/g, clinic.city)
+      .replace(/\{nearest_metro\}/g, nearestMetro)
       .replace(/\{osteo_count\}/g, String(clinic.team.osteopaths))
       .replace(/\{physio_count\}/g, String(clinic.team.physiotherapists))
       .replace(/\{ep_count\}/g, String(clinic.team.exercisePhys))
-  }
 
   const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}`
   const unsubscribeLinkOnly = `${baseUrl}/api/prospect/unsubscribe?t=${unsubscribeToken}`
@@ -235,7 +322,10 @@ export function mergeTemplate(
     contact_full_name: clinic.contactFullName,
     team_breakdown: teamBreakdownString(clinic.team),
     team_total: String(teamTotal(clinic.team)),
-    opening_line: opening,
+    opening_line_lead: replaceTokens(lead),
+    point_one: replaceTokens(pointOne),
+    point_two: replaceTokens(pointTwo),
+    point_three: replaceTokens(pointThree),
     portal_url: htmlEncodeUrl(portalUrl),
     access_key: clinic.accessKey,
     slug: clinic.slug,
