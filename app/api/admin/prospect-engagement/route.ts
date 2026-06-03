@@ -38,6 +38,24 @@ export async function GET(req: NextRequest) {
   const clinicIdFilter = url.searchParams.get('clinicId')
 
   try {
+    // Bootstrap check — if the cold-outreach tables haven't been migrated
+    // yet, return empty + a clear status so the dashboard doesn't 500.
+    const { rows: tableCheck } = await sql<{ exists: boolean }>`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'prospect_clinics'
+      ) AS exists
+    `
+    if (!tableCheck[0]?.exists) {
+      return NextResponse.json({
+        ok: true,
+        count: 0,
+        prospects: [],
+        status: 'schema-not-applied',
+        message: 'Run lib/prospect/schema.sql against the production Postgres to create prospect_clinics + related tables. The dashboard will populate once prospects are inserted.',
+      })
+    }
+
     const filterId = clinicIdFilter ? parseInt(clinicIdFilter, 10) : null
     const result = filterId !== null && !isNaN(filterId)
       ? await sql<EngagementRow>`
