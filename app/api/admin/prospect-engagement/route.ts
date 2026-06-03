@@ -92,14 +92,24 @@ export async function GET(req: NextRequest) {
     const clinicIdFilter = url.searchParams.get('clinicId')
     const filterId = clinicIdFilter ? parseInt(clinicIdFilter, 10) : null
 
+    // includeTest=true returns all sends including test samples sent to zac@
+    // for review. Default behaviour: filter test sends out of the analytics
+    // counters so "Sends: 5" reflects real production sends to prospects only,
+    // not test+prod mixed. Test sends are tagged via audit_key containing ':test:'.
+    const includeTest = url.searchParams.get('includeTest') === 'true'
+
     // Pull all three tables in parallel
     const [clinics, outreach, views] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
         : sql<ClinicDbRow>`SELECT * FROM prospect_clinics`,
-      filterId !== null && !isNaN(filterId)
-        ? sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log WHERE clinic_id = ${filterId} ORDER BY sent_at DESC`
-        : sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log ORDER BY sent_at DESC`,
+      includeTest
+        ? (filterId !== null && !isNaN(filterId)
+            ? sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log WHERE clinic_id = ${filterId} ORDER BY sent_at DESC`
+            : sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log ORDER BY sent_at DESC`)
+        : (filterId !== null && !isNaN(filterId)
+            ? sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log WHERE clinic_id = ${filterId} AND audit_key NOT LIKE '%:test:%' ORDER BY sent_at DESC`
+            : sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log WHERE audit_key NOT LIKE '%:test:%' ORDER BY sent_at DESC`),
       filterId !== null && !isNaN(filterId)
         ? sql<PortalViewRow>`
             SELECT clinic_id, COUNT(*)::text AS total,
