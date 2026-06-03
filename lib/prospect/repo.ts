@@ -50,6 +50,7 @@ interface DbClinicRow {
   notes: string | null
   created_at: Date
   updated_at: Date
+  priority_wave: string | null
 }
 
 function mapRow(row: DbClinicRow): ProspectClinic {
@@ -79,6 +80,7 @@ function mapRow(row: DbClinicRow): ProspectClinic {
     notes: row.notes ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    priorityWave: row.priority_wave ?? undefined,
   }
 }
 

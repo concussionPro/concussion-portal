@@ -91,6 +91,8 @@ export interface ProspectClinic {
   notes?: string
   createdAt: Date
   updatedAt: Date
+  /** P1 / P2 / etc — used in UTM campaign tagging. */
+  priorityWave?: string
 }
 
 export type EmailTemplateSlug = 'initial' | 'followup' | 'final'

@@ -64,6 +64,14 @@ const BASE_HTML_STYLE = `
   .stat.amber .unit { color: #b45309; }
   .stat.indigo .unit { color: #4338ca; }
   .stat .sub { font-size: 13px; color: #475569; line-height: 1.5; display: block; font-weight: 500; }
+  .role-bento { width: 100%; border-collapse: separate; border-spacing: 6px 0; margin: 4px -6px 6px; }
+  .role { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; vertical-align: top; width: 25%; text-align: left; }
+  .role-name { font-size: 11px; font-weight: 800; color: #0a5a5e; letter-spacing: 0.04em; display: block; }
+  .role-covers { font-size: 11px; color: #64748b; line-height: 1.35; display: block; margin-top: 3px; font-weight: 500; }
+  @media only screen and (max-width: 480px) {
+    .role-bento { display: block !important; border-spacing: 0 !important; margin: 6px 0 4px !important; }
+    .role { display: inline-block !important; width: calc(50% - 8px) !important; margin: 0 4px 6px 0 !important; box-sizing: border-box !important; vertical-align: top; }
+  }
   .cta { display: inline-block; background: linear-gradient(135deg, #0d7377 0%, #0a5a5e 100%); color: #ffffff !important; padding: 16px 30px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 16px 0 4px; box-shadow: 0 8px 16px -6px rgba(13,115,119,0.45), 0 2px 4px -1px rgba(15,23,42,0.08); letter-spacing: 0.01em; }
   .secondary { display: block; font-size: 13px; color: #64748b; margin-top: 6px; }
   .secondary a { color: #0a5a5e; font-weight: 600; }
@@ -104,27 +112,33 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <p>Hi {contact_first_name},</p>
       {opening_block}
 
-      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
+      <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
       <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
         <td class="stat teal">
           <span class="headline"><span class="num">1</span><span class="unit"> day</span></span>
-          <span class="sub">On-site, your clinic, whole multi-disc team, real cases</span>
+          <span class="sub">On-site team training</span>
         </td>
         <td class="stat amber">
           <span class="headline"><span class="num">8</span><span class="unit"> modules</span></span>
-          <span class="sub">SCAT6 · SCOAT6 · VOMS · oculomotor · BESS · cervical · RTP + toolkit</span>
+          <span class="sub">SCAT6 · VOMS · BESS · RTP + toolkit</span>
         </td>
         <td class="stat indigo">
           <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
-          <span class="sub">CEA · OA endorsed · per clinician · AHPRA-aligned</span>
+          <span class="sub">OA endorsed · per clinician</span>
         </td>
       </tr></table>
 
       <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
-      <span class="secondary">Or book 30 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
+      <span class="secondary">Or book 30 min: <a href="{cal_booking_url}">cal.com/zac-lewis-so8zjs</a></span>
 
-      <p style="margin: 22px 0 0; font-size: 13px; color: #64748b; line-height: 1.55;"><strong style="color: #0a5a5e;">Multidisciplinary integration</strong> — your whole team activated for the best concussion outcomes. CEA delivers it on-site: clinical training (physios, EPs, osteos), admin SOPs, document templates, and marketing + referral assets to anchor your clinic as the local concussion authority.</p>
+      <p style="margin: 20px 0 8px; font-size: 12px; color: #0a5a5e; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;">Multidisciplinary integration</p>
+      <table class="role-bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td class="role"><span class="role-name">Physio</span><span class="role-covers">Vestibular · cervical · RTP</span></td>
+        <td class="role"><span class="role-name">EP</span><span class="role-covers">Sub-threshold aerobic</span></td>
+        <td class="role"><span class="role-name">Osteo / Myo</span><span class="role-covers">Cervico-mandibular</span></td>
+        <td class="role"><span class="role-name">Admin</span><span class="role-covers">GP letters · NDIS</span></td>
+      </tr></table>
 
       <div class="sig">
         <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, CEA
@@ -149,7 +163,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <p>Hi {contact_first_name},</p>
       <p>Following up — preview dashboard for {clinic_short_name} is still live:</p>
 
-      <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
+      <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
       <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
         <td class="stat"><div class="v">Module 1</div><div class="l">Free trial · 30 min</div></td>
@@ -158,7 +172,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       </tr></table>
 
       <a href="{portal_url}" class="cta">Open dashboard →</a>
-      <span class="secondary">Or book 30 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
+      <span class="secondary">Or book 30 min: <a href="{cal_booking_url}">cal.com/zac-lewis-so8zjs</a></span>
 
       <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA</div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
@@ -220,11 +234,14 @@ export function mergeTemplate(
   // Subject-line variants (research-backed: short, question, location-personalised, <50 chars).
   // Pick deterministically from slug so the same prospect always gets the same
   // variant on retries; rotates across the prospect cohort for A/B insight.
+  // Mix of statements + capability-style questions (no possessives, no salesy
+  // "Become" framing). Capability questions prompt self-reflection without
+  // being pushy: "Are you positioned to..." reads as professional curiosity.
   const subjectVariants = [
-    `Concussion hub for ${clinic.city}?`,
-    `${clinic.city}'s concussion pathway?`,
-    `Become ${clinic.city}'s concussion authority?`,
-    `2026 RTP clearance for ${clinic.shortName}?`,
+    `Concussion hub for ${clinic.city}`,
+    `Multidisciplinary concussion protocol · ${clinic.shortName}`,
+    `Are you positioned to manage concussion cases?`,
+    `Is ${clinic.shortName} ready for the 2026 RTP standard?`,
   ]
   const variantIdx = clinic.slug.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % subjectVariants.length
   const subjectVariant = subjectVariants[variantIdx]
@@ -259,7 +276,25 @@ export function mergeTemplate(
     .replace(/\{city\}/g, clinic.city)
     .replace(/\{nearest_metro\}/g, nearestMetro)
 
-  const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}`
+  // ─── UTM tagging ─────────────────────────────────────────────────────
+  // Every outbound link in the email gets utm_source/medium/campaign/content
+  // so we can attribute portal-views, Cal bookings, and downstream conversions
+  // back to specific prospect cohorts. utm_term distinguishes which link
+  // inside the email the recipient clicked (hero image vs CTA vs book link).
+  const utmBase = new URLSearchParams({
+    utm_source: 'outreach',
+    utm_medium: 'email',
+    utm_campaign: `concussion_hub_${clinic.priorityWave?.toLowerCase() ?? 'wave'}`,
+    utm_content: clinic.slug,
+  })
+  const utmFor = (term: string) => {
+    const p = new URLSearchParams(utmBase)
+    p.set('utm_term', term)
+    return p.toString()
+  }
+  const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('cta')}`
+  const portalImageUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('hero')}`
+  const calBookingUrl = `https://cal.com/zac-lewis-so8zjs/30min?${utmFor('book')}`
   const unsubscribeLinkOnly = `${baseUrl}/api/prospect/unsubscribe?t=${unsubscribeToken}`
 
   // Build OG image URL with FULL query-string payload so the image renders
@@ -296,6 +331,8 @@ export function mergeTemplate(
     team_total: String(teamTotal(clinic.team)),
     opening_block: openingBlock,
     portal_url: htmlEncodeUrl(portalUrl),
+    portal_image_url: htmlEncodeUrl(portalImageUrl),
+    cal_booking_url: htmlEncodeUrl(calBookingUrl),
     access_key: clinic.accessKey,
     slug: clinic.slug,
     unsubscribe_link_only: htmlEncodeUrl(unsubscribeLinkOnly),
