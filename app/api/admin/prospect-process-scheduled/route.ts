@@ -61,7 +61,10 @@ export async function POST(req: NextRequest) {
     body = {}
   }
   const dryRun = body.dryRun !== false // default TRUE — safe by default
-  const dailyCap = body.dailyCap ?? 5
+  // Domain reputation ramp: 5/day Week 1, 10/day Week 2, 15-20/day Week 3+.
+  // Override via body.dailyCap. Current default at 15 — top of the safe range
+  // for a domain that's already shown clean delivery on its first batches.
+  const dailyCap = body.dailyCap ?? 15
   const allowPatternGuess = body.allowPatternGuess === true
 
   // Template signoff gate — even cron-driven sends require it
