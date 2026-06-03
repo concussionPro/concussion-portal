@@ -69,9 +69,10 @@ export async function POST(req: NextRequest) {
 
   const alreadySuppressed = new Set<string>()
   if (uniqueEmails.length > 0) {
+    const uniqueEmailsJson = JSON.stringify(uniqueEmails)
     const { rows: existing } = await sql<{ email: string }>`
       SELECT LOWER(email) AS email FROM email_suppression
-      WHERE LOWER(email) = ANY(${uniqueEmails})
+      WHERE LOWER(email) = ANY(SELECT jsonb_array_elements_text(${uniqueEmailsJson}::jsonb))
     `
     for (const r of existing) alreadySuppressed.add(r.email)
   }

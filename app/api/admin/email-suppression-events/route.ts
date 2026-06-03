@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
   `
 
   const recipients = [...new Set(events.map((e) => e.recipient))]
+  const recipientsJson = JSON.stringify(recipients)
   const userRowsByEmail = new Map<
     string,
     { id: string; nurtureUnsubscribed: boolean; accessLevel: string; name: string | null }
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
     }>`
       SELECT id, email, name, access_level, nurture_unsubscribed
       FROM users
-      WHERE LOWER(email) = ANY(${recipients})
+      WHERE LOWER(email) = ANY(SELECT jsonb_array_elements_text(${recipientsJson}::jsonb))
     `
     for (const u of userRows) {
       userRowsByEmail.set(u.email.toLowerCase(), {
@@ -67,15 +68,17 @@ export async function GET(request: NextRequest) {
   }
 
   let suppressionRows: Array<{ email: string; reason: string; source: string | null; created_at: string }> = []
-  try {
-    const r = await sql<{ email: string; reason: string; source: string | null; created_at: string }>`
-      SELECT email, reason, source, created_at
-      FROM email_suppression
-      WHERE LOWER(email) = ANY(${recipients})
-    `
-    suppressionRows = r.rows
-  } catch {
-    suppressionRows = []
+  if (recipients.length > 0) {
+    try {
+      const r = await sql<{ email: string; reason: string; source: string | null; created_at: string }>`
+        SELECT email, reason, source, created_at
+        FROM email_suppression
+        WHERE LOWER(email) = ANY(SELECT jsonb_array_elements_text(${recipientsJson}::jsonb))
+      `
+      suppressionRows = r.rows
+    } catch {
+      suppressionRows = []
+    }
   }
   const suppressionByEmail = new Map<string, (typeof suppressionRows)[number]>()
   for (const s of suppressionRows) {
