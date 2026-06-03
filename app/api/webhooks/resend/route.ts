@@ -256,9 +256,15 @@ export async function POST(request: NextRequest) {
               VALUES (${email}, ${reason}, ${'webhook:' + eventType + ':prospect-id:' + pidNum})
               ON CONFLICT (email) DO NOTHING
             `
+            // bounced ≠ lost. Lost = explicit rejection. Bounced = wrong email,
+            // can re-engage once a verified replacement is found. Surface as
+            // distinct status so admin can filter the bounced queue.
+            const newStatus = eventType === 'bounced' ? 'bounced' : 'lost'
             await sql`
               UPDATE prospect_clinics
-              SET status = 'lost', notes = COALESCE(notes, '') || ${'\n[auto] ' + new Date().toISOString() + ' webhook ' + eventType}, updated_at = NOW()
+              SET status = ${newStatus},
+                  notes = COALESCE(notes, '') || ${'\n[auto] ' + new Date().toISOString() + ' webhook ' + eventType + ' — needs replacement email'},
+                  updated_at = NOW()
               WHERE id = ${pidNum}
             `
             await writeAnalyticsEvent(`prospect_email_${eventType}`, {

@@ -17,6 +17,8 @@ export type ProspectStatus =
   | 'won'
   | 'lost'
   | 'archived'
+  /** Hard-bounced — needs a verified replacement email before re-sending. */
+  | 'bounced'
 
 export type TravelBand =
   | 'within-2hr'        // A$0
