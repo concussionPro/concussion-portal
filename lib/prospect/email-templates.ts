@@ -6,23 +6,23 @@ import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount } fro
  */
 const T1_OPENING_VARIANTS: Record<Discipline, string> = {
   physiotherapists:
-    'Most concussion presentations at sports-focused clinics like {clinic_short_name} get bounced back to GPs — but the 2023 Amsterdam consensus puts physios at the centre of the structured return-to-play pathway.',
+    'Did you catch the 2024 AIS/SMA/ACSEP/APA concussion guidelines? Physios are now explicitly named as "appropriately trained" providers for the mandatory 21-day return-to-play clearance — but most clinics aren\'t structurally set up to deliver the protocol they\'re nominated to clear.',
   osteopaths:
-    'Multi-disc osteo clinics are positioned for the full concussion arc — vestibular, cervical, return-to-play — but most still send the structured cases out.',
+    'The 2024 AIS/SMA/ACSEP/APA guidelines locked in a mandatory 21-day RTP stand-down for community sport concussion — and most multi-disc clinics aren\'t set up to deliver the structured clearance protocol that flows from it.',
   generalPractitioners:
-    '60% of Australian GPs report undertraining in concussion (RACGP 2023). The practices that build the diagnostic and referral pathway become the local default.',
+    'The 2024 AIS/SMA/ACSEP/APA concussion guidelines name GPs explicitly as RTP clearance providers under the new mandatory 21-day stand-down — but 60% of AU GPs still report undertraining in the structured pathway (RACGP 2023).',
   sportsMedicineDoctors:
-    'Sports medicine is the diagnostic and RTP-clearance hub the 2023 Amsterdam consensus calls for — but most concussion cases on the {region} are routing through ED and primary care first.',
+    'The 2024 AIS/SMA/ACSEP/APA concussion guidelines made you the diagnostic + RTP-clearance hub under a mandatory 21-day stand-down — most cases on the {region} are still routing through ED and primary care first.',
   exercisePhys:
-    'Sub-symptom-threshold aerobic progression is the 2023 consensus recommendation for persistent post-concussion symptoms — and it is the EP-led half of recovery most clinics do not deliver.',
+    'The 2024 AIS guidelines extended the mandatory community-sport stand-down to 21 days — and the sub-symptom-threshold aerobic progression that drives RTP clearance is the EP-led half most clinics don\'t deliver.',
   myotherapists:
-    'Multi-disc clinics with manual-therapy depth are positioned for the full concussion pathway — most still bounce the structured cases back to GPs.',
+    'The 2024 AIS guidelines locked in a 21-day mandatory RTP stand-down with structured clearance — multi-disc clinics with manual-therapy depth are positioned to own the pathway, but most still refer it out.',
   remedialMassage:
-    'Multi-disc clinics with manual-therapy depth are positioned for the full concussion pathway — most still bounce the structured cases back to GPs.',
+    'The 2024 AIS guidelines locked in a 21-day mandatory RTP stand-down with structured clearance — multi-disc clinics with manual-therapy depth are positioned to own the pathway, but most still refer it out.',
   practiceManager:
-    'Multi-clinician practices are positioned for the structured concussion pathway — most still refer the cases out instead of capturing them across the team.',
+    'The 2024 AIS/SMA/ACSEP/APA guidelines mandate a 21-day RTP stand-down with structured clearance — multi-clinician practices are positioned to capture the pathway, but most still refer the cases out.',
   admin:
-    'Multi-clinician practices are positioned for the structured concussion pathway — most still refer the cases out instead of capturing them across the team.',
+    'The 2024 AIS/SMA/ACSEP/APA guidelines mandate a 21-day RTP stand-down with structured clearance — multi-clinician practices are positioned to capture the pathway, but most still refer the cases out.',
 }
 
 /**
@@ -70,7 +70,7 @@ const BASE_HTML_STYLE = `
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     slug: 'initial',
-    subjectTemplate: '{clinic_short_name} · the concussion RTP pathway most clinics refer out',
+    subjectTemplate: '{clinic_short_name} · 2024 AIS guidelines just made you a named concussion RTP clearance provider',
     /**
      * Visual T1 — HTML email. Short text + bento stats + dashboard screenshot
      * + one CTA. The text-only fallback (used by plain-text email clients)
@@ -88,9 +88,9 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
       <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td class="stat"><div class="v">6&ndash;10</div><div class="l">Sessions per case · vestibular → cervical → RTP</div></td>
-        <td class="stat"><div class="v">60%</div><div class="l">GPs untrained (RACGP) · referrals follow the protocol</div></td>
-        <td class="stat"><div class="v">14 CPD</div><div class="l">OA endorsed · one day on-site</div></td>
+        <td class="stat"><div class="v">21 days</div><div class="l">Mandatory community-sport RTP stand-down (AIS 2024)</div></td>
+        <td class="stat"><div class="v">Named</div><div class="l">Physios + GPs explicitly listed as clearance providers</div></td>
+        <td class="stat"><div class="v">14 CPD</div><div class="l">OA endorsed · the protocol to deliver it</div></td>
       </tr></table>
 
       <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
