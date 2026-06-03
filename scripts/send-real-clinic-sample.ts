@@ -61,12 +61,12 @@ async function main() {
     process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
 
   const template = EMAIL_TEMPLATES.find((t) => t.slug === 'initial')!
-  const { subject, body } = mergeTemplate(template, POGO_PHYSIO, baseUrl, 'sample-pgphys-2026-06-03')
+  const { subject, html, text } = mergeTemplate(template, POGO_PHYSIO, baseUrl, 'sample-pgphys-2026-06-03')
 
   console.log('--- RENDERED EMAIL ---')
   console.log('Subject:', subject)
   console.log()
-  console.log(body)
+  console.log(text)
   console.log('--- SENDING TO:', zacInbox, '---')
 
   const resend = new Resend(apiKey)
@@ -75,7 +75,8 @@ async function main() {
     to: zacInbox,
     replyTo: 'zac@concussion-education-australia.com',
     subject: `[SAMPLE · POGO Physio · T1] ${subject}`,
-    text: body,
+    html,
+    text,
     headers: {
       'List-Unsubscribe':
         '<https://portal.concussion-education-australia.com/api/prospect/unsubscribe?t=sample>, <mailto:unsubscribe@concussion-education-australia.com>',

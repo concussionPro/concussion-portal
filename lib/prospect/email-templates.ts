@@ -2,86 +2,137 @@ import type { EmailTemplate, Discipline, ProspectClinic } from './types'
 import { dominantDiscipline, teamBreakdownString, teamTotal } from './pricing'
 
 /**
- * Discipline-aware T1 opening-line variants. The cold email's first line
- * is the strongest "looks personalised, not template" signal — it's
- * specific to the principal's discipline.
- *
- * Variables: {clinic_short_name}, {region}, plus discipline-specific tokens.
+ * Discipline-aware T1 opening line. Single sentence — sets context fast.
  */
 const T1_OPENING_VARIANTS: Record<Discipline, string> = {
   osteopaths:
-    'Saw your team page — {osteo_count} osteopaths is the kind of clinical depth that makes structured concussion training land properly across the practice.',
+    '{osteo_count} osteopaths means you can run a serious concussion program — diagnosis through return-to-play.',
   physiotherapists:
-    'Saw your team page — {physio_count} physios working sideline and return-to-play means concussion presentations are on the books regularly.',
+    '{physio_count} physios working sideline and return-to-play means concussion cases are on the books regularly.',
   generalPractitioners:
-    'Saw your practice page — running a primary-care practice positioned to manage concussion locally needs the diagnostic side tight, and the referral pathway clear.',
+    'Primary-care practices managing concussion locally need the diagnostic side tight and the referral pathway clear.',
   sportsMedicineDoctors:
-    'Saw your practice page — sports medicine sits at the centre of concussion decisions on the {region}, and your team is well-positioned to own that.',
+    'Sports medicine is the centre of concussion decisions on the {region} — your team is positioned to own it.',
   exercisePhys:
-    'Saw your team page — EP-led concussion rehab (sub-symptom-threshold aerobic, vestibular progression) is the underbuilt half of the recovery pathway; structured training closes the gap.',
+    'EP-led concussion rehab — sub-symptom-threshold aerobic, vestibular progression — is the underbuilt half of recovery.',
   myotherapists:
-    'Saw your team page — a multi-disciplinary practice with strong manual-therapy depth is exactly the kind of team that benefits from a coordinated concussion pathway.',
+    'Multi-disc clinics with strong manual-therapy depth are the right home for a coordinated concussion pathway.',
   remedialMassage:
-    'Saw your team page — a multi-disciplinary practice with strong manual-therapy depth is exactly the kind of team that benefits from a coordinated concussion pathway.',
+    'Multi-disc clinics with strong manual-therapy depth are the right home for a coordinated concussion pathway.',
   practiceManager:
-    'Saw your team page — {clinic_short_name} has the multi-disciplinary mix concussion management is designed for.',
+    'A multi-disc clinic the size of {clinic_short_name} has the team composition concussion management is designed for.',
   admin:
-    'Saw your team page — {clinic_short_name} has the multi-disciplinary mix concussion management is designed for.',
+    'A multi-disc clinic the size of {clinic_short_name} has the team composition concussion management is designed for.',
 }
 
 /**
- * The three production cold email templates. Production sends will FAIL
- * for any template whose `signedOffAt` is null — see /api/admin/prospect-send.
+ * Regional variant — for clinics in towns where the nearest concussion-trained
+ * clinic is 200km+ away. "I'll come to you" is the lead, not "be the local hub."
  */
+const T1_REGIONAL_OPENING =
+  'Most concussion CPD requires your team to travel to {nearest_metro} and spend the night. I\'m based in Byron Bay — I\'ll bring the full-day training to {city}.'
+
+/**
+ * Network variant — for multi-clinic groups (3+ locations). Frames as a
+ * network-wide deal, not a single-site send.
+ */
+const T1_NETWORK_OPENING =
+  'Saw your team page — {network_size} locations across {region} is the kind of network that benefits from one trained clinical model rolled out everywhere, not a piecemeal CPD spend.'
+
+const BASE_HTML_STYLE = `
+  body { margin:0; padding:0; background:#f8fafc; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#1a2332; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 32px 16px; }
+  .card { background: #ffffff; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; }
+  h1 { font-size: 24px; line-height: 1.2; margin: 0 0 12px; font-weight: 800; letter-spacing: -0.01em; color: #0a5a5e; }
+  p { font-size: 15px; line-height: 1.55; margin: 0 0 14px; color: #1a2332; }
+  .muted { color: #64748b; font-size: 13px; }
+  .bento { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; }
+  .stat { background: #f1f5f9; border-radius: 10px; padding: 12px 14px; }
+  .stat .v { font-size: 18px; font-weight: 800; color: #0a5a5e; line-height: 1.1; }
+  .stat .l { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; font-weight: 600; }
+  .cta { display: inline-block; background: #0d7377; color: #ffffff; padding: 14px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 15px; margin: 16px 0; }
+  .cta:hover { background: #0a5a5e; }
+  .secondary { display: block; font-size: 13px; color: #475569; margin-top: 12px; }
+  .secondary a { color: #0a5a5e; }
+  .preview-img { display: block; width: 100%; max-width: 568px; height: auto; border-radius: 12px; border: 1px solid #e2e8f0; margin: 16px 0; }
+  .sig { font-size: 13px; color: #475569; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; line-height: 1.5; }
+  .sig strong { color: #1a2332; }
+  .unsub { font-size: 11px; color: #94a3b8; margin-top: 12px; }
+  .unsub a { color: #94a3b8; text-decoration: underline; }
+`
+
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     slug: 'initial',
-    subjectTemplate: '{clinic_short_name} concussion training — {region} focus',
-    bodyTemplate: `Hi {contact_first_name},
+    subjectTemplate: '{clinic_short_name} concussion training — {region}',
+    /**
+     * Visual T1 — HTML email. Short text + bento stats + dashboard screenshot
+     * + one CTA. The text-only fallback (used by plain-text email clients)
+     * appears via Resend's automatic plain-text conversion. We pass `text`
+     * as the structured body so subject merging still works server-side.
+     */
+    bodyTemplate: `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>${BASE_HTML_STYLE}</style></head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <p>Hi {contact_first_name},</p>
+      <p>{opening_line}</p>
 
-{opening_line}
+      <div class="bento">
+        <div class="stat"><div class="v">14</div><div class="l">CPD hrs · OA endorsed</div></div>
+        <div class="stat"><div class="v">8 modules</div><div class="l">Online + on-site at your clinic</div></div>
+        <div class="stat"><div class="v">A$1,000</div><div class="l">Per clinician on-site (vs A$1,400 public)</div></div>
+        <div class="stat"><div class="v">1 day</div><div class="l">Whole team trained together</div></div>
+      </div>
 
-Concussion is one of the most undertaught conditions in Australian healthcare, and one of the highest-volume sports injuries in {region}. Most clinics in your catchment aren't formally positioned to manage it. {clinic_short_name} could be.
+      <a href="{portal_url}"><img src="{base_url}/api/prospect/og-image?slug={slug}" alt="{clinic_short_name} preview portal" class="preview-img" /></a>
 
-I'm Zac Lewis — AHPRA-registered osteopath, founder of Concussion Education Australia. Our flagship Concussion Clinical Mastery is Osteopathy Australia–endorsed, 14 CPD hours, used in clinics across AU.
+      <p style="font-size:13px;color:#475569;">A private preview portal for {clinic_short_name} — sample module, fillable templates, pricing for your team size.</p>
 
-For multi-clinician practices like yours, we run on-site cohort training — your whole team trains together on your own cases. I've put together a private working preview portal for {clinic_short_name} so you can see exactly what's in it before deciding:
+      <a href="{portal_url}" class="cta">Open your preview →</a>
+      <span class="secondary">Or book 20 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
 
-{portal_url}
+      <div class="sig">
+        <strong>Zac Lewis, Osteopath</strong> · B.Clin.Sci., M.Ost.Med.<br/>
+        AHPRA-registered · Founder, Concussion Education Australia<br/>
+        Worked with national + professional ice-hockey leagues in NZ &amp; Canada
+      </div>
 
-(Access key: {access_key} — paste into the link if prompted.)
-
-20-minute scoping call when it suits: https://cal.com/zac-lewis-so8zjs/30min
-
-Cheers,
-Zac
-
---
-Zac Lewis · B.Clin.Sci., M.Ost.Med.
-AHPRA-registered Osteopath
-Founder, Concussion Education Australia
-{unsubscribe_link}`,
+      <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
+    </div>
+  </div>
+</body></html>`,
     openingVariants: T1_OPENING_VARIANTS,
     signedOffAt: null,
     signedOffBy: null,
   },
   {
     slug: 'followup',
-    subjectTemplate: 'Re: {clinic_short_name} concussion training — {region} focus',
-    bodyTemplate: `Hi {contact_first_name},
+    subjectTemplate: 'Re: {clinic_short_name} concussion training — {region}',
+    bodyTemplate: `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>${BASE_HTML_STYLE}</style></head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <p>Hi {contact_first_name},</p>
+      <p>Following up on my note from last week. Two things worth the 5-minute skim even if a cohort isn't right for {clinic_short_name} this year:</p>
 
-Wanted to check this hadn't gone to your spam folder. Two things you might find useful even if a cohort isn't right for {clinic_short_name} this year:
+      <div class="bento">
+        <div class="stat"><div class="v">Module 1</div><div class="l">Free trial · interactive quiz</div></div>
+        <div class="stat"><div class="v">140+</div><div class="l">Peer-reviewed references</div></div>
+      </div>
 
-1. Our Module 1 trial is open inside the preview portal — first sections plus the interactive myth-quiz checkpoint. Worth a 5-min skim for any clinician seeing head injuries: {portal_url}
+      <a href="{portal_url}"><img src="{base_url}/api/prospect/og-image?slug={slug}" alt="{clinic_short_name} preview portal" class="preview-img" /></a>
 
-2. We surfaced our concussion reference library — 140+ peer-reviewed sources across Amsterdam 2023, AIS 2024, RACGP and Cochrane. Free to browse in the portal.
+      <a href="{portal_url}" class="cta">Open your preview →</a>
+      <span class="secondary">Or book 20 min: <a href="https://cal.com/zac-lewis-so8zjs/30min">cal.com/zac-lewis-so8zjs</a></span>
 
-If timing isn't right, no need to reply. If it is, 20 mins on https://cal.com/zac-lewis-so8zjs/30min.
-
-Cheers,
-Zac
-
-{unsubscribe_link}`,
+      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, Concussion Education Australia</div>
+      <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
+    </div>
+  </div>
+</body></html>`,
     openingVariants: T1_OPENING_VARIANTS,
     signedOffAt: null,
     signedOffBy: null,
@@ -89,18 +140,19 @@ Zac
   {
     slug: 'final',
     subjectTemplate: 'Closing the loop — {clinic_short_name}',
-    bodyTemplate: `Hi {contact_first_name},
-
-Last one from me — happy to leave it there if this isn't a fit. If you'd rather get the materials direct without a call, here's the full preview portal: {portal_url}
-
-Module 1 trial + the reference library are useful even without the on-site program.
-
-Either way, all the best with the practice.
-
-Cheers,
-Zac
-
-{unsubscribe_link}`,
+    bodyTemplate: `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>${BASE_HTML_STYLE}</style></head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <p>Hi {contact_first_name},</p>
+      <p>Last note from me. If the timing isn't right, all good — most regional clinics that engage circle back 6-12 months later. The preview portal stays open if you'd rather just browse the materials:</p>
+      <a href="{portal_url}" class="cta">Open preview →</a>
+      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, Concussion Education Australia</div>
+      <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
+    </div>
+  </div>
+</body></html>`,
     openingVariants: T1_OPENING_VARIANTS,
     signedOffAt: null,
     signedOffBy: null,
@@ -108,32 +160,54 @@ Zac
 ]
 
 /**
- * Merge a clinic's data into a template. Returns { subject, body } ready
- * to hand to Resend.
+ * Merge a clinic's data into a template. Returns { subject, html, text }
+ * so Resend can send the HTML body with a plain-text fallback.
  *
- * @param baseUrl absolute origin, e.g. 'https://portal.concussion-education-australia.com'
+ * Pass `regionalVariant=true` to use the "I'll come to you" opening for
+ * underserved regional clinics. Pass `networkVariant={size}` to use the
+ * multi-clinic-network opener for groups (3+ locations).
  */
 export function mergeTemplate(
   template: EmailTemplate,
   clinic: ProspectClinic,
   baseUrl: string,
   unsubscribeToken: string,
-): { subject: string; body: string } {
+  options: {
+    regionalVariant?: boolean
+    networkVariant?: { networkSize: number; nearestMetro?: string }
+    nearestMetro?: string
+  } = {},
+): { subject: string; html: string; text: string } {
   const discipline = clinic.contactDiscipline
-  const opening = template.openingVariants[discipline]
-    .replace(/\{clinic_short_name\}/g, clinic.shortName)
-    .replace(/\{region\}/g, clinic.region)
-    .replace(/\{osteo_count\}/g, String(clinic.team.osteopaths))
-    .replace(/\{physio_count\}/g, String(clinic.team.physiotherapists))
-    .replace(/\{ep_count\}/g, String(clinic.team.exercisePhys))
+  const nearestMetro = options.nearestMetro ?? options.networkVariant?.nearestMetro ?? 'Sydney or Brisbane'
+
+  let opening: string
+  if (options.networkVariant) {
+    opening = T1_NETWORK_OPENING
+      .replace(/\{network_size\}/g, String(options.networkVariant.networkSize))
+      .replace(/\{region\}/g, clinic.region)
+  } else if (options.regionalVariant) {
+    opening = T1_REGIONAL_OPENING
+      .replace(/\{nearest_metro\}/g, nearestMetro)
+      .replace(/\{city\}/g, clinic.city)
+  } else {
+    opening = template.openingVariants[discipline]
+      .replace(/\{clinic_short_name\}/g, clinic.shortName)
+      .replace(/\{region\}/g, clinic.region)
+      .replace(/\{osteo_count\}/g, String(clinic.team.osteopaths))
+      .replace(/\{physio_count\}/g, String(clinic.team.physiotherapists))
+      .replace(/\{ep_count\}/g, String(clinic.team.exercisePhys))
+  }
 
   const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}`
-  const unsubscribeLink = `Reply STOP to unsubscribe — or one-click: ${baseUrl}/api/prospect/unsubscribe?t=${unsubscribeToken}`
+  const unsubscribeLinkOnly = `${baseUrl}/api/prospect/unsubscribe?t=${unsubscribeToken}`
 
-  const variables: Record<string, string> = {
+  const variables: Record<string, string | undefined> = {
+    base_url: baseUrl,
     clinic_name: clinic.name,
     clinic_short_name: clinic.shortName,
     region: clinic.region,
+    city: clinic.city,
     contact_first_name: clinic.contactFirstName,
     contact_full_name: clinic.contactFullName,
     team_breakdown: teamBreakdownString(clinic.team),
@@ -141,27 +215,21 @@ export function mergeTemplate(
     opening_line: opening,
     portal_url: portalUrl,
     access_key: clinic.accessKey,
-    unsubscribe_link: unsubscribeLink,
+    slug: clinic.slug,
+    unsubscribe_link_only: unsubscribeLinkOnly,
+    nearest_metro: nearestMetro,
   }
 
   const subject = mergeVariables(template.subjectTemplate, variables)
-  const body = mergeVariables(template.bodyTemplate, variables)
-  return { subject, body }
+  const html = mergeVariables(template.bodyTemplate, variables)
+  const text = htmlToPlainText(html)
+  return { subject, html, text }
 }
 
 /**
- * Resolve {variable} tokens in a template string.
- *
- * Reliability rule: if a variable is missing OR is an empty/whitespace value,
- * the token is REMOVED entirely (not left as `{token}` and not replaced with
- * a placeholder string). The surrounding sentence may need a little cleanup
- * (double spaces collapsed) but the email never ships with raw {clinic_name}
- * or similar literal artefacts visible to the recipient.
- *
- * If you can't reliably populate a value (e.g. you don't know the contact's
- * first name or the principal's role), pass `undefined` or an empty string —
- * the engine will gracefully degrade the sentence rather than leak a
- * placeholder.
+ * Token resolution. Removes any unresolved {placeholders} entirely so the
+ * email never ships with raw merge artefacts visible. Whitespace + dangling
+ * punctuation cleaned up.
  */
 function mergeVariables(str: string, vars: Record<string, string | undefined>): string {
   const replaced = str.replace(/\{([a-z_]+)\}/g, (_m, key) => {
@@ -169,29 +237,39 @@ function mergeVariables(str: string, vars: Record<string, string | undefined>): 
     if (value && value.trim().length > 0) return value
     return ''
   })
-  // Tidy up artefacts from removed tokens: double spaces, leading punctuation
-  // gaps, dangling commas before periods, empty parentheses.
   return replaced
     .replace(/[ \t]+/g, ' ')
     .replace(/\(\s*\)/g, '')
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/,\s*([,.])/g, '$1')
-    .replace(/\s*\n\s*/g, '\n')
+    .trim()
+}
+
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<head[\s\S]*?<\/head>/gi, '')
+    .replace(/<a [^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, '$2 ($1)')
+    .replace(/<img [^>]*alt="([^"]*)"[^>]*\/?>/gi, '[$1]')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
 
-/**
- * Helper for ad-hoc rendering — accepts a clinic and returns the merged
- * T1 preview without needing a base URL (used in admin UI previews).
- */
 export function previewInitialEmail(
   clinic: ProspectClinic,
   baseUrl: string = 'https://portal.concussion-education-australia.com',
-): { subject: string; body: string } {
+): { subject: string; html: string; text: string } {
   const tpl = EMAIL_TEMPLATES.find((t) => t.slug === 'initial')!
   return mergeTemplate(tpl, clinic, baseUrl, 'preview-token')
 }
 
-// Re-export for convenience
 export { dominantDiscipline }

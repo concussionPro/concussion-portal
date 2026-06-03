@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
-  const { subject, body: emailBody } = mergeTemplate(template, clinic, baseUrl, 'sample-token')
+  const { subject, html, text } = mergeTemplate(template, clinic, baseUrl, 'sample-token')
 
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
@@ -178,7 +178,8 @@ export async function POST(req: NextRequest) {
       ok: false,
       error: 'RESEND_API_KEY not configured — returning rendered content only',
       subject,
-      body: emailBody,
+      html,
+      text,
     })
   }
 
@@ -192,7 +193,8 @@ export async function POST(req: NextRequest) {
       to: zacInbox,
       replyTo: 'zac@concussion-education-australia.com',
       subject: finalSubject,
-      text: emailBody,
+      html,
+      text,
       headers: {
         'List-Unsubscribe': `<${baseUrl}/api/prospect/unsubscribe?t=sample>, <mailto:unsubscribe@concussion-education-australia.com>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -214,7 +216,7 @@ export async function POST(req: NextRequest) {
       resendEmailId: result.data?.id,
       sentTo: zacInbox,
       subject: finalSubject,
-      bodyPreview: emailBody.slice(0, 600) + '…',
+      textPreview: text.slice(0, 600) + '…',
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

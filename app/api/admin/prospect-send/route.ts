@@ -40,14 +40,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { clinicId?: number; templateSlug?: string; testMode?: boolean }
+  let body: {
+    clinicId?: number
+    templateSlug?: string
+    testMode?: boolean
+    variant?: 'metro' | 'regional' | 'network'
+    networkSize?: number
+    nearestMetro?: string
+  }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { clinicId, templateSlug, testMode = true } = body
+  const { clinicId, templateSlug, testMode = true, variant = 'metro', networkSize, nearestMetro } = body
   if (!clinicId || !templateSlug) {
     return NextResponse.json({ error: 'clinicId and templateSlug required' }, { status: 400 })
   }
@@ -88,7 +95,14 @@ export async function POST(req: NextRequest) {
 
   // ── BUILD EMAIL ──
   const unsubscribeToken = `${clinic.slug}-${Date.now().toString(36)}`
-  const { subject, body: emailBody } = mergeTemplate(template, clinic, BASE_URL, unsubscribeToken)
+  const { subject, html, text } = mergeTemplate(template, clinic, BASE_URL, unsubscribeToken, {
+    regionalVariant: variant === 'regional',
+    networkVariant:
+      variant === 'network' && networkSize
+        ? { networkSize, nearestMetro }
+        : undefined,
+    nearestMetro,
+  })
 
   const to = testMode ? ZAC_INBOX : clinic.contactEmail
   const finalSubject = testMode ? `[TEST · ${clinic.shortName}] ${subject}` : subject
@@ -108,7 +122,8 @@ export async function POST(req: NextRequest) {
       to,
       replyTo: TRANSACTIONAL_REPLY_TO,
       subject: finalSubject,
-      text: emailBody,
+      html,
+      text,
       headers: {
         'List-Unsubscribe': `<${BASE_URL}/api/prospect/unsubscribe?t=${unsubscribeToken}>, <mailto:unsubscribe@concussion-education-australia.com>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -139,7 +154,7 @@ export async function POST(req: NextRequest) {
     clinicId: clinic.id,
     templateSlug: slug,
     emailSubject: finalSubject,
-    emailBody,
+    emailBody: text,
     resendEmailId,
     auditKey,
   })
