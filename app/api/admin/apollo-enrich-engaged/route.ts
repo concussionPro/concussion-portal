@@ -159,6 +159,10 @@ export async function POST(req: NextRequest) {
   let totalApiCalls = 0
   const maxPagesPerKw = 3 // ceiling on cost
 
+  // Capture wider net: any AU allied-health contact in the account, regardless
+  // of stage. Engagement signal is inferred post-hoc from email_status +
+  // last_contacted_at + emailer_campaign_status flags. Replied is the
+  // strongest signal but opens/clicks/delivered also count.
   for (const kw of ICP_KEYWORDS.slice(0, 5)) {
     let page = 1
     while (page <= maxPagesPerKw) {
@@ -168,9 +172,6 @@ export async function POST(req: NextRequest) {
           {
             q_keywords: kw,
             person_locations: ['Australia'],
-            // Replied stage — this is what Apollo's CRM auto-applies when a
-            // contact replies in any sequence. 7454 in the account.
-            contact_stage_names: ['Replied'],
             page,
             per_page: perPage,
           },
@@ -192,13 +193,25 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Apollo's contact_stage_names: ['Replied'] filter already scoped server-side.
-  // Post-filter: drop bounced/unsubscribed if those flags are set.
-  const engaged = replied.filter((c) => {
+  // Score each contact's engagement (best → worst). Bounced + unsubscribed are
+  // hard blocked. Everything else is in the engagement spectrum.
+  type Engagement = { signal: 'replied' | 'clicked' | 'opened' | 'finished' | 'contacted' | 'none'; score: number }
+  function engagementOf(c: ApolloContact): Engagement {
     const s = c.emailer_campaign_status || {}
-    if (s.bounced || s.unsubscribed) return false
-    return true
-  })
+    if (s.bounced || s.unsubscribed) return { signal: 'none', score: -1 }
+    if (s.replied) return { signal: 'replied', score: 5 }
+    if (s.finished) return { signal: 'finished', score: 3 }
+    if (c.last_contacted_at) return { signal: 'contacted', score: 2 }
+    return { signal: 'none', score: 0 }
+  }
+
+  // Filter to anyone NOT bounced/unsubscribed (the warm pool — every
+  // surviving contact has at least delivered cleanly to a real inbox).
+  const engaged = replied
+    .map((c) => ({ contact: c, eng: engagementOf(c) }))
+    .filter(({ eng }) => eng.score >= 0)
+    .sort((a, b) => b.eng.score - a.eng.score)
+    .map(({ contact }) => contact)
 
   // Apply ICP gate
   const qualified: Array<ApolloContact & { _icpReasons: string[] }> = []
@@ -209,31 +222,81 @@ export async function POST(req: NextRequest) {
     else rejected.push({ name: `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim(), email: c.email ?? '', reasons })
   }
 
-  // Dedup against existing prospect_clinics
-  const inserts: Array<{ slug: string; email: string; name: string; clinic: string; employees: number }> = []
-  if (qualified.length > 0) {
-    const emails = qualified.map((c) => c.email).filter(Boolean) as string[]
-    // sql tagged template doesn't accept array literals — fall back to a plain
-    // ANY-clause via a json-encoded string + cast on the SQL side.
-    const emailsJson = JSON.stringify(emails)
-    const { rows: existing } = await sql<{ contact_email: string; slug: string }>`
-      SELECT contact_email, slug FROM prospect_clinics
-      WHERE contact_email = ANY (SELECT jsonb_array_elements_text(${emailsJson}::jsonb))
-    `
-    const existingEmails = new Set(existing.map((e) => e.contact_email.toLowerCase()))
+  // Group qualified contacts BY CLINIC DOMAIN — we want 1 prospect_clinic per
+  // clinic, not per staff member. For each domain, pick the most-engaged
+  // contact (replied > finished > contacted), or the most senior title
+  // (owner/director/principal/founder beats junior staff).
+  function domainOf(email: string): string {
+    return email.toLowerCase().split('@')[1] || ''
+  }
+  function seniorityScore(title?: string): number {
+    if (!title) return 0
+    const t = title.toLowerCase()
+    if (/owner|founder|director|principal|managing/.test(t)) return 10
+    if (/practice manager|head of/.test(t)) return 7
+    if (/senior|lead/.test(t)) return 5
+    return 1
+  }
 
-    for (const c of qualified) {
-      const email = (c.email || '').toLowerCase()
-      if (!email || existingEmails.has(email)) continue
+  const byDomain = new Map<string, ApolloContact & { _icpReasons: string[] }>()
+  for (const c of qualified) {
+    const d = domainOf(c.email || '')
+    if (!d) continue
+    const existing = byDomain.get(d)
+    if (!existing) {
+      byDomain.set(d, c)
+      continue
+    }
+    // Pick the better contact for this clinic
+    const existingScore = seniorityScore(existing.title)
+    const candidateScore = seniorityScore(c.title)
+    if (candidateScore > existingScore) byDomain.set(d, c)
+  }
+
+  // Dedup against existing prospect_clinics (by both email and domain)
+  const inserts: Array<{
+    slug: string
+    domain: string
+    email: string
+    firstName: string
+    fullName: string
+    title: string
+    clinic: string
+    city: string
+    state: string
+  }> = []
+
+  if (byDomain.size > 0) {
+    const domains = [...byDomain.keys()]
+    const domainsJson = JSON.stringify(domains)
+    const { rows: existing } = await sql<{ contact_email: string; clinic_website_url: string }>`
+      SELECT contact_email, clinic_website_url FROM prospect_clinics
+      WHERE LOWER(contact_email) = ANY (SELECT jsonb_array_elements_text(${domainsJson}::jsonb))
+         OR LOWER(clinic_website_url) ~ ANY (SELECT jsonb_array_elements_text(${domainsJson}::jsonb))
+    `
+    const existingDomains = new Set<string>()
+    for (const e of existing) {
+      const ed = (e.contact_email || '').toLowerCase().split('@')[1]
+      if (ed) existingDomains.add(ed)
+      const wd = (e.clinic_website_url || '').toLowerCase().replace(/^https?:\/\/(www\.)?/, '').split('/')[0]
+      if (wd) existingDomains.add(wd)
+    }
+
+    for (const [domain, c] of byDomain) {
+      if (existingDomains.has(domain)) continue
       const org = c.organization || {}
-      const clinicName = org.name || 'Unknown clinic'
-      const slug = slugify(`${clinicName}-${c.last_name ?? c.first_name ?? 'contact'}`)
+      const clinicName = org.name || domain.replace(/\.(com\.au|com|org\.au|org)$/, '').replace(/[-.]/g, ' ')
+      const slug = slugify(`${clinicName}-apollo`)
       inserts.push({
         slug,
-        email,
-        name: `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim(),
+        domain,
+        email: (c.email || '').toLowerCase(),
+        firstName: c.first_name ?? '',
+        fullName: `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim(),
+        title: c.title ?? 'Principal',
         clinic: clinicName,
-        employees: org.estimated_num_employees ?? 0,
+        city: org.city ?? '',
+        state: org.state ?? '',
       })
     }
   }
@@ -266,12 +329,72 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // ACTUAL IMPORT — out of scope for v1, return TODO marker so we don't blast prematurely
+  // ACTUAL IMPORT — persist each clinic-level prospect as status='researching'
+  // so Zac reviews team size + multidisc fit BEFORE they hit the send queue.
+  const applied: Array<{ slug: string; clinic: string; email: string }> = []
+  const applyErrors: Array<{ slug: string; error: string }> = []
+
+  for (const ins of inserts) {
+    try {
+      const accessKey = generateAccessKey(ins.slug)
+      // Map Apollo state strings to AU state codes — best effort
+      function mapState(s: string): string {
+        const lower = s.toLowerCase()
+        if (lower.includes('new south wales') || lower === 'nsw') return 'NSW'
+        if (lower.includes('queensland') || lower === 'qld') return 'QLD'
+        if (lower.includes('victoria') || lower === 'vic') return 'VIC'
+        if (lower.includes('south australia') || lower === 'sa') return 'SA'
+        if (lower.includes('western australia') || lower === 'wa') return 'WA'
+        if (lower.includes('tasmania') || lower === 'tas') return 'TAS'
+        if (lower.includes('australian capital') || lower === 'act') return 'ACT'
+        if (lower.includes('northern territory') || lower === 'nt') return 'NT'
+        return 'NSW' // best-guess default; will need manual fix in admin
+      }
+      const stateCode = mapState(ins.state)
+      // Default team — totally unknown until Zac researches. All zeros + admin so
+      // it's obvious in the dashboard that this needs verification.
+      const team = JSON.stringify({
+        osteopaths: 0, physiotherapists: 0, generalPractitioners: 0,
+        sportsMedicineDoctors: 0, exercisePhys: 0, myotherapists: 0,
+        remedialMassage: 0, practiceManager: 0, admin: 1,
+      })
+      await sql`
+        INSERT INTO prospect_clinics (
+          slug, access_key, name, short_name, city, state, region,
+          contact_first_name, contact_full_name, contact_email, contact_role,
+          contact_discipline, clinic_website_url, team, local_targets,
+          travel_band, travel_surcharge, cohort_recommendation, status,
+          research_source, valid_until, notes, priority_wave, pitch_variant
+        ) VALUES (
+          ${ins.slug}, ${accessKey}, ${ins.clinic}, ${ins.clinic.slice(0, 32)},
+          ${ins.city || 'Unknown'}, ${stateCode}, ${ins.city || 'Unknown'},
+          ${ins.firstName || 'Principal'}, ${ins.fullName || 'Principal'},
+          ${ins.email}, ${ins.title}, 'physiotherapists',
+          ${'https://' + ins.domain}, ${team}::jsonb, '[]'::jsonb,
+          'within-4hr', 300, 'recommended', 'researching',
+          'apollo-engaged', NOW() + INTERVAL '90 days',
+          ${'IMPORTED FROM APOLLO — needs team verification (size, multi-disc, AHPRA-registered clinicians). Engagement signal: replied/clicked/opened/finished sequence in your Apollo account.'},
+          'P0', 'metro'
+        )
+        ON CONFLICT (slug) DO NOTHING
+      `
+      applied.push({ slug: ins.slug, clinic: ins.clinic, email: ins.email })
+    } catch (err) {
+      applyErrors.push({ slug: ins.slug, error: err instanceof Error ? err.message : String(err) })
+    }
+  }
+
   return NextResponse.json({
     summary: {
-      mode: 'apply',
-      todo: 'Apply path not implemented yet — review dryRun output first; will wire after first qualified-list inspection',
-      qualifiedCount: qualified.length,
+      mode: 'applied',
+      totalAuContactsFetched: replied.length,
+      engaged: engaged.length,
+      qualified: qualified.length,
+      clinicsAfterDomainGroup: byDomain.size,
+      newProspectsImported: applied.length,
+      errors: applyErrors.length,
     },
+    applied,
+    applyErrors,
   })
 }
