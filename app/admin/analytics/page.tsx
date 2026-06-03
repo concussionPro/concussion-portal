@@ -2758,28 +2758,37 @@ export default function AnalyticsDashboard() {
               return (
                 <div className="space-y-6">
                   {/* Header strip — pipeline summary always visible */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="card rounded-xl p-4">
-                      <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Prospects</div>
-                      <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{prospects.length}</div>
-                      <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.byStatus.researching ?? 0} researching · {agg.byStatus.approved ?? 0} approved</div>
-                    </div>
-                    <div className="card rounded-xl p-4">
-                      <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Weighted pipeline</div>
-                      <div className="text-2xl font-bold text-[var(--accent)] mt-1">{fmt$(agg.revenue.weightedPipeline)}</div>
-                      <div className="text-xs text-[var(--muted-foreground)] mt-0.5">of {fmt$(agg.revenue.totalRevenuePotential)} potential</div>
-                    </div>
-                    <div className="card rounded-xl p-4">
-                      <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Engagement</div>
-                      <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{agg.funnel.totalOpens} opens</div>
-                      <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.funnel.totalClicks} clicks · {agg.funnel.totalViews} portal views</div>
-                    </div>
-                    <div className="card rounded-xl p-4">
-                      <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Replies / Wins</div>
-                      <div className="text-2xl font-bold text-emerald-600 mt-1">{agg.funnel.totalReplies} / {agg.revenue.wins}</div>
-                      <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{(agg.funnel.sendOpenRate * 100).toFixed(0)}% open · {(agg.funnel.sendReplyRate * 100).toFixed(1)}% reply</div>
-                    </div>
-                  </div>
+                  {(() => {
+                    const activeStatuses = ['approved', 'sent', 'opened', 'engaged', 'replied', 'won']
+                    const activePipeline = prospects
+                      .filter(p => activeStatuses.includes(p.status))
+                      .reduce((acc, p) => acc + p.recoCohortTotal, 0)
+                    const activeCount = prospects.filter(p => activeStatuses.includes(p.status)).length
+                    return (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="card rounded-xl p-4">
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Prospects</div>
+                          <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{prospects.length}</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.byStatus.researching ?? 0} researching · {agg.byStatus.approved ?? 0} approved</div>
+                        </div>
+                        <div className="card rounded-xl p-4">
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Active pipeline</div>
+                          <div className="text-2xl font-bold text-[var(--accent)] mt-1">{fmt$(activePipeline)}</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{activeCount} approved+sent · {fmt$(agg.revenue.totalRevenuePotential)} total potential</div>
+                        </div>
+                        <div className="card rounded-xl p-4">
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Engagement</div>
+                          <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{agg.funnel.totalOpens} opens</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.funnel.totalClicks} clicks · {agg.funnel.totalViews} portal views</div>
+                        </div>
+                        <div className="card rounded-xl p-4" title={`Weighted ${fmt$(agg.revenue.weightedPipeline)} = stage probability × cohort value`}>
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Replies / Wins</div>
+                          <div className="text-2xl font-bold text-emerald-600 mt-1">{agg.funnel.totalReplies} / {agg.revenue.wins}</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{(agg.funnel.sendOpenRate * 100).toFixed(0)}% open · {(agg.funnel.sendReplyRate * 100).toFixed(1)}% reply · weighted {fmt$(agg.revenue.weightedPipeline)}</div>
+                        </div>
+                      </div>
+                    )
+                  })()}
 
                   {/* Sub-tab nav */}
                   <div className="flex gap-1 border-b border-[rgba(13,115,119,0.1)] overflow-x-auto">

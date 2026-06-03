@@ -122,6 +122,9 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           {/* Local hub */}
           <LocalHubSection clinic={clinic} />
 
+          {/* Public workshop fallback — for clinics without enough team interest */}
+          <PublicWorkshopFallback />
+
           {/* Booking */}
           <BookingEmbed />
 
@@ -458,6 +461,45 @@ function LocalList({ title, items }: { title: string; items: { name: string }[] 
   )
 }
 
+function PublicWorkshopFallback() {
+  return (
+    <section className="mt-10">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Not enough team interest?</p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">Send delegates to the next public workshop</h3>
+      <p className="text-sm text-muted-foreground mb-5 max-w-xl">
+        If your cohort isn&apos;t there yet, individual clinicians can join the next public workshop instead — same 14 CPD, same content, half-day theory + half-day practical.
+      </p>
+      <a
+        href="https://concussion-education-australia.com/workshops/melbourne-2026-06-13"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block rounded-2xl bg-gradient-to-br from-amber-50 via-white to-amber-50/30 border-2 border-amber-200 hover:border-amber-300 shadow-sm hover:shadow-md transition-all group"
+      >
+        <div className="p-6 sm:p-7 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                <GraduationCap className="w-4 h-4 text-amber-700" strokeWidth={2} />
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-700">Saturday 13 June 2026 · Melbourne CBD</p>
+            </div>
+            <h4 className="text-xl sm:text-2xl font-bold mb-1 leading-tight text-foreground">
+              Melbourne public workshop — A$1,400 per clinician
+            </h4>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Catering included · early-bird closes 31 May 2026 · seat-limited.
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-500 text-white px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
+            See workshop
+            <ArrowUpRight className="w-4 h-4" />
+          </div>
+        </div>
+      </a>
+    </section>
+  )
+}
+
 function BookingEmbed() {
   return (
     <section className="mt-10">
@@ -466,14 +508,31 @@ function BookingEmbed() {
       <p className="text-sm text-muted-foreground mb-5 max-w-xl">
         20 minutes · we walk through your team mix, the catchment opportunity, and a delivery date.
       </p>
-      <div className="rounded-2xl overflow-hidden border border-accent/15 bg-white shadow-sm">
-        <iframe
-          src="https://cal.com/zac-lewis-so8zjs/30min/embed?theme=light&hideBranding=true"
-          loading="lazy"
-          style={{ width: '100%', height: '700px', border: 0 }}
-          title="Book a call with Zac Lewis"
-        />
-      </div>
+      <a
+        href="https://cal.com/zac-lewis-so8zjs/30min"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group"
+      >
+        <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
+                <Activity className="w-4 h-4" strokeWidth={2} />
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">cal.com · 20 minutes</p>
+            </div>
+            <h4 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">Book a call with Zac</h4>
+            <p className="text-sm text-white/85 leading-relaxed">
+              Direct calendar — pick a slot that works. No pre-call form.
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
+            Open calendar
+            <ArrowUpRight className="w-4 h-4" />
+          </div>
+        </div>
+      </a>
     </section>
   )
 }
