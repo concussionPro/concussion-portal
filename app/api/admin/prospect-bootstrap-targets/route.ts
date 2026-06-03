@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         results.push({
           slug: target.slug,
           ok: true,
-          scheduledFor: scheduledAt.toISOString(),
+          scheduledFor: scheduledAt?.toISOString(),
         })
         continue
       }
