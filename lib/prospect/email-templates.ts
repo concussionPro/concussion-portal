@@ -6,23 +6,23 @@ import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount } fro
  */
 const T1_OPENING_VARIANTS: Record<Discipline, string> = {
   physiotherapists:
-    'Did you catch the 2024 AIS/SMA/ACSEP/APA concussion guidelines? Physios are now explicitly named as "appropriately trained" providers for the mandatory 21-day return-to-play clearance — but most clinics aren\'t structurally set up to deliver the protocol they\'re nominated to clear.',
+    '2024 AIS/SMA guidelines named physios for the mandatory 21-day RTP clearance. Most clinics still aren\'t set up to deliver the protocol.',
   osteopaths:
-    'The 2024 AIS/SMA/ACSEP/APA guidelines locked in a mandatory 21-day RTP stand-down for community sport concussion — and most multi-disc clinics aren\'t set up to deliver the structured clearance protocol that flows from it.',
+    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-disc osteo clinics are positioned to own the pathway — most still refer it out.',
   generalPractitioners:
-    'The 2024 AIS/SMA/ACSEP/APA concussion guidelines name GPs explicitly as RTP clearance providers under the new mandatory 21-day stand-down — but 60% of AU GPs still report undertraining in the structured pathway (RACGP 2023).',
+    '2024 AIS/SMA guidelines named GPs as concussion RTP clearance providers — but 60% of AU GPs report undertraining in the protocol (RACGP).',
   sportsMedicineDoctors:
-    'The 2024 AIS/SMA/ACSEP/APA concussion guidelines made you the diagnostic + RTP-clearance hub under a mandatory 21-day stand-down — most cases on the {region} are still routing through ED and primary care first.',
+    '2024 AIS/SMA made sports medicine the diagnostic + RTP-clearance hub under a mandatory 21-day stand-down. Most {region} cases still route via ED first.',
   exercisePhys:
-    'The 2024 AIS guidelines extended the mandatory community-sport stand-down to 21 days — and the sub-symptom-threshold aerobic progression that drives RTP clearance is the EP-led half most clinics don\'t deliver.',
+    '2024 AIS guidelines mandated 21-day stand-down. Sub-symptom-threshold aerobic progression drives the RTP clearance — and it\'s the EP-led half most clinics skip.',
   myotherapists:
-    'The 2024 AIS guidelines locked in a 21-day mandatory RTP stand-down with structured clearance — multi-disc clinics with manual-therapy depth are positioned to own the pathway, but most still refer it out.',
+    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-disc clinics with manual-therapy depth are positioned to own it — most refer it out.',
   remedialMassage:
-    'The 2024 AIS guidelines locked in a 21-day mandatory RTP stand-down with structured clearance — multi-disc clinics with manual-therapy depth are positioned to own the pathway, but most still refer it out.',
+    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-disc clinics with manual-therapy depth are positioned to own it — most refer it out.',
   practiceManager:
-    'The 2024 AIS/SMA/ACSEP/APA guidelines mandate a 21-day RTP stand-down with structured clearance — multi-clinician practices are positioned to capture the pathway, but most still refer the cases out.',
+    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-clinician practices are positioned to capture the pathway — most refer it out.',
   admin:
-    'The 2024 AIS/SMA/ACSEP/APA guidelines mandate a 21-day RTP stand-down with structured clearance — multi-clinician practices are positioned to capture the pathway, but most still refer the cases out.',
+    '2024 AIS/SMA mandated a 21-day RTP stand-down with structured clearance. Multi-clinician practices are positioned to capture the pathway — most refer it out.',
 }
 
 /**
@@ -70,7 +70,7 @@ const BASE_HTML_STYLE = `
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     slug: 'initial',
-    subjectTemplate: '{clinic_short_name} · 2024 AIS guidelines just made you a named concussion RTP clearance provider',
+    subjectTemplate: 'AIS/SMA named physios for the 21-day RTP clearance — {clinic_short_name} ready?',
     /**
      * Visual T1 — HTML email. Short text + bento stats + dashboard screenshot
      * + one CTA. The text-only fallback (used by plain-text email clients)
@@ -83,7 +83,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>{opening_line} I built a private dashboard for {clinic_short_name} — sample module, fillable templates, your team's pricing.</p>
+      <p>{opening_line} Built {clinic_short_name} a preview dashboard — the protocol, your team pricing.</p>
 
       <a href="{portal_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
