@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
 import type { ClinicTeam, CohortRecommendation, TravelBand } from '@/lib/prospect/types'
-import { teamTotal, clinicalCount, computePricing } from '@/lib/prospect/pricing'
+import { teamTotal, clinicalCount, computePricing, clinicSizeBucket, hubPackPriceFor } from '@/lib/prospect/pricing'
 
 interface ClinicDbRow {
   id: number
@@ -179,6 +179,8 @@ export async function GET(req: NextRequest) {
         team: c.team,
         clinicalCount: clinicalCount(c.team),
         totalCount: teamTotal(c.team),
+        sizeBucket: clinicSizeBucket(c.team),
+        hubPackPricing: hubPackPriceFor(c.team),
         // tier + pricing
         cohortRecommendation: c.cohort_recommendation,
         recoCohortClinicians: recoCohort.clinicians,
