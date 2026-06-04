@@ -21,7 +21,7 @@ export const CONFIG = {
     SAVINGS: 210,
     // Concussion Hub Pack — clinic-tier offer for cold outreach.
     // 5 online seats + branded clinical docs + admin pack + 30min consult.
-    PRICE_CLINIC_HUB_PACK: 1500,
+    PRICE_CLINIC_HUB_PACK: 1497,
     CLINIC_HUB_SEATS_INCLUDED: 5,
     // Per-clinician seat ADDED beyond the 5 included. Large clinics that
     // want their whole 10-20 person team trained pay marginal per-seat
@@ -29,11 +29,11 @@ export const CONFIG = {
     // they're already a Hub Pack customer, but high enough that the unit
     // economics work — Zac's online delivery cost is ~$0 per seat but the
     // perceived value tracks team size.
-    PRICE_CLINIC_HUB_EXTRA_SEAT: 500,
+    PRICE_CLINIC_HUB_EXTRA_SEAT: 497,
     // Per-clinician workshop upgrade for Hub Pack customers. Below the
     // standalone workshop-upgrade price because the clinic already paid
     // for the bundle — this is the marginal in-person cost only.
-    PRICE_CLINIC_WORKSHOP_UPGRADE: 500,
+    PRICE_CLINIC_WORKSHOP_UPGRADE: 497,
     SCAT_MASTERY_CPD_POINTS: 0,
     SCAT_MASTERY_MODULES: 3,
     PROMO_CODE: 'SCAT6',

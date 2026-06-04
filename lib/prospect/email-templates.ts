@@ -130,10 +130,10 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       </tr></table>
 
       <p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>Concussion Hub Pack — $1,500.</strong> Up to 5 of your clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day Hub launch playbook — all with {clinic_short_name}'s logo, ready to deploy day one.
+        <strong>Concussion Hub Pack — $1,497.</strong> Up to 5 of your clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day Hub launch playbook — all with {clinic_short_name}'s logo, ready to deploy day one.
       </p>
       <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
-        Larger team? Add seats at $500 per additional clinician. Want hands-on credentials? Upgrade nominated clinicians to our next public workshop at <strong>$500 each</strong>.
+        Larger team? Add seats at $497 per additional clinician. Want hands-on credentials? Upgrade nominated clinicians to our next public workshop at <strong>$497 each</strong>.
       </p>
       <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
         <strong>Lifetime access</strong> — one clinic purchase, ongoing content. Your team gets new concussion-adjacent modules as we roll them out.
@@ -176,14 +176,14 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview" class="preview-img" width="548" height="288" /></a>
 
       <ul class="points" style="margin: 14px 0 14px;">
-        <li><strong>5 clinicians online</strong> — your team trained in their own time (additional seats $500 ea)</li>
+        <li><strong>5 clinicians online</strong> — your team trained in their own time (additional seats $497 ea)</li>
         <li><strong>Branded clinical docs</strong> — GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager, all with {clinic_short_name}'s logo</li>
         <li><strong>Admin pack</strong> — billing codes, intake workflow, discharge documentation</li>
-        <li><strong>$500/clinician workshop upgrade</strong> when you want hands-on credentials</li>
+        <li><strong>$497/clinician workshop upgrade</strong> when you want hands-on credentials</li>
       </ul>
 
       <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>$1,500 base.</strong> Most clinics that engage take the call first — 15 minutes, no slides, just whether the program fits your team's caseload.
+        <strong>$1,497 base.</strong> Most clinics that engage take the call first — 15 minutes, no slides, just whether the program fits your team's caseload.
       </p>
 
       <a href="{cal_booking_url}" class="cta">Book 15 min on cal.com →</a>
@@ -213,7 +213,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <span class="secondary">Free SCAT6/SCOAT6 pack also still available: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a></span>
 
       <p style="margin-top: 18px; font-size: 14px; color: #475569; line-height: 1.55;">
-        Whenever you're ready: $1,500 Hub Pack base · $500 per in-person workshop upgrade · book 15 min <a href="{cal_booking_url}" style="color: #0a5a5e;">on cal.com</a>.
+        Whenever you're ready: $1,497 Hub Pack base · $497 per in-person workshop upgrade · book 15 min <a href="{cal_booking_url}" style="color: #0a5a5e;">on cal.com</a>.
       </p>
 
       <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, Concussion Education Australia</div>
