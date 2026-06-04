@@ -72,6 +72,13 @@ export async function POST(req: NextRequest) {
   //   - if T1 sent_at + 4 BD is still in the future → schedule T2
   //   - if T1 sent_at + 4 BD is in the past (cron missed it) → push out
   //     to today + 1 BD so cron picks it up tomorrow morning
+  // Only count REAL production T1 sends:
+  //  - resend_email_id IS NOT NULL → excludes sentinel rows from
+  //    /api/admin/prospect-mark-already-sent (those have NULL)
+  //  - audit_key NOT LIKE '%:test:%' → excludes dev/test fires
+  //  - audit_key NOT LIKE '%manual-pre-engine%' → excludes pre-engine markers
+  // Use MAX(sent_at) to dedupe clinics with multiple real T1 fires
+  // (test + prod). The most recent send drives the T2 timing.
   const { rows: candidates } = await sql<{
     id: number
     slug: string
@@ -84,15 +91,22 @@ export async function POST(req: NextRequest) {
   }>`
     SELECT
       pc.id, pc.slug, pc.short_name, pc.status, pc.next_template_slug, pc.scheduled_send_at,
-      ol_initial.sent_at AS t1_sent_at,
+      MAX(ol_initial.sent_at) AS t1_sent_at,
       EXISTS (
         SELECT 1 FROM prospect_outreach_log ol2
-        WHERE ol2.clinic_id = pc.id AND ol2.template_slug = 'followup'
+        WHERE ol2.clinic_id = pc.id
+          AND ol2.template_slug = 'followup'
+          AND ol2.resend_email_id IS NOT NULL
       ) AS has_followup_log
     FROM prospect_clinics pc
     JOIN prospect_outreach_log ol_initial
-      ON ol_initial.clinic_id = pc.id AND ol_initial.template_slug = 'initial'
+      ON ol_initial.clinic_id = pc.id
+      AND ol_initial.template_slug = 'initial'
+      AND ol_initial.resend_email_id IS NOT NULL
+      AND ol_initial.audit_key NOT LIKE '%:test:%'
+      AND ol_initial.audit_key NOT LIKE '%manual-pre-engine%'
     WHERE pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won')
+    GROUP BY pc.id, pc.slug, pc.short_name, pc.status, pc.next_template_slug, pc.scheduled_send_at
   `
 
   const now = new Date()
