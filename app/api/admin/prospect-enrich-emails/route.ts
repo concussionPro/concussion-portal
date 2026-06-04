@@ -190,13 +190,31 @@ export async function POST(req: NextRequest) {
       continue
     }
 
-    let response: ApolloSearchResponse
+    // Use /contacts/search (free plan compatible) — searches Zac's saved
+    // Apollo contacts. After 6 months of outreach his CRM has direct emails
+    // for most AU allied-health clinics. /mixed_people/search would search
+    // Apollo's full DB but is paywalled (403 on free plan).
+    //
+    // /contacts/search supports q_organization_domains for domain match
+    // and q_keywords for name fuzzy-match. Try domain first, then keyword
+    // (clinic short name) as fallback.
+    let response: ApolloSearchResponse = {}
+    let lookupMode: 'domain' | 'keyword' | 'both-failed' = 'domain'
     try {
-      response = await apollo<ApolloSearchResponse>('/mixed_people/search', {
+      response = await apollo<ApolloSearchResponse>('/contacts/search', {
         q_organization_domains: [domain],
-        person_seniorities: ['owner', 'founder', 'c_suite', 'partner', 'director', 'head', 'manager'],
-        per_page: 10,
+        per_page: 25,
       })
+      const candidatesByDomain = [...(response.people ?? []), ...(response.contacts ?? [])]
+      if (candidatesByDomain.length === 0) {
+        // Try keyword fallback — useful when Apollo stored the org under a
+        // different domain alias (e.g. ".com.au" vs ".com").
+        lookupMode = 'keyword'
+        response = await apollo<ApolloSearchResponse>('/contacts/search', {
+          q_keywords: c.short_name,
+          per_page: 25,
+        })
+      }
     } catch (err) {
       results.push({
         id: c.id, shortName: c.short_name, originalEmail: c.contact_email,
