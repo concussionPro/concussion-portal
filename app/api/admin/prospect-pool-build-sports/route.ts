@@ -95,9 +95,42 @@ const DOMAIN_BLOCKLIST = [
   '.gov.au', '.gov',
   '.health.nsw.gov.au', '.health.qld.gov.au', '.health.vic.gov.au',
   'apa.org', 'osteopathy.org',
-  'nrlfans', 'afl.com',
+  // Sports orgs / teams (not clinics — separate pipeline)
+  'cricket', 'afl.com', 'nrlfans', 'rugby', 'netball', 'football',
+  'westernbulldogs', 'swans.com', 'sydneyswans', 'collingwoodfc',
+  'richmondfc', 'hawthornfc', 'essendonfc', 'stkildafc', 'demons.com',
+  'lions.com.au', 'tigers.com.au', 'magpies.com.au', 'cats.com.au',
+  'suns.com.au', 'giants.com.au', 'wallabies', 'matildas', 'socceroos',
+  // Peak bodies + sport associations
+  'sma.org.au', 'sportsmedicineaustralia',
+  // Medical device / equipment brands
+  'smith-nephew', 'arthrex', 'strapit.com', 'mueller', 'rocktape',
+  'kinesio', 'compex', 'gametime',
+  // Aggregators
   'sarahkey.com',
 ]
+
+// Positive signal: domain MUST contain at least one clinic-indicator
+// keyword (or be on an explicit allowlist). This filter rejects sports
+// teams, medical-device brands, peak bodies, and other non-clinic orgs
+// that share sports-medicine vocabulary in their Apollo metadata.
+const CLINIC_KEYWORDS = [
+  'physio', 'physiotherapy', 'physiotherapist',
+  'osteo', 'osteopathy', 'osteopath',
+  'chiro', 'chiropractic', 'chiropractor',
+  'sportsmed', 'sportsclinic', 'sports-med', 'sports-clinic',
+  'sportsperformance', 'sports-performance',
+  'clinic', 'health', 'medical', 'rehabilitation', 'rehab',
+  'fitness', 'movement', 'wellness',
+  'allied', 'spine', 'spinal', 'recovery', 'injury',
+  'sportstherapy', 'sports-therapy',
+  'pilates', 'exercise', 'kinetic',
+]
+
+function looksLikeClinicDomain(domain: string): boolean {
+  const lower = domain.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return CLINIC_KEYWORDS.some((kw) => lower.includes(kw.replace(/[^a-z0-9]/g, '')))
+}
 
 const TITLE_RANK: Array<{ pattern: RegExp; rank: number; label: string }> = [
   { pattern: /\b(owner|founder|co-founder)\b/i, rank: 100, label: 'owner/founder' },
@@ -226,6 +259,10 @@ export async function POST(req: NextRequest) {
     if (!email || !email.includes('@')) continue
     const domain = email.split('@')[1]
     if (!domain || isBlockedDomain(domain)) continue
+    // Positive filter: must look like a clinic domain. Rejects sports
+    // teams, medical device brands, peak bodies that share sports-med
+    // vocabulary in Apollo's metadata but aren't actual clinics.
+    if (!looksLikeClinicDomain(domain)) continue
     const orgName = c.organization?.name || domain
     if (!byDomain.has(domain)) byDomain.set(domain, { domain, orgName, contacts: [] })
     byDomain.get(domain)!.contacts.push(c)
