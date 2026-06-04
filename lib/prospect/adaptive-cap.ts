@@ -2,33 +2,41 @@
  * Adaptive daily cap for cold-outreach cron.
  *
  * Replaces the static PROSPECT_CRON_DAILY_CAP env var with a data-driven
- * cap that ramps up when deliverability is clean and throttles down when
- * complaints or bounces spike. Domain reputation is shared with nurture +
- * transactional mail, so cold-outreach volume has to step DOWN if its
- * complaints start poisoning the whole sending identity.
+ * cap that ramps up when cold outreach is clean and throttles down when
+ * cold complaints or bounces spike. Designed to maximise throughput while
+ * defending shared sending-identity reputation.
  *
- * Decision logic (rolling 30 day window, CEA project only):
+ * TWO signal windows:
  *
- *   complaint_rate (= complaints / sends across ALL channels):
- *     >= 0.30%   → BLOCK (cap = 0). Domain at Gmail/Yahoo deferral risk.
- *     >= 0.20%   → THROTTLE (cap = 3).
- *     >= 0.10%   → HOLD (cap = 5).
- *     <  0.10%   → eligible to ramp.
+ *   A) 30-day TOTAL domain (CEA project, all channels) — safety net only.
+ *      Catches catastrophic reputation events that would block Gmail/Yahoo
+ *      delivery regardless of which channel caused them.
+ *      Triggers:
+ *        total complaint >= 0.30% (Gmail red line) → BLOCK (cap=0)
+ *        total bounce    >= 5%                     → BLOCK
  *
- *   bounce_rate (= hard bounces / sends):
- *     >= 5%      → BLOCK (cap = 0). List quality is wrecked.
- *     >= 2%      → HOLD (cap = 5).
- *     <  2%      → eligible to ramp.
+ *   B) 7-day COLD-only (cross-referenced via prospect_outreach_log
+ *      resend_email_ids) — primary ramp signal. What cold outreach has
+ *      actually done recently, not a 30-day average that includes
+ *      historical nurture complaints unrelated to cold.
+ *      Triggers:
+ *        cold complaint >= 1.0% → THROTTLE (cap=3)
+ *        cold bounce    >= 8%   → THROTTLE (cap=3)
+ *        cold complaint >= 0.5% → HOLD     (cap=5)
  *
- * Ramp ladder (only applied when BOTH gates clear):
- *   - cold_sends_last_7d < 10  →  cap = 5   (Week 1 baseline)
- *   - cold_sends_last_7d < 25  →  cap = 8   (Week 2)
- *   - cold_sends_last_7d < 50  →  cap = 12  (Week 3)
- *   - cold_sends_last_7d >= 50 →  cap = 15  (Week 4+ ceiling — past this
- *                                 split sending identity to subdomain)
+ * Ramp ladder (BOTH gates clear):
+ *   - cold_sends_7d <  5  →  cap = 8   (Day-1 baseline — generous open)
+ *   - cold_sends_7d < 25  →  cap = 12  (Week 1+)
+ *   - cold_sends_7d < 60  →  cap = 18  (Week 2-3)
+ *   - cold_sends_7d ≥ 60  →  cap = 25  (Week 4+ ceiling — split identity past this)
  *
- * Operators can override via env (PROSPECT_CRON_CAP_OVERRIDE) but the
- * adaptive value is always computed and logged so we can audit decisions.
+ * Why the bigger baseline (was 5/day, now 8/day): a single historical
+ * complaint from a nurture send shouldn't permanently throttle cold
+ * outreach. The new logic correctly distinguishes recent cold activity
+ * from historical domain noise.
+ *
+ * PROSPECT_CRON_CAP_OVERRIDE env can force a cap for one-off events.
+ * Adaptive value is always computed and logged either way.
  */
 import { sql } from '@/lib/db'
 
@@ -36,17 +44,22 @@ export interface CapDecision {
   cap: number
   reason: string
   metrics: {
-    complaintRate: number
-    bounceRate: number
+    // 30-day total domain (safety net)
     totalSends30d: number
+    totalComplaintRate30d: number
+    totalBounceRate30d: number
+    // 7-day cold-only (primary signal)
     coldSends7d: number
+    coldComplaints7d: number
+    coldBounces7d: number
+    coldComplaintRate7d: number
+    coldBounceRate7d: number
   }
   envOverride: number | null
 }
 
 export async function computeAdaptiveCap(): Promise<CapDecision> {
-  // 1. Rolling 30-day domain-wide deliverability metrics (CEA project).
-  //    Dedupe to per-email (an open event firing twice doesn't double-count).
+  // ── A. 30-day total domain (safety net) ──
   const { rows: domain30 } = await sql<{
     emails: number
     complaints: number
@@ -55,7 +68,6 @@ export async function computeAdaptiveCap(): Promise<CapDecision> {
     WITH per_email AS (
       SELECT
         email_id,
-        MAX(CASE WHEN event_type = 'delivered'  THEN 1 ELSE 0 END) AS delivered,
         MAX(CASE WHEN event_type = 'complained' THEN 1 ELSE 0 END) AS complained,
         MAX(CASE WHEN event_type = 'bounced'    THEN 1 ELSE 0 END) AS bounced
       FROM email_events
@@ -70,56 +82,85 @@ export async function computeAdaptiveCap(): Promise<CapDecision> {
     FROM per_email
   `
 
-  const m = domain30[0] || { emails: 0, complaints: 0, bounces: 0 }
-  const complaintRate = m.emails > 0 ? m.complaints / m.emails : 0
-  const bounceRate = m.emails > 0 ? m.bounces / m.emails : 0
+  const d = domain30[0] || { emails: 0, complaints: 0, bounces: 0 }
+  const totalComplaintRate30d = d.emails > 0 ? d.complaints / d.emails : 0
+  const totalBounceRate30d = d.emails > 0 ? d.bounces / d.emails : 0
 
-  // 2. Cold-only volume in the last 7 days — drives the ramp ladder.
-  // Cold outreach is tagged sequence=null + has a prospect-id tag (we'd need
-  // to join email_events with prospect_outreach_log). Cheap proxy: count
-  // prospect_outreach_log rows.
-  const { rows: cold7Rows } = await sql<{ cold_sends_7d: number }>`
-    SELECT COUNT(*)::int AS cold_sends_7d
-    FROM prospect_outreach_log
-    WHERE sent_at >= NOW() - INTERVAL '7 days'
+  // ── B. 7-day cold-only — join email_events to prospect_outreach_log via
+  // resend_email_id. Excludes sentinel rows (resend_email_id NULL).
+  const { rows: cold7 } = await sql<{
+    sends: number
+    complaints: number
+    bounces: number
+  }>`
+    WITH cold_sent AS (
+      SELECT resend_email_id
+      FROM prospect_outreach_log
+      WHERE sent_at >= NOW() - INTERVAL '7 days'
+        AND resend_email_id IS NOT NULL
+    ),
+    cold_events AS (
+      SELECT
+        ee.email_id,
+        MAX(CASE WHEN ee.event_type = 'complained' THEN 1 ELSE 0 END) AS complained,
+        MAX(CASE WHEN ee.event_type = 'bounced'    THEN 1 ELSE 0 END) AS bounced
+      FROM email_events ee
+      JOIN cold_sent cs ON cs.resend_email_id = ee.email_id
+      GROUP BY ee.email_id
+    ),
+    cold_send_count AS (
+      SELECT COUNT(*)::int AS n FROM cold_sent
+    )
+    SELECT
+      (SELECT n FROM cold_send_count)            AS sends,
+      COALESCE(SUM(complained), 0)::int          AS complaints,
+      COALESCE(SUM(bounced), 0)::int             AS bounces
+    FROM cold_events
   `
-  const coldSends7d = cold7Rows[0]?.cold_sends_7d ?? 0
 
-  // 3. Determine cap.
-  let cap = 5
-  let reason = 'baseline'
+  const c = cold7[0] || { sends: 0, complaints: 0, bounces: 0 }
+  const coldComplaintRate7d = c.sends > 0 ? c.complaints / c.sends : 0
+  const coldBounceRate7d = c.sends > 0 ? c.bounces / c.sends : 0
 
-  if (complaintRate >= 0.0030) {
+  // ── C. Decision ──
+  let cap = 8
+  let reason = 'baseline (clean)'
+
+  // Safety net: 30-day total domain catastrophes.
+  if (totalComplaintRate30d >= 0.0030) {
     cap = 0
-    reason = `BLOCK: complaint_rate ${(complaintRate * 100).toFixed(2)}% >= 0.30% (Gmail red line)`
-  } else if (bounceRate >= 0.05) {
+    reason = `BLOCK: 30d total complaint ${(totalComplaintRate30d * 100).toFixed(2)}% >= 0.30% (Gmail red line)`
+  } else if (totalBounceRate30d >= 0.05) {
     cap = 0
-    reason = `BLOCK: bounce_rate ${(bounceRate * 100).toFixed(2)}% >= 5% (list quality risk)`
-  } else if (complaintRate >= 0.0020) {
+    reason = `BLOCK: 30d total bounce ${(totalBounceRate30d * 100).toFixed(2)}% >= 5% (list quality risk)`
+  // Cold-specific reputation collapse.
+  } else if (coldComplaintRate7d >= 0.010) {
     cap = 3
-    reason = `THROTTLE: complaint_rate ${(complaintRate * 100).toFixed(2)}% >= 0.20%`
-  } else if (complaintRate >= 0.0010 || bounceRate >= 0.02) {
+    reason = `THROTTLE: cold complaint 7d ${(coldComplaintRate7d * 100).toFixed(2)}% >= 1.0%`
+  } else if (coldBounceRate7d >= 0.08) {
+    cap = 3
+    reason = `THROTTLE: cold bounce 7d ${(coldBounceRate7d * 100).toFixed(2)}% >= 8%`
+  } else if (coldComplaintRate7d >= 0.005) {
     cap = 5
-    reason = `HOLD: complaint_rate ${(complaintRate * 100).toFixed(2)}% or bounce_rate ${(bounceRate * 100).toFixed(2)}% near threshold`
+    reason = `HOLD: cold complaint 7d ${(coldComplaintRate7d * 100).toFixed(2)}% >= 0.5%`
   } else {
     // Clean — ramp by 7-day cold volume.
-    if (coldSends7d < 10) {
-      cap = 5
-      reason = `RAMP wk1: cold_sends_7d=${coldSends7d} < 10`
-    } else if (coldSends7d < 25) {
+    if (c.sends < 5) {
       cap = 8
-      reason = `RAMP wk2: cold_sends_7d=${coldSends7d}`
-    } else if (coldSends7d < 50) {
+      reason = `RAMP-DAY1 (baseline): cold_sends_7d=${c.sends}`
+    } else if (c.sends < 25) {
       cap = 12
-      reason = `RAMP wk3: cold_sends_7d=${coldSends7d}`
+      reason = `RAMP-WK1: cold_sends_7d=${c.sends}`
+    } else if (c.sends < 60) {
+      cap = 18
+      reason = `RAMP-WK2: cold_sends_7d=${c.sends}`
     } else {
-      cap = 15
-      reason = `CEILING wk4+: cold_sends_7d=${coldSends7d} (split sending identity before raising)`
+      cap = 25
+      reason = `CEILING: cold_sends_7d=${c.sends} (split sending identity before raising further)`
     }
   }
 
-  // 4. Env override — operators can force a cap (e.g. during a known event
-  // that would spike complaints unfairly). Logged so it's auditable.
+  // Env override — operators can force a cap for one-off events.
   const overrideRaw = process.env.PROSPECT_CRON_CAP_OVERRIDE
   const envOverride = overrideRaw != null ? parseInt(overrideRaw, 10) : null
   if (envOverride != null && !isNaN(envOverride) && envOverride >= 0) {
@@ -131,10 +172,14 @@ export async function computeAdaptiveCap(): Promise<CapDecision> {
     cap,
     reason,
     metrics: {
-      complaintRate,
-      bounceRate,
-      totalSends30d: m.emails,
-      coldSends7d,
+      totalSends30d: d.emails,
+      totalComplaintRate30d,
+      totalBounceRate30d,
+      coldSends7d: c.sends,
+      coldComplaints7d: c.complaints,
+      coldBounces7d: c.bounces,
+      coldComplaintRate7d,
+      coldBounceRate7d,
     },
     envOverride,
   }
