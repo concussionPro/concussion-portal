@@ -19,6 +19,14 @@ export const CONFIG = {
     PRICE_EARLY_BIRD: 1190,
     PRICE_INTERNATIONAL: 197,
     SAVINGS: 210,
+    // Concussion Hub Pack — clinic-tier offer for cold outreach.
+    // 5 online seats + branded clinical docs + admin pack + 30min consult.
+    PRICE_CLINIC_HUB_PACK: 1500,
+    CLINIC_HUB_SEATS_INCLUDED: 5,
+    // Per-clinician workshop upgrade for Hub Pack customers. Below the
+    // standalone workshop-upgrade price because the clinic already paid
+    // for the bundle — this is the marginal in-person cost only.
+    PRICE_CLINIC_WORKSHOP_UPGRADE: 500,
     SCAT_MASTERY_CPD_POINTS: 0,
     SCAT_MASTERY_MODULES: 3,
     PROMO_CODE: 'SCAT6',

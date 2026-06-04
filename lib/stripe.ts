@@ -45,6 +45,11 @@ export const COURSE_PRICING = {
   INTERNATIONAL_ONLINE: CONFIG.COURSE.PRICE_INTERNATIONAL * 100,
   WORKSHOP_UPGRADE_EARLY: (CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE) * 100,
   WORKSHOP_UPGRADE_REGULAR: (CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE) * 100,
+  // Clinic Hub Pack — 5 online seats + branded docs + admin pack ($1,500).
+  // Targeted at clinic owners via cold B2B outreach.
+  CLINIC_HUB_PACK: CONFIG.COURSE.PRICE_CLINIC_HUB_PACK * 100,
+  // Per-clinician workshop upgrade for Hub Pack buyers ($500).
+  CLINIC_WORKSHOP_UPGRADE: CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE * 100,
 } as const
 
 /**
@@ -55,6 +60,11 @@ export const COURSE_ACCESS_MAP: Record<string, 'online-only' | 'full-course'> = 
   'full-course': 'full-course',
   'international-online': 'online-only',
   'workshop-upgrade': 'full-course',
+  // Clinic Hub Pack — purchaser gets full-course access (so they can verify
+  // content). Additional seats are provisioned manually post-checkout via
+  // redemption codes. Workshop upgrades are tracked separately as add-ons.
+  'clinic-hub-pack': 'full-course',
+  'clinic-workshop-upgrade': 'full-course',
 }
 
 /**
@@ -66,7 +76,14 @@ export type WorkshopLocation = typeof VALID_LOCATIONS[number]
 /**
  * Valid course types (including international)
  */
-export const VALID_COURSE_TYPES = ['online-only', 'full-course', 'international-online', 'workshop-upgrade'] as const
+export const VALID_COURSE_TYPES = [
+  'online-only',
+  'full-course',
+  'international-online',
+  'workshop-upgrade',
+  'clinic-hub-pack',
+  'clinic-workshop-upgrade',
+] as const
 export type CourseType = typeof VALID_COURSE_TYPES[number]
 
 /**
@@ -116,6 +133,17 @@ export async function createCourseCheckoutSession({
     currency = 'aud'
     productName = 'ConcussionPro — Online Course'
     productDescription = '8 online modules (8 CPD hours) · Lifetime access · Clinical Toolkit · Reference Repository · Digital certificate'
+  } else if (courseType === 'clinic-hub-pack') {
+    unitAmount = COURSE_PRICING.CLINIC_HUB_PACK
+    currency = 'aud'
+    productName = 'Concussion Hub Pack — Clinic Tier'
+    productDescription = `Up to ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} clinician online seats · Branded clinical docs (GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager) · Admin/billing pack · 90-day Hub launch playbook · 30-min strategy call with Zac`
+  } else if (courseType === 'clinic-workshop-upgrade') {
+    unitAmount = COURSE_PRICING.CLINIC_WORKSHOP_UPGRADE
+    currency = 'aud'
+    const locationLabel = location ? formatLocation(location) : 'TBD'
+    productName = `Concussion Hub Pack — Workshop Upgrade (${locationLabel})`
+    productDescription = `Adds in-person workshop attendance for 1 nominated clinician (${locationLabel}) · 6 additional CPD hours · Hands-on credentials · Clinic Hub Pack add-on`
   } else {
     unitAmount = isEarlyBird ? COURSE_PRICING.FULL_COURSE_EARLY : COURSE_PRICING.FULL_COURSE_REGULAR
     currency = 'aud'
