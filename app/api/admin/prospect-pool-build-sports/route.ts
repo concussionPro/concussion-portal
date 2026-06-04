@@ -77,17 +77,13 @@ interface ApolloContact {
   country?: string
 }
 
+// Keyword loop kept for backwards-compat but no longer the primary path.
+// We now walk the FULL AU CRM (~7,400 contacts at last count) and filter
+// post-hoc — the sports-keyword filter was throwing away 97% of the pool.
 const SPORTS_KEYWORDS = [
   'sports medicine',
   'sports physio',
-  'sports physiotherapy',
-  'sports clinic',
   'athletic performance',
-  'sports rehabilitation',
-  'sports injury',
-  'sports chiro',
-  'sports osteopath',
-  'return to play',
 ]
 
 const DOMAIN_BLOCKLIST = [
@@ -201,27 +197,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'APOLLO_API_KEY env var not set' }, { status: 500 })
   }
 
-  let body: { dryRun?: boolean; perKwPages?: number }
+  let body: { dryRun?: boolean; perKwPages?: number; maxPages?: number; mode?: 'sweep' | 'sports' }
   try {
     body = await req.json().catch(() => ({}))
   } catch {
     body = {}
   }
   const dryRun = body.dryRun !== false
-  const perKwPages = Math.max(1, Math.min(body.perKwPages ?? 2, 5))
+  // Two modes:
+  //  'sweep' (default): walk the ENTIRE AU CRM regardless of keyword.
+  //    Apollo paginates by 100. With 7,400+ AU contacts this is ~75 calls.
+  //    Apply clinic-domain + blocklist filters post-fetch.
+  //  'sports': old behaviour — narrow to sports keywords. Use only if
+  //    sweep is producing too much noise to be useful.
+  const mode = body.mode === 'sports' ? 'sports' : 'sweep'
+  const maxPages = Math.max(1, Math.min(body.maxPages ?? 100, 200))
+  const perKwPages = Math.max(1, Math.min(body.perKwPages ?? 5, 20))
 
-  // 1. Pull AU contacts matching sports keywords from Apollo CRM
+  // 1. Pull contacts from Apollo CRM
   const allContacts: ApolloContact[] = []
   const seenIds = new Set<string>()
   let apolloCalls = 0
-  for (const kw of SPORTS_KEYWORDS) {
+  let totalEntries = 0
+
+  if (mode === 'sweep') {
+    // Walk the entire AU CRM. No keyword filter — apply quality filter at
+    // the domain-grouping step instead.
     let page = 1
-    while (page <= perKwPages) {
+    while (page <= maxPages) {
       try {
         const result = await apollo<{ contacts?: ApolloContact[]; pagination?: { total_pages?: number; total_entries?: number } }>(
           '/contacts/search',
           {
-            q_keywords: kw,
             person_locations: ['Australia'],
             page,
             per_page: 100,
@@ -229,6 +236,7 @@ export async function POST(req: NextRequest) {
         )
         apolloCalls += 1
         const items = result.contacts || []
+        totalEntries = result.pagination?.total_entries ?? totalEntries
         for (const c of items) {
           if (c.id && !seenIds.has(c.id) && !(c.emailer_campaign_status?.bounced || c.emailer_campaign_status?.unsubscribed)) {
             seenIds.add(c.id)
@@ -240,9 +248,44 @@ export async function POST(req: NextRequest) {
         page += 1
       } catch (err) {
         return NextResponse.json({
-          error: 'apollo search failed', kw, page,
+          error: 'apollo sweep failed', page,
           detail: err instanceof Error ? err.message : String(err),
+          partial: allContacts.length,
         }, { status: 502 })
+      }
+    }
+  } else {
+    // Legacy keyword-loop mode for explicit sports-only narrowing
+    for (const kw of SPORTS_KEYWORDS) {
+      let page = 1
+      while (page <= perKwPages) {
+        try {
+          const result = await apollo<{ contacts?: ApolloContact[]; pagination?: { total_pages?: number; total_entries?: number } }>(
+            '/contacts/search',
+            {
+              q_keywords: kw,
+              person_locations: ['Australia'],
+              page,
+              per_page: 100,
+            },
+          )
+          apolloCalls += 1
+          const items = result.contacts || []
+          for (const c of items) {
+            if (c.id && !seenIds.has(c.id) && !(c.emailer_campaign_status?.bounced || c.emailer_campaign_status?.unsubscribed)) {
+              seenIds.add(c.id)
+              allContacts.push(c)
+            }
+          }
+          const totalPages = result.pagination?.total_pages || 1
+          if (page >= totalPages || items.length === 0) break
+          page += 1
+        } catch (err) {
+          return NextResponse.json({
+            error: 'apollo keyword search failed', kw, page,
+            detail: err instanceof Error ? err.message : String(err),
+          }, { status: 502 })
+        }
       }
     }
   }
@@ -417,7 +460,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     summary: {
       mode: dryRun ? 'dry-run' : 'applied',
+      sourceMode: mode,
       apolloCalls,
+      apolloTotalEntries: totalEntries,
       contactsFetched: allContacts.length,
       uniqueDomains: byDomain.size,
       qualifyingCandidates: candidates.length,
