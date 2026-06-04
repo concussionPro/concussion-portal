@@ -174,7 +174,8 @@ export async function POST(req: NextRequest) {
 
     let response: HunterDomainSearchResponse
     try {
-      const url = `${HUNTER_BASE}/domain-search?domain=${encodeURIComponent(domain)}&api_key=${hunterKey}&limit=25`
+      // Free tier caps domain-search results at 10. Paid tier goes higher.
+      const url = `${HUNTER_BASE}/domain-search?domain=${encodeURIComponent(domain)}&api_key=${hunterKey}&limit=10`
       const res = await fetch(url, { headers: { accept: 'application/json' } })
       if (res.status === 429) {
         results.push({
