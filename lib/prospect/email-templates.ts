@@ -136,7 +136,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
         Larger team? Add seats at $250 per additional clinician. Want hands-on credentials? Upgrade nominated clinicians to our next public workshop at <strong>$500 each</strong>.
       </p>
       <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
-        <strong>Lifetime CPD Hub access</strong> — your team also gets every new module we ship (vagal regulation, vestibular rehab, AI in practice, paediatric pathway). One clinic purchase, ongoing content. In-person workshop stays concussion-specific.
+        <strong>Lifetime access</strong> — one clinic purchase, ongoing content. Your team gets new concussion-adjacent modules as we roll them out.
       </p>
 
       <a href="{portal_url}" class="cta">See the {clinic_short_name} preview →</a>
