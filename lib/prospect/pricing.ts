@@ -1,4 +1,66 @@
 import type { ClinicTeam, TravelBand, PricingBreakdown, Discipline } from './types'
+import { CONFIG } from '@/lib/config'
+
+/**
+ * Clinic size bucket — used by:
+ *  - Admin dashboard to segment outreach pipeline
+ *  - Hub Pack pricing (extra-seat math beyond the 5 included)
+ *  - ICP qualification (very large clinics typically route to the on-site
+ *    cohort offer instead, which has its own pricing engine via computePricing)
+ *
+ * Buckets are based on CLINICAL headcount (excludes admin + practice manager).
+ * Cutoffs match Zac's stated criteria: "do not allow very large clinics
+ * access without extra charge for 5+ clinicians".
+ */
+export type ClinicSizeBucket = 'small' | 'medium' | 'large' | 'enterprise'
+
+export function clinicSizeBucket(team: ClinicTeam): ClinicSizeBucket {
+  const c = clinicalCount(team)
+  if (c >= 21) return 'enterprise'
+  if (c >= 11) return 'large'
+  if (c >= 6) return 'medium'
+  return 'small'
+}
+
+/**
+ * Compute the Hub Pack total for a given clinic. Base $1,500 covers up to
+ * 5 clinicians; each clinician beyond 5 adds $250 (PRICE_CLINIC_HUB_EXTRA_SEAT).
+ *
+ * Enterprise (21+) is INCLUDED in the formula — but in practice large
+ * enterprise clinics typically convert better via the on-site cohort offer
+ * (Tier 1 + Tier 2 in computePricing). The Hub Pack formula stays valid;
+ * the choice of offer is a sales decision based on stated budget.
+ */
+export interface HubPackPricing {
+  bucket: ClinicSizeBucket
+  clinicalCount: number
+  seatsIncluded: number
+  extraSeats: number
+  basePrice: number
+  extraSeatsPrice: number
+  totalBase: number
+  recommendedOffer: 'hub-pack' | 'on-site-cohort'
+}
+
+export function hubPackPriceFor(team: ClinicTeam): HubPackPricing {
+  const c = clinicalCount(team)
+  const bucket = clinicSizeBucket(team)
+  const seatsIncluded = CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
+  const extraSeats = Math.max(0, c - seatsIncluded)
+  const basePrice = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
+  const extraSeatsPrice = extraSeats * CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT
+  const recommendedOffer: 'hub-pack' | 'on-site-cohort' = bucket === 'enterprise' ? 'on-site-cohort' : 'hub-pack'
+  return {
+    bucket,
+    clinicalCount: c,
+    seatsIncluded,
+    extraSeats,
+    basePrice,
+    extraSeatsPrice,
+    totalBase: basePrice + extraSeatsPrice,
+    recommendedOffer,
+  }
+}
 
 /**
  * Per-discipline one-time seat price for Tier 1 (online clinic license).
