@@ -162,6 +162,81 @@ export async function updateClinicStatus(id: number, status: ProspectStatus): Pr
   `
 }
 
+/**
+ * Bulk-insert clinics in a single SQL statement using a JSONB array
+ * parameter. Replaces N sequential createClinic() calls which were
+ * exhausting Vercel Postgres connections at scale (the prospect-pool
+ * importer's chunk-2 502s were caused by 372 sequential inserts in
+ * chunk 1 leaving the lambda in a degraded state).
+ *
+ * Returns the number of inserted rows. Conflicts on slug are silently
+ * skipped (ON CONFLICT DO NOTHING) so re-runs are idempotent.
+ */
+export async function bulkCreateClinics(inputs: CreateClinicInput[]): Promise<number> {
+  if (inputs.length === 0) return 0
+  const payload = inputs.map((input) => ({
+    slug: input.slug,
+    access_key: input.accessKey,
+    name: input.name,
+    short_name: input.shortName,
+    city: input.city,
+    state: input.state,
+    region: input.region,
+    contact_first_name: input.contactFirstName,
+    contact_full_name: input.contactFullName,
+    contact_email: input.contactEmail,
+    contact_role: input.contactRole ?? null,
+    contact_discipline: input.contactDiscipline,
+    clinic_website_url: input.clinicWebsiteUrl,
+    team: input.team,
+    local_targets: input.localTargets ?? [],
+    travel_band: input.travelBand,
+    travel_surcharge: travelSurchargeFor(input.travelBand),
+    cohort_recommendation: input.cohortRecommendation ?? 'recommended',
+    status: input.status ?? 'researching',
+    research_source: input.researchSource ?? 'manual',
+    valid_until: input.validUntil.toISOString(),
+    notes: input.notes ?? null,
+  }))
+
+  const payloadJson = JSON.stringify(payload)
+  const { rowCount } = await sql`
+    INSERT INTO prospect_clinics (
+      slug, access_key, name, short_name, city, state, region,
+      contact_first_name, contact_full_name, contact_email, contact_role, contact_discipline,
+      clinic_website_url, team, local_targets,
+      travel_band, travel_surcharge, cohort_recommendation,
+      status, research_source, valid_until, notes
+    )
+    SELECT
+      (elem->>'slug')::text,
+      (elem->>'access_key')::text,
+      (elem->>'name')::text,
+      (elem->>'short_name')::text,
+      (elem->>'city')::text,
+      (elem->>'state')::text,
+      (elem->>'region')::text,
+      (elem->>'contact_first_name')::text,
+      (elem->>'contact_full_name')::text,
+      (elem->>'contact_email')::text,
+      (elem->>'contact_role')::text,
+      (elem->>'contact_discipline')::text,
+      (elem->>'clinic_website_url')::text,
+      (elem->'team')::jsonb,
+      (elem->'local_targets')::jsonb,
+      (elem->>'travel_band')::text,
+      (elem->>'travel_surcharge')::int,
+      (elem->>'cohort_recommendation')::text,
+      (elem->>'status')::text,
+      (elem->>'research_source')::text,
+      (elem->>'valid_until')::timestamptz,
+      (elem->>'notes')::text
+    FROM jsonb_array_elements(${payloadJson}::jsonb) AS elem
+    ON CONFLICT (slug) DO NOTHING
+  `
+  return rowCount ?? 0
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPRESSION
 // ─────────────────────────────────────────────────────────────────────────────

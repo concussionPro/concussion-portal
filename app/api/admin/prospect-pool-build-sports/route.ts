@@ -30,7 +30,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
-import { createClinic, getClinicBySlug } from '@/lib/prospect/repo'
+import { createClinic, getClinicBySlug, bulkCreateClinics } from '@/lib/prospect/repo'
+import type { CreateClinicInput } from '@/lib/prospect/repo'
 import type { Discipline, State, ClinicTeam } from '@/lib/prospect/types'
 
 // 75-page Apollo sweep + 1000+ inserts can exceed the 60s default. Vercel
@@ -370,6 +371,12 @@ export async function POST(req: NextRequest) {
     error?: string
   }> = []
 
+  // Build all CreateClinicInput rows first, then bulk-insert in a single
+  // SQL statement. Avoids the 502s that hit when running 300+ sequential
+  // createClinic() calls (each opens/closes a DB connection, eventually
+  // exhausting the Vercel Postgres pool and degrading the lambda).
+  const inputsToInsert: CreateClinicInput[] = []
+
   for (const cand of newOnly) {
     let slug = slugify(cand.orgName)
     if (!slug) slug = slugify(cand.domain.split('.')[0])
@@ -407,61 +414,79 @@ export async function POST(req: NextRequest) {
         contactEmail: cand.bestContact.email,
         bucket: 'small (placeholder team — verify)',
       })
+      existingSlugs.add(slug)
       continue
     }
 
+    inputsToInsert.push({
+      slug,
+      accessKey: (() => {
+        const ab = 'abcdefghijkmnopqrstuvwxyz23456789'
+        let key = ''
+        for (let i = 0; i < 6; i++) key += ab[(slug.charCodeAt(i % slug.length) + i * 37) % ab.length]
+        return key
+      })(),
+      name: cand.orgName,
+      shortName: cand.orgName.split(/[—–-]| at /i)[0].trim().slice(0, 40),
+      city,
+      state,
+      region: city,
+      contactFirstName: cand.bestContact.first_name || '',
+      contactFullName: `${cand.bestContact.first_name ?? ''} ${cand.bestContact.last_name ?? ''}`.trim(),
+      contactEmail: cand.bestContact.email!,
+      contactRole: cand.bestContact.title,
+      contactDiscipline: discipline,
+      clinicWebsiteUrl: cand.bestContact.organization?.website_url || `https://${cand.domain}`,
+      team,
+      localTargets: [],
+      travelBand: 'flight-domestic',
+      cohortRecommendation: 'recommended',
+      status: 'researching',
+      researchSource: 'imported',
+      validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+      notes:
+        `Imported from Apollo CRM. ` +
+        `Contact title: ${cand.bestContact.title ?? 'unknown'} (${cand.titleLabel}). ` +
+        `${cand.contactsAtDomain} Apollo contact(s) at this domain. ` +
+        `TEAM PLACEHOLDER (4 ${discipline}) — verify via website or Hunter pass before send-eligibility. ` +
+        `Source: apollo-sports-pool.`,
+    })
+    existingSlugs.add(slug)
+    existingDomains.add(cand.domain)
+    results.push({
+      domain: cand.domain,
+      orgName: cand.orgName,
+      decision: 'insert',
+      slug,
+      contactEmail: cand.bestContact.email,
+      bucket: 'small (placeholder)',
+    })
+  }
+
+  // Single bulk-insert for the whole chunk (ON CONFLICT DO NOTHING on slug
+  // makes the call idempotent — re-runs of overlapping page ranges are
+  // safe).
+  if (!dryRun && inputsToInsert.length > 0) {
     try {
-      await createClinic({
-        slug,
-        accessKey: (() => {
-          const ab = 'abcdefghijkmnopqrstuvwxyz23456789'
-          let key = ''
-          for (let i = 0; i < 6; i++) key += ab[(slug.charCodeAt(i % slug.length) + i * 37) % ab.length]
-          return key
-        })(),
-        name: cand.orgName,
-        shortName: cand.orgName.split(/[—–-]| at /i)[0].trim().slice(0, 40),
-        city,
-        state,
-        region: city, // approx — Zac can refine
-        contactFirstName: cand.bestContact.first_name || '',
-        contactFullName: `${cand.bestContact.first_name ?? ''} ${cand.bestContact.last_name ?? ''}`.trim(),
-        contactEmail: cand.bestContact.email!,
-        contactRole: cand.bestContact.title,
-        contactDiscipline: discipline,
-        clinicWebsiteUrl: cand.bestContact.organization?.website_url || `https://${cand.domain}`,
-        team,
-        localTargets: [],
-        travelBand: 'flight-domestic', // generic AU-wide default; verify per clinic
-        cohortRecommendation: 'recommended',
-        status: 'researching',
-        researchSource: 'imported',
-        validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-        notes:
-          `Imported from Apollo CRM via sports-keyword search. ` +
-          `Contact title: ${cand.bestContact.title ?? 'unknown'} (${cand.titleLabel}). ` +
-          `${cand.contactsAtDomain} Apollo contact(s) at this domain. ` +
-          `TEAM PLACEHOLDER (4 ${discipline}) — verify via website or Hunter pass before send-eligibility. ` +
-          `Source: apollo-sports-pool.`,
-      })
-      existingSlugs.add(slug)
-      existingDomains.add(cand.domain)
-      results.push({
-        domain: cand.domain,
-        orgName: cand.orgName,
-        decision: 'insert',
-        slug,
-        contactEmail: cand.bestContact.email,
-        bucket: 'small (placeholder)',
-      })
+      const inserted = await bulkCreateClinics(inputsToInsert)
+      // If inserted < inputsToInsert.length, some rows hit ON CONFLICT —
+      // mark those as conflicts in the results for visibility.
+      if (inserted < inputsToInsert.length) {
+        const skipped = inputsToInsert.length - inserted
+        for (let i = 0; i < skipped; i++) {
+          const r = results[results.length - 1 - i]
+          if (r && r.decision === 'insert') r.decision = 'slug-conflict'
+        }
+      }
     } catch (err) {
-      results.push({
-        domain: cand.domain,
-        orgName: cand.orgName,
-        decision: 'insert-failed',
-        slug,
-        error: err instanceof Error ? err.message : String(err),
-      })
+      // If the bulk insert fails wholesale, mark every result as failed
+      const msg = err instanceof Error ? err.message : String(err)
+      for (const r of results) {
+        if (r.decision === 'insert') {
+          r.decision = 'insert-failed'
+          r.error = msg
+        }
+      }
     }
   }
 
