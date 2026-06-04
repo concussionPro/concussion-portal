@@ -233,11 +233,34 @@ export async function POST(req: NextRequest) {
       continue
     }
 
+    // Post-filter for quality:
+    //  1. Candidate email's domain must match the clinic's contactEmail
+    //     domain. The q_keywords fallback otherwise returns contacts at
+    //     OTHER clinics who happen to share a first name (e.g. Hunter Physio
+    //     was matching "Alice Hunter" at therunningroom.net).
+    //  2. Minimum candidate score = 30. Score 10 = "Physiotherapist" with
+    //     no leadership marker → could be a junior clinician, not the
+    //     principal. Senior titles (40+) are signal that this is a
+    //     decision-maker we can pitch on-site training to.
+    //  3. Score 100 (owner/founder) for surname-matches-clinic-name —
+    //     boost when Apollo says "John Hunter" at hunterphysio.com.au
+    //     because that's almost certainly the founder.
+    const MIN_SCORE = 30
     let best: { person: ApolloPerson; score: number; reason: string } | null = null
     for (const p of candidates) {
+      const candidateDomain = p.email ? extractDomain(p.email) : null
+      if (candidateDomain !== domain) continue // strict domain match
       const s = scoreCandidate(p)
-      if (s.score <= 0) continue
-      if (!best || s.score > best.score) best = { person: p, score: s.score, reason: s.reason }
+      if (s.score < MIN_SCORE) continue
+      // Founder/owner heuristic — surname appears in clinic shortName.
+      const last = (p.last_name ?? '').toLowerCase()
+      let boostedScore = s.score
+      let boostedReason = s.reason
+      if (last.length > 3 && c.short_name.toLowerCase().includes(last)) {
+        boostedScore = Math.max(boostedScore, 100)
+        boostedReason = `${s.reason} + surname matches clinic name (likely founder)`
+      }
+      if (!best || boostedScore > best.score) best = { person: p, score: boostedScore, reason: boostedReason }
     }
 
     if (!best || !emailUsable(best.person)) {
