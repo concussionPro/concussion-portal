@@ -132,8 +132,8 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
         <strong>Concussion Hub Pack — $1,500.</strong> Up to 5 of your clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day Hub launch playbook — all with {clinic_short_name}'s logo, ready to deploy day one.
       </p>
-      <p style="margin: 0 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        When you want hands-on credentials for the clinicians leading the program, upgrade them to our next public workshop — <strong>$500 each</strong>.
+      <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
+        Larger team? Add seats at $250 per additional clinician. Want hands-on credentials? Upgrade nominated clinicians to our next public workshop at <strong>$500 each</strong>.
       </p>
 
       <a href="{portal_url}" class="cta">See the {clinic_short_name} preview →</a>
@@ -173,7 +173,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview" class="preview-img" width="548" height="288" /></a>
 
       <ul class="points" style="margin: 14px 0 14px;">
-        <li><strong>5 clinicians online</strong> — your whole team trained in their own time</li>
+        <li><strong>5 clinicians online</strong> — your team trained in their own time (additional seats $250 ea)</li>
         <li><strong>Branded clinical docs</strong> — GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager, all with {clinic_short_name}'s logo</li>
         <li><strong>Admin pack</strong> — billing codes, intake workflow, discharge documentation</li>
         <li><strong>$500/clinician workshop upgrade</strong> when you want hands-on credentials</li>

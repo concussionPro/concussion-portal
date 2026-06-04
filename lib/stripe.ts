@@ -48,6 +48,8 @@ export const COURSE_PRICING = {
   // Clinic Hub Pack — 5 online seats + branded docs + admin pack ($1,500).
   // Targeted at clinic owners via cold B2B outreach.
   CLINIC_HUB_PACK: CONFIG.COURSE.PRICE_CLINIC_HUB_PACK * 100,
+  // Per-clinician seat beyond the 5 included in Hub Pack base ($250).
+  CLINIC_HUB_EXTRA_SEAT: CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT * 100,
   // Per-clinician workshop upgrade for Hub Pack buyers ($500).
   CLINIC_WORKSHOP_UPGRADE: CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE * 100,
 } as const
@@ -64,6 +66,7 @@ export const COURSE_ACCESS_MAP: Record<string, 'online-only' | 'full-course'> = 
   // content). Additional seats are provisioned manually post-checkout via
   // redemption codes. Workshop upgrades are tracked separately as add-ons.
   'clinic-hub-pack': 'full-course',
+  'clinic-hub-extra-seat': 'online-only',
   'clinic-workshop-upgrade': 'full-course',
 }
 
@@ -82,6 +85,7 @@ export const VALID_COURSE_TYPES = [
   'international-online',
   'workshop-upgrade',
   'clinic-hub-pack',
+  'clinic-hub-extra-seat',
   'clinic-workshop-upgrade',
 ] as const
 export type CourseType = typeof VALID_COURSE_TYPES[number]
@@ -137,7 +141,12 @@ export async function createCourseCheckoutSession({
     unitAmount = COURSE_PRICING.CLINIC_HUB_PACK
     currency = 'aud'
     productName = 'Concussion Hub Pack — Clinic Tier'
-    productDescription = `Up to ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} clinician online seats · Branded clinical docs (GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager) · Admin/billing pack · 90-day Hub launch playbook · 30-min strategy call with Zac`
+    productDescription = `Up to ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} clinician online seats · Branded clinical docs (GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager) · Admin/billing pack · 90-day Hub launch playbook · 30-min strategy call with Zac · Extra seats beyond ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED}: A$${CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT} per clinician`
+  } else if (courseType === 'clinic-hub-extra-seat') {
+    unitAmount = COURSE_PRICING.CLINIC_HUB_EXTRA_SEAT
+    currency = 'aud'
+    productName = 'Concussion Hub Pack — Extra Online Seat'
+    productDescription = `Adds 1 online seat for a clinician beyond the ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} included in the Hub Pack base · 8 modules · 14 CPD hours · OA endorsed · Lifetime access`
   } else if (courseType === 'clinic-workshop-upgrade') {
     unitAmount = COURSE_PRICING.CLINIC_WORKSHOP_UPGRADE
     currency = 'aud'
