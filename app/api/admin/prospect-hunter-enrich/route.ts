@@ -108,16 +108,24 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  let body: { dryRun?: boolean }
+  let body: { dryRun?: boolean; limit?: number }
   try {
     body = await req.json().catch(() => ({}))
   } catch {
     body = {}
   }
   const dryRun = body.dryRun !== false
+  // Per-run cap on Hunter API calls. Free tier = 25 lookups/month;
+  // domain-search costs 1 each. Default cap = 25. Drop to e.g. 5 if you
+  // want to spread the budget across multiple weeks.
+  const callBudget = Math.max(1, Math.min(25, body.limit ?? 25))
 
-  // Only target clinics that Apollo failed to enrich. Hunter-enriched
-  // marker keeps it idempotent.
+  // Only target clinics that:
+  //  - Need enriching (generic mailbox) — filtered later
+  //  - Haven't been enriched (`[hunter-enriched]` tag)
+  //  - Haven't been checked-and-found-empty (`[hunter-checked-empty]` tag)
+  //    The empty-check marker prevents re-burning budget on dead-end domains
+  //    if the route is run multiple times.
   const { rows: clinics } = await sql<ClinicRow>`
     SELECT id, slug, short_name, contact_email, contact_full_name, contact_first_name,
            contact_role, notes, status
@@ -125,6 +133,7 @@ export async function POST(req: NextRequest) {
     WHERE status IN ('researching', 'approved')
       AND contact_email IS NOT NULL
       AND COALESCE(notes, '') NOT LIKE '%[hunter-enriched]%'
+      AND COALESCE(notes, '') NOT LIKE '%[hunter-checked-empty]%'
   `
 
   const results: Array<{
@@ -154,6 +163,7 @@ export async function POST(req: NextRequest) {
 
   const MIN_SCORE = 30
   const MIN_CONFIDENCE = 70
+  let hunterCallsMade = 0
 
   for (const c of clinics) {
     if (!isGenericMailbox(c.contact_email)) {
@@ -172,8 +182,15 @@ export async function POST(req: NextRequest) {
       continue
     }
 
+    // Budget guard: stop calling Hunter once the per-run cap is reached.
+    // Remaining clinics roll over to the next call.
+    if (hunterCallsMade >= callBudget) {
+      break
+    }
+
     let response: HunterDomainSearchResponse
     try {
+      hunterCallsMade += 1
       // Free tier caps domain-search results at 10. Paid tier goes higher.
       const url = `${HUNTER_BASE}/domain-search?domain=${encodeURIComponent(domain)}&api_key=${hunterKey}&limit=10`
       const res = await fetch(url, { headers: { accept: 'application/json' } })
@@ -206,6 +223,18 @@ export async function POST(req: NextRequest) {
 
     const candidates = response.data?.emails ?? []
     if (candidates.length === 0) {
+      // Mark this clinic as "Hunter has nothing for this domain" so the
+      // next run's WHERE-clause excludes it — keeps free-tier budget for
+      // domains we haven't tried yet.
+      if (!dryRun) {
+        const emptyNote = `\n[hunter-checked-empty] ${new Date().toISOString()} domain-search returned 0 emails`
+        await sql`
+          UPDATE prospect_clinics
+          SET notes = COALESCE(notes, '') || ${emptyNote},
+              updated_at = NOW()
+          WHERE id = ${c.id}
+        `
+      }
       results.push({
         id: c.id, shortName: c.short_name, originalEmail: c.contact_email,
         domain, decision: 'no-candidates',
@@ -291,6 +320,9 @@ export async function POST(req: NextRequest) {
     skipped: results.filter((r) =>
       r.decision === 'skipped-not-generic' || r.decision === 'skipped-no-domain',
     ).length,
+    hunterCallsMade,
+    callBudget,
+    clinicsRemaining: clinics.length - results.length,
   }
 
   return NextResponse.json({ summary, results })
