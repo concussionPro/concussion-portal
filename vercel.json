@@ -22,7 +22,7 @@
     },
     {
       "path": "/api/cron/prospect-process-scheduled",
-      "schedule": "0 21 * * 1-5"
+      "schedule": "1 0 * * 1-5"
     }
   ]
 }
