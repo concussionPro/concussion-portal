@@ -957,7 +957,7 @@ export const PROSPECT_TARGETS: ProspectSeed[] = [
  * Build the cold-outreach send schedule across PROSPECT_TARGETS.
  *
  * Rules:
- *  - Mon / Wed / Fri only (never Tue/Thu, never weekend).
+ *  - Weekdays only (Mon–Fri, never weekends).
  *  - Hard cap of `dailyCap` sends per day (default 5).
  *  - Priority order: P1 → P6 wave, then full-team → recommended → essential
  *    cohort tier within wave.
@@ -989,15 +989,16 @@ export function buildSendSchedule(startDate: Date, dailyCap = 5): Map<string, Da
   sendDay.setHours(9, 30, 0, 0)
   const dayBucket: Array<{ slug: string; city: string; region: string }> = []
 
+  // Weekdays Mon–Fri only — skip Sat (6) + Sun (0).
   const advanceDay = () => {
     sendDay.setDate(sendDay.getDate() + 1)
-    while ([0, 2, 4, 6].includes(sendDay.getDay())) {
+    while ([0, 6].includes(sendDay.getDay())) {
       sendDay.setDate(sendDay.getDate() + 1)
     }
     dayBucket.length = 0
   }
 
-  while ([0, 2, 4, 6].includes(sendDay.getDay())) {
+  while ([0, 6].includes(sendDay.getDay())) {
     sendDay.setDate(sendDay.getDate() + 1)
   }
 

@@ -172,8 +172,8 @@ function nextBusinessDay(from: Date): Date {
   if (from.getHours() >= 9 || (from.getHours() === 9 && from.getMinutes() >= 30)) {
     d.setDate(d.getDate() + 1)
   }
-  // Skip weekends + Tue/Thu (Mon/Wed/Fri only)
-  while ([0, 2, 4, 6].includes(d.getDay())) {
+  // Skip weekends (Mon–Fri only).
+  while ([0, 6].includes(d.getDay())) {
     d.setDate(d.getDate() + 1)
   }
   return d
