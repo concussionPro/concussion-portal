@@ -167,14 +167,19 @@ export async function POST(req: NextRequest) {
 
 function nextBusinessDay(from: Date): Date {
   const d = new Date(from)
-  d.setHours(9, 30, 0, 0)
-  // If now is past 9:30am today, start tomorrow
-  if (from.getHours() >= 9 || (from.getHours() === 9 && from.getMinutes() >= 30)) {
-    d.setDate(d.getDate() + 1)
+  // Use 00:00 UTC of the target date as the scheduled time. This means every
+  // clinic scheduled for "today" is already in the past by the time the cron
+  // fires (cron runs at 21:00 UTC = 7am AEST next day; 00:00 UTC <= 21:00 UTC).
+  // Previously this was 09:30 (local) which Vercel evaluated as 09:30 UTC =
+  // 7:30pm Sydney, after the cron fire window, so today's batch never landed.
+  d.setUTCHours(0, 0, 0, 0)
+  // If we're already past midnight UTC on this date, start tomorrow.
+  if (from.getTime() > d.getTime()) {
+    d.setUTCDate(d.getUTCDate() + 1)
   }
   // Skip weekends (Mon–Fri only).
-  while ([0, 6].includes(d.getDay())) {
-    d.setDate(d.getDate() + 1)
+  while ([0, 6].includes(d.getUTCDay())) {
+    d.setUTCDate(d.getUTCDate() + 1)
   }
   return d
 }

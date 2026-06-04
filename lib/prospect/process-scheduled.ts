@@ -45,6 +45,10 @@ export interface ProcessScheduledOptions {
   dryRun: boolean
   dailyCap: number
   allowPatternGuess: boolean
+  // Bypass the "scheduled_send_at <= NOW()" filter. Fires every approved
+  // clinic scheduled for the current UTC date regardless of time-of-day.
+  // Used for manual "fire today's queue now" runs. Cron never sets this.
+  force?: boolean
 }
 
 export interface ProcessScheduledResult {
@@ -87,7 +91,7 @@ function isLowConfidenceEmail(email: string): boolean {
 export async function processScheduledSends(
   opts: ProcessScheduledOptions,
 ): Promise<ProcessScheduledResult> {
-  const { dryRun, dailyCap, allowPatternGuess } = opts
+  const { dryRun, dailyCap, allowPatternGuess, force = false } = opts
 
   const signoff = await getTemplateSignoff('initial')
   if (!signoff.signedOffAt) {
@@ -109,20 +113,39 @@ export async function processScheduledSends(
     }
   }
 
-  const { rows: due } = await sql<QueueRow>`
-    SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
-           pc.scheduled_send_at, pc.next_template_slug, pc.status
-    FROM prospect_clinics pc
-    WHERE pc.status = 'approved'
-      AND pc.scheduled_send_at IS NOT NULL
-      AND pc.scheduled_send_at <= NOW()
-      AND NOT EXISTS (
-        SELECT 1 FROM prospect_outreach_log ol
-        WHERE ol.clinic_id = pc.id AND ol.template_slug = 'initial'
-      )
-    ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
-    LIMIT 50
-  `
+  // Time-window filter:
+  //  - Default (cron mode): scheduled_send_at <= NOW()
+  //  - force=true: any clinic scheduled for the current UTC date — used
+  //    when manually firing today's batch before its scheduled time.
+  const { rows: due } = force
+    ? await sql<QueueRow>`
+        SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
+               pc.scheduled_send_at, pc.next_template_slug, pc.status
+        FROM prospect_clinics pc
+        WHERE pc.status = 'approved'
+          AND pc.scheduled_send_at IS NOT NULL
+          AND pc.scheduled_send_at::date = CURRENT_DATE
+          AND NOT EXISTS (
+            SELECT 1 FROM prospect_outreach_log ol
+            WHERE ol.clinic_id = pc.id AND ol.template_slug = 'initial'
+          )
+        ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
+        LIMIT 50
+      `
+    : await sql<QueueRow>`
+        SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
+               pc.scheduled_send_at, pc.next_template_slug, pc.status
+        FROM prospect_clinics pc
+        WHERE pc.status = 'approved'
+          AND pc.scheduled_send_at IS NOT NULL
+          AND pc.scheduled_send_at <= NOW()
+          AND NOT EXISTS (
+            SELECT 1 FROM prospect_outreach_log ol
+            WHERE ol.clinic_id = pc.id AND ol.template_slug = 'initial'
+          )
+        ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
+        LIMIT 50
+      `
 
   const results: ProcessScheduledResult['results'] = []
   let sentCount = 0

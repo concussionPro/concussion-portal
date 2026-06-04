@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { dryRun?: boolean; dailyCap?: number; allowPatternGuess?: boolean }
+  let body: { dryRun?: boolean; dailyCap?: number; allowPatternGuess?: boolean; force?: boolean }
   try {
     body = await req.json().catch(() => ({}))
   } catch {
@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
   const dryRun = body.dryRun !== false
   const dailyCap = body.dailyCap ?? 15
   const allowPatternGuess = body.allowPatternGuess === true
+  const force = body.force === true
 
-  const result = await processScheduledSends({ dryRun, dailyCap, allowPatternGuess })
+  const result = await processScheduledSends({ dryRun, dailyCap, allowPatternGuess, force })
 
   if (result.summary.signoffMissing) {
     return NextResponse.json(
