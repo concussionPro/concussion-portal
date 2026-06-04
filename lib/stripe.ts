@@ -140,8 +140,8 @@ export async function createCourseCheckoutSession({
   } else if (courseType === 'clinic-hub-pack') {
     unitAmount = COURSE_PRICING.CLINIC_HUB_PACK
     currency = 'aud'
-    productName = 'Concussion Hub Pack — Clinic Tier'
-    productDescription = `Up to ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} clinician online seats · Branded clinical docs (GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager) · Admin/billing pack · 90-day Hub launch playbook · 30-min strategy call with Zac · Extra seats beyond ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED}: A$${CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT} per clinician`
+    productName = 'Concussion Hub Pack — Clinic Tier (Lifetime CPD Hub access)'
+    productDescription = `Up to ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED} clinician online seats · LIFETIME access to the CEA CPD Hub including all future modules (vagal regulation, vestibular rehab, AI in practice, paediatric pathway, etc) · Branded clinical docs (GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager) · Admin/billing pack · 90-day Hub launch playbook · 30-min strategy call with Zac · Extra seats beyond ${CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED}: A$${CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT} per clinician · In-person workshop upgrade A$${CONFIG.COURSE.PRICE_CLINIC_WORKSHOP_UPGRADE}/clinician (concussion-specific hands-on)`
   } else if (courseType === 'clinic-hub-extra-seat') {
     unitAmount = COURSE_PRICING.CLINIC_HUB_EXTRA_SEAT
     currency = 'aud'
