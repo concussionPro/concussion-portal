@@ -29,7 +29,7 @@ export const CONFIG = {
     // they're already a Hub Pack customer, but high enough that the unit
     // economics work — Zac's online delivery cost is ~$0 per seat but the
     // perceived value tracks team size.
-    PRICE_CLINIC_HUB_EXTRA_SEAT: 250,
+    PRICE_CLINIC_HUB_EXTRA_SEAT: 500,
     // Per-clinician workshop upgrade for Hub Pack customers. Below the
     // standalone workshop-upgrade price because the clinic already paid
     // for the bundle — this is the marginal in-person cost only.
