@@ -19,6 +19,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { processScheduledSends } from '@/lib/prospect/process-scheduled'
+import { computeAdaptiveCap } from '@/lib/prospect/adaptive-cap'
 
 export const maxDuration = 60
 
@@ -45,13 +46,31 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Production cron: dailyCap from env, default 5 (conservative ramp after
-  // the /api/prospect/unsubscribe 404 was fixed — bake at 5/weekday for a
-  // week, then raise via env).
-  const dailyCap = parseInt(process.env.PROSPECT_CRON_DAILY_CAP ?? '5', 10)
+  // Data-driven daily cap. computeAdaptiveCap looks at rolling 30-day
+  // complaint + bounce rates and the 7-day cold-send volume. It ramps up
+  // on clean weeks and throttles down when complaints spike, so cold
+  // outreach can't poison the shared sending identity without
+  // self-correcting.
+  const capDecision = await computeAdaptiveCap()
+  console.log(
+    `[prospect cron] adaptive-cap=${capDecision.cap}  ` +
+      `complaint_rate=${(capDecision.metrics.complaintRate * 100).toFixed(2)}%  ` +
+      `bounce_rate=${(capDecision.metrics.bounceRate * 100).toFixed(2)}%  ` +
+      `cold_sends_7d=${capDecision.metrics.coldSends7d}  ` +
+      `reason="${capDecision.reason}"`,
+  )
+
+  if (capDecision.cap === 0) {
+    return NextResponse.json({
+      skipped: true,
+      reason: 'adaptive-cap=0',
+      capDecision,
+    })
+  }
+
   const result = await processScheduledSends({
     dryRun: false,
-    dailyCap,
+    dailyCap: capDecision.cap,
     allowPatternGuess: false,
   })
 
@@ -66,5 +85,5 @@ export async function GET(request: Request) {
       `lowConf=${result.summary.skippedLowConfidence}) failed=${result.summary.sendFailed}`,
   )
 
-  return NextResponse.json(result)
+  return NextResponse.json({ ...result, capDecision })
 }
