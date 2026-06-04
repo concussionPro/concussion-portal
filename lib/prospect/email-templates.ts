@@ -116,25 +116,32 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
         <td class="stat teal">
-          <span class="headline"><span class="num">1</span><span class="unit"> day</span></span>
-          <span class="sub">On-site team training</span>
+          <span class="headline"><span class="num">5</span><span class="unit"> clinicians</span></span>
+          <span class="sub">Whole team online · in own time</span>
         </td>
         <td class="stat amber">
-          <span class="headline"><span class="num">8</span><span class="unit"> modules</span></span>
-          <span class="sub">SCAT6 · VOMS · BESS · RTP + toolkit</span>
-        </td>
-        <td class="stat indigo">
           <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
           <span class="sub">OA endorsed · per clinician</span>
         </td>
+        <td class="stat indigo">
+          <span class="headline"><span class="num">Day 1</span></span>
+          <span class="sub">Branded clinical docs ready</span>
+        </td>
       </tr></table>
 
-      <a href="{portal_url}" class="cta">Open {clinic_short_name} Dashboard →</a>
-      <span class="secondary">Or just reply with questions · book 30 min <a href="{cal_booking_url}">cal.com/zac-lewis-so8zjs</a></span>
+      <p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        <strong>Concussion Hub Pack — $1,500.</strong> Up to 5 of your clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day Hub launch playbook — all with {clinic_short_name}'s logo, ready to deploy day one.
+      </p>
+      <p style="margin: 0 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        When you want hands-on credentials for the clinicians leading the program, upgrade them to our next public workshop — <strong>$500 each</strong>.
+      </p>
+
+      <a href="{portal_url}" class="cta">See the {clinic_short_name} preview →</a>
+      <span class="secondary">15 min fit-check · <a href="{cal_booking_url}">book 30 min on cal.com</a> · or <a href="{scat_pack_url}">grab the free SCAT6/SCOAT6 pack now</a></span>
 
       <p style="margin: 20px 0 8px; font-size: 12px; color: #0a5a5e; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;">Multidisciplinary integration</p>
       <table class="role-bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td class="role"><span class="role-name">Osteo / Physio</span><span class="role-covers">Diagnosis · case management · cervicogenic</span></td>
+        <td class="role"><span class="role-name">Osteo / Physio / Chiro</span><span class="role-covers">Diagnosis · case management · cervicogenic</span></td>
         <td class="role"><span class="role-name">Physio / EP</span><span class="role-covers">Return to play · sub-threshold aerobic</span></td>
         <td class="role"><span class="role-name">Myo / RMT</span><span class="role-covers">Soft tissue · inflammation</span></td>
         <td class="role"><span class="role-name">Admin</span><span class="role-covers">GP letters · NDIS · schools</span></td>
@@ -154,25 +161,30 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   },
   {
     slug: 'followup',
-    subjectTemplate: 'Re: {clinic_short_name} concussion training — {region}',
+    subjectTemplate: 'Re: Concussion hub for {city}',
     bodyTemplate: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${BASE_HTML_STYLE}</style></head>
 <body>
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>Following up — preview dashboard for {clinic_short_name} is still live:</p>
+      <p>Following up — quick recap on the Concussion Hub Pack for {clinic_short_name}:</p>
 
-      <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
+      <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview" class="preview-img" width="548" height="288" /></a>
 
-      <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td class="stat"><div class="v">Module 1</div><div class="l">Free trial · 30 min</div></td>
-        <td class="stat"><div class="v">140+</div><div class="l">Peer-reviewed refs</div></td>
-        <td class="stat"><div class="v">14 CPD</div><div class="l">OA endorsed</div></td>
-      </tr></table>
+      <ul class="points" style="margin: 14px 0 14px;">
+        <li><strong>5 clinicians online</strong> — your whole team trained in their own time</li>
+        <li><strong>Branded clinical docs</strong> — GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager, all with {clinic_short_name}'s logo</li>
+        <li><strong>Admin pack</strong> — billing codes, intake workflow, discharge documentation</li>
+        <li><strong>$500/clinician workshop upgrade</strong> when you want hands-on credentials</li>
+      </ul>
 
-      <a href="{portal_url}" class="cta">Open dashboard →</a>
-      <span class="secondary">Or book 30 min: <a href="{cal_booking_url}">cal.com/zac-lewis-so8zjs</a></span>
+      <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        <strong>$1,500 base.</strong> Most clinics that engage take the call first — 15 minutes, no slides, just whether the program fits your team's caseload.
+      </p>
+
+      <a href="{cal_booking_url}" class="cta">Book 15 min on cal.com →</a>
+      <span class="secondary">Or grab the free SCAT6/SCOAT6 pack to use right now: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a></span>
 
       <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA</div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
@@ -192,8 +204,15 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>Last note from me. If the timing isn't right, all good — most regional clinics that engage circle back 6-12 months later. The preview portal stays open if you'd rather just browse the materials:</p>
-      <a href="{portal_url}" class="cta">Open preview →</a>
+      <p>Last note from me on the Concussion Hub Pack. If the timing isn't right, all good — most clinics that engage circle back when their next concussion case shows up. The {clinic_short_name} preview stays open:</p>
+
+      <a href="{portal_url}" class="cta">Open {clinic_short_name} preview →</a>
+      <span class="secondary">Free SCAT6/SCOAT6 pack also still available: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a></span>
+
+      <p style="margin-top: 18px; font-size: 14px; color: #475569; line-height: 1.55;">
+        Whenever you're ready: $1,500 Hub Pack base · $500 per in-person workshop upgrade · book 15 min <a href="{cal_booking_url}" style="color: #0a5a5e;">on cal.com</a>.
+      </p>
+
       <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, Concussion Education Australia</div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
     </div>
@@ -295,6 +314,11 @@ export function mergeTemplate(
   const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('cta')}`
   const portalImageUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('hero')}`
   const calBookingUrl = `https://cal.com/zac-lewis-so8zjs/30min?${utmFor('book')}`
+  // SCAT pack lead magnet — UTM-tagged so we can attribute downstream
+  // free-signups + paid conversions back to the cold-outreach SCAT path.
+  const scatPackUrl = `${baseUrl}/scat-mastery?${utmFor('scat_pack')}&prospect=${clinic.slug}`
+  // Short version of base URL for display in body copy (no protocol)
+  const baseUrlShort = baseUrl.replace(/^https?:\/\//, '')
   const unsubscribeLinkOnly = `${baseUrl}/api/prospect/unsubscribe?t=${unsubscribeToken}`
 
   // Build OG image URL with FULL query-string payload so the image renders
@@ -333,6 +357,8 @@ export function mergeTemplate(
     portal_url: htmlEncodeUrl(portalUrl),
     portal_image_url: htmlEncodeUrl(portalImageUrl),
     cal_booking_url: htmlEncodeUrl(calBookingUrl),
+    scat_pack_url: htmlEncodeUrl(scatPackUrl),
+    base_url_short: baseUrlShort,
     access_key: clinic.accessKey,
     slug: clinic.slug,
     unsubscribe_link_only: htmlEncodeUrl(unsubscribeLinkOnly),
