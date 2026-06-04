@@ -113,6 +113,12 @@ export async function processScheduledSends(
     }
   }
 
+  // Status filter: status IN ('approved', 'researching'). Zac doesn't
+  // manually approve — the curation is in data/prospect-targets.ts (multi-
+  // disc + ≥8 clinical gate). Any row that made it into prospect_clinics
+  // in either status is engine-eligible. Workshop-tier and wrong-fit
+  // prospects are status='archived' and naturally excluded.
+  //
   // Time-window filter:
   //  - Default (cron mode): scheduled_send_at <= NOW()
   //  - force=true: any clinic scheduled for the current UTC date — used
@@ -122,7 +128,7 @@ export async function processScheduledSends(
         SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
                pc.scheduled_send_at, pc.next_template_slug, pc.status
         FROM prospect_clinics pc
-        WHERE pc.status = 'approved'
+        WHERE pc.status IN ('approved', 'researching')
           AND pc.scheduled_send_at IS NOT NULL
           AND pc.scheduled_send_at::date = CURRENT_DATE
           AND NOT EXISTS (
@@ -136,7 +142,7 @@ export async function processScheduledSends(
         SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
                pc.scheduled_send_at, pc.next_template_slug, pc.status
         FROM prospect_clinics pc
-        WHERE pc.status = 'approved'
+        WHERE pc.status IN ('approved', 'researching')
           AND pc.scheduled_send_at IS NOT NULL
           AND pc.scheduled_send_at <= NOW()
           AND NOT EXISTS (
