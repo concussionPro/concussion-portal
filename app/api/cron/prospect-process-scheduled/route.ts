@@ -54,9 +54,11 @@ export async function GET(request: Request) {
   const capDecision = await computeAdaptiveCap()
   console.log(
     `[prospect cron] adaptive-cap=${capDecision.cap}  ` +
-      `complaint_rate=${(capDecision.metrics.complaintRate * 100).toFixed(2)}%  ` +
-      `bounce_rate=${(capDecision.metrics.bounceRate * 100).toFixed(2)}%  ` +
-      `cold_sends_7d=${capDecision.metrics.coldSends7d}  ` +
+      `30d_total_complaint=${(capDecision.metrics.totalComplaintRate30d * 100).toFixed(2)}%  ` +
+      `30d_total_bounce=${(capDecision.metrics.totalBounceRate30d * 100).toFixed(2)}%  ` +
+      `7d_cold_sends=${capDecision.metrics.coldSends7d}  ` +
+      `7d_cold_complaint=${(capDecision.metrics.coldComplaintRate7d * 100).toFixed(2)}%  ` +
+      `7d_cold_bounce=${(capDecision.metrics.coldBounceRate7d * 100).toFixed(2)}%  ` +
       `reason="${capDecision.reason}"`,
   )
 
