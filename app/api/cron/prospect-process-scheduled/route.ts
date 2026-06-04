@@ -68,10 +68,15 @@ export async function GET(request: Request) {
     })
   }
 
+  // allowPatternGuess: true → cron sends to generic mailboxes (info@,
+  // reception@, etc) when no verified direct email is available. Per Zac:
+  // "just try info@ or reception@" — accept the slightly higher complaint
+  // risk on these because the adaptive cap auto-throttles if domain
+  // reputation drops below threshold.
   const result = await processScheduledSends({
     dryRun: false,
     dailyCap: capDecision.cap,
-    allowPatternGuess: false,
+    allowPatternGuess: true,
   })
 
   if (result.summary.signoffMissing) {
