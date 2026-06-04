@@ -33,6 +33,10 @@ import { isAdminRequest } from '@/lib/require-admin'
 import { createClinic, getClinicBySlug } from '@/lib/prospect/repo'
 import type { Discipline, State, ClinicTeam } from '@/lib/prospect/types'
 
+// 75-page Apollo sweep + 1000+ inserts can exceed the 60s default. Vercel
+// Pro allows up to 300s on serverless functions.
+export const maxDuration = 300
+
 const APOLLO_BASE = 'https://api.apollo.io/api/v1'
 
 async function apollo<T>(path: string, body?: object): Promise<T> {
@@ -197,7 +201,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'APOLLO_API_KEY env var not set' }, { status: 500 })
   }
 
-  let body: { dryRun?: boolean; perKwPages?: number; maxPages?: number; mode?: 'sweep' | 'sports' }
+  let body: { dryRun?: boolean; perKwPages?: number; maxPages?: number; mode?: 'sweep' | 'sports'; startPage?: number }
   try {
     body = await req.json().catch(() => ({}))
   } catch {
@@ -211,7 +215,8 @@ export async function POST(req: NextRequest) {
   //  'sports': old behaviour — narrow to sports keywords. Use only if
   //    sweep is producing too much noise to be useful.
   const mode = body.mode === 'sports' ? 'sports' : 'sweep'
-  const maxPages = Math.max(1, Math.min(body.maxPages ?? 100, 200))
+  const maxPages = Math.max(1, Math.min(body.maxPages ?? 40, 200))
+  const startPage = Math.max(1, Math.min(body.startPage ?? 1, 200))
   const perKwPages = Math.max(1, Math.min(body.perKwPages ?? 5, 20))
 
   // 1. Pull contacts from Apollo CRM
@@ -221,10 +226,13 @@ export async function POST(req: NextRequest) {
   let totalEntries = 0
 
   if (mode === 'sweep') {
-    // Walk the entire AU CRM. No keyword filter — apply quality filter at
-    // the domain-grouping step instead.
-    let page = 1
-    while (page <= maxPages) {
+    // Walk the AU CRM. No keyword filter — apply quality filter at the
+    // domain-grouping step instead. Paginate from startPage for maxPages
+    // pages so a 7,400-contact CRM can be chunked across multiple runs if
+    // the 300s timeout is still tight.
+    let page = startPage
+    const pageCeiling = startPage + maxPages - 1
+    while (page <= pageCeiling) {
       try {
         const result = await apollo<{ contacts?: ApolloContact[]; pagination?: { total_pages?: number; total_entries?: number } }>(
           '/contacts/search',
@@ -461,6 +469,8 @@ export async function POST(req: NextRequest) {
     summary: {
       mode: dryRun ? 'dry-run' : 'applied',
       sourceMode: mode,
+      startPage,
+      maxPages,
       apolloCalls,
       apolloTotalEntries: totalEntries,
       contactsFetched: allContacts.length,
