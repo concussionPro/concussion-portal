@@ -33,13 +33,6 @@ export async function POST(req: NextRequest) {
 
   const result = await processScheduledSends({ dryRun, dailyCap, allowPatternGuess, force })
 
-  if (result.summary.signoffMissing) {
-    return NextResponse.json(
-      { error: 'T1 template not signed off — POST /api/admin/prospect-template-signoff first' },
-      { status: 403 },
-    )
-  }
-
   return NextResponse.json({
     summary: { ...result.summary, zacInbox: ZAC_INBOX },
     results: result.results,

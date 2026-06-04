@@ -79,15 +79,15 @@ export async function GET(request: Request) {
     allowPatternGuess: true,
   })
 
-  if (result.summary.signoffMissing) {
-    console.error('[prospect cron] T1 template not signed off — skipping run')
-    return NextResponse.json({ skipped: true, reason: 'signoff-missing' })
-  }
-
   console.log(
     `[prospect cron] due=${result.summary.due} sent=${result.summary.sent} ` +
+      `byTemplate(initial=${result.summary.byTemplate.initial}, ` +
+      `followup=${result.summary.byTemplate.followup}, ` +
+      `final=${result.summary.byTemplate.final}) ` +
       `skipped(cap=${result.summary.skippedCap}, supp=${result.summary.skippedSuppressed}, ` +
-      `lowConf=${result.summary.skippedLowConfidence}) failed=${result.summary.sendFailed}`,
+      `lowConf=${result.summary.skippedLowConfidence}, ` +
+      `signoff=${result.summary.skippedSignoffMissing}) ` +
+      `failed=${result.summary.sendFailed}`,
   )
 
   return NextResponse.json({ ...result, capDecision })
