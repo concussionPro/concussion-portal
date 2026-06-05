@@ -109,7 +109,7 @@ function extractAddress(html: string): ExtractedAddress | null {
   return null
 }
 
-async function fetchWithTimeout(url: string, timeoutMs = 12000): Promise<string | null> {
+async function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<string | null> {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -120,11 +120,12 @@ async function fetchWithTimeout(url: string, timeoutMs = 12000): Promise<string 
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
         Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9',
       },
+      redirect: 'follow',
     })
     clearTimeout(timer)
     if (!res.ok) return null
     const text = await res.text()
-    return text.slice(0, 400_000) // cap memory
+    return text.slice(0, 300_000)
   } catch {
     return null
   }
@@ -132,7 +133,18 @@ async function fetchWithTimeout(url: string, timeoutMs = 12000): Promise<string 
 
 function candidatePaths(websiteUrl: string): string[] {
   const u = websiteUrl.replace(/\/+$/, '')
-  return [u, `${u}/contact`, `${u}/contact-us`, `${u}/about`, `${u}/locations`, `${u}/find-us`]
+  return [u, `${u}/contact`]
+}
+
+async function findAddressForClinic(websiteUrl: string): Promise<{ extracted: ExtractedAddress; hitPath: string } | null> {
+  const paths = candidatePaths(websiteUrl)
+  const settled = await Promise.all(paths.map((p) => fetchWithTimeout(p).then((html) => ({ p, html }))))
+  for (const { p, html } of settled) {
+    if (!html) continue
+    const extracted = extractAddress(html)
+    if (extracted) return { extracted, hitPath: p }
+  }
+  return null
 }
 
 interface ClinicRow {
@@ -204,35 +216,38 @@ export async function POST(req: NextRequest) {
     postcode?: number
   }> = []
 
-  for (const c of candidates) {
-    const cityClean = !!c.city && !/^unknown$/i.test(c.city)
-    const regionClean = !!c.region && !/^unknown$/i.test(c.region)
-    if (cityClean && regionClean) {
+  // Process all clinics in parallel — fetch is I/O-bound and each clinic
+  // is independent. 60 clinics × 2 paths fetched concurrently = ~5-10s
+  // total instead of the 100s+ a sequential loop would take.
+  const fetchResults = await Promise.all(
+    candidates.map(async (c) => {
+      const cityClean = !!c.city && !/^unknown$/i.test(c.city)
+      const regionClean = !!c.region && !/^unknown$/i.test(c.region)
+      if (cityClean && regionClean) return { c, status: 'already-clean' as const }
+      if (!c.clinic_website_url) return { c, status: 'no-url' as const }
+      const found = await findAddressForClinic(c.clinic_website_url)
+      return { c, status: found ? 'recovered' as const : 'no-match' as const, found }
+    }),
+  )
+
+  for (const fr of fetchResults) {
+    const c = fr.c
+    if (fr.status === 'already-clean') {
       results.push({
         id: c.id, slug: c.slug, shortName: c.short_name,
         websiteUrl: c.clinic_website_url, decision: 'skipped-already-clean',
       })
       continue
     }
-    if (!c.clinic_website_url) {
+    if (fr.status === 'no-url') {
       results.push({
         id: c.id, slug: c.slug, shortName: c.short_name,
         websiteUrl: null, decision: 'fetch-failed',
       })
       continue
     }
-
-    let extracted: ExtractedAddress | null = null
-    let hitPath: string | null = null
-    for (const path of candidatePaths(c.clinic_website_url)) {
-      const html = await fetchWithTimeout(path)
-      if (!html) continue
-      extracted = extractAddress(html)
-      if (extracted) {
-        hitPath = path
-        break
-      }
-    }
+    const extracted = fr.status === 'recovered' ? fr.found?.extracted ?? null : null
+    const hitPath = fr.status === 'recovered' ? fr.found?.hitPath ?? null : null
 
     if (!extracted) {
       // Mark as backfill-failed so re-runs skip it
