@@ -150,7 +150,12 @@ function candidatePaths(websiteUrl: string): string[] {
  * Skipped silently if GOOGLE_MAPS_API_KEY env missing.
  */
 async function googlePlacesLookup(shortName: string, stateHint?: string): Promise<ExtractedAddress | null> {
-  const key = process.env.GOOGLE_MAPS_API_KEY
+  // Accept any of the common env var names Zac may have set on Vercel
+  const key =
+    process.env.GOOGLE_MAPS_API_KEY ??
+    process.env.GOOGLE_API_KEY ??
+    process.env.GMAPS_API_KEY ??
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   if (!key) return null
   const stateBit = stateHint && /^(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)$/i.test(stateHint) ? ` ${stateHint.toUpperCase()}` : ''
   const query = `${shortName}${stateBit} Australia`
