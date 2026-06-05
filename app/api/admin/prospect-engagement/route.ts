@@ -111,6 +111,18 @@ export async function GET(req: NextRequest) {
       })
     }
 
+    // Lazy-migrate portal view tracking columns. Same ALTERs live in the
+    // /api/prospect/[token]/track endpoint, but those only fire when a
+    // human visits a portal. The aggregation here references the columns
+    // independently so we ensure they exist on every read.
+    try {
+      await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS interaction_type TEXT NOT NULL DEFAULT 'view'`
+      await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS target TEXT`
+      await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS dwell_ms INTEGER`
+    } catch (err) {
+      console.error('[prospect-engagement] portal column migration failed:', err)
+    }
+
     const url = new URL(req.url)
     const clinicIdFilter = url.searchParams.get('clinicId')
     const filterId = clinicIdFilter ? parseInt(clinicIdFilter, 10) : null
