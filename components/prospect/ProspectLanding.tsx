@@ -250,6 +250,21 @@ function SidebarItem({
 function ZacCredibility() {
   return (
     <section className="glass-premium rounded-2xl p-5 sm:p-6 mb-6">
+      {/* Trust strip — endorsement + speaker + clinical badges, surfaced
+          above the bio so the credibility frame loads first. CPD purchase
+          decisions in healthcare hinge on this signal more than urgency. */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent/10 text-accent text-[10.5px] font-bold uppercase tracking-wider">
+          <ShieldCheck className="w-3 h-3" strokeWidth={2.5} />
+          Osteopathy Australia endorsed
+        </span>
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-[10.5px] font-bold uppercase tracking-wider border border-amber-200/60">
+          14 CPD hrs · AHPRA aligned
+        </span>
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 text-slate-700 text-[10.5px] font-bold uppercase tracking-wider border border-slate-200/60">
+          Speaker · OA conference circuit
+        </span>
+      </div>
       <div className="flex items-start gap-4 sm:gap-5">
         <Image
           src="/zac-lewis.jpg"

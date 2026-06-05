@@ -112,6 +112,10 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <p>Hi {contact_first_name},</p>
       {opening_block}
 
+      <p style="margin: 6px 0 14px; padding: 9px 12px; background: #f0fdfa; border-left: 3px solid #0a5a5e; border-radius: 4px; font-size: 13px; color: #0a5a5e; line-height: 1.5;">
+        <strong>Osteopathy Australia endorsed</strong> · 14 CPD hours AHPRA-aligned · delivered by an AHPRA-registered osteopath who's spent a decade on concussion at the elite-sport end. Reference: <a href="https://www.osteopathy.org.au" style="color: #0a5a5e; text-decoration: underline;">osteopathy.org.au</a>.
+      </p>
+
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
       {stats_block}
@@ -190,6 +194,10 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <p>Hi {contact_first_name},</p>
       <p>Last note from me on the Concussion Hub Pack. If the timing isn't right, all good — most clinics that engage circle back when their next concussion case shows up. The {clinic_short_name} preview stays open:</p>
 
+      <p style="margin: 12px 0; padding: 8px 12px; background: #f0fdfa; border-left: 3px solid #0a5a5e; border-radius: 4px; font-size: 12.5px; color: #0a5a5e; line-height: 1.5;">
+        Osteopathy Australia endorsed · 14 CPD hours · AHPRA-aligned.
+      </p>
+
       <a href="{portal_url}" class="cta">Open {clinic_short_name} preview →</a>
       <span class="secondary">Free SCAT6/SCOAT6 pack also still available: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a></span>
 
@@ -198,7 +206,10 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
         Whenever you're ready: book 15 min <a href="{cal_booking_url}" style="color: #0a5a5e;">on cal.com</a>.
       </p>
 
-      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, Concussion Education Australia</div>
+      <div class="sig">
+        <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, Concussion Education Australia
+        <br><span style="font-size: 11px; color: #94a3b8;">Speaker · OA conference circuit</span>
+      </div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
     </div>
   </div>

@@ -61,8 +61,19 @@ interface OutreachLogRow {
 interface PortalViewRow {
   clinic_id: number
   total: string
+  view_days: number | string
   first_viewed_at: string | null
   last_viewed_at: string | null
+}
+
+interface EventSignalRow {
+  clinic_id: number
+  open_days: number | string
+  total_open_events: number | string
+  cal_clicks: number | string
+  product_clicks: number | string
+  other_clicks: number | string
+  last_event_at: string | null
 }
 
 export async function GET(req: NextRequest) {
@@ -98,8 +109,33 @@ export async function GET(req: NextRequest) {
     // not test+prod mixed. Test sends are tagged via audit_key containing ':test:'.
     const includeTest = url.searchParams.get('includeTest') === 'true'
 
-    // Pull all three tables in parallel
-    const [clinics, outreach, views] = await Promise.all([
+    // ── Engagement-signal recalibration (2026-06-05) ──────────────────────
+    // The previous heuristic (`totalOpens >= 3 → hot`) over-weighted single-
+    // open noise from Apple Mail Privacy Protection, which pre-fetches every
+    // open the moment the email lands in the inbox (often 2-3 prefetches
+    // across iCloud devices for one read). The recalibrated signals favour
+    // research-backed predictors of B2B cold-meeting conversion:
+    //
+    //   STRONGEST  →  reply
+    //                 cal.com click (literal booking flow click)
+    //                 product-link click (dashboard CTA / pricing / hub link)
+    //                 return-day portal view (>1 calendar day of views)
+    //                 multi-day opens (opens spanning 2+ calendar days)
+    //   WEAKER    →   single-day opens, single portal view
+    //
+    // Salesloft 2023 published: clicks on cold email → 14.6% meeting rate
+    // vs 1.8% opens-only. Apollo 2024 healthcare benchmarks: 35-45% open
+    // rate but 1-2% click rate is normal (clinicians research by Googling
+    // rather than clicking). Reply rates with OA-endorsed + named-author
+    // framing trend 4-6% (vs 1-3% generic B2B services).
+    //
+    // We classify clicks by destination URL — cal.com clicks are highest
+    // intent (the prospect has decided to book), product clicks (dashboard
+    // / pricing / hub) signal active research, "other" clicks (unsubscribe,
+    // SCAT pack) carry minimal call-recommendation weight on their own.
+
+    // Pull all five sources in parallel
+    const [clinics, outreach, views, eventSignals] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
         : sql<ClinicDbRow>`SELECT * FROM prospect_clinics`,
@@ -119,6 +155,7 @@ export async function GET(req: NextRequest) {
       filterId !== null && !isNaN(filterId)
         ? sql<PortalViewRow>`
             SELECT clinic_id, COUNT(*)::text AS total,
+              COUNT(DISTINCT viewed_at::date)::int AS view_days,
               MIN(viewed_at) AS first_viewed_at, MAX(viewed_at) AS last_viewed_at
             FROM prospect_portal_views
             WHERE clinic_id = ${filterId}
@@ -126,10 +163,50 @@ export async function GET(req: NextRequest) {
             GROUP BY clinic_id`
         : sql<PortalViewRow>`
             SELECT clinic_id, COUNT(*)::text AS total,
+              COUNT(DISTINCT viewed_at::date)::int AS view_days,
               MIN(viewed_at) AS first_viewed_at, MAX(viewed_at) AS last_viewed_at
             FROM prospect_portal_views
             WHERE COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
             GROUP BY clinic_id`,
+      // Email-event signal aggregator — joins email_events to
+      // prospect_outreach_log via resend_email_id and computes:
+      //   - open_days: distinct calendar days with opens (MPP-resistant)
+      //   - cal_clicks: clicks to cal.com (literal booking intent)
+      //   - product_clicks: clicks to dashboard /p/{slug} or /pricing (research)
+      //   - other_clicks: SCAT pack / unsubscribe / etc (weak)
+      filterId !== null && !isNaN(filterId)
+        ? sql<EventSignalRow>`
+            WITH cold_sent AS (
+              SELECT clinic_id, resend_email_id
+              FROM prospect_outreach_log
+              WHERE clinic_id = ${filterId} AND resend_email_id IS NOT NULL
+            )
+            SELECT cs.clinic_id,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'opened' THEN ee.created_at::date END)::int AS open_days,
+              COUNT(CASE WHEN ee.event_type = 'opened' THEN 1 END)::int AS total_open_events,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.id END)::int AS cal_clicks,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(/p/[^?]+|/pricing|/dashboard|/hub)' AND ee.click_url !~* '(cal\\.com|cal_booking)' THEN ee.id END)::int AS product_clicks,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url !~* '(cal\\.com|cal_booking|/p/|/pricing|/dashboard|/hub|/calendar)' THEN ee.id END)::int AS other_clicks,
+              MAX(ee.created_at) AS last_event_at
+            FROM cold_sent cs
+            JOIN email_events ee ON ee.email_id = cs.resend_email_id
+            GROUP BY cs.clinic_id`
+        : sql<EventSignalRow>`
+            WITH cold_sent AS (
+              SELECT clinic_id, resend_email_id
+              FROM prospect_outreach_log
+              WHERE resend_email_id IS NOT NULL
+            )
+            SELECT cs.clinic_id,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'opened' THEN ee.created_at::date END)::int AS open_days,
+              COUNT(CASE WHEN ee.event_type = 'opened' THEN 1 END)::int AS total_open_events,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.id END)::int AS cal_clicks,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(/p/[^?]+|/pricing|/dashboard|/hub)' AND ee.click_url !~* '(cal\\.com|cal_booking)' THEN ee.id END)::int AS product_clicks,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url !~* '(cal\\.com|cal_booking|/p/|/pricing|/dashboard|/hub|/calendar)' THEN ee.id END)::int AS other_clicks,
+              MAX(ee.created_at) AS last_event_at
+            FROM cold_sent cs
+            JOIN email_events ee ON ee.email_id = cs.resend_email_id
+            GROUP BY cs.clinic_id`,
     ])
 
     // Index helpers
@@ -140,6 +217,8 @@ export async function GET(req: NextRequest) {
     }
     const viewsByClinic = new Map<number, PortalViewRow>()
     for (const v of views.rows) viewsByClinic.set(v.clinic_id, v)
+    const signalsByClinic = new Map<number, EventSignalRow>()
+    for (const s of eventSignals.rows) signalsByClinic.set(s.clinic_id, s)
 
     // Build rich rows
     const prospects = clinics.rows.map((c) => {
@@ -179,27 +258,68 @@ export async function GET(req: NextRequest) {
       }
       const weightedValue = Math.round(dealValue * (stageProb[c.status] ?? 0))
 
-      // Engagement tier — segments prospects for outreach prioritisation.
-      // Driven by total opens, total clicks, portal views, replies, and
-      // status. Bot-filtered portal views already happens at the SQL layer.
+      // ── Engagement tier — recalibrated against B2B + healthcare-CPD
+      // benchmarks (see CTE comment block above). Strongest non-reply
+      // signals: cal-click, return-day portal view, product-click,
+      // multi-day opens. Single open / single same-day view = noise.
       const portalViews = view ? parseInt(view.total, 10) : 0
+      const viewDays = view ? Number(view.view_days ?? 0) : 0
+      const signal = signalsByClinic.get(c.id)
+      const openDays = signal ? Number(signal.open_days ?? 0) : 0
+      const calClicks = signal ? Number(signal.cal_clicks ?? 0) : 0
+      const productClicks = signal ? Number(signal.product_clicks ?? 0) : 0
+      const otherClicks = signal ? Number(signal.other_clicks ?? 0) : 0
       const everSent = sends.length > 0
+
+      // Top non-reply signal — what the strongest engagement marker is
+      // for this clinic. Drives both tier and "why call this prospect"
+      // copy in the admin dashboard.
+      const topSignal: 'cal_click' | 'return_view' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none' =
+        calClicks > 0 ? 'cal_click'
+        : viewDays >= 2 ? 'return_view'
+        : productClicks > 0 ? 'product_click'
+        : openDays >= 2 ? 'multi_day_opens'
+        : portalViews > 0 ? 'single_view'
+        : totalOpens > 0 ? 'single_open'
+        : 'none'
+
       let engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won' = 'cold'
       if (c.status === 'won') engagementTier = 'won'
       else if (replies > 0) engagementTier = 'replied'
-      else if (c.status === 'engaged' || (totalClicks > 0 && portalViews > 0)) engagementTier = 'engaged'
-      else if (totalClicks > 0 || portalViews >= 2 || totalOpens >= 3) engagementTier = 'hot'
-      else if (totalOpens > 0 || portalViews > 0) engagementTier = 'warm'
+      // ENGAGED = highest predictive non-reply signals → personal call
+      // 1) Cal click (literal booking intent) OR
+      // 2) Return-day portal view + any click (research + commitment) OR
+      // 3) Product click + multi-day opens (research over time)
+      else if (
+        c.status === 'engaged' ||
+        calClicks > 0 ||
+        (viewDays >= 2 && (productClicks > 0 || otherClicks > 0 || calClicks > 0)) ||
+        (productClicks > 0 && openDays >= 2)
+      ) engagementTier = 'engaged'
+      // HOT = single strong signal (one of these alone)
+      // - Any product click (clicked the dashboard preview)
+      // - Return-day view (came back another day)
+      // - Multi-day opens AND total >= 3 (rules out Apple-MPP noise)
+      else if (
+        productClicks > 0 ||
+        viewDays >= 2 ||
+        (openDays >= 2 && totalOpens >= 3) ||
+        otherClicks > 0
+      ) engagementTier = 'hot'
+      // WARM = real attention but not strong enough alone
+      // - Multi-day opens (someone genuinely read more than once)
+      // - Single portal view
+      else if (openDays >= 2 || portalViews > 0) engagementTier = 'warm'
       else engagementTier = 'cold'
 
-      // Personal-call-recommended: clinic showed engagement signals but
-      // hasn't booked a cal.com slot or replied yet. Zac's time is the
-      // bottleneck — surface only the clinics where a manual call would
-      // likely close. Suppress when clinic hasn't been sent to (no signal
-      // yet) or is already in won/replied state (done) or lost/bounced.
+      // ── Personal call recommendation — only for high-intent signals.
+      // We don't call on a single open or single same-day portal view —
+      // those signals are too noisy to spend Zac's time on. We DO call
+      // for cal_click, return-day visits, and product clicks. This is the
+      // actionable surface; everything else gets the auto-sequence.
       const callRecommended =
         everSent &&
-        ['hot', 'engaged'].includes(engagementTier) &&
+        (engagementTier === 'engaged' || (engagementTier === 'hot' && (productClicks > 0 || viewDays >= 2 || calClicks > 0))) &&
         !['lost', 'bounced', 'archived', 'won', 'replied'].includes(c.status)
 
       return {
@@ -259,8 +379,16 @@ export async function GET(req: NextRequest) {
         // engagement segmentation — drives admin dashboard warm/hot view
         engagementTier,
         callRecommended,
+        topSignal,
+        // calibrated signal counts — surfaced so admin can verify the
+        // tier classification and write good "why call" copy
+        openDays,
+        calClicks,
+        productClicks,
+        otherClicks,
         // portal
         totalPortalViews: view ? parseInt(view.total, 10) : 0,
+        viewDays,
         firstPortalViewAt: view?.first_viewed_at ?? null,
         lastPortalViewAt: view?.last_viewed_at ?? null,
         // per-send detail (most recent first)
