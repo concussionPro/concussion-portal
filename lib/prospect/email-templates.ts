@@ -292,69 +292,6 @@ export function mergeTemplate(
     offerBlock = `<p style="margin: 18px 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
         ${headerLine}${invitingNote}
       </p>`
-  // Engagement-aware followup variant. T2 subject + intro paragraph
-  // reference what the prospect did (or didn't do) with T1. T2 also
-  // gates the price-reveal: if the prospect has engaged (opened/clicked
-  // T1, signalling they've at least seen the dashboard), include the
-  // price in the body. If no engagement, keep pushing to dashboard.
-  // T3 always discloses (it's the last touch, no upside to withholding).
-  // Bot/scanner clicks are filtered upstream so SafeLinks pre-fetches
-  // don't trigger the "noticed you took a look" variants or the price
-  // reveal.
-  const engagement = options.priorEngagement ?? 'none'
-  const discloseFollowupPrice = template.slug === 'final' || engagement !== 'none'
-  let followupSubject: string
-  let followupIntro: string
-  if (engagement === 'clicked') {
-    followupSubject = `Saw ${clinic.shortName} took a look — quick follow-up`
-    followupIntro = `<p>Following up — saw ${clinic.shortName} opened the preview after my last note. Anything stand out? Happy to walk through what fits your team on a 15-min call, or hand over the free SCAT pack if it's more useful right now.</p>`
-  } else if (engagement === 'opened') {
-    followupSubject = `Re: Concussion hub — quick check`
-    followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what's in this for ${clinic.shortName}:</p>`
-  } else {
-    followupSubject = `Re: Concussion hub for ${safeCity}`
-    followupIntro = `<p>Following up — quick recap on the Concussion Hub Pack for ${clinic.shortName}:</p>`
-  }
-
-  if (isOnSiteTarget) {
-    // Reframe to on-site language
-    if (engagement === 'clicked') {
-      followupIntro = `<p>Following up — saw ${clinic.shortName} opened the preview after my last note. Anything stand out? Happy to walk through what an on-site cohort day at ${clinic.shortName} would actually look like, or hand over the free SCAT pack if it's more useful right now.</p>`
-    } else if (engagement === 'opened') {
-      followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what an on-site cohort day at ${clinic.shortName} would cover:</p>`
-    } else {
-      followupIntro = `<p>Following up — quick recap on the on-site cohort training for ${clinic.shortName}:</p>`
-    }
-  }
-
-  // Price reveal — gated on prior engagement (T1 opened/clicked → they've
-  // seen the dashboard so it's no longer "withheld") or template=final
-  // (last touch, always disclose). When NOT disclosing, push to dashboard.
-  let followupPriceBlock = ''
-  if (discloseFollowupPrice) {
-    if (isOnSiteTarget) {
-      const recoCohort = cohortPricing.cohortTiers.find((t) => {
-        const reco = clinic.cohortRecommendation
-        const name = reco === 'essential' ? 'Essential' : reco === 'full-team' ? 'Full team' : 'Recommended'
-        return t.name === name
-      })!
-      const cohortPriceFormatted = `A$${recoCohort.total.toLocaleString('en-AU')}`
-      followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
-        <strong>${cohortPriceFormatted}</strong> for ${recoCohort.clinicians} clinicians, full-day on-site at ${clinic.shortName}. Includes lifetime online access for everyone in the cohort.
-      </p>`
-    } else {
-      followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
-        <strong>$1,497 Hub Pack</strong> — your team online + clinic-branded clinical pack + launch playbook. Workshop upgrades $497/clinician if you want hands-on credentials too.
-      </p>`
-    }
-  } else {
-    followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #475569; line-height: 1.55;">
-      Pricing + cohort breakdown lives on the ${clinic.shortName} dashboard.
-    </p>`
-  }
-
-  if (false) {
-    // (this branch never executes — placeholder to preserve existing else-block below)
   } else {
     // Small / medium clinic — Hub Pack pitch
     statsBlock = `<table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
@@ -440,6 +377,60 @@ export function mergeTemplate(
   const regionPhrase = hasUnknownRegion
     ? safeCity
     : (naturalRegionPhrase(clinic.region) ?? safeCity)
+
+  // ─── Engagement-aware followup variant (T2/T3) ──────────────────────────
+  // T2 subject + intro reference what the prospect did (or didn't do) with
+  // T1. T2 gates the price-reveal: if they engaged (opened/clicked T1, i.e.
+  // they've seen the dashboard), include price in body. If no engagement,
+  // keep pushing to dashboard. T3 always discloses — last touch, no upside
+  // to withholding. Bot/scanner clicks are filtered upstream so SafeLinks
+  // pre-fetches don't trigger "saw you take a look" variants.
+  const engagement = options.priorEngagement ?? 'none'
+  const discloseFollowupPrice = template.slug === 'final' || engagement !== 'none'
+  let followupSubject: string
+  let followupIntro: string
+  if (engagement === 'clicked') {
+    followupSubject = `Saw ${clinic.shortName} took a look — quick follow-up`
+    followupIntro = `<p>Following up — saw ${clinic.shortName} opened the preview after my last note. Anything stand out? Happy to walk through what fits your team on a 15-min call, or hand over the free SCAT pack if it's more useful right now.</p>`
+  } else if (engagement === 'opened') {
+    followupSubject = `Re: Concussion hub — quick check`
+    followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what's in this for ${clinic.shortName}:</p>`
+  } else {
+    followupSubject = `Re: Concussion hub for ${safeCity}`
+    followupIntro = `<p>Following up — quick recap on the Concussion Hub Pack for ${clinic.shortName}:</p>`
+  }
+  if (isOnSiteTarget) {
+    if (engagement === 'clicked') {
+      followupIntro = `<p>Following up — saw ${clinic.shortName} opened the preview after my last note. Anything stand out? Happy to walk through what an on-site cohort day at ${clinic.shortName} would actually look like, or hand over the free SCAT pack if it's more useful right now.</p>`
+    } else if (engagement === 'opened') {
+      followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what an on-site cohort day at ${clinic.shortName} would cover:</p>`
+    } else {
+      followupIntro = `<p>Following up — quick recap on the on-site cohort training for ${clinic.shortName}:</p>`
+    }
+  }
+
+  let followupPriceBlock = ''
+  if (discloseFollowupPrice) {
+    if (isOnSiteTarget) {
+      const recoCohortFp = cohortPricing.cohortTiers.find((t) => {
+        const reco = clinic.cohortRecommendation
+        const name = reco === 'essential' ? 'Essential' : reco === 'full-team' ? 'Full team' : 'Recommended'
+        return t.name === name
+      })!
+      const cohortPriceFormatted = `A$${recoCohortFp.total.toLocaleString('en-AU')}`
+      followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
+        <strong>${cohortPriceFormatted}</strong> for ${recoCohortFp.clinicians} clinicians, full-day on-site at ${clinic.shortName}. Includes lifetime online access for everyone in the cohort.
+      </p>`
+    } else {
+      followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
+        <strong>$1,497 Hub Pack</strong> — your team online + clinic-branded clinical pack + launch playbook. Workshop upgrades $497/clinician if you want hands-on credentials too.
+      </p>`
+    }
+  } else {
+    followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #475569; line-height: 1.55;">
+      Pricing + cohort breakdown lives on the ${clinic.shortName} dashboard.
+    </p>`
+  }
 
   openingBlock = openingBlock
     .replace(/\{clinic_short_name\}/g, clinic.shortName)

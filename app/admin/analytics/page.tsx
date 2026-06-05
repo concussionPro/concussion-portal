@@ -47,6 +47,9 @@ import {
   Bell,
   Trash2,
   Loader2,
+  Phone,
+  Snowflake,
+  Sparkles,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -162,6 +165,11 @@ interface ProspectRow {
   nextTemplateSlug: string | null
   priorityWave: string | null
   pitchVariant: string | null
+  engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won'
+  callRecommended: boolean
+  recommendedOffer?: 'hub-pack' | 'on-site-cohort'
+  sizeBucket?: string
+  dealValue?: number
   sends: ProspectSend[]
 }
 interface ProspectAggregates {
@@ -169,7 +177,11 @@ interface ProspectAggregates {
   byRegion: Record<string, number>
   byCohort: Record<string, number>
   byTravelBand: Record<string, number>
-  revenue: { totalRevenuePotential: number; weightedPipeline: number; wins: number }
+  byEngagementTier?: Record<string, number>
+  byOffer?: Record<string, number>
+  bySizeBucket?: Record<string, number>
+  callRecommendedCount?: number
+  revenue: { totalRevenuePotential: number; weightedPipeline: number; wins: number; hubPackPipelineValue?: number; onSitePipelineValue?: number }
   funnel: {
     totalSends: number; totalOpens: number; totalClicks: number; totalViews: number; totalReplies: number; wins: number
     sendOpenRate: number; openClickRate: number; sendReplyRate: number; replyToWinRate: number
@@ -2680,9 +2692,43 @@ export default function AnalyticsDashboard() {
               const { prospects, aggregates } = prospectsData
               const agg = aggregates ?? {
                 byStatus: {}, byRegion: {}, byCohort: {}, byTravelBand: {},
-                revenue: { totalRevenuePotential: 0, weightedPipeline: 0, wins: 0 },
+                byEngagementTier: {}, byOffer: {}, bySizeBucket: {}, callRecommendedCount: 0,
+                revenue: { totalRevenuePotential: 0, weightedPipeline: 0, wins: 0, hubPackPipelineValue: 0, onSitePipelineValue: 0 },
                 funnel: { totalSends: 0, totalOpens: 0, totalClicks: 0, totalViews: 0, totalReplies: 0, wins: 0, sendOpenRate: 0, openClickRate: 0, sendReplyRate: 0, replyToWinRate: 0 },
               }
+
+              // Engagement tier definitions — drives both the overview tier strip
+              // and the Breakdowns view. Each tier has: count, label, recommended
+              // next action, colour. Action text is what Zac should DO with these
+              // prospects right now — not just a label.
+              const TIER_META: Array<{
+                key: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won'
+                label: string
+                action: string
+                colour: string
+                badgeBg: string
+                badgeText: string
+                icon: React.ElementType
+              }> = [
+                { key: 'cold',     label: 'Cold',     action: 'Wait for T1/T2 to land · no manual action',                       colour: 'bg-slate-400',   badgeBg: 'bg-slate-100',   badgeText: 'text-slate-700',   icon: Snowflake },
+                { key: 'warm',     label: 'Warm',     action: 'Opened only — let auto-followup ride · T2 reveals price',         colour: 'bg-amber-300',   badgeBg: 'bg-amber-50',    badgeText: 'text-amber-700',   icon: Flame },
+                { key: 'hot',      label: 'Hot',      action: 'CLICKED or 2+ views — send a personal LinkedIn DM in 24h',         colour: 'bg-orange-500',  badgeBg: 'bg-orange-50',   badgeText: 'text-orange-700',  icon: Flame },
+                { key: 'engaged',  label: 'Engaged',  action: 'Click + portal view — CALL THIS WEEK · cal.com link in next email', colour: 'bg-rose-500',    badgeBg: 'bg-rose-50',     badgeText: 'text-rose-700',    icon: Phone },
+                { key: 'replied',  label: 'Replied',  action: 'Reply received — respond inside 2 business hours',                 colour: 'bg-emerald-500', badgeBg: 'bg-emerald-50',  badgeText: 'text-emerald-700', icon: Sparkles },
+                { key: 'won',      label: 'Won',      action: 'Closed — onboarding email sent · log in CRM',                       colour: 'bg-emerald-700', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-800', icon: CheckCircle2 },
+              ]
+              const tierCounts: Record<string, number> = agg.byEngagementTier ?? {}
+              // Total restricted to non-dead — matches API logic
+              const tierTotalForPct = TIER_META.reduce((acc, t) => acc + (tierCounts[t.key] ?? 0), 0)
+
+              // Clinics where Zac should personally reach out NOW (sorted by signal strength)
+              const callRecommendedList = prospects
+                .filter(p => p.callRecommended)
+                .sort((a, b) => {
+                  const score = (p: ProspectRow) =>
+                    p.totalClicks * 100 + p.totalPortalViews * 10 + p.totalOpens
+                  return score(b) - score(a)
+                })
 
               const fmt$ = (n: number) => `A$${n.toLocaleString('en-AU')}`
 
@@ -2811,6 +2857,115 @@ export default function AnalyticsDashboard() {
                   {/* ── Overview ── */}
                   {prospectsSubTab === 'overview' && (
                     <div className="space-y-6">
+                      {/* Engagement tier strip — segments cold/warm/hot/engaged/replied with
+                          recommended next action per tier. This is the primary at-a-glance
+                          view: what to do today, not just headline numbers. */}
+                      <div>
+                        <SectionTitle title="Engagement tiers" subtitle="Where every prospect sits + what to do next · drives daily action" />
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                          {TIER_META.map(t => {
+                            const count = tierCounts[t.key] ?? 0
+                            const pct = tierTotalForPct > 0 ? (count / tierTotalForPct) * 100 : 0
+                            const Icon = t.icon
+                            return (
+                              <button
+                                key={t.key}
+                                onClick={() => setProspectsSubTab('queue')}
+                                className="card rounded-xl p-4 text-left hover:border-[var(--accent)] transition-colors cursor-pointer group"
+                                title={`${count} ${t.label.toLowerCase()} prospects · click to drill in`}
+                              >
+                                <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${t.badgeBg} ${t.badgeText} text-[10px] font-bold uppercase tracking-wider mb-2`}>
+                                  <Icon size={11} />{t.label}
+                                </div>
+                                <div className="text-2xl font-bold text-[var(--foreground)]">{count}</div>
+                                <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{pct.toFixed(0)}% of pipeline</div>
+                                <div className={`mt-2 h-1 rounded-full bg-slate-100 overflow-hidden`}>
+                                  <div className={`h-full ${t.colour}`} style={{ width: `${pct}%` }} />
+                                </div>
+                                <p className="text-[11px] text-[var(--muted-foreground)] mt-2.5 leading-snug">{t.action}</p>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Call-now list — clinics with strong signals + no reply yet.
+                          This is the actionable surface: Zac's time goes here. */}
+                      {callRecommendedList.length > 0 && (
+                        <div>
+                          <SectionTitle
+                            title={`Call now (${callRecommendedList.length})`}
+                            subtitle="Clinics with click/view signal but no reply yet — manual outreach likely to close · sorted by signal strength"
+                          />
+                          <div className="card rounded-2xl overflow-hidden border-orange-200">
+                            <table className="w-full text-sm">
+                              <thead className="bg-orange-50 text-xs uppercase tracking-wider text-orange-700">
+                                <tr>
+                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Contact</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Tier</th>
+                                  <th className="text-center px-3 py-3 font-semibold">Opens</th>
+                                  <th className="text-center px-3 py-3 font-semibold">Clicks</th>
+                                  <th className="text-center px-3 py-3 font-semibold">Views</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Offer</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Suggested next step</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {callRecommendedList.slice(0, 20).map(p => {
+                                  const tier = TIER_META.find(t => t.key === p.engagementTier)!
+                                  const TierIcon = tier.icon
+                                  const isOnSite = p.recommendedOffer === 'on-site-cohort'
+                                  const offerLabel = isOnSite
+                                    ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}`
+                                    : `Hub Pack · ${fmt$(p.dealValue ?? 1497)}`
+                                  // Next-step copy — different per engagement strength + offer type
+                                  let nextStep = ''
+                                  if (p.totalClicks > 0 && isOnSite) {
+                                    nextStep = `Personal LinkedIn DM ${p.contactFirstName} — reference the on-site cohort · suggest 15 min call`
+                                  } else if (p.totalClicks > 0) {
+                                    nextStep = `LinkedIn DM ${p.contactFirstName} · they clicked through — $1,497 Hub Pack referenced`
+                                  } else if (p.totalPortalViews >= 2 && isOnSite) {
+                                    nextStep = `Personal email to ${p.contactFirstName} · they reviewed cohort options ${p.totalPortalViews}×`
+                                  } else if (p.totalPortalViews >= 2) {
+                                    nextStep = `Personal email to ${p.contactFirstName} · reviewed dashboard ${p.totalPortalViews}× without commit`
+                                  } else {
+                                    nextStep = `${p.totalOpens}× opens · soft nudge ahead of auto T2/T3`
+                                  }
+                                  return (
+                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer">
+                                      <td className="px-4 py-3">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                        <div className="text-xs text-[var(--muted-foreground)]">{p.city || 'Unknown'}, {p.state} · {p.clinicalCount} clinical</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName}</div>
+                                        <div className="text-[var(--muted-foreground)]">{p.contactDiscipline}</div>
+                                      </td>
+                                      <td className="px-4 py-3">
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${tier.badgeBg} ${tier.badgeText} text-[10px] font-bold uppercase tracking-wider`}>
+                                          <TierIcon size={10} />{tier.label}
+                                        </span>
+                                      </td>
+                                      <td className="px-3 py-3 text-center text-sm font-semibold">{p.totalOpens || '—'}</td>
+                                      <td className="px-3 py-3 text-center text-sm font-bold text-orange-600">{p.totalClicks || '—'}</td>
+                                      <td className="px-3 py-3 text-center text-sm font-bold text-[var(--accent)]">{p.totalPortalViews || '—'}</td>
+                                      <td className="px-4 py-3 text-right text-xs">
+                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{offerLabel}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)] leading-snug max-w-xs">{nextStep}</td>
+                                    </tr>
+                                  )
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                          {callRecommendedList.length > 20 && (
+                            <p className="text-xs text-[var(--muted-foreground)] mt-2">Showing top 20 by signal strength. {callRecommendedList.length - 20} more in Queue tab.</p>
+                          )}
+                        </div>
+                      )}
+
                       {/* Top 10 by weighted value */}
                       <div>
                         <SectionTitle title="Top weighted prospects" subtitle="Highest expected-value prospects · weighted by stage probability" />
@@ -2958,6 +3113,9 @@ export default function AnalyticsDashboard() {
                   {/* ── Breakdowns ── */}
                   {prospectsSubTab === 'breakdowns' && (
                     <div className="grid md:grid-cols-2 gap-4">
+                      <BreakdownCard title="By engagement tier" data={agg.byEngagementTier ?? {}} icon={Flame} />
+                      <BreakdownCard title="By offer (Hub Pack vs on-site)" data={agg.byOffer ?? {}} icon={DollarSign} />
+                      <BreakdownCard title="By clinic size" data={agg.bySizeBucket ?? {}} icon={Building2} />
                       <BreakdownCard title="By region" data={agg.byRegion} icon={MapPin} />
                       <BreakdownCard title="By cohort tier" data={agg.byCohort} icon={Target} />
                       <BreakdownCard title="By travel band" data={agg.byTravelBand} icon={Globe} />
@@ -3081,15 +3239,16 @@ export default function AnalyticsDashboard() {
                       {/* Sent outreach */}
                       {sentTable.length > 0 && (
                         <div>
-                          <SectionTitle title="Outreach sent" subtitle="Every prospect with at least one send · most recent first · click to drill in" />
+                          <SectionTitle title="Outreach sent" subtitle="Every prospect with at least one send · sorted by engagement tier (hottest first) · click to drill in" />
                           <div className="card rounded-2xl overflow-hidden overflow-x-auto">
                             <table className="w-full text-sm">
                               <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
                                 <tr>
                                   <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Tier</th>
                                   <th className="text-left px-4 py-3 font-semibold">Location</th>
                                   <th className="text-right px-4 py-3 font-semibold">Team</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Cohort</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Offer</th>
                                   <th className="text-right px-4 py-3 font-semibold">Sends</th>
                                   <th className="text-right px-4 py-3 font-semibold">Opens / Clicks</th>
                                   <th className="text-right px-4 py-3 font-semibold">Views</th>
@@ -3099,23 +3258,46 @@ export default function AnalyticsDashboard() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {sentTable.map(p => (
-                                  <tr key={p.id} onClick={() => setSelectedProspectId(p.id)} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer">
-                                    <td className="px-4 py-3">
-                                      <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
-                                      <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName}</div>
-                                    </td>
-                                    <td className="px-4 py-3 text-[var(--muted-foreground)] text-xs">{p.city}, {p.state}<div>{p.region}</div></td>
-                                    <td className="px-4 py-3 text-right">{p.clinicalCount}<span className="text-xs text-[var(--muted-foreground)]"> / {p.totalCount}</span></td>
-                                    <td className="px-4 py-3 text-xs capitalize">{p.cohortRecommendation}<div className="text-[var(--muted-foreground)]">{fmt$(p.recoCohortTotal)}</div></td>
-                                    <td className="px-4 py-3 text-right">{p.totalSends}</td>
-                                    <td className="px-4 py-3 text-right">{p.totalOpens} / {p.totalClicks}</td>
-                                    <td className="px-4 py-3 text-right">{p.totalPortalViews}</td>
-                                    <td className="px-4 py-3 text-right">{p.replies > 0 ? <span className="font-bold text-emerald-600">{p.replies}</span> : '—'}</td>
-                                    <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">{p.lastSentAt ? timeAgo(new Date(p.lastSentAt).getTime()) : '—'}<div>{p.lastSentTemplate}</div></td>
-                                    <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
-                                  </tr>
-                                ))}
+                                {[...sentTable].sort((a, b) => {
+                                  // Sort by engagement tier descending — hottest first
+                                  const rank: Record<string, number> = { replied: 6, engaged: 5, hot: 4, warm: 3, won: 2, cold: 1 }
+                                  const ra = rank[a.engagementTier] ?? 0
+                                  const rb = rank[b.engagementTier] ?? 0
+                                  if (rb !== ra) return rb - ra
+                                  return (b.lastSentAt ? new Date(b.lastSentAt).getTime() : 0) - (a.lastSentAt ? new Date(a.lastSentAt).getTime() : 0)
+                                }).map(p => {
+                                  const tier = TIER_META.find(t => t.key === p.engagementTier) ?? TIER_META[0]
+                                  const TierIcon = tier.icon
+                                  const isOnSite = p.recommendedOffer === 'on-site-cohort'
+                                  return (
+                                    <tr key={p.id} onClick={() => setSelectedProspectId(p.id)} className={`border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer ${p.callRecommended ? 'bg-orange-50/40' : ''}`}>
+                                      <td className="px-4 py-3">
+                                        <div className="flex items-center gap-1.5">
+                                          {p.callRecommended && <Phone size={12} className="text-orange-600" aria-label="Personal call recommended" />}
+                                          <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                        </div>
+                                        <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName}</div>
+                                      </td>
+                                      <td className="px-4 py-3">
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${tier.badgeBg} ${tier.badgeText} text-[10px] font-bold uppercase tracking-wider`}>
+                                          <TierIcon size={10} />{tier.label}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3 text-[var(--muted-foreground)] text-xs">{p.city}, {p.state}<div>{p.region}</div></td>
+                                      <td className="px-4 py-3 text-right">{p.clinicalCount}<span className="text-xs text-[var(--muted-foreground)]"> / {p.totalCount}</span></td>
+                                      <td className="px-4 py-3 text-xs">
+                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{isOnSite ? 'On-site' : 'Hub Pack'}</div>
+                                        <div className="text-[var(--muted-foreground)]">{fmt$(p.dealValue ?? p.recoCohortTotal)}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-right">{p.totalSends}</td>
+                                      <td className="px-4 py-3 text-right">{p.totalOpens} / {p.totalClicks > 0 ? <span className="font-bold text-orange-600">{p.totalClicks}</span> : 0}</td>
+                                      <td className="px-4 py-3 text-right">{p.totalPortalViews > 0 ? <span className="font-bold text-[var(--accent)]">{p.totalPortalViews}</span> : 0}</td>
+                                      <td className="px-4 py-3 text-right">{p.replies > 0 ? <span className="font-bold text-emerald-600">{p.replies}</span> : '—'}</td>
+                                      <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">{p.lastSentAt ? timeAgo(new Date(p.lastSentAt).getTime()) : '—'}<div>{p.lastSentTemplate}</div></td>
+                                      <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
+                                    </tr>
+                                  )
+                                })}
                               </tbody>
                             </table>
                           </div>
