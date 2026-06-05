@@ -167,12 +167,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       </ul>
 
       {followup_price_block}
-      <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        Most clinics that engage take the call first — 15 minutes, no slides, just whether the program fits your team's caseload.
-      </p>
-
-      <a href="{cal_booking_url}" class="cta">Book 15 min on cal.com →</a>
-      <span class="secondary">Or grab the free SCAT6/SCOAT6 pack to use right now: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a></span>
+      {followup_cta_block}
 
       <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA · <span style="color: #94a3b8;">Speaker · OA conference circuit</span></div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
@@ -469,6 +464,11 @@ export function mergeTemplate(
   const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('cta')}`
   const portalImageUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('hero')}`
   const calBookingUrl = `https://cal.com/zac-lewis-so8zjs/30min?${utmFor('book')}`
+  // Lower-commitment "show me around" event type — surfaced only to
+  // warm/hot prospects on T2 (people who already opened or clicked T1).
+  // Cold T2 keeps the standard 30-min sales call. Cal.com event type
+  // must exist at this URL — create at app.cal.com if missing.
+  const calWalkthroughUrl = `https://cal.com/zac-lewis-so8zjs/portal-walkthrough?${utmFor('walkthrough')}`
   // SCAT pack lead magnet — UTM-tagged so we can attribute downstream
   // free-signups + paid conversions back to the cold-outreach SCAT path.
   const scatPackUrl = `${baseUrl}/scat-mastery?${utmFor('scat_pack')}&prospect=${clinic.slug}`
@@ -497,6 +497,36 @@ export function mergeTemplate(
   // raw URL (htmlToPlainText decodes &amp; back to &).
   const htmlEncodeUrl = (u: string) => u.replace(/&/g, '&amp;')
 
+  // ─── Engagement-tier-aware CTA for T2 (followup) ────────────────────────
+  // Cold (priorEngagement = 'none'): standard sales CTA + SCAT lead magnet
+  // Warm / Hot (opened or clicked T1): walkthrough CTA + reply alt
+  //
+  // Walkthrough framing converts better for research-mode prospects than
+  // "book a sales call" — they've already shown interest by opening or
+  // clicking, but most cold-click bailers cite "do I really want a sales
+  // call?" as the friction. Walkthrough reframes the same 30 mins as
+  // value-led ("show me around the {clinic} preview") rather than pitch.
+  //
+  // Also surfaces a low-friction reply alternative for the ~50% who'd
+  // rather email one question than book any kind of slot.
+  let followupCtaBlock: string
+  if (engagement === 'none') {
+    followupCtaBlock = `
+      <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        Most clinics that engage take the call first — 15 minutes, no slides, just whether the program fits your team's caseload.
+      </p>
+      <a href="${htmlEncodeUrl(calBookingUrl)}" class="cta">Book 15 min on cal.com →</a>
+      <span class="secondary">Or grab the free SCAT6/SCOAT6 pack to use right now: <a href="${htmlEncodeUrl(scatPackUrl)}">${baseUrlShort}/scat-mastery</a></span>`
+  } else {
+    // Warm/Hot variant — walkthrough framing
+    followupCtaBlock = `
+      <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        Want a guided tour through the ${clinic.shortName} preview? 30-min screenshare — I walk you through the modules, branded docs, and how the workshop upgrade slots in. No pitch, no slides.
+      </p>
+      <a href="${htmlEncodeUrl(calWalkthroughUrl)}" class="cta">Book a 30-min portal walkthrough →</a>
+      <span class="secondary">Or hit reply with one question — I'll answer in writing within a day.</span>`
+  }
+
   const variables: Record<string, string | undefined> = {
     base_url: baseUrl,
     clinic_name: clinic.name,
@@ -517,6 +547,8 @@ export function mergeTemplate(
     portal_url: htmlEncodeUrl(portalUrl),
     portal_image_url: htmlEncodeUrl(portalImageUrl),
     cal_booking_url: htmlEncodeUrl(calBookingUrl),
+    cal_walkthrough_url: htmlEncodeUrl(calWalkthroughUrl),
+    followup_cta_block: followupCtaBlock,
     scat_pack_url: htmlEncodeUrl(scatPackUrl),
     base_url_short: baseUrlShort,
     access_key: clinic.accessKey,

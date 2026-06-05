@@ -40,8 +40,14 @@ const COLD_FROM = 'Zac Lewis <partnerships@concussion-education-australia.com>'
 const REPLY_TO = 'zac@concussion-education-australia.com'
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
 
-const FOLLOWUP_GAP_BUSINESS_DAYS = 4 // T1 → T2
-const FINAL_GAP_BUSINESS_DAYS = 5    // T2 → T3
+// Cadence — busy clinicians. Healthcare CPD research cycle is 7-21 days
+// per touch; chasing too fast (< 1 week) reads as annoying and burns
+// trust faster than it builds urgency. Total sequence spans ~3 weeks.
+//   T1 → T2: 7 BD (~ 9-10 calendar days) — they read T1, mulled it,
+//            maybe forwarded to a partner, now a tasteful nudge.
+//   T2 → T3: 8 BD (~ 11-12 calendar days) — final note, no chase energy.
+const FOLLOWUP_GAP_BUSINESS_DAYS = 7 // T1 → T2 — was 4, bumped 2026-06-05
+const FINAL_GAP_BUSINESS_DAYS = 8    // T2 → T3 — was 5, bumped 2026-06-05
 
 interface QueueRow {
   id: number
