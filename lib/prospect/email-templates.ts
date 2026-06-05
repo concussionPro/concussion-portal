@@ -14,16 +14,20 @@ const STANDARD_POINTS = `<ul class="points">
   <li>Evidence-based care anchored in the 2026 AIS/SMA + Amsterdam consensus</li>
 </ul>`
 
+// {hub_phrase} is rendered as either "for {city}" (location known) or
+// "for concussion management" (location unknown — the "local hub for
+// concussion management" framing per Zac). Single substitution keeps
+// the lead sentence reading cleanly either way.
 const T1_OPENING_VARIANTS: Record<Discipline, string> = {
-  physiotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
-  osteopaths: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
-  generalPractitioners: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
-  sportsMedicineDoctors: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
-  exercisePhys: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
-  myotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
-  remedialMassage: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
-  practiceManager: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
-  admin: `<p class="lead">From diagnosis to discharge — become the concussion hub for {city}.</p>${STANDARD_POINTS}`,
+  physiotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
+  osteopaths: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
+  generalPractitioners: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
+  sportsMedicineDoctors: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
+  exercisePhys: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
+  myotherapists: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
+  remedialMassage: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
+  practiceManager: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
+  admin: `<p class="lead">From diagnosis to discharge — become the concussion hub {hub_phrase}.</p>${STANDARD_POINTS}`,
 }
 
 /**
@@ -445,7 +449,14 @@ export function mergeTemplate(
     </p>`
   }
 
+  // Hub phrase — substitutes into "become the concussion hub {hub_phrase}".
+  //   Known location:   "for Sunshine Coast"  → "become the concussion hub for Sunshine Coast"
+  //   Unknown location: "for your caseload"   → "become the concussion hub for your caseload"
+  // The unknown variant reads as intentional positioning, not as a fallback.
+  const hubPhrase = locationUnknown ? `for your caseload` : `for ${safeCity}`
+
   openingBlock = openingBlock
+    .replace(/\{hub_phrase\}/g, hubPhrase)
     .replace(/\{clinic_short_name\}/g, clinic.shortName)
     .replace(/\{region_phrase\}/g, regionPhrase)
     .replace(/\{region\}/g, safeRegion)

@@ -115,7 +115,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                     <GraduationCap className="w-4 h-4 text-amber-300" strokeWidth={2} />
                   </div>
                   <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-300">
-                    The day at {clinic.city} · highest-value product
+                    {cityUnknown ? `On-site at ${clinic.shortName}` : `The day at ${clinic.city}`} · highest-value product
                   </p>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">
@@ -203,7 +203,16 @@ function Sidebar({ clinic }: { clinic: ProspectClinic }) {
       <div className="glass-premium rounded-xl p-3 mb-6">
         <p className="text-[9px] uppercase tracking-wider font-bold text-accent mb-1">Prepared for</p>
         <p className="text-sm font-bold text-foreground leading-tight">{clinic.shortName}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">{clinic.city}, {clinic.state}</p>
+        {(() => {
+          const cityKnown = clinic.city && !/unknown/i.test(clinic.city)
+          if (cityKnown) {
+            return <p className="text-[11px] text-muted-foreground mt-0.5">{clinic.city}, {clinic.state}</p>
+          }
+          if (clinic.state) {
+            return <p className="text-[11px] text-muted-foreground mt-0.5">{clinic.state}</p>
+          }
+          return null
+        })()}
       </div>
 
       <nav className="flex-1 space-y-1">
@@ -389,7 +398,9 @@ function PricingTiers({ clinic, pricing }: { clinic: ProspectClinic; pricing: Pr
           Investment · you choose the cohort
         </p>
         <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-          On-site training at {clinic.city}
+          {clinic.city && !/unknown/i.test(clinic.city)
+            ? `On-site training at ${clinic.city}`
+            : `On-site training for ${clinic.shortName}`}
         </h3>
       </div>
 
@@ -515,12 +526,13 @@ function LocalHubSection({ clinic }: { clinic: ProspectClinic }) {
   const sports = clinic.localTargets.filter((t) => t.type === 'sports-club' || t.type === 'surf-life-saving' || t.type === 'triathlon' || t.type === 'cycling')
   const schools = clinic.localTargets.filter((t) => t.type === 'school')
   const gps = clinic.localTargets.filter((t) => t.type === 'gp-practice')
+  const regionKnown = clinic.region && !/unknown/i.test(clinic.region)
   return (
     <section className="mt-8 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50/70 to-orange-50/40 p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-3">
         <MapPin className="w-4 h-4 text-amber-700" />
         <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-700">
-          {clinic.region} positioning · pre-mapped local catchment
+          {regionKnown ? `${clinic.region} positioning` : 'Local positioning'} · pre-mapped local catchment
         </p>
       </div>
       <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">
