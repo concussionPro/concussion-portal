@@ -103,6 +103,23 @@ function isLowConfidenceEmail(email: string): boolean {
   return /^(info|admin|reception|office|bookings|enquiries|hello|contact|mail)@/.test(lower)
 }
 
+// If a clinic's data is too degraded to produce a competent personalised
+// email, refuse to send. We REALLY can't ship "Hi Director," or "Concussion
+// hub for Unknown" — both embarrassing real artifacts from the Apollo sweep
+// when Apollo stuffed a job title into first_name or didn't populate city.
+const BAD_NAME_PATTERN = /^(director|manager|principal|owner|founder|partner|ceo|md|head|chief|admin|reception|practice|clinic|info|unknown|n\/a|na|none|test|user|customer)$/i
+
+function hasUnshippableData(row: { short_name?: string | null; contact_first_name?: string | null }): boolean {
+  const sn = (row.short_name ?? '').trim()
+  const fn = (row.contact_first_name ?? '').trim()
+  if (!sn || /unknown/i.test(sn)) return true
+  if (!fn) return true
+  if (BAD_NAME_PATTERN.test(fn)) return true
+  // Multi-word job titles (e.g. "Practice Manager")
+  if (/^(director|manager|principal|owner|founder|partner|head|chief|practice|clinic|admin|reception)(\s+\w+)*$/i.test(fn)) return true
+  return false
+}
+
 // Skip weekends. Result is at 00:00 UTC so the morning cron picks it up.
 function addBusinessDays(from: Date, n: number): Date {
   const d = new Date(from)
@@ -201,6 +218,18 @@ export async function processScheduledSends(
         id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
         template: templateSlug,
         decision: 'skipped-suppressed', reason: 'on suppression list',
+      })
+      continue
+    }
+    // Belt-and-braces: refuse to send if first_name or short_name would
+    // produce embarrassing copy ("Hi Director," / "Concussion hub for
+    // Unknown"). The merger has defences too but this is the surer guard.
+    if (hasUnshippableData(row)) {
+      results.push({
+        id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
+        template: templateSlug,
+        decision: 'skipped-low-confidence',
+        reason: `unshippable data: short_name="${row.short_name}" first_name="${row.contact_first_name}" — needs manual fix`,
       })
       continue
     }

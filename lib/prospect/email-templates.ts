@@ -259,12 +259,27 @@ export function mergeTemplate(
   // Mix of statements + capability-style questions (no possessives, no salesy
   // "Become" framing). Capability questions prompt self-reflection without
   // being pushy: "Are you positioned to..." reads as professional curiosity.
-  const subjectVariants = [
-    `Concussion hub for ${clinic.city}`,
-    `Multidisciplinary concussion protocol · ${clinic.shortName}`,
-    `Are you positioned to manage concussion cases?`,
-    `Is ${clinic.shortName} ready for the 2026 RTP standard?`,
+  // Filter out variants that reference unverified data BEFORE picking. The
+  // sweep importer defaults city to 'Unknown' when Apollo doesn't populate
+  // it — that variant must NEVER ship as "Concussion hub for Unknown".
+  // Same defence for shortName containing 'Unknown' (paranoid — shouldn't
+  // happen but the data is messy).
+  const hasUnknownCity = !clinic.city || /unknown/i.test(clinic.city)
+  const hasUnknownShortName = !clinic.shortName || /unknown/i.test(clinic.shortName)
+  const allVariants: Array<{ subject: string; refs: 'city' | 'shortName' | 'none' }> = [
+    { subject: `Concussion hub for ${clinic.city}`, refs: 'city' },
+    { subject: `Multidisciplinary concussion protocol · ${clinic.shortName}`, refs: 'shortName' },
+    { subject: `Are you positioned to manage concussion cases?`, refs: 'none' },
+    { subject: `Is ${clinic.shortName} ready for the 2026 RTP standard?`, refs: 'shortName' },
   ]
+  const subjectVariants = allVariants
+    .filter((v) => !(v.refs === 'city' && hasUnknownCity))
+    .filter((v) => !(v.refs === 'shortName' && hasUnknownShortName))
+    .map((v) => v.subject)
+  // Belt-and-braces: if every variant got filtered out (extremely degraded
+  // data), fall through to the discipline-agnostic capability question
+  // which never references clinic fields.
+  if (subjectVariants.length === 0) subjectVariants.push('Are you positioned to manage concussion cases?')
   const variantIdx = clinic.slug.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % subjectVariants.length
   const subjectVariant = subjectVariants[variantIdx]
 
@@ -352,7 +367,7 @@ export function mergeTemplate(
     region: clinic.region,
     region_phrase: regionPhrase,
     city: clinic.city,
-    contact_first_name: clinic.contactFirstName,
+    contact_first_name: safeFirstName(clinic.contactFirstName),
     contact_full_name: clinic.contactFullName,
     team_breakdown: teamBreakdownString(clinic.team),
     team_total: String(teamTotal(clinic.team)),
@@ -390,6 +405,27 @@ export function mergeTemplate(
  * To extend: add the raw `region` value from prospect_clinics here.
  * Match the actual data in `data/prospect-targets.ts`.
  */
+/**
+ * If contact_first_name looks like a job title (Director, Principal, Manager,
+ * Owner etc) — which happens when Apollo stuffs a role into the wrong field —
+ * fall back to a neutral greeting. Anything resembling "Hi Director,"
+ * "Hi Manager," "Hi Unknown," "Hi Owner," etc must NEVER ship.
+ */
+const TITLE_FIRST_NAME_PATTERN = /^(director|manager|principal|owner|founder|partner|ceo|md|head|chief|admin|reception|practice|clinic|info|unknown|n\/a|na|none|test)$/i
+
+function safeFirstName(raw: string | null | undefined): string {
+  const v = (raw ?? '').trim()
+  if (!v) return 'there'
+  // Multi-word "Job Title" capture (e.g. "Practice Manager")
+  if (/^(?:director|manager|principal|owner|founder|partner|head|chief|practice|clinic|admin|reception)(?:\s+\w+)*$/i.test(v)) return 'there'
+  if (TITLE_FIRST_NAME_PATTERN.test(v)) return 'there'
+  // Names with bracketed roles (e.g. "John (Director)") — strip the role
+  const cleaned = v.replace(/\s*\([^)]*\)\s*/g, '').trim()
+  if (!cleaned) return 'there'
+  if (TITLE_FIRST_NAME_PATTERN.test(cleaned)) return 'there'
+  return cleaned
+}
+
 function naturalRegionPhrase(region: string): string | null {
   const phrases: Record<string, string> = {
     'Gold Coast': 'the Gold Coast',
