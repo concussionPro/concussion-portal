@@ -280,20 +280,12 @@ export function mergeTemplate(
     const headerLine = isEnterprise
       ? `<strong>On-site training for the full team — ${cohortPriceFormatted}.</strong> Full-day program at ${clinic.shortName}, your entire clinical team trained together, same protocol across every site of your network.`
       : `<strong>On-site cohort training — ${cohortPriceFormatted}.</strong> I bring the full-day program to ${clinic.shortName}: ${recoCohort.clinicians} of your clinicians trained together in one day, same protocol across your team, immediate application to your concussion caseload.`
-    const invitingAdvisory = isInvitingBucket
-      ? `<p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
-        With ${hubPricing.clinicalCount}, invite 1-3 local referrers (GPs, school medics, nearby sports physios) to fill the cohort. Most clinics that do this deepen their referral pipeline at the same time.
-      </p>`
+    // Email is the hook, not the brochure. Details on the call.
+    const invitingNote = isInvitingBucket
+      ? ` Invite 1-3 referrers to fill the cohort if needed.`
       : ''
-    // Large/enterprise: keep it short. Headline carries the offer.
-    // Materials/admin pack implicit — they expect it. Just close with the
-    // lifetime access hook in one line.
-    offerBlock = `<p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        ${headerLine}
-      </p>
-      ${invitingAdvisory}
-      <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
-        <strong>Lifetime online access</strong> for the team. Materials + launch playbook included.
+    offerBlock = `<p style="margin: 18px 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        ${headerLine}${invitingNote}
       </p>`
   // Engagement-aware followup variant. T2 subject + intro paragraph
   // reference what the prospect did (or didn't do) with T1. Same for
@@ -343,14 +335,8 @@ export function mergeTemplate(
           <span class="sub">Branded clinical docs ready</span>
         </td>
       </tr></table>`
-    offerBlock = `<p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>Concussion Hub Pack — $1,497.</strong> All ${hubPricing.clinicalCount > 0 ? Math.min(hubPricing.clinicalCount, 5) : 'your'} clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, admin/practice ops pack, and 90-day Hub launch playbook — all with ${clinic.shortName}'s logo, ready to deploy day one.
-      </p>
-      <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
-        Want hands-on credentials too? Upgrade nominated clinicians to our next public workshop at <strong>$497 each</strong>.
-      </p>
-      <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
-        <strong>Lifetime access</strong> — one clinic purchase, ongoing content. Your team gets new concussion-adjacent modules as we roll them out.
+    offerBlock = `<p style="margin: 18px 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        <strong>Concussion Hub Pack — $1,497.</strong> Your team online + clinic-branded clinical pack + launch playbook. Optional in-person workshop seats $497/clinician.
       </p>`
   }
 
