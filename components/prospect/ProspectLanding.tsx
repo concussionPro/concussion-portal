@@ -130,11 +130,10 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           {/* Booking + reply CTAs (consolidated; workshop fallback removed — on-site only) */}
           <NextStepCTA clinic={clinic} />
 
-          {/* Individual signup — for clinicians who land here but aren't the
-              team buyer. Wires straight into workshop_interest → Ready to
-              Train catalog. Source-tagged 'prospect_portal' so admin can
-              attribute individual signups back to clinic portals. */}
-          <IndividualInterestCard clinicShortName={clinic.shortName} clinicState={clinic.state} />
+          {/* Quiet pointer to individual enrolment — for clinicians who land
+              on the dashboard and would rather enrol themselves than wait for
+              the team deal. Links straight to /pricing. */}
+          <IndividualInterestCard />
 
           {/* Footer */}
           <SocialProofFooter />
