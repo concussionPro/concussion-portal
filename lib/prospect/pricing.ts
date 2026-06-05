@@ -12,13 +12,23 @@ import { CONFIG } from '@/lib/config'
  * Cutoffs match Zac's stated criteria: "do not allow very large clinics
  * access without extra charge for 5+ clinicians".
  */
-export type ClinicSizeBucket = 'small' | 'medium' | 'large' | 'enterprise'
+/**
+ * Per Zac's strategy 2026-06-05:
+ *   ≤5 clinical → Hub Pack ($1,497, up to 5 online + admin/docs, optional
+ *                $497/seat workshop upgrade)
+ *   6-7 clinical → on-site cohort (min 8 needed; suggest invite outside
+ *                  practitioners to make up numbers — 'inviting' bucket)
+ *   8-20 clinical → on-site cohort (economic at this size)
+ *   21+ clinical → enterprise on-site (different framing — full team /
+ *                  multi-day capacity)
+ */
+export type ClinicSizeBucket = 'small' | 'inviting' | 'large' | 'enterprise'
 
 export function clinicSizeBucket(team: ClinicTeam): ClinicSizeBucket {
   const c = clinicalCount(team)
   if (c >= 21) return 'enterprise'
-  if (c >= 11) return 'large'
-  if (c >= 6) return 'medium'
+  if (c >= 8) return 'large'
+  if (c >= 6) return 'inviting'
   return 'small'
 }
 
@@ -49,7 +59,12 @@ export function hubPackPriceFor(team: ClinicTeam): HubPackPricing {
   const extraSeats = Math.max(0, c - seatsIncluded)
   const basePrice = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
   const extraSeatsPrice = extraSeats * CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT
-  const recommendedOffer: 'hub-pack' | 'on-site-cohort' = bucket === 'enterprise' ? 'on-site-cohort' : 'hub-pack'
+  // Per Zac 2026-06-05: only 'small' (≤5 clinical) gets the Hub Pack pitch.
+  // Anything above (inviting/large/enterprise) gets on-site cohort. The
+  // extra-online-seat math stays available for sales calls but isn't the
+  // cold-pitch path anymore.
+  const recommendedOffer: 'hub-pack' | 'on-site-cohort' =
+    bucket === 'small' ? 'hub-pack' : 'on-site-cohort'
   return {
     bucket,
     clinicalCount: c,

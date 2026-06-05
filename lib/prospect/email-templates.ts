@@ -254,6 +254,8 @@ export function mergeTemplate(
       return t.name === name
     })!
     const cohortPriceFormatted = `A$${recoCohort.total.toLocaleString('en-AU')}`
+    const isInvitingBucket = hubPricing.bucket === 'inviting'
+    const isEnterprise = hubPricing.bucket === 'enterprise'
     statsBlock = `<table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
         <td class="stat teal">
           <span class="headline"><span class="num">1</span><span class="unit"> day</span></span>
@@ -261,16 +263,25 @@ export function mergeTemplate(
         </td>
         <td class="stat amber">
           <span class="headline"><span class="num">${recoCohort.clinicians}</span><span class="unit"> clinicians</span></span>
-          <span class="sub">${recoCohort.name} cohort · trained together</span>
+          <span class="sub">${isEnterprise ? 'Full-team cohort' : recoCohort.name + ' cohort'} · trained together</span>
         </td>
         <td class="stat indigo">
           <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
           <span class="sub">OA endorsed · per clinician</span>
         </td>
       </tr></table>`
+    const headerLine = isEnterprise
+      ? `<strong>On-site training for the full team — ${cohortPriceFormatted}.</strong> Full-day program at ${clinic.shortName}, your entire clinical team trained together, same protocol across every site of your network.`
+      : `<strong>On-site cohort training — ${cohortPriceFormatted}.</strong> I bring the full-day program to ${clinic.shortName}: ${recoCohort.clinicians} of your clinicians trained together in one day, same protocol across your team, immediate application to your concussion caseload.`
+    const invitingAdvisory = isInvitingBucket
+      ? `<p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
+        Note: on-site cohort runs at minimum 8 clinicians for the economics to work. With your ${hubPricing.clinicalCount}, the practical move is inviting 1-3 local practitioners (GP referrers, sports physios from a nearby clinic, school sport medics) to fill seats — most clinics that do this report it deepens their referral pipeline AS WELL as filling the cohort. Happy to walk through who to invite on the call.
+      </p>`
+      : ''
     offerBlock = `<p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>On-site cohort training — ${cohortPriceFormatted}.</strong> I bring the full-day program to ${clinic.shortName}: ${recoCohort.clinicians} of your clinicians trained together in one day, same protocol across your team, immediate application to your concussion caseload.
+        ${headerLine}
       </p>
+      ${invitingAdvisory}
       <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
         Includes the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day clinic launch playbook with ${clinic.shortName}'s logo — ready to deploy the week after training.
       </p>
@@ -294,10 +305,10 @@ export function mergeTemplate(
         </td>
       </tr></table>`
     offerBlock = `<p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>Concussion Hub Pack — $1,497.</strong> Up to 5 of your clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day Hub launch playbook — all with ${clinic.shortName}'s logo, ready to deploy day one.
+        <strong>Concussion Hub Pack — $1,497.</strong> All ${hubPricing.clinicalCount > 0 ? Math.min(hubPricing.clinicalCount, 5) : 'your'} clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, admin/practice ops pack, and 90-day Hub launch playbook — all with ${clinic.shortName}'s logo, ready to deploy day one.
       </p>
       <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
-        Larger team? Add seats at $497 per additional clinician. Want hands-on credentials? Upgrade nominated clinicians to our next public workshop at <strong>$497 each</strong>.
+        Want hands-on credentials too? Upgrade nominated clinicians to our next public workshop at <strong>$497 each</strong>.
       </p>
       <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
         <strong>Lifetime access</strong> — one clinic purchase, ongoing content. Your team gets new concussion-adjacent modules as we roll them out.
