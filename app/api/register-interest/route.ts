@@ -46,7 +46,14 @@ export async function POST(request: NextRequest) {
     const ip = getClientIp(request)
 
     const body = await request.json()
-    const { email, name, city } = body
+    const { email, name, city, source: bodySource, clinicShortName } = body
+    // Allowlist of valid sources — keeps the analytics segment clean and
+    // prevents arbitrary strings flooding the source column. Add new
+    // entry-points here when adding new signup surfaces.
+    const VALID_SOURCES = ['pricing_page', 'prospect_portal', 'other_city', 'next_early_bird'] as const
+    const source: string = typeof bodySource === 'string' && (VALID_SOURCES as readonly string[]).includes(bodySource)
+      ? bodySource
+      : 'pricing_page'
 
     // Rate limit by IP
     if (!checkRateLimit(`ip:${ip}`, 10)) {
@@ -74,7 +81,7 @@ export async function POST(request: NextRequest) {
     // Insert into Postgres (ON CONFLICT = duplicate)
     const { rowCount } = await sql`
       INSERT INTO workshop_interest (email, name, city, source)
-      VALUES (${cleanEmail}, ${cleanName}, ${city}, 'pricing_page')
+      VALUES (${cleanEmail}, ${cleanName}, ${city}, ${source})
       ON CONFLICT (email, city) DO NOTHING
     `
 
@@ -116,15 +123,21 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send interest confirmation email:', emailErr)
     }
 
-    // Notify Zac (best effort)
+    // Notify Zac (best effort). If signup came from a clinic prospect
+    // portal, include the clinic name in the subject so Zac can spot
+    // individuals who came in via the cold-outreach pipeline.
+    const clinicHint = source === 'prospect_portal' && typeof clinicShortName === 'string' && clinicShortName.trim().length > 0
+      ? ` · via ${clinicShortName.trim().slice(0, 50)} portal`
+      : ''
     try {
       await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
-        subject: `New Interest: ${cityLabel} Workshop — ${cleanName}`,
-        html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, totalCount),
+        subject: `New Interest: ${cityLabel} Workshop — ${cleanName}${clinicHint}`,
+        html: buildNotificationEmail(cleanName, cleanEmail, cityLabel, totalCount, source, clinicHint),
         tags: [
           { name: 'type', value: 'interest-notification' },
           { name: 'city', value: city },
+          { name: 'source', value: source },
         ],
       })
     } catch (emailErr) {
@@ -186,7 +199,7 @@ function buildConfirmationEmail(name: string, city: string): string {
   `
 }
 
-function buildNotificationEmail(name: string, email: string, city: string, totalCount: number): string {
+function buildNotificationEmail(name: string, email: string, city: string, totalCount: number, source: string = 'pricing_page', clinicHint: string = ''): string {
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
       <h2 style="font-size: 18px; color: #0f172a; margin-bottom: 16px;">
@@ -211,6 +224,10 @@ function buildNotificationEmail(name: string, email: string, city: string, total
         <tr>
           <td style="padding: 8px 0; color: #64748b;">Total Interested</td>
           <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${totalCount} people</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Source</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${escapeHtml(source)}${escapeHtml(clinicHint)}</td>
         </tr>
       </table>
 

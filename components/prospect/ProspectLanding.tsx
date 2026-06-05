@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
 import { computePricing, teamTotal, clinicalCount } from '@/lib/prospect/pricing'
+import { IndividualInterestCard } from './IndividualInterestCard'
 
 export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   const pricing = computePricing(clinic.team, clinic.travelBand)
@@ -128,6 +129,12 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
 
           {/* Booking + reply CTAs (consolidated; workshop fallback removed — on-site only) */}
           <NextStepCTA clinic={clinic} />
+
+          {/* Individual signup — for clinicians who land here but aren't the
+              team buyer. Wires straight into workshop_interest → Ready to
+              Train catalog. Source-tagged 'prospect_portal' so admin can
+              attribute individual signups back to clinic portals. */}
+          <IndividualInterestCard clinicShortName={clinic.shortName} clinicState={clinic.state} />
 
           {/* Footer */}
           <SocialProofFooter />
