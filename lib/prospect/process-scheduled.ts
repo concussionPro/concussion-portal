@@ -128,7 +128,11 @@ function hasUnshippableData(row: { short_name?: string | null; contact_first_nam
   return false
 }
 
-// Skip weekends. Result is at 00:00 UTC so the morning cron picks it up.
+// Skip Sunday only. Saturday counts as a send day per Zac 2026-06-05:
+// "extend outreach to clinics saturday 8am-1pm" — clinic owners often
+// catch up on admin email Saturday morning. Result is at 00:00 UTC so
+// the Mon-Sat morning cron picks it up (Sat 00:01 UTC = Sat 10am
+// Melbourne AEST, 11am AEDT — within the 8am-1pm window).
 function addBusinessDays(from: Date, n: number): Date {
   const d = new Date(from)
   d.setUTCHours(0, 0, 0, 0)
@@ -136,7 +140,7 @@ function addBusinessDays(from: Date, n: number): Date {
   while (added < n) {
     d.setUTCDate(d.getUTCDate() + 1)
     const dow = d.getUTCDay()
-    if (dow !== 0 && dow !== 6) added += 1
+    if (dow !== 0) added += 1 // 0 = Sunday — skip; Saturday (6) counts
   }
   return d
 }

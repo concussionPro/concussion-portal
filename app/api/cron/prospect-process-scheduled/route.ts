@@ -10,11 +10,12 @@
  * in prospect_clinics but only manual POSTs to the admin route triggered
  * delivery. Result: scheduled clinics piled up indefinitely.
  *
- * Day-of-week filter: the schedule itself already only places sends on
- * Mon–Fri (no weekends) per buildSendSchedule + nextBusinessDay. The cron
- * still runs every day for defensive reasons (catches a Mon catch-up if
- * weekend was a public holiday) — if there's nothing due, the function
- * exits cheaply.
+ * Day-of-week filter: the schedule places sends Mon-Sat (Sunday only is
+ * skipped) per addBusinessDays. Cron fires Mon-Sat at 00:01 UTC, which
+ * lands at:
+ *   Mon-Fri ~10/11am Melbourne (winter/summer)
+ *   Sat     ~10/11am Melbourne — within Zac's 8am-1pm Sat window
+ * If nothing's due, the function exits cheaply.
  */
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'

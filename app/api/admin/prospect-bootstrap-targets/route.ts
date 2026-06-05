@@ -177,8 +177,8 @@ function nextBusinessDay(from: Date): Date {
   if (from.getTime() > d.getTime()) {
     d.setUTCDate(d.getUTCDate() + 1)
   }
-  // Skip weekends (Mon–Fri only).
-  while ([0, 6].includes(d.getUTCDay())) {
+  // Send days = Mon-Sat (skip Sunday only). Saturday added 2026-06-05.
+  while (d.getUTCDay() === 0) {
     d.setUTCDate(d.getUTCDate() + 1)
   }
   return d

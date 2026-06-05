@@ -37,18 +37,20 @@ import { isAdminRequest } from '@/lib/require-admin'
 
 export const maxDuration = 300
 
+// Send days: Mon-Sat (only Sunday=0 skipped). Saturday added per Zac
+// 2026-06-05 — clinic owners catch up Sat 8am-1pm.
 function nextBusinessDayUtc(from: Date): Date {
   const d = new Date(from)
   d.setUTCHours(0, 0, 0, 0)
   if (from.getTime() > d.getTime()) d.setUTCDate(d.getUTCDate() + 1)
-  while ([0, 6].includes(d.getUTCDay())) d.setUTCDate(d.getUTCDate() + 1)
+  while (d.getUTCDay() === 0) d.setUTCDate(d.getUTCDate() + 1)
   return d
 }
 
 function advanceBusinessDay(d: Date): Date {
   const next = new Date(d)
   next.setUTCDate(next.getUTCDate() + 1)
-  while ([0, 6].includes(next.getUTCDay())) next.setUTCDate(next.getUTCDate() + 1)
+  while (next.getUTCDay() === 0) next.setUTCDate(next.getUTCDate() + 1)
   return next
 }
 
