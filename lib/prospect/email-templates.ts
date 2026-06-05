@@ -1,5 +1,5 @@
 import type { EmailTemplate, Discipline, ProspectClinic } from './types'
-import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount } from './pricing'
+import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount, hubPackPriceFor, computePricing } from './pricing'
 
 /**
  * Discipline-aware T1 opening line. Single sentence — sets context fast.
@@ -114,30 +114,9 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
 
-      <table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td class="stat teal">
-          <span class="headline"><span class="num">5</span><span class="unit"> clinicians</span></span>
-          <span class="sub">Whole team online · in own time</span>
-        </td>
-        <td class="stat amber">
-          <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
-          <span class="sub">OA endorsed · per clinician</span>
-        </td>
-        <td class="stat indigo">
-          <span class="headline"><span class="num">Day 1</span></span>
-          <span class="sub">Branded clinical docs ready</span>
-        </td>
-      </tr></table>
+      {stats_block}
 
-      <p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>Concussion Hub Pack — $1,497.</strong> Up to 5 of your clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day Hub launch playbook — all with {clinic_short_name}'s logo, ready to deploy day one.
-      </p>
-      <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
-        Larger team? Add seats at $497 per additional clinician. Want hands-on credentials? Upgrade nominated clinicians to our next public workshop at <strong>$497 each</strong>.
-      </p>
-      <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
-        <strong>Lifetime access</strong> — one clinic purchase, ongoing content. Your team gets new concussion-adjacent modules as we roll them out.
-      </p>
+      {offer_block}
 
       <a href="{portal_url}" class="cta">See the {clinic_short_name} preview →</a>
       <span class="secondary">15 min fit-check · <a href="{cal_booking_url}">book 30 min on cal.com</a> · or <a href="{scat_pack_url}">grab the free SCAT6/SCOAT6 pack now</a></span>
@@ -252,6 +231,78 @@ export function mergeTemplate(
   // Pick the discipline-aware HTML opening (lead + bullets). Regional and
   // network variants override the lead + first/third bullets with their angle.
   let openingBlock = template.openingVariants[discipline] ?? template.openingVariants.physiotherapists
+
+  // Match the offer to the prospect. Small/medium clinics (4-10 clinical)
+  // get the Hub Pack pitch ($1,497 online + branded docs). Large/enterprise
+  // (11+ clinical) get the on-site cohort pitch (Zac comes to the clinic,
+  // full team trained in 1 day, $8-15k). Product-target match is the
+  // single biggest conversion lever — Google Ads was so bad partly because
+  // it pitched the same single-seat course to clinic owners who needed
+  // team training.
+  const hubPricing = hubPackPriceFor(clinic.team)
+  const cohortPricing = computePricing(clinic.team, clinic.travelBand)
+  const isOnSiteTarget = hubPricing.recommendedOffer === 'on-site-cohort'
+
+  let statsBlock: string
+  let offerBlock: string
+
+  if (isOnSiteTarget) {
+    // Large / enterprise clinic — on-site cohort pitch
+    const recoCohort = cohortPricing.cohortTiers.find((t) => {
+      const reco = clinic.cohortRecommendation
+      const name = reco === 'essential' ? 'Essential' : reco === 'full-team' ? 'Full team' : 'Recommended'
+      return t.name === name
+    })!
+    const cohortPriceFormatted = `A$${recoCohort.total.toLocaleString('en-AU')}`
+    statsBlock = `<table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td class="stat teal">
+          <span class="headline"><span class="num">1</span><span class="unit"> day</span></span>
+          <span class="sub">On-site at ${clinic.shortName}</span>
+        </td>
+        <td class="stat amber">
+          <span class="headline"><span class="num">${recoCohort.clinicians}</span><span class="unit"> clinicians</span></span>
+          <span class="sub">${recoCohort.name} cohort · trained together</span>
+        </td>
+        <td class="stat indigo">
+          <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
+          <span class="sub">OA endorsed · per clinician</span>
+        </td>
+      </tr></table>`
+    offerBlock = `<p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        <strong>On-site cohort training — ${cohortPriceFormatted}.</strong> I bring the full-day program to ${clinic.shortName}: ${recoCohort.clinicians} of your clinicians trained together in one day, same protocol across your team, immediate application to your concussion caseload.
+      </p>
+      <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
+        Includes the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day clinic launch playbook with ${clinic.shortName}'s logo — ready to deploy the week after training.
+      </p>
+      <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
+        <strong>Lifetime online access</strong> for every clinician in the cohort — one purchase, ongoing content as new concussion-adjacent modules ship.
+      </p>`
+  } else {
+    // Small / medium clinic — Hub Pack pitch
+    statsBlock = `<table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td class="stat teal">
+          <span class="headline"><span class="num">5</span><span class="unit"> clinicians</span></span>
+          <span class="sub">Whole team online · in own time</span>
+        </td>
+        <td class="stat amber">
+          <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
+          <span class="sub">OA endorsed · per clinician</span>
+        </td>
+        <td class="stat indigo">
+          <span class="headline"><span class="num">Day 1</span></span>
+          <span class="sub">Branded clinical docs ready</span>
+        </td>
+      </tr></table>`
+    offerBlock = `<p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        <strong>Concussion Hub Pack — $1,497.</strong> Up to 5 of your clinicians online + the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day Hub launch playbook — all with ${clinic.shortName}'s logo, ready to deploy day one.
+      </p>
+      <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
+        Larger team? Add seats at $497 per additional clinician. Want hands-on credentials? Upgrade nominated clinicians to our next public workshop at <strong>$497 each</strong>.
+      </p>
+      <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
+        <strong>Lifetime access</strong> — one clinic purchase, ongoing content. Your team gets new concussion-adjacent modules as we roll them out.
+      </p>`
+  }
 
   // Subject-line variants (research-backed: short, question, location-personalised, <50 chars).
   // Pick deterministically from slug so the same prospect always gets the same
@@ -368,6 +419,8 @@ export function mergeTemplate(
     region_phrase: regionPhrase,
     city: clinic.city,
     contact_first_name: safeFirstName(clinic.contactFirstName),
+    stats_block: statsBlock,
+    offer_block: offerBlock,
     contact_full_name: clinic.contactFullName,
     team_breakdown: teamBreakdownString(clinic.team),
     team_total: String(teamTotal(clinic.team)),
