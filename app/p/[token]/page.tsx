@@ -15,7 +15,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: clinic ? `Concussion Hub Program — ${clinic.shortName}` : 'Concussion Hub Program',
     description: clinic
-      ? `Working preview portal for ${clinic.name}, ${clinic.city} ${clinic.state}.`
+      ? (clinic.city && !/unknown/i.test(clinic.city)
+          ? `Working preview portal for ${clinic.name}, ${clinic.city} ${clinic.state}.`
+          : `Working preview portal for ${clinic.name}.`)
       : 'Private proposal portal.',
     robots: 'noindex, nofollow',
   }
