@@ -282,21 +282,18 @@ export function mergeTemplate(
       : `<strong>On-site cohort training — ${cohortPriceFormatted}.</strong> I bring the full-day program to ${clinic.shortName}: ${recoCohort.clinicians} of your clinicians trained together in one day, same protocol across your team, immediate application to your concussion caseload.`
     const invitingAdvisory = isInvitingBucket
       ? `<p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
-        Note: on-site cohort runs at minimum 8 clinicians for the economics to work. With your ${hubPricing.clinicalCount}, the practical move is inviting 1-3 local practitioners (GP referrers, sports physios from a nearby clinic, school sport medics) to fill seats — most clinics that do this report it deepens their referral pipeline AS WELL as filling the cohort. Happy to walk through who to invite on the call.
+        With ${hubPricing.clinicalCount}, invite 1-3 local referrers (GPs, school medics, nearby sports physios) to fill the cohort. Most clinics that do this deepen their referral pipeline at the same time.
       </p>`
       : ''
-    // For large/enterprise clinics the admin/docs pack is implicit — they
-    // expect it as part of a professional engagement, no need to enumerate
-    // it as a selling point. Focus on the cohort outcome.
+    // Large/enterprise: keep it short. Headline carries the offer.
+    // Materials/admin pack implicit — they expect it. Just close with the
+    // lifetime access hook in one line.
     offerBlock = `<p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
         ${headerLine}
       </p>
       ${invitingAdvisory}
-      <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
-        Same protocol across every clinician day one. All clinic-branded materials and launch documentation included.
-      </p>
       <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
-        <strong>Lifetime online access</strong> for every clinician in the cohort — one purchase, ongoing content as new concussion-adjacent modules ship.
+        <strong>Lifetime online access</strong> for the team. Materials + launch playbook included.
       </p>`
   // Engagement-aware followup variant. T2 subject + intro paragraph
   // reference what the prospect did (or didn't do) with T1. Same for
