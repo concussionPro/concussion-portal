@@ -79,6 +79,15 @@ interface EventSignalRow {
   last_event_at: string | null
 }
 
+interface PortalFlowRow {
+  clinic_id: number
+  section_funnel: Record<string, number>
+  cta_clicks: Record<string, number>
+  exit_sections: Record<string, number>
+  avg_dwell_ms: number | string | null
+  deepest_section: string | null
+}
+
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -137,8 +146,82 @@ export async function GET(req: NextRequest) {
     // / pricing / hub) signal active research, "other" clicks (unsubscribe,
     // SCAT pack) carry minimal call-recommendation weight on their own.
 
-    // Pull all five sources in parallel
-    const [clinics, outreach, views, eventSignals] = await Promise.all([
+    // Portal flow aggregator — section funnel, CTA clicks, exit drop-off.
+    // Bot-filtered. Surfaces per-clinic JSON blobs of section→count and
+    // target→count, plus dwell stats. Returns empty {} for clinics with
+    // no events; route handles missing rows gracefully.
+    const BOT_REGEX = "(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)"
+    const portalFlowQuery = filterId !== null && !isNaN(filterId)
+      ? sql<PortalFlowRow>`
+          WITH filtered AS (
+            SELECT * FROM prospect_portal_views
+            WHERE clinic_id = ${filterId}
+              AND COALESCE(user_agent, '') !~* ${BOT_REGEX}
+          ),
+          sec AS (
+            SELECT clinic_id, section_visited, COUNT(*)::int AS n
+            FROM filtered WHERE interaction_type IN ('view', 'section_view')
+            GROUP BY clinic_id, section_visited
+          ),
+          cta AS (
+            SELECT clinic_id, target, COUNT(*)::int AS n
+            FROM filtered WHERE interaction_type = 'cta_click' AND target IS NOT NULL
+            GROUP BY clinic_id, target
+          ),
+          exits AS (
+            SELECT clinic_id, section_visited, COUNT(*)::int AS n
+            FROM filtered WHERE interaction_type = 'exit'
+            GROUP BY clinic_id, section_visited
+          ),
+          dwell AS (
+            SELECT clinic_id, AVG(dwell_ms)::int AS avg_dwell_ms
+            FROM filtered WHERE interaction_type = 'exit' AND dwell_ms IS NOT NULL
+            GROUP BY clinic_id
+          )
+          SELECT
+            f.clinic_id,
+            COALESCE((SELECT jsonb_object_agg(section_visited, n) FROM sec WHERE clinic_id = f.clinic_id), '{}'::jsonb) AS section_funnel,
+            COALESCE((SELECT jsonb_object_agg(target, n) FROM cta WHERE clinic_id = f.clinic_id), '{}'::jsonb) AS cta_clicks,
+            COALESCE((SELECT jsonb_object_agg(section_visited, n) FROM exits WHERE clinic_id = f.clinic_id), '{}'::jsonb) AS exit_sections,
+            (SELECT avg_dwell_ms FROM dwell WHERE clinic_id = f.clinic_id) AS avg_dwell_ms,
+            NULL::text AS deepest_section
+          FROM (SELECT DISTINCT clinic_id FROM filtered) f`
+      : sql<PortalFlowRow>`
+          WITH filtered AS (
+            SELECT * FROM prospect_portal_views
+            WHERE COALESCE(user_agent, '') !~* ${BOT_REGEX}
+          ),
+          sec AS (
+            SELECT clinic_id, section_visited, COUNT(*)::int AS n
+            FROM filtered WHERE interaction_type IN ('view', 'section_view')
+            GROUP BY clinic_id, section_visited
+          ),
+          cta AS (
+            SELECT clinic_id, target, COUNT(*)::int AS n
+            FROM filtered WHERE interaction_type = 'cta_click' AND target IS NOT NULL
+            GROUP BY clinic_id, target
+          ),
+          exits AS (
+            SELECT clinic_id, section_visited, COUNT(*)::int AS n
+            FROM filtered WHERE interaction_type = 'exit'
+            GROUP BY clinic_id, section_visited
+          ),
+          dwell AS (
+            SELECT clinic_id, AVG(dwell_ms)::int AS avg_dwell_ms
+            FROM filtered WHERE interaction_type = 'exit' AND dwell_ms IS NOT NULL
+            GROUP BY clinic_id
+          )
+          SELECT
+            f.clinic_id,
+            COALESCE((SELECT jsonb_object_agg(section_visited, n) FROM sec WHERE clinic_id = f.clinic_id), '{}'::jsonb) AS section_funnel,
+            COALESCE((SELECT jsonb_object_agg(target, n) FROM cta WHERE clinic_id = f.clinic_id), '{}'::jsonb) AS cta_clicks,
+            COALESCE((SELECT jsonb_object_agg(section_visited, n) FROM exits WHERE clinic_id = f.clinic_id), '{}'::jsonb) AS exit_sections,
+            (SELECT avg_dwell_ms FROM dwell WHERE clinic_id = f.clinic_id) AS avg_dwell_ms,
+            NULL::text AS deepest_section
+          FROM (SELECT DISTINCT clinic_id FROM filtered) f`
+
+    // Pull all six sources in parallel
+    const [clinics, outreach, views, eventSignals, portalFlow] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
         : sql<ClinicDbRow>`SELECT * FROM prospect_clinics`,
@@ -210,6 +293,7 @@ export async function GET(req: NextRequest) {
             FROM cold_sent cs
             JOIN email_events ee ON ee.email_id = cs.resend_email_id
             GROUP BY cs.clinic_id`,
+      portalFlowQuery,
     ])
 
     // Index helpers
@@ -222,6 +306,8 @@ export async function GET(req: NextRequest) {
     for (const v of views.rows) viewsByClinic.set(v.clinic_id, v)
     const signalsByClinic = new Map<number, EventSignalRow>()
     for (const s of eventSignals.rows) signalsByClinic.set(s.clinic_id, s)
+    const portalFlowByClinic = new Map<number, PortalFlowRow>()
+    for (const f of portalFlow.rows) portalFlowByClinic.set(f.clinic_id, f)
 
     // Build rich rows
     const prospects = clinics.rows.map((c) => {
@@ -405,6 +491,17 @@ export async function GET(req: NextRequest) {
         viewDays,
         firstPortalViewAt: view?.first_viewed_at ?? null,
         lastPortalViewAt: view?.last_viewed_at ?? null,
+        // portal flow — section funnel + CTA clicks + exit drop-off
+        portalFlow: (() => {
+          const f = portalFlowByClinic.get(c.id)
+          if (!f) return null
+          return {
+            sectionFunnel: f.section_funnel ?? {},
+            ctaClicks: f.cta_clicks ?? {},
+            exitSections: f.exit_sections ?? {},
+            avgDwellMs: f.avg_dwell_ms != null ? Number(f.avg_dwell_ms) : null,
+          }
+        })(),
         // per-send detail (most recent first)
         sends: sends.map((s) => ({
           id: s.id,

@@ -170,6 +170,12 @@ interface ProspectRow {
   topSignal?: 'cal_booked' | 'cal_click' | 'return_view' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none'
   calBookedAt?: string | null
   calBookingStatus?: string | null
+  portalFlow?: {
+    sectionFunnel: Record<string, number>
+    ctaClicks: Record<string, number>
+    exitSections: Record<string, number>
+    avgDwellMs: number | null
+  } | null
   openDays?: number
   viewDays?: number
   calClicks?: number
@@ -3285,6 +3291,62 @@ export default function AnalyticsDashboard() {
                               <Mail size={12} /> Personal nudge
                             </a>
                           </div>
+                          {/* Portal flow funnel — what they viewed, clicked, exited on */}
+                          {selectedProspect.portalFlow && (Object.keys(selectedProspect.portalFlow.sectionFunnel).length > 0 || Object.keys(selectedProspect.portalFlow.ctaClicks).length > 0) && (
+                            <div className="bg-white rounded-lg p-3 mb-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Portal flow</div>
+                                {selectedProspect.portalFlow.avgDwellMs != null && (
+                                  <div className="text-xs text-[var(--muted-foreground)]">avg dwell <span className="font-bold text-[var(--foreground)]">{Math.round(selectedProspect.portalFlow.avgDwellMs / 1000)}s</span></div>
+                                )}
+                              </div>
+                              {/* Section funnel — ordered by canonical scroll order */}
+                              {(() => {
+                                const SECTION_ORDER = ['hero', 'credibility', 'trial-cta', 'onsite-hero', 'team-snapshot', 'multidisciplinary', 'pricing', 'risk-reversal', 'local-hub', 'next-step', 'individual-signup', 'footer']
+                                const funnel = selectedProspect.portalFlow!.sectionFunnel
+                                const exits = selectedProspect.portalFlow!.exitSections
+                                const maxN = Math.max(...Object.values(funnel), 1)
+                                const ordered = SECTION_ORDER.filter(s => funnel[s])
+                                if (ordered.length === 0) return null
+                                return (
+                                  <div className="space-y-1 mb-3">
+                                    <div className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-semibold mb-1">Section funnel · exits flagged</div>
+                                    {ordered.map(s => {
+                                      const n = funnel[s] ?? 0
+                                      const ex = exits[s] ?? 0
+                                      const pct = (n / maxN) * 100
+                                      return (
+                                        <div key={s} className="flex items-center gap-2 text-xs">
+                                          <div className="w-28 text-[var(--foreground)] capitalize truncate" title={s}>{s.replace(/-/g, ' ')}</div>
+                                          <div className="flex-1 bg-slate-100 rounded h-4 relative overflow-hidden">
+                                            <div className="absolute inset-y-0 left-0 bg-[var(--accent)] opacity-70" style={{ width: `${pct}%` }} />
+                                            <div className="absolute inset-0 flex items-center justify-between px-2 text-[10px] font-bold">
+                                              <span className="text-white mix-blend-difference">{n}</span>
+                                              {ex > 0 && <span className="text-rose-600">↶ {ex} exit{ex === 1 ? '' : 's'}</span>}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                )
+                              })()}
+                              {/* CTA clicks */}
+                              {Object.keys(selectedProspect.portalFlow.ctaClicks).length > 0 && (
+                                <div>
+                                  <div className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-semibold mb-1">CTA clicks</div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {Object.entries(selectedProspect.portalFlow.ctaClicks).map(([t, n]) => (
+                                      <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[10.5px] font-bold">
+                                        {t} <span className="text-[var(--foreground)]/70">×{n}</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           <div className="bg-white rounded-lg p-3">
                             <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-2">Send history ({selectedProspect.sends.length})</div>
                             {selectedProspect.sends.length === 0 ? (

@@ -28,6 +28,7 @@ import {
 import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
 import { computePricing, teamTotal, clinicalCount } from '@/lib/prospect/pricing'
 import { IndividualInterestCard } from './IndividualInterestCard'
+import { ProspectTracker } from './ProspectTracker'
 
 export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   const pricing = computePricing(clinic.team, clinic.travelBand)
@@ -36,11 +37,12 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
 
   return (
     <div className="flex min-h-screen dashboard-bg">
+      <ProspectTracker token={clinic.slug} accessKey={clinic.accessKey} />
       <Sidebar clinic={clinic} />
       <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           {/* Greeting */}
-          <div className="mb-6">
+          <div data-track-section="hero" className="mb-6">
             <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">
               Concussion Hub Program · {clinic.city}, {clinic.state}
             </p>
@@ -52,10 +54,14 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             </p>
           </div>
 
-          <ZacCredibility />
+          <div data-track-section="credibility">
+            <ZacCredibility />
+          </div>
 
           {/* Trial CTA */}
           <Link
+            data-track-section="trial-cta"
+            data-track-cta="trial-module1"
             href={`/p/${clinic.slug}/learning?k=${clinic.accessKey}`}
             className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg group hover:shadow-xl transition-shadow"
           >
@@ -84,6 +90,8 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
 
           {/* Onsite hero */}
           <a
+            data-track-section="onsite-hero"
+            data-track-cta="onsite-hero-see-pricing"
             href="#pricing"
             className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg group hover:shadow-xl transition-shadow"
           >
@@ -113,30 +121,46 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           </a>
 
           {/* Team snapshot bento */}
-          <TeamSnapshot clinic={clinic} clinicalCount={clinical} totalCount={total} />
+          <div data-track-section="team-snapshot">
+            <TeamSnapshot clinic={clinic} clinicalCount={clinical} totalCount={total} />
+          </div>
 
           {/* Multidisciplinary integration value frame */}
-          <MultidisciplinaryIntegration clinic={clinic} />
+          <div data-track-section="multidisciplinary">
+            <MultidisciplinaryIntegration clinic={clinic} />
+          </div>
 
           {/* Pricing */}
-          <PricingTiers clinic={clinic} pricing={pricing} />
+          <div data-track-section="pricing">
+            <PricingTiers clinic={clinic} pricing={pricing} />
+          </div>
 
           {/* Risk reversal */}
-          <RiskReversal />
+          <div data-track-section="risk-reversal">
+            <RiskReversal />
+          </div>
 
           {/* Local hub */}
-          <LocalHubSection clinic={clinic} />
+          <div data-track-section="local-hub">
+            <LocalHubSection clinic={clinic} />
+          </div>
 
           {/* Booking + reply CTAs (consolidated; workshop fallback removed — on-site only) */}
-          <NextStepCTA clinic={clinic} />
+          <div data-track-section="next-step">
+            <NextStepCTA clinic={clinic} />
+          </div>
 
           {/* Quiet pointer to individual enrolment — for clinicians who land
               on the dashboard and would rather enrol themselves than wait for
               the team deal. Links straight to /pricing. */}
-          <IndividualInterestCard />
+          <div data-track-section="individual-signup">
+            <IndividualInterestCard />
+          </div>
 
           {/* Footer */}
-          <SocialProofFooter />
+          <div data-track-section="footer">
+            <SocialProofFooter />
+          </div>
         </div>
       </main>
     </div>
@@ -532,6 +556,7 @@ function NextStepCTA({ clinic }: { clinic: ProspectClinic }) {
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <a
+          data-track-cta="next-step-email-zac"
           href={`mailto:zac@concussion-education-australia.com?subject=${mailtoSubject}`}
           className="block rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group"
         >
@@ -553,6 +578,7 @@ function NextStepCTA({ clinic }: { clinic: ProspectClinic }) {
           </div>
         </a>
         <a
+          data-track-cta="next-step-book-cal"
           href="https://cal.com/zac-lewis-so8zjs/30min"
           target="_blank"
           rel="noopener noreferrer"

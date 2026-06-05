@@ -13,6 +13,7 @@ export function IndividualInterestCard() {
         Want to enrol just yourself? <span className="text-muted-foreground">Online-only access from $497 · lifetime access · 14 CPD hours.</span>
       </p>
       <Link
+        data-track-cta="individual-pricing"
         href="/pricing"
         className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-dark whitespace-nowrap"
       >
