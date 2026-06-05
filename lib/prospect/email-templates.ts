@@ -518,11 +518,9 @@ export function mergeTemplate(
       <a href="${htmlEncodeUrl(calBookingUrl)}" class="cta">Book 15 min on cal.com →</a>
       <span class="secondary">Or grab the free SCAT6/SCOAT6 pack to use right now: <a href="${htmlEncodeUrl(scatPackUrl)}">${baseUrlShort}/scat-mastery</a></span>`
   } else {
-    // Warm/Hot variant — walkthrough framing
+    // Warm/Hot variant — walkthrough framing (low-commitment alt for
+    // prospects who already engaged with T1 but didn't book the sales call)
     followupCtaBlock = `
-      <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        Want a guided tour through the ${clinic.shortName} preview? 30-min screenshare — I walk you through the modules, branded docs, and how the workshop upgrade slots in. No pitch, no slides.
-      </p>
       <a href="${htmlEncodeUrl(calWalkthroughUrl)}" class="cta">Book a 30-min portal walkthrough →</a>
       <span class="secondary">Or hit reply with one question — I'll answer in writing within a day.</span>`
   }
