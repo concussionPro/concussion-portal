@@ -145,6 +145,15 @@ export async function GET(req: NextRequest) {
         t.name === (recoTier === 'essential' ? 'Essential' : recoTier === 'full-team' ? 'Full team' : 'Recommended'),
       )!
 
+      // Pick the deal value that MATCHES THE OFFER going to this clinic.
+      // Small/medium clinics get Hub Pack ($1,497-$2,800ish). Large/enterprise
+      // get on-site cohort ($8k-$15k). Previously this used the on-site
+      // cohort total for EVERY clinic — inflating active pipeline ~6x for
+      // 95% of prospects.
+      const hubPricing = hubPackPriceFor(c.team)
+      const dealValue =
+        hubPricing.recommendedOffer === 'on-site-cohort' ? recoCohort.total : hubPricing.totalBase
+
       const stageProb: Record<string, number> = {
         researching: 0,
         approved: 0.05,
@@ -155,8 +164,9 @@ export async function GET(req: NextRequest) {
         won: 1,
         lost: 0,
         archived: 0,
+        bounced: 0,
       }
-      const weightedValue = Math.round(recoCohort.total * (stageProb[c.status] ?? 0))
+      const weightedValue = Math.round(dealValue * (stageProb[c.status] ?? 0))
 
       return {
         // identifiers
@@ -181,11 +191,14 @@ export async function GET(req: NextRequest) {
         totalCount: teamTotal(c.team),
         sizeBucket: clinicSizeBucket(c.team),
         hubPackPricing: hubPackPriceFor(c.team),
-        // tier + pricing
+        // tier + pricing — dealValue reflects the offer going to this clinic
+        // (Hub Pack for small/med, on-site cohort for large/enterprise)
         cohortRecommendation: c.cohort_recommendation,
         recoCohortClinicians: recoCohort.clinicians,
         recoCohortPerClinician: recoCohort.perClinician,
         recoCohortTotal: recoCohort.total,
+        recommendedOffer: hubPricing.recommendedOffer,
+        dealValue,
         weightedPipelineValue: weightedValue,
         // travel
         travelBand: c.travel_band,
@@ -251,6 +264,9 @@ function buildAggregates(prospects: Array<{
   cohortRecommendation: string
   travelBand: string
   recoCohortTotal: number
+  dealValue: number
+  recommendedOffer: 'hub-pack' | 'on-site-cohort'
+  sizeBucket: string
   weightedPipelineValue: number
   totalSends: number
   totalOpens: number
@@ -262,8 +278,12 @@ function buildAggregates(prospects: Array<{
   const byRegion: Record<string, number> = {}
   const byCohort: Record<string, number> = {}
   const byTravelBand: Record<string, number> = {}
+  const byOffer: Record<string, number> = {}
+  const bySizeBucket: Record<string, number> = {}
   let totalRevenuePotential = 0
   let weightedPipeline = 0
+  let hubPackPipelineValue = 0
+  let onSitePipelineValue = 0
   let totalSends = 0
   let totalOpens = 0
   let totalClicks = 0
@@ -271,14 +291,22 @@ function buildAggregates(prospects: Array<{
   let totalReplies = 0
   let wins = 0
 
+  const DEAD_STATUS = new Set(['lost', 'archived', 'bounced'])
+
   for (const p of prospects) {
     byStatus[p.status] = (byStatus[p.status] ?? 0) + 1
+    byOffer[p.recommendedOffer] = (byOffer[p.recommendedOffer] ?? 0) + 1
+    bySizeBucket[p.sizeBucket] = (bySizeBucket[p.sizeBucket] ?? 0) + 1
+    // Skip dead-status clinics from aggregate rollups + region/cohort/travel
+    // groupings — they're inflating the visible pipeline & "outreach sent"
+    // panes with prospects that will never convert.
+    if (DEAD_STATUS.has(p.status)) continue
     byRegion[p.region] = (byRegion[p.region] ?? 0) + 1
     byCohort[p.cohortRecommendation] = (byCohort[p.cohortRecommendation] ?? 0) + 1
     byTravelBand[p.travelBand] = (byTravelBand[p.travelBand] ?? 0) + 1
-    if (!['lost', 'archived'].includes(p.status)) {
-      totalRevenuePotential += p.recoCohortTotal
-    }
+    totalRevenuePotential += p.dealValue
+    if (p.recommendedOffer === 'hub-pack') hubPackPipelineValue += p.dealValue
+    else onSitePipelineValue += p.dealValue
     weightedPipeline += p.weightedPipelineValue
     totalSends += p.totalSends
     totalOpens += p.totalOpens
@@ -298,8 +326,12 @@ function buildAggregates(prospects: Array<{
     byRegion,
     byCohort,
     byTravelBand,
+    byOffer,
+    bySizeBucket,
     revenue: {
       totalRevenuePotential,
+      hubPackPipelineValue,
+      onSitePipelineValue,
       weightedPipeline,
       wins,
     },
