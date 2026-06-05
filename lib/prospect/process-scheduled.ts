@@ -34,6 +34,7 @@ import {
   logOutreach,
 } from '@/lib/prospect/repo'
 import { EMAIL_TEMPLATES, mergeTemplate } from '@/lib/prospect/email-templates'
+import { preflightClinic, failureSummary } from '@/lib/prospect/preflight'
 import type { EmailTemplateSlug } from '@/lib/prospect/types'
 
 const COLD_FROM = 'Zac Lewis <partnerships@concussion-education-australia.com>'
@@ -96,6 +97,7 @@ export interface ProcessScheduledResult {
       | 'skipped-low-confidence'
       | 'skipped-cap'
       | 'skipped-signoff-missing'
+      | 'skipped-preflight'
       | 'sent'
       | 'send-failed'
       | 'sent-dryrun'
@@ -274,6 +276,45 @@ export async function processScheduledSends(
         id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
         template: templateSlug,
         decision: 'send-failed', reason: 'clinic vanished mid-query',
+      })
+      continue
+    }
+
+    // ─── PREFLIGHT GATE ──────────────────────────────────────────────────
+    // Last-chance check before send. Verifies personalization data is
+    // shippable AND email is deliverable (DNS MX + suppression + format
+    // + disposable-domain). Per Zac: no mistakes, no generic terms — if
+    // anything would render as fallback or bounce, quarantine instead.
+    const preflight = await preflightClinic(clinic)
+    if (preflight.severity === 'quarantine') {
+      // Auto-quarantine — block this prospect from future sends
+      try {
+        await sql`
+          UPDATE prospect_clinics
+          SET status = 'archived',
+              notes = COALESCE(notes || E'\\n', '') || ${'[preflight-quarantine ' + new Date().toISOString().slice(0, 10) + '] ' + failureSummary(preflight)},
+              scheduled_send_at = NULL,
+              updated_at = NOW()
+          WHERE id = ${row.id}
+        `
+      } catch (err) {
+        console.error('[preflight-quarantine] failed to update prospect:', err)
+      }
+      results.push({
+        id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
+        template: templateSlug,
+        decision: 'skipped-preflight',
+        reason: `preflight quarantine: ${failureSummary(preflight)}`,
+      })
+      continue
+    }
+    if (preflight.severity === 'enrich' && !allowPatternGuess) {
+      // Soft fail — hold for enrichment (DNS error or role-only mailbox)
+      results.push({
+        id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
+        template: templateSlug,
+        decision: 'skipped-preflight',
+        reason: `preflight enrich-needed: ${failureSummary(preflight)}`,
       })
       continue
     }
