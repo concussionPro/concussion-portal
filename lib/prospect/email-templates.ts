@@ -162,8 +162,9 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
         <li><strong>$497/clinician workshop upgrade</strong> when you want hands-on credentials</li>
       </ul>
 
+      {followup_price_block}
       <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>$1,497 base.</strong> Most clinics that engage take the call first — 15 minutes, no slides, just whether the program fits your team's caseload.
+        Most clinics that engage take the call first — 15 minutes, no slides, just whether the program fits your team's caseload.
       </p>
 
       <a href="{cal_booking_url}" class="cta">Book 15 min on cal.com →</a>
@@ -192,8 +193,9 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{portal_url}" class="cta">Open {clinic_short_name} preview →</a>
       <span class="secondary">Free SCAT6/SCOAT6 pack also still available: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a></span>
 
+      {followup_price_block}
       <p style="margin-top: 18px; font-size: 14px; color: #475569; line-height: 1.55;">
-        Whenever you're ready: $1,497 Hub Pack base · $497 per in-person workshop upgrade · book 15 min <a href="{cal_booking_url}" style="color: #0a5a5e;">on cal.com</a>.
+        Whenever you're ready: book 15 min <a href="{cal_booking_url}" style="color: #0a5a5e;">on cal.com</a>.
       </p>
 
       <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, Concussion Education Australia</div>
@@ -277,9 +279,12 @@ export function mergeTemplate(
           <span class="sub">OA endorsed · per clinician</span>
         </td>
       </tr></table>`
+    // T1 doesn't disclose price — that's gated on portal-view engagement.
+    // Price + cohort breakdown lives on the dashboard. T2 unlocks price in
+    // copy IF the prospect has clicked through and seen the product.
     const headerLine = isEnterprise
-      ? `<strong>On-site training for the full team — ${cohortPriceFormatted}.</strong> Full-day program at ${clinic.shortName}, your entire clinical team trained together, same protocol across every site of your network.`
-      : `<strong>On-site cohort training — ${cohortPriceFormatted}.</strong> I bring the full-day program to ${clinic.shortName}: ${recoCohort.clinicians} of your clinicians trained together in one day, same protocol across your team, immediate application to your concussion caseload.`
+      ? `<strong>On-site training for the full team at ${clinic.shortName}.</strong> Full-day program, your entire clinical team trained together, same protocol across every site of your network.`
+      : `<strong>On-site cohort training at ${clinic.shortName}.</strong> Full-day program: ${recoCohort.clinicians} of your clinicians trained together, same protocol across the team, immediate application to your concussion caseload.`
     // Email is the hook, not the brochure. Details on the call.
     const invitingNote = isInvitingBucket
       ? ` Invite 1-3 referrers to fill the cohort if needed.`
@@ -288,11 +293,16 @@ export function mergeTemplate(
         ${headerLine}${invitingNote}
       </p>`
   // Engagement-aware followup variant. T2 subject + intro paragraph
-  // reference what the prospect did (or didn't do) with T1. Same for
-  // T3 referencing T2. Bot/scanner clicks are filtered upstream in
-  // process-scheduled so SafeLinks pre-fetches don't trigger the
-  // "noticed you took a look" variants.
+  // reference what the prospect did (or didn't do) with T1. T2 also
+  // gates the price-reveal: if the prospect has engaged (opened/clicked
+  // T1, signalling they've at least seen the dashboard), include the
+  // price in the body. If no engagement, keep pushing to dashboard.
+  // T3 always discloses (it's the last touch, no upside to withholding).
+  // Bot/scanner clicks are filtered upstream so SafeLinks pre-fetches
+  // don't trigger the "noticed you took a look" variants or the price
+  // reveal.
   const engagement = options.priorEngagement ?? 'none'
+  const discloseFollowupPrice = template.slug === 'final' || engagement !== 'none'
   let followupSubject: string
   let followupIntro: string
   if (engagement === 'clicked') {
@@ -317,6 +327,32 @@ export function mergeTemplate(
     }
   }
 
+  // Price reveal — gated on prior engagement (T1 opened/clicked → they've
+  // seen the dashboard so it's no longer "withheld") or template=final
+  // (last touch, always disclose). When NOT disclosing, push to dashboard.
+  let followupPriceBlock = ''
+  if (discloseFollowupPrice) {
+    if (isOnSiteTarget) {
+      const recoCohort = cohortPricing.cohortTiers.find((t) => {
+        const reco = clinic.cohortRecommendation
+        const name = reco === 'essential' ? 'Essential' : reco === 'full-team' ? 'Full team' : 'Recommended'
+        return t.name === name
+      })!
+      const cohortPriceFormatted = `A$${recoCohort.total.toLocaleString('en-AU')}`
+      followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
+        <strong>${cohortPriceFormatted}</strong> for ${recoCohort.clinicians} clinicians, full-day on-site at ${clinic.shortName}. Includes lifetime online access for everyone in the cohort.
+      </p>`
+    } else {
+      followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
+        <strong>$1,497 Hub Pack</strong> — your team online + clinic-branded clinical pack + launch playbook. Workshop upgrades $497/clinician if you want hands-on credentials too.
+      </p>`
+    }
+  } else {
+    followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #475569; line-height: 1.55;">
+      Pricing + cohort breakdown lives on the ${clinic.shortName} dashboard.
+    </p>`
+  }
+
   if (false) {
     // (this branch never executes — placeholder to preserve existing else-block below)
   } else {
@@ -335,8 +371,10 @@ export function mergeTemplate(
           <span class="sub">Branded clinical docs ready</span>
         </td>
       </tr></table>`
+    // T1 doesn't disclose price for small clinics either. Pricing is on
+    // the dashboard — gates on engagement.
     offerBlock = `<p style="margin: 18px 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>Concussion Hub Pack — $1,497.</strong> Your team online + clinic-branded clinical pack + launch playbook. Optional in-person workshop seats $497/clinician.
+        <strong>Concussion Hub Pack for ${clinic.shortName}.</strong> Your team online + clinic-branded clinical pack + launch playbook. Optional in-person workshop seats. Pricing + breakdown on the ${clinic.shortName} dashboard.
       </p>`
   }
 
@@ -469,6 +507,7 @@ export function mergeTemplate(
     offer_block: offerBlock,
     followup_subject: followupSubject,
     followup_intro: followupIntro,
+    followup_price_block: followupPriceBlock,
     contact_full_name: clinic.contactFullName,
     team_breakdown: teamBreakdownString(clinic.team),
     team_total: String(teamTotal(clinic.team)),
