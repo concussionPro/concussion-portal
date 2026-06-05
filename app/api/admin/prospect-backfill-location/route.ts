@@ -216,19 +216,31 @@ export async function POST(req: NextRequest) {
     postcode?: number
   }> = []
 
-  // Process all clinics in parallel — fetch is I/O-bound and each clinic
-  // is independent. 60 clinics × 2 paths fetched concurrently = ~5-10s
-  // total instead of the 100s+ a sequential loop would take.
-  const fetchResults = await Promise.all(
-    candidates.map(async (c) => {
-      const cityClean = !!c.city && !/^unknown$/i.test(c.city)
-      const regionClean = !!c.region && !/^unknown$/i.test(c.region)
-      if (cityClean && regionClean) return { c, status: 'already-clean' as const }
-      if (!c.clinic_website_url) return { c, status: 'no-url' as const }
-      const found = await findAddressForClinic(c.clinic_website_url)
-      return { c, status: found ? 'recovered' as const : 'no-match' as const, found }
-    }),
-  )
+  // Process clinics in concurrency-limited batches. All-parallel exhausts
+  // node's connection pool and DNS resolver when many clinic sites are
+  // slow/dead — limit=20 timed out at 90s while limit=3 completed in 4s.
+  // Batches of 5 balance throughput vs reliability.
+  const BATCH_SIZE = 5
+  type FetchResult =
+    | { c: ClinicRow; status: 'already-clean' }
+    | { c: ClinicRow; status: 'no-url' }
+    | { c: ClinicRow; status: 'recovered'; found: { extracted: ExtractedAddress; hitPath: string } }
+    | { c: ClinicRow; status: 'no-match' }
+  const fetchResults: FetchResult[] = []
+  for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+    const batch = candidates.slice(i, i + BATCH_SIZE)
+    const batchResults = await Promise.all(
+      batch.map(async (c): Promise<FetchResult> => {
+        const cityClean = !!c.city && !/^unknown$/i.test(c.city)
+        const regionClean = !!c.region && !/^unknown$/i.test(c.region)
+        if (cityClean && regionClean) return { c, status: 'already-clean' }
+        if (!c.clinic_website_url) return { c, status: 'no-url' }
+        const found = await findAddressForClinic(c.clinic_website_url)
+        return found ? { c, status: 'recovered', found } : { c, status: 'no-match' }
+      }),
+    )
+    fetchResults.push(...batchResults)
+  }
 
   for (const fr of fetchResults) {
     const c = fr.c
