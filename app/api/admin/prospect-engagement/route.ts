@@ -179,6 +179,29 @@ export async function GET(req: NextRequest) {
       }
       const weightedValue = Math.round(dealValue * (stageProb[c.status] ?? 0))
 
+      // Engagement tier — segments prospects for outreach prioritisation.
+      // Driven by total opens, total clicks, portal views, replies, and
+      // status. Bot-filtered portal views already happens at the SQL layer.
+      const portalViews = view ? parseInt(view.total, 10) : 0
+      const everSent = sends.length > 0
+      let engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won' = 'cold'
+      if (c.status === 'won') engagementTier = 'won'
+      else if (replies > 0) engagementTier = 'replied'
+      else if (c.status === 'engaged' || (totalClicks > 0 && portalViews > 0)) engagementTier = 'engaged'
+      else if (totalClicks > 0 || portalViews >= 2 || totalOpens >= 3) engagementTier = 'hot'
+      else if (totalOpens > 0 || portalViews > 0) engagementTier = 'warm'
+      else engagementTier = 'cold'
+
+      // Personal-call-recommended: clinic showed engagement signals but
+      // hasn't booked a cal.com slot or replied yet. Zac's time is the
+      // bottleneck — surface only the clinics where a manual call would
+      // likely close. Suppress when clinic hasn't been sent to (no signal
+      // yet) or is already in won/replied state (done) or lost/bounced.
+      const callRecommended =
+        everSent &&
+        ['hot', 'engaged'].includes(engagementTier) &&
+        !['lost', 'bounced', 'archived', 'won', 'replied'].includes(c.status)
+
       return {
         // identifiers
         id: c.id,
@@ -233,6 +256,9 @@ export async function GET(req: NextRequest) {
         lastSentAt: lastSent?.sent_at ?? null,
         lastSentTemplate: lastSent?.template_slug ?? null,
         lastSentSubject: lastSent?.email_subject ?? null,
+        // engagement segmentation — drives admin dashboard warm/hot view
+        engagementTier,
+        callRecommended,
         // portal
         totalPortalViews: view ? parseInt(view.total, 10) : 0,
         firstPortalViewAt: view?.first_viewed_at ?? null,
@@ -284,6 +310,8 @@ function buildAggregates(prospects: Array<{
   totalClicks: number
   totalPortalViews: number
   replies: number
+  engagementTier: string
+  callRecommended: boolean
 }>) {
   const byStatus: Record<string, number> = {}
   const byRegion: Record<string, number> = {}
@@ -291,6 +319,8 @@ function buildAggregates(prospects: Array<{
   const byTravelBand: Record<string, number> = {}
   const byOffer: Record<string, number> = {}
   const bySizeBucket: Record<string, number> = {}
+  const byEngagementTier: Record<string, number> = {}
+  let callRecommendedCount = 0
   let totalRevenuePotential = 0
   let weightedPipeline = 0
   let hubPackPipelineValue = 0
@@ -308,6 +338,8 @@ function buildAggregates(prospects: Array<{
     byStatus[p.status] = (byStatus[p.status] ?? 0) + 1
     byOffer[p.recommendedOffer] = (byOffer[p.recommendedOffer] ?? 0) + 1
     bySizeBucket[p.sizeBucket] = (bySizeBucket[p.sizeBucket] ?? 0) + 1
+    byEngagementTier[p.engagementTier] = (byEngagementTier[p.engagementTier] ?? 0) + 1
+    if (p.callRecommended) callRecommendedCount += 1
     // Skip dead-status clinics from aggregate rollups + region/cohort/travel
     // groupings — they're inflating the visible pipeline & "outreach sent"
     // panes with prospects that will never convert.
@@ -339,6 +371,8 @@ function buildAggregates(prospects: Array<{
     byTravelBand,
     byOffer,
     bySizeBucket,
+    byEngagementTier,
+    callRecommendedCount,
     revenue: {
       totalRevenuePotential,
       hubPackPipelineValue,
