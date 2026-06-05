@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   const { rows: candidates } = await sql<{ id: number; slug: string; short_name: string; city: string | null; contact_first_name: string | null }>`
     SELECT pc.id, pc.slug, pc.short_name, pc.city, pc.contact_first_name
     FROM prospect_clinics pc
-    WHERE pc.next_template_slug IS NOT NULL
+    WHERE pc.next_template_slug = 'initial'  -- T1 only — never accelerate T2/T3
       AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won')
       AND pc.scheduled_send_at IS NOT NULL
       AND pc.scheduled_send_at::date > CURRENT_DATE
