@@ -136,6 +136,56 @@ function candidatePaths(websiteUrl: string): string[] {
   return [u, `${u}/contact`]
 }
 
+/**
+ * Google Places Text Search — used as a fallback when website scrape
+ * can't find an AU address pattern. Per Zac: clinic-name search by
+ * Google Maps API recovers location for clinics with sparse / SPA
+ * websites where the address only renders client-side.
+ *
+ * Query: "{shortName} {state hint} Australia" — sourced from clinic
+ * name + any state hint we already have. AU country restriction
+ * narrows results to the right country.
+ *
+ * Cost: ~$0.032 per Text Search request (Places API basic data).
+ * Skipped silently if GOOGLE_MAPS_API_KEY env missing.
+ */
+async function googlePlacesLookup(shortName: string, stateHint?: string): Promise<ExtractedAddress | null> {
+  const key = process.env.GOOGLE_MAPS_API_KEY
+  if (!key) return null
+  const stateBit = stateHint && /^(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)$/i.test(stateHint) ? ` ${stateHint.toUpperCase()}` : ''
+  const query = `${shortName}${stateBit} Australia`
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 6000)
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&region=au&key=${key}`,
+      { signal: controller.signal },
+    )
+    clearTimeout(timer)
+    if (!res.ok) return null
+    const data: { status?: string; results?: Array<{ formatted_address?: string; name?: string }> } = await res.json()
+    if (data.status !== 'OK' || !data.results || data.results.length === 0) return null
+    // Walk top 3 results — first one occasionally lands on a same-named
+    // business overseas even with region=au, so the AU-address check is
+    // the actual gate.
+    for (const r of data.results.slice(0, 3)) {
+      if (!r.formatted_address) continue
+      const m = r.formatted_address.match(
+        /,\s*([A-Z][a-zA-Z\-]+(?:\s+[A-Z][a-zA-Z\-]+){0,3})\s+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\s+(\d{4}),?\s*Australia/,
+      )
+      if (!m) continue
+      const city = m[1].trim()
+      const state = m[2] as StateCode
+      const postcode = parseInt(m[3], 10)
+      if (postcode < 200 || postcode > 9999) continue
+      return { city, state, postcode, region: regionFromPostcode(state, postcode) }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 async function findAddressForClinic(websiteUrl: string): Promise<{ extracted: ExtractedAddress; hitPath: string } | null> {
   const paths = candidatePaths(websiteUrl)
   const settled = await Promise.all(paths.map((p) => fetchWithTimeout(p).then((html) => ({ p, html }))))
@@ -234,9 +284,19 @@ export async function POST(req: NextRequest) {
         const cityClean = !!c.city && !/^unknown$/i.test(c.city)
         const regionClean = !!c.region && !/^unknown$/i.test(c.region)
         if (cityClean && regionClean) return { c, status: 'already-clean' }
-        if (!c.clinic_website_url) return { c, status: 'no-url' }
-        const found = await findAddressForClinic(c.clinic_website_url)
-        return found ? { c, status: 'recovered', found } : { c, status: 'no-match' }
+        // First try: scrape clinic website for AU address pattern.
+        if (c.clinic_website_url) {
+          const fromWeb = await findAddressForClinic(c.clinic_website_url)
+          if (fromWeb) return { c, status: 'recovered', found: fromWeb }
+        }
+        // Fallback: Google Places Text Search by clinic name. Recovers
+        // clinics whose website is SPA / JS-rendered / contact-less.
+        // Uses any existing state value as a disambiguator hint.
+        const fromGoogle = await googlePlacesLookup(c.short_name, c.state ?? undefined)
+        if (fromGoogle) {
+          return { c, status: 'recovered', found: { extracted: fromGoogle, hitPath: 'google-places' } }
+        }
+        return c.clinic_website_url ? { c, status: 'no-match' } : { c, status: 'no-url' }
       }),
     )
     fetchResults.push(...batchResults)

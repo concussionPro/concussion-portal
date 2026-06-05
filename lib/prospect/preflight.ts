@@ -207,10 +207,15 @@ export async function preflightClinic(
   // - ENRICH: soft fail. Hold-for-enrichment.
   //     Role-based local part, transient DNS error.
   // - PASS: ship.
+  // Quarantine = hard fail (block + archive). Anything that would force
+  // bad copy ("Hi Director", non-functional email) or guarantees a bounce.
+  // city/region/state get graceful fallback copy at render time per Zac
+  // ("become the local hub for concussion management" framing), so they
+  // DROP from quarantine to pass — the fallback is by design.
   const QUARANTINE_CODES = new Set<PreflightFailureCode>([
     'first_name_missing', 'first_name_role_only',
     'short_name_missing', 'short_name_unknown',
-    'city_missing', 'city_unknown', 'state_invalid', 'team_clinical_zero',
+    'team_clinical_zero',
     'email_format', 'email_disposable', 'email_mx_missing', 'email_suppressed',
   ])
   const ENRICH_CODES = new Set<PreflightFailureCode>([

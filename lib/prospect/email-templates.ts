@@ -373,8 +373,13 @@ export function mergeTemplate(
   // hasUnknownCity already declared above at the subject-variant filter;
   // reuse it here.
   const hasUnknownRegion = !clinic.region || /unknown/i.test(clinic.region)
+  // Location fallback — per Zac: when city/region can't be recovered,
+  // drop the geographic frame entirely and pitch as "local hub for
+  // concussion management". Custom (with city/region) is the ideal,
+  // this is the graceful fallback that still ships clean copy.
   const safeCity = hasUnknownCity ? 'your area' : clinic.city
   const safeRegion = hasUnknownRegion ? 'your region' : clinic.region
+  const locationUnknown = hasUnknownCity && hasUnknownRegion
 
   // Region phrasing — single source of truth for "for {region_phrase}" copy.
   // Some regions need the definite article to sound natural ("the Gold Coast"),
@@ -402,7 +407,9 @@ export function mergeTemplate(
     followupSubject = `Re: Concussion hub — quick check`
     followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what's in this for ${clinic.shortName}:</p>`
   } else {
-    followupSubject = `Re: Concussion hub for ${safeCity}`
+    followupSubject = locationUnknown
+      ? `Re: Concussion hub — ${clinic.shortName}`
+      : `Re: Concussion hub for ${safeCity}`
     followupIntro = `<p>Following up — quick recap on the Concussion Hub Pack for ${clinic.shortName}:</p>`
   }
   if (isOnSiteTarget) {

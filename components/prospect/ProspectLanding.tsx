@@ -35,6 +35,18 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   const total = teamTotal(clinic.team)
   const clinical = clinicalCount(clinic.team)
 
+  // Location fallback — when city or region is missing/unknown, drop the
+  // geographic frame entirely and pitch as the local concussion hub.
+  // Clinic name + clinician count carry the personalisation regardless.
+  const cityUnknown = !clinic.city || /unknown/i.test(clinic.city)
+  const regionUnknown = !clinic.region || /unknown/i.test(clinic.region)
+  const eyebrow = cityUnknown
+    ? `Concussion Hub Program · ${clinic.shortName}`
+    : `Concussion Hub Program · ${clinic.city}${clinic.state ? `, ${clinic.state}` : ''}`
+  const subhead = regionUnknown
+    ? `Become the local hub for concussion management.`
+    : `Become the first call for concussion on the ${clinic.region}.`
+
   return (
     <div className="flex min-h-screen dashboard-bg">
       <ProspectTracker token={clinic.slug} accessKey={clinic.accessKey} />
@@ -44,13 +56,13 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           {/* Greeting */}
           <div data-track-section="hero" className="mb-6">
             <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">
-              Concussion Hub Program · {clinic.city}, {clinic.state}
+              {eyebrow}
             </p>
             <h2 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.02] mb-2 bg-gradient-to-br from-foreground via-foreground to-accent bg-clip-text text-transparent">
               {clinic.shortName} Dashboard
             </h2>
             <p className="text-base sm:text-lg text-foreground/80 font-semibold max-w-2xl">
-              Become the first call for concussion on the {clinic.region}.
+              {subhead}
             </p>
           </div>
 
