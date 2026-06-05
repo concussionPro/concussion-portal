@@ -88,9 +88,12 @@ interface ExtractedAddress {
  * padded with leading 0 in display — handled as 4-digit match).
  */
 const ADDRESS_RE = new RegExp(
-  // city: 1-4 capitalised words, optional hyphens
-  // (lookahead avoids matching prefix words)
-  '(?:^|[\\s,.>])([A-Z][a-zA-Z\\-]+(?:\\s+[A-Z][a-zA-Z\\-]+){0,3})\\s*,?\\s+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\\s+(\\d{4})\\b',
+  // city: 1-4 capitalised words separated by SPACES ONLY (no newlines).
+  // (?:[ \t]+) is the inter-word separator — \s would let newlines and
+  // <br> tags slip in, producing "King George Street\nInnaloo" as city.
+  // The lookbehind `(?:^|[\s,.>])` allows entering the match from any
+  // whitespace or punctuation but the city itself stays single-line.
+  '(?:^|[\\s,.>])([A-Z][a-zA-Z\\-]+(?:[ \\t]+[A-Z][a-zA-Z\\-]+){0,3})[ \\t]*,?[ \\t]+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)[ \\t]+(\\d{4})\\b',
   'g',
 )
 
