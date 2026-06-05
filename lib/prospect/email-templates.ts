@@ -350,18 +350,29 @@ export function mergeTemplate(
 </ul>`
   }
 
+  // Safe location substitution: if Apollo gave us 'Unknown' (or empty) for
+  // city/region — which happens for ~95% of the bulk import — substitute
+  // a neutral phrase so the email never ships "concussion hub for Unknown".
+  // Backfill route will replace these with real values over time; this
+  // ensures the engine can still fire with shippable copy in the interim.
+  const hasUnknownCity = !clinic.city || /unknown/i.test(clinic.city)
+  const hasUnknownRegion = !clinic.region || /unknown/i.test(clinic.region)
+  const safeCity = hasUnknownCity ? 'your area' : clinic.city
+  const safeRegion = hasUnknownRegion ? 'your region' : clinic.region
+
   // Region phrasing — single source of truth for "for {region_phrase}" copy.
   // Some regions need the definite article to sound natural ("the Gold Coast"),
-  // others don't ("Brisbane"). Anything unmapped falls back to {city} which
-  // always works (every clinic has a city). Better to use the city than emit
-  // grammatically wrong copy.
-  const regionPhrase = naturalRegionPhrase(clinic.region) ?? clinic.city
+  // others don't ("Brisbane"). Anything unmapped falls back to the city
+  // (which itself falls back to 'your area' if also unknown).
+  const regionPhrase = hasUnknownRegion
+    ? safeCity
+    : (naturalRegionPhrase(clinic.region) ?? safeCity)
 
   openingBlock = openingBlock
     .replace(/\{clinic_short_name\}/g, clinic.shortName)
     .replace(/\{region_phrase\}/g, regionPhrase)
-    .replace(/\{region\}/g, clinic.region)
-    .replace(/\{city\}/g, clinic.city)
+    .replace(/\{region\}/g, safeRegion)
+    .replace(/\{city\}/g, safeCity)
     .replace(/\{nearest_metro\}/g, nearestMetro)
 
   // ─── UTM tagging ─────────────────────────────────────────────────────

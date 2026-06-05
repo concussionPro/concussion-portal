@@ -99,19 +99,31 @@ export async function POST(req: NextRequest) {
     wasScheduled: boolean
   }> = []
 
+  // Updated criteria after the template merger learned to substitute
+  // "your area" / "your region" for Unknown city/region. We no longer
+  // need to quarantine for missing location — only for bad name fields
+  // (where there's no graceful fallback in body copy):
+  //   - bad short_name → would surface "Concussion hub for Unknown" in
+  //     subject variants that use shortName
+  //   - bad first_name → would surface "Hi Director,"
+  // Placeholder team is also tolerated now — the conditional offer block
+  // defaults to Hub Pack pitch (small/med) which is the safe pitch for
+  // unknown-size clinics.
   for (const c of clinics) {
     const reasons: string[] = []
-    if (badCity(c.city)) reasons.push('bad-city')
-    if (badRegion(c.region)) reasons.push('bad-region')
     if (badShortName(c.short_name)) reasons.push('bad-short-name')
     if (badFirstName(c.contact_first_name)) reasons.push('bad-first-name')
-    if (placeholderTeam(c.team, c.research_source)) reasons.push('placeholder-team')
+    // Soft flags — included in audit but don't trigger quarantine
+    const softReasons: string[] = []
+    if (badCity(c.city)) softReasons.push('soft:bad-city')
+    if (badRegion(c.region)) softReasons.push('soft:bad-region')
+    if (placeholderTeam(c.team, c.research_source)) softReasons.push('soft:placeholder-team')
     if (reasons.length > 0) {
       flagged.push({
         id: c.id,
         slug: c.slug,
         shortName: c.short_name,
-        reasons,
+        reasons: [...reasons, ...softReasons],
         wasScheduled: !!c.scheduled_send_at,
       })
     }
