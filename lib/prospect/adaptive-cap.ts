@@ -126,25 +126,33 @@ export async function computeAdaptiveCap(): Promise<CapDecision> {
   let cap = 8
   let reason = 'baseline (clean)'
 
-  // Safety net: 30-day total domain catastrophes.
+  // Min sample size for cold-only rate triggers. Below this, a single
+  // bounce on a small sample (e.g. 2 of 22 = 9%) statistically dominates
+  // and throttles us unfairly. Require ≥50 cold sends in 7d before the
+  // bounce/complaint rate signals kick in.
+  const MIN_COLD_SENDS_FOR_RATE_TRIGGERS = 50
+
+  // Safety net: 30-day total domain catastrophes (these ALWAYS apply
+  // regardless of cold sample size — they're about the whole sending
+  // identity, not just cold).
   if (totalComplaintRate30d >= 0.0030) {
     cap = 0
     reason = `BLOCK: 30d total complaint ${(totalComplaintRate30d * 100).toFixed(2)}% >= 0.30% (Gmail red line)`
   } else if (totalBounceRate30d >= 0.05) {
     cap = 0
     reason = `BLOCK: 30d total bounce ${(totalBounceRate30d * 100).toFixed(2)}% >= 5% (list quality risk)`
-  // Cold-specific reputation collapse.
-  } else if (coldComplaintRate7d >= 0.010) {
+  // Cold-specific reputation collapse (require min sample size).
+  } else if (c.sends >= MIN_COLD_SENDS_FOR_RATE_TRIGGERS && coldComplaintRate7d >= 0.010) {
     cap = 3
-    reason = `THROTTLE: cold complaint 7d ${(coldComplaintRate7d * 100).toFixed(2)}% >= 1.0%`
-  } else if (coldBounceRate7d >= 0.08) {
+    reason = `THROTTLE: cold complaint 7d ${(coldComplaintRate7d * 100).toFixed(2)}% >= 1.0% (n=${c.sends})`
+  } else if (c.sends >= MIN_COLD_SENDS_FOR_RATE_TRIGGERS && coldBounceRate7d >= 0.08) {
     cap = 3
-    reason = `THROTTLE: cold bounce 7d ${(coldBounceRate7d * 100).toFixed(2)}% >= 8%`
-  } else if (coldComplaintRate7d >= 0.005) {
+    reason = `THROTTLE: cold bounce 7d ${(coldBounceRate7d * 100).toFixed(2)}% >= 8% (n=${c.sends})`
+  } else if (c.sends >= MIN_COLD_SENDS_FOR_RATE_TRIGGERS && coldComplaintRate7d >= 0.005) {
     cap = 5
-    reason = `HOLD: cold complaint 7d ${(coldComplaintRate7d * 100).toFixed(2)}% >= 0.5%`
+    reason = `HOLD: cold complaint 7d ${(coldComplaintRate7d * 100).toFixed(2)}% >= 0.5% (n=${c.sends})`
   } else {
-    // Clean — ramp by 7-day cold volume.
+    // Either clean OR sample-too-small to read — ramp by 7-day cold volume.
     if (c.sends < 5) {
       cap = 8
       reason = `RAMP-DAY1 (baseline): cold_sends_7d=${c.sends}`
