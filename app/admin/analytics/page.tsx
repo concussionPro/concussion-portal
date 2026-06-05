@@ -167,7 +167,9 @@ interface ProspectRow {
   pitchVariant: string | null
   engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won'
   callRecommended: boolean
-  topSignal?: 'cal_click' | 'return_view' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none'
+  topSignal?: 'cal_booked' | 'cal_click' | 'return_view' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none'
+  calBookedAt?: string | null
+  calBookingStatus?: string | null
   openDays?: number
   viewDays?: number
   calClicks?: number
@@ -2748,10 +2750,18 @@ export default function AnalyticsDashboard() {
                 .filter(p => p.callRecommended)
                 .sort((a, b) => signalScore(b) - signalScore(a))
 
+              // Cal.com bookings — surface above "Call now" so Zac sees
+              // the scheduled meetings first. Includes cancelled bookings
+              // (status='cancelled') as a separate visual state.
+              const upcomingBookings = prospects
+                .filter(p => p.calBookedAt && p.calBookingStatus === 'booked')
+                .sort((a, b) => new Date(a.calBookedAt!).getTime() - new Date(b.calBookedAt!).getTime())
+
               // "Why call" copy — derived from topSignal so the dashboard
               // explains the actual reason in human language, not a number.
               const whyCallCopy = (p: ProspectRow): string => {
                 switch (p.topSignal) {
+                  case 'cal_booked':      return `${p.contactFirstName} booked via cal.com — prep notes for the call, no manual outreach needed.`
                   case 'cal_click':       return `${p.contactFirstName} clicked the cal.com link — they want to book. Call today before momentum fades.`
                   case 'return_view':     return `${p.contactFirstName} returned to the dashboard on a separate day (${p.viewDays}× view-days) — research mode. Personal note within 48h.`
                   case 'product_click':   return `${p.contactFirstName} clicked through to the preview${p.productClicks && p.productClicks > 1 ? ` (×${p.productClicks})` : ''} — strongest non-reply intent. LinkedIn DM in 24h.`
@@ -2925,6 +2935,57 @@ export default function AnalyticsDashboard() {
                         </div>
                       </div>
 
+                      {/* Upcoming cal.com bookings — auto-populated by the cal.com
+                          webhook (BOOKING_CREATED). Show before Call-now so Zac
+                          sees scheduled meetings before lists of who-to-call. */}
+                      {upcomingBookings.length > 0 && (
+                        <div>
+                          <SectionTitle
+                            title={`Upcoming bookings (${upcomingBookings.length})`}
+                            subtitle="Cal.com booked via the prospect cold-outreach pipeline · prep, don't outreach"
+                          />
+                          <div className="card rounded-2xl overflow-hidden border-emerald-200">
+                            <table className="w-full text-sm">
+                              <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
+                                <tr>
+                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Contact</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Scheduled</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Offer</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Prep</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {upcomingBookings.map(p => {
+                                  const when = p.calBookedAt ? new Date(p.calBookedAt) : null
+                                  const whenLabel = when
+                                    ? when.toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                                    : '—'
+                                  const isOnSite = p.recommendedOffer === 'on-site-cohort'
+                                  return (
+                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
+                                      <td className="px-4 py-3">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                        <div className="text-xs text-[var(--muted-foreground)]">{p.city || 'Unknown'}, {p.state} · {p.clinicalCount} clinical</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName}</div>
+                                        <div className="text-[var(--muted-foreground)]">{p.contactDiscipline}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700">{whenLabel}</td>
+                                      <td className="px-4 py-3 text-right text-xs">
+                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{isOnSite ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}` : `Hub Pack · ${fmt$(p.dealValue ?? 1497)}`}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)] leading-snug">Review {p.shortName}&apos;s team mix + city · pull last portal-view section · 15-min agenda</td>
+                                    </tr>
+                                  )
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Call-now list — clinics with strong signals + no reply yet.
                           This is the actionable surface: Zac's time goes here. */}
                       {callRecommendedList.length > 0 && (
@@ -2965,6 +3026,7 @@ export default function AnalyticsDashboard() {
                                     : [cal > 0 ? `${cal}× cal` : '', prod > 0 ? `${prod}× product` : '', oth > 0 ? `${oth}× other` : ''].filter(Boolean).join(' · ')
                                   // Top-signal label — what's the strongest signal
                                   const SIGNAL_LABELS: Record<NonNullable<ProspectRow['topSignal']>, string> = {
+                                    cal_booked: '📅 Cal booked',
                                     cal_click: '🎯 Cal click',
                                     return_view: '↻ Return visit',
                                     product_click: '→ Product click',

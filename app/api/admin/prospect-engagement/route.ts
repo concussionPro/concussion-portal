@@ -41,6 +41,9 @@ interface ClinicDbRow {
   next_template_slug: string | null
   priority_wave: string | null
   pitch_variant: string | null
+  cal_booked_at: string | null
+  cal_booking_id: string | null
+  cal_booking_status: string | null
 }
 
 interface OutreachLogRow {
@@ -273,9 +276,12 @@ export async function GET(req: NextRequest) {
 
       // Top non-reply signal — what the strongest engagement marker is
       // for this clinic. Drives both tier and "why call this prospect"
-      // copy in the admin dashboard.
-      const topSignal: 'cal_click' | 'return_view' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none' =
-        calClicks > 0 ? 'cal_click'
+      // copy in the admin dashboard. cal_booked = literal booking via
+      // cal.com webhook (strongest possible non-reply, non-won signal).
+      const isCalBooked = c.cal_booking_status === 'booked' && c.cal_booked_at !== null
+      const topSignal: 'cal_booked' | 'cal_click' | 'return_view' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none' =
+        isCalBooked ? 'cal_booked'
+        : calClicks > 0 ? 'cal_click'
         : viewDays >= 2 ? 'return_view'
         : productClicks > 0 ? 'product_click'
         : openDays >= 2 ? 'multi_day_opens'
@@ -315,10 +321,15 @@ export async function GET(req: NextRequest) {
       // ── Personal call recommendation — only for high-intent signals.
       // We don't call on a single open or single same-day portal view —
       // those signals are too noisy to spend Zac's time on. We DO call
-      // for cal_click, return-day visits, and product clicks. This is the
-      // actionable surface; everything else gets the auto-sequence.
+      // for cal_click, return-day visits, and product clicks.
+      //
+      // Cal-booked clinics are SUPPRESSED from call-recommended — the
+      // call is already on the calendar. They surface in their own
+      // "Upcoming bookings" group instead. This stops the dashboard
+      // from telling Zac to "call this person" when a meeting is locked.
       const callRecommended =
         everSent &&
+        !isCalBooked &&
         (engagementTier === 'engaged' || (engagementTier === 'hot' && (productClicks > 0 || viewDays >= 2 || calClicks > 0))) &&
         !['lost', 'bounced', 'archived', 'won', 'replied'].includes(c.status)
 
@@ -368,6 +379,9 @@ export async function GET(req: NextRequest) {
         nextTemplateSlug: c.next_template_slug,
         priorityWave: c.priority_wave,
         pitchVariant: c.pitch_variant,
+        // cal.com booking — populated by /api/webhooks/cal
+        calBookedAt: c.cal_booked_at ?? null,
+        calBookingStatus: c.cal_booking_status ?? null,
         // outreach summary
         totalSends: sends.length,
         totalOpens,
