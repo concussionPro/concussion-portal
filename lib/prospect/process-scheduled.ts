@@ -274,7 +274,40 @@ export async function processScheduledSends(
 
     const template = EMAIL_TEMPLATES.find((t) => t.slug === templateSlug)!
     const unsubToken = `${clinic.slug}-${Date.now().toString(36)}`
-    const { subject, html, text } = mergeTemplate(template, clinic, BASE_URL, unsubToken)
+
+    // For followup + final sends, look up engagement signal from the
+    // previous template. Drives variant selection in mergeTemplate:
+    //   - clicked → strongest variant ("noticed you opened the {clinic} preview")
+    //   - opened  → soft variant ("saw you took a look")
+    //   - none    → generic followup
+    // Bot/scanner UAs filtered out so SafeLinks pre-fetches don't trigger
+    // the "we noticed you clicked" variant when no human actually engaged.
+    let priorEngagement: 'none' | 'opened' | 'clicked' = 'none'
+    if (templateSlug !== 'initial') {
+      const priorSlug = templateSlug === 'followup' ? 'initial' : 'followup'
+      const { rows: priorSends } = await sql<{ resend_email_id: string | null }>`
+        SELECT resend_email_id FROM prospect_outreach_log
+        WHERE clinic_id = ${clinic.id}
+          AND template_slug = ${priorSlug}
+          AND resend_email_id IS NOT NULL
+        ORDER BY sent_at DESC LIMIT 1
+      `
+      const priorResendId = priorSends[0]?.resend_email_id
+      if (priorResendId) {
+        const { rows: events } = await sql<{ event_type: string }>`
+          SELECT event_type FROM email_events
+          WHERE email_id = ${priorResendId}
+            AND event_type IN ('opened', 'clicked')
+            AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|crawler|spider|slurp|facebook|linkedin|whatsapp|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+        `
+        if (events.some((e) => e.event_type === 'clicked')) priorEngagement = 'clicked'
+        else if (events.some((e) => e.event_type === 'opened')) priorEngagement = 'opened'
+      }
+    }
+
+    const { subject, html, text } = mergeTemplate(template, clinic, BASE_URL, unsubToken, {
+      priorEngagement,
+    })
     const auditKey = `outreach:${clinic.slug}:${templateSlug}:cron:${Date.now()}`
 
     try {

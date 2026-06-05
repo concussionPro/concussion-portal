@@ -143,14 +143,14 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   },
   {
     slug: 'followup',
-    subjectTemplate: 'Re: Concussion hub for {city}',
+    subjectTemplate: '{followup_subject}',
     bodyTemplate: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${BASE_HTML_STYLE}</style></head>
 <body>
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>Following up — quick recap on the Concussion Hub Pack for {clinic_short_name}:</p>
+      {followup_intro}
 
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview" class="preview-img" width="548" height="288" /></a>
 
@@ -223,6 +223,12 @@ export function mergeTemplate(
     regionalVariant?: boolean
     networkVariant?: { networkSize: number; nearestMetro?: string }
     nearestMetro?: string
+    /**
+     * Engagement signal from the PREVIOUS template in the sequence.
+     * Drives T2/T3 opening variant — references prior engagement when
+     * present so the prospect sees a personalised followup, not boilerplate.
+     */
+    priorEngagement?: 'none' | 'opened' | 'clicked'
   } = {},
 ): { subject: string; html: string; text: string } {
   const discipline = clinic.contactDiscipline
@@ -288,6 +294,38 @@ export function mergeTemplate(
       <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
         <strong>Lifetime online access</strong> for every clinician in the cohort — one purchase, ongoing content as new concussion-adjacent modules ship.
       </p>`
+  // Engagement-aware followup variant. T2 subject + intro paragraph
+  // reference what the prospect did (or didn't do) with T1. Same for
+  // T3 referencing T2. Bot/scanner clicks are filtered upstream in
+  // process-scheduled so SafeLinks pre-fetches don't trigger the
+  // "noticed you took a look" variants.
+  const engagement = options.priorEngagement ?? 'none'
+  let followupSubject: string
+  let followupIntro: string
+  if (engagement === 'clicked') {
+    followupSubject = `Saw ${clinic.shortName} took a look — quick follow-up`
+    followupIntro = `<p>Following up — saw ${clinic.shortName} opened the preview after my last note. Anything stand out? Happy to walk through what fits your team on a 15-min call, or hand over the free SCAT pack if it's more useful right now.</p>`
+  } else if (engagement === 'opened') {
+    followupSubject = `Re: Concussion hub — quick check`
+    followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what's in this for ${clinic.shortName}:</p>`
+  } else {
+    followupSubject = `Re: Concussion hub for ${safeCity}`
+    followupIntro = `<p>Following up — quick recap on the Concussion Hub Pack for ${clinic.shortName}:</p>`
+  }
+
+  if (isOnSiteTarget) {
+    // Reframe to on-site language
+    if (engagement === 'clicked') {
+      followupIntro = `<p>Following up — saw ${clinic.shortName} opened the preview after my last note. Anything stand out? Happy to walk through what an on-site cohort day at ${clinic.shortName} would actually look like, or hand over the free SCAT pack if it's more useful right now.</p>`
+    } else if (engagement === 'opened') {
+      followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what an on-site cohort day at ${clinic.shortName} would cover:</p>`
+    } else {
+      followupIntro = `<p>Following up — quick recap on the on-site cohort training for ${clinic.shortName}:</p>`
+    }
+  }
+
+  if (false) {
+    // (this branch never executes — placeholder to preserve existing else-block below)
   } else {
     // Small / medium clinic — Hub Pack pitch
     statsBlock = `<table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
@@ -442,6 +480,8 @@ export function mergeTemplate(
     contact_first_name: safeFirstName(clinic.contactFirstName),
     stats_block: statsBlock,
     offer_block: offerBlock,
+    followup_subject: followupSubject,
+    followup_intro: followupIntro,
     contact_full_name: clinic.contactFullName,
     team_breakdown: teamBreakdownString(clinic.team),
     team_total: String(teamTotal(clinic.team)),
