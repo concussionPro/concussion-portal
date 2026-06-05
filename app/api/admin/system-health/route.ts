@@ -91,6 +91,20 @@ export async function GET(req: NextRequest) {
     })
   }
 
+  // Google Maps API — optional but powers location backfill fallback
+  const googleKey =
+    process.env.GOOGLE_MAPS_API_KEY ??
+    process.env.GOOGLE_API_KEY ??
+    process.env.GMAPS_API_KEY ??
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  checks.push({
+    name: 'env:GOOGLE_MAPS_API_KEY',
+    status: googleKey ? 'ok' : 'warn',
+    detail: googleKey
+      ? `${googleKey.slice(0, 4)}*** (${googleKey.length} chars)`
+      : 'missing — location backfill falls back to website-scrape only',
+  })
+
   // ── Cal.com event type (URL existence) ────────────────────────────────
   // Both cold and warm/hot T2 use the same /30min event — walkthrough
   // framing is copy-level, not a separate event type.
