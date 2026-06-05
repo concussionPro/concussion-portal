@@ -110,15 +110,26 @@ export async function GET(req: NextRequest) {
         : (filterId !== null && !isNaN(filterId)
             ? sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log WHERE clinic_id = ${filterId} AND audit_key NOT LIKE '%:test:%' ORDER BY sent_at DESC`
             : sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log WHERE audit_key NOT LIKE '%:test:%' ORDER BY sent_at DESC`),
+      // Filter out bot / scanner user agents (Microsoft 365 SafeLinks,
+      // Mimecast, Proofpoint, Barracuda, etc) — they pre-fetch every link
+      // in every email for malware scanning. Without this filter Brisbane
+      // Physio showed 0 opens / 3 clicks, which is physically impossible
+      // for human behaviour. The recorded raw view rows stay intact (for
+      // audit) but the aggregate counts here surface humans-only.
       filterId !== null && !isNaN(filterId)
         ? sql<PortalViewRow>`
             SELECT clinic_id, COUNT(*)::text AS total,
               MIN(viewed_at) AS first_viewed_at, MAX(viewed_at) AS last_viewed_at
-            FROM prospect_portal_views WHERE clinic_id = ${filterId} GROUP BY clinic_id`
+            FROM prospect_portal_views
+            WHERE clinic_id = ${filterId}
+              AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+            GROUP BY clinic_id`
         : sql<PortalViewRow>`
             SELECT clinic_id, COUNT(*)::text AS total,
               MIN(viewed_at) AS first_viewed_at, MAX(viewed_at) AS last_viewed_at
-            FROM prospect_portal_views GROUP BY clinic_id`,
+            FROM prospect_portal_views
+            WHERE COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+            GROUP BY clinic_id`,
     ])
 
     // Index helpers
