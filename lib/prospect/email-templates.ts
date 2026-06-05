@@ -364,9 +364,8 @@ export function mergeTemplate(
   // Safe location substitution: if Apollo gave us 'Unknown' (or empty) for
   // city/region — which happens for ~95% of the bulk import — substitute
   // a neutral phrase so the email never ships "concussion hub for Unknown".
-  // Backfill route will replace these with real values over time; this
-  // ensures the engine can still fire with shippable copy in the interim.
-  const hasUnknownCity = !clinic.city || /unknown/i.test(clinic.city)
+  // hasUnknownCity already declared above at the subject-variant filter;
+  // reuse it here.
   const hasUnknownRegion = !clinic.region || /unknown/i.test(clinic.region)
   const safeCity = hasUnknownCity ? 'your area' : clinic.city
   const safeRegion = hasUnknownRegion ? 'your region' : clinic.region
