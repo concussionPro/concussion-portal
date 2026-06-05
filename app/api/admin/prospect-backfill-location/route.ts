@@ -137,17 +137,99 @@ function candidatePaths(websiteUrl: string): string[] {
 }
 
 /**
- * Google Places Text Search — used as a fallback when website scrape
- * can't find an AU address pattern. Per Zac: clinic-name search by
- * Google Maps API recovers location for clinics with sparse / SPA
- * websites where the address only renders client-side.
+ * OpenStreetMap Nominatim — free clinic-name → AU location lookup.
+ * No API key required. Used after website-scrape fails, before the
+ * paid Google Places fallback (which only fires if GOOGLE_MAPS_API_KEY
+ * is set).
  *
- * Query: "{shortName} {state hint} Australia" — sourced from clinic
- * name + any state hint we already have. AU country restriction
- * narrows results to the right country.
+ * Nominatim Usage Policy:
+ *   - Strict 1 req/sec rate limit (enforce via module-level throttle)
+ *   - Custom User-Agent required (no generic browser UA)
+ *   - Email contact in UA per their compliance ask
  *
- * Cost: ~$0.032 per Text Search request (Places API basic data).
- * Skipped silently if GOOGLE_MAPS_API_KEY env missing.
+ * Quality for AU healthcare: ~60-80% hit rate — most clinics are on OSM.
+ */
+let lastNominatim = 0
+async function throttleNominatim(): Promise<void> {
+  const elapsed = Date.now() - lastNominatim
+  const wait = Math.max(0, 1100 - elapsed)
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait))
+  lastNominatim = Date.now()
+}
+
+interface NominatimResult {
+  display_name?: string
+  address?: {
+    city?: string
+    town?: string
+    suburb?: string
+    village?: string
+    state?: string
+    postcode?: string
+    country_code?: string
+  }
+}
+
+const STATE_NAME_TO_CODE: Record<string, StateCode> = {
+  'New South Wales': 'NSW',
+  'Victoria': 'VIC',
+  'Queensland': 'QLD',
+  'Western Australia': 'WA',
+  'South Australia': 'SA',
+  'Tasmania': 'TAS',
+  'Australian Capital Territory': 'ACT',
+  'Northern Territory': 'NT',
+}
+
+async function nominatimLookup(shortName: string, stateHint?: string): Promise<ExtractedAddress | null> {
+  await throttleNominatim()
+  const stateBit = stateHint && /^(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)$/i.test(stateHint) ? ` ${stateHint.toUpperCase()}` : ''
+  const query = `${shortName}${stateBit} Australia`
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 6000)
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=au&format=json&limit=3&addressdetails=1`,
+      {
+        signal: controller.signal,
+        headers: {
+          'User-Agent':
+            'ConcussionEducationAustralia/1.0 (zac@concussion-education-australia.com)',
+          'Accept-Language': 'en-AU,en;q=0.9',
+        },
+      },
+    )
+    clearTimeout(timer)
+    if (!res.ok) return null
+    const data: NominatimResult[] = await res.json()
+    for (const r of data) {
+      const a = r.address
+      if (!a || a.country_code !== 'au') continue
+      const city = a.city || a.town || a.suburb || a.village
+      if (!city) continue
+      const stateCode = a.state ? STATE_NAME_TO_CODE[a.state] : undefined
+      if (!stateCode) continue
+      const postcodeStr = a.postcode
+      if (!postcodeStr) continue
+      const postcode = parseInt(postcodeStr, 10)
+      if (isNaN(postcode) || postcode < 200 || postcode > 9999) continue
+      return {
+        city,
+        state: stateCode,
+        postcode,
+        region: regionFromPostcode(stateCode, postcode),
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Google Places Text Search — paid fallback (~$0.032/req) used only
+ * after Nominatim fails. Requires GOOGLE_MAPS_API_KEY env var. Higher
+ * accuracy than Nominatim for SPA / sparse clinic websites.
  */
 async function googlePlacesLookup(shortName: string, stateHint?: string): Promise<ExtractedAddress | null> {
   // Accept any of the common env var names Zac may have set on Vercel
@@ -294,9 +376,14 @@ export async function POST(req: NextRequest) {
           const fromWeb = await findAddressForClinic(c.clinic_website_url)
           if (fromWeb) return { c, status: 'recovered', found: fromWeb }
         }
-        // Fallback: Google Places Text Search by clinic name. Recovers
-        // clinics whose website is SPA / JS-rendered / contact-less.
-        // Uses any existing state value as a disambiguator hint.
+        // Fallback 1: OpenStreetMap Nominatim (free, no key). Catches
+        // most healthcare clinics since they're mapped in OSM.
+        const fromOsm = await nominatimLookup(c.short_name, c.state ?? undefined)
+        if (fromOsm) {
+          return { c, status: 'recovered', found: { extracted: fromOsm, hitPath: 'nominatim' } }
+        }
+        // Fallback 2: Google Places (paid, env-gated). Higher accuracy
+        // for SPA / sparse-website clinics that OSM doesn't cover.
         const fromGoogle = await googlePlacesLookup(c.short_name, c.state ?? undefined)
         if (fromGoogle) {
           return { c, status: 'recovered', found: { extracted: fromGoogle, hitPath: 'google-places' } }
