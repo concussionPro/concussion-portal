@@ -464,11 +464,11 @@ export function mergeTemplate(
   const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('cta')}`
   const portalImageUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('hero')}`
   const calBookingUrl = `https://cal.com/zac-lewis-so8zjs/30min?${utmFor('book')}`
-  // Lower-commitment "show me around" event type — surfaced only to
-  // warm/hot prospects on T2 (people who already opened or clicked T1).
-  // Cold T2 keeps the standard 30-min sales call. Cal.com event type
-  // must exist at this URL — create at app.cal.com if missing.
-  const calWalkthroughUrl = `https://cal.com/zac-lewis-so8zjs/portal-walkthrough?${utmFor('walkthrough')}`
+  // Warm/hot T2 reuses the same /30min event — the "walkthrough" framing
+  // is in the email copy + button label, not a separate cal.com event.
+  // UTM tag differs so we can still distinguish walkthrough-frame bookings
+  // from standard sales-call bookings in analytics.
+  const calWalkthroughUrl = `https://cal.com/zac-lewis-so8zjs/30min?${utmFor('walkthrough')}`
   // SCAT pack lead magnet — UTM-tagged so we can attribute downstream
   // free-signups + paid conversions back to the cold-outreach SCAT path.
   const scatPackUrl = `${baseUrl}/scat-mastery?${utmFor('scat_pack')}&prospect=${clinic.slug}`

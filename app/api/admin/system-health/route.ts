@@ -91,12 +91,10 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  // ── Cal.com event types (URL existence) ───────────────────────────────
-  const calChecks = await Promise.all([
-    checkUrl('https://cal.com/zac-lewis-so8zjs/30min', 'cal:30min'),
-    checkUrl('https://cal.com/zac-lewis-so8zjs/portal-walkthrough', 'cal:portal-walkthrough'),
-  ])
-  checks.push(...calChecks)
+  // ── Cal.com event type (URL existence) ────────────────────────────────
+  // Both cold and warm/hot T2 use the same /30min event — walkthrough
+  // framing is copy-level, not a separate event type.
+  checks.push(await checkUrl('https://cal.com/zac-lewis-so8zjs/30min', 'cal:30min'))
 
   // ── Resend API reachable ──────────────────────────────────────────────
   if (process.env.RESEND_API_KEY) {
