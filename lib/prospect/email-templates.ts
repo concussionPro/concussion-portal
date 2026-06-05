@@ -131,6 +131,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <div class="sig">
         <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, CEA
+        <br><span style="font-size: 11px; color: #94a3b8;">Speaker · Osteopathy Australia conference circuit</span>
       </div>
 
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
@@ -168,7 +169,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{cal_booking_url}" class="cta">Book 15 min on cal.com →</a>
       <span class="secondary">Or grab the free SCAT6/SCOAT6 pack to use right now: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a></span>
 
-      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA</div>
+      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA · <span style="color: #94a3b8;">Speaker · OA conference circuit</span></div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
     </div>
   </div>
@@ -284,12 +285,15 @@ export function mergeTemplate(
         Note: on-site cohort runs at minimum 8 clinicians for the economics to work. With your ${hubPricing.clinicalCount}, the practical move is inviting 1-3 local practitioners (GP referrers, sports physios from a nearby clinic, school sport medics) to fill seats — most clinics that do this report it deepens their referral pipeline AS WELL as filling the cohort. Happy to walk through who to invite on the call.
       </p>`
       : ''
+    // For large/enterprise clinics the admin/docs pack is implicit — they
+    // expect it as part of a professional engagement, no need to enumerate
+    // it as a selling point. Focus on the cohort outcome.
     offerBlock = `<p style="margin: 18px 0 10px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
         ${headerLine}
       </p>
       ${invitingAdvisory}
       <p style="margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: #475569;">
-        Includes the branded GP referral letters, NDIS framework, school sport intake forms, billing codes, and 90-day clinic launch playbook with ${clinic.shortName}'s logo — ready to deploy the week after training.
+        Same protocol across every clinician day one. All clinic-branded materials and launch documentation included.
       </p>
       <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b;">
         <strong>Lifetime online access</strong> for every clinician in the cohort — one purchase, ongoing content as new concussion-adjacent modules ship.
