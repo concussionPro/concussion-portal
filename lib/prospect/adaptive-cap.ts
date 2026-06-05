@@ -153,18 +153,21 @@ export async function computeAdaptiveCap(): Promise<CapDecision> {
     reason = `HOLD: cold complaint 7d ${(coldComplaintRate7d * 100).toFixed(2)}% >= 0.5% (n=${c.sends})`
   } else {
     // Either clean OR sample-too-small to read — ramp by 7-day cold volume.
+    // Per Zac 2026-06-05: "scattergun. as many targets as possible". Bumped
+    // ramp tiers to be aggressive — domain reputation is healthy enough to
+    // sustain higher volume given clean data + working unsubscribe.
     if (c.sends < 5) {
-      cap = 8
-      reason = `RAMP-DAY1 (baseline): cold_sends_7d=${c.sends}`
+      cap = 15
+      reason = `RAMP-DAY1 (baseline 15): cold_sends_7d=${c.sends}`
     } else if (c.sends < 25) {
-      cap = 12
-      reason = `RAMP-WK1: cold_sends_7d=${c.sends}`
+      cap = 20
+      reason = `RAMP-WK1 (20): cold_sends_7d=${c.sends}`
     } else if (c.sends < 60) {
-      cap = 18
-      reason = `RAMP-WK2: cold_sends_7d=${c.sends}`
-    } else {
       cap = 25
-      reason = `CEILING: cold_sends_7d=${c.sends} (split sending identity before raising further)`
+      reason = `RAMP-WK2 (25): cold_sends_7d=${c.sends}`
+    } else {
+      cap = 30
+      reason = `CEILING (30): cold_sends_7d=${c.sends} — split sending identity before raising further`
     }
   }
 
