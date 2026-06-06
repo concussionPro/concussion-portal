@@ -100,6 +100,41 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             </div>
           </Link>
 
+          {/* Toolkit callout — branded clinical pack, outreach kit, admin
+              micro-course, all pre-populated with the clinic's details.
+              Lives between the Module 1 trial and the on-site hero because
+              the email body explicitly promises these docs; surfacing them
+              prominently closes the credibility loop. */}
+          <Link
+            data-track-section="toolkit-callout"
+            data-track-cta="toolkit-launcher"
+            href={`/p/${clinic.slug}/toolkit?k=${clinic.accessKey}`}
+            className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-accent/5 border border-amber-200 shadow-sm hover:shadow-md transition-shadow group"
+          >
+            <div className="relative p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-center">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <FileText className="w-3.5 h-3.5 text-amber-700" strokeWidth={2} />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-700">
+                    Branded for {clinic.shortName}
+                  </p>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-1 leading-tight">
+                  Clinical pack · outreach kit · admin micro-course
+                </h3>
+                <p className="text-[13px] text-muted-foreground leading-relaxed">
+                  Fillable templates pre-populated with {clinic.shortName}&apos;s name. GP letters, NDIS, school sport intake, RTP tracking, capability one-pager, front-desk training.
+                </p>
+              </div>
+              <div className="shrink-0 inline-flex items-center gap-1.5 text-sm font-bold bg-accent text-white px-4 py-2.5 rounded-lg shadow-sm group-hover:translate-x-0.5 transition-transform">
+                Open toolkit
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
+          </Link>
+
           {/* Onsite hero */}
           <a
             data-track-section="onsite-hero"
@@ -221,9 +256,9 @@ function Sidebar({ clinic }: { clinic: ProspectClinic }) {
         <SidebarItem label="SCAT Forms" icon={Activity} href="/scat-forms" external />
         <SidebarItem label="Baseline Testing" icon={TrendingUp} href="/preseason" external />
         <SidebarItem label="Reference Library" icon={Library} />
-        <SidebarItem label="Clinical Toolkit" icon={FileText} locked />
-        <SidebarItem label="Outreach Kit" icon={Stethoscope} locked />
-        <SidebarItem label="Admin Workflow" icon={BookMarked} locked />
+        <SidebarItem label="Clinical Toolkit" icon={FileText} href={`/p/${clinic.slug}/toolkit/clinical?k=${clinic.accessKey}`} />
+        <SidebarItem label="Outreach Kit" icon={Stethoscope} href={`/p/${clinic.slug}/toolkit/outreach?k=${clinic.accessKey}`} />
+        <SidebarItem label="Admin Workflow" icon={BookMarked} href={`/p/${clinic.slug}/toolkit/admin?k=${clinic.accessKey}`} />
       </nav>
 
       <div className="pt-5 border-t border-white/30">
