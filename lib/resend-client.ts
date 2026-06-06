@@ -40,8 +40,27 @@ interface EmailOptions {
   /** ISO 8601 datetime — Resend holds the send and dispatches at this time.
    *  Used by cron loops to stagger batches and protect sender reputation. */
   scheduledAt?: string
-  /** Optional file attachments — used for tax invoice PDFs on real purchases. */
-  attachments?: Array<{ filename: string; content: Buffer }>
+  /** Optional file attachments — used for tax invoice PDFs on real purchases.
+   *  Buffer content is automatically base64-encoded before send because the
+   *  Resend Node SDK JSON.stringify-serialises the payload, which turns a
+   *  raw Buffer into `{ type: 'Buffer', data: [bytes] }` — Resend's REST
+   *  API silently drops attachments in that form. Pre-encoding to base64
+   *  string is what their API expects. */
+  attachments?: Array<{ filename: string; content: Buffer | string }>
+}
+
+/**
+ * Normalise attachments so Buffer.content becomes a base64 string.
+ * Pass-through if content is already a string (assumed base64 by caller).
+ */
+function encodeAttachments(
+  atts: Array<{ filename: string; content: Buffer | string }> | undefined,
+): Array<{ filename: string; content: string }> | undefined {
+  if (!atts || atts.length === 0) return undefined
+  return atts.map((a) => ({
+    filename: a.filename,
+    content: typeof a.content === 'string' ? a.content : a.content.toString('base64'),
+  }))
 }
 
 /**
@@ -59,6 +78,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   }
 
   try {
+    const encodedAttachments = encodeAttachments(options.attachments)
     const result = await getResend()!.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       replyTo: FROM_EMAIL,
@@ -68,7 +88,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       tags: options.tags,
       headers: options.headers,
       ...(options.scheduledAt ? { scheduledAt: options.scheduledAt } : {}),
-      ...(options.attachments && options.attachments.length > 0 ? { attachments: options.attachments } : {}),
+      ...(encodedAttachments ? { attachments: encodedAttachments } : {}),
     })
 
     if (result.data) {
@@ -87,7 +107,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 /**
  * Send email via Resend with attachment support (or log to console in dev)
  */
-export async function sendEmailWithAttachment(options: EmailOptions & { attachments: Array<{ filename: string; content: Buffer }> }): Promise<boolean> {
+export async function sendEmailWithAttachment(options: EmailOptions & { attachments: Array<{ filename: string; content: Buffer | string }> }): Promise<boolean> {
   if (!getResend() || process.env.NODE_ENV === 'development') {
     console.log('Email (with attachment) would be sent:', {
       to: redactEmail(options.to),
@@ -98,6 +118,7 @@ export async function sendEmailWithAttachment(options: EmailOptions & { attachme
   }
 
   try {
+    const encodedAttachments = encodeAttachments(options.attachments)!
     const result = await getResend()!.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       replyTo: FROM_EMAIL,
@@ -106,7 +127,7 @@ export async function sendEmailWithAttachment(options: EmailOptions & { attachme
       html: options.html,
       tags: options.tags,
       headers: options.headers,
-      attachments: options.attachments,
+      attachments: encodedAttachments,
     })
 
     if (result.data) {
@@ -145,7 +166,7 @@ export async function sendPostPurchaseLoginEmail(opts: {
   accommodationPerkLine?: string
   origin?: string
   /** Optional attachments — used for tax invoice PDF on real purchases. */
-  attachments?: Array<{ filename: string; content: Buffer }>
+  attachments?: Array<{ filename: string; content: Buffer | string }>
 }): Promise<boolean> {
   const baseUrl = opts.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   const loginUrl = `${baseUrl}/auth/verify?token=${opts.token}&utm_source=email&utm_medium=email&utm_campaign=purchase_welcome`
