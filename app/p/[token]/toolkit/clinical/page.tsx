@@ -51,11 +51,26 @@ export default async function ClinicalToolkitPage({ params, searchParams }: Page
           </Link>
 
           <div data-track-section="toolkit-clinical">
+            {/* Preview policy:
+                  - Show 3 of 6 templates IN FULL so prospects see the
+                    branding land in real content (clinic.name flows into
+                    every {clinic_name} field via FillableDoc defaultValues)
+                  - Lock 3 templates as teaser cards — keeps the "unlock with
+                    Hub Program" tension visible
+                  - FillableDoc previewMode (auto-on because previewedSlugs
+                    is an array) blocks print/PDF via the global @media print
+                    CSS injected by PreviewPrintBlock
+                  - Download API (`/api/toolkit/download`) rejects dynamic
+                    per-clinic access keys (allow-list contains only 'ah2026')
+            */}
             <ClinicalToolkitDoc
               templates={DISCHARGE_TEMPLATES}
               principles={DOCUMENTATION_PRINCIPLES}
-              previewedSlugs={['gp-handover-letter']}
-              previewSectionLimit={0}
+              previewedSlugs={[
+                'gp-handover-letter',
+                'school-rtp-authorisation',
+                'parent-symptom-management-plan',
+              ]}
               unlockHref={`${baseHref}?k=${accessKey}#pricing`}
               defaultValues={{
                 clinic_name: clinic.name,

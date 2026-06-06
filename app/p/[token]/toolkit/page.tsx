@@ -67,8 +67,8 @@ export default async function ToolkitLauncherPage({ params, searchParams }: Page
                 kind="Clinical"
                 kindTone="accent"
                 title="Clinical Toolkit"
-                detail="Six discharge & handover templates — GP, school, parent, sports club, WorkCover, NDIS. AHPRA-aligned, clinician sign-off built in."
-                meta="6 templates"
+                detail="Six AHPRA-aligned discharge & handover templates: GP, school RTP, parent plan, sports club, WorkCover, NDIS. 3 visible in preview."
+                meta="6 templates · 3 in preview"
                 icon={FileText}
               />
               <ToolkitCard
@@ -77,8 +77,8 @@ export default async function ToolkitLauncherPage({ params, searchParams }: Page
                 kind="Outreach"
                 kindTone="slate"
                 title="Outreach Kit"
-                detail={`Six referral-building templates for schools, clubs, GPs, surf life saving and endurance sport, plus ${clinic.shortName}'s capability one-pager.`}
-                meta="6 templates"
+                detail={`Six referral-building templates: schools, clubs, GPs, surf life saving, endurance sport, plus ${clinic.shortName}'s capability one-pager. 3 visible in preview.`}
+                meta="6 templates · 3 in preview"
                 icon={Mail}
               />
               <ToolkitCard
@@ -87,8 +87,8 @@ export default async function ToolkitLauncherPage({ params, searchParams }: Page
                 kind="Training"
                 kindTone="amber"
                 title="Front-Desk Micro-Course"
-                detail="Eight modules for reception & admin. View only — full course + downloadable certificate activates on enrolment."
-                meta="8 modules · ~1 hr"
+                detail="Eight modules for reception & admin. All 8 visible in structure; body content + knowledge checks + certificate activate on enrolment."
+                meta="8 modules · structure preview"
                 icon={GraduationCap}
               />
             </div>
@@ -97,6 +97,9 @@ export default async function ToolkitLauncherPage({ params, searchParams }: Page
               <p className="text-sm font-bold text-foreground mb-1">Fillable &amp; branded for {clinic.shortName}</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Every clinical and outreach template loads pre-populated with {clinic.shortName}&apos;s name and (where known) location. Type into the highlighted fields — matching fields fill together and persist on reload. Every clinical template carries a clinician checklist, sign-off block, and a compliance &amp; disclaimer note covering scope of practice, emergency red flags, and privacy / consent handling.
+              </p>
+              <p className="text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
+                Preview only — printing / PDF export is disabled until the Hub Program is in place.
               </p>
             </div>
           </div>

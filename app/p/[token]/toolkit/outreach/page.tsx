@@ -52,10 +52,15 @@ export default async function OutreachKitPage({ params, searchParams }: PageProp
           </Link>
 
           <div data-track-section="toolkit-outreach">
+            {/* Same preview policy as clinical — 3 of 6 visible in full,
+                3 locked. Print blocked. Download API blocked. */}
             <OutreachToolkitDoc
               templates={OUTREACH_TEMPLATES}
-              previewedSlugs={['generic-capability-one-pager']}
-              previewSectionLimit={0}
+              previewedSlugs={[
+                'generic-capability-one-pager',
+                'gp-practice-referral-letter',
+                'school-introduction-letter',
+              ]}
               unlockHref={`${baseHref}?k=${accessKey}#pricing`}
               defaultValues={{
                 clinic_name: clinic.name,
