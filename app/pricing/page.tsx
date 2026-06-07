@@ -277,7 +277,7 @@ function PricingContent() {
                 <span className="text-gradient">Mastery</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Become the concussion expert in your practice. Phenotype-driven rehabilitation, cranial nerve + cervical examination, VOMS interpretation, persistent PCS management — advanced clinical skill for Australian clinicians.
+                Become the concussion expert in your practice — advanced clinical skill for Australian clinicians.
               </p>
             </>
           )}
