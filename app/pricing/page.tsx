@@ -11,11 +11,8 @@ import {
   Star,
   ShieldCheck,
   Building2,
-  GraduationCap,
-  Check,
   ArrowRight,
   ExternalLink,
-  Mail,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
@@ -369,76 +366,6 @@ function PricingContent() {
           </span>
         </div>
 
-        {/* Regulatory context — reinforces decision after seeing price */}
-        <div className="max-w-3xl mx-auto mt-12 mb-8 p-5 rounded-xl bg-slate-50 border border-slate-200">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Why clinicians are upskilling now</p>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Link href="/blog/ais-concussion-brain-health-position-statement-2024" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
-              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">AIS Position Statement 2024</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Physiotherapists formally recognised as first-line concussion care providers</p>
-              </div>
-            </Link>
-            <Link href="/blog/21-day-concussion-stand-down-youth-sport-australia" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
-              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">21-Day Stand-Down Rule</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Clubs need qualified assessors to manage the graded return protocol</p>
-              </div>
-            </Link>
-            <Link href="/blog/nsw-mandatory-concussion-training-combat-sports" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
-              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">NSW Combat Sports Legislation</p>
-                <p className="text-xs text-muted-foreground mt-0.5">First Australian jurisdiction to mandate concussion training</p>
-              </div>
-            </Link>
-            <Link href="/blog/ahpra-cpd-requirements-concussion-education" className="group flex items-start gap-3 p-3 rounded-lg hover:bg-white transition-colors">
-              <span className="text-accent mt-0.5 text-lg leading-none">→</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">AHPRA CPD Requirements</p>
-                <p className="text-xs text-muted-foreground mt-0.5">How structured concussion education counts toward your annual obligations</p>
-              </div>
-            </Link>
-          </div>
-        </div>
-
-        {/* Free course card — escape hatch for not-ready visitors */}
-        <div className="max-w-[900px] mx-auto mb-8">
-          <div className="card rounded-2xl p-6 md:p-7 flex flex-col sm:flex-row items-center gap-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border-2 border-emerald-200/40">
-            <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center border border-emerald-200/50 flex-shrink-0">
-              <GraduationCap className="w-7 h-7 text-emerald-600" strokeWidth={2} />
-            </div>
-            <div className="flex-1 text-center sm:text-left">
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <h3 className="text-lg font-bold text-foreground">Not ready to commit? Start Free</h3>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Free
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">
-                3 focused modules on SCAT6 administration. Free, no card required. See the course quality before you commit.
-              </p>
-              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                {['3 modules', 'Free', 'No payment required', 'Instant access'].map(item => (
-                  <li key={item} className="flex items-center gap-1">
-                    <Check className="w-3 h-3 text-emerald-600" strokeWidth={2.5} />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <Link
-              href="/scat-mastery"
-              className="flex-shrink-0 px-6 py-3.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors whitespace-nowrap flex items-center gap-2"
-            >
-              Start Free Course
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-
         {/* Meet Your Instructor */}
         <div className="max-w-3xl mx-auto mb-8">
           <h3 className="text-xl font-bold text-center text-foreground mb-6">Meet Your Instructor</h3>
@@ -512,70 +439,6 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Why hands-on matters — workshop upsell nudge, placed after pricing to create desire without blocking online sale */}
-        <div className="max-w-3xl mx-auto mt-10 p-5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.12)]">
-          <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">Ready to take it further? Why hands-on matters</p>
-          <ul className="space-y-2">
-            {[
-              'Practice SCAT6 administration on real subjects with expert feedback',
-              'Master BESS & tandem gait scoring — the sections clinicians find most challenging',
-              'Leave with a clinical toolkit you can use Monday morning',
-            ].map((item, i) => (
-              <li key={i} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
-                <span className="text-accent mt-0.5">•</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Testimonials — post-price objection handling (CXL: 20-30% more effective after price reveal) */}
-        <div className="max-w-4xl mx-auto mt-12">
-          <h3 className="text-xl font-bold text-center text-foreground mb-6">What Clinicians Are Saying</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            {testimonials.slice(0, 3).map((t) => (
-              <TestimonialCard key={t.name} t={t} />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 md:max-w-[66.666%] md:mx-auto">
-            {testimonials.slice(3).map((t) => (
-              <TestimonialCard key={t.name} t={t} />
-            ))}
-          </div>
-        </div>
-
-        {/* Guarantee + Employer Reimbursement — final objection removal */}
-        <div className="max-w-4xl mx-auto mt-16 md:mt-20 grid md:grid-cols-2 gap-4">
-          {/* Money-back guarantee */}
-          <div className="glass rounded-xl p-6 border border-emerald-200/50">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
-              </div>
-              <h3 className="font-bold text-foreground">7-Day Satisfaction Guarantee</h3>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Try the course risk-free. If it&apos;s not right for you, email us within
-              7 days for a full refund — no questions asked.
-            </p>
-          </div>
-
-          {/* Employer reimbursement */}
-          <div className="glass rounded-xl p-6 border border-blue-200/50">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="font-bold text-foreground">Employer CPD Reimbursement</h3>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Most employers and practices cover CPD training costs. We provide a
-              tax invoice and AHPRA-aligned CPD certificate — everything your
-              employer needs to approve reimbursement. Many clinicians pay $0 out of pocket.
-            </p>
-          </div>
-        </div>
-
         {/* FAQ */}
         <div id="faq" className="max-w-2xl mx-auto mt-16 md:mt-20">
           <h2 className="text-2xl font-bold text-center mb-8 text-foreground">Common Questions</h2>
@@ -608,50 +471,6 @@ function PricingContent() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Ask Zac — personal contact CTA for undecided visitors */}
-        <div className="max-w-2xl mx-auto mt-10">
-          <div className="glass rounded-xl p-6 flex flex-col sm:flex-row items-center gap-5">
-            <Image
-              src="/zac-lewis-headshot.jpg"
-              alt="Zac Lewis"
-              width={64}
-              height={64}
-              className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-accent/20"
-            />
-            <div className="flex-1 text-center sm:text-left">
-              <h3 className="font-bold text-foreground mb-1">Still have questions?</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Not sure which option fits your situation? Email me directly — I&apos;m happy to
-                help you work out the right path. I reply within 24 hours.
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">— Zac Lewis, Course Director</p>
-            </div>
-            <a
-              href="mailto:zac@concussion-education-australia.com?subject=Question about the concussion course"
-              className="flex-shrink-0 px-5 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors whitespace-nowrap flex items-center gap-2"
-            >
-              <Mail className="w-4 h-4" />
-              Email Zac
-            </a>
-          </div>
-        </div>
-
-        {/* Final CTA */}
-        <div id="pricing-compact" className="mt-16 md:mt-20">
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-foreground mb-2">
-              Enrol today — lifetime access included
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {enrollmentCount >= 100
-                ? `Join ${enrollmentCount}+ clinicians building concussion confidence.`
-                : 'Join clinicians building concussion confidence.'}
-              {' '}7-day money-back guarantee.
-            </p>
-          </div>
-          <PricingOptions variant="compact" />
         </div>
 
       </div>
