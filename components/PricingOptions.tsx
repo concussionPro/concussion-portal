@@ -148,7 +148,7 @@ function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) 
             {`${label} workshop isn’t confirmed yet`}
           </p>
           <p className={`text-muted-foreground leading-snug mt-0.5 ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
-            We run workshops once a city reaches {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians. Drop your details — you&apos;ll get {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice as soon as the date is locked in.
+            Drop your details — you&apos;ll be first to know when the date is locked in, and registered-list pricing is locked in for you (no deadline).
           </p>
         </div>
       </div>
@@ -399,18 +399,12 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <div className="mb-4">
               {isEarlyBird ? (
                 <>
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <span className="text-sm text-[var(--muted-foreground)] line-through">${(bookOwner ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                      {bookOwner ? `Bundle −$${BUNDLE_DISCOUNT}` : `Save $${CONFIG.COURSE.SAVINGS}`}
-                    </span>
-                  </div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-2xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
                     <span className="text-[10px] text-slate-400">≈ $770 USD</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
-                  <p className="text-[10px] text-orange-600 font-medium mt-0.5">Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}</p>
+                  <p className="text-[10px] text-[var(--accent)] font-medium mt-0.5">Registered-list pricing — locked in for everyone on the interest list</p>
                 </>
               ) : (
                 <>
@@ -674,12 +668,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <div className="text-right flex-shrink-0">
               {isEarlyBird ? (
                 <>
-                  <div className="flex items-center gap-1.5 justify-end mb-0.5">
-                    <span className="text-[11px] text-[var(--muted-foreground)] line-through">${(bookOwner ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                      {bookOwner ? `−$${BUNDLE_DISCOUNT}` : `−$${CONFIG.COURSE.SAVINGS}`}
-                    </span>
-                  </div>
                   <div className="flex items-baseline gap-1 justify-end">
                     <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
                     <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
@@ -805,8 +793,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </button>
 
               {isEarlyBird && (
-                <p className="text-[10px] text-orange-600 font-medium text-center mt-2">
-                  Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — then ${CONFIG.COURSE.PRICE_REGULAR}
+                <p className="text-[10px] text-[var(--accent)] font-medium text-center mt-2">
+                  Registered-list pricing — locked in for everyone on the interest list
                 </p>
               )}
             </>

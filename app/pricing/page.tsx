@@ -11,7 +11,6 @@ import {
   Star,
   ShieldCheck,
   Building2,
-  Clock,
   GraduationCap,
   Check,
   ArrowRight,
@@ -56,22 +55,6 @@ function CanceledBanner() {
   )
 }
 
-// ─── Countdown Hook ──────────────────────────────────────────────────────────
-
-function useCountdown(deadline: string) {
-  const [days, setDays] = useState<number | null>(null)
-  useEffect(() => {
-    const target = new Date(deadline + 'T23:59:59').getTime()
-    const calc = () => {
-      const diff = target - Date.now()
-      setDays(diff > 0 ? Math.floor(diff / (1000 * 60 * 60 * 24)) : 0)
-    }
-    calc()
-    const id = setInterval(calc, 60000) // update every minute
-    return () => clearInterval(id)
-  }, [deadline])
-  return days
-}
 
 // ─── Main Pricing Content ────────────────────────────────────────────────────
 
@@ -134,18 +117,10 @@ function PricingContent() {
   }, [])
   const isCpdTraffic = heroVariant === 'cpd'
 
-  // Early bird countdown
-  const daysLeft = useCountdown(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)
-  const isEarlyBird = daysLeft !== null && daysLeft >= 0 && new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
-
-  // Early bird deadline formatted from config
-  const earlyBirdDate = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00')
-    .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
-
   const faqs: FaqItem[] = [
     {
       q: 'Can I upgrade from online-only to the full course later?',
-      a: 'Yes — contact us to arrange an upgrade. Note that early bird pricing may no longer be available, so enrolling in the complete course now locks in the best rate.',
+      a: 'Yes — contact us to arrange an upgrade. Enrolling in the complete course now locks in the registered-list price.',
     },
     {
       q: 'When do I get access to the online modules?',
@@ -157,7 +132,7 @@ function PricingContent() {
     },
     {
       q: "How are workshop dates confirmed?",
-      a: "We run workshops once a city reaches enough registrations — this ensures a great hands-on learning environment. Q1 2026 workshops ran across all three cities. For the next round (Jun–Aug 2026), we'll confirm your date and venue 6 weeks in advance. Registered participants choose their preferred date first.",
+      a: "We run workshops as demand in each city opens up. Q1 2026 workshops ran across all three cities. Drop your details on the interest list for your preferred city — you'll get 6 weeks' notice when the date is locked in, and registered-list pricing is locked in for you (no deadline). Registered participants choose their preferred date first.",
     },
     {
       q: 'How much time does the course take?',
@@ -182,7 +157,7 @@ function PricingContent() {
     },
     {
       q: 'Where are workshops held and when is the next one?',
-      a: 'The next confirmed workshop is Melbourne — Saturday 13 June 2026, Rydges Melbourne (Exhibition St), 8am–4pm with a catered lunch plus morning and afternoon tea included. Workshops also run in Sydney and Byron Bay when each city reaches enough registrations (max 12 per session to keep hands-on practice time high). You\'ll receive at least 6 weeks\' notice once your city\'s date is locked in.',
+      a: 'The next confirmed workshop is Melbourne — Saturday 13 June 2026, Rydges Melbourne (Exhibition St), 8am–4pm with a catered lunch plus morning and afternoon tea included. Sydney and Byron Bay workshops open as soon as dates are confirmed (max 12 per session to keep hands-on practice time high). Drop your details on the interest list for your city — you\'ll get at least 6 weeks\' notice when your date is locked in.',
     },
     {
       q: 'Can I pay in instalments?',
@@ -310,28 +285,12 @@ function PricingContent() {
           ) : (
             <>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                Australia&apos;s Leading Hands-On{' '}
-                <span className="text-gradient">Concussion CPD</span>
+                <span className="text-gradient">Osteopathy Australia</span> Endorsed
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Master SCAT6, VOMS &amp; BESS with expert-led training.{' '}
-                {isEarlyBird
-                  ? `Early bird pricing ends ${earlyBirdDate} — price increases to $${CONFIG.COURSE.PRICE_REGULAR}.`
-                  : 'Enrol today — lifetime access included.'}
+                Concussion CPD — 14 hours, AHPRA aligned. Master SCAT6, VOMS &amp; BESS with expert-led training. Lifetime access included.
               </p>
             </>
-          )}
-
-          {/* Countdown timer */}
-          {isEarlyBird && daysLeft !== null && (
-            <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-orange-50 border border-orange-200">
-              <Clock className="w-4 h-4 text-orange-600" />
-              <span className="text-sm font-semibold text-orange-700">
-                {daysLeft === 0
-                  ? `Last day to lock in early bird pricing — save $${CONFIG.COURSE.SAVINGS}`
-                  : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left at early bird pricing — save $${CONFIG.COURSE.SAVINGS}`}
-              </span>
-            </div>
           )}
         </div>
 
@@ -646,15 +605,11 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Final CTA — with urgency */}
+        {/* Final CTA */}
         <div id="pricing-compact" className="mt-16 md:mt-20">
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold text-foreground mb-2">
-              {isEarlyBird
-                ? daysLeft === 0
-                  ? 'Last day — lock in early bird pricing'
-                  : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left — lock in early bird pricing`
-                : 'Enrol today — lifetime access included'}
+              Enrol today — lifetime access included
             </h3>
             <p className="text-sm text-muted-foreground">
               {enrollmentCount >= 100
