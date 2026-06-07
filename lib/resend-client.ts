@@ -61,25 +61,43 @@ interface EmailOptions {
 function inferSequenceFromSubject(subject: string | undefined): string {
   if (!subject) return 'untagged-other'
   const s = subject.toLowerCase()
+  // Transactional + auth
   if (s.includes('login link') || s.includes('your link')) return 'magic-link'
   if (s.includes("you're in") || s.includes('welcome to concussionpro')) return 'purchase-welcome'
-  if (s.includes('thanks for') || s.includes('thank you for')) return 'thank-you'
-  if (s.includes('certificate')) return 'certificate'
-  if (s.includes('tax invoice') || s.includes('your invoice')) return 'tax-invoice'
   if (s.includes('verify')) return 'verify-email'
   if (s.includes('reset') && s.includes('password')) return 'password-reset'
-  if (s.includes('preseason')) return 'preseason'
-  if (s.includes('scat')) return 'scat-resource'
+  // Certificate + receipts
+  if (s.includes('certificate')) return 'certificate'
+  if (s.includes('tax invoice') || s.includes('your invoice')) return 'tax-invoice'
+  // Re-engagement cluster
+  if (s.includes('where did you get up to') || s.includes('modules are waiting') || s.includes("clinicians say changes")) return 'reengagement'
+  if (s.includes('module 1') || s.includes('opened module') || s.includes('start with module')) return 'onboarding-nudge'
+  if (s.includes('know a colleague')) return 'referral-nudge'
+  if (s.includes('earned it') || s.includes('$50 off') || s.includes('discount')) return 'discount-reward'
+  // Cold outreach + samples
+  if (s.startsWith('[sample')) return 'cold-outreach-sample'
+  if (s.includes('clear this patient') || s.includes('positioned to manage concussion')) return 'cold-outreach'
+  if (s.includes('outreach') || s.includes('checking in')) return 'cold-outreach'
+  // CPD + course value
+  if (s.includes('cpd options') || s.includes('final summary')) return 'cpd-options-recap'
+  if (s.includes('cpd hours') || s.includes('cpd points') || s.includes('full breakdown')) return 'cpd-breakdown'
+  // Workshop cluster
   if (s.includes('workshop') && s.includes('byron')) return 'byron-workshop'
   if (s.includes('workshop') && s.includes('melbourne')) return 'melbourne-workshop'
+  if (s.includes('one week away') || (s.includes('workshop') && s.includes('prepare'))) return 'workshop-prep'
   if (s.includes('early bird')) return 'early-bird'
+  // Operational + admin
+  if (s.includes('hot lead') || s.includes('morning briefing') || s.includes('cea daily') || s.includes('item to note')) return 'admin-digest'
+  // Other products
+  if (s.includes('preseason')) return 'preseason'
+  if (s.includes('scat')) return 'scat-resource'
   if (s.includes('ready to train') || s.includes('ready-to-train')) return 'ready-to-train'
   if (s.includes('inbound') || s.includes('reply notification')) return 'inbound-reply'
   if (s.includes('reminder')) return 'reminder'
   if (s.includes('ai in clinical practice') || s.includes('ai course')) return 'ai-course'
   if (s.includes('hub pack') || s.includes('concussion hub')) return 'concussion-hub'
   if (s.includes('register your interest') || s.includes('interest registered')) return 'interest-registration'
-  if (s.includes('outreach') || s.includes('checking in')) return 'cold-outreach'
+  if (s.includes('thanks for') || s.includes('thank you for')) return 'thank-you'
   return 'untagged-other'
 }
 
