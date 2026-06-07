@@ -50,6 +50,54 @@ interface EmailOptions {
 }
 
 /**
+ * Infer a `sequence` tag from the subject line so every send gets
+ * categorised in /admin/email-analytics, even when the call site forgot
+ * to pass tags. Resend tags are server-side metadata — they don't touch
+ * the email content, so there's no deliverability cost.
+ *
+ * Keep slugs short, kebab-case, and stable so the analytics dashboard
+ * keeps a clean per-sequence breakdown over time.
+ */
+function inferSequenceFromSubject(subject: string | undefined): string {
+  if (!subject) return 'untagged-other'
+  const s = subject.toLowerCase()
+  if (s.includes('login link') || s.includes('your link')) return 'magic-link'
+  if (s.includes("you're in") || s.includes('welcome to concussionpro')) return 'purchase-welcome'
+  if (s.includes('thanks for') || s.includes('thank you for')) return 'thank-you'
+  if (s.includes('certificate')) return 'certificate'
+  if (s.includes('tax invoice') || s.includes('your invoice')) return 'tax-invoice'
+  if (s.includes('verify')) return 'verify-email'
+  if (s.includes('reset') && s.includes('password')) return 'password-reset'
+  if (s.includes('preseason')) return 'preseason'
+  if (s.includes('scat')) return 'scat-resource'
+  if (s.includes('workshop') && s.includes('byron')) return 'byron-workshop'
+  if (s.includes('workshop') && s.includes('melbourne')) return 'melbourne-workshop'
+  if (s.includes('early bird')) return 'early-bird'
+  if (s.includes('ready to train') || s.includes('ready-to-train')) return 'ready-to-train'
+  if (s.includes('inbound') || s.includes('reply notification')) return 'inbound-reply'
+  if (s.includes('reminder')) return 'reminder'
+  if (s.includes('ai in clinical practice') || s.includes('ai course')) return 'ai-course'
+  if (s.includes('hub pack') || s.includes('concussion hub')) return 'concussion-hub'
+  if (s.includes('register your interest') || s.includes('interest registered')) return 'interest-registration'
+  if (s.includes('outreach') || s.includes('checking in')) return 'cold-outreach'
+  return 'untagged-other'
+}
+
+/**
+ * Ensure the tags array contains a `sequence` entry. If the caller already
+ * supplied one, leave it alone. Otherwise infer from the subject line.
+ */
+function ensureSequenceTag(
+  tags: Array<{ name: string; value: string }> | undefined,
+  subject: string,
+): Array<{ name: string; value: string }> {
+  const arr = Array.isArray(tags) ? [...tags] : []
+  if (arr.some((t) => t.name === 'sequence')) return arr
+  arr.push({ name: 'sequence', value: inferSequenceFromSubject(subject) })
+  return arr
+}
+
+/**
  * Normalise attachments so Buffer.content becomes a base64 string.
  * Pass-through if content is already a string (assumed base64 by caller).
  */
@@ -79,13 +127,14 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
   try {
     const encodedAttachments = encodeAttachments(options.attachments)
+    const normalisedTags = ensureSequenceTag(options.tags, options.subject)
     const result = await getResend()!.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       replyTo: FROM_EMAIL,
       to: options.to,
       subject: options.subject,
       html: options.html,
-      tags: options.tags,
+      tags: normalisedTags,
       headers: options.headers,
       ...(options.scheduledAt ? { scheduledAt: options.scheduledAt } : {}),
       ...(encodedAttachments ? { attachments: encodedAttachments } : {}),
@@ -119,13 +168,14 @@ export async function sendEmailWithAttachment(options: EmailOptions & { attachme
 
   try {
     const encodedAttachments = encodeAttachments(options.attachments)!
+    const normalisedTags = ensureSequenceTag(options.tags, options.subject)
     const result = await getResend()!.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       replyTo: FROM_EMAIL,
       to: options.to,
       subject: options.subject,
       html: options.html,
-      tags: options.tags,
+      tags: normalisedTags,
       headers: options.headers,
       attachments: encodedAttachments,
     })
@@ -280,6 +330,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
   return sendEmail({
     to: email,
     subject: 'Your ConcussionPro Login Link',
+    tags: [{ name: 'sequence', value: 'magic-link' }],
     html: `
       <!DOCTYPE html>
       <html>

@@ -160,7 +160,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const sequence = tags.sequence || null
+    // Sequence is the analytics group-by. We prefer an explicit `sequence`
+    // tag but fall back to `category` or `type` so older call sites that
+    // tagged with those names still get grouped instead of bucketed into
+    // "(no tag)". Last-resort default keeps the transactional/magic-link
+    // volume out of the "(no tag)" bucket.
+    const sequence =
+      tags.sequence ||
+      tags.category ||
+      tags.type ||
+      (data.subject?.toLowerCase().includes('login link') ? 'magic-link' : null)
     const day = tags.day || null
     const clickUrl = data.click?.link || null
 
