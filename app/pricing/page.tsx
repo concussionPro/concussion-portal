@@ -317,23 +317,81 @@ function PricingContent() {
           </Link>
         </div>
 
-        {/* Paid-traffic objection killer: employer-reimbursement callout.
-            Fires for cpd / online variants (paid intent searchers).
-            #1 reason ad clickers leave is sticker shock — this addresses
-            it before they reach the pricing cards. */}
-        {(heroVariant === 'cpd' || heroVariant === 'online') && (
-          <div className="max-w-3xl mx-auto mb-8 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
-            <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-foreground">Most clinicians pay $0 out of pocket</p>
-              <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. We provide a tax invoice and AHPRA-aligned CPD certificate for reimbursement.</p>
-            </div>
+        {/* Employer-reimbursement callout — universal (was variant-gated, but
+            research shows this is a #1 objection across ALL paid CPD traffic,
+            not just cpd/online searchers). Most clinicians have an annual
+            CPD budget — surface this BEFORE the price. */}
+        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
+          <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Most clinicians pay $0 out of pocket</p>
+            <p className="text-xs text-muted-foreground mt-1">Your employer or practice likely covers CPD training costs. Tax invoice + AHPRA-aligned CPD certificate emailed instantly on purchase.</p>
           </div>
-        )}
+        </div>
+
+        {/* Course map — orients the decision around three clear paths so the
+            visitor self-selects before scrolling to pricing. Concussion Online
+            and Concussion + Workshop are the focus of /pricing; the AI course
+            is referenced as a separate adjacent track for visitors who landed
+            here but want a different topic. */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-3 text-center">
+            Choose your CPD path
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <a href="/courses/ai-in-clinical-practice" className="block rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/30 hover:shadow-sm transition-all">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">AI in Practice</p>
+              <p className="text-sm font-bold text-foreground mb-1">AI in Clinical Practice</p>
+              <p className="text-[11.5px] text-muted-foreground leading-snug mb-2">Heidi vs Lyrebird vs ChatGPT · AHPRA AI + Australian Privacy Principles · NDIS-audit-safe documentation.</p>
+              <p className="text-[11px] text-accent font-semibold">3 CPD hrs · from ${99} →</p>
+            </a>
+            <a href="#pricing-cards" className="block rounded-xl border-2 border-accent/40 bg-accent/5 p-4 hover:border-accent transition-all">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1">Online · Most Flexible</p>
+              <p className="text-sm font-bold text-foreground mb-1">Concussion Mastery — Online</p>
+              <p className="text-[11.5px] text-muted-foreground leading-snug mb-2">8 modules · self-paced · lifetime access · OA endorsed. SCAT6, VOMS, BESS — all online.</p>
+              <p className="text-[11px] text-accent font-semibold">8 CPD hrs · ${CONFIG.COURSE.PRICE_ONLINE} ↓ Below</p>
+            </a>
+            <a href="#pricing-cards" className="block rounded-xl border-2 border-accent bg-gradient-to-br from-accent/8 via-white to-accent/4 p-4 hover:shadow-sm transition-all">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1">Complete · Hands-On</p>
+              <p className="text-sm font-bold text-foreground mb-1">Concussion Mastery — Complete</p>
+              <p className="text-[11.5px] text-muted-foreground leading-snug mb-2">Online + in-person workshop day. Practical assessment with feedback. Registered-list pricing locked in.</p>
+              <p className="text-[11px] text-accent font-semibold">14 CPD hrs · ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} ↓ Below</p>
+            </a>
+          </div>
+        </div>
 
         {/* Pricing Cards — visible within first scroll on mobile */}
         <div id="pricing-cards">
           <PricingOptions variant="full" />
+        </div>
+
+        {/* Social proof at decision moment — testimonial strip right after
+            the pricing cards. Research: visitors who see named clinician
+            quotes within the same scroll-screen as price convert higher
+            than visitors who see them at page-bottom only. */}
+        <div className="max-w-4xl mx-auto mt-6 mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {testimonials.slice(0, 3).map(t => (
+              <TestimonialCard key={`pricing-${t.name}`} t={t} />
+            ))}
+          </div>
+        </div>
+
+        {/* AHPRA + reimbursement microcopy below the pricing cards — directly
+            addresses the two healthcare-CPD friction questions ("will this
+            count?" + "can I claim it back?") at decision moment. */}
+        <div className="max-w-3xl mx-auto mt-4 mb-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" /> AHPRA CPD audit-ready certificate
+          </span>
+          <span className="hidden sm:inline text-slate-300">·</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Building2 className="w-4 h-4 text-blue-600" /> Tax invoice emailed instantly
+          </span>
+          <span className="hidden sm:inline text-slate-300">·</span>
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-amber-600" /> 7-day money-back guarantee
+          </span>
         </div>
 
         {/* Regulatory context — reinforces decision after seeing price */}
