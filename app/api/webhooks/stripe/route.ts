@@ -30,11 +30,19 @@ function redact(email: string | null | undefined): string {
   return email.slice(0, 3) + '***'
 }
 
-// Server-side analytics — writes to Postgres (same table as client-side tracking)
-async function logAnalyticsEvent(eventType: string, eventData: Record<string, unknown>) {
+// Server-side analytics — writes to Postgres (same table as client-side tracking).
+// Persists user_email in its own column so JOIN-ing analytics_events to email_events
+// (for per-sequence revenue attribution) and to users (for high-intent retargeting)
+// is a single index lookup instead of a JSONB scan.
+async function logAnalyticsEvent(
+  eventType: string,
+  eventData: Record<string, unknown>,
+  userEmail?: string | null,
+) {
   try {
+    const normalisedEmail = userEmail ? userEmail.toLowerCase().trim() : null
     await sql`
-      INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country)
+      INSERT INTO analytics_events (event_type, event_data, session_id, timestamp_ms, user_agent, referrer, path, search, ip, country, user_email)
       VALUES (
         ${eventType},
         ${JSON.stringify(eventData)}::jsonb,
@@ -45,7 +53,8 @@ async function logAnalyticsEvent(eventType: string, eventData: Record<string, un
         ${'/api/webhooks/stripe'},
         ${null},
         ${'server'},
-        ${null}
+        ${null},
+        ${normalisedEmail}
       )
     `
   } catch (err) {
@@ -314,14 +323,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Step 3: Log purchase to analytics + fire Google Ads conversion server-side
   const purchaseAmount = (session.amount_total || 0) / 100
   try {
-    await logAnalyticsEvent('purchase_complete', {
-      email: redact(customerEmail),
-      courseType,
-      amount: purchaseAmount,
-      currency,
-      transactionId: session.id,
-      accessLevel,
-    })
+    // Store full email so we can JOIN analytics_events → email_events.sequence
+    // for per-sequence revenue attribution (which email campaign drove the sale).
+    // PII consideration: this is an internal analytics table behind admin auth,
+    // not a public surface. Redact only at log/console level (line above already
+    // does that via console.log redact()).
+    await logAnalyticsEvent(
+      'purchase_complete',
+      {
+        courseType,
+        amount: purchaseAmount,
+        currency,
+        transactionId: session.id,
+        accessLevel,
+      },
+      customerEmail,
+    )
   } catch (err) {
     console.error('Failed to log purchase analytics:', err)
   }
@@ -772,7 +789,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
   // Log to analytics
   try {
-    await logAnalyticsEvent('checkout_expired', { email: redact(email), courseType, amount })
+    await logAnalyticsEvent('checkout_expired', { courseType, amount }, email)
   } catch (err) {
     console.error('Failed to log checkout expired analytics:', err)
   }

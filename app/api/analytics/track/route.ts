@@ -61,6 +61,10 @@ interface TrackPayload {
   referrer: string | null;
   path: string;
   search: string | null;
+  /** Optional — caller can stitch identity at event time (logged-in user,
+   *  or email already collected via form). Persisted to user_email column
+   *  for indexed JOINs to email_events + users. */
+  userEmail?: string | null;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -105,15 +109,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const search = payload.search ? String(payload.search).slice(0, 512) : null;
   const eventDataRaw = JSON.stringify(payload.eventData ?? {});
   const eventData = eventDataRaw.length > 4096 ? '{}' : eventDataRaw;
+  // Normalise + clamp the optional user_email so a malformed client payload
+  // can't write garbage to the indexed column.
+  const userEmailRaw = payload.userEmail ?? null;
+  const userEmail =
+    typeof userEmailRaw === 'string' && userEmailRaw.includes('@') && userEmailRaw.length <= 254
+      ? userEmailRaw.toLowerCase().trim()
+      : null;
 
   try {
     await sql`
       INSERT INTO analytics_events (
         event_type, event_data, session_id, timestamp_ms, user_agent,
-        referrer, path, search, ip, country
+        referrer, path, search, ip, country, user_email
       ) VALUES (
         ${eventType}, ${eventData}::jsonb, ${sessionId}, ${ts}, ${userAgent},
-        ${referrer}, ${pagePath}, ${search}, ${ip}, ${country}
+        ${referrer}, ${pagePath}, ${search}, ${ip}, ${country}, ${userEmail}
       )
     `;
   } catch (err) {

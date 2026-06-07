@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { setIdentity, trackEvent } from '@/lib/analytics'
 
 function VerifyContent() {
   const router = useRouter()
@@ -35,6 +36,15 @@ function VerifyContent() {
       .then((data) => {
         setStatus('success')
         setMessage('Login successful! You\'ll stay logged in. Redirecting...')
+
+        // Stitch identity — every subsequent analytics event from this
+        // browser will carry user_email so the funnel can show
+        // "Jane logged in → viewed /pricing → bought" without server-side
+        // cookie→email JOINs.
+        if (data.user?.email) {
+          setIdentity(data.user.email)
+          trackEvent('identity_set', { source: 'magic-link', accessLevel: data.user.accessLevel })
+        }
 
         // Fire gtag page_view and login event before redirecting
         // This fixes 0s sessions and 100% bounce on magic link verify

@@ -112,6 +112,43 @@ function getFirstUtm(): Record<string, string> {
   }
 }
 
+/**
+ * Identity-stitching helpers. We persist the user's email in localStorage
+ * once any high-intent surface knows it (logged-in users on /learning,
+ * email-link click ?email=..., free-course signup confirmation, etc.).
+ * Every subsequent trackEvent automatically attaches user_email so the
+ * dashboard can show "Jane viewed /pricing 4× then bought" without
+ * needing a server-side cookie→email JOIN.
+ */
+const IDENTITY_KEY = 'cea_user_email'
+
+export function setIdentity(email: string | null | undefined): void {
+  try {
+    if (!email || !email.includes('@')) return
+    const v = email.toLowerCase().trim().slice(0, 254)
+    localStorage.setItem(IDENTITY_KEY, v)
+  } catch {
+    /* private mode etc — silent */
+  }
+}
+
+export function getIdentity(): string | null {
+  try {
+    const v = localStorage.getItem(IDENTITY_KEY)
+    return v && v.includes('@') ? v : null
+  } catch {
+    return null
+  }
+}
+
+export function clearIdentity(): void {
+  try {
+    localStorage.removeItem(IDENTITY_KEY)
+  } catch {
+    /* noop */
+  }
+}
+
 // Client-side analytics tracking
 export async function trackEvent(
   eventType: string,
@@ -132,6 +169,11 @@ export async function trackEvent(
     const firstReferrer = getFirstReferrer()
     const utmParams = getUtmParams()
     const firstUtm = getFirstUtm()
+    // Caller can override identity per-call (e.g. signup flow passes the
+    // email they just collected before we've persisted it to localStorage).
+    const userEmail = (eventData && typeof eventData.userEmail === 'string')
+      ? eventData.userEmail
+      : getIdentity()
 
     const event = {
       eventType,
@@ -148,6 +190,7 @@ export async function trackEvent(
       referrer: document.referrer,
       path: window.location.pathname,
       search: window.location.search || null,
+      userEmail: userEmail || null,
     }
 
     // Send to analytics API

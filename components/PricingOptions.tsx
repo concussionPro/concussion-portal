@@ -760,7 +760,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 <button
                   key={city.slug}
                   type="button"
-                  onClick={() => setSelectedLocation(city.slug)}
+                  onClick={() => {
+                    setSelectedLocation(city.slug)
+                    trackEvent('workshop_city_select', { city: city.slug, source: 'pricing_card' })
+                  }}
                   className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
                     selectedLocation === city.slug
                       ? 'bg-[var(--accent)] text-white border-[var(--accent)]'

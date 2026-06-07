@@ -20,6 +20,7 @@ import { PricingOptions } from '@/components/PricingOptions'
 import { CourseSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { createFAQSchema } from '@/lib/schema-markup'
 import { CONFIG } from '@/lib/config'
+import { trackEvent } from '@/lib/analytics'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,26 +60,80 @@ function CanceledBanner() {
 function PricingContent() {
   // FAQ accordion — allow multiple open
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
-  const toggleFaq = (i: number) => {
+  const toggleFaq = (i: number, question: string) => {
     setOpenFaqs(prev => {
       const next = new Set(prev)
-      if (next.has(i)) next.delete(i)
-      else next.add(i)
+      if (next.has(i)) {
+        next.delete(i)
+      } else {
+        next.add(i)
+        // High-intent micro-signal: FAQ opens reveal the buyer's objection
+        trackEvent('faq_open', { faq_index: i, question: question.slice(0, 80), source: 'pricing_page' })
+      }
       return next
     })
   }
 
-  // Sticky mobile CTA — show after scrolling past pricing cards
+  // Fire pricing_page view on mount with UTM context — drives channel-attribution.
+  // The route-change page_view event lands too — this is an explicit higher-intent
+  // signal so the dashboard can show a real "pricing-viewer → buyer" funnel.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    trackEvent('pricing_page', {
+      utm_source: params.get('utm_source') || undefined,
+      utm_medium: params.get('utm_medium') || undefined,
+      utm_campaign: params.get('utm_campaign') || undefined,
+      utm_content: params.get('utm_content') || undefined,
+      promo: params.get('promo') || undefined,
+      location: params.get('location') || undefined,
+    })
+  }, [])
+
+  // Sticky mobile CTA — show after scrolling past pricing cards.
+  // Also doubles as the high-intent "scrolled past pricing" signal.
   const [showStickyCta, setShowStickyCta] = useState(false)
   useEffect(() => {
     const target = document.getElementById('pricing-cards')
     if (!target) return
+    let firedScrolledTo = false
     const observer = new IntersectionObserver(
-      ([entry]) => setShowStickyCta(!entry.isIntersecting),
+      ([entry]) => {
+        setShowStickyCta(!entry.isIntersecting)
+        if (entry.isIntersecting && !firedScrolledTo) {
+          firedScrolledTo = true
+          trackEvent('pricing_cards_in_view', {})
+        }
+      },
       { threshold: 0 }
     )
     observer.observe(target)
-    return () => observer.disconnect()
+
+    // Compare-Plans + FAQ in-view trackers — both signal late-funnel intent.
+    const fired = new Set<string>()
+    const microTargets: Array<{ id: string; event: string }> = [
+      { id: 'faq', event: 'faq_section_in_view' },
+    ]
+    const microObserver = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue
+          const m = microTargets.find((t) => document.getElementById(t.id) === e.target)
+          if (m && !fired.has(m.event)) {
+            fired.add(m.event)
+            trackEvent(m.event, {})
+          }
+        }
+      },
+      { threshold: 0.3 }
+    )
+    for (const t of microTargets) {
+      const el = document.getElementById(t.id)
+      if (el) microObserver.observe(el)
+    }
+    return () => {
+      observer.disconnect()
+      microObserver.disconnect()
+    }
   }, [])
 
   // UTM-aware hero — match the headline to the search intent that brought
@@ -508,7 +563,7 @@ function PricingContent() {
               <div key={i} className="glass rounded-xl overflow-hidden">
                 <button
                   type="button"
-                  onClick={() => toggleFaq(i)}
+                  onClick={() => toggleFaq(i, item.q)}
                   className="w-full flex items-center justify-between px-5 py-4 text-left gap-3"
                   aria-expanded={openFaqs.has(i)}
                 >
