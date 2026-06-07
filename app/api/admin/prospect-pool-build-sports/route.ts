@@ -126,6 +126,22 @@ const CLINIC_KEYWORDS = [
   'allied', 'spine', 'spinal', 'recovery', 'injury',
   'sportstherapy', 'sports-therapy',
   'pilates', 'exercise', 'kinetic',
+  // Broader clinic-naming patterns added 2026-06-08 — pull through more
+  // allied health domains that the first sweep missed.
+  'therapy', 'therapist',
+  'myo', 'myotherapy',
+  'remedial', 'massage',
+  'orthopaedic', 'ortho-',
+  'performance', 'biomech', 'biomechanic',
+  'kines', 'kinesiology',
+  'paediatric', 'pediatric',
+  'manual',
+  'wellbeing',
+  'podiatry', 'podiatrist',
+  'neurology', 'neuro-',
+  'concussion', 'brain', 'tbi',
+  'speech', 'speechpath',
+  'sport', // bare 'sport' catches "sport injury", "sport plus" etc.
 ]
 
 function looksLikeClinicDomain(domain: string): boolean {
