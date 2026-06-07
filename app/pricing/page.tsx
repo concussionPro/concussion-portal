@@ -295,18 +295,23 @@ function PricingContent() {
           )}
         </div>
 
-        {/* Credential bar: OA endorsement + trust signals */}
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-8 py-4 px-6 glass rounded-xl border border-accent/10">
-          <div className="flex items-center gap-2">
-            <Image src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" width={36} height={32} className="h-8 w-auto" priority />
-            <span className="text-sm font-semibold text-foreground">Endorsed by Osteopathy Australia</span>
+        {/* OA endorsement — prominent block. The endorsement is one of the
+            highest-trust signals in AHPRA-aligned CPD, so it carries visual
+            weight here even though the H1 leads with what we do. */}
+        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6">
+          <Image src="/osteopathy-australia-endorsed.png" alt="Endorsed by Osteopathy Australia" width={160} height={144} className="h-20 sm:h-24 w-auto" priority />
+          <div className="text-left">
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">Endorsed by</p>
+            <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">Osteopathy Australia</p>
+            <p className="text-xs text-muted-foreground mt-0.5">AHPRA aligned · 14 CPD hours</p>
           </div>
-          <span className="hidden sm:inline text-slate-300">|</span>
-          <span className="text-sm text-muted-foreground">AHPRA Aligned · 14 CPD Hours (8 online + 6 workshop)</span>
-          <span className="hidden sm:inline text-slate-300">|</span>
-          <span className="text-sm text-muted-foreground">7-day money-back guarantee</span>
-          <span className="hidden sm:inline text-slate-300">|</span>
-          <span className="text-sm font-semibold text-foreground">
+        </div>
+
+        {/* Secondary trust signals — quieter row below the endorsement */}
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mb-8 text-[13px] text-muted-foreground">
+          <span>7-day money-back guarantee</span>
+          <span className="hidden sm:inline text-slate-300">·</span>
+          <span className="font-semibold text-foreground">
             {enrollmentCount >= 100 ? `${enrollmentCount}+ clinicians enrolled` : 'Trusted by clinicians Australia-wide'}
           </span>
         </div>
