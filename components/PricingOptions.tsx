@@ -598,16 +598,16 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             Same 8 modules as the full CCM, at your own pace. Add the hands-on workshop anytime to upgrade.
           </p>
 
-          {/* Visual: course interface preview */}
+          {/* Visual: CCM Online course preview screenshot */}
           <div className="relative rounded-xl overflow-hidden border border-teal-100 mb-4 h-[120px] bg-white">
             <Image
-              src="/online-course-preview.jpg"
-              alt="Online course interface preview"
+              src="/ccm-online-preview.png"
+              alt="CCM Online course preview interface"
               fill
               sizes="(min-width: 1024px) 340px, 100vw"
               className="object-cover object-top"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/40 pointer-events-none" aria-hidden="true" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/30 pointer-events-none" aria-hidden="true" />
           </div>
 
           {/* 2-col feature bento */}

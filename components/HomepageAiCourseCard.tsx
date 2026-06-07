@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Loader2, Sparkles, Check, Lock } from 'lucide-react'
 
 /**
@@ -85,6 +86,18 @@ export function HomepageAiCourseCard() {
       <p className="relative text-[12px] text-slate-600 leading-relaxed mb-3">
         AHPRA AI guidelines, NDIS-audit-safe reports, and Heidi vs Lyrebird vs ChatGPT for clinical notes — for AU allied health. 3 CPD hours · 9 modules · certificate.
       </p>
+
+      {/* Visual: AI course preview screenshot */}
+      <div className="relative rounded-lg overflow-hidden border border-amber-200/60 mb-3 h-[110px] bg-white">
+        <Image
+          src="/ai-course-preview.png"
+          alt="AI in Clinical Practice course preview"
+          fill
+          sizes="(min-width: 1024px) 340px, 100vw"
+          className="object-cover object-top"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/40 pointer-events-none" aria-hidden="true" />
+      </div>
 
       {/* Feature pills */}
       <div className="relative flex flex-wrap gap-1.5 mb-4">
