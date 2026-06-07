@@ -362,7 +362,7 @@ function PricingContent() {
               Cranial nerve exam, VOMS interpretation, phenotype-driven rehab — hands-on.
             </h3>
             <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
-              Workshop day: advanced clinical skill on real subjects with expert feedback. Cervical assessment, cranial nerve, VOMS, then designing phenotype-specific rehab protocols. 6 CPD hours.
+              Workshop day: advanced clinical skill on real subjects with expert feedback. Cervical assessment, cranial nerve, VOMS, then designing phenotype-specific rehab protocols.
             </p>
           </div>
         </div>
