@@ -280,21 +280,21 @@ function PricingContent() {
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Become the concussion expert in your practice — advanced clinical skill for Australian clinicians.
               </p>
-              {/* Skill grid — 2 cols × 3 rows. Each item is the specific
-                  clinical capability buyers walk away with, no text wall. */}
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2 max-w-xl mx-auto mt-5 text-left">
+              {/* Skill chips — inline pills, no text-block. Captures the
+                  6 actual clinical capabilities in scannable visual form. */}
+              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mt-4">
                 {[
-                  'Phenotype-driven rehab',
-                  'Cranial nerve exam',
-                  'Cervical assessment',
-                  'VOMS interpretation',
-                  'Persistent PCS management',
-                  'Return-to-play protocols',
+                  'Phenotype rehab',
+                  'Cranial nerve',
+                  'Cervical exam',
+                  'VOMS',
+                  'Persistent PCS',
+                  'Return-to-play',
                 ].map((skill) => (
-                  <div key={skill} className="flex items-start gap-2 text-[13.5px] text-foreground/85">
-                    <Check className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                    <span className="leading-snug">{skill}</span>
-                  </div>
+                  <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/8 border border-accent/15 text-[11.5px] sm:text-xs font-semibold text-accent whitespace-nowrap">
+                    <Check className="w-3 h-3 flex-shrink-0" strokeWidth={3} />
+                    {skill}
+                  </span>
                 ))}
               </div>
             </>
