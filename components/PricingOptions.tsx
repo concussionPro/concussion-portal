@@ -821,7 +821,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-teal-800 mb-1">For clinics + organisations</p>
             <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1">Training a whole team?</h3>
             <p className="text-sm text-slate-700 leading-relaxed">
-              In-house team training for clinics, sports organisations, and hospital networks. Concussion + AI in Clinical Practice, delivered on-site or live online, around your workflow.
+              In-house team training for clinics, sports organisations, and hospital networks — Concussion + AI in Clinical Practice, delivered on-site or live online around your workflow.
             </p>
           </div>
           <a
