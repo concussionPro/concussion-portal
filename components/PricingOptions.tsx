@@ -148,7 +148,7 @@ function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) 
             {`${label} workshop isn’t confirmed yet`}
           </p>
           <p className={`text-muted-foreground leading-snug mt-0.5 ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
-            Drop your details — you&apos;ll be first to know when the date is locked in, and registered-list pricing is locked in for you (no deadline).
+            Drop your details — you&apos;ll be first to know when the date is locked in.
           </p>
         </div>
       </div>
@@ -404,7 +404,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                     <span className="text-[10px] text-slate-400">≈ $770 USD</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
-                  <p className="text-[10px] text-[var(--accent)] font-medium mt-0.5">Registered-list pricing — locked in for everyone on the interest list</p>
                 </>
               ) : (
                 <>
@@ -459,7 +458,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               {[
                 'Everything in Online, plus:',
                 'Full-day workshop (6 CPD hours)',
-                'Hands-on SCAT6, VOMS, BESS',
+                'Hands-on oculomotor + cranial nerve exam',
                 CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
                   ? 'Sydney & Byron Bay added when demand hits'
                   : 'Choose your preferred AU location',
@@ -792,11 +791,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 )}
               </button>
 
-              {isEarlyBird && (
-                <p className="text-[10px] text-[var(--accent)] font-medium text-center mt-2">
-                  Registered-list pricing — locked in for everyone on the interest list
-                </p>
-              )}
             </>
           ) : (
             <WorkshopInterestForm citySlug={selectedLocation} variant="full" />

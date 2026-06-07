@@ -129,11 +129,6 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             </button>
           </div>
 
-          {isEarlyBird && (
-            <p className="text-xs font-semibold text-[var(--accent)] mb-1">
-              Registered-list pricing locked in — no deadline
-            </p>
-          )}
 
           <p className="text-muted-foreground text-xs mt-2">
             8 CPD hours (online) &middot; 14 CPD hours (complete with workshop)

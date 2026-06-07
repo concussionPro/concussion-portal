@@ -365,11 +365,6 @@ function LearningSuiteInner() {
                       Add Workshop
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
-                    {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
-                      <p className="text-[11px] text-[var(--accent)] font-medium mt-2">
-                        Registered-list pricing locked in — no deadline
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>

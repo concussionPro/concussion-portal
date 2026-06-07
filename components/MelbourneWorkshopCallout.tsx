@@ -86,7 +86,7 @@ export function MelbourneWorkshopCallout({
           </span>
           {earlyBirdActive && (
             <span className="inline-flex items-center text-xs font-semibold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-2 rounded-lg">
-              Registered-list pricing ${CONFIG.COURSE.PRICE_EARLY_BIRD}
+              From ${CONFIG.COURSE.PRICE_EARLY_BIRD}
             </span>
           )}
         </div>

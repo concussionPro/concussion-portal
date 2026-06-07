@@ -120,7 +120,7 @@ function PricingContent() {
     },
     {
       q: "How are workshop dates confirmed?",
-      a: "We run workshops as demand in each city opens up. Q1 2026 workshops ran across all three cities. Drop your details on the interest list for your preferred city — you'll get 6 weeks' notice when the date is locked in, and registered-list pricing is locked in for you (no deadline). Registered participants choose their preferred date first.",
+      a: "We run workshops as demand in each city opens up. Q1 2026 workshops ran across all three cities. Drop your details on the interest list for your preferred city — you'll get 6 weeks' notice when the date is locked in. Registered participants choose their preferred date first.",
     },
     {
       q: 'How much time does the course take?',

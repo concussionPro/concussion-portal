@@ -255,7 +255,7 @@ export function NextActionCard() {
                     </button>
                     {earlyBird && (
                       <p className="text-[11px] text-blue-600 font-medium mt-2">
-                        Registered-list pricing locked in — no deadline
+                        Lifetime access included
                       </p>
                     )}
                   </div>
@@ -489,7 +489,7 @@ export function NextActionCard() {
                 </button>
                 {workshopNudge.earlyBird && (
                   <span className="text-[11px] text-blue-600 font-medium">
-                    Registered-list pricing — no deadline
+                    Lifetime access included
                   </span>
                 )}
               </div>

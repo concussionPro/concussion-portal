@@ -350,11 +350,6 @@ function CheckoutSuccessContent() {
                   Upgrade from ${upgradePrice} more
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                {isEarlyBird && (
-                  <p className="text-xs text-[var(--accent)] font-medium mt-2">
-                    Registered-list pricing locked in — no deadline
-                  </p>
-                )}
               </div>
             </div>
           )

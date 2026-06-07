@@ -193,13 +193,7 @@ function UpgradeContent() {
               <span className="text-4xl font-bold">${upgradePrice}</span>
               <span className="text-muted-foreground">AUD</span>
             </div>
-            {isEarlyBird ? (
-              <p className="text-sm text-accent font-semibold">
-                Registered-list pricing — locked in (no deadline)
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">Workshop upgrade price</p>
-            )}
+            <p className="text-sm text-muted-foreground">Workshop upgrade price</p>
           </div>
 
           {error && (
