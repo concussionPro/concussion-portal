@@ -235,8 +235,17 @@ export async function GET(req: NextRequest) {
       LIMIT 60
     `
 
-    // Add the angle recommendation row-by-row (TS-side keeps the SQL readable)
-    const enriched = rows.map((r) => ({ ...r, angle: buildAngle(r) }))
+    // Add the angle recommendation row-by-row (TS-side keeps the SQL readable).
+    // Also null-out the 1970-01-01 sentinel that GREATEST() coalesces NULL to in
+    // SQL — otherwise the UI renders "56y ago" for rows that have no signal date.
+    const enriched = rows.map((r) => {
+      const lastSignal = r.lastSignalAt
+        ? new Date(r.lastSignalAt).getFullYear() > 2000
+          ? r.lastSignalAt
+          : null
+        : null
+      return { ...r, angle: buildAngle(r), lastSignalAt: lastSignal }
+    })
 
     // ── Demand-by-location rollup ──
     // Anonymous + identified browsers grouped by AU state + city, to drive
