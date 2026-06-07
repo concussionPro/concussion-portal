@@ -13,6 +13,7 @@ import {
   Building2,
   ArrowRight,
   ExternalLink,
+  Check,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { PricingOptions } from '@/components/PricingOptions'
@@ -279,6 +280,23 @@ function PricingContent() {
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Become the concussion expert in your practice — advanced clinical skill for Australian clinicians.
               </p>
+              {/* Skill grid — 2 cols × 3 rows. Each item is the specific
+                  clinical capability buyers walk away with, no text wall. */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 max-w-xl mx-auto mt-5 text-left">
+                {[
+                  'Phenotype-driven rehab',
+                  'Cranial nerve exam',
+                  'Cervical assessment',
+                  'VOMS interpretation',
+                  'Persistent PCS management',
+                  'Return-to-play protocols',
+                ].map((skill) => (
+                  <div key={skill} className="flex items-start gap-2 text-[13.5px] text-foreground/85">
+                    <Check className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <span className="leading-snug">{skill}</span>
+                  </div>
+                ))}
+              </div>
             </>
           )}
 
