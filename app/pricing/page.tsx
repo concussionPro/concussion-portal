@@ -285,10 +285,11 @@ function PricingContent() {
           ) : (
             <>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                <span className="text-gradient">Osteopathy Australia</span> Endorsed
+                Concussion Clinical{' '}
+                <span className="text-gradient">Mastery</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Concussion CPD — 14 hours, AHPRA aligned. Master SCAT6, VOMS &amp; BESS with expert-led training. Lifetime access included.
+                Concussion management training for Australian clinicians — SCAT6, VOMS &amp; BESS · 14 CPD hours · Osteopathy Australia endorsed · AHPRA aligned · Lifetime access.
               </p>
             </>
           )}
