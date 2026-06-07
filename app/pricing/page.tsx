@@ -349,6 +349,18 @@ function PricingContent() {
           </div>
         </div>
 
+        {/* Clinic-owner early signal — high-ROI traffic. Surfaces the team
+            inquiry path before they bounce on individual sticker shock. */}
+        <div className="text-center mb-4">
+          <a
+            href="#team-training"
+            className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:text-accent/80 transition-colors"
+          >
+            Training a team? See team pricing
+            <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+
         {/* Employer-reimbursement callout — universal (was variant-gated, but
             research shows this is a #1 objection across ALL paid CPD traffic,
             not just cpd/online searchers). Most clinicians have an annual
