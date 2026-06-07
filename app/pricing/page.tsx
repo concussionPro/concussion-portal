@@ -153,7 +153,7 @@ function PricingContent() {
     },
     {
       q: 'I\'m not sure which option is right for me',
-      a: 'The online course is ideal if you want flexible, self-paced concussion education you can fit around clinical work. The complete course adds a full day of supervised hands-on practice — administering SCAT6, VOMS, and BESS on real subjects with expert feedback. If you\'re unsure, start with the free SCAT6 Mastery course to experience the teaching style, or email Zac directly for a personal recommendation.',
+      a: 'The online course is ideal if you want flexible, self-paced concussion education you can fit around clinical work. The complete course adds a full day of supervised hands-on practice — cranial nerve examination, cervical assessment, VOMS interpretation, then designing phenotype-driven rehab protocols on real subjects with expert feedback. If you\'re unsure, start with the free SCAT6 Mastery course to experience the teaching style, or email Zac directly for a personal recommendation.',
     },
   ]
 
@@ -277,29 +277,36 @@ function PricingContent() {
                 <span className="text-gradient">Mastery</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Concussion management training for Australian clinicians — SCAT6, VOMS &amp; BESS mastery in 8 modules + practical workshop.
+                Become the concussion expert in your practice. Phenotype-driven rehabilitation, cranial nerve + cervical examination, VOMS interpretation, persistent PCS management — advanced clinical skill for Australian clinicians.
               </p>
             </>
           )}
 
-          {/* Punch stat bento — visual rhythm above the OA block. Real
-              numbers only (no inflated enrollment claims). */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 max-w-3xl mx-auto mt-7">
-            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
-              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Online modules</p>
-            </div>
+          {/* Punch stat bento — research-backed wording for CPD course
+              conversion: outcome-led labels ("Practical skills" not "online
+              modules"), CPD-hours-as-currency, regulatory framing, status
+              ("specialist-level"), risk reversal at end. Anchors the value
+              prop before the OA block. */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
             <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
               <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">14<span className="text-base font-semibold">hrs</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD AHPRA aligned</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">AHPRA CPD</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Self-paced modules</p>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500 p-3 sm:p-4 text-left">
+              <p className="text-2xl sm:text-3xl font-bold text-rose-700 leading-none">1<span className="text-base font-semibold">day</span></p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Hands-on workshop</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500 p-3 sm:p-4 text-left">
               <p className="text-2xl sm:text-3xl font-bold text-indigo-700 leading-none">∞</p>
               <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Lifetime access</p>
             </div>
-            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left">
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500 p-3 sm:p-4 text-left col-span-2 lg:col-span-1">
               <p className="text-2xl sm:text-3xl font-bold text-emerald-700 leading-none">7<span className="text-base font-semibold">day</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back guarantee</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">Money-back</p>
             </div>
           </div>
         </div>
@@ -334,10 +341,10 @@ function PricingContent() {
           <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white">
             <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] font-bold text-amber-300 mb-1">Live workshop training</p>
             <h3 className="text-base sm:text-xl font-bold leading-tight">
-              Real clinical practice. Real feedback. Real concussion patients.
+              Cranial nerve exam, VOMS interpretation, phenotype-driven rehab — hands-on.
             </h3>
             <p className="text-[12.5px] sm:text-sm text-white/85 mt-1 leading-snug max-w-2xl">
-              Workshop day: SCAT6, VOMS &amp; BESS hands-on with expert feedback. 6 CPD hours on top of the 8 online.
+              Workshop day: advanced clinical skill on real subjects with expert feedback. Cervical assessment, cranial nerve, VOMS, then designing phenotype-specific rehab protocols. 6 CPD hours.
             </p>
           </div>
         </div>
