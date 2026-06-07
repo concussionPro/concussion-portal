@@ -335,37 +335,6 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Course map — orients the decision around three clear paths so the
-            visitor self-selects before scrolling to pricing. Concussion Online
-            and Concussion + Workshop are the focus of /pricing; the AI course
-            is referenced as a separate adjacent track for visitors who landed
-            here but want a different topic. */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-3 text-center">
-            Choose your CPD path
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <a href="/courses/ai-in-clinical-practice" className="block rounded-xl border border-slate-200 bg-white p-4 hover:border-accent/30 hover:shadow-sm transition-all">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">AI in Practice</p>
-              <p className="text-sm font-bold text-foreground mb-1">AI in Clinical Practice</p>
-              <p className="text-[11.5px] text-muted-foreground leading-snug mb-2">Heidi vs Lyrebird vs ChatGPT · AHPRA AI + Australian Privacy Principles · NDIS-audit-safe documentation.</p>
-              <p className="text-[11px] text-accent font-semibold">3 CPD hrs · from ${99} →</p>
-            </a>
-            <a href="#pricing-cards" className="block rounded-xl border-2 border-accent/40 bg-accent/5 p-4 hover:border-accent transition-all">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1">Online · Most Flexible</p>
-              <p className="text-sm font-bold text-foreground mb-1">Concussion Mastery — Online</p>
-              <p className="text-[11.5px] text-muted-foreground leading-snug mb-2">8 modules · self-paced · lifetime access · OA endorsed. SCAT6, VOMS, BESS — all online.</p>
-              <p className="text-[11px] text-accent font-semibold">8 CPD hrs · ${CONFIG.COURSE.PRICE_ONLINE} ↓ Below</p>
-            </a>
-            <a href="#pricing-cards" className="block rounded-xl border-2 border-accent bg-gradient-to-br from-accent/8 via-white to-accent/4 p-4 hover:shadow-sm transition-all">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1">Complete · Hands-On</p>
-              <p className="text-sm font-bold text-foreground mb-1">Concussion Mastery — Complete</p>
-              <p className="text-[11.5px] text-muted-foreground leading-snug mb-2">Online + in-person workshop day. Practical assessment with feedback. Registered-list pricing locked in.</p>
-              <p className="text-[11px] text-accent font-semibold">14 CPD hrs · ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} ↓ Below</p>
-            </a>
-          </div>
-        </div>
-
         {/* Pricing Cards — visible within first scroll on mobile */}
         <div id="pricing-cards">
           <PricingOptions variant="full" />
