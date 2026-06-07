@@ -481,12 +481,21 @@ export function mergeTemplate(
   }
   const portalUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('cta')}`
   const portalImageUrl = `${baseUrl}/p/${clinic.slug}?k=${clinic.accessKey}&${utmFor('hero')}`
-  const calBookingUrl = `https://cal.com/zac-lewis-so8zjs/30min?${utmFor('book')}`
-  // Warm/hot T2 reuses the same /30min event — the "walkthrough" framing
-  // is in the email copy + button label, not a separate cal.com event.
-  // UTM tag differs so we can still distinguish walkthrough-frame bookings
-  // from standard sales-call bookings in analytics.
-  const calWalkthroughUrl = `https://cal.com/zac-lewis-so8zjs/30min?${utmFor('walkthrough')}`
+  // Pivoted 2026-06-08: cal.com link had 4 clicks → 0 bookings over 60 days.
+  // Off-site calendar friction was killing conversion. Route the CTA through
+  // the in-portal /talk form instead — pre-fills the prospect's name/email/
+  // clinic from URL params, captures intent in 30 seconds, emails Zac
+  // directly. Cal embed lives below the form as a self-serve fallback for
+  // people who'd rather pick a slot themselves. Name="calBookingUrl" kept
+  // for diff hygiene — the URL behind it is now /talk.
+  const talkParams = new URLSearchParams({
+    slug: clinic.slug,
+    name: clinic.contactFirstName,
+    email: clinic.contactEmail,
+    clinic: clinic.shortName ?? clinic.name,
+  })
+  const calBookingUrl = `${baseUrl}/talk?${talkParams.toString()}&${utmFor('book')}`
+  const calWalkthroughUrl = `${baseUrl}/talk?${talkParams.toString()}&${utmFor('walkthrough')}`
   // SCAT pack lead magnet — UTM-tagged so we can attribute downstream
   // free-signups + paid conversions back to the cold-outreach SCAT path.
   const scatPackUrl = `${baseUrl}/scat-mastery?${utmFor('scat_pack')}&prospect=${clinic.slug}`
