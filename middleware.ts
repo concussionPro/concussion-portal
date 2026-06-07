@@ -138,9 +138,17 @@ const BOT_UA_PATTERN = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|l
 // CSRF: same-origin check for state-changing API calls.
 // Stripe webhooks (verified by signature) and Vercel cron (verified by CRON_SECRET
 // or admin key) are exempt because they're server-to-server, not browser-CSRF-susceptible.
+//
+// Unsubscribe endpoints are exempt because RFC 8058 one-click unsubscribe
+// (Gmail / Apple Mail / Microsoft "Unsubscribe" header button) POSTs without
+// an Origin header — blocking them returns 403 and the recipient marks the
+// email as spam instead, pushing complaint rate toward Gmail's 0.30% red
+// line. Token-based verification inside the endpoint prevents abuse.
 const CSRF_EXEMPT_PREFIXES = [
   '/api/webhooks/',
   '/api/cron/',
+  '/api/prospect/unsubscribe',
+  '/api/unsubscribe',
 ]
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
