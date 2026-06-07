@@ -100,6 +100,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const country = request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country') || null;
+  // Vercel populates region (state code, e.g. "NSW") and city (e.g. "Sydney")
+  // on every request — captured so the demand heatmap can show anonymous
+  // browsers' geography for planning where to host the next workshop.
+  // Cloudflare uses different header names if traffic ever routes through CF.
+  const region =
+    request.headers.get('x-vercel-ip-country-region') ||
+    request.headers.get('cf-region-code') ||
+    null;
+  const city =
+    request.headers.get('x-vercel-ip-city') ||
+    request.headers.get('cf-ipcity') ||
+    null;
   const eventType = String(payload.eventType).slice(0, 64);
   const sessionId = String(payload.sessionId).slice(0, 128);
   const ts = typeof payload.timestamp === 'number' ? payload.timestamp : Date.now();
@@ -121,10 +133,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await sql`
       INSERT INTO analytics_events (
         event_type, event_data, session_id, timestamp_ms, user_agent,
-        referrer, path, search, ip, country, user_email
+        referrer, path, search, ip, country, region, city, user_email
       ) VALUES (
         ${eventType}, ${eventData}::jsonb, ${sessionId}, ${ts}, ${userAgent},
-        ${referrer}, ${pagePath}, ${search}, ${ip}, ${country}, ${userEmail}
+        ${referrer}, ${pagePath}, ${search}, ${ip}, ${country}, ${region}, ${city}, ${userEmail}
       )
     `;
   } catch (err) {
