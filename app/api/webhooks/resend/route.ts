@@ -193,12 +193,32 @@ export async function POST(request: NextRequest) {
       `
     }
 
-    // Handle complaints — suppress future emails
+    // Handle complaints — suppress future emails globally + nurture-side
     if (eventType === 'complained') {
-      console.log(`[Resend] Complaint: ${email.slice(0, 3)}*** — suppressing from nurture`)
+      console.log(`[Resend] Complaint: ${email.slice(0, 3)}*** — suppressing globally`)
       await sql`
         UPDATE users SET nurture_unsubscribed = true
         WHERE LOWER(email) = ${email}
+      `
+      // Defence in depth: always add to global email_suppression on complaint,
+      // not just when the email was a tagged cold-outreach send. A nurture
+      // complaint should also globally block — otherwise a stray broadcast or
+      // manual send could re-hit the complainant and bounce our complaint rate
+      // toward Gmail's 0.30% red line.
+      await sql`
+        INSERT INTO email_suppression (email, reason, source)
+        VALUES (${email}, 'complained', 'webhook:complained:nurture')
+        ON CONFLICT (email) DO NOTHING
+      `
+    }
+
+    // Handle bounces — also add to global suppression (any further send to a
+    // hard-bouncing address compounds reputation damage).
+    if (eventType === 'bounced') {
+      await sql`
+        INSERT INTO email_suppression (email, reason, source)
+        VALUES (${email}, 'hard-bounce', 'webhook:bounced:nurture')
+        ON CONFLICT (email) DO NOTHING
       `
     }
 
