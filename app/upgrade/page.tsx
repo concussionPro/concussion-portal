@@ -193,17 +193,11 @@ function UpgradeContent() {
               <span className="text-4xl font-bold">${upgradePrice}</span>
               <span className="text-muted-foreground">AUD</span>
             </div>
-            {isEarlyBird && (
+            {isEarlyBird ? (
               <p className="text-sm text-accent font-semibold">
-                Early bird pricing — save ${UPGRADE_PRICE_REGULAR - UPGRADE_PRICE_EARLY}
+                Registered-list pricing — locked in (no deadline)
               </p>
-            )}
-            {isEarlyBird && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-            )}
-            {!isEarlyBird && (
+            ) : (
               <p className="text-sm text-muted-foreground">Workshop upgrade price</p>
             )}
           </div>

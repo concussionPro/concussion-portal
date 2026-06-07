@@ -351,8 +351,8 @@ function CheckoutSuccessContent() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 {isEarlyBird && (
-                  <p className="text-xs text-orange-600 font-medium mt-2">
-                    Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  <p className="text-xs text-[var(--accent)] font-medium mt-2">
+                    Registered-list pricing locked in — no deadline
                   </p>
                 )}
               </div>

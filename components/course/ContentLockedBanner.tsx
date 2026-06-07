@@ -129,10 +129,9 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
             </button>
           </div>
 
-          {/* Early bird urgency */}
           {isEarlyBird && (
-            <p className="text-xs font-semibold text-orange-600 mb-1">
-              Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} — then ${CONFIG.COURSE.PRICE_REGULAR}
+            <p className="text-xs font-semibold text-[var(--accent)] mb-1">
+              Registered-list pricing locked in — no deadline
             </p>
           )}
 

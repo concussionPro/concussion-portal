@@ -255,7 +255,7 @@ export function NextActionCard() {
                     </button>
                     {earlyBird && (
                       <p className="text-[11px] text-blue-600 font-medium mt-2">
-                        Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+                        Registered-list pricing locked in — no deadline
                       </p>
                     )}
                   </div>
@@ -489,7 +489,7 @@ export function NextActionCard() {
                 </button>
                 {workshopNudge.earlyBird && (
                   <span className="text-[11px] text-blue-600 font-medium">
-                    Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+                    Registered-list pricing — no deadline
                   </span>
                 )}
               </div>

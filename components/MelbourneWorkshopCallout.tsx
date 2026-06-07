@@ -85,8 +85,8 @@ export function MelbourneWorkshopCallout({
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
           </span>
           {earlyBirdActive && (
-            <span className="inline-flex items-center text-xs font-semibold text-orange-900 bg-orange-100 px-3 py-2 rounded-lg">
-              Early bird ${CONFIG.COURSE.PRICE_EARLY_BIRD} — ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+            <span className="inline-flex items-center text-xs font-semibold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-2 rounded-lg">
+              Registered-list pricing ${CONFIG.COURSE.PRICE_EARLY_BIRD}
             </span>
           )}
         </div>

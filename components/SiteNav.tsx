@@ -129,8 +129,8 @@ export function SiteNav() {
               </a>
             )}
             {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
-              <span className="hidden lg:inline-flex ml-2 text-[10px] font-semibold px-2 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 whitespace-nowrap">
-                Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
+              <span className="hidden lg:inline-flex ml-2 text-[10px] font-semibold px-2 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 whitespace-nowrap">
+                Registered-list pricing
               </span>
             )}
             {onPricing ? (

@@ -366,8 +366,8 @@ function LearningSuiteInner() {
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                     {new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') && (
-                      <p className="text-[11px] text-orange-600 font-medium mt-2">
-                        Early bird ends {new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} — save ${CONFIG.COURSE.SAVINGS}
+                      <p className="text-[11px] text-[var(--accent)] font-medium mt-2">
+                        Registered-list pricing locked in — no deadline
                       </p>
                     )}
                   </div>
