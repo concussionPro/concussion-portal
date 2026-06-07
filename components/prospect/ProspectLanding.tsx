@@ -596,66 +596,87 @@ function LocalList({ title, items }: { title: string; items: { name: string }[] 
 }
 
 /**
- * Single Next-Step CTA — consolidates the prior PublicWorkshopFallback +
- * BookingEmbed. On-site only (workshop fallback removed per Zac directive).
- * Two side-by-side options: a 30-min call, or just reply directly. Reply
- * is the lower-friction default for cold-outreach response — calendar is
- * an option, not the only path.
+ * Single Next-Step CTA — inline Cal.com calendar so prospects pick a
+ * time without leaving their tailored portal demo (the off-site Cal page
+ * was hitting 4 clicks → 0 bookings in 60 days). Plus an after-5pm
+ * request path for clinicians who don't have business-hours availability,
+ * and a direct-email fallback.
  */
 function NextStepCTA({ clinic }: { clinic: ProspectClinic }) {
   const mailtoSubject = encodeURIComponent(`Re: Concussion training for ${clinic.shortName}`)
+  const talkParams = new URLSearchParams({
+    slug: clinic.slug,
+    name: clinic.contactFirstName ?? '',
+    email: clinic.contactEmail ?? '',
+    clinic: clinic.shortName ?? clinic.name,
+    afterhours: '1',
+  }).toString()
+  const afterHoursUrl = `/talk?${talkParams}`
+
   return (
     <section className="mt-10">
       <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Next step</p>
       <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
-        Reply or book a call
+        Pick a time — or reply
       </h3>
       <p className="text-sm text-muted-foreground mb-5 max-w-xl">
-        Two ways to take this further. No pre-call form, no contract.
+        15 minutes to walk through how the program fits {clinic.shortName}.
+        No contract, no slides, just whether it makes sense for your team.
       </p>
+
+      {/* Inline Cal.com calendar — pick a slot without leaving the portal */}
+      <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm mb-4">
+        <iframe
+          src="https://cal.com/zac-lewis-so8zjs/30min?embed=1&embedType=inline&theme=light"
+          title={`Book 15 min with Zac — ${clinic.shortName}`}
+          className="w-full h-[640px] border-0 bg-white"
+          allow="camera; microphone; autoplay; fullscreen"
+          loading="lazy"
+        />
+      </div>
+
+      {/* Two lower-friction fallbacks side by side */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <a
-          data-track-cta="next-step-email-zac"
-          href={`mailto:zac@concussion-education-australia.com?subject=${mailtoSubject}`}
+          data-track-cta="next-step-after-5pm"
+          href={afterHoursUrl}
           className="block rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group"
         >
           <div className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
-                <Mail className="w-4 h-4" strokeWidth={2} />
+                <Activity className="w-4 h-4" strokeWidth={2} />
               </div>
-              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">Reply directly</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">After hours</p>
             </div>
-            <h4 className="text-lg sm:text-xl font-bold mb-1 leading-tight">Just email Zac</h4>
+            <h4 className="text-lg sm:text-xl font-bold mb-1 leading-tight">Only free after 5pm?</h4>
             <p className="text-[13px] text-white/85 leading-relaxed">
-              Ask anything — team mix, scheduling, scope. I&apos;ll answer the same day.
+              Send your evening window — I&apos;ll come back same-day with a time.
             </p>
             <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold bg-white text-accent px-4 py-2 rounded-lg shadow-md group-hover:scale-[1.02] transition-transform">
-              Open email
+              Request a time
               <ArrowUpRight className="w-4 h-4" />
             </div>
           </div>
         </a>
         <a
-          data-track-cta="next-step-book-cal"
-          href="https://cal.com/zac-lewis-so8zjs/30min"
-          target="_blank"
-          rel="noopener noreferrer"
+          data-track-cta="next-step-email-zac"
+          href={`mailto:zac@concussion-education-australia.com?subject=${mailtoSubject}`}
           className="block rounded-2xl bg-white border-2 border-accent/20 hover:border-accent/40 shadow-md hover:shadow-lg transition-all group"
         >
           <div className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Activity className="w-4 h-4 text-accent" strokeWidth={2} />
+                <Mail className="w-4 h-4 text-accent" strokeWidth={2} />
               </div>
-              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent">cal.com · 30 minutes</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent">Direct</p>
             </div>
-            <h4 className="text-lg sm:text-xl font-bold text-foreground mb-1 leading-tight">Book a call</h4>
+            <h4 className="text-lg sm:text-xl font-bold text-foreground mb-1 leading-tight">Just email me</h4>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
-              Direct calendar — pick a slot that works for {clinic.shortName}.
+              Ask anything — team mix, scope, group pricing. I answer same day.
             </p>
             <div className="mt-4 inline-flex items-center gap-2 text-sm font-bold bg-accent text-white px-4 py-2 rounded-lg shadow-md group-hover:scale-[1.02] transition-transform">
-              Open calendar
+              Open email
               <ArrowUpRight className="w-4 h-4" />
             </div>
           </div>

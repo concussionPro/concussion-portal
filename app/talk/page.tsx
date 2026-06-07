@@ -19,6 +19,8 @@ function TalkInner() {
   const [err, setErr] = useState<string | null>(null)
   const [showCalFallback, setShowCalFallback] = useState(false)
 
+  const afterHours = params.get('afterhours') === '1'
+
   // Pre-fill from URL params (links from prospect emails / dashboard)
   useEffect(() => {
     const eName = params.get('name') || params.get('first') || ''
@@ -29,11 +31,19 @@ function TalkInner() {
     if (eEmail) setEmail(decodeURIComponent(eEmail))
     if (eClinic) setClinic(decodeURIComponent(eClinic))
     if (eRole) setRole(decodeURIComponent(eRole))
+    // After-hours flow: pre-fill the "when works" field with their evening
+    // window so the form is one-tap-submit for clinicians who only have
+    // post-clinic availability. They came in via the "Only free after 5pm?"
+    // CTA on the prospect portal — they've already self-declared the need.
+    if (params.get('afterhours') === '1') {
+      setPreferredTimes('After 5pm AEST any weeknight, or anytime Saturday morning')
+    }
 
     trackEvent('talk_page_view', {
       prospect_slug: params.get('slug') || undefined,
       utm_source: params.get('utm_source') || undefined,
       utm_campaign: params.get('utm_campaign') || undefined,
+      after_hours: params.get('afterhours') === '1',
     })
   }, [params])
 
