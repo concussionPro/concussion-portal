@@ -25,7 +25,7 @@ export function OutreachToolkitDoc({
   const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
   return (
     <FillableDoc storageKey="outreach-kit" defaultValues={defaultValues} previewMode={isPreviewMode}>
-      <Cover />
+      <Cover isPreviewMode={isPreviewMode} />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
         isVisible(t.slug)
@@ -74,7 +74,7 @@ function LockedOutreachCard({ template, unlockHref }: { template: OutreachTempla
   )
 }
 
-function Cover() {
+function Cover({ isPreviewMode }: { isPreviewMode?: boolean }) {
   return (
     <section className="bg-white rounded-2xl border border-accent/10 p-6 sm:p-10 mb-6 shadow-sm print:shadow-none print:border-0 print:rounded-none print:break-after-page">
       <div className="flex items-center gap-3 mb-6">
@@ -101,11 +101,13 @@ function Cover() {
         Six referral-building templates for the post-training outreach push. Edit fields per recipient, run as a sequenced campaign across schools, clubs and GP practices in your catchment.
       </p>
 
-      <div className="mt-5 rounded-lg bg-accent/[0.04] border border-accent/15 border-l-2 border-l-accent p-3 sm:p-4">
-        <p className="text-xs text-foreground leading-relaxed">
-          <strong>Fillable:</strong> populate clinic name, contact details, recipient names. Same-name fields fill together; entries persist on reload. <strong>Clear fields</strong> resets between recipients.
-        </p>
-      </div>
+      {!isPreviewMode && (
+        <div className="mt-5 rounded-lg bg-accent/[0.04] border border-accent/15 border-l-2 border-l-accent p-3 sm:p-4">
+          <p className="text-xs text-foreground leading-relaxed">
+            <strong>Fillable:</strong> populate clinic name, contact details, recipient names. Same-name fields fill together; entries persist on reload. <strong>Clear fields</strong> resets between recipients.
+          </p>
+        </div>
+      )}
     </section>
   )
 }

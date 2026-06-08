@@ -255,7 +255,7 @@ function Sidebar({ clinic }: { clinic: ProspectClinic }) {
         <SidebarItem label="Learning Suite" icon={BookOpen} href={`/p/${clinic.slug}/learning?k=${clinic.accessKey}`} />
         <SidebarItem label="SCAT Forms" icon={Activity} href="/scat-forms" external />
         <SidebarItem label="Baseline Testing" icon={TrendingUp} href="/preseason" external />
-        <SidebarItem label="Reference Library" icon={Library} />
+        <SidebarItem label="Reference Library" icon={Library} href={`/p/${clinic.slug}/references?k=${clinic.accessKey}`} />
         <SidebarItem label="Clinical Toolkit" icon={FileText} href={`/p/${clinic.slug}/toolkit/clinical?k=${clinic.accessKey}`} />
         <SidebarItem label="Outreach Kit" icon={Stethoscope} href={`/p/${clinic.slug}/toolkit/outreach?k=${clinic.accessKey}`} />
         <SidebarItem label="Admin Workflow" icon={BookMarked} href={`/p/${clinic.slug}/toolkit/admin?k=${clinic.accessKey}`} />
