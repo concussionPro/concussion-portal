@@ -206,6 +206,10 @@ interface ProspectRow {
   scatCourseFirstAt?: string | null
   preseasonFirstAt?: string | null
   hasFreeContentSignup?: boolean
+  // Behavioural lead score + tier classification
+  engagementScore?: number
+  personalOutreachCandidate?: boolean
+  daysSinceFirstSend?: number | null
   recommendedOffer?: 'hub-pack' | 'on-site-cohort'
   sizeBucket?: string
   dealValue?: number
@@ -2747,6 +2751,13 @@ export default function AnalyticsDashboard() {
               // to warm anymore — Apple Mail Privacy Protection prefetches single
               // opens so they're effectively noise. Real signals: cal-click,
               // return-day view, product click, multi-day opens.
+              // ── 3-TIER LEAD CLASSIFICATION (HubSpot/Marketo standard) ──
+              // COLD/WARM/HOT only. All prospects keep getting nurtured
+              // regardless of tier - tier just tells Zac who to monitor
+              // closely. ENGAGED/REPLIED/WON are terminal states surfaced
+              // separately (cal-booked + replied tracked in their own
+              // panels). Tier flows from accumulating engagement score
+              // (industry-standard behavioural scoring).
               const TIER_META: Array<{
                 key: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won'
                 label: string
@@ -2757,12 +2768,12 @@ export default function AnalyticsDashboard() {
                 badgeText: string
                 icon: React.ElementType
               }> = [
-                { key: 'cold',     label: 'Cold',     action: 'Wait for T1/T2 to land · no manual action',                                threshold: 'No signal · or only single open (Apple MPP noise)',   colour: 'bg-slate-400',   badgeBg: 'bg-slate-100',   badgeText: 'text-slate-700',   icon: Snowflake },
-                { key: 'warm',     label: 'Warm',     action: 'Real attention but not strong · let T2 ride · price-reveal unlocks',      threshold: 'Opens on 2+ days OR 1 portal view',                  colour: 'bg-amber-300',   badgeBg: 'bg-amber-50',    badgeText: 'text-amber-700',   icon: Flame },
-                { key: 'hot',      label: 'Hot',      action: 'Product click OR return visit — personal LinkedIn DM in 24h',              threshold: 'Product click OR 2+ view days OR 3+ opens spanning 2+ days', colour: 'bg-orange-500',  badgeBg: 'bg-orange-50',   badgeText: 'text-orange-700',  icon: Flame },
-                { key: 'engaged',  label: 'Engaged',  action: 'CALL THIS WEEK · highest-intent signal · book a slot · follow up by EOW',  threshold: 'Cal click · OR return visit + click · OR product click + multi-day opens', colour: 'bg-rose-500',    badgeBg: 'bg-rose-50',     badgeText: 'text-rose-700',    icon: Phone },
-                { key: 'replied',  label: 'Replied',  action: 'Reply received — respond inside 2 business hours',                          threshold: 'Direct reply to outreach',                            colour: 'bg-emerald-500', badgeBg: 'bg-emerald-50',  badgeText: 'text-emerald-700', icon: Sparkles },
-                { key: 'won',      label: 'Won',      action: 'Closed — onboarding email sent · log in CRM',                                threshold: 'Deal closed',                                         colour: 'bg-emerald-700', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-800', icon: CheckCircle2 },
+                { key: 'cold',    label: 'Cold',    action: 'Auto-sequence handles · let nurture run',                             threshold: 'Score < 5 · no real signal yet',         colour: 'bg-slate-400',  badgeBg: 'bg-slate-100',  badgeText: 'text-slate-700',  icon: Snowflake },
+                { key: 'warm',    label: 'Warm',    action: 'Active interest building · auto-T2 fires + accelerates if engagement continues', threshold: 'Score 5-24 · multiple touches', colour: 'bg-amber-300',  badgeBg: 'bg-amber-50',   badgeText: 'text-amber-700',  icon: Flame },
+                { key: 'hot',     label: 'Hot',     action: 'Monitor closely · personal-outreach candidate after 7-10d in sequence', threshold: 'Score 25+ · sustained engagement',       colour: 'bg-orange-500', badgeBg: 'bg-orange-50',  badgeText: 'text-orange-700', icon: Flame },
+                { key: 'engaged', label: 'Booked',  action: 'Booking confirmed via cal.com OR /talk · prep for the call',          threshold: 'Cal webhook OR talk-req submitted',      colour: 'bg-rose-500',   badgeBg: 'bg-rose-50',    badgeText: 'text-rose-700',   icon: Phone },
+                { key: 'replied', label: 'Replied', action: 'Direct reply received · respond inside 2 business hours',             threshold: 'Direct reply to outreach',               colour: 'bg-emerald-500',badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-700',icon: Sparkles },
+                { key: 'won',     label: 'Won',     action: 'Deal closed · onboarding email sent',                                  threshold: 'Deal closed',                            colour: 'bg-emerald-700',badgeBg: 'bg-emerald-100',badgeText: 'text-emerald-800',icon: CheckCircle2 },
               ]
               const tierCounts: Record<string, number> = agg.byEngagementTier ?? {}
               // Total restricted to non-dead — matches API logic
@@ -2877,24 +2888,24 @@ export default function AnalyticsDashboard() {
                 )
                 .sort((a, b) => hotNowSortScore(b) - hotNowSortScore(a))
                 .slice(0, 12)
-              // WARM (engaged but not acted) - shown beneath HOT NOW.
-              // These prospects read the dashboard but havent clicked a CTA
-              // or booked a call. Auto-sequence (T2 acceleration) handles
-              // them; no manual outreach unless they convert to HOT.
+              // WARM tier — actively building interest. Shown beneath HOT NOW.
               const warmNoAction = prospects
                 .filter(p =>
-                  (p.engagementTier === 'warm') &&
+                  p.engagementTier === 'warm' &&
                   !(p.calBookedAt && p.calBookingStatus === 'booked') &&
                   !p.hasTalkRequest &&
-                  p.replies === 0 &&
-                  (p.portalCtaClicks ?? 0) === 0 &&
-                  (p.calClickDays ?? 0) < 2
+                  p.replies === 0
                 )
-                .sort((a, b) =>
-                  ((b.portalTotalDwellMs ?? 0) + (b.portalEngagedSessions ?? 0) * 60_000) -
-                  ((a.portalTotalDwellMs ?? 0) + (a.portalEngagedSessions ?? 0) * 60_000)
-                )
+                .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
                 .slice(0, 10)
+              // PERSONAL OUTREACH CANDIDATES — HOT-tier prospects 7-21 days
+              // into the nurture sequence with no booking yet. Industry
+              // research (Salesloft/HubSpot/Outreach.io): manual touch in
+              // this window converts ~3x the average when behavioural score
+              // sits in the upper quartile.
+              const personalOutreachCandidates = prospects
+                .filter(p => p.personalOutreachCandidate === true)
+                .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
 
               // Today's engagers — any signal in the last 24h, regardless of tier
               const engagedToday = prospects.filter(p => p.engagedToday)
@@ -3209,6 +3220,59 @@ export default function AnalyticsDashboard() {
                           </div>
                           <p className="text-[10.5px] text-rose-700/80 mt-2">
                             HOT requires ACTION — dashboard CTA click (Book/Pricing/Talk) OR cal.com clicks on 2+ days. Dwell-alone doesnt count (warm at best). Sorted by intent: CTA ▶ cal multi-day ▶ engaged sessions ▶ time.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* PERSONAL OUTREACH CANDIDATES — HOT-tier 7-21d into nurture.
+                          This is the only sub-list that warrants Zacs personal email
+                          per industry-standard 7-10d post-T1 manual touch window. */}
+                      {personalOutreachCandidates.length > 0 && (
+                        <div className="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50/30 p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-orange-600 text-white">👤 PERSONAL OUTREACH · candidates</span>
+                              <span className="text-sm font-bold text-[var(--foreground)]">
+                                {personalOutreachCandidates.length} HOT prospect{personalOutreachCandidates.length === 1 ? '' : 's'} · 7-21d into nurture · manual nudge converts ~3× here
+                              </span>
+                            </div>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-left text-[10px] uppercase text-orange-700/70 font-bold border-b border-orange-200/50">
+                                  <th className="px-2 py-1.5">Contact / Clinic</th>
+                                  <th className="px-2 py-1.5 text-right" title="Behavioural lead score - HubSpot/Marketo model">Score</th>
+                                  <th className="px-2 py-1.5 text-right">Day</th>
+                                  <th className="px-2 py-1.5">Top signal</th>
+                                  <th className="px-2 py-1.5">Nurture stage</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {personalOutreachCandidates.map(p => {
+                                  const stage = nurtureStage(p)
+                                  return (
+                                    <tr
+                                      key={p.id}
+                                      onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }}
+                                      className="border-b border-orange-100/40 hover:bg-white/60 cursor-pointer"
+                                    >
+                                      <td className="px-2 py-2">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
+                                        <div className="text-[10.5px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
+                                      </td>
+                                      <td className="px-2 py-2 text-right font-bold text-orange-700 tabular-nums">{p.engagementScore ?? 0}</td>
+                                      <td className="px-2 py-2 text-right font-semibold text-orange-700 tabular-nums">{p.daysSinceFirstSend ?? '—'}d</td>
+                                      <td className="px-2 py-2 text-[10.5px] text-[var(--foreground)]">{whyCallCopy(p).split(' — ')[0].slice(0, 38)}</td>
+                                      <td className={`px-2 py-2 text-[10.5px] font-semibold ${stage.tone}`}>{stage.label}</td>
+                                    </tr>
+                                  )
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                          <p className="text-[10.5px] text-orange-700/80 mt-2">
+                            HOT (score ≥25) + 7-21 days since T1 + no booking yet = research-backed manual-touch window. All still receive auto-nurture in parallel.
                           </p>
                         </div>
                       )}

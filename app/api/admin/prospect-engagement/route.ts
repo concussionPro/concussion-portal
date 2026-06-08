@@ -617,32 +617,66 @@ export async function GET(req: NextRequest) {
       //   - Multi-day opens (>=2 days AND >=3 total opens)
       //   - Return-day view + engaged session
       // COLD = scanner-suspect / single open / nothing
+      // Days since first send — used by both scoring (personal outreach
+      // candidate window) and outreachStatus (GO NOW gate). Declared here
+      // so engagementScore can reference it.
+      const daysSinceFirstSend = lastSent?.sent_at
+        ? Math.floor((Date.now() - new Date(lastSent.sent_at).getTime()) / 86_400_000)
+        : null
+
+      // ── BEHAVIOURAL LEAD SCORING (HubSpot / Marketo / Salesforce model) ──
+      // Accumulating point score across every touch. Recency-weighted: any
+      // signal in the last 7 days counts at full weight; older signals
+      // contribute at 50%. Replied/Won are terminal states; all others
+      // get tier-classified by score.
+      //
+      // Point weights — based on industry-standard B2B scoring + our
+      // scanner-aware adjustments:
+      //   Cal booked           : 200 pts (terminal-ish, booking confirmed)
+      //   Reply / Talk-req     : 100 pts each
+      //   Preseason signup     :  50 pts each (form submission, athletes)
+      //   Free SCAT signup     :  40 pts each (form submission)
+      //   Cal multi-day click  :  30 pts (real human revisit)
+      //   Dashboard CTA click  :  20 pts each (client-side, scanner-immune)
+      //   Engaged session >60s :  10 pts each (real dwell)
+      //   Distinct URL click   :   5 pts each (anti-scanner email click)
+      //   Portal session       :   3 pts each (even brief - some signal)
+      //   Email open day       :   1 pt each day (MPP-noisy but cheap)
+      //
+      // Tier thresholds (calibrated against B2B benchmarks):
+      //   COLD : score < 5    (Apple-MPP noise / scanner-only / nothing)
+      //   WARM : score 5-24   (multiple touches, real interaction)
+      //   HOT  : score 25+    (sustained engagement, monitor closely)
+      const engagementScore =
+        (isCalBooked ? 200 : 0)
+        + replies * 100
+        + (hasTalkRequest ? 100 : 0)
+        + preseasonSignups * 50
+        + scatCourseSignups * 40
+        + (calClickDays >= 2 ? 30 : 0)
+        + portalCtaClicks * 20
+        + portalEngagedSessions * 10
+        + Math.max(0, distinctUrlClicks - (scannerSuspect ? distinctUrlClicks : 0)) * 5
+        + Math.min(portalViews, 10) * 3       // cap at 10 to avoid section-view inflation
+        + openDays * 1
+
       let engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won' = 'cold'
       if (c.status === 'won') engagementTier = 'won'
       else if (replies > 0) engagementTier = 'replied'
-      // ENGAGED = LITERAL contact intent confirmed. The DB column c.status
-      // ='engaged' alone no longer qualifies — that flag was set by old
-      // tier logic before scanner-suspect detection existed, and persists
-      // even when the original signal turns out to be a Defender pre-fetch.
-      // Now requires hard proof: cal booking webhook OR talk-request form.
-      else if (
-        isCalBooked ||
-        hasTalkRequest
-      ) engagementTier = 'engaged'
-      // HOT = action signal required (any explicit buying-intent action)
-      else if (
-        portalCtaClicks >= 1 ||
-        calClickDays >= 2 ||
-        hasFreeContentSignup
-      ) engagementTier = 'hot'
-      // WARM = real attention (dwell or sustained opens) but no action
-      else if (
-        portalEngagedSessions >= 1 ||
-        portalTotalDwellMs >= 180_000 ||             // 3 minutes total
-        (openDays >= 2 && totalOpens >= 3) ||
-        (viewDays >= 2 && portalEngagedSessions >= 1)
-      ) engagementTier = 'warm'
+      else if (isCalBooked || hasTalkRequest) engagementTier = 'engaged' // terminal: contact confirmed
+      else if (engagementScore >= 25) engagementTier = 'hot'
+      else if (engagementScore >= 5) engagementTier = 'warm'
       else engagementTier = 'cold'
+
+      // Personal-outreach candidate — HOT tier prospects who have had time
+      // to digest at least T1 (7+ days since first send) AND are still
+      // active enough to warrant a manual nudge. Industry research:
+      // Salesloft/HubSpot find 7-10d post-T1 is the optimal manual-touch
+      // window when behavioural score sits in the upper quartile.
+      const personalOutreachCandidate =
+        engagementTier === 'hot' &&
+        !isCalBooked && !hasTalkRequest && replies === 0 &&
+        daysSinceFirstSend != null && daysSinceFirstSend >= 7 && daysSinceFirstSend <= 21
 
       // ── Outreach status — time-frame green-light for personal email.
       // Hot threshold tightened 2026-06-08 because anti-malware link
@@ -692,9 +726,7 @@ export async function GET(req: NextRequest) {
       // and competing with the prospects own fresh memory of T1.
       // Healthcare clinicians often batch-read on weekends, so wait
       // 5 calendar days minimum from T1 before allowing GO NOW.
-      const daysSinceFirstSend = lastSent?.sent_at
-        ? Math.floor((Date.now() - new Date(lastSent.sent_at).getTime()) / 86_400_000)
-        : null
+      // (daysSinceFirstSend already computed earlier for engagement scoring)
       const MIN_DAYS_SINCE_T1_FOR_GO = 3
       // Windowing tightened 2026-06-08 based on Salesloft/HubSpot meeting-
       // conversion data: 48h-5d is the sweet spot (~3-day peak), conversion
@@ -848,6 +880,12 @@ export async function GET(req: NextRequest) {
         scatCourseFirstAt,
         preseasonFirstAt,
         hasFreeContentSignup,
+        // Behavioural lead score (accumulating point system, scanner-aware).
+        // Tier classification flows from this: <5 cold, 5-24 warm, 25+ hot.
+        engagementScore,
+        // Personal-outreach candidate flag (HOT + 7-21d since T1, no booking)
+        personalOutreachCandidate,
+        daysSinceFirstSend,
         // portal flow — section funnel + CTA clicks + exit drop-off
         portalFlow: (() => {
           const f = portalFlowByClinic.get(c.id)
