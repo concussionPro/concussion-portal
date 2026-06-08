@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { DISCHARGE_TEMPLATES, DOCUMENTATION_PRINCIPLES } from '@/data/hub-program-content'
 import { ClinicalToolkitDoc } from '@/components/toolkit/ClinicalToolkitDoc'
 import { getClinicBySlug } from '@/lib/prospect/repo'
@@ -79,8 +80,11 @@ export default async function ClinicalToolkitPage({ params, searchParams }: Page
               }}
             />
           </div>
+          {/* Padding to keep last content above the sticky footer */}
+          <div className="h-20 print:hidden" />
         </div>
       </main>
+      <TalkToZacFooter clinicShortName={clinic.shortName} context="clinical-toolkit" />
     </div>
   )
 }

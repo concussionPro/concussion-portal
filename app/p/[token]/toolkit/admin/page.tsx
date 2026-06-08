@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { ADMIN_COURSE_MODULES } from '@/data/hub-program-content'
 import { AdminCourseDoc } from '@/components/toolkit/AdminCourseDoc'
 import { getClinicBySlug } from '@/lib/prospect/repo'
@@ -64,8 +65,10 @@ export default async function ProspectAdminCoursePage({ params, searchParams }: 
               unlockHref={`${baseHref}?k=${accessKey}#pricing`}
             />
           </div>
+          <div className="h-20" />
         </div>
       </main>
+      <TalkToZacFooter clinicShortName={clinic.shortName} context="admin-workflow" />
     </div>
   )
 }

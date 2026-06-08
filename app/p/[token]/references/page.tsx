@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { getClinicBySlug } from '@/lib/prospect/repo'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 
 interface Ref {
   authors: string
@@ -210,8 +211,10 @@ export default async function ProspectReferences({
               consensus evolves. Available to every clinician at {clinic.shortName} with the Hub Program.
             </p>
           </div>
+          <div className="h-20" />
         </div>
       </main>
+      <TalkToZacFooter clinicShortName={clinic.shortName} context="references" />
     </div>
   )
 }

@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Lock, Clock } from 'lucide-react'
 import { getClinicBySlug } from '@/lib/prospect/repo'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
+import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { getModulesMeta } from '@/data/module-meta'
 
 interface PageProps {
@@ -29,8 +31,16 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
   const locked = modules.filter((m) => m.id !== 1)
 
   return (
-    <div className="min-h-screen dashboard-bg">
-      <main>
+    <div className="flex min-h-screen dashboard-bg">
+      <ProspectSidebar
+        slug={clinic.slug}
+        accessKey={clinic.accessKey}
+        clinicShortName={clinic.shortName}
+        clinicCity={clinic.city}
+        clinicState={clinic.state}
+        active="learning"
+      />
+      <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Link
             href={`/p/${clinic.slug}?k=${clinic.accessKey}`}
@@ -98,8 +108,10 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
               Modules 2-8 unlock for every {clinic.shortName} clinician with the Hub Program · 14 CPD hrs each.
             </p>
           </div>
+          <div className="h-20" />
         </div>
       </main>
+      <TalkToZacFooter clinicShortName={clinic.shortName} context="learning" />
     </div>
   )
 }

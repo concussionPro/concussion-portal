@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { OUTREACH_TEMPLATES } from '@/data/hub-program-content'
 import { OutreachToolkitDoc } from '@/components/toolkit/OutreachToolkitDoc'
 import { getClinicBySlug } from '@/lib/prospect/repo'
@@ -70,8 +71,10 @@ export default async function OutreachKitPage({ params, searchParams }: PageProp
               }}
             />
           </div>
+          <div className="h-20 print:hidden" />
         </div>
       </main>
+      <TalkToZacFooter clinicShortName={clinic.shortName} context="outreach-kit" />
     </div>
   )
 }

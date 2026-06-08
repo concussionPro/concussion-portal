@@ -23,6 +23,7 @@ import {
 import { modules } from '@/data/modules'
 import { getClinicBySlug } from '@/lib/prospect/repo'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 
 // 6 sections + 3 quiz questions ≈ 10 minutes of reading on Module 1
 // (was 3 — too thin per Zac feedback). 6 covers myths/objectives,
@@ -171,8 +172,10 @@ export default async function ProspectModuleOneTrial({
             clinicShortName={clinic.shortName}
             clinicRegion={clinic.region || clinic.city || clinic.state}
           />
+          <div className="h-20" />
         </div>
       </main>
+      <TalkToZacFooter clinicShortName={clinic.shortName} context="module-1-trial" />
     </div>
   )
 }
