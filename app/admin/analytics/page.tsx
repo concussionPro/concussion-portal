@@ -3352,12 +3352,23 @@ export default function AnalyticsDashboard() {
                                         </td>
                                         <td className={`px-3 py-3 text-[11px] font-semibold whitespace-nowrap ${stage.tone}`}>{stage.label}</td>
                                         <td className="px-2 py-3 text-[10.5px] text-[var(--muted-foreground)] whitespace-nowrap">
-                                          {(p.portalTotalDwellMs ?? 0) > 0 && <span className="text-[var(--foreground)]">{fmtTime(p.portalTotalDwellMs ?? 0)}</span>}
-                                          {(p.portalCtaClicks ?? 0) > 0 && <span className="text-emerald-700 font-bold"> · 🎯{p.portalCtaClicks}</span>}
-                                          {(p.calClickDays ?? 0) > 0 && <span className="text-amber-700 font-bold"> · 📅{p.calClickDays}d</span>}
-                                          {p.hasFreeContentSignup && <span className="text-emerald-700 font-bold"> · 🎁signup</span>}
-                                          {(p.distinctUrlClicks ?? 0) > 0 && <span> · {p.distinctUrlClicks} click{p.distinctUrlClicks === 1 ? '' : 's'}</span>}
-                                          {(p.openDays ?? 0) > 0 && <span> · {p.openDays}d opens</span>}
+                                          {/* When scanner-suspect, suppress all portal-based "engagement"
+                                              metrics (they're headless renders, not human reading). Show
+                                              only signals that cannot be faked. */}
+                                          {p.scannerSuspect ? (
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">🤖 scanner</span>
+                                          ) : (
+                                            <>
+                                              {(p.portalEngagedSessions ?? 0) > 0 && <span className="text-rose-700 font-bold">🔥 {p.portalEngagedSessions} session{p.portalEngagedSessions === 1 ? '' : 's'} &gt;60s</span>}
+                                              {(p.portalEngagedSessions ?? 0) > 0 && (p.portalTotalDwellMs ?? 0) > 0 && <span className="text-[var(--foreground)]"> · {fmtTime(p.portalTotalDwellMs ?? 0)}</span>}
+                                            </>
+                                          )}
+                                          {(p.portalCtaClicks ?? 0) > 0 && <span className="text-emerald-700 font-bold"> · 🎯 {p.portalCtaClicks} CTA</span>}
+                                          {(p.calClickDays ?? 0) >= 2 && <span className="text-amber-700 font-bold"> · 📅 {p.calClickDays}d cal</span>}
+                                          {p.hasFreeContentSignup && <span className="text-emerald-700 font-bold"> · 🎁 signup</span>}
+                                          {!p.scannerSuspect && (p.distinctUrlClicks ?? 0) > 0 && (p.portalEngagedSessions ?? 0) === 0 && <span> · {p.distinctUrlClicks} email click{p.distinctUrlClicks === 1 ? '' : 's'}</span>}
+                                          {(p.openDays ?? 0) >= 2 && <span> · {p.openDays}d opens</span>}
+                                          {p.scannerSuspect && (p.openDays ?? 0) < 2 && (p.portalCtaClicks ?? 0) === 0 && <span className="text-[var(--muted-foreground)]/70"> · no real signal</span>}
                                         </td>
                                         <td className="px-3 py-3 text-center">
                                           {isPrep ? (
@@ -4119,9 +4130,16 @@ export default function AnalyticsDashboard() {
                             // T3 fires ~14 BD after T2 (~ 20 calendar days, research-backed final-touch window)
                             const t3Date = t2Date ? new Date(t2Date.getTime() + 20 * 86_400_000) : null
                             const t3DaysAway = t3Date ? Math.round((t3Date.getTime() - Date.now()) / 86_400_000) : null
-                            const sentT1 = sp.sends.length >= 1
-                            const sentT2 = sp.sends.length >= 2
-                            const sentT3 = sp.sends.length >= 3
+                            // Lookup actual sent records by template slug.
+                            // sp.sends is ordered most-recent-first per the
+                            // prospect-engagement endpoint; templateSlug is
+                            // the canonical key (initial/followup/final).
+                            const t1Send = sp.sends.find(s => s.templateSlug === 'initial')
+                            const t2Send = sp.sends.find(s => s.templateSlug === 'followup')
+                            const t3Send = sp.sends.find(s => s.templateSlug === 'final')
+                            const sentT1 = !!t1Send
+                            const sentT2 = !!t2Send
+                            const sentT3 = !!t3Send
                             const fmtDate = (d: Date) => d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
                             return (
                               <div className="bg-white rounded-lg p-4 mb-4 border border-[var(--accent)]/20">
@@ -4129,18 +4147,40 @@ export default function AnalyticsDashboard() {
                                   Whats next · auto-sequence + manual trigger
                                 </div>
                                 <div className="space-y-2.5">
-                                  {/* T1 */}
-                                  {sentT1 && (
+                                  {/* T1 (actual send) */}
+                                  {sentT1 && t1Send && (
                                     <div className="flex items-start gap-3">
                                       <div className="text-emerald-600 text-sm font-bold mt-0.5 w-6 shrink-0">✓</div>
                                       <div className="flex-1 min-w-0">
-                                        <div className="text-[11px] font-bold text-[var(--foreground)]">T1 · sent {sp.lastSentAt ? fmtDate(new Date(sp.lastSentAt)) : ''}</div>
-                                        <div className="text-[11px] text-[var(--muted-foreground)] truncate">&quot;{sp.lastSentSubject ?? ''}&quot;</div>
-                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{sp.totalOpens} opens · {sp.totalClicks} clicks · {sp.portalEngagedSessions ?? 0} engaged session{(sp.portalEngagedSessions ?? 0) === 1 ? '' : 's'}</div>
+                                        <div className="text-[11px] font-bold text-[var(--foreground)]">T1 · sent {fmtDate(new Date(t1Send.sentAt))}</div>
+                                        <div className="text-[11px] text-[var(--muted-foreground)] truncate">&quot;{t1Send.subject}&quot;</div>
+                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{t1Send.openedCount} opens · {t1Send.clickedCount} clicks</div>
                                       </div>
                                     </div>
                                   )}
-                                  {/* T2 — predicted */}
+                                  {/* T2 (actual send) */}
+                                  {sentT2 && t2Send && (
+                                    <div className="flex items-start gap-3">
+                                      <div className="text-emerald-600 text-sm font-bold mt-0.5 w-6 shrink-0">✓</div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-bold text-[var(--foreground)]">T2 · sent {fmtDate(new Date(t2Send.sentAt))}</div>
+                                        <div className="text-[11px] text-[var(--muted-foreground)] truncate">&quot;{t2Send.subject}&quot;</div>
+                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{t2Send.openedCount} opens · {t2Send.clickedCount} clicks</div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* T3 (actual send) */}
+                                  {sentT3 && t3Send && (
+                                    <div className="flex items-start gap-3">
+                                      <div className="text-emerald-600 text-sm font-bold mt-0.5 w-6 shrink-0">✓</div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-bold text-[var(--foreground)]">T3 · sent {fmtDate(new Date(t3Send.sentAt))}</div>
+                                        <div className="text-[11px] text-[var(--muted-foreground)] truncate">&quot;{t3Send.subject}&quot;</div>
+                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{t3Send.openedCount} opens · {t3Send.clickedCount} clicks</div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* T2 — predicted (only if not yet sent) */}
                                   {!sentT2 && (
                                     <div className="flex items-start gap-3">
                                       <div className={`text-sm font-bold mt-0.5 w-6 shrink-0 ${t2Date && t2DaysAway != null && t2DaysAway <= 1 ? 'text-amber-600' : 'text-blue-600'}`}>🔜</div>

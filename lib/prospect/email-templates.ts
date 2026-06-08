@@ -434,10 +434,15 @@ export function mergeTemplate(
   // All variants end with a discovery-call CTA (per Zac 2026-06-08).
   const engagement = options.priorEngagement ?? 'none'
   const discloseFollowupPrice = template.slug === 'final' || engagement !== 'none'
+  // Subject variants — deliberately avoid the word "free" (major spam-filter
+  // trigger that tanks inbox placement for clinical-CPD bulk sends).
+  // Resource still genuinely free in the body; we just dont shout it in
+  // the subject. Rotate by clinic-hash so the same clinic always gets the
+  // same variant on retries.
   const t2Variants: string[] = [
-    `Two free tools for ${clinic.shortName} - SCAT refresher + baseline testing`,
-    `Test ${clinic.shortName}'s athletes free + free SCAT mini-course`,
-    `Free baseline testing tool for ${clinic.shortName} (no setup)`,
+    `${clinic.shortName} online cognitive baseline testing + SCAT mini-course`,
+    `Two new clinical tools for ${clinic.shortName}: SCAT refresher + baseline testing`,
+    `Baseline testing tool for ${clinic.shortName} - no setup, no cost`,
   ]
   const t2Idx = clinic.slug.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % t2Variants.length
   const followupSubject = t2Variants[t2Idx]

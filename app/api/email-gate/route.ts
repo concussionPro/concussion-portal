@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
       sendEmail({
         to: normalizedEmail,
-        subject: 'Your SCAT6 assessment PDF + free concussion course',
+        subject: 'Your SCAT6 assessment PDF + concussion mini-course',
         headers: {
           'List-Unsubscribe': `<${unsubscribeUrl}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

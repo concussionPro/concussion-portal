@@ -500,7 +500,7 @@ export async function GET(req: NextRequest) {
           COUNT(DISTINCT clinic_id)::int AS unique_prospects
         FROM filtered
         GROUP BY section_visited
-        HAVING COUNT(*) >= 2
+        HAVING COUNT(*) >= 5     -- bumped from 2 to 5 to filter noise (Jun 9)
         ORDER BY views DESC
       `,
       // CTA aggregate — which CTAs on the dashboard actually get clicked
@@ -708,6 +708,13 @@ export async function GET(req: NextRequest) {
       //   COLD : score < 5    (Apple-MPP noise / scanner-only / nothing)
       //   WARM : score 5-24   (multiple touches, real interaction)
       //   HOT  : score 25+    (sustained engagement, monitor closely)
+      // Score formula now scanner-aware end-to-end. When scannerSuspect:
+      //   - distinct URL clicks are pre-fetches → 0 contribution
+      //   - portal views are headless renders → 0 contribution
+      //   - portal sessions are headless renders → already 0 (engaged=0)
+      // Only signals that cannot be faked (cal booking, talk-req, free-content
+      // form, dashboard CTA, multi-day cal clicks, engaged sessions >60s)
+      // contribute when the prospect is flagged scanner-suspect.
       const engagementScore =
         (isCalBooked ? 200 : 0)
         + replies * 100
@@ -717,15 +724,20 @@ export async function GET(req: NextRequest) {
         + (calClickDays >= 2 ? 30 : 0)
         + portalCtaClicks * 20
         + portalEngagedSessions * 10
-        + Math.max(0, distinctUrlClicks - (scannerSuspect ? distinctUrlClicks : 0)) * 5
-        + Math.min(portalViews, 10) * 3       // cap at 10 to avoid section-view inflation
-        + openDays * 1
+        + (scannerSuspect ? 0 : distinctUrlClicks * 5)
+        + (scannerSuspect ? 0 : Math.min(portalViews, 10) * 3)
+        // Open days: subtract 1 to suppress single Apple-MPP-day open
+        // (1 day = 0 pts, 2+ days contribute at 1 pt each beyond the first)
+        + Math.max(0, openDays - 1) * 1
 
       let engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won' = 'cold'
       if (c.status === 'won') engagementTier = 'won'
       else if (replies > 0) engagementTier = 'replied'
       else if (isCalBooked || hasTalkRequest) engagementTier = 'engaged' // terminal: contact confirmed
-      else if (engagementScore >= 25) engagementTier = 'hot'
+      // Scanner-suspect can never promote to HOT (even if score crawls past
+      // threshold via residual non-portal signals). They sit in WARM/COLD
+      // with a clear scanner_suspect topSignal so the dashboard explains why.
+      else if (engagementScore >= 25 && !scannerSuspect) engagementTier = 'hot'
       else if (engagementScore >= 5) engagementTier = 'warm'
       else engagementTier = 'cold'
 
