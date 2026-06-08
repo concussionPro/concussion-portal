@@ -129,7 +129,7 @@ function TalkInner() {
             </Field>
             <Field label="Clinic / organisation">
               <input type="text" value={clinic} onChange={(e) => setClinic(e.target.value)}
-                className="input" placeholder="Advanced Health" />
+                className="input" placeholder="Your clinic name" />
             </Field>
             <Field label="Your role">
               <input type="text" value={role} onChange={(e) => setRole(e.target.value)}

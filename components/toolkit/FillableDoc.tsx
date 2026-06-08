@@ -34,7 +34,20 @@ export function FillableDoc({
   // Hydrate from localStorage on mount. setState inside the effect is the
   // canonical pattern for client-only init — no SSR mismatch because
   // FillableField inputs render empty until hydration completes.
+  //
+  // IMPORTANT — previewMode: NEVER read or write localStorage on prospect
+  // demo surfaces. Otherwise the first prospect's clinic name (e.g.
+  // "Advanced Health Pain & Injury Clinic" when Zac toured Lauren's
+  // portal) caches under the global `hubfill:outreach-kit` key and bleeds
+  // into every other prospect's portal Zac visits next. Defaults from
+  // page props (clinic.name) are the only valid source of truth in
+  // previewMode.
   useEffect(() => {
+    if (previewMode) {
+      // Defaults already in state from useState init — just mark hydrated.
+      setHydrated(true)
+      return
+    }
     try {
       const raw = localStorage.getItem(`hubfill:${storageKey}`)
       if (raw) {
@@ -50,17 +63,26 @@ export function FillableDoc({
       // ignore parse errors
     }
     setHydrated(true)
-  }, [storageKey, defaultValues])
+  }, [storageKey, defaultValues, previewMode])
 
-  // Persist to localStorage whenever values change (post-hydration)
+  // Re-sync values when defaultValues change (e.g. navigation between
+  // prospect portals in the same SPA session). Only applies in preview
+  // mode — buyer mode uses localStorage as the source of truth.
   useEffect(() => {
-    if (!hydrated) return
+    if (!previewMode || !hydrated) return
+    setValues(defaultValues ?? {})
+  }, [defaultValues, previewMode, hydrated])
+
+  // Persist to localStorage whenever values change (post-hydration).
+  // Disabled in preview mode — no cross-prospect cache pollution.
+  useEffect(() => {
+    if (!hydrated || previewMode) return
     try {
       localStorage.setItem(`hubfill:${storageKey}`, JSON.stringify(values))
     } catch {
       // quota errors etc — silent
     }
-  }, [values, storageKey, hydrated])
+  }, [values, storageKey, hydrated, previewMode])
 
   const get = useCallback((name: string) => values[name] ?? '', [values])
   const set = useCallback((name: string, value: string) => {

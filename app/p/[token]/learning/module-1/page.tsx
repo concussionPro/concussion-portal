@@ -24,7 +24,13 @@ import { modules } from '@/data/modules'
 import { getClinicBySlug } from '@/lib/prospect/repo'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
 
-const TRIAL_SECTION_COUNT = 3
+// 6 sections + 3 quiz questions ≈ 10 minutes of reading on Module 1
+// (was 3 — too thin per Zac feedback). 6 covers myths/objectives,
+// definition + classification, pathophysiology basics, biomechanics,
+// red flags, and on-field recognition — enough for the prospect to
+// gauge clinical depth before the locked content gate.
+const TRIAL_SECTION_COUNT = 6
+const TRIAL_QUIZ_COUNT = 3
 
 const PREVIEW_PRINT_CSS = `
   @media print {
@@ -121,14 +127,24 @@ export default async function ProspectModuleOneTrial({
             ))}
           </div>
 
-          {/* QUIZ CHECKPOINT */}
-          {m1.quiz?.[0] && (
-            <QuizCheckpoint
-              question={m1.quiz[0]}
-              totalMythQuestions={m1.quiz.filter((q) => q.id.startsWith('myth')).length}
-              totalQuizQuestions={m1.quiz.length}
-            />
-          )}
+          {/* QUIZ CHECKPOINTS — multiple questions so the prospect can
+              actually engage with the clinical reasoning, not just see one */}
+          {m1.quiz?.length ? (
+            <div className="space-y-4 mt-8">
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent">
+                Knowledge checkpoints · {Math.min(TRIAL_QUIZ_COUNT, m1.quiz.length)} of {m1.quiz.length}
+              </p>
+              {m1.quiz.slice(0, TRIAL_QUIZ_COUNT).map((q, qi) => (
+                <QuizCheckpoint
+                  key={q.id}
+                  question={q}
+                  questionNumber={qi + 1}
+                  totalShown={Math.min(TRIAL_QUIZ_COUNT, m1.quiz.length)}
+                  totalAvailable={m1.quiz.length}
+                />
+              ))}
+            </div>
+          ) : null}
 
           {/* Locked sections preview */}
           <div className="glass-premium rounded-2xl p-5 mt-6">
@@ -167,22 +183,24 @@ export default async function ProspectModuleOneTrial({
 
 function QuizCheckpoint({
   question,
-  totalMythQuestions,
-  totalQuizQuestions,
+  questionNumber,
+  totalShown,
+  totalAvailable,
 }: {
   question: { id: string; question: string; options: string[]; correctAnswer: number; explanation: string }
-  totalMythQuestions: number
-  totalQuizQuestions: number
+  questionNumber: number
+  totalShown: number
+  totalAvailable: number
 }) {
   return (
-    <section className="mt-8">
+    <section>
       <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50/80 to-orange-50/40 p-5 sm:p-7 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-amber-200/60 flex items-center justify-center">
             <CheckCircle2 className="w-4 h-4 text-amber-700" strokeWidth={2.2} />
           </div>
           <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-800">
-            Quiz checkpoint · question 1 of {totalMythQuestions} myth questions
+            Checkpoint {questionNumber} of {totalShown} · {totalAvailable - totalShown} more in full Module 1
           </p>
         </div>
         <h3 className="text-base sm:text-lg font-bold text-foreground leading-snug mb-4">
@@ -214,9 +232,6 @@ function QuizCheckpoint({
             <p className="text-sm text-foreground leading-relaxed">{question.explanation}</p>
           </div>
         </details>
-        <p className="text-[11px] text-muted-foreground italic mt-4">
-          {totalQuizQuestions - 1} more questions follow this checkpoint in Module 1 · activated with the full Hub Program.
-        </p>
       </div>
     </section>
   )
