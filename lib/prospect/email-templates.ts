@@ -184,25 +184,47 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   },
   {
     slug: 'final',
-    subjectTemplate: 'Closing the loop — {clinic_short_name}',
+    subjectTemplate: 'Two paths from here — {clinic_short_name}',
+    // T3 closes with a binary decision — no more gifts. By this point
+    // {clinic_short_name} has had T1 (pitch + free pack) and T2 (free
+    // intake flowchart). Time to ask for the decision. Two paths:
+    //   A. Buy the online pack now (Hub Pack $1,497 - or individual)
+    //   B. Book a call about on-site team training (cohort day)
+    // {followup_price_block} renders the appropriate price line for the
+    // recommended offer. No SCAT pack mention - that gift was used in
+    // T1/T2 and re-offering at T3 dilutes the close.
     bodyTemplate: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>${BASE_HTML_STYLE}</style></head>
 <body>
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>Last note from me on the Concussion Hub Pack. If the timing isn't right, all good — most clinics that engage circle back when their next concussion case shows up. The {clinic_short_name} preview stays open:</p>
-
-      <p style="margin: 12px 0; padding: 8px 12px; background: #f0fdfa; border-left: 3px solid #0a5a5e; border-radius: 4px; font-size: 12.5px; color: #0a5a5e; line-height: 1.5;">
-        Osteopathy Australia endorsed · 14 CPD hours · AHPRA-aligned.
-      </p>
-
-      <a href="{portal_url}" class="cta">Open {clinic_short_name} preview →</a>
-      <span class="secondary">Free SCAT6/SCOAT6 pack also still available: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a></span>
+      <p>Last one from me. You've seen the program — two paths from here:</p>
 
       {followup_price_block}
-      <p style="margin-top: 18px; font-size: 14px; color: #475569; line-height: 1.55;">
-        Whenever you're ready: book 15 min <a href="{cal_booking_url}" style="color: #0a5a5e;">on cal.com</a>.
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 16px 0 8px;">
+        <tr>
+          <td style="width: 48%; vertical-align: top; padding: 14px; background: #f0fdfa; border: 1px solid #0a5a5e22; border-radius: 8px;">
+            <p style="margin: 0 0 6px; font-size: 11px; font-weight: bold; color: #0a5a5e; text-transform: uppercase; letter-spacing: 0.06em;">Path A · Online</p>
+            <p style="margin: 0 0 10px; font-size: 13px; color: #1a2332; line-height: 1.5;">Get your team trained in their own time. Same content, lifetime access.</p>
+            <a href="{portal_url}" style="display: inline-block; padding: 8px 14px; background: #0a5a5e; color: #fff; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: bold;">Open {clinic_short_name} preview →</a>
+          </td>
+          <td style="width: 4%;"></td>
+          <td style="width: 48%; vertical-align: top; padding: 14px; background: #fff7ed; border: 1px solid #ea580c22; border-radius: 8px;">
+            <p style="margin: 0 0 6px; font-size: 11px; font-weight: bold; color: #ea580c; text-transform: uppercase; letter-spacing: 0.06em;">Path B · On-site cohort</p>
+            <p style="margin: 0 0 10px; font-size: 13px; color: #1a2332; line-height: 1.5;">Full-day at {clinic_short_name}, hands-on with your whole team. Better fit for 6+ clinicians.</p>
+            <a href="{cal_booking_url}" style="display: inline-block; padding: 8px 14px; background: #ea580c; color: #fff; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: bold;">Book 15 min to scope →</a>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin: 14px 0 4px; padding: 8px 12px; background: #f8fafc; border-left: 3px solid #0a5a5e; border-radius: 4px; font-size: 12px; color: #475569; line-height: 1.5;">
+        Osteopathy Australia endorsed · 14 CPD hours · AHPRA-aligned · delivered by an AHPRA-registered osteopath.
+      </p>
+
+      <p style="margin-top: 14px; font-size: 13px; color: #475569; line-height: 1.55;">
+        If neither fits right now — no worries, this is my last note. I'll quietly check back in if there's a regulatory update or a new AIS/AFL guideline that's worth knowing about.
       </p>
 
       <div class="sig">

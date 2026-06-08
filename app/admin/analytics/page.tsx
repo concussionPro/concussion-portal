@@ -3673,7 +3673,7 @@ export default function AnalyticsDashboard() {
                                   ? 'opened'
                                   : 'none'
                             const t2RevealsPrice = engagedWithT1 !== 'none'
-                            const predictedT3Subject = `Closing the loop — ${sp.shortName}`
+                            const predictedT3Subject = `Two paths from here — ${sp.shortName}`
                             const t2Date = sp.scheduledSendAt ? new Date(sp.scheduledSendAt) : null
                             const t2DaysAway = t2Date ? Math.round((t2Date.getTime() - Date.now()) / 86_400_000) : null
                             // T3 fires ~8 BD after T2
@@ -3725,7 +3725,7 @@ export default function AnalyticsDashboard() {
                                           T3 · {t3Date ? `~${fmtDate(t3Date)} (~${t3DaysAway}d)` : 'after T2 lands'}
                                         </div>
                                         <div className="text-[11px] text-[var(--muted-foreground)] italic truncate">&quot;{predictedT3Subject}&quot;</div>
-                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">💲 always discloses price · last touch · same skip conditions</div>
+                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">⚖️ binary close · Path A (online) vs Path B (on-site cohort) · no more gifts</div>
                                       </div>
                                     </div>
                                   )}
