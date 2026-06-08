@@ -1088,6 +1088,10 @@ export default function AnalyticsDashboard() {
   type SentSortCol = 'clinic' | 'tier' | 'location' | 'team' | 'offer' | 'sends' | 'opens' | 'clicks' | 'views' | 'replies' | 'lastSent' | 'status' | 'score'
   const [sentSortCol, setSentSortCol] = useState<SentSortCol>('score')
   const [sentSortDir, setSentSortDir] = useState<'asc' | 'desc'>('desc')
+  // Collapsible page-optimization panels (default collapsed - they're
+  // reference data, not action data, and shouldnt dominate the top).
+  const [showExitFunnel, setShowExitFunnel] = useState(false)
+  const [showBreakdowns, setShowBreakdowns] = useState(false)
   const [bootstrapBusy, setBootstrapBusy] = useState(false)
   const [bootstrapMessage, setBootstrapMessage] = useState<string | null>(null)
 
@@ -2911,6 +2915,12 @@ export default function AnalyticsDashboard() {
                 )
                 .sort((a, b) => hotNowSortScore(b) - hotNowSortScore(a))
                 .slice(0, 12)
+              // Flag for the redundant panels now consolidated into the
+              // "Who is engaging right now" unified table at the top of Overview.
+              // Set to false 2026-06-09 per Zac: he wants ONE table answering
+              // "who's browsing, where in nurture, prep custom pitch?" rather
+              // than 4 separate panels each surfacing partial views.
+              const showLegacyEngagementPanels = false
               // WARM tier — actively building interest. Shown beneath HOT NOW.
               const warmNoAction = prospects
                 .filter(p =>
@@ -3117,7 +3127,10 @@ export default function AnalyticsDashboard() {
                     const totalActiveSends = prospects.filter(p => p.totalSends > 0).length
                     return (
                     <div className="space-y-6">
-                      {/* ── WHAT NEEDS YOU NOW · single decision panel ────── */}
+                      {/* ── WHAT NEEDS YOU NOW · DEPRECATED 2026-06-09: empty-tile
+                          panel removed in favour of the unified engagement table
+                          + tier bento at the top of Overview. Suppressed via flag. */}
+                      {showLegacyEngagementPanels && (
                       <div className="card rounded-2xl border-2 border-[var(--accent)]/30 bg-gradient-to-br from-[var(--accent)]/[0.04] via-white to-amber-50/30 p-5">
                         <div className="flex items-start justify-between mb-3">
                           <div>
@@ -3184,13 +3197,11 @@ export default function AnalyticsDashboard() {
                           </button>
                         </div>
                       </div>
+                      )}
 
-                      {/* HOT NOW — engagement-gold panel surfaced first. Pulls
-                          unfakeable signals only (real sessions / distinct-URL
-                          clicks / cal.com clicks). Anti-scanner. Sort by
-                          combined activity. Cal-booked + talk-req + replied
-                          are excluded (already in motion). */}
-                      {hotNow.length > 0 && (
+                      {/* HOT NOW — DEPRECATED 2026-06-09: content now in the unified
+                          "Who is engaging right now" table at the top of Overview. */}
+                      {showLegacyEngagementPanels && hotNow.length > 0 && (
                         <div className="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 via-amber-50 to-white p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
@@ -3247,10 +3258,130 @@ export default function AnalyticsDashboard() {
                         </div>
                       )}
 
+                      {/* ── ENGAGEMENT BENTO · HEADLINE ── 6-tile tier breakdown at the
+                          very top so Zac sees Cold/Warm/Hot/Booked/Replied/Won at a glance. */}
+                      <div>
+                        <SectionTitle
+                          title="Engagement tiers · who is in the pipeline right now"
+                          subtitle={`${tierCounts.warm ?? 0} warm · ${tierCounts.hot ?? 0} hot · ${tierCounts.engaged ?? 0} booked · score-based, behavioural · all tiers continue receiving the nurture sequence`}
+                        />
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                          {TIER_META.map(t => {
+                            const count = tierCounts[t.key] ?? 0
+                            const pct = tierTotalForPct > 0 ? (count / tierTotalForPct) * 100 : 0
+                            const Icon = t.icon
+                            return (
+                              <button
+                                key={t.key}
+                                onClick={() => setProspectsSubTab('queue')}
+                                className="card rounded-xl p-3.5 text-left hover:border-[var(--accent)] transition-colors cursor-pointer group"
+                                title={`${count} ${t.label.toLowerCase()} prospects · ${t.threshold}`}
+                              >
+                                <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${t.badgeBg} ${t.badgeText} text-[10px] font-bold uppercase tracking-wider mb-1.5`}>
+                                  <Icon size={11} />{t.label}
+                                </div>
+                                <div className="text-2xl font-bold text-[var(--foreground)]">{count}</div>
+                                <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{pct.toFixed(0)}% of pipeline</div>
+                                <div className={`mt-1.5 h-1 rounded-full bg-slate-100 overflow-hidden`}>
+                                  <div className={`h-full ${t.colour}`} style={{ width: `${pct}%` }} />
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      {/* ── WHOS ENGAGING RIGHT NOW · single unified table ──
+                          Replaces the three separate panels (HOT NOW, WARM, Personal
+                          outreach) with one prioritized list answering all three
+                          questions at a glance:
+                            1. Which clinics + people are actively browsing
+                            2. Where they sit in the nurture sequence
+                            3. Whether to prep a custom pitch for personal outreach */}
+                      {(() => {
+                        const engaging = prospects
+                          .filter(p =>
+                            (p.engagementScore ?? 0) >= 5 ||
+                            p.engagementTier === 'hot' || p.engagementTier === 'warm' ||
+                            p.engagementTier === 'engaged' || p.engagementTier === 'replied' ||
+                            p.callRecommended === true
+                          )
+                          .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
+                          .slice(0, 30)
+                        if (engaging.length === 0) return null
+                        return (
+                          <div>
+                            <SectionTitle
+                              title={`Who is engaging right now · ${engaging.length}`}
+                              subtitle="Browsing + emailing prospects · ranked by behavioural score · prep-pitch flag = HOT tier 7-21d into nurture (research: manual nudge ~3× conversion here)"
+                            />
+                            <div className="card rounded-2xl overflow-hidden">
+                              <table className="w-full text-sm">
+                                <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                                  <tr>
+                                    <th className="text-left px-3 py-3 font-semibold">Contact / Clinic</th>
+                                    <th className="text-center px-2 py-3 font-semibold" title="Behavioural lead score">Score</th>
+                                    <th className="text-left px-2 py-3 font-semibold">Tier</th>
+                                    <th className="text-left px-3 py-3 font-semibold">Nurture stage</th>
+                                    <th className="text-left px-2 py-3 font-semibold" title="Real time on portal · click count · dwell">Engagement</th>
+                                    <th className="text-center px-3 py-3 font-semibold" title="Prep custom pitch? Yes if HOT tier 7-21d into nurture (research-backed personal-touch window)">Prep pitch?</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {engaging.map(p => {
+                                    const tier = TIER_META.find(t => t.key === p.engagementTier) ?? TIER_META[0]
+                                    const TierIcon = tier.icon
+                                    const stage = nurtureStage(p)
+                                    const isPrep = p.personalOutreachCandidate === true
+                                    const scoreColour = (p.engagementScore ?? 0) >= 25 ? 'text-orange-700' : (p.engagementScore ?? 0) >= 5 ? 'text-amber-700' : 'text-[var(--muted-foreground)]'
+                                    return (
+                                      <tr
+                                        key={p.id}
+                                        onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }}
+                                        className={`border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer ${isPrep ? 'bg-orange-50/40' : ''}`}
+                                      >
+                                        <td className="px-3 py-3">
+                                          <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
+                                          <div className="text-[11px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
+                                        </td>
+                                        <td className={`px-2 py-3 text-center font-bold tabular-nums ${scoreColour}`}>{p.engagementScore ?? 0}</td>
+                                        <td className="px-2 py-3">
+                                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${tier.badgeBg} ${tier.badgeText} text-[10px] font-bold uppercase tracking-wider`}>
+                                            <TierIcon size={10} />{tier.label}
+                                          </span>
+                                        </td>
+                                        <td className={`px-3 py-3 text-[11px] font-semibold whitespace-nowrap ${stage.tone}`}>{stage.label}</td>
+                                        <td className="px-2 py-3 text-[10.5px] text-[var(--muted-foreground)] whitespace-nowrap">
+                                          {(p.portalTotalDwellMs ?? 0) > 0 && <span className="text-[var(--foreground)]">{fmtTime(p.portalTotalDwellMs ?? 0)}</span>}
+                                          {(p.portalCtaClicks ?? 0) > 0 && <span className="text-emerald-700 font-bold"> · 🎯{p.portalCtaClicks}</span>}
+                                          {(p.calClickDays ?? 0) > 0 && <span className="text-amber-700 font-bold"> · 📅{p.calClickDays}d</span>}
+                                          {p.hasFreeContentSignup && <span className="text-emerald-700 font-bold"> · 🎁signup</span>}
+                                          {(p.distinctUrlClicks ?? 0) > 0 && <span> · {p.distinctUrlClicks} click{p.distinctUrlClicks === 1 ? '' : 's'}</span>}
+                                          {(p.openDays ?? 0) > 0 && <span> · {p.openDays}d opens</span>}
+                                        </td>
+                                        <td className="px-3 py-3 text-center">
+                                          {isPrep ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-orange-500 text-white text-[10.5px] font-bold whitespace-nowrap">👤 YES · prep pitch</span>
+                                          ) : p.engagementTier === 'hot' && (p.daysSinceFirstSend ?? 0) < 7 ? (
+                                            <span className="text-[10.5px] text-amber-700/80">⏳ Wait · day {p.daysSinceFirstSend ?? 0}/7</span>
+                                          ) : (
+                                            <span className="text-[10.5px] text-[var(--muted-foreground)]">No · auto-nurture</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    )
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )
+                      })()}
+
                       {/* PERSONAL OUTREACH CANDIDATES — HOT-tier 7-21d into nurture.
                           This is the only sub-list that warrants Zacs personal email
                           per industry-standard 7-10d post-T1 manual touch window. */}
-                      {personalOutreachCandidates.length > 0 && (
+                      {showLegacyEngagementPanels && personalOutreachCandidates.length > 0 && (
                         <div className="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50/30 p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -3300,8 +3431,8 @@ export default function AnalyticsDashboard() {
                         </div>
                       )}
 
-                      {/* WARM panel — engaged but no action. Auto-sequence handles via T2 acceleration. */}
-                      {warmNoAction.length > 0 && (
+                      {/* WARM panel — DEPRECATED 2026-06-09: content now in unified table. */}
+                      {showLegacyEngagementPanels && warmNoAction.length > 0 && (
                         <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -3367,8 +3498,32 @@ export default function AnalyticsDashboard() {
                         </div>
                       )}
 
-                      {/* ── WHERE PROSPECTS DROP OFF · cross-portal exit funnel ── */}
-                      {prospectsData.funnelSections && prospectsData.funnelSections.length > 0 && (() => {
+                      {/* ── WHERE PROSPECTS DROP OFF · cross-portal exit funnel ──
+                          Collapsible — this is page-optimisation data, not action data,
+                          so it shouldnt dominate the top of the dashboard. Default
+                          closed. Click to expand and use the drop-off insights to
+                          tune the prospect portal sections + CTA copy. */}
+                      {prospectsData.funnelSections && prospectsData.funnelSections.length > 0 && (
+                        <div className="card rounded-2xl border-slate-200 overflow-hidden">
+                          <button
+                            onClick={() => setShowExitFunnel(v => !v)}
+                            className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
+                          >
+                            <div>
+                              <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showExitFunnel ? '▼' : '▶'} Page-optimisation data</div>
+                              <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Where prospects drop off · {prospectsData.funnelSections.length} sections tracked</div>
+                            </div>
+                            <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showExitFunnel ? 'hide' : 'show'}</span>
+                          </button>
+                          {showExitFunnel && (
+                            <div className="px-5 pb-5 pt-2 border-t border-slate-100">
+                              {/* The original exit-funnel render content lives below this wrapper. */}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* Original funnel render — only shown when expanded. We gate via the same flag. */}
+                      {showExitFunnel && prospectsData.funnelSections && prospectsData.funnelSections.length > 0 && (() => {
                         const sections = prospectsData.funnelSections!.filter(s => s.views >= 2)
                         if (sections.length === 0) return null
                         const maxViews = Math.max(...sections.map(s => s.views), 1)
@@ -3468,9 +3623,8 @@ export default function AnalyticsDashboard() {
                         )
                       })()}
 
-                      {/* Engagement tier strip — calibrated against B2B + healthcare-CPD
-                          benchmarks (Apollo 2024, Salesloft 2023, healthcare CPD trends).
-                          Each tile shows threshold + recommended action. */}
+                      {/* Engagement tier strip — DEPRECATED 2026-06-09: moved to TOP of Overview as the headline. */}
+                      {showLegacyEngagementPanels && (
                       <div>
                         <SectionTitle
                           title="Engagement tiers"
@@ -3503,6 +3657,7 @@ export default function AnalyticsDashboard() {
                           })}
                         </div>
                       </div>
+                      )}
 
                       {/* Upcoming cal.com bookings — auto-populated by the cal.com
                           webhook (BOOKING_CREATED). Show before Call-now so Zac
