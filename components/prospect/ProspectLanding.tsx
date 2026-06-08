@@ -29,6 +29,7 @@ import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
 import { computePricing, teamTotal, clinicalCount } from '@/lib/prospect/pricing'
 import { IndividualInterestCard } from './IndividualInterestCard'
 import { ProspectTracker } from './ProspectTracker'
+import { ProspectSidebar } from './ProspectSidebar'
 
 export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   const pricing = computePricing(clinic.team, clinic.travelBand)
@@ -220,49 +221,14 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
 
 function Sidebar({ clinic }: { clinic: ProspectClinic }) {
   return (
-    <div className="hidden md:flex fixed left-0 top-0 h-screen w-64 sidebar-premium p-6 flex-col z-40">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-md shadow-accent/15">
-            <Brain className="w-5 h-5 text-white" strokeWidth={2} />
-          </div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight">
-            Concussion<span className="text-accent">Pro</span>
-          </h1>
-        </div>
-      </div>
-
-      <div className="glass-premium rounded-xl p-3 mb-6">
-        <p className="text-[9px] uppercase tracking-wider font-bold text-accent mb-1">Prepared for</p>
-        <p className="text-sm font-bold text-foreground leading-tight">{clinic.shortName}</p>
-        {(() => {
-          const cityKnown = clinic.city && !/unknown/i.test(clinic.city)
-          if (cityKnown) {
-            return <p className="text-[11px] text-muted-foreground mt-0.5">{clinic.city}, {clinic.state}</p>
-          }
-          if (clinic.state) {
-            return <p className="text-[11px] text-muted-foreground mt-0.5">{clinic.state}</p>
-          }
-          return null
-        })()}
-      </div>
-
-      <nav className="flex-1 space-y-1">
-        <SidebarItem label="Dashboard" icon={() => <span className="text-base">●</span>} active />
-        <SidebarItem label="Learning Suite" icon={BookOpen} href={`/p/${clinic.slug}/learning?k=${clinic.accessKey}`} />
-        <SidebarItem label="SCAT Forms" icon={Activity} href="/scat-forms" external />
-        <SidebarItem label="Baseline Testing" icon={TrendingUp} href="/preseason" external />
-        <SidebarItem label="Reference Library" icon={Library} href={`/p/${clinic.slug}/references?k=${clinic.accessKey}`} />
-        <SidebarItem label="Clinical Toolkit" icon={FileText} href={`/p/${clinic.slug}/toolkit/clinical?k=${clinic.accessKey}`} />
-        <SidebarItem label="Outreach Kit" icon={Stethoscope} href={`/p/${clinic.slug}/toolkit/outreach?k=${clinic.accessKey}`} />
-        <SidebarItem label="Admin Workflow" icon={BookMarked} href={`/p/${clinic.slug}/toolkit/admin?k=${clinic.accessKey}`} />
-      </nav>
-
-      <div className="pt-5 border-t border-white/30">
-        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
-      </div>
-    </div>
+    <ProspectSidebar
+      slug={clinic.slug}
+      accessKey={clinic.accessKey}
+      clinicShortName={clinic.shortName}
+      clinicCity={clinic.city}
+      clinicState={clinic.state}
+      active="dashboard"
+    />
   )
 }
 
