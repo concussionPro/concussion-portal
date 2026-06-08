@@ -164,8 +164,8 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview" class="preview-img" width="548" height="288" /></a>
 
       <ul class="points" style="margin: 14px 0 14px;">
-        <li><strong>5 clinicians online</strong> — your team trained in their own time (additional seats $497 ea)</li>
-        <li><strong>Branded clinical docs</strong> — GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager, all with {clinic_short_name}'s logo</li>
+        <li><strong>{clinical_team_count} {clinical_team_word} online</strong> — your team trained in their own time (additional seats $497 ea)</li>
+        <li><strong>Pre-populated clinical docs</strong> — GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager, every form auto-fills with {clinic_short_name}'s details</li>
         <li><strong>Admin pack</strong> — billing codes, intake workflow, discharge documentation</li>
         <li><strong>$497/clinician workshop upgrade</strong> when you want hands-on credentials</li>
       </ul>
@@ -303,10 +303,14 @@ export function mergeTemplate(
         ${headerLine}${invitingNote}
       </p>`
   } else {
-    // Small / medium clinic — Hub Pack pitch
+    // Small / medium clinic — Hub Pack pitch.
+    // Clinical-team count is dynamic so the bento reads accurately for the
+    // actual clinic size (was hardcoded "5" — a 3-clinician clinic would
+    // see "5 clinicians" which is a credibility-killer at first read).
+    const clinicalTeamCount = clinicalCount(clinic.team) || 4
     statsBlock = `<table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
         <td class="stat teal">
-          <span class="headline"><span class="num">5</span><span class="unit"> clinicians</span></span>
+          <span class="headline"><span class="num">${clinicalTeamCount}</span><span class="unit"> clinician${clinicalTeamCount === 1 ? '' : 's'}</span></span>
           <span class="sub">Whole team online · in own time</span>
         </td>
         <td class="stat amber">
@@ -315,7 +319,7 @@ export function mergeTemplate(
         </td>
         <td class="stat indigo">
           <span class="headline"><span class="num">Day 1</span></span>
-          <span class="sub">Branded clinical docs ready</span>
+          <span class="sub">Pre-populated clinical docs</span>
         </td>
       </tr></table>`
     // T1 doesn't disclose price for small clinics either. Pricing is on
@@ -552,10 +556,16 @@ export function mergeTemplate(
       <span class="secondary">Or hit reply with one question — I'll answer in writing within a day.</span>`
   }
 
+  // Clinical team count is used in followup body copy so the bullet reads
+  // "{N} clinicians online" for the actual N — was hardcoded "5", which
+  // for a 3-person clinic killed credibility instantly.
+  const clinicalTeamCount = clinicalCount(clinic.team) || 4
   const variables: Record<string, string | undefined> = {
     base_url: baseUrl,
     clinic_name: clinic.name,
     clinic_short_name: clinic.shortName,
+    clinical_team_count: String(clinicalTeamCount),
+    clinical_team_word: clinicalTeamCount === 1 ? 'clinician' : 'clinicians',
     region: clinic.region,
     region_phrase: regionPhrase,
     city: clinic.city,
