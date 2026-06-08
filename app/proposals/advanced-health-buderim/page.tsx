@@ -966,14 +966,27 @@ function BookingEmbed() {
       <p className="text-sm text-muted-foreground mb-5 max-w-xl">
         20 minutes · we walk through your team mix, the catchment opportunity, and a delivery date. No prep needed.
       </p>
-      <div className="rounded-2xl overflow-hidden border border-accent/15 bg-white shadow-sm">
-        <iframe
-          src="https://cal.com/zac-lewis-so8zjs/30min/embed?theme=light&hideBranding=true"
-          loading="lazy"
-          style={{ width: '100%', height: '700px', border: 0 }}
-          title="Book a call with Zac Lewis"
-        />
-      </div>
+      <a
+        href="https://cal.com/zac-lewis-so8zjs/30min"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group px-6 py-5"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+            <Activity className="w-5 h-5" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">20 minutes · cal.com</p>
+            <h4 className="text-lg sm:text-xl font-bold mb-0.5 leading-tight">Open calendar</h4>
+            <p className="text-[12px] text-white/85">Grab a slot that works for Advanced Health.</p>
+          </div>
+        </div>
+        <div className="inline-flex items-center gap-1.5 text-sm font-bold bg-white text-accent px-4 py-2 rounded-lg shadow-md group-hover:scale-[1.02] transition-transform">
+          Book call
+          <ArrowUpRight className="w-4 h-4" />
+        </div>
+      </a>
     </section>
   )
 }
