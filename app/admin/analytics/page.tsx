@@ -168,7 +168,7 @@ interface ProspectRow {
   pitchVariant: string | null
   engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won'
   callRecommended: boolean
-  topSignal?: 'cal_booked' | 'cal_click' | 'return_view' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none'
+  topSignal?: 'cal_booked' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none'
   calBookedAt?: string | null
   calBookingStatus?: string | null
   portalFlow?: {
@@ -192,6 +192,14 @@ interface ProspectRow {
   lastSignalAt?: string | null
   engagedToday?: boolean
   hasTalkRequest?: boolean
+  // Real portal-side engagement — actual time spent + dashboard CTAs
+  portalTotalDwellMs?: number
+  portalMaxDwellMs?: number
+  portalEngagedSessions?: number
+  portalCtaClicks?: number
+  portalTopCtaTarget?: string | null
+  portalUniqueSections?: number
+  portalDeepestSection?: string | null
   recommendedOffer?: 'hub-pack' | 'on-site-cohort'
   sizeBucket?: string
   dealValue?: number
@@ -2781,16 +2789,28 @@ export default function AnalyticsDashboard() {
 
               // "Why call" copy — derived from topSignal so the dashboard
               // explains the actual reason in human language, not a number.
+              const fmtTime = (ms: number): string => {
+                if (!ms) return '—'
+                const s = Math.round(ms / 1000)
+                if (s < 60) return `${s}s`
+                const m = Math.floor(s / 60)
+                const r = s % 60
+                return r === 0 ? `${m}m` : `${m}m ${r}s`
+              }
+
               const whyCallCopy = (p: ProspectRow): string => {
                 switch (p.topSignal) {
-                  case 'cal_booked':      return `${p.contactFirstName} booked via cal.com — prep notes for the call, no manual outreach needed.`
-                  case 'cal_click':       return `${p.contactFirstName} clicked the cal.com link — they want to book. Call today before momentum fades.`
-                  case 'return_view':     return `${p.contactFirstName} returned to the dashboard on a separate day (${p.viewDays}× view-days) — research mode. Personal note within 48h.`
-                  case 'product_click':   return `${p.contactFirstName} clicked through to the preview${p.productClicks && p.productClicks > 1 ? ` (×${p.productClicks})` : ''} — strongest non-reply intent. LinkedIn DM in 24h.`
-                  case 'multi_day_opens': return `Opens on ${p.openDays} separate days — genuine sustained interest, no Apple-MPP noise. Soft nudge ahead of next auto-send.`
-                  case 'single_view':     return `Single portal view — let auto T2 deliver, gates the price reveal.`
-                  case 'single_open':     return `Single open only — likely Apple Mail Privacy prefetch. Auto-sequence handles it.`
-                  default:                return `No verified human signal yet — auto-sequence will deliver T2/T3.`
+                  case 'cal_booked':       return `${p.contactFirstName} booked via cal.com — prep notes for the call, no manual outreach needed.`
+                  case 'portal_cta_click': return `${p.contactFirstName} clicked "${p.portalTopCtaTarget ?? 'a CTA'}" on the dashboard${(p.portalCtaClicks ?? 0) > 1 ? ` (×${p.portalCtaClicks})` : ''} — real intent, not scanner noise. Personal email today.`
+                  case 'portal_deep_dive': return `${p.contactFirstName} viewed ${p.portalUniqueSections} sections of the dashboard${p.portalDeepestSection ? ` (deepest: ${p.portalDeepestSection.replace(/-/g, ' ')})` : ''} — genuine deep read. Personal note within 48h.`
+                  case 'cal_click':        return `${p.contactFirstName} clicked the cal.com link — they want to book. Call today before momentum fades.`
+                  case 'return_view':      return `${p.contactFirstName} returned to the dashboard on a separate day (${p.viewDays}× view-days) — research mode. Personal note within 48h.`
+                  case 'portal_long_dwell':return `${p.contactFirstName} spent ${fmtTime(p.portalMaxDwellMs ?? 0)} on the dashboard in a single session — genuine read. Personal email this week.`
+                  case 'product_click':    return `${p.contactFirstName} only clicked through from the email (${p.productClicks ?? 1}×). Likely anti-malware scanner pre-fetch — let auto-sequence handle.`
+                  case 'multi_day_opens':  return `Opens on ${p.openDays} separate days — genuine sustained interest, no Apple-MPP noise. Soft nudge ahead of next auto-send.`
+                  case 'single_view':      return `Single portal view — let auto T2 deliver, gates the price reveal.`
+                  case 'single_open':      return `Single open only — likely Apple Mail Privacy prefetch. Auto-sequence handles it.`
+                  default:                 return `No verified human signal yet — auto-sequence will deliver T2/T3.`
                 }
               }
 
@@ -3277,9 +3297,12 @@ export default function AnalyticsDashboard() {
                                   // Top-signal label — what's the strongest signal
                                   const SIGNAL_LABELS: Record<NonNullable<ProspectRow['topSignal']>, string> = {
                                     cal_booked: '📅 Cal booked',
+                                    portal_cta_click: '🎯 Dashboard CTA',
+                                    portal_deep_dive: '🔍 Deep dive',
                                     cal_click: '🎯 Cal click',
                                     return_view: '↻ Return visit',
-                                    product_click: '→ Product click',
+                                    portal_long_dwell: '⏱ Long read',
+                                    product_click: '→ Email click (scanner?)',
                                     multi_day_opens: '📅 Multi-day opens',
                                     single_view: '👁 Single view',
                                     single_open: '✉️ Single open',
@@ -3604,50 +3627,108 @@ export default function AnalyticsDashboard() {
                               </div>
                             </div>
                           </div>
-                          {/* Engagement signal breakdown — anti-scanner clarity */}
+                          {/* REAL portal engagement — time on page + dashboard CTA breakdown.
+                              These are the unfakeable signals. Email "product click"
+                              is mostly scanner pre-fetch, so we lean on these instead. */}
                           <div className="bg-white rounded-lg p-4 mb-4">
-                            <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-3">Engagement signals · what they mean</div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Real portal engagement · unfakeable</div>
+                              <div className="text-[10px] text-[var(--muted-foreground)]">JS-only · scanners cant fire client events</div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                               <div>
-                                <div className="text-[10px] uppercase tracking-wider text-rose-600 font-bold">🔥 Real sessions</div>
-                                <div className="text-xl font-bold text-rose-700 tabular-nums">{sp.realSessions ?? 0}</div>
-                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">Browser sessions on portal. Unfakeable.</div>
+                                <div className="text-[10px] uppercase tracking-wider text-rose-600 font-bold">⏱ Time on portal</div>
+                                <div className="text-xl font-bold text-rose-700 tabular-nums">{fmtTime(sp.portalTotalDwellMs ?? 0)}</div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
+                                  total across {sp.realSessions ?? 0} session{sp.realSessions === 1 ? '' : 's'}
+                                  {(sp.portalMaxDwellMs ?? 0) > 0 && `, longest ${fmtTime(sp.portalMaxDwellMs ?? 0)}`}
+                                </div>
                               </div>
                               <div>
-                                <div className="text-[10px] uppercase tracking-wider text-amber-600 font-bold">URL clicks</div>
-                                <div className="text-xl font-bold text-amber-700 tabular-nums">{sp.distinctUrlClicks ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">/ {sp.totalClicks} raw</span></div>
+                                <div className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">🎯 Dashboard CTAs</div>
+                                <div className="text-xl font-bold text-emerald-700 tabular-nums">{sp.portalCtaClicks ?? 0}</div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
+                                  {(sp.portalCtaClicks ?? 0) > 0
+                                    ? `top: ${sp.portalTopCtaTarget ?? 'unknown'}`
+                                    : 'no CTA clicks on dashboard yet'}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] uppercase tracking-wider text-amber-600 font-bold">🔍 Sections viewed</div>
+                                <div className="text-xl font-bold text-amber-700 tabular-nums">{sp.portalUniqueSections ?? 0}</div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
+                                  {(sp.portalUniqueSections ?? 0) >= 5 ? 'deep dive — read the whole page'
+                                    : (sp.portalUniqueSections ?? 0) >= 2 ? `scrolled past hero${sp.portalDeepestSection ? ` to ${sp.portalDeepestSection.replace(/-/g, ' ')}` : ''}`
+                                    : 'hero only — bounced'}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] uppercase tracking-wider text-[var(--accent)] font-bold">🔥 Engaged sessions</div>
+                                <div className="text-xl font-bold text-[var(--accent)] tabular-nums">{sp.portalEngagedSessions ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">/ {sp.realSessions ?? 0}</span></div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
+                                  sessions {'>'}30s (not a bounce)
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-2 pt-2 border-t border-slate-100">
+                              <strong className="text-[var(--foreground)]">Verdict:</strong> {' '}
+                              {(sp.portalCtaClicks ?? 0) > 0
+                                ? `${sp.portalCtaClicks} dashboard CTA click${sp.portalCtaClicks === 1 ? '' : 's'} = real buying signal. This is the strongest non-cal-booking intent.`
+                                : (sp.portalUniqueSections ?? 0) >= 5 && (sp.portalMaxDwellMs ?? 0) >= 60_000
+                                  ? `Deep dive (${sp.portalUniqueSections} sections, ${fmtTime(sp.portalMaxDwellMs ?? 0)} longest session) — serious research mode.`
+                                  : (sp.portalEngagedSessions ?? 0) >= 1
+                                    ? `${sp.portalEngagedSessions} engaged session${sp.portalEngagedSessions === 1 ? '' : 's'} (>30s) — they read it. Soft nudge or let auto-sequence handle.`
+                                    : (sp.realSessions ?? 0) > 0
+                                      ? `${sp.realSessions} portal session${sp.realSessions === 1 ? '' : 's'} but all under 30s — bounced. Auto-sequence handles.`
+                                      : 'No real portal engagement yet — let T2/T3 deliver.'}
+                            </div>
+                          </div>
+
+                          {/* Email signals — secondary, lower trust */}
+                          <div className="bg-slate-50 rounded-lg p-4 mb-4">
+                            <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-3">Email signals · scanner-prone</div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div>
+                                <div className="text-[10px] uppercase tracking-wider text-amber-700 font-bold">URL clicks</div>
+                                <div className="text-lg font-bold text-amber-700 tabular-nums">{sp.distinctUrlClicks ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">/ {sp.totalClicks} raw</span></div>
                                 <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
                                   {(sp.totalClicks ?? 0) > (sp.distinctUrlClicks ?? 0) * 2
-                                    ? `${(sp.totalClicks ?? 0) - (sp.distinctUrlClicks ?? 0)} likely scanner pre-fetches.`
-                                    : 'Real reads — no scanner inflation.'}
+                                    ? `${(sp.totalClicks ?? 0) - (sp.distinctUrlClicks ?? 0)} likely scanner pre-fetches`
+                                    : 'caps anti-scanner'}
                                 </div>
                               </div>
                               <div>
-                                <div className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">Cal clicks</div>
-                                <div className="text-xl font-bold text-emerald-700 tabular-nums">{sp.calClickDays ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">days</span></div>
+                                <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-bold">Cal.com clicks</div>
+                                <div className="text-lg font-bold text-emerald-700 tabular-nums">{sp.calClickDays ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">days</span></div>
                                 <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
-                                  {(sp.calClickDays ?? 0) >= 2 ? 'Multi-day = real intent.' : (sp.calClicks ?? 0) > 0 ? `${sp.calClicks} click, 1 day — could be scanner.` : 'No cal.com clicks.'}
+                                  {(sp.calClickDays ?? 0) >= 2 ? 'multi-day = human' : (sp.calClicks ?? 0) > 0 ? '1 day — scanner suspect' : 'none'}
                                 </div>
                               </div>
                               <div>
-                                <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Opens</div>
-                                <div className="text-xl font-bold text-[var(--foreground)] tabular-nums">{sp.openDays ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">days</span></div>
+                                <div className="text-[10px] uppercase tracking-wider text-slate-600 font-bold">Open days</div>
+                                <div className="text-lg font-bold text-[var(--foreground)] tabular-nums">{sp.openDays ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">/ {sp.totalOpens}</span></div>
                                 <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
-                                  {(sp.openDays ?? 0) >= 2 ? `${sp.totalOpens} opens across ${sp.openDays}d.` : `${sp.totalOpens} opens — Apple MPP noise possible.`}
+                                  {(sp.openDays ?? 0) >= 2 ? 'real interest' : 'Apple MPP noise possible'}
                                 </div>
                               </div>
                             </div>
                             {sp.lastClickedSubject && (
-                              <p className="text-[10.5px] text-[var(--muted-foreground)] mt-3 italic">Last clicked: &quot;{sp.lastClickedSubject}&quot;</p>
+                              <p className="text-[10.5px] text-[var(--muted-foreground)] mt-3 italic">Last email clicked: &quot;{sp.lastClickedSubject}&quot;</p>
                             )}
                           </div>
                           {/* Portal flow funnel — what they viewed, clicked, exited on */}
-                          {selectedProspect.portalFlow && (Object.keys(selectedProspect.portalFlow.sectionFunnel).length > 0 || Object.keys(selectedProspect.portalFlow.ctaClicks).length > 0) && (
+                          {sp.portalFlow && (Object.keys(sp.portalFlow.sectionFunnel).length > 0 || Object.keys(sp.portalFlow.ctaClicks).length > 0) && (
                             <div className="bg-white rounded-lg p-3 mb-3">
                               <div className="flex items-center justify-between mb-2">
-                                <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Portal flow</div>
-                                {selectedProspect.portalFlow.avgDwellMs != null && (
-                                  <div className="text-xs text-[var(--muted-foreground)]">avg dwell <span className="font-bold text-[var(--foreground)]">{Math.round(selectedProspect.portalFlow.avgDwellMs / 1000)}s</span></div>
+                                <div>
+                                  <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Section flow · clicks · exits</div>
+                                  <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">section_view counts · CTA click destinations · where they left</div>
+                                </div>
+                                {sp.portalFlow.avgDwellMs != null && (
+                                  <div className="text-right">
+                                    <div className="text-xs text-[var(--muted-foreground)]">avg session</div>
+                                    <div className="text-sm font-bold text-[var(--foreground)]">{fmtTime(sp.portalFlow.avgDwellMs)}</div>
+                                  </div>
                                 )}
                               </div>
                               {/* Section funnel — ordered by canonical scroll order */}
@@ -3682,11 +3763,11 @@ export default function AnalyticsDashboard() {
                                 )
                               })()}
                               {/* CTA clicks */}
-                              {Object.keys(selectedProspect.portalFlow.ctaClicks).length > 0 && (
+                              {Object.keys(sp.portalFlow!.ctaClicks).length > 0 && (
                                 <div>
                                   <div className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-semibold mb-1">CTA clicks</div>
                                   <div className="flex flex-wrap gap-1.5">
-                                    {Object.entries(selectedProspect.portalFlow.ctaClicks).map(([t, n]) => (
+                                    {Object.entries(sp.portalFlow!.ctaClicks).map(([t, n]) => (
                                       <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[10.5px] font-bold">
                                         {t} <span className="text-[var(--foreground)]/70">×{n}</span>
                                       </span>

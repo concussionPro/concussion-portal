@@ -67,6 +67,19 @@ interface PortalViewRow {
   view_days: number | string
   first_viewed_at: string | null
   last_viewed_at: string | null
+  // Real time-on-portal signals derived from interaction_type='exit' rows.
+  // dwell_ms on an exit event = total session duration (page-load → tab-close).
+  // total_dwell_ms = sum across all sessions. max_dwell_ms = longest session.
+  // engaged_sessions = sessions where dwell > 30s (not a bounce).
+  total_dwell_ms: number | string
+  max_dwell_ms: number | string
+  engaged_sessions: number | string
+  // Real CTA clicks ON the dashboard (book-call, pricing, talk, hub-link, etc).
+  // Unfakeable — scanners can't fire client-side click events on a SPA.
+  cta_clicks: number | string
+  top_cta_target: string | null
+  unique_sections: number | string
+  deepest_section: string | null
 }
 
 interface EventSignalRow {
@@ -278,20 +291,74 @@ export async function GET(req: NextRequest) {
       // audit) but the aggregate counts here surface humans-only.
       filterId !== null && !isNaN(filterId)
         ? sql<PortalViewRow>`
-            SELECT clinic_id, COUNT(*)::text AS total,
-              COUNT(DISTINCT viewed_at::date)::int AS view_days,
-              MIN(viewed_at) AS first_viewed_at, MAX(viewed_at) AS last_viewed_at
-            FROM prospect_portal_views
-            WHERE clinic_id = ${filterId}
-              AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
-            GROUP BY clinic_id`
+            WITH filtered AS (
+              SELECT * FROM prospect_portal_views
+              WHERE clinic_id = ${filterId}
+                AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+            ),
+            top_cta AS (
+              SELECT clinic_id, target
+              FROM filtered
+              WHERE interaction_type = 'cta_click' AND target IS NOT NULL
+              GROUP BY clinic_id, target
+              ORDER BY COUNT(*) DESC
+              LIMIT 1
+            ),
+            deepest AS (
+              SELECT clinic_id, section_visited
+              FROM filtered
+              WHERE interaction_type IN ('view','section_view')
+              GROUP BY clinic_id, section_visited
+              ORDER BY COUNT(*) DESC
+              LIMIT 1
+            )
+            SELECT f.clinic_id,
+              COUNT(*)::text AS total,
+              COUNT(DISTINCT f.viewed_at::date)::int AS view_days,
+              MIN(f.viewed_at) AS first_viewed_at, MAX(f.viewed_at) AS last_viewed_at,
+              COALESCE(SUM(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::bigint AS total_dwell_ms,
+              COALESCE(MAX(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::int AS max_dwell_ms,
+              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms > 30000)::int AS engaged_sessions,
+              COUNT(*) FILTER (WHERE f.interaction_type = 'cta_click')::int AS cta_clicks,
+              (SELECT target FROM top_cta WHERE clinic_id = f.clinic_id) AS top_cta_target,
+              COUNT(DISTINCT f.section_visited) FILTER (WHERE f.interaction_type IN ('view','section_view'))::int AS unique_sections,
+              (SELECT section_visited FROM deepest WHERE clinic_id = f.clinic_id) AS deepest_section
+            FROM filtered f
+            GROUP BY f.clinic_id`
         : sql<PortalViewRow>`
-            SELECT clinic_id, COUNT(*)::text AS total,
-              COUNT(DISTINCT viewed_at::date)::int AS view_days,
-              MIN(viewed_at) AS first_viewed_at, MAX(viewed_at) AS last_viewed_at
-            FROM prospect_portal_views
-            WHERE COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
-            GROUP BY clinic_id`,
+            WITH filtered AS (
+              SELECT * FROM prospect_portal_views
+              WHERE COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+            ),
+            top_cta AS (
+              SELECT clinic_id, target
+              FROM filtered
+              WHERE interaction_type = 'cta_click' AND target IS NOT NULL
+              GROUP BY clinic_id, target
+              ORDER BY COUNT(*) DESC
+              LIMIT 1
+            ),
+            deepest AS (
+              SELECT clinic_id, section_visited
+              FROM filtered
+              WHERE interaction_type IN ('view','section_view')
+              GROUP BY clinic_id, section_visited
+              ORDER BY COUNT(*) DESC
+              LIMIT 1
+            )
+            SELECT f.clinic_id,
+              COUNT(*)::text AS total,
+              COUNT(DISTINCT f.viewed_at::date)::int AS view_days,
+              MIN(f.viewed_at) AS first_viewed_at, MAX(f.viewed_at) AS last_viewed_at,
+              COALESCE(SUM(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::bigint AS total_dwell_ms,
+              COALESCE(MAX(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::int AS max_dwell_ms,
+              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms > 30000)::int AS engaged_sessions,
+              COUNT(*) FILTER (WHERE f.interaction_type = 'cta_click')::int AS cta_clicks,
+              (SELECT target FROM top_cta WHERE clinic_id = f.clinic_id) AS top_cta_target,
+              COUNT(DISTINCT f.section_visited) FILTER (WHERE f.interaction_type IN ('view','section_view'))::int AS unique_sections,
+              (SELECT section_visited FROM deepest WHERE clinic_id = f.clinic_id) AS deepest_section
+            FROM filtered f
+            GROUP BY f.clinic_id`,
       // Email-event signal aggregator — joins email_events to
       // prospect_outreach_log via resend_email_id and computes:
       //   - open_days: distinct calendar days with opens (MPP-resistant)
@@ -432,6 +499,16 @@ export async function GET(req: NextRequest) {
       // multi-day opens. Single open / single same-day view = noise.
       const portalViews = view ? parseInt(view.total, 10) : 0
       const viewDays = view ? Number(view.view_days ?? 0) : 0
+      // Real time-on-portal — dwell_ms on exit events is total session
+      // duration (page-load → tab-close). Sum across sessions gives the
+      // honest "how much time have they spent looking at this" answer.
+      const portalTotalDwellMs = view ? Number(view.total_dwell_ms ?? 0) : 0
+      const portalMaxDwellMs = view ? Number(view.max_dwell_ms ?? 0) : 0
+      const portalEngagedSessions = view ? Number(view.engaged_sessions ?? 0) : 0
+      const portalCtaClicks = view ? Number(view.cta_clicks ?? 0) : 0
+      const portalTopCtaTarget = view?.top_cta_target ?? null
+      const portalUniqueSections = view ? Number(view.unique_sections ?? 0) : 0
+      const portalDeepestSection = view?.deepest_section ?? null
       const signal = signalsByClinic.get(c.id)
       const openDays = signal ? Number(signal.open_days ?? 0) : 0
       const calClicks = signal ? Number(signal.cal_clicks ?? 0) : 0
@@ -448,15 +525,33 @@ export async function GET(req: NextRequest) {
 
       // Top non-reply signal — what the strongest engagement marker is
       // for this clinic. Drives both tier and "why call this prospect"
-      // copy in the admin dashboard. cal_booked = literal booking via
-      // cal.com webhook (strongest possible non-reply, non-won signal).
+      // copy in the admin dashboard. Reordered 2026-06-08 to put REAL
+      // portal interactions ahead of email "product clicks" — the latter
+      // is mostly anti-malware scanner pre-fetches (Defender/Mimecast/
+      // Proofpoint fetch every email link once), so "product_click=1"
+      // with no real session is almost always a scanner.
+      //
+      // Hierarchy (strongest → weakest):
+      //  cal_booked       : literal booking via cal.com webhook
+      //  portal_cta_click : clicked a CTA on the dashboard itself (book/pricing/talk)
+      //  portal_deep_dive : viewed 5+ unique sections (deep read)
+      //  cal_click        : clicked cal.com link from email
+      //  return_view      : came back on 2+ different days
+      //  portal_long_dwell: session >60s on the portal (genuine read)
+      //  multi_day_opens  : opens on 2+ different days
+      //  product_click    : email click to /p/[slug] / /pricing (likely scanner)
+      //  single_view      : one portal session
+      //  single_open      : one email open (Apple MPP noise)
       const isCalBooked = c.cal_booking_status === 'booked' && c.cal_booked_at !== null
-      const topSignal: 'cal_booked' | 'cal_click' | 'return_view' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none' =
+      const topSignal: 'cal_booked' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none' =
         isCalBooked ? 'cal_booked'
+        : portalCtaClicks > 0 ? 'portal_cta_click'
+        : portalUniqueSections >= 5 ? 'portal_deep_dive'
         : calClicks > 0 ? 'cal_click'
         : viewDays >= 2 ? 'return_view'
-        : productClicks > 0 ? 'product_click'
+        : portalMaxDwellMs >= 60_000 ? 'portal_long_dwell'
         : openDays >= 2 ? 'multi_day_opens'
+        : productClicks > 0 ? 'product_click'
         : portalViews > 0 ? 'single_view'
         : totalOpens > 0 ? 'single_open'
         : 'none'
@@ -464,29 +559,33 @@ export async function GET(req: NextRequest) {
       let engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won' = 'cold'
       if (c.status === 'won') engagementTier = 'won'
       else if (replies > 0) engagementTier = 'replied'
-      // ENGAGED = highest predictive non-reply signals → personal call
-      // 1) Cal click (literal booking intent) OR
-      // 2) Return-day portal view + any click (research + commitment) OR
-      // 3) Product click + multi-day opens (research over time)
+      // ENGAGED = highest-intent non-reply signals → personal call
+      //  1) Cal click OR cal booked (literal booking intent)
+      //  2) Dashboard CTA click (book/pricing/talk inside the portal)
+      //  3) Return-day portal view + any signal (research + commitment)
+      //  4) Long single session (>60s) + multi-day opens
       else if (
         c.status === 'engaged' ||
         calClicks > 0 ||
-        (viewDays >= 2 && (productClicks > 0 || otherClicks > 0 || calClicks > 0)) ||
-        (productClicks > 0 && openDays >= 2)
+        portalCtaClicks > 0 ||
+        (viewDays >= 2 && (portalCtaClicks > 0 || productClicks > 0 || otherClicks > 0)) ||
+        (portalMaxDwellMs >= 60_000 && openDays >= 2)
       ) engagementTier = 'engaged'
-      // HOT = single strong signal (one of these alone)
-      // - Any product click (clicked the dashboard preview)
-      // - Return-day view (came back another day)
-      // - Multi-day opens AND total >= 3 (rules out Apple-MPP noise)
+      // HOT = single strong real-portal signal
+      //  - Portal deep dive (5+ sections in single session)
+      //  - Return-day portal view (came back on another day)
+      //  - Long single session (>60s) on the portal
+      //  - Multi-day opens AND total >= 3 (rules out Apple-MPP noise)
       else if (
-        productClicks > 0 ||
+        portalUniqueSections >= 5 ||
         viewDays >= 2 ||
+        portalMaxDwellMs >= 60_000 ||
         (openDays >= 2 && totalOpens >= 3) ||
         otherClicks > 0
       ) engagementTier = 'hot'
       // WARM = real attention but not strong enough alone
-      // - Multi-day opens (someone genuinely read more than once)
-      // - Single portal view
+      //  - Multi-day opens (genuine repeat read)
+      //  - Any portal view (real session — even if brief)
       else if (openDays >= 2 || portalViews > 0) engagementTier = 'warm'
       else engagementTier = 'cold'
 
@@ -548,7 +647,8 @@ export async function GET(req: NextRequest) {
       const callRecommended =
         everSent &&
         !isCalBooked &&
-        (engagementTier === 'engaged' || (engagementTier === 'hot' && (productClicks > 0 || viewDays >= 2 || calClicks > 0))) &&
+        (engagementTier === 'engaged' ||
+          (engagementTier === 'hot' && (portalCtaClicks > 0 || viewDays >= 2 || calClicks > 0 || portalMaxDwellMs >= 60_000))) &&
         !['lost', 'bounced', 'archived', 'won', 'replied'].includes(c.status)
 
       return {
@@ -634,6 +734,14 @@ export async function GET(req: NextRequest) {
         viewDays,
         firstPortalViewAt: view?.first_viewed_at ?? null,
         lastPortalViewAt: view?.last_viewed_at ?? null,
+        // Real engagement on the dashboard — unfakeable client-side signals
+        portalTotalDwellMs,         // total seconds across all sessions
+        portalMaxDwellMs,           // longest single session
+        portalEngagedSessions,      // sessions >30s (not a bounce)
+        portalCtaClicks,            // CTA clicks ON the dashboard
+        portalTopCtaTarget,         // most-clicked CTA target ('book-call', etc)
+        portalUniqueSections,       // distinct sections viewed
+        portalDeepestSection,       // most-viewed section
         // portal flow — section funnel + CTA clicks + exit drop-off
         portalFlow: (() => {
           const f = portalFlowByClinic.get(c.id)
