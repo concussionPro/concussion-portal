@@ -620,10 +620,12 @@ export async function GET(req: NextRequest) {
       let engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won' = 'cold'
       if (c.status === 'won') engagementTier = 'won'
       else if (replies > 0) engagementTier = 'replied'
-      // ENGAGED = cal booked, talk-req, or explicit DB status='engaged'
-      // (set when cal.com webhook fires booking)
+      // ENGAGED = LITERAL contact intent confirmed. The DB column c.status
+      // ='engaged' alone no longer qualifies — that flag was set by old
+      // tier logic before scanner-suspect detection existed, and persists
+      // even when the original signal turns out to be a Defender pre-fetch.
+      // Now requires hard proof: cal booking webhook OR talk-request form.
       else if (
-        c.status === 'engaged' ||
         isCalBooked ||
         hasTalkRequest
       ) engagementTier = 'engaged'
@@ -730,12 +732,23 @@ export async function GET(req: NextRequest) {
       // call is already on the calendar. They surface in their own
       // "Upcoming bookings" group instead. This stops the dashboard
       // from telling Zac to "call this person" when a meeting is locked.
+      // Call-recommended = surface in "Call now" table. Requires LITERAL
+      // action proof - never includes scanner-suspect prospects, never
+      // includes prospects whose only signal is stale DB c.status='engaged'.
+      // Aligned with the new HOT NOW threshold so both views agree on
+      // who deserves a personal call.
       const callRecommended =
         everSent &&
         !isCalBooked &&
-        (engagementTier === 'engaged' ||
-          (engagementTier === 'hot' && (portalCtaClicks > 0 || viewDays >= 2 || calClicks > 0 || portalMaxDwellMs >= 60_000))) &&
-        !['lost', 'bounced', 'archived', 'won', 'replied'].includes(c.status)
+        !hasTalkRequest &&
+        !scannerSuspect &&
+        !['lost', 'bounced', 'archived', 'won', 'replied'].includes(c.status) &&
+        (
+          portalCtaClicks > 0 ||
+          calClickDays >= 2 ||
+          hasFreeContentSignup ||
+          (portalMaxDwellMs >= 60_000 && openDays >= 2)
+        )
 
       return {
         // identifiers
