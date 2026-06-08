@@ -2840,16 +2840,12 @@ export default function AnalyticsDashboard() {
 
               const fmt$ = (n: number) => `A$${n.toLocaleString('en-AU')}`
 
-              // ── HOT NOW threshold (mirrors API isHot, scanner-tightened 2026-06-08) ──
-              // Trusted signals only:
-              //   - ≥1 engaged portal session (>30s dwell)
-              //   - ≥1 dashboard CTA click (client-side JS, unfakeable)
-              //   - ≥2 different days clicking cal.com (scanner only fetches once)
-              // Sub-30s sessions and 1-day email clicks are LIKELY scanner pre-fetch.
-              // HOT NOW sort uses the same signal-strength hierarchy as
-              // the Call now list: dashboard CTA > cal multi-day >
-              // engaged sessions > time on portal. Excludes booked + talk-req
-              // (already in motion) and replied (separate tier).
+              // ── HOT NOW (rebuilt 2026-06-08) - ACTION required, no dwell-only ──
+              // Reading a marketing dashboard isnt buying intent. HOT NOW
+              // requires the prospect to have ACTED:
+              //   - >=1 dashboard CTA click (Book/Pricing/Talk - JS event)
+              //   - >=2 days of cal.com clicks (scanner only fetches once)
+              // Engaged sessions / time-on-portal alone -> WARM, not HOT.
               const hotNowSortScore = (p: ProspectRow): number => {
                 let s = 0
                 s += (p.portalCtaClicks ?? 0) * 10_000
@@ -2860,8 +2856,7 @@ export default function AnalyticsDashboard() {
               }
               const hotNow = prospects
                 .filter(p =>
-                  ((p.portalEngagedSessions ?? 0) >= 1 ||
-                   (p.portalCtaClicks ?? 0) >= 1 ||
+                  ((p.portalCtaClicks ?? 0) >= 1 ||
                    (p.calClickDays ?? 0) >= 2) &&
                   !(p.calBookedAt && p.calBookingStatus === 'booked') &&
                   !p.hasTalkRequest &&
@@ -2869,6 +2864,24 @@ export default function AnalyticsDashboard() {
                 )
                 .sort((a, b) => hotNowSortScore(b) - hotNowSortScore(a))
                 .slice(0, 12)
+              // WARM (engaged but not acted) - shown beneath HOT NOW.
+              // These prospects read the dashboard but havent clicked a CTA
+              // or booked a call. Auto-sequence (T2 acceleration) handles
+              // them; no manual outreach unless they convert to HOT.
+              const warmNoAction = prospects
+                .filter(p =>
+                  (p.engagementTier === 'warm') &&
+                  !(p.calBookedAt && p.calBookingStatus === 'booked') &&
+                  !p.hasTalkRequest &&
+                  p.replies === 0 &&
+                  (p.portalCtaClicks ?? 0) === 0 &&
+                  (p.calClickDays ?? 0) < 2
+                )
+                .sort((a, b) =>
+                  ((b.portalTotalDwellMs ?? 0) + (b.portalEngagedSessions ?? 0) * 60_000) -
+                  ((a.portalTotalDwellMs ?? 0) + (a.portalEngagedSessions ?? 0) * 60_000)
+                )
+                .slice(0, 10)
 
               // Today's engagers — any signal in the last 24h, regardless of tier
               const engagedToday = prospects.filter(p => p.engagedToday)
@@ -2879,14 +2892,15 @@ export default function AnalyticsDashboard() {
                 if (p.outreachStatus === 'done') return { label: '✓ Done', tone: 'bg-emerald-100 text-emerald-700 border-emerald-200', sortKey: 5 }
                 if (p.outreachStatus === 'go') {
                   const h = p.hoursSinceHotSignal ?? 0
-                  const daysRemaining = Math.max(0, Math.floor((168 - h) / 24))
+                  // GO window = 48h-120h (2-5 days post hot signal)
+                  const daysRemaining = Math.max(0, Math.floor((120 - h) / 24))
                   return { label: `🟢 GO NOW (${daysRemaining}d left)`, tone: 'bg-emerald-600 text-white border-emerald-700 animate-pulse', sortKey: 0 }
                 }
                 if (p.outreachStatus === 'cool') {
                   const h = p.hoursSinceHotSignal ?? 0
                   return { label: `⏳ Wait ${Math.max(0, 48 - h)}h more`, tone: 'bg-slate-100 text-slate-600 border-slate-200', sortKey: 2 }
                 }
-                if (p.outreachStatus === 'last-chance') return { label: '🟡 Last chance', tone: 'bg-amber-100 text-amber-700 border-amber-300', sortKey: 1 }
+                if (p.outreachStatus === 'last-chance') return { label: '🟡 Last chance (≤10d)', tone: 'bg-amber-100 text-amber-700 border-amber-300', sortKey: 1 }
                 if (p.outreachStatus === 'long-nurture') return { label: '🔴 Drop to long-nurture', tone: 'bg-rose-100 text-rose-700 border-rose-200', sortKey: 3 }
                 return null
               }
@@ -3181,12 +3195,63 @@ export default function AnalyticsDashboard() {
                             </table>
                           </div>
                           <p className="text-[10.5px] text-rose-700/80 mt-2">
-                            Sorted by intent strength: dashboard CTA clicks ▶ cal multi-day ▶ engaged sessions ▶ time on portal. Threshold: ≥1 engaged session (&gt;30s) OR ≥1 dashboard CTA click OR ≥2 cal-click days. Sub-30s sessions excluded (likely anti-malware scanner).
+                            HOT requires ACTION — dashboard CTA click (Book/Pricing/Talk) OR cal.com clicks on 2+ days. Dwell-alone doesnt count (warm at best). Sorted by intent: CTA ▶ cal multi-day ▶ engaged sessions ▶ time.
                           </p>
                         </div>
                       )}
 
-                      {/* Today's engagement — count + quick context if no HOT NOW panel above */}
+                      {/* WARM panel — engaged but no action. Auto-sequence handles via T2 acceleration. */}
+                      {warmNoAction.length > 0 && (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-600 text-white">🟡 WARM · no action yet</span>
+                              <span className="text-sm font-bold text-[var(--foreground)]">
+                                {warmNoAction.length} prospect{warmNoAction.length === 1 ? '' : 's'} reading but not clicking — auto-sequence handles
+                              </span>
+                            </div>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-left text-[10px] uppercase text-amber-700/70 font-bold border-b border-amber-200/50">
+                                  <th className="px-2 py-1.5">Contact / Clinic</th>
+                                  <th className="px-2 py-1.5 text-right">⏱ Time</th>
+                                  <th className="px-2 py-1.5 text-right">🔥 Sessions &gt;60s</th>
+                                  <th className="px-2 py-1.5 text-right">📅 Open days</th>
+                                  <th className="px-2 py-1.5">Nurture</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {warmNoAction.map(p => {
+                                  const stage = nurtureStage(p)
+                                  return (
+                                    <tr
+                                      key={p.id}
+                                      onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }}
+                                      className="border-b border-amber-100/40 hover:bg-white/60 cursor-pointer"
+                                    >
+                                      <td className="px-2 py-2">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
+                                        <div className="text-[10.5px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
+                                      </td>
+                                      <td className="px-2 py-2 text-right font-semibold text-amber-700 tabular-nums">{(p.portalTotalDwellMs ?? 0) > 0 ? fmtTime(p.portalTotalDwellMs ?? 0) : '—'}</td>
+                                      <td className="px-2 py-2 text-right font-semibold text-amber-700 tabular-nums">{p.portalEngagedSessions || '—'}</td>
+                                      <td className="px-2 py-2 text-right font-semibold text-amber-700 tabular-nums">{p.openDays || '—'}</td>
+                                      <td className={`px-2 py-2 text-[10.5px] font-semibold ${stage.tone}`}>{stage.label}</td>
+                                    </tr>
+                                  )
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                          <p className="text-[10.5px] text-amber-700/80 mt-2">
+                            These are reading the dashboard but havent clicked a CTA or booked a call. T2 (value-led, free SCAT + baseline tools) will fire ~4 BD after T1 instead of 7 BD — cron auto-accelerates when engagement detected. No manual outreach unless they cross into HOT.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Today's engagement — count + quick context if no HOT/WARM above */}
                       {engagedToday.length > 0 && hotNow.length === 0 && (
                         <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
                           <div className="flex items-center justify-between mb-1">
@@ -3727,10 +3792,14 @@ export default function AnalyticsDashboard() {
                                         </div>
                                         <div className="text-[11px] text-[var(--muted-foreground)] italic truncate">&quot;{predictedT2Subject}&quot;</div>
                                         <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
-                                          🎁 free SCAT mini-course + free pre-season baseline testing for athletes
-                                          {t2RevealsPrice ? ' · 💲 includes price reveal' : ''}
+                                          🎁 free SCAT mini-course + free pre-season baseline testing
+                                          {t2RevealsPrice ? ' · 💲 price reveal' : ''}
                                           {' · CTA: book 15-min discovery call'}
-                                          {' · skipped if: reply · cal booking · personal-lane promotion'}
+                                          <br />
+                                          {engagedWithT1 !== 'none'
+                                            ? '⚡ ENGAGEMENT DETECTED — cron auto-accelerates from +7 BD to +4 BD (memory still fresh)'
+                                            : 'Cold cadence (+7 BD); accelerates to +4 BD if open/click/portal-view detected'}
+                                          {' · skipped if: reply · cal booking · personal-lane'}
                                         </div>
                                       </div>
                                     </div>
@@ -3763,9 +3832,9 @@ export default function AnalyticsDashboard() {
                                   <div className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted-foreground)] mb-1.5">Switch to manual outreach when:</div>
                                   <ul className="text-[10.5px] text-[var(--muted-foreground)] space-y-1 leading-snug">
                                     <li>
-                                      <strong className={sp.outreachStatus === 'go' ? 'text-emerald-700' : 'text-[var(--muted-foreground)]'}>🟢 GO NOW window (48hr-7d after a hot signal)</strong>
+                                      <strong className={sp.outreachStatus === 'go' ? 'text-emerald-700' : 'text-[var(--muted-foreground)]'}>🟢 GO NOW window (48hr-5d after a hot signal)</strong>
                                       {sp.outreachStatus === 'go' && <span className="text-emerald-700 font-semibold"> ← {sp.contactFirstName} is HERE</span>}
-                                      <span> — personal email today, T2 will be auto-skipped.</span>
+                                      <span> — personal email today, T2 auto-skipped. Conversion drops 30% past day 5.</span>
                                     </li>
                                     <li>
                                       <strong className={sp.outreachStatus === 'cool' ? 'text-amber-700' : 'text-[var(--muted-foreground)]'}>⏳ Cool window (0-48h after hot signal)</strong>
@@ -3773,12 +3842,12 @@ export default function AnalyticsDashboard() {
                                       <span> — wait, dont compete with fresh T1 memory.</span>
                                     </li>
                                     <li>
-                                      <strong className={sp.outreachStatus === 'last-chance' ? 'text-amber-700' : 'text-[var(--muted-foreground)]'}>🟡 Last chance (7-14d silent after hot)</strong>
+                                      <strong className={sp.outreachStatus === 'last-chance' ? 'text-amber-700' : 'text-[var(--muted-foreground)]'}>🟡 Last chance (5-10d silent after hot)</strong>
                                       {sp.outreachStatus === 'last-chance' && <span className="text-amber-700 font-semibold"> ← {sp.contactFirstName} is HERE</span>}
                                       <span> — one tactical follow-up before dropping.</span>
                                     </li>
                                     <li>
-                                      <strong className={sp.outreachStatus === 'long-nurture' || sp.outreachStatus === 'not-hot' ? 'text-rose-700' : 'text-[var(--muted-foreground)]'}>🔴 14d+ silent · 🤖 scanner-only · no signal</strong>
+                                      <strong className={sp.outreachStatus === 'long-nurture' || sp.outreachStatus === 'not-hot' ? 'text-rose-700' : 'text-[var(--muted-foreground)]'}>🔴 10d+ silent · 🤖 scanner-only · WARM-but-no-action · no signal</strong>
                                       {(sp.outreachStatus === 'long-nurture' || sp.outreachStatus === 'not-hot') && <span className="text-rose-700 font-semibold"> ← {sp.contactFirstName} is HERE</span>}
                                       <span> — let auto-sequence finish, then long-nurture. No personal email.</span>
                                     </li>

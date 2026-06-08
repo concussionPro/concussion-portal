@@ -318,7 +318,7 @@ export async function GET(req: NextRequest) {
               MIN(f.viewed_at) AS first_viewed_at, MAX(f.viewed_at) AS last_viewed_at,
               COALESCE(SUM(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::bigint AS total_dwell_ms,
               COALESCE(MAX(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::int AS max_dwell_ms,
-              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms > 30000)::int AS engaged_sessions,
+              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms > 60000)::int AS engaged_sessions,
               COUNT(*) FILTER (WHERE f.interaction_type = 'cta_click')::int AS cta_clicks,
               (SELECT target FROM top_cta WHERE clinic_id = f.clinic_id) AS top_cta_target,
               COUNT(DISTINCT f.section_visited) FILTER (WHERE f.interaction_type IN ('view','section_view'))::int AS unique_sections,
@@ -352,7 +352,7 @@ export async function GET(req: NextRequest) {
               MIN(f.viewed_at) AS first_viewed_at, MAX(f.viewed_at) AS last_viewed_at,
               COALESCE(SUM(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::bigint AS total_dwell_ms,
               COALESCE(MAX(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::int AS max_dwell_ms,
-              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms > 30000)::int AS engaged_sessions,
+              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms > 60000)::int AS engaged_sessions,
               COUNT(*) FILTER (WHERE f.interaction_type = 'cta_click')::int AS cta_clicks,
               (SELECT target FROM top_cta WHERE clinic_id = f.clinic_id) AS top_cta_target,
               COUNT(DISTINCT f.section_visited) FILTER (WHERE f.interaction_type IN ('view','section_view'))::int AS unique_sections,
@@ -565,37 +565,43 @@ export async function GET(req: NextRequest) {
         : totalOpens > 0 ? 'single_open'
         : 'none'
 
-      // Engagement tier — only TRUSTED signals promote a prospect.
-      // Scanner-suspect (sessions but no dwell) stays in cold/warm so
-      // Zac doesn't waste a personal email chasing a Defender pre-fetch.
+      // Engagement tier — REBUILT 2026-06-08 to make tier promotion
+      // require ACTION TAKEN, not just time spent. Sub-60s dwell, single
+      // sessions without clicks, and email-link clicks (scanner-prone)
+      // no longer promote past warm.
+      //
+      // HOT = explicit buying-intent action:
+      //   - Cal booked / talk request (already pulled into ENGAGED/REPLIED)
+      //   - Dashboard CTA click (Book/Pricing/Talk - JS-only, scanner-immune)
+      //   - Cal.com clicks on 2+ different days (single day = scanner)
+      // WARM = real attention but no action yet:
+      //   - 1+ engaged session (>60s real dwell)
+      //   - Total portal time >= 3 minutes
+      //   - Multi-day opens (>=2 days AND >=3 total opens)
+      //   - Return-day view + engaged session
+      // COLD = scanner-suspect / single open / nothing
       let engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won' = 'cold'
       if (c.status === 'won') engagementTier = 'won'
       else if (replies > 0) engagementTier = 'replied'
-      // ENGAGED = literal buying signal → personal call
-      //  1) Cal click on 2+ days (one-day click could be scanner)
-      //  2) Dashboard CTA click (unfakeable — client-side JS event)
-      //  3) Long real session (>60s) + multi-day opens
+      // ENGAGED = cal booked, talk-req, or explicit DB status='engaged'
+      // (set when cal.com webhook fires booking)
       else if (
         c.status === 'engaged' ||
-        calClickDays >= 2 ||
-        portalCtaClicks > 0 ||
-        (portalMaxDwellMs >= 60_000 && openDays >= 2)
+        isCalBooked ||
+        hasTalkRequest
       ) engagementTier = 'engaged'
-      // HOT = single strong real-portal signal (no scanner-suspect promotion)
-      //  - Portal deep dive (5+ sections in a session > 30s)
-      //  - Return-day view + at least one >30s session
-      //  - Single >60s session = real read
-      //  - Multi-day opens AND total >= 3 (rules out Apple-MPP noise)
+      // HOT = action signal required
       else if (
-        (portalUniqueSections >= 5 && portalEngagedSessions >= 1) ||
-        (viewDays >= 2 && portalEngagedSessions >= 1) ||
-        portalMaxDwellMs >= 60_000 ||
-        (openDays >= 2 && totalOpens >= 3)
+        portalCtaClicks >= 1 ||
+        calClickDays >= 2
       ) engagementTier = 'hot'
-      // WARM = real attention but not strong enough alone
-      //  - Multi-day opens (genuine repeat read)
-      //  - At least one engaged session (>30s on the portal)
-      else if (openDays >= 2 || portalEngagedSessions >= 1) engagementTier = 'warm'
+      // WARM = real attention (dwell or sustained opens) but no action
+      else if (
+        portalEngagedSessions >= 1 ||
+        portalTotalDwellMs >= 180_000 ||             // 3 minutes total
+        (openDays >= 2 && totalOpens >= 3) ||
+        (viewDays >= 2 && portalEngagedSessions >= 1)
+      ) engagementTier = 'warm'
       else engagementTier = 'cold'
 
       // ── Outreach status — time-frame green-light for personal email.
@@ -647,19 +653,26 @@ export async function GET(req: NextRequest) {
       const daysSinceFirstSend = lastSent?.sent_at
         ? Math.floor((Date.now() - new Date(lastSent.sent_at).getTime()) / 86_400_000)
         : null
-      const MIN_DAYS_SINCE_T1_FOR_GO = 5
+      const MIN_DAYS_SINCE_T1_FOR_GO = 3
+      // Windowing tightened 2026-06-08 based on Salesloft/HubSpot meeting-
+      // conversion data: 48h-5d is the sweet spot (~3-day peak), conversion
+      // drops 30% by day 5 and another 40% by day 7. Engaged signal at 7+
+      // days is stale - memory of why they engaged has faded.
+      //
+      //   cool       (0-48h)     : digest window - dont seem desperate
+      //   go         (48h-120h)  : 🟢 SWEET SPOT - 2-5 days post hot signal
+      //   last-chance (120-240h) : 🟡 5-10d - one tactical follow-up
+      //   long-nurture (240h+)   : 🔴 10d+ - quarterly cadence only
       let outreachStatus: 'cool' | 'go' | 'last-chance' | 'long-nurture' | 'done' | 'not-hot'
       if (isCalBooked || hasTalkRequest || replies > 0) {
         outreachStatus = 'done'
       } else if (!isHot || hoursSinceHotSignal == null) {
         outreachStatus = 'not-hot'
       } else if (hoursSinceHotSignal < 48 || (daysSinceFirstSend != null && daysSinceFirstSend < MIN_DAYS_SINCE_T1_FOR_GO)) {
-        // Wait either the 48hr engagement-digest window OR until T1 has
-        // had 5 calendar days to land — whichever is longer.
         outreachStatus = 'cool'
-      } else if (hoursSinceHotSignal <= 168) {
+      } else if (hoursSinceHotSignal <= 120) {        // 5 days
         outreachStatus = 'go'
-      } else if (hoursSinceHotSignal <= 336) {
+      } else if (hoursSinceHotSignal <= 240) {        // 10 days
         outreachStatus = 'last-chance'
       } else {
         outreachStatus = 'long-nurture'

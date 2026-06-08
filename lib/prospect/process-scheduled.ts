@@ -41,21 +41,24 @@ const COLD_FROM = 'Zac Lewis <partnerships@concussion-education-australia.com>'
 const REPLY_TO = 'zac@concussion-education-australia.com'
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
 
-// Cadence — busy clinicians. Healthcare CPD research cycle is 7-21 days
-// per touch; chasing too fast (< 1 week) reads as annoying and burns
-// trust faster than it builds urgency. Total sequence spans ~4 weeks.
-//   T1 → T2: 7 BD (~ 9-10 calendar days) — they read T1, mulled it,
-//            maybe forwarded to a partner, now a value-led nudge with
-//            the free intake-flowchart resource.
-//   T2 → T3: 14 BD (~ 18-20 calendar days) — final-touch window per
-//            HubSpot 2024 / Salesloft 2023 / Outreach.io research:
-//            14-21 days after the prior touch is the sweet spot for
-//            the "breakup" email (long enough that theyve decided or
-//            forgotten; short enough that they havent fully cooled).
-//            Healthcare specifically needs 14+ for partner consults,
-//            budget cycles, CPD-year timing.
-const FOLLOWUP_GAP_BUSINESS_DAYS = 7  // T1 → T2 — was 4, bumped 2026-06-05
-const FINAL_GAP_BUSINESS_DAYS = 14    // T2 → T3 — bumped 2026-06-08 from 8 to research-backed final-touch window
+// Cadence — busy clinicians. Engagement-aware: cold prospects get the
+// standard wait; engaged prospects get T2 accelerated so the signal
+// doesnt go stale.
+//   T1 → T2 (COLD, no engagement): 7 BD — they need time + a value drop
+//                                  to remember why we emailed.
+//   T1 → T2 (ENGAGED with T1):     4 BD — capture them while T1 is
+//                                  fresh. Salesloft 2023 / Outreach.io:
+//                                  engagement-triggered follow-ups peak
+//                                  at 3-5 BD; static 7+ BD lets memory
+//                                  fade and reply rate drops 30-40%.
+//   T2 → T3: 14 BD — final-touch window per HubSpot 2024 / Salesloft
+//                    2023 / Outreach.io: 14-21 days is the sweet spot
+//                    for the breakup email. Healthcare specifically
+//                    needs 14+ for partner consults, budget cycles,
+//                    CPD-year timing.
+const FOLLOWUP_GAP_BUSINESS_DAYS = 7         // T1 → T2 (cold / no signal)
+// Engaged path uses 6 cal-days (~4 BD) inline in the acceleration SQL sweep.
+const FINAL_GAP_BUSINESS_DAYS = 14           // T2 → T3
 
 interface QueueRow {
   id: number
@@ -167,6 +170,61 @@ export async function processScheduledSends(
   for (const slug of ['initial', 'followup', 'final'] as const) {
     const so = await getTemplateSignoff(slug)
     signoffByTemplate.set(slug, !!so.signedOffAt)
+  }
+
+  // ── ENGAGEMENT-AWARE T2 ACCELERATION ──
+  // Any prospect whose next_template_slug='followup' and who has shown
+  // post-T1 engagement (open/click/portal-view) gets pulled forward to
+  // T1+4 BD (cal proxy: T1 + 6 calendar days). Without this, an engaged
+  // signal at day 3 still waits the full 7 BD for T2, by which point
+  // the prospect has cooled. Research: engagement-triggered follow-ups
+  // peak at 3-5 BD; static 7+ BD lets reply rate drop 30-40%.
+  // Skipped in dryRun.
+  if (!dryRun) {
+    try {
+      await sql`
+        WITH t1_sent AS (
+          SELECT pol.clinic_id, MIN(pol.sent_at) AS t1_at
+          FROM prospect_outreach_log pol
+          WHERE pol.template_slug = 'initial'
+            AND pol.resend_email_id IS NOT NULL
+          GROUP BY pol.clinic_id
+        ),
+        engaged_followups AS (
+          SELECT pc.id AS clinic_id, t1.t1_at,
+                 (t1.t1_at + INTERVAL '6 days') AS accel_target
+          FROM prospect_clinics pc
+          JOIN t1_sent t1 ON t1.clinic_id = pc.id
+          WHERE pc.next_template_slug = 'followup'
+            AND pc.status NOT IN ('archived','lost','bounced','engaged','won','replied')
+            AND pc.scheduled_send_at IS NOT NULL
+            AND pc.scheduled_send_at > NOW() + INTERVAL '2 days'
+            AND (
+              EXISTS (
+                SELECT 1 FROM email_events ee
+                JOIN prospect_outreach_log pol2 ON pol2.resend_email_id = ee.email_id
+                WHERE pol2.clinic_id = pc.id
+                  AND ee.event_type IN ('opened','clicked')
+                  AND ee.created_at > t1.t1_at
+              )
+              OR EXISTS (
+                SELECT 1 FROM prospect_portal_views ppv
+                WHERE ppv.clinic_id = pc.id
+                  AND ppv.viewed_at > t1.t1_at
+                  AND COALESCE(ppv.user_agent, '') !~* '(microsoft office|safelinks|mimecast|barracuda|proofpoint|googlebot|bingbot)'
+              )
+            )
+        )
+        UPDATE prospect_clinics pc
+        SET scheduled_send_at = LEAST(pc.scheduled_send_at, ef.accel_target),
+            updated_at = NOW()
+        FROM engaged_followups ef
+        WHERE pc.id = ef.clinic_id
+          AND pc.scheduled_send_at > ef.accel_target
+      `
+    } catch (err) {
+      console.error('[process-scheduled] T2 acceleration sweep failed:', err)
+    }
   }
 
   // Driver query: every clinic whose next_template_slug says something is
