@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Building2, User, Mail, AlertCircle, Check, Copy, ArrowRight, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
@@ -17,6 +17,25 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<{ code: string; athleteLink: string } | null>(null)
   const [copied, setCopied] = useState(false)
+  // Capture ?prospect={slug} from URL for B2B cold-outreach attribution.
+  // SessionStorage persists if user navigates around before submitting.
+  const [prospectSlug, setProspectSlug] = useState<string>('')
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const slug = params.get('prospect')
+    if (slug) {
+      const clean = slug.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80)
+      if (clean) {
+        setProspectSlug(clean)
+        try { sessionStorage.setItem('prospect_slug', clean) } catch { /* silent */ }
+      }
+    } else {
+      try {
+        const stored = sessionStorage.getItem('prospect_slug')
+        if (stored) setProspectSlug(stored)
+      } catch { /* silent */ }
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +59,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/preseason/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clinicName, contactName, email }),
+        body: JSON.stringify({ clinicName, contactName, email, prospectSlug: prospectSlug || undefined }),
       })
 
       const data = await response.json()

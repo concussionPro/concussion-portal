@@ -29,7 +29,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Preseason service not configured' }, { status: 503 })
     }
 
-    const { clinicName, contactName, email } = await request.json()
+    const { clinicName, contactName, email, prospectSlug } = await request.json() as {
+      clinicName?: string; contactName?: string; email?: string; prospectSlug?: string
+    }
 
     // Validate
     if (!clinicName || !contactName || !email) {
@@ -87,12 +89,19 @@ export async function POST(request: Request) {
     }
 
     // Add to user list for nurture emails (won't duplicate if already exists)
+    // Capture prospectSlug if this came from a cold-email link (e.g.
+    // /preseason?prospect={slug}) - lets the b2b dashboard attribute the
+    // free-tool signup back to the right prospect_clinics row as a HOT signal.
+    const sanitizedProspectSlug = typeof prospectSlug === 'string'
+      ? prospectSlug.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80) || undefined
+      : undefined
     try {
       await createUser({
         email: email.toLowerCase(),
         name: contactName,
         accessLevel: 'preview',
         signupSource: 'preseason',
+        sourceProspectSlug: sanitizedProspectSlug,
       })
     } catch (err) {
       console.error('Failed to add preseason registrant to user list:', err)

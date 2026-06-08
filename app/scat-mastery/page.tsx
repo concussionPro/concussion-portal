@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Brain,
   Mail,
@@ -35,6 +35,26 @@ export default function SCATMasteryPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [successData, setSuccessData] = useState<{ message?: string } | null>(null)
+  // Read ?prospect={slug} from URL on landing — captures B2B cold-outreach
+  // attribution. Persisted to sessionStorage so it survives if the user
+  // navigates around the page before submitting the form.
+  const [prospectSlug, setProspectSlug] = useState<string>('')
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const slug = params.get('prospect')
+    if (slug) {
+      const clean = slug.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80)
+      if (clean) {
+        setProspectSlug(clean)
+        try { sessionStorage.setItem('prospect_slug', clean) } catch { /* silent */ }
+      }
+    } else {
+      try {
+        const stored = sessionStorage.getItem('prospect_slug')
+        if (stored) setProspectSlug(stored)
+      } catch { /* silent */ }
+    }
+  }, [])
 
   const validateEmail = (val: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
@@ -58,7 +78,7 @@ export default function SCATMasteryPage() {
       const res = await fetch('/api/signup-free', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase() }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), prospectSlug: prospectSlug || undefined }),
       })
 
       const data = await res.json()

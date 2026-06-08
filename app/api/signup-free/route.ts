@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
-    const { email, name } = body as { email?: string; name?: string }
+    const { email, name, prospectSlug } = body as { email?: string; name?: string; prospectSlug?: string }
 
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -68,11 +68,19 @@ export async function POST(request: NextRequest) {
       console.log(`Existing user signed up for free course: ${email.slice(0, 3)}***`)
     } else {
       // Create new user with preview access
+      // Capture prospectSlug if this came from a cold-email link (e.g.
+      // /scat-mastery?prospect={slug}) so the b2b dashboard can credit
+      // the free-course signup back to the right prospect_clinics row
+      // as a HOT buying-intent signal.
+      const sanitizedProspectSlug = typeof prospectSlug === 'string'
+        ? prospectSlug.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80) || undefined
+        : undefined
       userId = await createUser({
         email,
         name: userName,
         accessLevel: 'preview',
         signupSource: 'free-course',
+        sourceProspectSlug: sanitizedProspectSlug,
       })
       console.log(`New user created for free course: ${email.slice(0, 3)}***`)
     }

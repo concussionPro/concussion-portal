@@ -73,6 +73,12 @@ async function ensureColumns() {
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS converted_from TEXT`
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false`
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reference_book_purchased_at TIMESTAMPTZ`
+    // Attribution back to the cold-outreach prospect_clinics.slug that
+    // referred this signup (via ?prospect={slug} URL param on cold-email
+    // CTAs to /scat-mastery and /preseason). Lets the engagement
+    // aggregator count free-tool signups per prospect.
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS source_prospect_slug TEXT`
+    await sql`CREATE INDEX IF NOT EXISTS users_source_prospect_slug_idx ON users (source_prospect_slug) WHERE source_prospect_slug IS NOT NULL`
   } catch {
     // Column already exists or permissions differ — safe to continue
   }
@@ -114,6 +120,8 @@ export async function createUser(data: {
   stripeSubscriptionId?: string
   workshopLocation?: string
   signupSource?: 'free-course' | 'scat-export' | 'preseason' | 'purchase' | 'admin' | 'squarespace' | 'ai-safety-checklist'
+  /** prospect_clinics.slug if this signup came from the cold sequence via ?prospect= param */
+  sourceProspectSlug?: string
 }): Promise<string> {
   await ensureColumns()
   await ensureEmailIndex()
@@ -123,7 +131,7 @@ export async function createUser(data: {
   // Atomic upsert: INSERT or update on conflict
   // ON CONFLICT uses the unique index on LOWER(email)
   const { rows } = await sql`
-    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, signup_source, converted_from)
+    INSERT INTO users (id, email, name, access_level, created_at, squarespace_order_id, stripe_customer_id, stripe_subscription_id, workshop_location, signup_source, converted_from, source_prospect_slug)
     VALUES (
       ${id},
       ${data.email},
@@ -135,7 +143,8 @@ export async function createUser(data: {
       ${data.stripeSubscriptionId || null},
       ${data.workshopLocation || null},
       ${data.signupSource || null},
-      ${null}
+      ${null},
+      ${data.sourceProspectSlug || null}
     )
     ON CONFLICT (LOWER(email)) DO UPDATE SET
       access_level = CASE
@@ -152,7 +161,8 @@ export async function createUser(data: {
         WHEN users.signup_source IS NOT NULL AND EXCLUDED.signup_source IS NOT NULL AND users.signup_source != EXCLUDED.signup_source
         THEN COALESCE(users.converted_from, users.signup_source)
         ELSE users.converted_from
-      END
+      END,
+      source_prospect_slug = COALESCE(users.source_prospect_slug, EXCLUDED.source_prospect_slug)
     RETURNING id
   `
 

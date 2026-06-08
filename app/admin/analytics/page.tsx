@@ -168,7 +168,7 @@ interface ProspectRow {
   pitchVariant: string | null
   engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won'
   callRecommended: boolean
-  topSignal?: 'cal_booked' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'scanner_suspect' | 'single_view' | 'single_open' | 'none'
+  topSignal?: 'cal_booked' | 'scat_course_signup' | 'preseason_signup' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'scanner_suspect' | 'single_view' | 'single_open' | 'none'
   calBookedAt?: string | null
   calBookingStatus?: string | null
   portalFlow?: {
@@ -201,6 +201,11 @@ interface ProspectRow {
   portalUniqueSections?: number
   portalDeepestSection?: string | null
   scannerSuspect?: boolean
+  scatCourseSignups?: number
+  preseasonSignups?: number
+  scatCourseFirstAt?: string | null
+  preseasonFirstAt?: string | null
+  hasFreeContentSignup?: boolean
   recommendedOffer?: 'hub-pack' | 'on-site-cohort'
   sizeBucket?: string
   dealValue?: number
@@ -2782,17 +2787,20 @@ export default function AnalyticsDashboard() {
                 let s = 0
                 if (p.calBookedAt && p.calBookingStatus === 'booked') s += 100_000
                 if (p.hasTalkRequest) s += 50_000
+                // Free-content signups = submitted email for free SCAT course or
+                // pre-season baseline-testing tool. Slightly weaker than booking
+                // a call but stronger than a dashboard CTA click (which is a
+                // single tap, not a form submission).
+                s += (p.preseasonSignups ?? 0) * 25_000   // pre-season > scat course (more committed: athletes-testing)
+                s += (p.scatCourseSignups ?? 0) * 15_000
                 s += (p.portalCtaClicks ?? 0) * 10_000
                 if ((p.calClickDays ?? 0) >= 2) s += 5_000
                 s += (p.portalEngagedSessions ?? 0) * 1_000
                 const minutesOnPortal = Math.min(30, Math.round((p.portalTotalDwellMs ?? 0) / 60_000))
                 s += minutesOnPortal * 100
-                // Return-day views only count if at least one engaged session
-                // (otherwise multi-day scanner pre-fetch could inflate this)
                 if ((p.portalEngagedSessions ?? 0) >= 1) {
                   s += Math.max(0, (p.viewDays ?? 0) - 1) * 500
                 }
-                // Multi-day opens only count past Apple-MPP-noise threshold
                 if ((p.totalOpens ?? 0) >= 3) {
                   s += Math.max(0, (p.openDays ?? 0) - 1) * 50
                 }
@@ -2824,7 +2832,8 @@ export default function AnalyticsDashboard() {
               const whyCallCopy = (p: ProspectRow): string => {
                 switch (p.topSignal) {
                   case 'cal_booked':       return `${p.contactFirstName} booked via cal.com — prep notes for the call, no manual outreach needed.`
-                  case 'portal_cta_click': return `${p.contactFirstName} clicked "${p.portalTopCtaTarget ?? 'a CTA'}" on the dashboard${(p.portalCtaClicks ?? 0) > 1 ? ` (×${p.portalCtaClicks})` : ''} — real intent, not scanner noise. Personal email today.`
+                  case 'preseason_signup': return `${p.contactFirstName} registered for the free pre-season baseline-testing tool — strongest free-content signal (filled the form for athlete-testing). Personal email today, lead with how the Hub Pack / on-site cohort builds on the baseline data.`
+                  case 'scat_course_signup': return `${p.contactFirstName} signed up for the free SCAT mastery course — submitted email for clinical content. Personal email today, reference the course + offer the deeper hub.`
                   case 'portal_deep_dive': return `${p.contactFirstName} viewed ${p.portalUniqueSections} sections with ${p.portalEngagedSessions} engaged session${p.portalEngagedSessions === 1 ? '' : 's'} >30s${p.portalDeepestSection ? ` (deepest: ${p.portalDeepestSection.replace(/-/g, ' ')})` : ''} — genuine deep read. Personal note within 48h.`
                   case 'cal_click':        return `${p.contactFirstName} clicked cal.com on ${p.calClickDays} different days — definitely a human. Call today before momentum fades.`
                   case 'return_view':      return `${p.contactFirstName} returned to the dashboard on ${p.viewDays} different days with real dwell — research mode. Personal note within 48h.`
@@ -2848,6 +2857,8 @@ export default function AnalyticsDashboard() {
               // Engaged sessions / time-on-portal alone -> WARM, not HOT.
               const hotNowSortScore = (p: ProspectRow): number => {
                 let s = 0
+                s += (p.preseasonSignups ?? 0) * 25_000
+                s += (p.scatCourseSignups ?? 0) * 15_000
                 s += (p.portalCtaClicks ?? 0) * 10_000
                 if ((p.calClickDays ?? 0) >= 2) s += 5_000
                 s += (p.portalEngagedSessions ?? 0) * 1_000
@@ -2857,7 +2868,9 @@ export default function AnalyticsDashboard() {
               const hotNow = prospects
                 .filter(p =>
                   ((p.portalCtaClicks ?? 0) >= 1 ||
-                   (p.calClickDays ?? 0) >= 2) &&
+                   (p.calClickDays ?? 0) >= 2 ||
+                   (p.preseasonSignups ?? 0) >= 1 ||
+                   (p.scatCourseSignups ?? 0) >= 1) &&
                   !(p.calBookedAt && p.calBookingStatus === 'booked') &&
                   !p.hasTalkRequest &&
                   p.replies === 0
@@ -3397,6 +3410,8 @@ export default function AnalyticsDashboard() {
                                   // Top-signal label — what's the strongest signal
                                   const SIGNAL_LABELS: Record<NonNullable<ProspectRow['topSignal']>, string> = {
                                     cal_booked: '📅 Cal booked',
+                                    preseason_signup: '🏃 Pre-season signup',
+                                    scat_course_signup: '📚 SCAT course signup',
                                     portal_cta_click: '🎯 Dashboard CTA',
                                     portal_deep_dive: '🔍 Deep dive',
                                     cal_click: '🎯 Cal click (multi-day)',
@@ -3907,6 +3922,28 @@ export default function AnalyticsDashboard() {
                                 </div>
                               </div>
                             </div>
+                            {/* Free-content signups - attributed from cold-email URL params */}
+                            {((sp.preseasonSignups ?? 0) > 0 || (sp.scatCourseSignups ?? 0) > 0) && (
+                              <div className="mt-3 pt-3 border-t border-slate-100">
+                                <div className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold mb-2">🎁 Free-content signups · STRONGEST intent</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(sp.preseasonSignups ?? 0) > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 text-[11px] font-semibold border border-emerald-200">
+                                      🏃 Pre-season baseline signup ×{sp.preseasonSignups}
+                                      {sp.preseasonFirstAt && <span className="text-[10px] text-emerald-700/70 font-normal">· {new Date(sp.preseasonFirstAt).toLocaleDateString('en-AU')}</span>}
+                                    </span>
+                                  )}
+                                  {(sp.scatCourseSignups ?? 0) > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 text-[11px] font-semibold border border-emerald-200">
+                                      📚 Free SCAT course signup ×{sp.scatCourseSignups}
+                                      {sp.scatCourseFirstAt && <span className="text-[10px] text-emerald-700/70 font-normal">· {new Date(sp.scatCourseFirstAt).toLocaleDateString('en-AU')}</span>}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10.5px] text-[var(--muted-foreground)] mt-2 italic">Form submitted from a cold-email link — verified buying signal, stronger than a dashboard CTA click.</p>
+                              </div>
+                            )}
+
                             <div className="text-[10.5px] text-[var(--muted-foreground)] mt-2 pt-2 border-t border-slate-100">
                               <strong className="text-[var(--foreground)]">Verdict:</strong> {' '}
                               {(sp.portalCtaClicks ?? 0) > 0

@@ -106,6 +106,14 @@ interface TalkRequestRow {
   email: string
 }
 
+interface FreeContentRow {
+  source_prospect_slug: string
+  scat_course_count: number | string
+  preseason_count: number | string
+  scat_course_first_at: string | null
+  preseason_first_at: string | null
+}
+
 interface PortalFlowRow {
   clinic_id: number
   section_funnel: Record<string, number>
@@ -266,7 +274,7 @@ export async function GET(req: NextRequest) {
     // Practice", slug 'zac-preview-demo'). Without this filter Zac's own
     // browsing inflates the engagement metrics and pollutes the "Call now"
     // list with himself.
-    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, portalFlow] = await Promise.all([
+    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, freeContent, portalFlow] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
         : sql<ClinicDbRow>`
@@ -435,6 +443,23 @@ export async function GET(req: NextRequest) {
       // Talk-request submissions — keyed by email. Used to mark
       // prospects DONE so they don't surface as "needs personal outreach".
       sql<TalkRequestRow>`SELECT DISTINCT LOWER(email) AS email FROM talk_requests`,
+      // Free-content signups attributed back via users.source_prospect_slug
+      // (captured at signup from ?prospect={slug} URL param on /scat-mastery
+      // and /preseason/register). Per-prospect counts of:
+      //   - SCAT mastery free-course signups (signup_source = 'free-course')
+      //   - Pre-season baseline-testing registrations (signup_source = 'preseason')
+      // Both are explicit buying-intent actions, even stronger than a
+      // dashboard CTA click because the prospect filled out a form.
+      sql<FreeContentRow>`
+        SELECT source_prospect_slug,
+          COUNT(*) FILTER (WHERE signup_source = 'free-course')::int AS scat_course_count,
+          COUNT(*) FILTER (WHERE signup_source = 'preseason')::int  AS preseason_count,
+          MIN(created_at) FILTER (WHERE signup_source = 'free-course') AS scat_course_first_at,
+          MIN(created_at) FILTER (WHERE signup_source = 'preseason')  AS preseason_first_at
+        FROM users
+        WHERE source_prospect_slug IS NOT NULL
+        GROUP BY source_prospect_slug
+      `,
       portalFlowQuery,
     ])
 
@@ -454,6 +479,10 @@ export async function GET(req: NextRequest) {
     for (const r of realSessions.rows) realSessionsByClinic.set(r.clinic_id, r)
     const talkRequestSet = new Set<string>()
     for (const t of talkRequests.rows) talkRequestSet.add(t.email)
+    const freeContentByProspect = new Map<string, FreeContentRow>()
+    for (const f of freeContent.rows) {
+      if (f.source_prospect_slug) freeContentByProspect.set(f.source_prospect_slug.toLowerCase(), f)
+    }
 
     // Build rich rows
     const prospects = clinics.rows.map((c) => {
@@ -521,6 +550,12 @@ export async function GET(req: NextRequest) {
       const realSessionsCount = realRow ? Number(realRow.real_sessions ?? 0) : 0
       const lastRealSessionAt = realRow?.last_real_session_at ?? null
       const hasTalkRequest = c.contact_email ? talkRequestSet.has(c.contact_email.toLowerCase()) : false
+      const freeContent = c.slug ? freeContentByProspect.get(c.slug.toLowerCase()) : undefined
+      const scatCourseSignups = freeContent ? Number(freeContent.scat_course_count ?? 0) : 0
+      const preseasonSignups = freeContent ? Number(freeContent.preseason_count ?? 0) : 0
+      const scatCourseFirstAt = freeContent?.scat_course_first_at ?? null
+      const preseasonFirstAt = freeContent?.preseason_first_at ?? null
+      const hasFreeContentSignup = scatCourseSignups > 0 || preseasonSignups > 0
       const everSent = sends.length > 0
 
       // Top non-reply signal — what the strongest engagement marker is
@@ -551,8 +586,10 @@ export async function GET(req: NextRequest) {
       // but no human dwell. Without engaged_sessions>=1 OR a dashboard
       // CTA click, no portal signal can be trusted.
       const scannerSuspect = portalUniqueSections > 0 && portalEngagedSessions === 0 && portalCtaClicks === 0
-      const topSignal: 'cal_booked' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'scanner_suspect' | 'single_view' | 'single_open' | 'none' =
+      const topSignal: 'cal_booked' | 'scat_course_signup' | 'preseason_signup' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'scanner_suspect' | 'single_view' | 'single_open' | 'none' =
         isCalBooked ? 'cal_booked'
+        : preseasonSignups > 0 ? 'preseason_signup'        // strongest free-content signal
+        : scatCourseSignups > 0 ? 'scat_course_signup'     // submitted email for free SCAT course
         : portalCtaClicks > 0 ? 'portal_cta_click'
         : (portalUniqueSections >= 5 && portalEngagedSessions >= 1) ? 'portal_deep_dive'
         : calClickDays >= 2 ? 'cal_click'
@@ -590,10 +627,11 @@ export async function GET(req: NextRequest) {
         isCalBooked ||
         hasTalkRequest
       ) engagementTier = 'engaged'
-      // HOT = action signal required
+      // HOT = action signal required (any explicit buying-intent action)
       else if (
         portalCtaClicks >= 1 ||
-        calClickDays >= 2
+        calClickDays >= 2 ||
+        hasFreeContentSignup
       ) engagementTier = 'hot'
       // WARM = real attention (dwell or sustained opens) but no action
       else if (
@@ -628,9 +666,9 @@ export async function GET(req: NextRequest) {
       const isHot =
         isCalBooked ||
         hasTalkRequest ||
+        hasFreeContentSignup ||      // signed up for free SCAT course or pre-season tool
         calClickDays >= 2 ||
-        portalCtaClicks >= 1 ||
-        portalEngagedSessions >= 1
+        portalCtaClicks >= 1
       // Last signal across all channels — most recent of click / portal
       // view / real session / open. Drives the "today" engagement view.
       const lastSignalCandidates = [
@@ -638,6 +676,8 @@ export async function GET(req: NextRequest) {
         signal?.last_click_at,
         view?.last_viewed_at,
         lastRealSessionAt,
+        scatCourseFirstAt,
+        preseasonFirstAt,
       ].filter((d): d is string => !!d && new Date(d).getFullYear() > 2000)
       const lastSignalAt = lastSignalCandidates.length
         ? lastSignalCandidates.reduce((max, d) => (new Date(d).getTime() > new Date(max).getTime() ? d : max))
@@ -789,6 +829,12 @@ export async function GET(req: NextRequest) {
         portalUniqueSections,       // distinct sections viewed
         portalDeepestSection,       // most-viewed section
         scannerSuspect,             // sessions exist but every one <30s — likely anti-malware pre-fetch
+        // Free-content signups attributed back from cold-email URL param
+        scatCourseSignups,          // count of users.signup_source='free-course' with this slug
+        preseasonSignups,           // count of users.signup_source='preseason' with this slug
+        scatCourseFirstAt,
+        preseasonFirstAt,
+        hasFreeContentSignup,
         // portal flow — section funnel + CTA clicks + exit drop-off
         portalFlow: (() => {
           const f = portalFlowByClinic.get(c.id)
