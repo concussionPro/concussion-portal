@@ -231,13 +231,26 @@ export async function GET(req: NextRequest) {
           AND COALESCE(project, 'cea') = 'cea'
         GROUP BY LOWER(recipient)
       ),
+      -- prospect_portal_views is the AUTHORITATIVE source for portal browsing
+      -- (analytics_events.user_email is unreliably populated). Join via
+      -- clinic_id → contact_email so the engagement signal flows back
+      -- through to the email-keyed pool below.
+      portal_engagement AS (
+        SELECT LOWER(pc.contact_email) AS email,
+               COUNT(DISTINCT pv.id)::int                AS portal_views,
+               COUNT(DISTINCT pv.viewer_ip)::int         AS portal_unique_ips,
+               MAX(pv.viewed_at)                         AS last_portal_view_at
+        FROM prospect_portal_views pv
+        JOIN prospect_clinics pc ON pc.id = pv.clinic_id
+        WHERE pv.viewed_at >= NOW() - INTERVAL '90 days'
+        GROUP BY LOWER(pc.contact_email)
+      ),
       site_intent AS (
         SELECT LOWER(user_email) AS email,
                COUNT(*) FILTER (WHERE event_type='pricing_page')::int    AS pricing_views,
                COUNT(*) FILTER (WHERE event_type='checkout_start')::int  AS checkout_starts,
-               COUNT(*) FILTER (WHERE path LIKE '/proposals/%' AND event_type='page_view')::int AS portal_views,
                MAX(created_at) FILTER (
-                 WHERE event_type IN ('pricing_page','checkout_start','enrol_click') OR path LIKE '/proposals/%'
+                 WHERE event_type IN ('pricing_page','checkout_start','enrol_click')
                ) AS last_site_intent_at
         FROM analytics_events
         WHERE created_at >= NOW() - INTERVAL '90 days'
@@ -307,14 +320,20 @@ export async function GET(req: NextRequest) {
           e.last_click_at            AS "lastClickAt",
           COALESCE(s.pricing_views, 0)::int   AS "pricingViews",
           COALESCE(s.checkout_starts, 0)::int AS "checkoutStarts",
-          COALESCE(s.portal_views, 0)::int    AS "portalViews",
-          s.last_site_intent_at AS "lastSiteIntentAt",
+          -- Portal views from prospect_portal_views (authoritative source).
+          -- analytics_events.user_email was unreliably populated; the portal
+          -- table tracks clinic_id directly.
+          COALESCE(pe.portal_views, 0)::int    AS "portalViews",
+          GREATEST(
+            COALESCE(s.last_site_intent_at, '1970-01-01'::timestamptz),
+            COALESCE(pe.last_portal_view_at, '1970-01-01'::timestamptz)
+          ) AS "lastSiteIntentAt",
           COALESCE(w.submits, 0)::int AS "wiSubmits",
           w.cities AS "wiCities",
           (
             COALESCE(s.pricing_views, 0) * 20
             + COALESCE(s.checkout_starts, 0) * 30
-            + COALESCE(s.portal_views, 0) * 25
+            + COALESCE(pe.portal_views, 0) * 5          -- 5/view because portal_views are page-level so they accumulate fast (each section scroll = +1)
             + COALESCE(w.submits, 0) * 15
             + COALESCE(e.clicks, 0) * 5
             + COALESCE(e.opens, 0) * 2
@@ -323,12 +342,14 @@ export async function GET(req: NextRequest) {
           GREATEST(
             COALESCE(e.last_click_at,       '1970-01-01'::timestamptz),
             COALESCE(s.last_site_intent_at, '1970-01-01'::timestamptz),
+            COALESCE(pe.last_portal_view_at, '1970-01-01'::timestamptz),
             COALESCE(w.last_submit_at,      '1970-01-01'::timestamptz)
           ) AS "lastSignalAt"
         FROM pool p
-        LEFT JOIN email_engagement e ON e.email = LOWER(p.email)
-        LEFT JOIN site_intent     s ON s.email = LOWER(p.email)
-        LEFT JOIN wi               w ON w.email = LOWER(p.email)
+        LEFT JOIN email_engagement   e  ON e.email  = LOWER(p.email)
+        LEFT JOIN site_intent        s  ON s.email  = LOWER(p.email)
+        LEFT JOIN portal_engagement  pe ON pe.email = LOWER(p.email)
+        LEFT JOIN wi                 w  ON w.email  = LOWER(p.email)
         WHERE LOWER(p.email) NOT IN (SELECT email FROM converted)
           AND LOWER(p.email) NOT IN (SELECT email FROM unsubbed)
       )

@@ -178,6 +178,16 @@ export default function B2bOutreachPage() {
 
   const todayCount = useMemo(() => (data?.targets || []).filter((t) => t.priorityBucket === 'today').length, [data])
   const overdueCount = useMemo(() => (data?.targets || []).filter((t) => t.priorityBucket === 'overdue').length, [data])
+  // HOT NOW = anyone with portal_views ≥ 5 OR clicks ≥ 3 in the last 14 days.
+  // These are the prospects to email/call BEFORE the rest of the cold queue.
+  const hotNow = useMemo(() => {
+    if (!data) return [] as Target[]
+    return data.targets
+      .filter((t) => (t.portalViews ?? 0) >= 5 || (t.clicks ?? 0) >= 3)
+      .filter((t) => !t.hasBookedCall && !t.hasTalkRequest)
+      .sort((a, b) => (b.portalViews + b.clicks * 2) - (a.portalViews + a.clicks * 2))
+      .slice(0, 12)
+  }, [data])
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -235,6 +245,53 @@ export default function B2bOutreachPage() {
             <button onClick={load} className="px-2.5 py-1.5 rounded bg-slate-900 text-white text-[11px] font-semibold hover:bg-slate-700">Apply</button>
           </div>
         </div>
+
+        {/* HOT NOW panel — engagement-gold prospects with portal views ≥ 5
+            or email clicks ≥ 3 in last 14d. Sort by combined activity score.
+            These are the immediate revenue targets — pinned at top above the
+            urgency banner so Zac sees them every time he opens the dashboard. */}
+        {hotNow.length > 0 && (
+          <div className="bg-gradient-to-br from-rose-50 via-amber-50 to-white border border-rose-200 rounded-md p-3 mb-3">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white animate-pulse">🔥 HOT NOW</span>
+                <span className="text-xs font-bold text-slate-900">
+                  {hotNow.length} prospect{hotNow.length === 1 ? '' : 's'} with deep engagement — reach out today
+                </span>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-[10px] uppercase text-slate-500 font-bold border-b border-rose-200/50">
+                    <th className="px-2 py-1">Contact / Clinic</th>
+                    <th className="px-2 py-1 text-right">Portal views</th>
+                    <th className="px-2 py-1 text-right">Clicks</th>
+                    <th className="px-2 py-1 text-right">Score</th>
+                    <th className="px-2 py-1">Recent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {hotNow.map((t, i) => (
+                    <tr key={t.email + i} className="border-b border-rose-100/50 hover:bg-white/60">
+                      <td className="px-2 py-1.5">
+                        <div className="font-semibold text-slate-900">{t.firstName ?? '?'} <span className="text-slate-500 font-normal">— {t.clinic ?? '?'}</span></div>
+                        <a href={`mailto:${t.email}?subject=${encodeURIComponent(`Quick follow-up on ${t.clinic ?? 'concussion training'}`)}`} className="text-[10.5px] text-blue-600 hover:underline">{t.email}</a>
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-bold text-rose-700 tabular-nums">{t.portalViews}</td>
+                      <td className="px-2 py-1.5 text-right font-bold text-amber-700 tabular-nums">{t.clicks}</td>
+                      <td className="px-2 py-1.5 text-right font-bold text-slate-900 tabular-nums">{t.intentScore}</td>
+                      <td className="px-2 py-1.5 text-[10px] text-slate-500 truncate max-w-[180px]">{t.lastClickedSubject ? `clicked: "${t.lastClickedSubject.slice(0, 28)}"` : daysAgo(t.lastSignalAt) + ' since last signal'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-[10.5px] text-rose-700/80 mt-2">
+              Threshold: ≥5 portal views or ≥3 email clicks · click email to draft a personal follow-up
+            </p>
+          </div>
+        )}
 
         {/* Urgency banner — pinned to top so Zac sees who to reach out to TODAY */}
         {(todayCount > 0 || overdueCount > 0) && (
