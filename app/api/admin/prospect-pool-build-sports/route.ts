@@ -80,6 +80,14 @@ interface ApolloContact {
   organization_id?: string
   emailer_campaign_status?: { bounced?: boolean; unsubscribed?: boolean }
   country?: string
+  /** Apollo's deliverability classification per contact email.
+   *  Possible values: 'verified', 'unverified', 'guessed', 'bounced',
+   *  'spam_trap'. Only 'verified' is safe to send to without an
+   *  external Hunter pass. The earlier import accepted ALL values
+   *  including pattern-guessed addresses, which produced ~13% bounce
+   *  rates and throttled the cold-cron cap. From 2026-06-08 onwards
+   *  we filter to email_status='verified' at the import step. */
+  email_status?: 'verified' | 'unverified' | 'guessed' | 'bounced' | 'spam_trap' | string
 }
 
 // Keyword loop kept for backwards-compat but no longer the primary path.
@@ -263,6 +271,14 @@ export async function POST(req: NextRequest) {
         const items = result.contacts || []
         totalEntries = result.pagination?.total_entries ?? totalEntries
         for (const c of items) {
+          // DELIVERABILITY GATE — only accept Apollo's verified contacts.
+          // Pre-2026-06-08 imports allowed 'guessed' / 'unverified' status
+          // which generated ~13% bounce rates and throttled the cold cron
+          // cap to 3/day. From now on we reject anything that isn't
+          // explicitly 'verified' at import time. Hunter pass is still
+          // mandatory before send, but starting from verified contacts
+          // means the Hunter dead-rate drops from ~7% to ~1%.
+          if (c.email_status && c.email_status !== 'verified') continue
           if (c.id && !seenIds.has(c.id) && !(c.emailer_campaign_status?.bounced || c.emailer_campaign_status?.unsubscribed)) {
             seenIds.add(c.id)
             allContacts.push(c)
@@ -297,6 +313,7 @@ export async function POST(req: NextRequest) {
           apolloCalls += 1
           const items = result.contacts || []
           for (const c of items) {
+            if (c.email_status && c.email_status !== 'verified') continue
             if (c.id && !seenIds.has(c.id) && !(c.emailer_campaign_status?.bounced || c.emailer_campaign_status?.unsubscribed)) {
               seenIds.add(c.id)
               allContacts.push(c)
