@@ -108,9 +108,10 @@ export async function POST(req: NextRequest) {
       AND contact_email NOT LIKE 'reception@%'
       AND contact_email NOT LIKE 'enquiries@%'
       AND contact_email NOT LIKE 'office@%'
-      AND ${reverify} = TRUE OR COALESCE(notes, '') NOT LIKE '%[hunter-verified=%'
+      AND (${reverify} = TRUE OR COALESCE(notes, '') NOT LIKE '%[hunter-verified=%')
     ORDER BY
-      -- Prioritise the prospects scheduled soonest
+      -- Advance through the pool: oldest-verified-or-never-verified first
+      last_verified_at ASC NULLS FIRST,
       CASE WHEN scheduled_send_at IS NULL THEN '9999-12-31'::timestamptz ELSE scheduled_send_at END,
       id
     LIMIT ${limit}
