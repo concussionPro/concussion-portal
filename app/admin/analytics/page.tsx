@@ -3309,15 +3309,31 @@ export default function AnalyticsDashboard() {
                             2. Where they sit in the nurture sequence
                             3. Whether to prep a custom pitch for personal outreach */}
                       {(() => {
+                        // Show everyone with ANY activity - real or scanner-suspect.
+                        // Scanner-suspect activity is still useful to see (you know
+                        // who is being mail-gateway-scanned, who is on heavy IT
+                        // security, where the bot signal is concentrated). The
+                        // table flags scanner-suspect rows explicitly.
                         const engaging = prospects
                           .filter(p =>
-                            (p.engagementScore ?? 0) >= 5 ||
-                            p.engagementTier === 'hot' || p.engagementTier === 'warm' ||
-                            p.engagementTier === 'engaged' || p.engagementTier === 'replied' ||
-                            p.callRecommended === true
+                            (p.engagementScore ?? 0) >= 1 ||
+                            p.engagementTier !== 'cold' ||
+                            (p.totalClicks ?? 0) >= 1 ||
+                            (p.totalPortalViews ?? 0) >= 1 ||
+                            (p.totalOpens ?? 0) >= 2 ||  // multi-day opens
+                            p.engagedToday === true
                           )
-                          .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
-                          .slice(0, 30)
+                          // Sort: real signals first (score), then scanner-suspect
+                          // by raw activity count so Zac sees what's most active
+                          .sort((a, b) => {
+                            const aScore = (a.engagementScore ?? 0)
+                            const bScore = (b.engagementScore ?? 0)
+                            if (bScore !== aScore) return bScore - aScore
+                            const aActivity = (a.totalClicks ?? 0) + (a.totalPortalViews ?? 0)
+                            const bActivity = (b.totalClicks ?? 0) + (b.totalPortalViews ?? 0)
+                            return bActivity - aActivity
+                          })
+                          .slice(0, 40)
                         if (engaging.length === 0) return null
                         return (
                           <div>

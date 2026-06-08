@@ -1091,7 +1091,7 @@ function buildAggregates(prospects: Array<{
   let totalReplies = 0
   let wins = 0
 
-  const DEAD_STATUS = new Set(['lost', 'archived', 'bounced'])
+  const DEAD_STATUS = new Set(['lost', 'archived', 'bounced', 'engaged-elsewhere'])
 
   for (const p of prospects) {
     byStatus[p.status] = (byStatus[p.status] ?? 0) + 1

@@ -233,7 +233,7 @@ export async function processScheduledSends(
           FROM prospect_clinics pc
           JOIN t1_sent t1 ON t1.clinic_id = pc.id
           WHERE pc.next_template_slug = 'followup'
-            AND pc.status NOT IN ('archived','lost','bounced','engaged','won','replied')
+            AND pc.status NOT IN ('archived','lost','bounced','engaged','won','replied','engaged-elsewhere')
             AND pc.scheduled_send_at IS NOT NULL
             AND pc.scheduled_send_at > NOW() + INTERVAL '2 days'
             AND (
@@ -296,7 +296,7 @@ export async function processScheduledSends(
             ) wi_inner
         ) intent ON TRUE
         WHERE pc.next_template_slug IS NOT NULL
-          AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won')
+          AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
           AND pc.scheduled_send_at IS NOT NULL
           AND pc.scheduled_send_at::date = CURRENT_DATE
           AND COALESCE(intent.intent_score, 0) < 20
@@ -331,7 +331,7 @@ export async function processScheduledSends(
             ) wi_inner
         ) intent ON TRUE
         WHERE pc.next_template_slug IS NOT NULL
-          AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won')
+          AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
           AND pc.scheduled_send_at IS NOT NULL
           AND pc.scheduled_send_at <= NOW()
           AND COALESCE(intent.intent_score, 0) < 20
