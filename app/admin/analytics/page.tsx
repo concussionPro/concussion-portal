@@ -2623,6 +2623,22 @@ export default function AnalyticsDashboard() {
             })()}
 
             {/* ── B2B Prospects ────────────────────────────────────────── */}
+            {/* DEPRECATION NOTICE 2026-06-08 — the canonical B2B prospect
+                dashboard now lives at /admin/b2b-outreach (time-frame green
+                light, real-session signals, scanner-deflated clicks, HOT NOW
+                panel). The bootstrap helpers below remain for ops use. */}
+            {activeTab === 'prospects' && (
+              <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-accent/8 to-amber-50 border border-accent/25 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-accent mb-1">Moved</p>
+                  <h3 className="text-base font-bold text-foreground mb-0.5">B2B prospect dashboard lives at <code className="bg-white px-1.5 py-0.5 rounded text-xs">/admin/b2b-outreach</code></h3>
+                  <p className="text-xs text-muted-foreground">Real engagement signals, time-frame green light, HOT NOW panel, scanner-deflated clicks. The bootstrap helpers below remain for ops use.</p>
+                </div>
+                <a href="/admin/b2b-outreach" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors">
+                  Open B2B Outreach →
+                </a>
+              </div>
+            )}
             {activeTab === 'prospects' && (() => {
               const runBootstrap = async (url: string, label: string, payload?: object) => {
                 setBootstrapBusy(true)

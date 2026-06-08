@@ -58,8 +58,12 @@ type Row = {
   /** Distinct email URLs the prospect clicked — caps anti-malware scanner
    *  inflation (Defender/Mimecast/Proofpoint pre-fetch every link once). */
   distinctUrlClicks: number
-  /** Clicks on cal.com specifically — call-intent signal. */
+  /** Total cal.com clicks (raw — includes scanner pre-fetch). */
   calClicks: number
+  /** Distinct calendar DAYS the prospect clicked cal.com. 2+ days = real
+   *  user revisiting (a scanner only pre-fetches each link once per send).
+   *  Use this as the reliable cal-intent signal, not raw calClicks. */
+  calClickDays: number
   lastClickedSubject: string | null
   lastClickAt: string | null
 
@@ -86,6 +90,18 @@ type Row = {
   reachByDate: string | null
   priorityBucket: 'today' | 'this-week' | 'calm' | 'overdue' | 'done'
   personalScript: string | null
+
+  /** Time-frame-based traffic-light status for personal outreach cadence.
+   *  Computed from hoursSinceLastHotSignal:
+   *    cool     : 0-48h since first hot signal — let them digest
+   *    go       : 48h-7d — sweet spot for personal email
+   *    last-chance: 7-14d — going silent, one tactical follow-up
+   *    long-nurture: >14d silent — drop to quarterly seasonal cadence
+   *    done     : booked / talk-req / replied
+   *    not-hot  : never crossed the hot threshold
+   */
+  outreachStatus: 'cool' | 'go' | 'last-chance' | 'long-nurture' | 'done' | 'not-hot'
+  hoursSinceHotSignal: number | null
 }
 
 /**
@@ -244,9 +260,17 @@ export async function GET(req: NextRequest) {
                  AND click_url NOT ILIKE '%unsubscribe%'
                  AND click_url NOT ILIKE '%osteopathy.org.au%'
                )::int AS distinct_url_clicks,
+               -- Raw cal.com click count (scanner-included).
                COUNT(*) FILTER (
                  WHERE event_type='clicked' AND click_url ILIKE '%cal.com%'
                )::int AS cal_clicks,
+               -- Distinct DAYS the prospect clicked cal.com — a single click
+               -- could be a scanner pre-fetch, but the same email recipient
+               -- clicking cal across 2+ different days is almost always a
+               -- real user (the scanner only fetches each link once per send).
+               COUNT(DISTINCT created_at::date) FILTER (
+                 WHERE event_type='clicked' AND click_url ILIKE '%cal.com%'
+               )::int AS cal_click_days,
                MAX(created_at) FILTER (WHERE event_type='clicked') AS last_click_at,
                MAX(subject)    FILTER (WHERE event_type='clicked') AS last_clicked_subject
         FROM email_events
@@ -356,6 +380,7 @@ export async function GET(req: NextRequest) {
           COALESCE(e.clicks, 0)::int AS clicks,
           COALESCE(e.distinct_url_clicks, 0)::int AS "distinctUrlClicks",
           COALESCE(e.cal_clicks, 0)::int          AS "calClicks",
+          COALESCE(e.cal_click_days, 0)::int      AS "calClickDays",
           COALESCE(rs.real_sessions, 0)::int      AS "realSessions",
           e.last_clicked_subject     AS "lastClickedSubject",
           e.last_click_at            AS "lastClickAt",
@@ -449,6 +474,33 @@ export async function GET(req: NextRequest) {
         ? 'done'
         : computePriorityBucket(reachBy)
       const personalScript = buildPersonalScript(r, lastSignal)
+
+      // Time-frame-based outreach status. Hot threshold = ≥2 real sessions
+      // OR ≥3 distinct-URL clicks OR ≥1 cal click. If the prospect is hot,
+      // we stage them on a 48hr-wait / 7d-go / 14d-last-chance / drop-to-
+      // long-nurture cadence so Zac sees a green light when it's time.
+      const isHot =
+        (r.realSessions ?? 0) >= 2 ||
+        (r.distinctUrlClicks ?? 0) >= 3 ||
+        (r.calClicks ?? 0) >= 1
+      const hoursSinceHotSignal = isHot && lastSignal
+        ? Math.floor((Date.now() - new Date(lastSignal).getTime()) / 3600_000)
+        : null
+      let outreachStatus: Row['outreachStatus']
+      if (hasBookedCall || hasTalkRequest) {
+        outreachStatus = 'done'
+      } else if (!isHot || hoursSinceHotSignal == null) {
+        outreachStatus = 'not-hot'
+      } else if (hoursSinceHotSignal < 48) {
+        outreachStatus = 'cool'           // wait 48hr — don't seem desperate
+      } else if (hoursSinceHotSignal <= 168) {
+        outreachStatus = 'go'              // 🟢 sweet spot 48hr-7d
+      } else if (hoursSinceHotSignal <= 336) {
+        outreachStatus = 'last-chance'     // 🟡 7-14d — one tactical follow-up
+      } else {
+        outreachStatus = 'long-nurture'    // 🔴 14d+ → quarterly seasonal cadence
+      }
+
       return {
         ...r,
         angle: buildAngle(r),
@@ -459,6 +511,8 @@ export async function GET(req: NextRequest) {
         reachByDate: reachBy ? reachBy.toISOString() : null,
         priorityBucket,
         personalScript,
+        outreachStatus,
+        hoursSinceHotSignal,
       }
     })
 

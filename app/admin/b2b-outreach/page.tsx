@@ -22,7 +22,10 @@ interface Target {
   clicks: number
   distinctUrlClicks: number
   calClicks: number
+  calClickDays: number
   realSessions: number
+  outreachStatus: 'cool' | 'go' | 'last-chance' | 'long-nurture' | 'done' | 'not-hot'
+  hoursSinceHotSignal: number | null
   lastClickedSubject: string | null
   lastClickAt: string | null
   pricingViews: number
@@ -89,6 +92,35 @@ function priorityCell(t: Target): { label: string; tone: string; sortKey: number
   if (t.priorityBucket === 'overdue')   return { label: 'OVERDUE',   tone: 'bg-rose-100 text-rose-700 border-rose-300', sortKey: 1 }
   if (t.priorityBucket === 'this-week') return { label: 'This week', tone: 'bg-amber-100 text-amber-700 border-amber-200', sortKey: 2 }
   return { label: 'Watch',  tone: 'bg-slate-100 text-slate-500 border-slate-200', sortKey: 3 }
+}
+
+function outreachStatusCell(t: Target): { label: string; tone: string; sortKey: number } {
+  if (t.outreachStatus === 'done') return { label: '✓ Done', tone: 'bg-emerald-100 text-emerald-700 border-emerald-200', sortKey: 5 }
+  if (t.outreachStatus === 'go') {
+    const h = t.hoursSinceHotSignal ?? 0
+    const daysRemaining = Math.max(0, Math.floor((168 - h) / 24))
+    return {
+      label: `🟢 GO NOW (${daysRemaining}d left)`,
+      tone: 'bg-emerald-600 text-white border-emerald-700 animate-pulse',
+      sortKey: 0,
+    }
+  }
+  if (t.outreachStatus === 'cool') {
+    const h = t.hoursSinceHotSignal ?? 0
+    const hoursToGo = Math.max(0, 48 - h)
+    return {
+      label: `⏳ Wait ${hoursToGo}h more`,
+      tone: 'bg-slate-100 text-slate-600 border-slate-200',
+      sortKey: 2,
+    }
+  }
+  if (t.outreachStatus === 'last-chance') {
+    return { label: '🟡 Last chance', tone: 'bg-amber-100 text-amber-700 border-amber-300', sortKey: 1 }
+  }
+  if (t.outreachStatus === 'long-nurture') {
+    return { label: '🔴 Drop to long-nurture', tone: 'bg-rose-100 text-rose-700 border-rose-200', sortKey: 3 }
+  }
+  return { label: '—', tone: 'bg-slate-50 text-slate-400 border-slate-200', sortKey: 4 }
 }
 
 function reachByLabel(t: Target): string {
@@ -360,7 +392,7 @@ export default function B2bOutreachPage() {
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr className="text-left">
-                    <th className="px-3 py-2 text-[10px] uppercase font-bold tracking-wide text-slate-500 w-20">Reach by</th>
+                    <th className="px-3 py-2 text-[10px] uppercase font-bold tracking-wide text-slate-500 w-28">Outreach status</th>
                     <th className="px-3 py-2 text-[10px] uppercase font-bold tracking-wide text-slate-500">Contact / Clinic</th>
                     <th className="px-3 py-2 text-[10px] uppercase font-bold tracking-wide text-slate-500">Loc</th>
                     <th className="px-3 py-2 text-[10px] uppercase font-bold tracking-wide text-slate-500 text-right">Team</th>
@@ -378,17 +410,23 @@ export default function B2bOutreachPage() {
                   {visibleTargets.map((t, i) => {
                     const rowKey = t.email + i
                     const isExpanded = expandedRow === rowKey
-                    const pri = priorityCell(t)
+                    // Outreach status (time-frame green light) replaces the old
+                    // priorityCell. Hot prospects that crossed the 48hr digest
+                    // window get a GO NOW badge; under-48hr prospects show a
+                    // wait timer; over-14d-silent get drop-to-long-nurture.
+                    const outreach = outreachStatusCell(t)
                     return (
                       <Fragment key={rowKey}>
                         <tr
                           onClick={() => setExpandedRow(isExpanded ? null : rowKey)}
-                          className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${pri.sortKey <= 1 ? 'bg-rose-50/30' : ''}`}
+                          className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${outreach.sortKey === 0 ? 'bg-emerald-50/30' : outreach.sortKey === 1 ? 'bg-amber-50/30' : ''}`}
                         >
                           <td className="px-3 py-2">
                             <div className="flex flex-col gap-0.5">
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border w-fit ${pri.tone}`}>{pri.label}</span>
-                              <span className="text-[10px] text-slate-500">{reachByLabel(t)}</span>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border w-fit ${outreach.tone}`}>{outreach.label}</span>
+                              {t.calClickDays >= 2 && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border w-fit bg-emerald-100 text-emerald-700 border-emerald-200">📅 Cal {t.calClickDays}d</span>
+                              )}
                             </div>
                           </td>
                           <td className="px-3 py-2">
