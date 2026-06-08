@@ -639,12 +639,23 @@ export async function GET(req: NextRequest) {
       const hoursSinceHotSignal = isHot && lastSignalAt
         ? Math.floor((Date.now() - new Date(lastSignalAt).getTime()) / 3_600_000)
         : null
+      // Days since T1 send — gates GO NOW. Reaching out personally
+      // before T1 has had a working week to land risks looking pushy
+      // and competing with the prospects own fresh memory of T1.
+      // Healthcare clinicians often batch-read on weekends, so wait
+      // 5 calendar days minimum from T1 before allowing GO NOW.
+      const daysSinceFirstSend = lastSent?.sent_at
+        ? Math.floor((Date.now() - new Date(lastSent.sent_at).getTime()) / 86_400_000)
+        : null
+      const MIN_DAYS_SINCE_T1_FOR_GO = 5
       let outreachStatus: 'cool' | 'go' | 'last-chance' | 'long-nurture' | 'done' | 'not-hot'
       if (isCalBooked || hasTalkRequest || replies > 0) {
         outreachStatus = 'done'
       } else if (!isHot || hoursSinceHotSignal == null) {
         outreachStatus = 'not-hot'
-      } else if (hoursSinceHotSignal < 48) {
+      } else if (hoursSinceHotSignal < 48 || (daysSinceFirstSend != null && daysSinceFirstSend < MIN_DAYS_SINCE_T1_FOR_GO)) {
+        // Wait either the 48hr engagement-digest window OR until T1 has
+        // had 5 calendar days to land — whichever is longer.
         outreachStatus = 'cool'
       } else if (hoursSinceHotSignal <= 168) {
         outreachStatus = 'go'

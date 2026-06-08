@@ -403,37 +403,47 @@ export function mergeTemplate(
     ? safeCity
     : (naturalRegionPhrase(clinic.region) ?? safeCity)
 
-  // ─── Engagement-aware followup variant (T2/T3) ──────────────────────────
-  // T2 subject + intro reference what the prospect did (or didn't do) with
-  // T1. T2 gates the price-reveal: if they engaged (opened/clicked T1, i.e.
-  // they've seen the dashboard), include price in body. If no engagement,
-  // keep pushing to dashboard. T3 always discloses — last touch, no upside
-  // to withholding. Bot/scanner clicks are filtered upstream so SafeLinks
-  // pre-fetches don't trigger "saw you take a look" variants.
+  // ─── T2 followup variant — VALUE-FIRST, NO TRACKING ACKNOWLEDGMENT ──────
+  // 2026-06-08 rewrite: dropped "Saw {clinic} took a look" subjects (creepy
+  // tracking ack) in favour of value-led subjects that introduce a NEW
+  // clinical resource. Engagement signal still gates the price reveal in
+  // the body, but is never surfaced in the subject or intro — the prospect
+  // shouldn't feel monitored.
+  //
+  // Each T2 lead is a free SCAT6/SCOAT6 pack drop framed as "I built this
+  // for clinics that need a same-day intake workflow." The pitch follows
+  // the resource, not the other way around. Subject variants rotate by
+  // clinic-name-hash (deterministic, so the same clinic always gets the
+  // same subject if T2 reruns).
   const engagement = options.priorEngagement ?? 'none'
   const discloseFollowupPrice = template.slug === 'final' || engagement !== 'none'
-  let followupSubject: string
+  const t2Variants: string[] = isOnSiteTarget
+    ? [
+        `Day-1 concussion algorithm — built for ${clinic.shortName}`,
+        `${clinic.shortName} on-site cohort — agenda + free intake card`,
+        `Free clinical resource for ${clinic.shortName} (2026 AIS-aligned)`,
+      ]
+    : locationUnknown
+      ? [
+          `Day-1 concussion algorithm — built for ${clinic.shortName}`,
+          `Free SCAT6/SCOAT6 quick-reference for ${clinic.shortName}`,
+          `Concussion intake flowchart · ${clinic.shortName}`,
+        ]
+      : [
+          `Day-1 concussion algorithm — built for ${safeCity}`,
+          `Free SCAT6/SCOAT6 quick-reference for ${clinic.shortName}`,
+          `Concussion intake flowchart · ${clinic.shortName}`,
+        ]
+  const t2Idx = clinic.slug.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % t2Variants.length
+  const followupSubject = t2Variants[t2Idx]
+  // Intro = value drop first. Different lead depending on offer type, but
+  // never references opens/clicks. The free resource is the SCAT pack —
+  // already linked from T1 + T3, repositioned in T2 as the headline.
   let followupIntro: string
-  if (engagement === 'clicked') {
-    followupSubject = `Saw ${clinic.shortName} took a look — quick follow-up`
-    followupIntro = `<p>Following up — saw ${clinic.shortName} opened the preview after my last note. Anything stand out? Happy to walk through what fits your team on a 15-min call, or hand over the free SCAT pack if it's more useful right now.</p>`
-  } else if (engagement === 'opened') {
-    followupSubject = `Re: Concussion hub — quick check`
-    followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what's in this for ${clinic.shortName}:</p>`
-  } else {
-    followupSubject = locationUnknown
-      ? `Re: Concussion hub — ${clinic.shortName}`
-      : `Re: Concussion hub for ${safeCity}`
-    followupIntro = `<p>Following up — quick recap on the Concussion Hub Pack for ${clinic.shortName}:</p>`
-  }
   if (isOnSiteTarget) {
-    if (engagement === 'clicked') {
-      followupIntro = `<p>Following up — saw ${clinic.shortName} opened the preview after my last note. Anything stand out? Happy to walk through what an on-site cohort day at ${clinic.shortName} would actually look like, or hand over the free SCAT pack if it's more useful right now.</p>`
-    } else if (engagement === 'opened') {
-      followupIntro = `<p>Following up — wanted to check the last note got through. Quick recap on what an on-site cohort day at ${clinic.shortName} would cover:</p>`
-    } else {
-      followupIntro = `<p>Following up — quick recap on the on-site cohort training for ${clinic.shortName}:</p>`
-    }
+    followupIntro = `<p>Quick follow-up — wanted to share the day-1 concussion intake flowchart we use with cohort clinics. One page, red-flags → 60-min observation → discharge plan, designed so reception + clinicians can run it together: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a>.</p><p>If it's useful, the next step at ${clinic.shortName} is an on-site cohort day — full team, your space, on a Saturday that suits.</p>`
+  } else {
+    followupIntro = `<p>Quick follow-up — wanted to drop the SCAT6/SCOAT6 quick-reference + day-1 intake flowchart we built for clinics that see concussion irregularly. Useful even if the full Hub Pack isn't right yet: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a>.</p><p>If you want the rest — protocols, GP letters, RTP tracking — the Hub Pack is the path:</p>`
   }
 
   let followupPriceBlock = ''

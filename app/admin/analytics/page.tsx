@@ -3639,22 +3639,39 @@ export default function AnalyticsDashboard() {
                               (2) when do we switch to manual? Predicts T2 subject from engagement state
                               (clicked/opened/none mirrors the email-templates.ts gating). */}
                           {(() => {
-                            // Predict the followup subject the auto-sequence would send next.
-                            // Mirrors the engagement-aware variant logic in lib/prospect/email-templates.ts.
+                            // Predict T2 subject — mirrors the value-led variant logic
+                            // in lib/prospect/email-templates.ts (rewritten 2026-06-08
+                            // to drop tracking-acknowledgment subjects).
+                            const isOnSite = sp.recommendedOffer === 'on-site-cohort'
+                            const locationKnown = sp.city && !/unknown/i.test(sp.city)
+                            const t2Variants = isOnSite
+                              ? [
+                                  `Day-1 concussion algorithm — built for ${sp.shortName}`,
+                                  `${sp.shortName} on-site cohort — agenda + free intake card`,
+                                  `Free clinical resource for ${sp.shortName} (2026 AIS-aligned)`,
+                                ]
+                              : !locationKnown
+                                ? [
+                                    `Day-1 concussion algorithm — built for ${sp.shortName}`,
+                                    `Free SCAT6/SCOAT6 quick-reference for ${sp.shortName}`,
+                                    `Concussion intake flowchart · ${sp.shortName}`,
+                                  ]
+                                : [
+                                    `Day-1 concussion algorithm — built for ${sp.city}`,
+                                    `Free SCAT6/SCOAT6 quick-reference for ${sp.shortName}`,
+                                    `Concussion intake flowchart · ${sp.shortName}`,
+                                  ]
+                            const t2Idx = sp.slug.split('').reduce((a, ch) => a + ch.charCodeAt(0), 0) % t2Variants.length
+                            const predictedT2Subject = t2Variants[t2Idx]
+                            // Price reveal still gated by engagement (clicked/opened),
+                            // but the body lead is always the free resource — no
+                            // tracking acknowledgment in subject or intro.
                             const engagedWithT1 =
                               (sp.distinctUrlClicks ?? 0) > 0 || (sp.portalCtaClicks ?? 0) > 0
                                 ? 'clicked'
                                 : (sp.openDays ?? 0) > 0
                                   ? 'opened'
                                   : 'none'
-                            const predictedT2Subject =
-                              engagedWithT1 === 'clicked'
-                                ? `Saw ${sp.shortName} took a look — quick follow-up`
-                                : engagedWithT1 === 'opened'
-                                  ? `Re: Concussion hub — quick check`
-                                  : sp.city && !/unknown/i.test(sp.city)
-                                    ? `Re: Concussion hub for ${sp.city}`
-                                    : `Re: Concussion hub — ${sp.shortName}`
                             const t2RevealsPrice = engagedWithT1 !== 'none'
                             const predictedT3Subject = `Closing the loop — ${sp.shortName}`
                             const t2Date = sp.scheduledSendAt ? new Date(sp.scheduledSendAt) : null
