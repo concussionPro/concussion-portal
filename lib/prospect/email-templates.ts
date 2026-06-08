@@ -163,12 +163,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview" class="preview-img" width="548" height="288" /></a>
 
-      <ul class="points" style="margin: 14px 0 14px;">
-        <li><strong>All {hub_seat_count} of {clinic_short_name}'s {clinical_team_word} + admin trained</strong> — same protocols, same documentation, no clinician-by-clinician training overhead. Additional clinical seats $497 ea past 5.</li>
-        <li><strong>~8 hours of admin work handed to your team</strong> — pre-built GP referral letters, NDIS framework, school sport intake, RTP clearance docs, capability one-pager — every form auto-fills with {clinic_short_name}'s details. Reception runs intake; clinicians focus on the patient.</li>
-        <li><strong>Concussion-specific protocols</strong> — VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6 — 2026 AIS/SMA + Amsterdam consensus aligned, $497/clinician workshop upgrade when you want hands-on credentials.</li>
-        <li><strong>$497/clinician workshop upgrade</strong> when you want hands-on credentials</li>
-      </ul>
+      {followup_bullets}
 
       {followup_price_block}
       {followup_cta_block}
@@ -313,9 +308,14 @@ export function mergeTemplate(
     // T1 doesn't disclose price — that's gated on portal-view engagement.
     // Price + cohort breakdown lives on the dashboard. T2 unlocks price in
     // copy IF the prospect has clicked through and seen the product.
+    // Product = CPD. Lead with the math: N clinicians × 14 hrs = total
+    // CPD delivered in one day. That's the deliverable healthcare
+    // professionals are buying. Hands-on training is how it's delivered;
+    // CPD is what they get. AHPRA + OA endorsement is the credibility.
+    const totalCpd = recoCohort.clinicians * 14
     const headerLine = isEnterprise
-      ? `<strong>On-site cohort day for ${clinic.shortName}'s ${recoCohort.clinicians}-clinician team.</strong> Full-day program at your clinic — everyone trained together on the same protocol, no clinician-by-clinician training overhead. Plus ~8 hours of admin work handed to reception: pre-built GP referrals, NDIS framework, school sport intake, RTP clearance — every form auto-fills with ${clinic.shortName}'s details.`
-      : `<strong>On-site cohort day for ${clinic.shortName}'s ${recoCohort.clinicians}-clinician team.</strong> Full-day program at your clinic — everyone trained together same-day, same protocol, immediate application to your concussion caseload. Plus ~8 hours of admin work handed to reception (pre-built referrals + intake + RTP clearance docs auto-filling with ${clinic.shortName}'s details).`
+      ? `<strong>${totalCpd} CPD hours delivered to ${clinic.shortName}'s team in one day.</strong> ${recoCohort.clinicians} clinicians × 14 hours each, Osteopathy Australia endorsed, AHPRA-aligned. Concussion-specific: VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6 — hands-on practice, not a webinar. No staggered scheduling, no clinicians out of the clinic for weeks getting separate courses.`
+      : `<strong>${totalCpd} CPD hours delivered to ${clinic.shortName}'s team in one day.</strong> ${recoCohort.clinicians} clinicians × 14 hours each, Osteopathy Australia endorsed, AHPRA-aligned. Concussion-specific: VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6 — hands-on, applied to your caseload immediately.`
     // Email is the hook, not the brochure. Details on the call.
     const invitingNote = isInvitingBucket
       ? ` Invite 1-3 referrers to fill the cohort if needed.`
@@ -351,8 +351,9 @@ export function mergeTemplate(
       </tr></table>`
     // T1 doesn't disclose price for small clinics either. Pricing is on
     // the dashboard — gates on engagement.
+    const hubTotalCpd = hubSeatCount * 14
     offerBlock = `<p style="margin: 18px 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>${clinic.shortName} concussion Hub Pack — built for your ${hubSeatCount}-clinician team.</strong> Same protocols across every clinician, ~8 hours of admin work handed to reception (GP referral letters, NDIS framework, school sport intake, RTP clearance — every form auto-fills with ${clinic.shortName}'s details). Full pricing + the ${clinic.shortName} dashboard mockup below.
+        <strong>${hubTotalCpd} CPD hours for ${clinic.shortName}'s team.</strong> ${hubSeatCount} clinicians × 14 hours, Osteopathy Australia endorsed, AHPRA-aligned, completed online at each clinician's own pace — no time off the clinical schedule. Includes the clinic-branded admin pack (pre-built referrals, intake, RTP clearance docs auto-filling with ${clinic.shortName}'s details).
       </p>`
   }
 
@@ -599,6 +600,34 @@ export function mergeTemplate(
   // Misstating the included seats is a misrepresentation, so always min(raw, 5).
   const rawClinicalCount = clinicalCount(clinic.team) || 4
   const hubSeatCount = Math.min(rawClinicalCount, 5)
+
+  // ── T2 BULLETS · offer-type-aware ──
+  // For on-site cohort targets: use REAL clinician count + lead with the
+  //   CPD math (N × 14 = total CPD delivered in one day).
+  // For Hub Pack targets: cap at 5 + admin scope, lead with CPD math too
+  //   but emphasise self-paced + admin pack.
+  // Product = CPD hours. All bullets land on that.
+  let followupBullets: string
+  if (isOnSiteTarget) {
+    const recoCohort = cohortPricing.cohortTiers.find((t) => {
+      const reco = clinic.cohortRecommendation
+      const name = reco === 'essential' ? 'Essential' : reco === 'full-team' ? 'Full team' : 'Recommended'
+      return t.name === name
+    })!
+    const onsiteTotalCpd = recoCohort.clinicians * 14
+    followupBullets = `<ul class="points" style="margin: 14px 0 14px;">
+      <li><strong>${onsiteTotalCpd} CPD hours delivered in one day</strong> — ${recoCohort.clinicians} clinicians × 14 hours each, Osteopathy Australia endorsed, AHPRA-aligned. No staggered training over months.</li>
+      <li><strong>Hands-on at ${clinic.shortName}</strong> — concussion-specific assessment your team practices in real time: VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6, 2026 AIS/SMA + Amsterdam consensus aligned.</li>
+      <li><strong>Clinic-branded admin pack included</strong> — pre-built GP referrals, NDIS framework, school sport intake, RTP clearance docs — every form auto-fills with ${clinic.shortName}'s details. Reception runs intake; clinicians focus on the patient.</li>
+    </ul>`
+  } else {
+    const hubTotalCpd = hubSeatCount * 14
+    followupBullets = `<ul class="points" style="margin: 14px 0 14px;">
+      <li><strong>${hubTotalCpd} CPD hours for ${clinic.shortName}'s team</strong> — ${hubSeatCount} clinicians${rawClinicalCount > 5 ? ' (Hub Pack ceiling, extra seats $497 ea)' : ''} + admin × 14 hours each. Osteopathy Australia endorsed, AHPRA-aligned, completed online at each clinician's own pace. No time off the clinical schedule.</li>
+      <li><strong>Concussion-specific protocols</strong> — VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6, 2026 AIS/SMA + Amsterdam consensus aligned. $497/clinician workshop upgrade when you want hands-on credentials.</li>
+      <li><strong>Clinic-branded admin pack included</strong> — pre-built GP referrals, NDIS framework, school sport intake, RTP clearance docs — every form auto-fills with ${clinic.shortName}'s details.</li>
+    </ul>`
+  }
   const variables: Record<string, string | undefined> = {
     base_url: baseUrl,
     clinic_name: clinic.name,
@@ -624,6 +653,7 @@ export function mergeTemplate(
     cal_booking_url: htmlEncodeUrl(calBookingUrl),
     cal_walkthrough_url: htmlEncodeUrl(calWalkthroughUrl),
     followup_cta_block: followupCtaBlock,
+    followup_bullets: followupBullets,
     scat_pack_url: htmlEncodeUrl(scatPackUrl),
     preseason_url: htmlEncodeUrl(preseasonUrl),
     base_url_short: baseUrlShort,
