@@ -1102,6 +1102,7 @@ export default function AnalyticsDashboard() {
   // reference data, not action data, and shouldnt dominate the top).
   const [showExitFunnel, setShowExitFunnel] = useState(false)
   const [showBreakdowns, setShowBreakdowns] = useState(false)
+  const [showPipelineFunnel, setShowPipelineFunnel] = useState(false)
   const [bootstrapBusy, setBootstrapBusy] = useState(false)
   const [bootstrapMessage, setBootstrapMessage] = useState<string | null>(null)
 
@@ -3900,6 +3901,102 @@ export default function AnalyticsDashboard() {
                             </tbody>
                           </table>
                         </div>
+                      </div>
+
+                      {/* ── PIPELINE FUNNEL · collapsible · baked into Overview ── */}
+                      <div className="card rounded-2xl border-slate-200 overflow-hidden">
+                        <button
+                          onClick={() => setShowPipelineFunnel(v => !v)}
+                          className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
+                        >
+                          <div>
+                            <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showPipelineFunnel ? '▼' : '▶'} Pipeline funnel</div>
+                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Prospect count + conversion rate at each stage</div>
+                          </div>
+                          <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showPipelineFunnel ? 'hide' : 'show'}</span>
+                        </button>
+                        {showPipelineFunnel && (
+                          <div className="px-5 pb-5 pt-2 border-t border-slate-100 space-y-3">
+                            {FUNNEL_STAGES.map(stage => {
+                              const count = agg.byStatus[stage.key] ?? 0
+                              const widthPct = (count / funnelMax) * 100
+                              const stageRevenue = prospects
+                                .filter(p => p.status === stage.key)
+                                .reduce((acc, p) => acc + p.recoCohortTotal, 0)
+                              return (
+                                <div key={stage.key} className="flex items-center gap-3">
+                                  <div className="w-24 text-xs font-semibold text-[var(--foreground)]">{stage.label}</div>
+                                  <div className="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
+                                    <div className={`absolute inset-y-0 left-0 ${stage.colour} flex items-center justify-end pr-3 text-xs font-bold text-white`} style={{ width: `${widthPct}%`, minWidth: count > 0 ? '40px' : 0 }}>
+                                      {count > 0 && count}
+                                    </div>
+                                  </div>
+                                  <div className="w-32 text-xs text-right text-[var(--muted-foreground)]">{fmt$(stageRevenue)}</div>
+                                </div>
+                              )
+                            })}
+                            <div className="grid md:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
+                              <div className="text-xs">
+                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Send → Open</div>
+                                <div className="text-lg font-bold text-[var(--accent)]">{(agg.funnel.sendOpenRate * 100).toFixed(1)}%</div>
+                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalOpens} / {agg.funnel.totalSends}</div>
+                              </div>
+                              <div className="text-xs">
+                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Open → Click</div>
+                                <div className="text-lg font-bold text-[var(--accent)]">{(agg.funnel.openClickRate * 100).toFixed(1)}%</div>
+                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalClicks} / {agg.funnel.totalOpens}</div>
+                              </div>
+                              <div className="text-xs">
+                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Send → Reply</div>
+                                <div className="text-lg font-bold text-amber-600">{(agg.funnel.sendReplyRate * 100).toFixed(2)}%</div>
+                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalReplies} / {agg.funnel.totalSends}</div>
+                              </div>
+                              <div className="text-xs">
+                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Reply → Win</div>
+                                <div className="text-lg font-bold text-emerald-600">{(agg.funnel.replyToWinRate * 100).toFixed(1)}%</div>
+                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.revenue.wins} / {agg.funnel.totalReplies}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* ── BREAKDOWNS · collapsible · baked into Overview ── */}
+                      <div className="card rounded-2xl border-slate-200 overflow-hidden">
+                        <button
+                          onClick={() => setShowBreakdowns(v => !v)}
+                          className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
+                        >
+                          <div>
+                            <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showBreakdowns ? '▼' : '▶'} Pipeline breakdowns</div>
+                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">By tier · offer · size · region · discipline · pitch variant</div>
+                          </div>
+                          <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showBreakdowns ? 'hide' : 'show'}</span>
+                        </button>
+                        {showBreakdowns && (
+                          <div className="px-5 pb-5 pt-2 border-t border-slate-100 grid md:grid-cols-2 gap-4">
+                            <BreakdownCard title="By engagement tier" data={agg.byEngagementTier ?? {}} icon={Flame} />
+                            <BreakdownCard title="By offer (Hub Pack vs on-site)" data={agg.byOffer ?? {}} icon={DollarSign} />
+                            <BreakdownCard title="By clinic size" data={agg.bySizeBucket ?? {}} icon={Building2} />
+                            <BreakdownCard title="By region" data={agg.byRegion} icon={MapPin} />
+                            <BreakdownCard title="By cohort tier" data={agg.byCohort} icon={Target} />
+                            <BreakdownCard title="By travel band" data={agg.byTravelBand} icon={Globe} />
+                            <BreakdownCard title="By priority wave" data={prospects.reduce<Record<string, number>>((acc, p) => {
+                              const k = p.priorityWave ?? 'unassigned'
+                              acc[k] = (acc[k] ?? 0) + 1
+                              return acc
+                            }, {})} icon={Flame} />
+                            <BreakdownCard title="By discipline" data={prospects.reduce<Record<string, number>>((acc, p) => {
+                              acc[p.contactDiscipline] = (acc[p.contactDiscipline] ?? 0) + 1
+                              return acc
+                            }, {})} icon={Users} />
+                            <BreakdownCard title="By pitch variant" data={prospects.reduce<Record<string, number>>((acc, p) => {
+                              const k = p.pitchVariant ?? 'metro'
+                              acc[k] = (acc[k] ?? 0) + 1
+                              return acc
+                            }, {})} icon={MousePointer} />
+                          </div>
+                        )}
                       </div>
                     </div>
                     )
