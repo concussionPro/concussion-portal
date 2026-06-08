@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
-import { X, ArrowRight, Shield, Award } from 'lucide-react'
-import { trackLeadConversion } from '@/lib/analytics'
+import { X, ArrowRight, Shield, Award, Calendar } from 'lucide-react'
+import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
 /**
  * Exit-intent popup — captures email by offering free SCAT6 Mastery course.
@@ -31,6 +31,11 @@ export function ExitIntentPopup() {
   const [error, setError] = useState('')
 
   const isExcluded = EXCLUDED_PREFIXES.some(p => pathname.startsWith(p))
+  // On prospect-demo surfaces (/p/* and /proposals/*) the SCAT-capture form
+  // is wrong — these visitors have already received cold outreach. Show a
+  // book-a-call variant instead. General portal browsers keep the SCAT
+  // capture which is the right offer for a top-of-funnel anonymous visitor.
+  const isProspectDemo = pathname.startsWith('/p/') || pathname.startsWith('/proposals/')
 
   const triggerPopup = useCallback(() => {
     if (isExcluded) return
@@ -117,6 +122,61 @@ export function ExitIntentPopup() {
   }
 
   if (!show || isExcluded) return null
+
+  // Prospect-demo variant — surface "book a call" instead of the SCAT capture
+  if (isProspectDemo) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Book a call before you go">
+        <div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShow(false)}
+        />
+        <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <button
+            onClick={() => setShow(false)}
+            className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 transition-colors z-10"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+          <div className="h-1 bg-gradient-to-r from-[#0d9488] to-[#0ea5e9]" />
+          <div className="p-6 md:p-8">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0d9488] to-[#0ea5e9] flex items-center justify-center mb-4">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Before you go — quick chat?
+            </h3>
+            <p className="text-sm text-gray-600 leading-relaxed mb-5">
+              15 minutes to walk through how the program fits your team — no slides,
+              no pitch. I&apos;ll come back same-day if you can&apos;t pick a slot now.
+            </p>
+            <div className="space-y-2">
+              <a
+                href="https://cal.com/zac-lewis-so8zjs/30min"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent('exit_popup_book_cal', { path: pathname })}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#0d9488] text-white rounded-xl text-sm font-bold hover:bg-[#0f766e] transition-colors"
+              >
+                Pick a time on cal.com <ArrowRight className="w-4 h-4" />
+              </a>
+              <a
+                href="mailto:zac@concussion-education-australia.com?subject=Concussion%20training%20-%20quick%20question"
+                onClick={() => trackEvent('exit_popup_email', { path: pathname })}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-[#0d9488] border border-[#0d9488]/30 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors"
+              >
+                Or just email me directly
+              </a>
+            </div>
+            <p className="text-[11px] text-gray-500 text-center mt-4">
+              Zac Lewis · founder · replies personally
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Free SCAT6 training offer">

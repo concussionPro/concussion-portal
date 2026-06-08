@@ -441,17 +441,17 @@ function PricingTiers() {
 
       <div className="mb-4 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-4 py-3 shadow-sm flex items-center gap-3 sm:gap-5 flex-wrap">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[9px] uppercase tracking-wider font-bold text-white/50">Public rate</span>
+          <span className="text-[9px] uppercase tracking-wider font-bold text-white/85">Public rate</span>
           <span className="text-base font-bold">A$1,400</span>
-          <span className="text-[10px] text-white/60">/ clinician</span>
+          <span className="text-[10px] text-white/80">/ clinician</span>
         </div>
-        <span className="text-white/30 text-sm">→</span>
+        <span className="text-white/60 text-sm">→</span>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-300/80">On-site cohort</span>
+          <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-300">On-site cohort</span>
           <span className="text-base font-bold text-emerald-300">From A$900</span>
-          <span className="text-[10px] text-white/60">/ clinician</span>
+          <span className="text-[10px] text-white/80">/ clinician</span>
         </div>
-        <span className="text-[10px] text-white/60 sm:ml-auto">
+        <span className="text-[11px] text-white/90 sm:ml-auto">
           Save up to A$500/clinician · whole team trains on your own cases
         </span>
       </div>
