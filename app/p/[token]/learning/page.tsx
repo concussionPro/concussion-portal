@@ -51,7 +51,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
           </p>
 
           <Link
-            href={`/proposals/advanced-health-buderim/learning/module-1?k=ah2026`}
+            href={`/modules/101?source=portal-preview&prospect=${clinic.slug}`}
             className="block glass-premium rounded-2xl p-5 sm:p-6 mb-4 border-l-2 border-l-accent hover:shadow-md transition-shadow group"
           >
             <div className="flex items-start gap-4">

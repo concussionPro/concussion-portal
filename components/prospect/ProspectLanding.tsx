@@ -624,15 +624,34 @@ function NextStepCTA({ clinic }: { clinic: ProspectClinic }) {
         No contract, no slides, just whether it makes sense for your team.
       </p>
 
-      {/* Inline Cal.com calendar — pick a slot without leaving the portal */}
-      <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm mb-4">
-        <iframe
-          src="https://cal.com/zac-lewis-so8zjs/30min?embed=1&embedType=inline&theme=light"
-          title={`Book 15 min with Zac — ${clinic.shortName}`}
-          className="w-full h-[640px] border-0 bg-white"
-          allow="camera; microphone; autoplay; fullscreen"
-          loading="lazy"
-        />
+      {/* Primary CTA — opens Cal.com booking in a new tab. The inline iframe
+          embed Cal.com blocks via X-Frame-Options; their official embed needs
+          the JS snippet which adds page weight + a render race. Direct link
+          works, never breaks, and opens in a new tab so the prospect doesn't
+          lose the portal demo while picking a slot. */}
+      <div className="mb-4">
+        <a
+          data-track-cta="next-step-book-cal"
+          href="https://cal.com/zac-lewis-so8zjs/30min"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group px-6 py-5"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+              <Activity className="w-5 h-5" strokeWidth={2} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">15 minutes · cal.com</p>
+              <h4 className="text-lg sm:text-xl font-bold mb-0.5 leading-tight">Pick a time</h4>
+              <p className="text-[12px] text-white/85">Open the calendar, grab a slot that works for {clinic.shortName}.</p>
+            </div>
+          </div>
+          <div className="inline-flex items-center gap-1.5 text-sm font-bold bg-white text-accent px-4 py-2 rounded-lg shadow-md group-hover:scale-[1.02] transition-transform">
+            Open calendar
+            <ArrowUpRight className="w-4 h-4" />
+          </div>
+        </a>
       </div>
 
       {/* Two lower-friction fallbacks side by side */}
