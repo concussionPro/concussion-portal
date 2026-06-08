@@ -117,7 +117,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       {opening_block}
 
       <p style="margin: 6px 0 14px; padding: 9px 12px; background: #f0fdfa; border-left: 3px solid #0a5a5e; border-radius: 4px; font-size: 13px; color: #0a5a5e; line-height: 1.5;">
-        <strong>Osteopathy Australia endorsed</strong> · 14 CPD hours AHPRA-aligned · delivered by an AHPRA-registered osteopath who's spent a decade on concussion at the elite-sport end. Reference: <a href="https://www.osteopathy.org.au" style="color: #0a5a5e; text-decoration: underline;">osteopathy.org.au</a>.
+        <strong>Osteopathy Australia endorsed</strong> · 14 CPD hours AHPRA-aligned · delivered by an AHPRA-registered osteopath who's spent a decade on concussion at the elite-sport end.
       </p>
 
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview dashboard" class="preview-img" width="548" height="288" /></a>
@@ -139,7 +139,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <div class="sig">
         <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, CEA
-        <br><span style="font-size: 11px; color: #94a3b8;">Speaker · Osteopathy Australia conference circuit</span>
+        <br><span style="font-size: 11px; color: #94a3b8;">Speaker · Osteopathy Australia conferences</span>
       </div>
 
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
@@ -173,7 +173,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       {followup_price_block}
       {followup_cta_block}
 
-      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA · <span style="color: #94a3b8;">Speaker · OA conference circuit</span></div>
+      <div class="sig"><strong>Zac Lewis, Osteopath</strong> · Founder, CEA · <span style="color: #94a3b8;">Speaker · OA conferences</span></div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
     </div>
   </div>
@@ -228,7 +228,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <div class="sig">
         <strong>Zac Lewis, Osteopath</strong> · AHPRA-registered · Founder, Concussion Education Australia
-        <br><span style="font-size: 11px; color: #94a3b8;">Speaker · OA conference circuit</span>
+        <br><span style="font-size: 11px; color: #94a3b8;">Speaker · OA conferences</span>
       </div>
       <div class="unsub">Reply STOP or <a href="{unsubscribe_link_only}">unsubscribe one-click</a></div>
     </div>
