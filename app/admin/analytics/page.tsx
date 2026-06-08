@@ -3642,25 +3642,11 @@ export default function AnalyticsDashboard() {
                             // Predict T2 subject — mirrors the value-led variant logic
                             // in lib/prospect/email-templates.ts (rewritten 2026-06-08
                             // to drop tracking-acknowledgment subjects).
-                            const isOnSite = sp.recommendedOffer === 'on-site-cohort'
-                            const locationKnown = sp.city && !/unknown/i.test(sp.city)
-                            const t2Variants = isOnSite
-                              ? [
-                                  `Day-1 concussion algorithm — built for ${sp.shortName}`,
-                                  `${sp.shortName} on-site cohort — agenda + free intake card`,
-                                  `Free clinical resource for ${sp.shortName} (2026 AIS-aligned)`,
-                                ]
-                              : !locationKnown
-                                ? [
-                                    `Day-1 concussion algorithm — built for ${sp.shortName}`,
-                                    `Free SCAT6/SCOAT6 quick-reference for ${sp.shortName}`,
-                                    `Concussion intake flowchart · ${sp.shortName}`,
-                                  ]
-                                : [
-                                    `Day-1 concussion algorithm — built for ${sp.city}`,
-                                    `Free SCAT6/SCOAT6 quick-reference for ${sp.shortName}`,
-                                    `Concussion intake flowchart · ${sp.shortName}`,
-                                  ]
+                            const t2Variants = [
+                              `Two free tools for ${sp.shortName} - SCAT refresher + baseline testing`,
+                              `Test ${sp.shortName}'s athletes free + free SCAT mini-course`,
+                              `Free baseline testing tool for ${sp.shortName} (no setup)`,
+                            ]
                             const t2Idx = sp.slug.split('').reduce((a, ch) => a + ch.charCodeAt(0), 0) % t2Variants.length
                             const predictedT2Subject = t2Variants[t2Idx]
                             // Price reveal still gated by engagement (clicked/opened),
@@ -3673,11 +3659,11 @@ export default function AnalyticsDashboard() {
                                   ? 'opened'
                                   : 'none'
                             const t2RevealsPrice = engagedWithT1 !== 'none'
-                            const predictedT3Subject = `Two paths from here — ${sp.shortName}`
+                            const predictedT3Subject = `In case you were still weighing this up — ${sp.shortName}`
                             const t2Date = sp.scheduledSendAt ? new Date(sp.scheduledSendAt) : null
                             const t2DaysAway = t2Date ? Math.round((t2Date.getTime() - Date.now()) / 86_400_000) : null
-                            // T3 fires ~8 BD after T2
-                            const t3Date = t2Date ? new Date(t2Date.getTime() + 9 * 86_400_000) : null
+                            // T3 fires ~14 BD after T2 (~ 20 calendar days, research-backed final-touch window)
+                            const t3Date = t2Date ? new Date(t2Date.getTime() + 20 * 86_400_000) : null
                             const t3DaysAway = t3Date ? Math.round((t3Date.getTime() - Date.now()) / 86_400_000) : null
                             const sentT1 = sp.sends.length >= 1
                             const sentT2 = sp.sends.length >= 2
@@ -3710,7 +3696,9 @@ export default function AnalyticsDashboard() {
                                         </div>
                                         <div className="text-[11px] text-[var(--muted-foreground)] italic truncate">&quot;{predictedT2Subject}&quot;</div>
                                         <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
-                                          {t2RevealsPrice ? '💲 includes price reveal (engaged with T1)' : 'no price yet (pushes to dashboard)'}
+                                          🎁 free SCAT mini-course + free pre-season baseline testing for athletes
+                                          {t2RevealsPrice ? ' · 💲 includes price reveal' : ''}
+                                          {' · CTA: book 15-min discovery call'}
                                           {' · skipped if: reply · cal booking · personal-lane promotion'}
                                         </div>
                                       </div>
@@ -3725,7 +3713,7 @@ export default function AnalyticsDashboard() {
                                           T3 · {t3Date ? `~${fmtDate(t3Date)} (~${t3DaysAway}d)` : 'after T2 lands'}
                                         </div>
                                         <div className="text-[11px] text-[var(--muted-foreground)] italic truncate">&quot;{predictedT3Subject}&quot;</div>
-                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">⚖️ binary close · Path A (online) vs Path B (on-site cohort) · no more gifts</div>
+                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">📋 warm options recap (online + on-site) · no new gift · CTA: book 15-min discovery call · 14 BD after T2 (~3 wks post-T1)</div>
                                       </div>
                                     </div>
                                   )}

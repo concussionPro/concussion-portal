@@ -127,7 +127,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       {offer_block}
 
       <a href="{portal_url}" class="cta">See the {clinic_short_name} preview →</a>
-      <span class="secondary">15 min fit-check · <a href="{cal_booking_url}">book 30 min on cal.com</a> · or <a href="{scat_pack_url}">grab the free SCAT6/SCOAT6 pack now</a></span>
+      <span class="secondary"><a href="{cal_booking_url}">Or book a 15-min discovery call</a> · <a href="{scat_pack_url}">grab the free SCAT6/SCOAT6 pack</a></span>
 
       <p style="margin: 20px 0 8px; font-size: 12px; color: #0a5a5e; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;">Multidisciplinary integration</p>
       <table class="role-bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
@@ -184,47 +184,46 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   },
   {
     slug: 'final',
-    subjectTemplate: 'Two paths from here — {clinic_short_name}',
-    // T3 closes with a binary decision — no more gifts. By this point
-    // {clinic_short_name} has had T1 (pitch + free pack) and T2 (free
-    // intake flowchart). Time to ask for the decision. Two paths:
-    //   A. Buy the online pack now (Hub Pack $1,497 - or individual)
-    //   B. Book a call about on-site team training (cohort day)
-    // {followup_price_block} renders the appropriate price line for the
-    // recommended offer. No SCAT pack mention - that gift was used in
-    // T1/T2 and re-offering at T3 dilutes the close.
+    subjectTemplate: 'In case you were still weighing this up — {clinic_short_name}',
+    // T3 = warm "just in case" recap, sent 14 BD after T2 (research-backed
+    // final-touch window per HubSpot/Salesloft/Outreach.io). Helpful tone
+    // outperforms aggressive closes 3-4x in reply rate. By this point
+    // theyve had T1 (pitch + SCAT pack footnote) and T2 (free intake
+    // flowchart as headline). No new gift - this is a quiet recap of the
+    // options theyve already seen, in case timing wasnt right earlier.
+    // {followup_price_block} always discloses price at T3.
     bodyTemplate: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>${BASE_HTML_STYLE}</style></head>
 <body>
   <div class="wrap">
     <div class="card">
       <p>Hi {contact_first_name},</p>
-      <p>Last one from me. You've seen the program — two paths from here:</p>
+      <p>No urgency from my end at all — but I wanted to drop a quick recap in case {clinic_short_name} was still weighing this up. Sometimes the timing for a CPD decision lands on the third look, not the first.</p>
+
+      <p style="margin: 12px 0 14px; font-size: 14px; color: #1a2332; line-height: 1.55;">Two ways the program can land:</p>
+
+      <ul style="margin: 0 0 14px; padding: 0 0 0 18px; font-size: 13.5px; color: #1a2332; line-height: 1.6;">
+        <li style="margin-bottom: 8px;"><strong>Online Hub Pack</strong> — your team trained in their own time, lifetime access, clinic-branded clinical pack. Best fit for self-paced teams.</li>
+        <li><strong>On-site cohort day</strong> — full day at {clinic_short_name}, hands-on with the whole team, on a Saturday that suits. Best fit for 6+ clinicians.</li>
+      </ul>
 
       {followup_price_block}
 
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 16px 0 8px;">
-        <tr>
-          <td style="width: 48%; vertical-align: top; padding: 14px; background: #f0fdfa; border: 1px solid #0a5a5e22; border-radius: 8px;">
-            <p style="margin: 0 0 6px; font-size: 11px; font-weight: bold; color: #0a5a5e; text-transform: uppercase; letter-spacing: 0.06em;">Path A · Online</p>
-            <p style="margin: 0 0 10px; font-size: 13px; color: #1a2332; line-height: 1.5;">Get your team trained in their own time. Same content, lifetime access.</p>
-            <a href="{portal_url}" style="display: inline-block; padding: 8px 14px; background: #0a5a5e; color: #fff; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: bold;">Open {clinic_short_name} preview →</a>
-          </td>
-          <td style="width: 4%;"></td>
-          <td style="width: 48%; vertical-align: top; padding: 14px; background: #fff7ed; border: 1px solid #ea580c22; border-radius: 8px;">
-            <p style="margin: 0 0 6px; font-size: 11px; font-weight: bold; color: #ea580c; text-transform: uppercase; letter-spacing: 0.06em;">Path B · On-site cohort</p>
-            <p style="margin: 0 0 10px; font-size: 13px; color: #1a2332; line-height: 1.5;">Full-day at {clinic_short_name}, hands-on with your whole team. Better fit for 6+ clinicians.</p>
-            <a href="{cal_booking_url}" style="display: inline-block; padding: 8px 14px; background: #ea580c; color: #fff; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: bold;">Book 15 min to scope →</a>
-          </td>
-        </tr>
-      </table>
-
-      <p style="margin: 14px 0 4px; padding: 8px 12px; background: #f8fafc; border-left: 3px solid #0a5a5e; border-radius: 4px; font-size: 12px; color: #475569; line-height: 1.5;">
-        Osteopathy Australia endorsed · 14 CPD hours · AHPRA-aligned · delivered by an AHPRA-registered osteopath.
+      <p style="margin: 12px 0 14px; padding: 8px 12px; background: #f0fdfa; border-left: 3px solid #0a5a5e; border-radius: 4px; font-size: 12.5px; color: #0a5a5e; line-height: 1.5;">
+        Osteopathy Australia endorsed · 14 CPD hours · AHPRA-aligned.
       </p>
 
-      <p style="margin-top: 14px; font-size: 13px; color: #475569; line-height: 1.55;">
-        If neither fits right now — no worries, this is my last note. I'll quietly check back in if there's a regulatory update or a new AIS/AFL guideline that's worth knowing about.
+      <p style="margin: 14px 0 10px; font-size: 13.5px; color: #1a2332; line-height: 1.55;">Easiest way to figure out which one fits is a 15-min chat — no pressure, just a quick discovery call:</p>
+
+      <a href="{cal_booking_url}" class="cta">Book a 15-min discovery call →</a>
+      <span class="secondary">Or revisit the <a href="{portal_url}">{clinic_short_name} preview</a> · reply with a question — I'll answer in writing within a day.</span>
+
+      <p style="margin: 18px 0 0; font-size: 13px; color: #475569; line-height: 1.55;">
+        Either way — this is my last scheduled note. No more sequence emails after this. If something changes for {clinic_short_name} down the line (new regulatory update, an AFL ruling, a tricky case), I'm a reply away.
+      </p>
+
+      <p style="margin: 12px 0 0; font-size: 13px; color: #475569; line-height: 1.55;">
+        Thanks for your time either way, {contact_first_name}.
       </p>
 
       <div class="sig">
@@ -425,47 +424,44 @@ export function mergeTemplate(
     ? safeCity
     : (naturalRegionPhrase(clinic.region) ?? safeCity)
 
-  // ─── T2 followup variant — VALUE-FIRST, NO TRACKING ACKNOWLEDGMENT ──────
-  // 2026-06-08 rewrite: dropped "Saw {clinic} took a look" subjects (creepy
-  // tracking ack) in favour of value-led subjects that introduce a NEW
-  // clinical resource. Engagement signal still gates the price reveal in
-  // the body, but is never surfaced in the subject or intro — the prospect
-  // shouldn't feel monitored.
+  // ─── T2 followup variant — TWO FREE TOOLS, NO TRACKING ACKNOWLEDGMENT ──
+  // 2026-06-08 rewrite (v3): T2 leads with TWO genuinely useful free tools
+  // the prospect can deploy this week:
+  //   1. Free SCAT mastery mini-course - the 1-hr CPD-eligible refresher
+  //   2. Free pre-season baseline testing tool - athletes self-administer
+  //      SCAT6 baselines remotely (huge for sports teams + school clinics)
   //
-  // Each T2 lead is a free SCAT6/SCOAT6 pack drop framed as "I built this
-  // for clinics that need a same-day intake workflow." The pitch follows
-  // the resource, not the other way around. Subject variants rotate by
-  // clinic-name-hash (deterministic, so the same clinic always gets the
-  // same subject if T2 reruns).
+  // No tracking ack in subject or intro. Pitch follows the value drop.
+  // All variants end with a discovery-call CTA (per Zac 2026-06-08).
   const engagement = options.priorEngagement ?? 'none'
   const discloseFollowupPrice = template.slug === 'final' || engagement !== 'none'
-  const t2Variants: string[] = isOnSiteTarget
-    ? [
-        `Day-1 concussion algorithm — built for ${clinic.shortName}`,
-        `${clinic.shortName} on-site cohort — agenda + free intake card`,
-        `Free clinical resource for ${clinic.shortName} (2026 AIS-aligned)`,
-      ]
-    : locationUnknown
-      ? [
-          `Day-1 concussion algorithm — built for ${clinic.shortName}`,
-          `Free SCAT6/SCOAT6 quick-reference for ${clinic.shortName}`,
-          `Concussion intake flowchart · ${clinic.shortName}`,
-        ]
-      : [
-          `Day-1 concussion algorithm — built for ${safeCity}`,
-          `Free SCAT6/SCOAT6 quick-reference for ${clinic.shortName}`,
-          `Concussion intake flowchart · ${clinic.shortName}`,
-        ]
+  const t2Variants: string[] = [
+    `Two free tools for ${clinic.shortName} - SCAT refresher + baseline testing`,
+    `Test ${clinic.shortName}'s athletes free + free SCAT mini-course`,
+    `Free baseline testing tool for ${clinic.shortName} (no setup)`,
+  ]
   const t2Idx = clinic.slug.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % t2Variants.length
   const followupSubject = t2Variants[t2Idx]
-  // Intro = value drop first. Different lead depending on offer type, but
-  // never references opens/clicks. The free resource is the SCAT pack —
-  // already linked from T1 + T3, repositioned in T2 as the headline.
+  // Intro = lead with the two free tools, no engagement reference.
   let followupIntro: string
   if (isOnSiteTarget) {
-    followupIntro = `<p>Quick follow-up — wanted to share the day-1 concussion intake flowchart we use with cohort clinics. One page, red-flags → 60-min observation → discharge plan, designed so reception + clinicians can run it together: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a>.</p><p>If it's useful, the next step at ${clinic.shortName} is an on-site cohort day — full team, your space, on a Saturday that suits.</p>`
+    followupIntro = `<p>Quick follow-up — wanted to share two free tools that pair well with the on-site cohort day for ${clinic.shortName}:</p>
+      <p style="margin: 10px 0; padding: 10px 12px; background: #f0fdfa; border-radius: 6px; font-size: 13.5px; line-height: 1.55;">
+        <strong>1. Free SCAT mastery mini-course</strong> — 1-hr CPD-eligible refresher (SCAT6, SCOAT6, oculomotor, BESS). Anyone on your team can take it free: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a>
+      </p>
+      <p style="margin: 10px 0; padding: 10px 12px; background: #f0fdfa; border-radius: 6px; font-size: 13.5px; line-height: 1.55;">
+        <strong>2. Pre-season baseline testing — free</strong> — athletes self-administer their SCAT6 baseline remotely. No appointment, no setup on your end. Massive head-start if a concussion happens mid-season: <a href="{preseason_url}">{base_url_short}/preseason</a>
+      </p>
+      <p style="margin: 14px 0 0;">Both are genuinely free, no upsell trap. If they're useful and you want the bigger picture for ${clinic.shortName}, a full on-site cohort day is the next step:</p>`
   } else {
-    followupIntro = `<p>Quick follow-up — wanted to drop the SCAT6/SCOAT6 quick-reference + day-1 intake flowchart we built for clinics that see concussion irregularly. Useful even if the full Hub Pack isn't right yet: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a>.</p><p>If you want the rest — protocols, GP letters, RTP tracking — the Hub Pack is the path:</p>`
+    followupIntro = `<p>Quick follow-up — wanted to share two free tools ${clinic.shortName} can use this week, no strings:</p>
+      <p style="margin: 10px 0; padding: 10px 12px; background: #f0fdfa; border-radius: 6px; font-size: 13.5px; line-height: 1.55;">
+        <strong>1. Free SCAT mastery mini-course</strong> — 1-hr CPD-eligible refresher (SCAT6, SCOAT6, oculomotor, BESS). Anyone on your team can take it free: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a>
+      </p>
+      <p style="margin: 10px 0; padding: 10px 12px; background: #f0fdfa; border-radius: 6px; font-size: 13.5px; line-height: 1.55;">
+        <strong>2. Pre-season baseline testing — free</strong> — your athletes self-administer their SCAT6 baseline remotely. No appointment, no setup on your end. Massive head-start when a concussion happens: <a href="{preseason_url}">{base_url_short}/preseason</a>
+      </p>
+      <p style="margin: 14px 0 0;">Both genuinely free. If they fit how ${clinic.shortName} runs, the Hub Pack is the rest of the picture (protocols, GP letters, RTP tracking):</p>`
   }
 
   let followupPriceBlock = ''
@@ -541,6 +537,9 @@ export function mergeTemplate(
   // SCAT pack lead magnet — UTM-tagged so we can attribute downstream
   // free-signups + paid conversions back to the cold-outreach SCAT path.
   const scatPackUrl = `${baseUrl}/scat-mastery?${utmFor('scat_pack')}&prospect=${clinic.slug}`
+  // Pre-season baseline testing tool — free self-administered SCAT6 baselines
+  // for athletes. T2 lead magnet (2026-06-08): "test your athletes free".
+  const preseasonUrl = `${baseUrl}/preseason?${utmFor('preseason')}&prospect=${clinic.slug}`
   // Short version of base URL for display in body copy (no protocol)
   const baseUrlShort = baseUrl.replace(/^https?:\/\//, '')
   const unsubscribeLinkOnly = `${baseUrl}/api/prospect/unsubscribe?t=${unsubscribeToken}`
@@ -582,16 +581,16 @@ export function mergeTemplate(
   if (engagement === 'none') {
     followupCtaBlock = `
       <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        Most clinics that engage take the call first — 15 minutes, no slides, just whether the program fits your team's caseload.
+        If the bigger picture is interesting, a 15-min discovery call is the fastest way to see if it fits ${clinic.shortName}.
       </p>
-      <a href="${htmlEncodeUrl(calBookingUrl)}" class="cta">Book 15 min on cal.com →</a>
-      <span class="secondary">Or grab the free SCAT6/SCOAT6 pack to use right now: <a href="${htmlEncodeUrl(scatPackUrl)}">${baseUrlShort}/scat-mastery</a></span>`
+      <a href="${htmlEncodeUrl(calBookingUrl)}" class="cta">Book a 15-min discovery call →</a>
+      <span class="secondary">Or reply with a question — I'll answer in writing within a day.</span>`
   } else {
-    // Warm/Hot variant — walkthrough framing (low-commitment alt for
-    // prospects who already engaged with T1 but didn't book the sales call)
+    // Warm/Hot variant — they've already engaged with T1 + the two free
+    // tools in T2. Discovery call is the natural next step.
     followupCtaBlock = `
-      <a href="${htmlEncodeUrl(calWalkthroughUrl)}" class="cta">Book a 30-min portal walkthrough →</a>
-      <span class="secondary">Or hit reply with one question — I'll answer in writing within a day.</span>`
+      <a href="${htmlEncodeUrl(calBookingUrl)}" class="cta">Book a 15-min discovery call →</a>
+      <span class="secondary">Or reply with one question — I'll answer in writing within a day.</span>`
   }
 
   // Hub Pack scope (per Zac 2026-06-08): up to 5 clinicians + admin. The
@@ -626,6 +625,7 @@ export function mergeTemplate(
     cal_walkthrough_url: htmlEncodeUrl(calWalkthroughUrl),
     followup_cta_block: followupCtaBlock,
     scat_pack_url: htmlEncodeUrl(scatPackUrl),
+    preseason_url: htmlEncodeUrl(preseasonUrl),
     base_url_short: baseUrlShort,
     access_key: clinic.accessKey,
     slug: clinic.slug,

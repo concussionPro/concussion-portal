@@ -43,12 +43,19 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-e
 
 // Cadence — busy clinicians. Healthcare CPD research cycle is 7-21 days
 // per touch; chasing too fast (< 1 week) reads as annoying and burns
-// trust faster than it builds urgency. Total sequence spans ~3 weeks.
+// trust faster than it builds urgency. Total sequence spans ~4 weeks.
 //   T1 → T2: 7 BD (~ 9-10 calendar days) — they read T1, mulled it,
-//            maybe forwarded to a partner, now a tasteful nudge.
-//   T2 → T3: 8 BD (~ 11-12 calendar days) — final note, no chase energy.
-const FOLLOWUP_GAP_BUSINESS_DAYS = 7 // T1 → T2 — was 4, bumped 2026-06-05
-const FINAL_GAP_BUSINESS_DAYS = 8    // T2 → T3 — was 5, bumped 2026-06-05
+//            maybe forwarded to a partner, now a value-led nudge with
+//            the free intake-flowchart resource.
+//   T2 → T3: 14 BD (~ 18-20 calendar days) — final-touch window per
+//            HubSpot 2024 / Salesloft 2023 / Outreach.io research:
+//            14-21 days after the prior touch is the sweet spot for
+//            the "breakup" email (long enough that theyve decided or
+//            forgotten; short enough that they havent fully cooled).
+//            Healthcare specifically needs 14+ for partner consults,
+//            budget cycles, CPD-year timing.
+const FOLLOWUP_GAP_BUSINESS_DAYS = 7  // T1 → T2 — was 4, bumped 2026-06-05
+const FINAL_GAP_BUSINESS_DAYS = 14    // T2 → T3 — bumped 2026-06-08 from 8 to research-backed final-touch window
 
 interface QueueRow {
   id: number
