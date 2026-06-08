@@ -543,66 +543,88 @@ export async function GET(req: NextRequest) {
       //  single_view      : one portal session
       //  single_open      : one email open (Apple MPP noise)
       const isCalBooked = c.cal_booking_status === 'booked' && c.cal_booked_at !== null
-      const topSignal: 'cal_booked' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none' =
+      // SCANNER-SUSPECT: portal sessions exist but every one was <30s.
+      // Pattern of anti-malware link inspectors (Defender ATP, Cloudflare
+      // Email Security, etc) that render the page in headless Chrome to
+      // inspect links and close in 2-3s. IntersectionObserver fires for
+      // every visible section during render → looks like "deep dive"
+      // but no human dwell. Without engaged_sessions>=1 OR a dashboard
+      // CTA click, no portal signal can be trusted.
+      const scannerSuspect = portalUniqueSections > 0 && portalEngagedSessions === 0 && portalCtaClicks === 0
+      const topSignal: 'cal_booked' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'scanner_suspect' | 'single_view' | 'single_open' | 'none' =
         isCalBooked ? 'cal_booked'
         : portalCtaClicks > 0 ? 'portal_cta_click'
-        : portalUniqueSections >= 5 ? 'portal_deep_dive'
-        : calClicks > 0 ? 'cal_click'
-        : viewDays >= 2 ? 'return_view'
+        : (portalUniqueSections >= 5 && portalEngagedSessions >= 1) ? 'portal_deep_dive'
+        : calClickDays >= 2 ? 'cal_click'
+        : (viewDays >= 2 && portalEngagedSessions >= 1) ? 'return_view'
         : portalMaxDwellMs >= 60_000 ? 'portal_long_dwell'
-        : openDays >= 2 ? 'multi_day_opens'
+        : (openDays >= 2 && totalOpens >= 3) ? 'multi_day_opens'
+        : scannerSuspect ? 'scanner_suspect'
         : productClicks > 0 ? 'product_click'
         : portalViews > 0 ? 'single_view'
         : totalOpens > 0 ? 'single_open'
         : 'none'
 
+      // Engagement tier — only TRUSTED signals promote a prospect.
+      // Scanner-suspect (sessions but no dwell) stays in cold/warm so
+      // Zac doesn't waste a personal email chasing a Defender pre-fetch.
       let engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won' = 'cold'
       if (c.status === 'won') engagementTier = 'won'
       else if (replies > 0) engagementTier = 'replied'
-      // ENGAGED = highest-intent non-reply signals → personal call
-      //  1) Cal click OR cal booked (literal booking intent)
-      //  2) Dashboard CTA click (book/pricing/talk inside the portal)
-      //  3) Return-day portal view + any signal (research + commitment)
-      //  4) Long single session (>60s) + multi-day opens
+      // ENGAGED = literal buying signal → personal call
+      //  1) Cal click on 2+ days (one-day click could be scanner)
+      //  2) Dashboard CTA click (unfakeable — client-side JS event)
+      //  3) Long real session (>60s) + multi-day opens
       else if (
         c.status === 'engaged' ||
-        calClicks > 0 ||
+        calClickDays >= 2 ||
         portalCtaClicks > 0 ||
-        (viewDays >= 2 && (portalCtaClicks > 0 || productClicks > 0 || otherClicks > 0)) ||
         (portalMaxDwellMs >= 60_000 && openDays >= 2)
       ) engagementTier = 'engaged'
-      // HOT = single strong real-portal signal
-      //  - Portal deep dive (5+ sections in single session)
-      //  - Return-day portal view (came back on another day)
-      //  - Long single session (>60s) on the portal
+      // HOT = single strong real-portal signal (no scanner-suspect promotion)
+      //  - Portal deep dive (5+ sections in a session > 30s)
+      //  - Return-day view + at least one >30s session
+      //  - Single >60s session = real read
       //  - Multi-day opens AND total >= 3 (rules out Apple-MPP noise)
       else if (
-        portalUniqueSections >= 5 ||
-        viewDays >= 2 ||
+        (portalUniqueSections >= 5 && portalEngagedSessions >= 1) ||
+        (viewDays >= 2 && portalEngagedSessions >= 1) ||
         portalMaxDwellMs >= 60_000 ||
-        (openDays >= 2 && totalOpens >= 3) ||
-        otherClicks > 0
+        (openDays >= 2 && totalOpens >= 3)
       ) engagementTier = 'hot'
       // WARM = real attention but not strong enough alone
       //  - Multi-day opens (genuine repeat read)
-      //  - Any portal view (real session — even if brief)
-      else if (openDays >= 2 || portalViews > 0) engagementTier = 'warm'
+      //  - At least one engaged session (>30s on the portal)
+      else if (openDays >= 2 || portalEngagedSessions >= 1) engagementTier = 'warm'
       else engagementTier = 'cold'
 
       // ── Outreach status — time-frame green-light for personal email.
-      // Hot threshold (UNFAKEABLE only) = ≥2 real browser sessions OR
-      // ≥3 distinct-URL email clicks OR ≥1 cal.com click. If hot, status
-      // tracks hours since last hot signal:
+      // Hot threshold tightened 2026-06-08 because anti-malware link
+      // inspectors (Defender ATP, Cloudflare ES) render the portal in
+      // headless Chrome, generating real session_ids + IntersectionObserver
+      // section_views, then close in 2-3s. Without dwell or a client-side
+      // CTA click, the data is unreliable.
+      //
+      // Trusted hot signals (any one promotes to hot):
+      //   - cal.com booking confirmed
+      //   - talk request submitted
+      //   - cal.com clicked on 2+ different days (scanner only fetches once)
+      //   - 1+ dashboard CTA click (client-side JS event — unfakeable)
+      //   - 1+ engaged session (>30s on portal — real human dwell)
+      //
+      // Status windows once hot:
       //   cool       (0-48h)  : let them digest, don't seem desperate
       //   go         (48h-7d) : sweet spot for personal email — GO NOW
       //   last-chance (7-14d) : one tactical follow-up before drop
       //   long-nurture (14d+) : drop to quarterly seasonal cadence
-      //   done       : booked OR submitted talk request OR replied
-      //   not-hot    : never crossed the hot threshold
+      //   done       : booked / talk-req / replied
+      //   not-hot    : never crossed the hot threshold (incl scanner-suspect)
       const isHot =
-        realSessionsCount >= 2 ||
-        distinctUrlClicks >= 3 ||
-        calClicks >= 1
+        isCalBooked ||
+        hasTalkRequest ||
+        calClickDays >= 2 ||
+        portalCtaClicks >= 1 ||
+        portalEngagedSessions >= 1
       // Last signal across all channels — most recent of click / portal
       // view / real session / open. Drives the "today" engagement view.
       const lastSignalCandidates = [
@@ -742,6 +764,7 @@ export async function GET(req: NextRequest) {
         portalTopCtaTarget,         // most-clicked CTA target ('book-call', etc)
         portalUniqueSections,       // distinct sections viewed
         portalDeepestSection,       // most-viewed section
+        scannerSuspect,             // sessions exist but every one <30s — likely anti-malware pre-fetch
         // portal flow — section funnel + CTA clicks + exit drop-off
         portalFlow: (() => {
           const f = portalFlowByClinic.get(c.id)

@@ -168,7 +168,7 @@ interface ProspectRow {
   pitchVariant: string | null
   engagementTier: 'cold' | 'warm' | 'hot' | 'engaged' | 'replied' | 'won'
   callRecommended: boolean
-  topSignal?: 'cal_booked' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'single_view' | 'single_open' | 'none'
+  topSignal?: 'cal_booked' | 'portal_cta_click' | 'portal_deep_dive' | 'cal_click' | 'return_view' | 'portal_long_dwell' | 'product_click' | 'multi_day_opens' | 'scanner_suspect' | 'single_view' | 'single_open' | 'none'
   calBookedAt?: string | null
   calBookingStatus?: string | null
   portalFlow?: {
@@ -200,6 +200,7 @@ interface ProspectRow {
   portalTopCtaTarget?: string | null
   portalUniqueSections?: number
   portalDeepestSection?: string | null
+  scannerSuspect?: boolean
   recommendedOffer?: 'hub-pack' | 'on-site-cohort'
   sizeBucket?: string
   dealValue?: number
@@ -2802,12 +2803,13 @@ export default function AnalyticsDashboard() {
                 switch (p.topSignal) {
                   case 'cal_booked':       return `${p.contactFirstName} booked via cal.com — prep notes for the call, no manual outreach needed.`
                   case 'portal_cta_click': return `${p.contactFirstName} clicked "${p.portalTopCtaTarget ?? 'a CTA'}" on the dashboard${(p.portalCtaClicks ?? 0) > 1 ? ` (×${p.portalCtaClicks})` : ''} — real intent, not scanner noise. Personal email today.`
-                  case 'portal_deep_dive': return `${p.contactFirstName} viewed ${p.portalUniqueSections} sections of the dashboard${p.portalDeepestSection ? ` (deepest: ${p.portalDeepestSection.replace(/-/g, ' ')})` : ''} — genuine deep read. Personal note within 48h.`
-                  case 'cal_click':        return `${p.contactFirstName} clicked the cal.com link — they want to book. Call today before momentum fades.`
-                  case 'return_view':      return `${p.contactFirstName} returned to the dashboard on a separate day (${p.viewDays}× view-days) — research mode. Personal note within 48h.`
+                  case 'portal_deep_dive': return `${p.contactFirstName} viewed ${p.portalUniqueSections} sections with ${p.portalEngagedSessions} engaged session${p.portalEngagedSessions === 1 ? '' : 's'} >30s${p.portalDeepestSection ? ` (deepest: ${p.portalDeepestSection.replace(/-/g, ' ')})` : ''} — genuine deep read. Personal note within 48h.`
+                  case 'cal_click':        return `${p.contactFirstName} clicked cal.com on ${p.calClickDays} different days — definitely a human. Call today before momentum fades.`
+                  case 'return_view':      return `${p.contactFirstName} returned to the dashboard on ${p.viewDays} different days with real dwell — research mode. Personal note within 48h.`
                   case 'portal_long_dwell':return `${p.contactFirstName} spent ${fmtTime(p.portalMaxDwellMs ?? 0)} on the dashboard in a single session — genuine read. Personal email this week.`
-                  case 'product_click':    return `${p.contactFirstName} only clicked through from the email (${p.productClicks ?? 1}×). Likely anti-malware scanner pre-fetch — let auto-sequence handle.`
-                  case 'multi_day_opens':  return `Opens on ${p.openDays} separate days — genuine sustained interest, no Apple-MPP noise. Soft nudge ahead of next auto-send.`
+                  case 'multi_day_opens':  return `Opens on ${p.openDays} separate days (${p.totalOpens} total) — sustained interest, not MPP noise. Soft nudge ahead of next auto-send.`
+                  case 'scanner_suspect':  return `${p.realSessions} portal session${p.realSessions === 1 ? '' : 's'} but all under 30s = anti-malware scanner pre-fetch (Defender/Cloudflare etc render the page to inspect links). Treat as no signal — let auto-sequence handle.`
+                  case 'product_click':    return `${p.contactFirstName} only clicked through from the email. Likely anti-malware scanner pre-fetch — let auto-sequence handle.`
                   case 'single_view':      return `Single portal view — let auto T2 deliver, gates the price reveal.`
                   case 'single_open':      return `Single open only — likely Apple Mail Privacy prefetch. Auto-sequence handles it.`
                   default:                 return `No verified human signal yet — auto-sequence will deliver T2/T3.`
@@ -2816,22 +2818,24 @@ export default function AnalyticsDashboard() {
 
               const fmt$ = (n: number) => `A$${n.toLocaleString('en-AU')}`
 
-              // ── HOT NOW + outreach-status (consolidated from /admin/b2b-outreach) ──
-              // Unfakeable threshold: ≥2 real browser sessions OR ≥3 distinct-URL
-              // clicks OR ≥1 cal.com click. Raw click counts excluded (anti-
-              // malware scanners pre-fetch every email link 4-5×).
+              // ── HOT NOW threshold (mirrors API isHot, scanner-tightened 2026-06-08) ──
+              // Trusted signals only:
+              //   - ≥1 engaged portal session (>30s dwell)
+              //   - ≥1 dashboard CTA click (client-side JS, unfakeable)
+              //   - ≥2 different days clicking cal.com (scanner only fetches once)
+              // Sub-30s sessions and 1-day email clicks are LIKELY scanner pre-fetch.
               const hotNow = prospects
                 .filter(p =>
-                  ((p.realSessions ?? 0) >= 2 ||
-                   (p.distinctUrlClicks ?? 0) >= 3 ||
-                   (p.calClicks ?? 0) >= 1) &&
+                  ((p.portalEngagedSessions ?? 0) >= 1 ||
+                   (p.portalCtaClicks ?? 0) >= 1 ||
+                   (p.calClickDays ?? 0) >= 2) &&
                   !(p.calBookedAt && p.calBookingStatus === 'booked') &&
                   !p.hasTalkRequest &&
                   p.replies === 0
                 )
                 .sort((a, b) =>
-                  ((b.realSessions ?? 0) * 3 + (b.distinctUrlClicks ?? 0) * 2 + (b.calClicks ?? 0) * 5) -
-                  ((a.realSessions ?? 0) * 3 + (a.distinctUrlClicks ?? 0) * 2 + (a.calClicks ?? 0) * 5)
+                  ((b.portalCtaClicks ?? 0) * 10 + (b.portalEngagedSessions ?? 0) * 3 + (b.calClickDays ?? 0) * 5) -
+                  ((a.portalCtaClicks ?? 0) * 10 + (a.portalEngagedSessions ?? 0) * 3 + (a.calClickDays ?? 0) * 5)
                 )
                 .slice(0, 12)
 
@@ -3299,11 +3303,12 @@ export default function AnalyticsDashboard() {
                                     cal_booked: '📅 Cal booked',
                                     portal_cta_click: '🎯 Dashboard CTA',
                                     portal_deep_dive: '🔍 Deep dive',
-                                    cal_click: '🎯 Cal click',
+                                    cal_click: '🎯 Cal click (multi-day)',
                                     return_view: '↻ Return visit',
                                     portal_long_dwell: '⏱ Long read',
                                     product_click: '→ Email click (scanner?)',
                                     multi_day_opens: '📅 Multi-day opens',
+                                    scanner_suspect: '🤖 Scanner pre-fetch',
                                     single_view: '👁 Single view',
                                     single_open: '✉️ Single open',
                                     none: '—',
@@ -3544,6 +3549,8 @@ export default function AnalyticsDashboard() {
                           verdict = { tone: 'done', headline: '✓ Talk request submitted — respond inside 2hrs', copy: `They filled out the /talk form. Reply directly via email — they expect a response within hours, not days.` }
                         } else if (sp.replies > 0) {
                           verdict = { tone: 'done', headline: '✓ Replied — respond inside 2hrs', copy: `Direct reply received. Auto-sequence paused. Personal reply now.` }
+                        } else if (sp.scannerSuspect && sp.outreachStatus !== 'go') {
+                          verdict = { tone: 'monitor', headline: '🤖 SCANNER SUSPECT — let auto-sequence handle', copy: `${sp.realSessions} portal session${sp.realSessions === 1 ? '' : 's'} recorded but all under 30s (total ${fmtTime(sp.portalTotalDwellMs ?? 0)}). This is the anti-malware link-inspector pattern (Defender ATP, Cloudflare Email Security, etc) — headless Chrome renders the page, fires IntersectionObserver for every section, then closes in 2-3s. No real human read. Don't waste a personal email — let T2 deliver.` }
                         } else if (sp.outreachStatus === 'go') {
                           const daysLeft = Math.max(0, Math.floor((168 - (hoursSinceSignal ?? 0)) / 24))
                           verdict = { tone: 'go', headline: `🟢 GO NOW — ${daysLeft}d window`, copy: `${sp.contactFirstName} crossed the hot threshold ${Math.floor((hoursSinceSignal ?? 0) / 24)}d ago and has had time to digest T1. Personal email today — reference their strongest signal (${sp.topSignal?.replace(/_/g, ' ') ?? 'engagement'}). Window closes in ${daysLeft}d before they cool.` }
@@ -3630,7 +3637,12 @@ export default function AnalyticsDashboard() {
                           {/* REAL portal engagement — time on page + dashboard CTA breakdown.
                               These are the unfakeable signals. Email "product click"
                               is mostly scanner pre-fetch, so we lean on these instead. */}
-                          <div className="bg-white rounded-lg p-4 mb-4">
+                          <div className={`bg-white rounded-lg p-4 mb-4 ${sp.scannerSuspect ? 'border border-amber-300' : ''}`}>
+                            {sp.scannerSuspect && (
+                              <div className="mb-3 p-2 rounded bg-amber-50 border border-amber-200 text-[11px] text-amber-900">
+                                <strong>🤖 Scanner-suspect data.</strong> All {sp.realSessions} portal session{sp.realSessions === 1 ? '' : 's'} were under 30s — likely Defender/Cloudflare link inspector rendering the page in headless Chrome. Section views and dwell numbers below are NOT human interactions.
+                              </div>
+                            )}
                             <div className="flex items-center justify-between mb-3">
                               <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Real portal engagement · unfakeable</div>
                               <div className="text-[10px] text-[var(--muted-foreground)]">JS-only · scanners cant fire client events</div>
@@ -3657,7 +3669,9 @@ export default function AnalyticsDashboard() {
                                 <div className="text-[10px] uppercase tracking-wider text-amber-600 font-bold">🔍 Sections viewed</div>
                                 <div className="text-xl font-bold text-amber-700 tabular-nums">{sp.portalUniqueSections ?? 0}</div>
                                 <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
-                                  {(sp.portalUniqueSections ?? 0) >= 5 ? 'deep dive — read the whole page'
+                                  {sp.scannerSuspect
+                                    ? 'scanner pre-fetch — not human'
+                                    : (sp.portalUniqueSections ?? 0) >= 5 ? 'deep dive — read the whole page'
                                     : (sp.portalUniqueSections ?? 0) >= 2 ? `scrolled past hero${sp.portalDeepestSection ? ` to ${sp.portalDeepestSection.replace(/-/g, ' ')}` : ''}`
                                     : 'hero only — bounced'}
                                 </div>
