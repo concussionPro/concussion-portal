@@ -308,14 +308,13 @@ export function mergeTemplate(
     // T1 doesn't disclose price — that's gated on portal-view engagement.
     // Price + cohort breakdown lives on the dashboard. T2 unlocks price in
     // copy IF the prospect has clicked through and seen the product.
-    // Product = CPD. Lead with the math: N clinicians × 14 hrs = total
-    // CPD delivered in one day. That's the deliverable healthcare
-    // professionals are buying. Hands-on training is how it's delivered;
-    // CPD is what they get. AHPRA + OA endorsement is the credibility.
-    const totalCpd = recoCohort.clinicians * 14
+    // Product = CPD hours. Per person. 14 hrs per clinician, OA endorsed,
+    // AHPRA-aligned. Dont multiply across the team — that misrepresents
+    // the deliverable. The team-size + one-day-delivery are HOW it's
+    // delivered, not what they get.
     const headerLine = isEnterprise
-      ? `<strong>${totalCpd} CPD hours delivered to ${clinic.shortName}'s team in one day.</strong> ${recoCohort.clinicians} clinicians × 14 hours each, Osteopathy Australia endorsed, AHPRA-aligned. Concussion-specific: VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6 — hands-on practice, not a webinar. No staggered scheduling, no clinicians out of the clinic for weeks getting separate courses.`
-      : `<strong>${totalCpd} CPD hours delivered to ${clinic.shortName}'s team in one day.</strong> ${recoCohort.clinicians} clinicians × 14 hours each, Osteopathy Australia endorsed, AHPRA-aligned. Concussion-specific: VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6 — hands-on, applied to your caseload immediately.`
+      ? `<strong>14 CPD hours per clinician — Osteopathy Australia endorsed, AHPRA-aligned.</strong> Delivered to ${clinic.shortName}'s full ${recoCohort.clinicians}-clinician team in one day, on-site. Concussion-specific: VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6 — hands-on practice, not a webinar. No staggered scheduling, no clinicians out of the clinic for weeks getting separate courses.`
+      : `<strong>14 CPD hours per clinician — Osteopathy Australia endorsed, AHPRA-aligned.</strong> Delivered to ${clinic.shortName}'s ${recoCohort.clinicians}-clinician team in one day, on-site. Concussion-specific: VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6 — hands-on, applied to your caseload immediately.`
     // Email is the hook, not the brochure. Details on the call.
     const invitingNote = isInvitingBucket
       ? ` Invite 1-3 referrers to fill the cohort if needed.`
@@ -351,9 +350,8 @@ export function mergeTemplate(
       </tr></table>`
     // T1 doesn't disclose price for small clinics either. Pricing is on
     // the dashboard — gates on engagement.
-    const hubTotalCpd = hubSeatCount * 14
     offerBlock = `<p style="margin: 18px 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
-        <strong>${hubTotalCpd} CPD hours for ${clinic.shortName}'s team.</strong> ${hubSeatCount} clinicians × 14 hours, Osteopathy Australia endorsed, AHPRA-aligned, completed online at each clinician's own pace — no time off the clinical schedule. Includes the clinic-branded admin pack (pre-built referrals, intake, RTP clearance docs auto-filling with ${clinic.shortName}'s details).
+        <strong>14 CPD hours per clinician — Osteopathy Australia endorsed, AHPRA-aligned.</strong> ${clinic.shortName}'s ${hubSeatCount} clinicians + admin, completed online at each clinician's own pace — no time off the clinical schedule. Includes the clinic-branded admin pack (pre-built referrals, intake, RTP clearance docs auto-filling with ${clinic.shortName}'s details).
       </p>`
   }
 
@@ -614,18 +612,16 @@ export function mergeTemplate(
       const name = reco === 'essential' ? 'Essential' : reco === 'full-team' ? 'Full team' : 'Recommended'
       return t.name === name
     })!
-    const onsiteTotalCpd = recoCohort.clinicians * 14
     followupBullets = `<ul class="points" style="margin: 14px 0 14px;">
-      <li><strong>${onsiteTotalCpd} CPD hours delivered in one day</strong> — ${recoCohort.clinicians} clinicians × 14 hours each, Osteopathy Australia endorsed, AHPRA-aligned. No staggered training over months.</li>
-      <li><strong>Hands-on at ${clinic.shortName}</strong> — concussion-specific assessment your team practices in real time: VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6, 2026 AIS/SMA + Amsterdam consensus aligned.</li>
-      <li><strong>Clinic-branded admin pack included</strong> — pre-built GP referrals, NDIS framework, school sport intake, RTP clearance docs — every form auto-fills with ${clinic.shortName}'s details. Reception runs intake; clinicians focus on the patient.</li>
+      <li><strong>14 CPD hours per clinician — OA endorsed, AHPRA-aligned</strong></li>
+      <li><strong>${recoCohort.clinicians} clinicians trained together in one day at ${clinic.shortName}</strong> — hands-on practice with VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6. No staggered training over months.</li>
+      <li><strong>Clinic-branded admin pack included</strong> — pre-built GP referrals, NDIS framework, school sport intake, RTP clearance docs — every form auto-fills with ${clinic.shortName}'s details.</li>
     </ul>`
   } else {
-    const hubTotalCpd = hubSeatCount * 14
     followupBullets = `<ul class="points" style="margin: 14px 0 14px;">
-      <li><strong>${hubTotalCpd} CPD hours for ${clinic.shortName}'s team</strong> — ${hubSeatCount} clinicians${rawClinicalCount > 5 ? ' (Hub Pack ceiling, extra seats $497 ea)' : ''} + admin × 14 hours each. Osteopathy Australia endorsed, AHPRA-aligned, completed online at each clinician's own pace. No time off the clinical schedule.</li>
-      <li><strong>Concussion-specific protocols</strong> — VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6, 2026 AIS/SMA + Amsterdam consensus aligned. $497/clinician workshop upgrade when you want hands-on credentials.</li>
-      <li><strong>Clinic-branded admin pack included</strong> — pre-built GP referrals, NDIS framework, school sport intake, RTP clearance docs — every form auto-fills with ${clinic.shortName}'s details.</li>
+      <li><strong>14 CPD hours per clinician — OA endorsed, AHPRA-aligned</strong></li>
+      <li><strong>${hubSeatCount} clinicians${rawClinicalCount > 5 ? ' (Hub Pack ceiling, extra seats $497 ea)' : ''} + admin</strong> — completed online at each clinician's own pace. No time off the clinical schedule.</li>
+      <li><strong>Clinic-branded admin pack included</strong> — pre-built GP referrals, NDIS framework, school sport intake, RTP clearance docs — every form auto-fills with ${clinic.shortName}'s details. $497/clinician workshop upgrade when you want hands-on credentials.</li>
     </ul>`
   }
   const variables: Record<string, string | undefined> = {
