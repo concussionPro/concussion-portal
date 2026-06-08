@@ -230,10 +230,28 @@ interface ProspectAggregates {
     sendOpenRate: number; openClickRate: number; sendReplyRate: number; replyToWinRate: number
   }
 }
+interface FunnelSection {
+  section: string
+  views: number
+  exits: number
+  ctaClicks: number
+  uniqueProspects: number
+  avgExitDwellMs: number | null
+  medianExitDwellMs: number | null
+  exitRate: number      // 0-1 fraction
+  ctaRate: number       // 0-1 fraction
+}
+interface CtaTarget {
+  target: string
+  clicks: number
+  uniqueProspects: number
+}
 interface ProspectsData {
   count: number
   prospects: ProspectRow[]
   aggregates?: ProspectAggregates
+  funnelSections?: FunnelSection[]
+  ctaTargets?: CtaTarget[]
   status?: string
   message?: string
 }
@@ -3348,6 +3366,107 @@ export default function AnalyticsDashboard() {
                           </p>
                         </div>
                       )}
+
+                      {/* ── WHERE PROSPECTS DROP OFF · cross-portal exit funnel ── */}
+                      {prospectsData.funnelSections && prospectsData.funnelSections.length > 0 && (() => {
+                        const sections = prospectsData.funnelSections!.filter(s => s.views >= 2)
+                        if (sections.length === 0) return null
+                        const maxViews = Math.max(...sections.map(s => s.views), 1)
+                        // Canonical scroll order to render top → bottom of page
+                        const SECTION_ORDER = ['hero','credibility','trial-cta','onsite-hero','team-snapshot','multidisciplinary','pricing','local-hub','risk-reversal','next-step','individual-signup','footer']
+                        const ordered = [...sections].sort((a, b) => {
+                          const ai = SECTION_ORDER.indexOf(a.section)
+                          const bi = SECTION_ORDER.indexOf(b.section)
+                          if (ai === -1 && bi === -1) return b.views - a.views
+                          if (ai === -1) return 1
+                          if (bi === -1) return -1
+                          return ai - bi
+                        })
+                        // Top exit-rate offender (where the most prospects are leaving)
+                        const dropOff = [...sections].filter(s => s.views >= 3).sort((a, b) => b.exitRate - a.exitRate)[0]
+                        const topCta = (prospectsData.ctaTargets ?? [])[0]
+                        const totalCtaClicks = (prospectsData.ctaTargets ?? []).reduce((sum, c) => sum + c.clicks, 0)
+                        const totalSectionViews = sections.reduce((sum, s) => sum + s.views, 0)
+                        const overallCtaRate = totalSectionViews > 0 ? totalCtaClicks / totalSectionViews : 0
+                        return (
+                          <div>
+                            <SectionTitle
+                              title="Where prospects drop off"
+                              subtitle="Cross-portal exit funnel · which section bleeds the most, which CTAs actually pull · the conversion-bottleneck story"
+                            />
+                            <div className="card rounded-2xl p-5 border-orange-200/40">
+                              {/* Headline insight */}
+                              {dropOff && (
+                                <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200">
+                                  <div className="text-[11px] uppercase tracking-wider font-bold text-rose-700 mb-1">🚪 Biggest drop-off</div>
+                                  <div className="text-sm text-rose-900 font-semibold">
+                                    <strong>{dropOff.section.replace(/-/g, ' ')}</strong> · {Math.round(dropOff.exitRate * 100)}% exit rate · {dropOff.exits} of {dropOff.views} views ended here
+                                  </div>
+                                  <p className="text-[11.5px] text-rose-700/90 mt-1">
+                                    {dropOff.section === 'pricing' ? 'Sticker shock or pricing copy not converting. Test: add risk-reversal next to price, or split-test cohort vs Hub Pack framing.'
+                                      : dropOff.section === 'hero' ? 'Above-fold isnt earning the scroll. Test: clinic-name personalisation, clinician-count + admin-time-saved benefit, region-specific stat.'
+                                      : dropOff.section === 'trial-cta' ? 'Trial CTA not converting. Test: free-content offer (SCAT pack / preseason) above the cohort pitch.'
+                                      : dropOff.section === 'team-snapshot' ? 'Team display isnt landing. Test: lead with clinician count + admin pain-point.'
+                                      : 'Section copy or position isnt converting - test alternatives.'}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Section funnel — full bar chart */}
+                              <div className="mb-4">
+                                <div className="text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold mb-2">Section funnel · views vs exits</div>
+                                <div className="space-y-1.5">
+                                  {ordered.map(s => {
+                                    const viewPct = (s.views / maxViews) * 100
+                                    const exitPctOfViews = s.views > 0 ? (s.exits / s.views) * 100 : 0
+                                    const exitColour = exitPctOfViews >= 50 ? 'bg-rose-500' : exitPctOfViews >= 25 ? 'bg-amber-400' : 'bg-emerald-400'
+                                    const dwellSec = s.medianExitDwellMs ? Math.round(s.medianExitDwellMs / 1000) : null
+                                    return (
+                                      <div key={s.section} className="flex items-center gap-2 text-xs">
+                                        <div className="w-28 text-[var(--foreground)] capitalize truncate font-medium" title={s.section}>{s.section.replace(/-/g, ' ')}</div>
+                                        <div className="flex-1 bg-slate-100 rounded h-6 relative overflow-hidden">
+                                          <div className="absolute inset-y-0 left-0 bg-[var(--accent)]/30" style={{ width: `${viewPct}%` }} />
+                                          <div className={`absolute inset-y-0 left-0 ${exitColour} opacity-70`} style={{ width: `${(s.exits / maxViews) * 100}%` }} />
+                                          <div className="absolute inset-0 flex items-center justify-between px-2 text-[10.5px] font-bold">
+                                            <span className="text-[var(--foreground)]">{s.views} views · {s.uniqueProspects} prospects</span>
+                                            <span className={exitPctOfViews >= 25 ? 'text-rose-700' : 'text-emerald-700'}>
+                                              {s.exits > 0 ? `${s.exits} exits (${Math.round(exitPctOfViews)}%)` : 'no exits'}
+                                              {dwellSec != null && exitPctOfViews >= 25 && ` · ~${dwellSec}s before exit`}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        {s.ctaClicks > 0 && (
+                                          <div className="w-20 text-right text-[10.5px] text-emerald-700 font-semibold">🎯 {s.ctaClicks} CTA</div>
+                                        )}
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* CTA performance */}
+                              {(prospectsData.ctaTargets ?? []).length > 0 && (
+                                <div>
+                                  <div className="text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold mb-2">CTA performance · which buttons actually pull</div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {(prospectsData.ctaTargets ?? []).slice(0, 10).map(c => (
+                                      <span key={c.target} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--accent)]/10 text-[var(--accent)] text-[11px] font-semibold border border-[var(--accent)]/20">
+                                        {c.target}
+                                        <span className="text-[var(--foreground)]/70 font-bold">×{c.clicks}</span>
+                                        <span className="text-[10px] text-[var(--muted-foreground)]">· {c.uniqueProspects} prospect{c.uniqueProspects === 1 ? '' : 's'}</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <p className="text-[10.5px] text-[var(--muted-foreground)] mt-2">
+                                    Top: <strong>{topCta?.target ?? '—'}</strong> ({topCta?.clicks ?? 0} clicks). Overall CTA-click-per-section-view rate: {(overallCtaRate * 100).toFixed(1)}%
+                                    {overallCtaRate < 0.05 && ' — CTAs are not converting browsers to actions. Test stronger value drops above each CTA (free SCAT pack, baseline tool, clinic-name personalisation).'}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {/* Engagement tier strip — calibrated against B2B + healthcare-CPD
                           benchmarks (Apollo 2024, Salesloft 2023, healthcare CPD trends).

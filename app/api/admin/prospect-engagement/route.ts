@@ -123,6 +123,22 @@ interface PortalFlowRow {
   deepest_section: string | null
 }
 
+interface FunnelAggregateRow {
+  section: string
+  views: number | string
+  exits: number | string
+  cta_clicks: number | string
+  avg_exit_dwell_ms: number | string | null
+  median_exit_dwell_ms: number | string | null
+  unique_prospects: number | string
+}
+
+interface CtaAggregateRow {
+  target: string
+  clicks: number | string
+  unique_prospects: number | string
+}
+
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -274,7 +290,7 @@ export async function GET(req: NextRequest) {
     // Practice", slug 'zac-preview-demo'). Without this filter Zac's own
     // browsing inflates the engagement metrics and pollutes the "Call now"
     // list with himself.
-    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, freeContent, portalFlow] = await Promise.all([
+    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, freeContent, funnelAggregate, ctaAggregate, portalFlow] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
         : sql<ClinicDbRow>`
@@ -459,6 +475,51 @@ export async function GET(req: NextRequest) {
         FROM users
         WHERE source_prospect_slug IS NOT NULL
         GROUP BY source_prospect_slug
+      `,
+      // ── AGGREGATE EXIT FUNNEL — where prospects bail, where they engage ──
+      // Across ALL prospect portals, group portal_views by section_visited
+      // and compute: total section views (denominator), exits, CTA clicks,
+      // avg/median dwell-before-exit, unique prospects who hit the section.
+      // Bot-filtered. Powers the "Where prospects drop off" dashboard panel
+      // — the single most actionable signal for fixing conversion blockers.
+      sql<FunnelAggregateRow>`
+        WITH filtered AS (
+          SELECT * FROM prospect_portal_views
+          WHERE viewed_at >= NOW() - INTERVAL '90 days'
+            AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+            AND section_visited IS NOT NULL
+            AND section_visited <> ''
+        )
+        SELECT
+          section_visited AS section,
+          COUNT(*) FILTER (WHERE interaction_type IN ('view','section_view'))::int AS views,
+          COUNT(*) FILTER (WHERE interaction_type = 'exit')::int AS exits,
+          COUNT(*) FILTER (WHERE interaction_type = 'cta_click')::int AS cta_clicks,
+          AVG(dwell_ms) FILTER (WHERE interaction_type = 'exit' AND dwell_ms IS NOT NULL)::int AS avg_exit_dwell_ms,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY dwell_ms) FILTER (WHERE interaction_type = 'exit' AND dwell_ms IS NOT NULL)::int AS median_exit_dwell_ms,
+          COUNT(DISTINCT clinic_id)::int AS unique_prospects
+        FROM filtered
+        GROUP BY section_visited
+        HAVING COUNT(*) >= 2
+        ORDER BY views DESC
+      `,
+      // CTA aggregate — which CTAs on the dashboard actually get clicked
+      // across all portals. Tells us which buttons are doing the work and
+      // which copy/positioning isnt pulling.
+      sql<CtaAggregateRow>`
+        SELECT
+          target,
+          COUNT(*)::int AS clicks,
+          COUNT(DISTINCT clinic_id)::int AS unique_prospects
+        FROM prospect_portal_views
+        WHERE interaction_type = 'cta_click'
+          AND target IS NOT NULL
+          AND target <> ''
+          AND viewed_at >= NOW() - INTERVAL '90 days'
+          AND COALESCE(user_agent, '') !~* '(microsoft office|safelinks|mimecast|barracuda|proofpoint|googlebot|bingbot|crawler|wget|curl|python-requests|node-fetch)'
+        GROUP BY target
+        ORDER BY clicks DESC
+        LIMIT 20
       `,
       portalFlowQuery,
     ])
@@ -917,11 +978,34 @@ export async function GET(req: NextRequest) {
     // Aggregations
     const aggregates = buildAggregates(prospects)
 
+    // Funnel + CTA aggregates — across-all-portals view for the "where
+    // prospects drop off" panel. Computed once per request, sent down
+    // so the UI can render the conversion-bottleneck story without
+    // recomputing client-side.
+    const funnelSections = funnelAggregate.rows.map(r => ({
+      section: r.section,
+      views: Number(r.views ?? 0),
+      exits: Number(r.exits ?? 0),
+      ctaClicks: Number(r.cta_clicks ?? 0),
+      uniqueProspects: Number(r.unique_prospects ?? 0),
+      avgExitDwellMs: r.avg_exit_dwell_ms != null ? Number(r.avg_exit_dwell_ms) : null,
+      medianExitDwellMs: r.median_exit_dwell_ms != null ? Number(r.median_exit_dwell_ms) : null,
+      exitRate: Number(r.views ?? 0) > 0 ? Number(r.exits ?? 0) / Number(r.views ?? 0) : 0,
+      ctaRate: Number(r.views ?? 0) > 0 ? Number(r.cta_clicks ?? 0) / Number(r.views ?? 0) : 0,
+    }))
+    const ctaTargets = ctaAggregate.rows.map(r => ({
+      target: r.target,
+      clicks: Number(r.clicks ?? 0),
+      uniqueProspects: Number(r.unique_prospects ?? 0),
+    }))
+
     return NextResponse.json({
       ok: true,
       count: prospects.length,
       prospects,
       aggregates,
+      funnelSections,
+      ctaTargets,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
