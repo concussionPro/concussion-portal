@@ -23,6 +23,7 @@ import {
 import { modules } from '@/data/modules'
 import { getClinicBySlug } from '@/lib/prospect/repo'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 
 // 7 sections + 4 quizzes ≈ 10 minutes — sweet spot per Zac. Cuts at
@@ -96,6 +97,7 @@ export default async function ProspectModuleOneTrial({
         clinicShortName={clinic.shortName}
         clinicCity={clinic.city}
         clinicState={clinic.state}
+        active="learning"
       />
       <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
@@ -362,97 +364,5 @@ function StatPill({ headline, label }: { headline: string; label: string }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Sidebar — fully dynamic per prospect
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ProspectSidebar({
-  slug, accessKey, clinicShortName, clinicCity, clinicState,
-}: {
-  slug: string; accessKey: string; clinicShortName: string; clinicCity?: string | null; clinicState?: string | null
-}) {
-  const portalBase = `/p/${slug}`
-  const ak = `k=${accessKey}`
-  return (
-    <div className="hidden md:flex fixed left-0 top-0 h-screen w-64 sidebar-premium p-6 flex-col z-40">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-md shadow-accent/15">
-            <Brain className="w-5 h-5 text-white" strokeWidth={2} />
-          </div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight">
-            Concussion<span className="text-accent">Pro</span>
-          </h1>
-        </div>
-      </div>
-
-      <div className="glass-premium rounded-xl p-3 mb-6">
-        <p className="text-[9px] uppercase tracking-wider font-bold text-accent mb-1">Prepared for</p>
-        <p className="text-sm font-bold text-foreground leading-tight">{clinicShortName}</p>
-        {(clinicCity || clinicState) && (
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            {clinicCity}{clinicCity && clinicState ? ', ' : ''}{clinicState}
-          </p>
-        )}
-      </div>
-
-      <nav className="flex-1 space-y-1">
-        <SidebarItem href={`${portalBase}?${ak}`} label="Dashboard" icon={Home} />
-        <SidebarItem href={`${portalBase}/learning?${ak}`} label="Learning Suite" icon={BookOpen} active />
-        <SidebarItem href="/scat-forms" label="SCAT Forms" icon={Activity} external />
-        <SidebarItem href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
-        <SidebarItem href={`${portalBase}/references?${ak}`} label="Reference Library" icon={Library} />
-        <SidebarItem href={`${portalBase}/toolkit/clinical?${ak}`} label="Clinical Toolkit" icon={FileText} />
-        <SidebarItem href={`${portalBase}/toolkit/outreach?${ak}`} label="Outreach Kit" icon={Stethoscope} />
-        <SidebarItem href={`${portalBase}/toolkit/admin?${ak}`} label="Admin Workflow" icon={BookMarked} />
-      </nav>
-
-      <div className="pt-5 border-t border-white/30">
-        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
-      </div>
-    </div>
-  )
-}
-
-function SidebarItem({
-  href, label, icon: Icon, active, locked, external,
-}: {
-  href?: string
-  label: string
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
-  active?: boolean
-  locked?: boolean
-  external?: boolean
-}) {
-  const base = 'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all relative text-sm font-medium'
-  if (locked) {
-    return (
-      <div className={`${base} opacity-50 text-muted-foreground cursor-default`}>
-        <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
-        <span>{label}</span>
-        <Lock className="w-3 h-3 ml-auto text-muted-foreground/60" />
-      </div>
-    )
-  }
-  if (active) {
-    return (
-      <div className={`${base} bg-accent/8 text-accent font-semibold cursor-default`}>
-        <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
-        <span>{label}</span>
-      </div>
-    )
-  }
-  return (
-    <a
-      href={href}
-      target={external ? '_blank' : undefined}
-      rel={external ? 'noopener' : undefined}
-      className={`${base} text-muted-foreground hover:text-foreground hover:bg-white/40`}
-    >
-      <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
-      <span>{label}</span>
-      {external && <ExternalLink className="w-3 h-3 ml-auto opacity-50" />}
-    </a>
-  )
-}
+// Sidebar/SidebarItem removed — replaced by shared <ProspectSidebar>
+// imported from components/prospect (gains the mobile hamburger drawer).

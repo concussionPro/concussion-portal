@@ -5,6 +5,7 @@ import { FileText, ArrowLeft, Mail, GraduationCap } from 'lucide-react'
 import { ToolkitSidebar } from './_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { getClinicBySlug } from '@/lib/prospect/repo'
 
 interface PageProps {
@@ -103,8 +104,10 @@ export default async function ToolkitLauncherPage({ params, searchParams }: Page
               </p>
             </div>
           </div>
+          <div className="h-20" />
         </div>
       </main>
+      <TalkToZacFooter clinicShortName={clinic.shortName} context="toolkit-launcher" />
     </div>
   )
 }

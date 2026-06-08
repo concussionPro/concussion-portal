@@ -14,7 +14,7 @@ interface PageProps {
 }
 
 export const metadata: Metadata = {
-  title: 'Learning Suite — Hub Program Preview',
+  title: 'Learning Suite',
   robots: 'noindex, nofollow',
 }
 
