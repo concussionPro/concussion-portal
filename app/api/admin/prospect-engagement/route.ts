@@ -74,9 +74,23 @@ interface EventSignalRow {
   open_days: number | string
   total_open_events: number | string
   cal_clicks: number | string
+  cal_click_days: number | string
+  distinct_url_clicks: number | string
   product_clicks: number | string
   other_clicks: number | string
   last_event_at: string | null
+  last_click_at: string | null
+  last_clicked_subject: string | null
+}
+
+interface RealSessionRow {
+  clinic_id: number
+  real_sessions: number | string
+  last_real_session_at: string | null
+}
+
+interface TalkRequestRow {
+  email: string
 }
 
 interface PortalFlowRow {
@@ -232,8 +246,8 @@ export async function GET(req: NextRequest) {
             NULL::text AS deepest_section
           FROM (SELECT DISTINCT clinic_id FROM filtered) f`
 
-    // Pull all six sources in parallel
-    const [clinics, outreach, views, eventSignals, portalFlow] = await Promise.all([
+    // Pull all sources in parallel
+    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, portalFlow] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
         : sql<ClinicDbRow>`SELECT * FROM prospect_clinics`,
@@ -283,9 +297,13 @@ export async function GET(req: NextRequest) {
               COUNT(DISTINCT CASE WHEN ee.event_type = 'opened' THEN ee.created_at::date END)::int AS open_days,
               COUNT(CASE WHEN ee.event_type = 'opened' THEN 1 END)::int AS total_open_events,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.id END)::int AS cal_clicks,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.created_at::date END)::int AS cal_click_days,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url IS NOT NULL AND ee.click_url !~* '(unsubscribe|osteopathy\\.org\\.au)' THEN ee.click_url END)::int AS distinct_url_clicks,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(/p/[^?]+|/pricing|/dashboard|/hub)' AND ee.click_url !~* '(cal\\.com|cal_booking)' THEN ee.id END)::int AS product_clicks,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url !~* '(cal\\.com|cal_booking|/p/|/pricing|/dashboard|/hub|/calendar)' THEN ee.id END)::int AS other_clicks,
-              MAX(ee.created_at) AS last_event_at
+              MAX(ee.created_at) AS last_event_at,
+              MAX(ee.created_at) FILTER (WHERE ee.event_type = 'clicked') AS last_click_at,
+              MAX(ee.subject)    FILTER (WHERE ee.event_type = 'clicked') AS last_clicked_subject
             FROM cold_sent cs
             JOIN email_events ee ON ee.email_id = cs.resend_email_id
             GROUP BY cs.clinic_id`
@@ -299,12 +317,45 @@ export async function GET(req: NextRequest) {
               COUNT(DISTINCT CASE WHEN ee.event_type = 'opened' THEN ee.created_at::date END)::int AS open_days,
               COUNT(CASE WHEN ee.event_type = 'opened' THEN 1 END)::int AS total_open_events,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.id END)::int AS cal_clicks,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.created_at::date END)::int AS cal_click_days,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url IS NOT NULL AND ee.click_url !~* '(unsubscribe|osteopathy\\.org\\.au)' THEN ee.click_url END)::int AS distinct_url_clicks,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(/p/[^?]+|/pricing|/dashboard|/hub)' AND ee.click_url !~* '(cal\\.com|cal_booking)' THEN ee.id END)::int AS product_clicks,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url !~* '(cal\\.com|cal_booking|/p/|/pricing|/dashboard|/hub|/calendar)' THEN ee.id END)::int AS other_clicks,
-              MAX(ee.created_at) AS last_event_at
+              MAX(ee.created_at) AS last_event_at,
+              MAX(ee.created_at) FILTER (WHERE ee.event_type = 'clicked') AS last_click_at,
+              MAX(ee.subject)    FILTER (WHERE ee.event_type = 'clicked') AS last_clicked_subject
             FROM cold_sent cs
             JOIN email_events ee ON ee.email_id = cs.resend_email_id
             GROUP BY cs.clinic_id`,
+      // Real browser sessions on /p/[slug] — unfakeable engagement.
+      // analytics_events.session_id filtered to non-server sessions, with
+      // bot UAs filtered at write time. This is the strongest signal
+      // (cannot be inflated by Defender/Mimecast/Proofpoint scanners).
+      filterId !== null && !isNaN(filterId)
+        ? sql<RealSessionRow>`
+            SELECT pc.id AS clinic_id,
+                   COUNT(DISTINCT ae.session_id)::int AS real_sessions,
+                   MAX(ae.created_at)                 AS last_real_session_at
+            FROM prospect_clinics pc
+            JOIN analytics_events ae ON ae.path LIKE '/p/' || pc.slug || '%'
+            WHERE pc.id = ${filterId}
+              AND ae.created_at >= NOW() - INTERVAL '90 days'
+              AND ae.session_id IS NOT NULL
+              AND ae.session_id NOT LIKE 'server_%'
+            GROUP BY pc.id`
+        : sql<RealSessionRow>`
+            SELECT pc.id AS clinic_id,
+                   COUNT(DISTINCT ae.session_id)::int AS real_sessions,
+                   MAX(ae.created_at)                 AS last_real_session_at
+            FROM prospect_clinics pc
+            JOIN analytics_events ae ON ae.path LIKE '/p/' || pc.slug || '%'
+            WHERE ae.created_at >= NOW() - INTERVAL '90 days'
+              AND ae.session_id IS NOT NULL
+              AND ae.session_id NOT LIKE 'server_%'
+            GROUP BY pc.id`,
+      // Talk-request submissions — keyed by email. Used to mark
+      // prospects DONE so they don't surface as "needs personal outreach".
+      sql<TalkRequestRow>`SELECT DISTINCT LOWER(email) AS email FROM talk_requests`,
       portalFlowQuery,
     ])
 
@@ -320,6 +371,10 @@ export async function GET(req: NextRequest) {
     for (const s of eventSignals.rows) signalsByClinic.set(s.clinic_id, s)
     const portalFlowByClinic = new Map<number, PortalFlowRow>()
     for (const f of portalFlow.rows) portalFlowByClinic.set(f.clinic_id, f)
+    const realSessionsByClinic = new Map<number, RealSessionRow>()
+    for (const r of realSessions.rows) realSessionsByClinic.set(r.clinic_id, r)
+    const talkRequestSet = new Set<string>()
+    for (const t of talkRequests.rows) talkRequestSet.add(t.email)
 
     // Build rich rows
     const prospects = clinics.rows.map((c) => {
@@ -368,8 +423,15 @@ export async function GET(req: NextRequest) {
       const signal = signalsByClinic.get(c.id)
       const openDays = signal ? Number(signal.open_days ?? 0) : 0
       const calClicks = signal ? Number(signal.cal_clicks ?? 0) : 0
+      const calClickDays = signal ? Number(signal.cal_click_days ?? 0) : 0
+      const distinctUrlClicks = signal ? Number(signal.distinct_url_clicks ?? 0) : 0
       const productClicks = signal ? Number(signal.product_clicks ?? 0) : 0
       const otherClicks = signal ? Number(signal.other_clicks ?? 0) : 0
+      const lastClickedSubject = signal?.last_clicked_subject ?? null
+      const realRow = realSessionsByClinic.get(c.id)
+      const realSessionsCount = realRow ? Number(realRow.real_sessions ?? 0) : 0
+      const lastRealSessionAt = realRow?.last_real_session_at ?? null
+      const hasTalkRequest = c.contact_email ? talkRequestSet.has(c.contact_email.toLowerCase()) : false
       const everSent = sends.length > 0
 
       // Top non-reply signal — what the strongest engagement marker is
@@ -415,6 +477,52 @@ export async function GET(req: NextRequest) {
       // - Single portal view
       else if (openDays >= 2 || portalViews > 0) engagementTier = 'warm'
       else engagementTier = 'cold'
+
+      // ── Outreach status — time-frame green-light for personal email.
+      // Hot threshold (UNFAKEABLE only) = ≥2 real browser sessions OR
+      // ≥3 distinct-URL email clicks OR ≥1 cal.com click. If hot, status
+      // tracks hours since last hot signal:
+      //   cool       (0-48h)  : let them digest, don't seem desperate
+      //   go         (48h-7d) : sweet spot for personal email — GO NOW
+      //   last-chance (7-14d) : one tactical follow-up before drop
+      //   long-nurture (14d+) : drop to quarterly seasonal cadence
+      //   done       : booked OR submitted talk request OR replied
+      //   not-hot    : never crossed the hot threshold
+      const isHot =
+        realSessionsCount >= 2 ||
+        distinctUrlClicks >= 3 ||
+        calClicks >= 1
+      // Last signal across all channels — most recent of click / portal
+      // view / real session / open. Drives the "today" engagement view.
+      const lastSignalCandidates = [
+        signal?.last_event_at,
+        signal?.last_click_at,
+        view?.last_viewed_at,
+        lastRealSessionAt,
+      ].filter((d): d is string => !!d && new Date(d).getFullYear() > 2000)
+      const lastSignalAt = lastSignalCandidates.length
+        ? lastSignalCandidates.reduce((max, d) => (new Date(d).getTime() > new Date(max).getTime() ? d : max))
+        : null
+      const hoursSinceHotSignal = isHot && lastSignalAt
+        ? Math.floor((Date.now() - new Date(lastSignalAt).getTime()) / 3_600_000)
+        : null
+      let outreachStatus: 'cool' | 'go' | 'last-chance' | 'long-nurture' | 'done' | 'not-hot'
+      if (isCalBooked || hasTalkRequest || replies > 0) {
+        outreachStatus = 'done'
+      } else if (!isHot || hoursSinceHotSignal == null) {
+        outreachStatus = 'not-hot'
+      } else if (hoursSinceHotSignal < 48) {
+        outreachStatus = 'cool'
+      } else if (hoursSinceHotSignal <= 168) {
+        outreachStatus = 'go'
+      } else if (hoursSinceHotSignal <= 336) {
+        outreachStatus = 'last-chance'
+      } else {
+        outreachStatus = 'long-nurture'
+      }
+      // Today's engagement boolean — any signal in the last 24h. Surfaces
+      // "engaged today" rollup at the top of the dashboard.
+      const engagedToday = !!lastSignalAt && (Date.now() - new Date(lastSignalAt).getTime()) < 86_400_000
 
       // ── Personal call recommendation — only for high-intent signals.
       // We don't call on a single open or single same-day portal view —
@@ -496,8 +604,19 @@ export async function GET(req: NextRequest) {
         // tier classification and write good "why call" copy
         openDays,
         calClicks,
+        calClickDays,
+        distinctUrlClicks,
         productClicks,
         otherClicks,
+        lastClickedSubject,
+        // Unfakeable signals + status (was duplicated to /admin/b2b-outreach)
+        realSessions: realSessionsCount,
+        lastRealSessionAt,
+        outreachStatus,
+        hoursSinceHotSignal,
+        lastSignalAt,
+        engagedToday,
+        hasTalkRequest,
         // portal
         totalPortalViews: view ? parseInt(view.total, 10) : 0,
         viewDays,

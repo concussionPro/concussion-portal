@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   Users,
   Eye,
@@ -179,8 +180,18 @@ interface ProspectRow {
   openDays?: number
   viewDays?: number
   calClicks?: number
+  calClickDays?: number
+  distinctUrlClicks?: number
   productClicks?: number
   otherClicks?: number
+  lastClickedSubject?: string | null
+  realSessions?: number
+  lastRealSessionAt?: string | null
+  outreachStatus?: 'cool' | 'go' | 'last-chance' | 'long-nurture' | 'done' | 'not-hot'
+  hoursSinceHotSignal?: number | null
+  lastSignalAt?: string | null
+  engagedToday?: boolean
+  hasTalkRequest?: boolean
   recommendedOffer?: 'hub-pack' | 'on-site-cohort'
   sizeBucket?: string
   dealValue?: number
@@ -946,9 +957,14 @@ function DeviceIcon({ device }: { device: string }) {
 }
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
+const VALID_TAB_TYPES: TabType[] = ['overview', 'channels', 'flow', 'funnel', 'events', 'retargeting', 'insights', 'pool', 'preseason', 'users', 'report', 'google-ads', 'prospects']
+
 export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState<Period>('7d')
-  const [activeTab, setActiveTab] = useState<TabType>('insights')
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams?.get('tab') as TabType | null
+  const initialTab: TabType = tabFromUrl && VALID_TAB_TYPES.includes(tabFromUrl) ? tabFromUrl : 'insights'
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab)
   const [loading, setLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
@@ -2623,22 +2639,6 @@ export default function AnalyticsDashboard() {
             })()}
 
             {/* ── B2B Prospects ────────────────────────────────────────── */}
-            {/* DEPRECATION NOTICE 2026-06-08 — the canonical B2B prospect
-                dashboard now lives at /admin/b2b-outreach (time-frame green
-                light, real-session signals, scanner-deflated clicks, HOT NOW
-                panel). The bootstrap helpers below remain for ops use. */}
-            {activeTab === 'prospects' && (
-              <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-accent/8 to-amber-50 border border-accent/25 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-accent mb-1">Moved</p>
-                  <h3 className="text-base font-bold text-foreground mb-0.5">B2B prospect dashboard lives at <code className="bg-white px-1.5 py-0.5 rounded text-xs">/admin/b2b-outreach</code></h3>
-                  <p className="text-xs text-muted-foreground">Real engagement signals, time-frame green light, HOT NOW panel, scanner-deflated clicks. The bootstrap helpers below remain for ops use.</p>
-                </div>
-                <a href="/admin/b2b-outreach" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors">
-                  Open B2B Outreach →
-                </a>
-              </div>
-            )}
             {activeTab === 'prospects' && (() => {
               const runBootstrap = async (url: string, label: string, payload?: object) => {
                 setBootstrapBusy(true)
@@ -2796,6 +2796,69 @@ export default function AnalyticsDashboard() {
 
               const fmt$ = (n: number) => `A$${n.toLocaleString('en-AU')}`
 
+              // ── HOT NOW + outreach-status (consolidated from /admin/b2b-outreach) ──
+              // Unfakeable threshold: ≥2 real browser sessions OR ≥3 distinct-URL
+              // clicks OR ≥1 cal.com click. Raw click counts excluded (anti-
+              // malware scanners pre-fetch every email link 4-5×).
+              const hotNow = prospects
+                .filter(p =>
+                  ((p.realSessions ?? 0) >= 2 ||
+                   (p.distinctUrlClicks ?? 0) >= 3 ||
+                   (p.calClicks ?? 0) >= 1) &&
+                  !(p.calBookedAt && p.calBookingStatus === 'booked') &&
+                  !p.hasTalkRequest &&
+                  p.replies === 0
+                )
+                .sort((a, b) =>
+                  ((b.realSessions ?? 0) * 3 + (b.distinctUrlClicks ?? 0) * 2 + (b.calClicks ?? 0) * 5) -
+                  ((a.realSessions ?? 0) * 3 + (a.distinctUrlClicks ?? 0) * 2 + (a.calClicks ?? 0) * 5)
+                )
+                .slice(0, 12)
+
+              // Today's engagers — any signal in the last 24h, regardless of tier
+              const engagedToday = prospects.filter(p => p.engagedToday)
+
+              // Outreach-status badge — time-frame green-light for personal email
+              const outreachStatusBadge = (p: ProspectRow): { label: string; tone: string; sortKey: number } | null => {
+                if (!p.outreachStatus || p.outreachStatus === 'not-hot') return null
+                if (p.outreachStatus === 'done') return { label: '✓ Done', tone: 'bg-emerald-100 text-emerald-700 border-emerald-200', sortKey: 5 }
+                if (p.outreachStatus === 'go') {
+                  const h = p.hoursSinceHotSignal ?? 0
+                  const daysRemaining = Math.max(0, Math.floor((168 - h) / 24))
+                  return { label: `🟢 GO NOW (${daysRemaining}d left)`, tone: 'bg-emerald-600 text-white border-emerald-700 animate-pulse', sortKey: 0 }
+                }
+                if (p.outreachStatus === 'cool') {
+                  const h = p.hoursSinceHotSignal ?? 0
+                  return { label: `⏳ Wait ${Math.max(0, 48 - h)}h more`, tone: 'bg-slate-100 text-slate-600 border-slate-200', sortKey: 2 }
+                }
+                if (p.outreachStatus === 'last-chance') return { label: '🟡 Last chance', tone: 'bg-amber-100 text-amber-700 border-amber-300', sortKey: 1 }
+                if (p.outreachStatus === 'long-nurture') return { label: '🔴 Drop to long-nurture', tone: 'bg-rose-100 text-rose-700 border-rose-200', sortKey: 3 }
+                return null
+              }
+
+              // Nurture-stage label — where each prospect sits in T1/T2/T3 sequence
+              const nurtureStage = (p: ProspectRow): { label: string; tone: string } => {
+                if (p.replies > 0) return { label: 'Replied', tone: 'text-emerald-700' }
+                if (p.status === 'won') return { label: 'Won', tone: 'text-emerald-700 font-bold' }
+                const slug = p.nextTemplateSlug
+                const sent = p.totalSends
+                if (sent === 0 && !p.scheduledSendAt) return { label: 'Researching', tone: 'text-slate-500' }
+                if (sent === 0 && p.scheduledSendAt) {
+                  const days = Math.round((new Date(p.scheduledSendAt).getTime() - Date.now()) / 86_400_000)
+                  return { label: `T1 in ${days <= 0 ? 'today' : `${days}d`}`, tone: 'text-blue-600' }
+                }
+                if (sent >= 1 && slug && slug !== 'initial') {
+                  const next = slug === 'followup' ? 'T2' : slug === 'final' ? 'T3' : slug
+                  if (p.scheduledSendAt) {
+                    const days = Math.round((new Date(p.scheduledSendAt).getTime() - Date.now()) / 86_400_000)
+                    return { label: `${next} in ${days <= 0 ? 'today' : `${days}d`}`, tone: 'text-violet-600' }
+                  }
+                  return { label: `${next} next`, tone: 'text-violet-600' }
+                }
+                if (sent >= 3) return { label: 'Sequence done', tone: 'text-slate-500' }
+                return { label: `T${sent} sent`, tone: 'text-slate-600' }
+              }
+
               if (prospects.length === 0) {
                 return (
                   <div className="space-y-4">
@@ -2874,8 +2937,19 @@ export default function AnalyticsDashboard() {
                       .filter(p => activeStatuses.includes(p.status))
                       .reduce((acc, p) => acc + p.recoCohortTotal, 0)
                     const activeCount = prospects.filter(p => activeStatuses.includes(p.status)).length
+                    const goNowCount = prospects.filter(p => p.outreachStatus === 'go').length
                     return (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div
+                          className={`card rounded-xl p-4 ${hotNow.length > 0 ? 'border-rose-300 bg-gradient-to-br from-rose-50 to-amber-50' : ''}`}
+                          title="Real browser sessions ≥2 OR distinct-URL clicks ≥3 OR cal.com clicks ≥1 — unfakeable engagement"
+                        >
+                          <div className="text-xs text-rose-700 uppercase tracking-wider font-bold">🔥 HOT NOW</div>
+                          <div className="text-2xl font-bold text-rose-700 mt-1 tabular-nums">{hotNow.length}</div>
+                          <div className="text-xs text-rose-700/70 mt-0.5">
+                            {goNowCount > 0 ? `${goNowCount} 🟢 GO NOW · email today` : engagedToday.length > 0 ? `${engagedToday.length} engaged today` : 'no green-lights yet'}
+                          </div>
+                        </div>
                         <div className="card rounded-xl p-4">
                           <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Prospects</div>
                           <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{prospects.length}</div>
@@ -2921,6 +2995,84 @@ export default function AnalyticsDashboard() {
                   {/* ── Overview ── */}
                   {prospectsSubTab === 'overview' && (
                     <div className="space-y-6">
+                      {/* HOT NOW — engagement-gold panel surfaced first. Pulls
+                          unfakeable signals only (real sessions / distinct-URL
+                          clicks / cal.com clicks). Anti-scanner. Sort by
+                          combined activity. Cal-booked + talk-req + replied
+                          are excluded (already in motion). */}
+                      {hotNow.length > 0 && (
+                        <div className="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 via-amber-50 to-white p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white animate-pulse">🔥 HOT NOW</span>
+                              <span className="text-sm font-bold text-[var(--foreground)]">
+                                {hotNow.length} prospect{hotNow.length === 1 ? '' : 's'} with deep engagement — manual outreach today
+                              </span>
+                            </div>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-left text-[10px] uppercase text-rose-700/70 font-bold border-b border-rose-200/50">
+                                  <th className="px-2 py-1.5">Contact / Clinic</th>
+                                  <th className="px-2 py-1.5 text-right" title="Unique browser sessions on /p/[slug] — unfakeable">Sessions</th>
+                                  <th className="px-2 py-1.5 text-right" title="Distinct URL clicks in emails (anti-scanner)">URL clicks</th>
+                                  <th className="px-2 py-1.5 text-right" title="Distinct calendar days clicking cal.com">Cal days</th>
+                                  <th className="px-2 py-1.5">Outreach</th>
+                                  <th className="px-2 py-1.5">Nurture</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {hotNow.map(p => {
+                                  const status = outreachStatusBadge(p)
+                                  const stage = nurtureStage(p)
+                                  return (
+                                    <tr
+                                      key={p.id}
+                                      onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }}
+                                      className="border-b border-rose-100/40 hover:bg-white/60 cursor-pointer"
+                                    >
+                                      <td className="px-2 py-2">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
+                                        <div className="text-[10.5px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
+                                      </td>
+                                      <td className="px-2 py-2 text-right font-bold text-rose-700 tabular-nums">{p.realSessions || '—'}</td>
+                                      <td className="px-2 py-2 text-right font-bold text-amber-700 tabular-nums">{p.distinctUrlClicks || '—'}</td>
+                                      <td className="px-2 py-2 text-right font-bold text-emerald-700 tabular-nums">{p.calClickDays || (p.calClicks ? `${p.calClicks}×` : '—')}</td>
+                                      <td className="px-2 py-2">
+                                        {status ? (
+                                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${status.tone}`}>{status.label}</span>
+                                        ) : <span className="text-[10px] text-[var(--muted-foreground)]">—</span>}
+                                      </td>
+                                      <td className={`px-2 py-2 text-[10.5px] font-semibold ${stage.tone}`}>{stage.label}</td>
+                                    </tr>
+                                  )
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                          <p className="text-[10.5px] text-rose-700/80 mt-2">
+                            Threshold: ≥2 real browser sessions, ≥3 distinct-URL clicks, or any cal.com click. Raw click count excluded — anti-malware scanners pre-fetch every email link once.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Today's engagement — count + quick context if no HOT NOW panel above */}
+                      {engagedToday.length > 0 && hotNow.length === 0 && (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-bold text-[var(--foreground)]">📬 {engagedToday.length} prospect{engagedToday.length === 1 ? '' : 's'} engaged today</span>
+                            <button
+                              onClick={() => setProspectsSubTab('queue')}
+                              className="text-[11px] text-amber-700 font-semibold hover:underline"
+                            >View all in Queue →</button>
+                          </div>
+                          <p className="text-[11px] text-[var(--muted-foreground)]">
+                            Below the unfakeable HOT NOW threshold but still showing live activity — let the auto-sequence handle them unless they cross the green-light window.
+                          </p>
+                        </div>
+                      )}
+
                       {/* Engagement tier strip — calibrated against B2B + healthcare-CPD
                           benchmarks (Apollo 2024, Salesloft 2023, healthcare CPD trends).
                           Each tile shows threshold + recommended action. */}
@@ -3009,7 +3161,10 @@ export default function AnalyticsDashboard() {
                       )}
 
                       {/* Call-now list — clinics with strong signals + no reply yet.
-                          This is the actionable surface: Zac's time goes here. */}
+                          This is the actionable surface: Zac's time goes here.
+                          Outreach + Nurture columns surface time-frame green
+                          light + current sequence stage so Zac sees both
+                          WHO to chase AND WHERE they sit in the cold cron. */}
                       {callRecommendedList.length > 0 && (
                         <div>
                           <SectionTitle
@@ -3020,32 +3175,31 @@ export default function AnalyticsDashboard() {
                             <table className="w-full text-sm">
                               <thead className="bg-orange-50 text-xs uppercase tracking-wider text-orange-700">
                                 <tr>
+                                  <th className="text-left px-3 py-3 font-semibold">Outreach</th>
                                   <th className="text-left px-4 py-3 font-semibold">Clinic</th>
                                   <th className="text-left px-4 py-3 font-semibold">Contact</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Tier</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Top signal</th>
-                                  <th className="text-center px-3 py-3 font-semibold" title="Distinct calendar days with opens">Open days</th>
-                                  <th className="text-center px-3 py-3 font-semibold" title="Distinct calendar days with portal views">View days</th>
-                                  <th className="text-center px-3 py-3 font-semibold" title="Cal.com / product / other">Click type</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Offer</th>
+                                  <th className="text-left px-3 py-3 font-semibold">Nurture</th>
+                                  <th className="text-left px-3 py-3 font-semibold">Tier</th>
+                                  <th className="text-left px-3 py-3 font-semibold">Top signal</th>
+                                  <th className="text-center px-2 py-3 font-semibold" title="Real browser sessions on /p/[slug] — unfakeable">Sessions</th>
+                                  <th className="text-center px-2 py-3 font-semibold" title="Distinct URLs clicked in emails (anti-scanner)">URL clicks</th>
+                                  <th className="text-center px-2 py-3 font-semibold" title="Distinct calendar days clicking cal.com">Cal days</th>
+                                  <th className="text-right px-3 py-3 font-semibold">Offer</th>
                                   <th className="text-left px-4 py-3 font-semibold">Why call</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {callRecommendedList.slice(0, 20).map(p => {
+                                {callRecommendedList
+                                  .map(p => ({ p, status: outreachStatusBadge(p), stage: nurtureStage(p) }))
+                                  .sort((a, b) => (a.status?.sortKey ?? 99) - (b.status?.sortKey ?? 99))
+                                  .slice(0, 20)
+                                  .map(({ p, status, stage }) => {
                                   const tier = TIER_META.find(t => t.key === p.engagementTier)!
                                   const TierIcon = tier.icon
                                   const isOnSite = p.recommendedOffer === 'on-site-cohort'
                                   const offerLabel = isOnSite
                                     ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}`
                                     : `Hub Pack · ${fmt$(p.dealValue ?? 1497)}`
-                                  // Click-type breakdown — surfaces which kind of click happened
-                                  const cal = p.calClicks ?? 0
-                                  const prod = p.productClicks ?? 0
-                                  const oth = p.otherClicks ?? 0
-                                  const clickBreakdown = cal + prod + oth === 0
-                                    ? '—'
-                                    : [cal > 0 ? `${cal}× cal` : '', prod > 0 ? `${prod}× product` : '', oth > 0 ? `${oth}× other` : ''].filter(Boolean).join(' · ')
                                   // Top-signal label — what's the strongest signal
                                   const SIGNAL_LABELS: Record<NonNullable<ProspectRow['topSignal']>, string> = {
                                     cal_booked: '📅 Cal booked',
@@ -3057,8 +3211,14 @@ export default function AnalyticsDashboard() {
                                     single_open: '✉️ Single open',
                                     none: '—',
                                   }
+                                  const rowTint = status?.sortKey === 0 ? 'bg-emerald-50/30' : status?.sortKey === 1 ? 'bg-amber-50/30' : ''
                                   return (
-                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer">
+                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className={`border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] cursor-pointer ${rowTint}`}>
+                                      <td className="px-3 py-3">
+                                        {status ? (
+                                          <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${status.tone}`}>{status.label}</span>
+                                        ) : <span className="text-[10px] text-[var(--muted-foreground)]">—</span>}
+                                      </td>
                                       <td className="px-4 py-3">
                                         <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
                                         <div className="text-xs text-[var(--muted-foreground)]">{p.city || 'Unknown'}, {p.state} · {p.clinicalCount} clinical</div>
@@ -3067,16 +3227,17 @@ export default function AnalyticsDashboard() {
                                         <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName}</div>
                                         <div className="text-[var(--muted-foreground)]">{p.contactDiscipline}</div>
                                       </td>
-                                      <td className="px-4 py-3">
+                                      <td className={`px-3 py-3 text-[11px] font-semibold whitespace-nowrap ${stage.tone}`}>{stage.label}</td>
+                                      <td className="px-3 py-3">
                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${tier.badgeBg} ${tier.badgeText} text-[10px] font-bold uppercase tracking-wider`}>
                                           <TierIcon size={10} />{tier.label}
                                         </span>
                                       </td>
-                                      <td className="px-4 py-3 text-[11px] font-semibold text-[var(--foreground)]">{SIGNAL_LABELS[p.topSignal ?? 'none']}</td>
-                                      <td className="px-3 py-3 text-center text-sm font-semibold">{p.openDays ?? '—'}</td>
-                                      <td className="px-3 py-3 text-center text-sm font-bold text-[var(--accent)]">{p.viewDays ?? '—'}</td>
-                                      <td className="px-3 py-3 text-center text-[11px] text-[var(--muted-foreground)] whitespace-nowrap">{clickBreakdown}</td>
-                                      <td className="px-4 py-3 text-right text-xs">
+                                      <td className="px-3 py-3 text-[11px] font-semibold text-[var(--foreground)]">{SIGNAL_LABELS[p.topSignal ?? 'none']}</td>
+                                      <td className="px-2 py-3 text-center text-sm font-bold text-rose-700">{p.realSessions || '—'}</td>
+                                      <td className="px-2 py-3 text-center text-sm font-bold text-amber-700">{p.distinctUrlClicks || '—'}</td>
+                                      <td className="px-2 py-3 text-center text-sm font-bold text-emerald-700">{p.calClickDays || (p.calClicks ? `${p.calClicks}×` : '—')}</td>
+                                      <td className="px-3 py-3 text-right text-xs">
                                         <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{offerLabel}</div>
                                       </td>
                                       <td className="px-4 py-3 text-xs text-[var(--muted-foreground)] leading-snug max-w-xs">{whyCallCopy(p)}</td>

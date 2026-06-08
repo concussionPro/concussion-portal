@@ -331,7 +331,7 @@ function ZacCredibility() {
         <div className="flex-1 min-w-0">
           <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Delivered by</p>
           <p className="text-base sm:text-lg font-bold text-foreground leading-tight">
-            Dr Zac Lewis, Osteopath
+            Zac Lewis, Osteopath
           </p>
           <p className="text-xs text-muted-foreground mb-2">
             B.Clin.Sci., M.Ost.Med. · AHPRA-registered · Course Director, Concussion Education Australia
