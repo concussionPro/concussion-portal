@@ -165,15 +165,39 @@ export async function processScheduledSends(
   // Driver query: every clinic whose next_template_slug says something is
   // due, that's not in a dead state, and that hasn't already had this
   // specific template logged.
+  // Personal-lane exclusion: any prospect with intent_score ≥20 (warm+) is
+  // pulled from the cold cron so Zac's personal email doesn't collide with
+  // a templated send. Mirrors the scoring in /api/admin/b2b-outreach-targets.
+  // 90-day lookback to match the dashboard signal window.
   const { rows: due } = force
     ? await sql<QueueRow>`
         SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
                pc.scheduled_send_at, pc.next_template_slug, pc.status
         FROM prospect_clinics pc
+        LEFT JOIN LATERAL (
+          SELECT
+            COALESCE(ee_inner.clicks, 0) * 5 + COALESCE(ee_inner.opens, 0) * 2
+            + COALESCE(wi_inner.submits, 0) * 15
+            AS intent_score
+          FROM
+            (SELECT
+              COUNT(*) FILTER (WHERE event_type='clicked')::int clicks,
+              COUNT(*) FILTER (WHERE event_type='opened')::int opens
+             FROM email_events
+             WHERE LOWER(recipient) = LOWER(pc.contact_email)
+               AND created_at >= NOW() - INTERVAL '90 days'
+               AND COALESCE(project, 'cea') = 'cea'
+            ) ee_inner
+          CROSS JOIN
+            (SELECT COUNT(*)::int submits FROM workshop_interest
+             WHERE LOWER(email) = LOWER(pc.contact_email)
+            ) wi_inner
+        ) intent ON TRUE
         WHERE pc.next_template_slug IS NOT NULL
           AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won')
           AND pc.scheduled_send_at IS NOT NULL
           AND pc.scheduled_send_at::date = CURRENT_DATE
+          AND COALESCE(intent.intent_score, 0) < 20
           AND NOT EXISTS (
             SELECT 1 FROM prospect_outreach_log ol
             WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug
@@ -185,10 +209,30 @@ export async function processScheduledSends(
         SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
                pc.scheduled_send_at, pc.next_template_slug, pc.status
         FROM prospect_clinics pc
+        LEFT JOIN LATERAL (
+          SELECT
+            COALESCE(ee_inner.clicks, 0) * 5 + COALESCE(ee_inner.opens, 0) * 2
+            + COALESCE(wi_inner.submits, 0) * 15
+            AS intent_score
+          FROM
+            (SELECT
+              COUNT(*) FILTER (WHERE event_type='clicked')::int clicks,
+              COUNT(*) FILTER (WHERE event_type='opened')::int opens
+             FROM email_events
+             WHERE LOWER(recipient) = LOWER(pc.contact_email)
+               AND created_at >= NOW() - INTERVAL '90 days'
+               AND COALESCE(project, 'cea') = 'cea'
+            ) ee_inner
+          CROSS JOIN
+            (SELECT COUNT(*)::int submits FROM workshop_interest
+             WHERE LOWER(email) = LOWER(pc.contact_email)
+            ) wi_inner
+        ) intent ON TRUE
         WHERE pc.next_template_slug IS NOT NULL
           AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won')
           AND pc.scheduled_send_at IS NOT NULL
           AND pc.scheduled_send_at <= NOW()
+          AND COALESCE(intent.intent_score, 0) < 20
           AND NOT EXISTS (
             SELECT 1 FROM prospect_outreach_log ol
             WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug

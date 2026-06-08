@@ -69,9 +69,112 @@ type Row = {
   intentScore: number
   angle: string
   lastSignalAt: string | null
+
+  // Promotion + cadence
+  hasBookedCall: boolean
+  hasTalkRequest: boolean
+  inPersonalLane: boolean
+  reachByDate: string | null
+  priorityBucket: 'today' | 'this-week' | 'calm' | 'overdue' | 'done'
+  personalScript: string | null
 }
 
-function buildAngle(r: Omit<Row, 'angle'>): string {
+/**
+ * When should Zac contact this prospect by?
+ *
+ * Cadence reflects how cold-outreach decay works in B2B healthcare: a
+ * just-clicked prospect is at peak intent right now; waiting >7 days
+ * after the signal lets them cool back to baseline.
+ *
+ * Tiers (intentScore-based):
+ *   HOT  (≥30): reach within 24h of last signal
+ *   Warm (≥20): within 3 days
+ *   Engaged (≥10): within 7 days
+ *   Cool (<10): not flagged — they go in the normal nurture
+ *
+ * Returns null when the prospect doesn't qualify for the personal lane.
+ */
+function computeReachByDate(intentScore: number, lastSignalAt: string | null): Date | null {
+  if (!lastSignalAt) return null
+  const last = new Date(lastSignalAt)
+  if (isNaN(last.getTime())) return null
+  if (intentScore >= 30) return new Date(last.getTime() + 1 * 86400_000)
+  if (intentScore >= 20) return new Date(last.getTime() + 3 * 86400_000)
+  if (intentScore >= 10) return new Date(last.getTime() + 7 * 86400_000)
+  return null
+}
+
+function computePriorityBucket(reachBy: Date | null): Row['priorityBucket'] {
+  if (!reachBy) return 'calm'
+  const now = Date.now()
+  const r = reachBy.getTime()
+  if (r < now - 1 * 86400_000) return 'overdue'   // missed the window
+  if (r <= now + 0.5 * 86400_000) return 'today'  // due within 12h
+  if (r <= now + 7 * 86400_000) return 'this-week'
+  return 'calm'
+}
+
+/**
+ * Generate a personalised outreach script Zac can copy-paste / edit.
+ *
+ * The opening references their strongest signal: what they clicked,
+ * the city they registered workshop interest for, the team size, etc.
+ * Goal is a ~60-second-to-edit draft, not a perfect send.
+ */
+function buildPersonalScript(r: Omit<Row, 'angle' | 'hasBookedCall' | 'hasTalkRequest' | 'inPersonalLane' | 'reachByDate' | 'priorityBucket' | 'personalScript'>, lastSignalAt: string | null): string | null {
+  if (r.intentScore < 10) return null
+  const first = r.firstName || 'there'
+  const clinic = r.clinic
+  const team = r.teamSize ?? null
+  const lines: string[] = []
+
+  // Subject suggestion
+  if (clinic) {
+    lines.push(`Subject: Concussion training for the ${clinic} team — quick chat?`)
+  } else {
+    lines.push(`Subject: Concussion CPD — quick chat?`)
+  }
+  lines.push('')
+  lines.push(`Hey ${first},`)
+  lines.push('')
+
+  // Body opener — reference their strongest signal
+  if (r.checkoutStarts > 0) {
+    lines.push(`Saw you started enrolling${clinic ? ` for ${clinic}` : ''} but didn't finish — anything I can clear up before you do? Happy to walk through pricing, AHPRA CPD hours, or how the cohort scheduling works for a team of ${team ?? 'your size'}.`)
+  } else if (r.wiSubmits >= 2 || (r.wiCities && r.wiCities.split(',').length >= 2)) {
+    const cities = r.wiCities?.split(',').map((c) => c.trim()).filter(Boolean).join(' and ') || 'multiple workshop cities'
+    lines.push(`Saw you registered interest for both ${cities} workshops — sounds like the dates are the main question.`)
+    lines.push('')
+    lines.push(`Quick alternative: I run in-house team training onsite at clinics with 4–10 clinicians. Same content, same CPD hours, eliminates the travel question entirely. Worth a 15-min chat to see if it fits your rollout?`)
+  } else if (r.portalViews >= 3) {
+    lines.push(`Noticed you've been deep-diving the program portal for ${clinic ?? 'your team'} — appreciate the time you've put in.`)
+    lines.push('')
+    lines.push(`Two questions on my end: (1) is the timing about budget cycle, or scheduling? (2) is this for the whole clinical team or a subset? Happy to come back with a specific scope + price.`)
+  } else if (r.pricingViews >= 2) {
+    lines.push(`Saw you've looked at pricing a couple of times${clinic ? ` for ${clinic}` : ''} — if it's the public-workshop sticker that's the friction, the in-house option might fit better. Same content delivered onsite to your full team, $8k flat for clinics with 4–10 clinicians.`)
+  } else if (r.clicks >= 3) {
+    const subject = r.lastClickedSubject ? `"${r.lastClickedSubject}"` : 'the materials I sent'
+    lines.push(`Saw you clicked through ${subject} a few times. Quick question — is ${clinic ?? 'your team'} currently seeing concussion cases consistently, or more sporadically? Just trying to gauge whether the program fits the way ${clinic ?? 'you work'} runs.`)
+  } else if (r.wiSubmits === 1) {
+    const city = r.wiCities?.split(',')[0]?.trim() || 'the workshop'
+    lines.push(`Thanks for registering interest in the ${city} workshop. Quick one: would the in-house option work better for ${clinic ?? 'your team'}? Comes to ~$8k flat for 4–10 clinicians and removes the date question entirely.`)
+  } else if ((team ?? 0) >= 8 && r.opens >= 3) {
+    lines.push(`I've been sending materials to ${clinic ?? 'your clinic'} and noticed you've been opening them. A team of ${team} is roughly the sweet spot for the in-house training — happy to walk through what that looks like if you've got 15 min.`)
+  } else if (r.opens >= 3) {
+    lines.push(`Saw you've been opening the materials I've been sending. Anything specific drawing you in — the SCAT6/SCOAT6 angle, the workshop, or the in-house option for your team?`)
+  } else {
+    lines.push(`Wanted to check in directly rather than keep landing in your inbox via the automated sequence. Anything I can answer about the program for ${clinic ?? 'your team'}?`)
+  }
+  lines.push('')
+  // Close
+  lines.push(`If a 15-min call works, pick a time directly here: https://portal.concussion-education-australia.com/p/${(r.email?.split('@')[1] || '').replace(/\./g, '-')}`)
+  lines.push(`Or just reply with what you'd like to know — happy to answer over email.`)
+  lines.push('')
+  lines.push(`— Zac`)
+  return lines.join('\n')
+}
+
+function buildAngle(r: Omit<Row, 'angle' | 'hasBookedCall' | 'hasTalkRequest' | 'inPersonalLane' | 'reachByDate' | 'priorityBucket' | 'personalScript'>): string {
   // Rank from most actionable buying signal to least, pick the first hit.
   if (r.checkoutStarts > 0) {
     return `Started checkout — hit a wall. Call today: "I saw you started enrolling, anything I can clear up before you finish?"`
@@ -235,16 +338,74 @@ export async function GET(req: NextRequest) {
       LIMIT 60
     `
 
-    // Add the angle recommendation row-by-row (TS-side keeps the SQL readable).
-    // Also null-out the 1970-01-01 sentinel that GREATEST() coalesces NULL to in
-    // SQL — otherwise the UI renders "56y ago" for rows that have no signal date.
+    // Pull "have they already booked / submitted talk request?" so we can mark
+    // them DONE and skip the "reach out" urgency calculation.
+    const emails = rows.map((r) => r.email.toLowerCase()).filter(Boolean)
+    const bookedSet = new Set<string>()
+    const talkSet = new Set<string>()
+    if (emails.length) {
+      const emailsCsv = emails.join(',')
+      const { rows: booked } = await sql<{ email: string }>`
+        SELECT DISTINCT LOWER(attendee_email) AS email
+        FROM cal_webhook_log
+        WHERE LOWER(attendee_email) = ANY (string_to_array(${emailsCsv}, ','))
+          AND trigger_event IN ('BOOKING_CREATED','BOOKING_RESCHEDULED')
+      `
+      for (const b of booked) bookedSet.add(b.email)
+      const { rows: talks } = await sql<{ email: string }>`
+        SELECT DISTINCT LOWER(email) AS email
+        FROM talk_requests
+        WHERE LOWER(email) = ANY (string_to_array(${emailsCsv}, ','))
+      `
+      for (const t of talks) talkSet.add(t.email)
+    }
+
+    // Enrich each row: angle, signal date sanitisation, promotion flag,
+    // reach-by date, priority bucket, personalised email script.
     const enriched = rows.map((r) => {
-      const lastSignal = r.lastSignalAt
-        ? new Date(r.lastSignalAt).getFullYear() > 2000
+      const lastSignal =
+        r.lastSignalAt && new Date(r.lastSignalAt).getFullYear() > 2000
           ? r.lastSignalAt
           : null
-        : null
-      return { ...r, angle: buildAngle(r), lastSignalAt: lastSignal }
+      const emailLc = (r.email || '').toLowerCase()
+      const hasBookedCall = bookedSet.has(emailLc)
+      const hasTalkRequest = talkSet.has(emailLc)
+      // Promotion rule: anyone with intent ≥20 AND no call booked AND no talk
+      // request is "personal-lane". The cold cron should skip them so Zac's
+      // personal email doesn't collide with a templated send.
+      const inPersonalLane =
+        r.intentScore >= 20 && !hasBookedCall && !hasTalkRequest
+      const reachBy = computeReachByDate(r.intentScore, lastSignal)
+      const priorityBucket: Row['priorityBucket'] = hasBookedCall || hasTalkRequest
+        ? 'done'
+        : computePriorityBucket(reachBy)
+      const personalScript = buildPersonalScript(r, lastSignal)
+      return {
+        ...r,
+        angle: buildAngle(r),
+        lastSignalAt: lastSignal,
+        hasBookedCall,
+        hasTalkRequest,
+        inPersonalLane,
+        reachByDate: reachBy ? reachBy.toISOString() : null,
+        priorityBucket,
+        personalScript,
+      }
+    })
+
+    // Re-sort: priority bucket first (today → this-week → calm → overdue → done),
+    // then by intent score within bucket.
+    const bucketOrder: Record<Row['priorityBucket'], number> = {
+      'today': 0,
+      'this-week': 1,
+      'overdue': 2,
+      'calm': 3,
+      'done': 4,
+    }
+    enriched.sort((a, b) => {
+      const ba = bucketOrder[a.priorityBucket] - bucketOrder[b.priorityBucket]
+      if (ba !== 0) return ba
+      return (b.intentScore || 0) - (a.intentScore || 0)
     })
 
     // ── Demand-by-location rollup ──
