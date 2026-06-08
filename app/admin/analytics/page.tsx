@@ -2993,8 +2993,82 @@ export default function AnalyticsDashboard() {
                   </div>
 
                   {/* ── Overview ── */}
-                  {prospectsSubTab === 'overview' && (
+                  {prospectsSubTab === 'overview' && (() => {
+                    const goNow = prospects.filter(p => p.outreachStatus === 'go' && !p.calBookedAt && !p.hasTalkRequest && p.replies === 0)
+                    const coolWaiting = prospects.filter(p => p.outreachStatus === 'cool')
+                    const lastChance = prospects.filter(p => p.outreachStatus === 'last-chance')
+                    const dropToLongNurture = prospects.filter(p => p.outreachStatus === 'long-nurture')
+                    const totalActiveSends = prospects.filter(p => p.totalSends > 0).length
+                    return (
                     <div className="space-y-6">
+                      {/* ── WHAT NEEDS YOU NOW · single decision panel ────── */}
+                      <div className="card rounded-2xl border-2 border-[var(--accent)]/30 bg-gradient-to-br from-[var(--accent)]/[0.04] via-white to-amber-50/30 p-5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-[var(--accent)]">Today · what needs you</div>
+                            <h3 className="text-base font-bold text-[var(--foreground)] mt-0.5">
+                              {goNow.length === 0 && upcomingBookings.length === 0
+                                ? 'Nothing on your plate — auto-sequence is running'
+                                : `${goNow.length + upcomingBookings.length} action${(goNow.length + upcomingBookings.length) === 1 ? '' : 's'} required`}
+                            </h3>
+                          </div>
+                          <div className="text-[10.5px] text-[var(--muted-foreground)] text-right">
+                            <div>{totalActiveSends} prospects in active outreach</div>
+                            <div>{hotNow.length} HOT · {engagedToday.length} engaged today</div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
+                          {/* GO NOW — actually email today */}
+                          <button
+                            onClick={() => goNow[0] && setSelectedProspectId(goNow[0].id)}
+                            disabled={goNow.length === 0}
+                            className={`text-left p-3 rounded-lg border transition-all ${goNow.length > 0 ? 'bg-emerald-50 border-emerald-300 hover:border-emerald-500 cursor-pointer' : 'bg-slate-50 border-slate-200 cursor-default opacity-60'}`}
+                          >
+                            <div className={`text-[10px] uppercase tracking-wider font-bold ${goNow.length > 0 ? 'text-emerald-700' : 'text-slate-500'}`}>🟢 GO NOW · email today</div>
+                            <div className={`text-2xl font-bold tabular-nums mt-0.5 ${goNow.length > 0 ? 'text-emerald-800' : 'text-slate-400'}`}>{goNow.length}</div>
+                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-1 leading-snug">
+                              {goNow.length === 0 ? 'No one crossed the 48hr digest window yet' : `${goNow[0].contactFirstName} · ${goNow[0].shortName}${goNow.length > 1 ? ` + ${goNow.length - 1} more` : ''}`}
+                            </div>
+                          </button>
+                          {/* Cal bookings */}
+                          <button
+                            onClick={() => upcomingBookings[0] && setSelectedProspectId(upcomingBookings[0].id)}
+                            disabled={upcomingBookings.length === 0}
+                            className={`text-left p-3 rounded-lg border transition-all ${upcomingBookings.length > 0 ? 'bg-emerald-50 border-emerald-400 hover:border-emerald-600 cursor-pointer' : 'bg-slate-50 border-slate-200 cursor-default opacity-60'}`}
+                          >
+                            <div className={`text-[10px] uppercase tracking-wider font-bold ${upcomingBookings.length > 0 ? 'text-emerald-800' : 'text-slate-500'}`}>📅 Calls booked · prep</div>
+                            <div className={`text-2xl font-bold tabular-nums mt-0.5 ${upcomingBookings.length > 0 ? 'text-emerald-900' : 'text-slate-400'}`}>{upcomingBookings.length}</div>
+                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-1 leading-snug">
+                              {upcomingBookings.length === 0 ? 'No upcoming cal.com bookings' : `Next: ${upcomingBookings[0].contactFirstName} · ${new Date(upcomingBookings[0].calBookedAt!).toLocaleDateString('en-AU')}`}
+                            </div>
+                          </button>
+                          {/* Wait — cool window */}
+                          <button
+                            onClick={() => coolWaiting[0] && setSelectedProspectId(coolWaiting[0].id)}
+                            disabled={coolWaiting.length === 0}
+                            className={`text-left p-3 rounded-lg border transition-all ${coolWaiting.length > 0 ? 'bg-amber-50 border-amber-300 hover:border-amber-500 cursor-pointer' : 'bg-slate-50 border-slate-200 cursor-default opacity-60'}`}
+                          >
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-amber-700">⏳ WAIT · let T2 land</div>
+                            <div className="text-2xl font-bold text-amber-800 tabular-nums mt-0.5">{coolWaiting.length}</div>
+                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-1 leading-snug">
+                              {coolWaiting.length === 0 ? 'No fresh engagers in cool window' : 'Engaged in last 48h — personal outreach would compete with auto-sequence'}
+                            </div>
+                          </button>
+                          {/* Long-nurture drop */}
+                          <button
+                            onClick={() => dropToLongNurture[0] && setSelectedProspectId(dropToLongNurture[0].id)}
+                            disabled={dropToLongNurture.length === 0 && lastChance.length === 0}
+                            className={`text-left p-3 rounded-lg border transition-all ${(dropToLongNurture.length + lastChance.length) > 0 ? 'bg-rose-50 border-rose-200 hover:border-rose-400 cursor-pointer' : 'bg-slate-50 border-slate-200 cursor-default opacity-60'}`}
+                          >
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-rose-700">🟡🔴 Fading / drop</div>
+                            <div className="text-2xl font-bold text-rose-800 tabular-nums mt-0.5">{lastChance.length}<span className="text-base text-rose-600 font-normal ml-1">+ {dropToLongNurture.length}</span></div>
+                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-1 leading-snug">
+                              {lastChance.length + dropToLongNurture.length === 0 ? 'No fading prospects' : `${lastChance.length} last-chance · ${dropToLongNurture.length} drop to long-nurture`}
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
                       {/* HOT NOW — engagement-gold panel surfaced first. Pulls
                           unfakeable signals only (real sessions / distinct-URL
                           clicks / cal.com clicks). Anti-scanner. Sort by
@@ -3291,7 +3365,8 @@ export default function AnalyticsDashboard() {
                         </div>
                       </div>
                     </div>
-                  )}
+                    )
+                  })()}
 
                   {/* ── Schedule ── */}
                   {prospectsSubTab === 'schedule' && (
@@ -3427,46 +3502,144 @@ export default function AnalyticsDashboard() {
                   {prospectsSubTab === 'queue' && (
                     <div className="space-y-6">
                       {/* Drill-down modal */}
-                      {selectedProspect && (
+                      {selectedProspect && (() => {
+                        const sp = selectedProspect
+                        const status = outreachStatusBadge(sp)
+                        const stage = nurtureStage(sp)
+                        const lastSentAgo = sp.lastSentAt ? Math.round((Date.now() - new Date(sp.lastSentAt).getTime()) / 86_400_000) : null
+                        const nextSendIn = sp.scheduledSendAt ? Math.round((new Date(sp.scheduledSendAt).getTime() - Date.now()) / 86_400_000) : null
+                        const hoursSinceSignal = sp.hoursSinceHotSignal
+                        // Verdict: what should Zac do right now?
+                        let verdict: { tone: 'wait' | 'go' | 'monitor' | 'done'; headline: string; copy: string } = {
+                          tone: 'monitor',
+                          headline: 'Let auto-sequence handle it',
+                          copy: `No strong signal yet — the cold cron will deliver T2/T3 on schedule.`,
+                        }
+                        if (sp.calBookedAt && sp.calBookingStatus === 'booked') {
+                          verdict = { tone: 'done', headline: '📅 Booked — prep, do not outreach', copy: `Cal.com booking confirmed for ${new Date(sp.calBookedAt).toLocaleString('en-AU')}. Review their team mix + last portal section, prep a 15-min agenda.` }
+                        } else if (sp.hasTalkRequest) {
+                          verdict = { tone: 'done', headline: '✓ Talk request submitted — respond inside 2hrs', copy: `They filled out the /talk form. Reply directly via email — they expect a response within hours, not days.` }
+                        } else if (sp.replies > 0) {
+                          verdict = { tone: 'done', headline: '✓ Replied — respond inside 2hrs', copy: `Direct reply received. Auto-sequence paused. Personal reply now.` }
+                        } else if (sp.outreachStatus === 'go') {
+                          const daysLeft = Math.max(0, Math.floor((168 - (hoursSinceSignal ?? 0)) / 24))
+                          verdict = { tone: 'go', headline: `🟢 GO NOW — ${daysLeft}d window`, copy: `${sp.contactFirstName} crossed the hot threshold ${Math.floor((hoursSinceSignal ?? 0) / 24)}d ago and has had time to digest T1. Personal email today — reference their strongest signal (${sp.topSignal?.replace(/_/g, ' ') ?? 'engagement'}). Window closes in ${daysLeft}d before they cool.` }
+                        } else if (sp.outreachStatus === 'cool') {
+                          const hoursToGo = Math.max(0, 48 - (hoursSinceSignal ?? 0))
+                          const nextSendCopy = nextSendIn != null ? ` T${(sp.totalSends ?? 0) + 1} is scheduled in ${nextSendIn <= 0 ? 'today' : `${nextSendIn}d`} — let it land.` : ''
+                          verdict = { tone: 'wait', headline: `⏳ WAIT ${hoursToGo}h — don't compete with the auto-sequence`, copy: `${sp.contactFirstName} engaged ${hoursSinceSignal != null ? `${hoursSinceSignal}h ago` : 'recently'}. Reaching out personally now will compete with their fresh memory of T1 and look desperate.${nextSendCopy} Status flips to 🟢 GO NOW after the 48hr digest window.` }
+                        } else if (sp.outreachStatus === 'last-chance') {
+                          verdict = { tone: 'wait', headline: `🟡 LAST CHANCE — one tactical follow-up`, copy: `Engagement is fading (${hoursSinceSignal}h since last signal). Personal email referencing what they clicked, or let T3 deliver. Drop to long-nurture after another week of silence.` }
+                        } else if (sp.outreachStatus === 'long-nurture') {
+                          verdict = { tone: 'wait', headline: `🔴 Drop to long-nurture`, copy: `${hoursSinceSignal != null ? Math.floor(hoursSinceSignal / 24) : '14+'}d since last signal. Personal outreach is unlikely to convert — move them to quarterly seasonal cadence (regulatory updates, AIS guideline releases).` }
+                        } else if (sp.callRecommended) {
+                          verdict = { tone: 'go', headline: '📞 Call recommended', copy: `Strong signal (${sp.topSignal?.replace(/_/g, ' ') ?? 'engagement'}) but no time-frame green light yet. Open the prospect portal first, then dial.` }
+                        }
+                        const verdictTone = {
+                          wait: 'border-amber-300 bg-amber-50/60',
+                          go: 'border-emerald-300 bg-emerald-50/60',
+                          monitor: 'border-slate-200 bg-slate-50/60',
+                          done: 'border-emerald-400 bg-emerald-50/80',
+                        }[verdict.tone]
+                        const verdictText = {
+                          wait: 'text-amber-900',
+                          go: 'text-emerald-900',
+                          monitor: 'text-slate-700',
+                          done: 'text-emerald-900',
+                        }[verdict.tone]
+                        return (
                         <div className="card rounded-2xl p-6 border-[rgba(13,115,119,0.25)] bg-[rgba(13,115,119,0.02)]">
                           <div className="flex items-start justify-between mb-4">
                             <div>
-                              <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Drill-down · {selectedProspect.priorityWave}</div>
-                              <h3 className="text-xl font-bold text-[var(--foreground)] mt-1">{selectedProspect.shortName}</h3>
-                              <p className="text-sm text-[var(--muted-foreground)]">{selectedProspect.contactFullName} · {selectedProspect.contactRole ?? selectedProspect.contactDiscipline} · {selectedProspect.contactEmail}</p>
-                              <p className="text-xs text-[var(--muted-foreground)] mt-1">{selectedProspect.city}, {selectedProspect.state} · {selectedProspect.region}</p>
+                              <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Drill-down · {sp.priorityWave}</div>
+                              <h3 className="text-xl font-bold text-[var(--foreground)] mt-1">{sp.shortName}</h3>
+                              <p className="text-sm text-[var(--muted-foreground)]">{sp.contactFullName} · {sp.contactRole ?? sp.contactDiscipline} · {sp.contactEmail}</p>
+                              <p className="text-xs text-[var(--muted-foreground)] mt-1">{sp.city}, {sp.state} · {sp.region}</p>
                             </div>
                             <button onClick={() => setSelectedProspectId(null)} className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Close ×</button>
                           </div>
+                          {/* VERDICT — what to do, why, when. Replaces the buried buttons. */}
+                          <div className={`rounded-lg border p-4 mb-4 ${verdictTone}`}>
+                            <div className={`text-sm font-bold ${verdictText} mb-1`}>{verdict.headline}</div>
+                            <p className={`text-xs ${verdictText}/90 leading-relaxed`}>{verdict.copy}</p>
+                            <div className="flex gap-2 flex-wrap mt-3">
+                              <a href={`https://portal.concussion-education-australia.com/p/${sp.slug}?k=${(sp as ProspectRow & { accessKey?: string }).accessKey ?? ''}`} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-[rgba(13,115,119,0.2)] hover:bg-[rgba(13,115,119,0.04)] flex items-center gap-1.5">
+                                <ExternalLink size={12} /> Open their portal
+                              </a>
+                              {(verdict.tone === 'go' || verdict.tone === 'done') && (
+                                <a href={`mailto:${sp.contactEmail}?subject=${encodeURIComponent('Following up — concussion training for ' + sp.shortName)}`} className={`px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 ${verdict.tone === 'done' ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>
+                                  <Mail size={12} /> {verdict.tone === 'done' ? 'Reply now' : 'Personal email now'}
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                          {/* Context strip — team / cohort / nurture stage / status */}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                             <div className="bg-white rounded-lg p-3">
                               <div className="text-xs text-[var(--muted-foreground)]">Team</div>
-                              <div className="text-lg font-bold">{selectedProspect.clinicalCount} clinical</div>
-                              <div className="text-xs text-[var(--muted-foreground)]">of {selectedProspect.totalCount} total</div>
+                              <div className="text-lg font-bold">{sp.clinicalCount} clinical</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">of {sp.totalCount} total</div>
                             </div>
                             <div className="bg-white rounded-lg p-3">
                               <div className="text-xs text-[var(--muted-foreground)]">Cohort</div>
-                              <div className="text-lg font-bold capitalize">{selectedProspect.cohortRecommendation}</div>
-                              <div className="text-xs text-[var(--muted-foreground)]">{fmt$(selectedProspect.recoCohortTotal)}</div>
+                              <div className="text-lg font-bold capitalize">{sp.cohortRecommendation}</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">{fmt$(sp.recoCohortTotal)}</div>
                             </div>
                             <div className="bg-white rounded-lg p-3">
-                              <div className="text-xs text-[var(--muted-foreground)]">Engagement</div>
-                              <div className="text-lg font-bold">{selectedProspect.totalOpens}/{selectedProspect.totalClicks}/{selectedProspect.totalPortalViews}</div>
-                              <div className="text-xs text-[var(--muted-foreground)]">opens / clicks / views</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">Nurture stage</div>
+                              <div className={`text-lg font-bold ${stage.tone}`}>{stage.label}</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">
+                                {lastSentAgo != null ? `last sent ${lastSentAgo <= 0 ? 'today' : `${lastSentAgo}d ago`}` : 'no sends yet'}
+                              </div>
                             </div>
                             <div className="bg-white rounded-lg p-3">
-                              <div className="text-xs text-[var(--muted-foreground)]">Status</div>
-                              <div className="text-lg font-bold capitalize">{selectedProspect.status}</div>
-                              <div className="text-xs text-[var(--muted-foreground)]">{selectedProspect.scheduledSendAt ? `scheduled ${new Date(selectedProspect.scheduledSendAt).toLocaleDateString('en-AU')}` : 'no schedule'}</div>
+                              <div className="text-xs text-[var(--muted-foreground)]">Outreach status</div>
+                              {status ? (
+                                <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded border ${status.tone} mt-1`}>{status.label}</span>
+                              ) : (
+                                <div className="text-lg font-bold capitalize">{sp.status}</div>
+                              )}
+                              <div className="text-xs text-[var(--muted-foreground)] mt-1">
+                                {hoursSinceSignal != null ? `${hoursSinceSignal}h since last signal` : sp.scheduledSendAt ? `next send ${new Date(sp.scheduledSendAt).toLocaleDateString('en-AU')}` : 'no signal'}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex gap-2 flex-wrap mb-4">
-                            <a href={`https://portal.concussion-education-australia.com/p/${selectedProspect.slug}?k=${(selectedProspect as ProspectRow & { accessKey?: string }).accessKey ?? ''}`} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-[rgba(13,115,119,0.2)] hover:bg-[rgba(13,115,119,0.04)] flex items-center gap-1.5">
-                              <ExternalLink size={12} /> Open prospect portal
-                            </a>
-                            <a href={`mailto:${selectedProspect.contactEmail}?subject=${encodeURIComponent('Following up — concussion training for ' + selectedProspect.shortName)}`} className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-[rgba(13,115,119,0.2)] hover:bg-[rgba(13,115,119,0.04)] flex items-center gap-1.5">
-                              <Mail size={12} /> Personal nudge
-                            </a>
+                          {/* Engagement signal breakdown — anti-scanner clarity */}
+                          <div className="bg-white rounded-lg p-4 mb-4">
+                            <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-3">Engagement signals · what they mean</div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div>
+                                <div className="text-[10px] uppercase tracking-wider text-rose-600 font-bold">🔥 Real sessions</div>
+                                <div className="text-xl font-bold text-rose-700 tabular-nums">{sp.realSessions ?? 0}</div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">Browser sessions on portal. Unfakeable.</div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] uppercase tracking-wider text-amber-600 font-bold">URL clicks</div>
+                                <div className="text-xl font-bold text-amber-700 tabular-nums">{sp.distinctUrlClicks ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">/ {sp.totalClicks} raw</span></div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
+                                  {(sp.totalClicks ?? 0) > (sp.distinctUrlClicks ?? 0) * 2
+                                    ? `${(sp.totalClicks ?? 0) - (sp.distinctUrlClicks ?? 0)} likely scanner pre-fetches.`
+                                    : 'Real reads — no scanner inflation.'}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">Cal clicks</div>
+                                <div className="text-xl font-bold text-emerald-700 tabular-nums">{sp.calClickDays ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">days</span></div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
+                                  {(sp.calClickDays ?? 0) >= 2 ? 'Multi-day = real intent.' : (sp.calClicks ?? 0) > 0 ? `${sp.calClicks} click, 1 day — could be scanner.` : 'No cal.com clicks.'}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Opens</div>
+                                <div className="text-xl font-bold text-[var(--foreground)] tabular-nums">{sp.openDays ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">days</span></div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
+                                  {(sp.openDays ?? 0) >= 2 ? `${sp.totalOpens} opens across ${sp.openDays}d.` : `${sp.totalOpens} opens — Apple MPP noise possible.`}
+                                </div>
+                              </div>
+                            </div>
+                            {sp.lastClickedSubject && (
+                              <p className="text-[10.5px] text-[var(--muted-foreground)] mt-3 italic">Last clicked: &quot;{sp.lastClickedSubject}&quot;</p>
+                            )}
                           </div>
                           {/* Portal flow funnel — what they viewed, clicked, exited on */}
                           {selectedProspect.portalFlow && (Object.keys(selectedProspect.portalFlow.sectionFunnel).length > 0 || Object.keys(selectedProspect.portalFlow.ctaClicks).length > 0) && (
@@ -3541,7 +3714,8 @@ export default function AnalyticsDashboard() {
                             )}
                           </div>
                         </div>
-                      )}
+                        )
+                      })()}
 
                       {/* Re-engage queue */}
                       {reEngageQueue.length > 0 && (

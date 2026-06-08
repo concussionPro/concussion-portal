@@ -246,11 +246,23 @@ export async function GET(req: NextRequest) {
             NULL::text AS deepest_section
           FROM (SELECT DISTINCT clinic_id FROM filtered) f`
 
-    // Pull all sources in parallel
+    // Pull all sources in parallel.
+    // Self/admin seed-data exclusion: any prospect_clinics row whose slug,
+    // short_name, or contact_email signals it is a test/preview record
+    // belonging to Zac himself (e.g. send-portal-preview seed → "Zac Preview
+    // Practice", slug 'zac-preview-demo'). Without this filter Zac's own
+    // browsing inflates the engagement metrics and pollutes the "Call now"
+    // list with himself.
     const [clinics, outreach, views, eventSignals, realSessions, talkRequests, portalFlow] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
-        : sql<ClinicDbRow>`SELECT * FROM prospect_clinics`,
+        : sql<ClinicDbRow>`
+            SELECT * FROM prospect_clinics
+            WHERE COALESCE(slug, '') NOT ILIKE 'zac-preview%'
+              AND COALESCE(short_name, '') NOT ILIKE '%zac%preview%'
+              AND COALESCE(LOWER(contact_email), '') NOT IN ('zac@concussion-education-australia.com', 'z.lew87@gmail.com')
+              AND COALESCE(LOWER(contact_email), '') NOT LIKE '%@concussion-education-australia.com'
+          `,
       includeTest
         ? (filterId !== null && !isNaN(filterId)
             ? sql<OutreachLogRow>`SELECT * FROM prospect_outreach_log WHERE clinic_id = ${filterId} ORDER BY sent_at DESC`
