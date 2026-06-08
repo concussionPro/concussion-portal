@@ -2763,19 +2763,41 @@ export default function AnalyticsDashboard() {
               // Total restricted to non-dead — matches API logic
               const tierTotalForPct = TIER_META.reduce((acc, t) => acc + (tierCounts[t.key] ?? 0), 0)
 
-              // Signal-strength score reflects the calibrated hierarchy:
-              //   cal-click (literal booking intent)            = 1000
-              //   return-day view (genuine research follow-up)  = 500
-              //   product click (clicked the dashboard preview) = 200
-              //   multi-day opens                                = 50
-              //   single-day events                              = 10
-              const signalScore = (p: ProspectRow): number =>
-                (p.calClicks ?? 0) * 1000
-                + (Math.max(0, (p.viewDays ?? 0) - 1)) * 500
-                + (p.productClicks ?? 0) * 200
-                + (Math.max(0, (p.openDays ?? 0) - 1)) * 50
-                + p.totalPortalViews * 10
-                + p.totalOpens
+              // Signal-strength score — rewritten 2026-06-08 to weight by the
+              // three highest-intent signals per Zac: (1) contact/call intent,
+              // (2) dashboard CTA clicks, (3) real time on portal. Email opens
+              // and email "product clicks" deprioritised because they're
+              // mostly Apple-MPP / scanner noise.
+              //
+              // Hierarchy (high → low intent):
+              //   cal booked (calendar confirmed)         : 100_000
+              //   talk request (filled /talk form)        :  50_000
+              //   dashboard CTA click (per click)         :  10_000  ← real intent to act
+              //   cal.com clicks on 2+ different days     :   5_000  ← scanner-immune
+              //   engaged session (per >30s session)      :   1_000  ← real read
+              //   time on portal (per minute, cap 30m)    :     100  ← real dwell
+              //   return-day views (extra days, gated)    :     500  ← repeat visit
+              //   multi-day opens (3+ total, extra days)  :      50  ← MPP-resistant
+              const signalScore = (p: ProspectRow): number => {
+                let s = 0
+                if (p.calBookedAt && p.calBookingStatus === 'booked') s += 100_000
+                if (p.hasTalkRequest) s += 50_000
+                s += (p.portalCtaClicks ?? 0) * 10_000
+                if ((p.calClickDays ?? 0) >= 2) s += 5_000
+                s += (p.portalEngagedSessions ?? 0) * 1_000
+                const minutesOnPortal = Math.min(30, Math.round((p.portalTotalDwellMs ?? 0) / 60_000))
+                s += minutesOnPortal * 100
+                // Return-day views only count if at least one engaged session
+                // (otherwise multi-day scanner pre-fetch could inflate this)
+                if ((p.portalEngagedSessions ?? 0) >= 1) {
+                  s += Math.max(0, (p.viewDays ?? 0) - 1) * 500
+                }
+                // Multi-day opens only count past Apple-MPP-noise threshold
+                if ((p.totalOpens ?? 0) >= 3) {
+                  s += Math.max(0, (p.openDays ?? 0) - 1) * 50
+                }
+                return s
+              }
 
               const callRecommendedList = prospects
                 .filter(p => p.callRecommended)
@@ -2824,6 +2846,18 @@ export default function AnalyticsDashboard() {
               //   - ≥1 dashboard CTA click (client-side JS, unfakeable)
               //   - ≥2 different days clicking cal.com (scanner only fetches once)
               // Sub-30s sessions and 1-day email clicks are LIKELY scanner pre-fetch.
+              // HOT NOW sort uses the same signal-strength hierarchy as
+              // the Call now list: dashboard CTA > cal multi-day >
+              // engaged sessions > time on portal. Excludes booked + talk-req
+              // (already in motion) and replied (separate tier).
+              const hotNowSortScore = (p: ProspectRow): number => {
+                let s = 0
+                s += (p.portalCtaClicks ?? 0) * 10_000
+                if ((p.calClickDays ?? 0) >= 2) s += 5_000
+                s += (p.portalEngagedSessions ?? 0) * 1_000
+                s += Math.min(30, Math.round((p.portalTotalDwellMs ?? 0) / 60_000)) * 100
+                return s
+              }
               const hotNow = prospects
                 .filter(p =>
                   ((p.portalEngagedSessions ?? 0) >= 1 ||
@@ -2833,10 +2867,7 @@ export default function AnalyticsDashboard() {
                   !p.hasTalkRequest &&
                   p.replies === 0
                 )
-                .sort((a, b) =>
-                  ((b.portalCtaClicks ?? 0) * 10 + (b.portalEngagedSessions ?? 0) * 3 + (b.calClickDays ?? 0) * 5) -
-                  ((a.portalCtaClicks ?? 0) * 10 + (a.portalEngagedSessions ?? 0) * 3 + (a.calClickDays ?? 0) * 5)
-                )
+                .sort((a, b) => hotNowSortScore(b) - hotNowSortScore(a))
                 .slice(0, 12)
 
               // Today's engagers — any signal in the last 24h, regardless of tier
@@ -3113,9 +3144,9 @@ export default function AnalyticsDashboard() {
                               <thead>
                                 <tr className="text-left text-[10px] uppercase text-rose-700/70 font-bold border-b border-rose-200/50">
                                   <th className="px-2 py-1.5">Contact / Clinic</th>
-                                  <th className="px-2 py-1.5 text-right" title="Unique browser sessions on /p/[slug] — unfakeable">Sessions</th>
-                                  <th className="px-2 py-1.5 text-right" title="Distinct URL clicks in emails (anti-scanner)">URL clicks</th>
-                                  <th className="px-2 py-1.5 text-right" title="Distinct calendar days clicking cal.com">Cal days</th>
+                                  <th className="px-2 py-1.5 text-right" title="Total time on prospect portal (sum of all sessions) — real human dwell">⏱ Time</th>
+                                  <th className="px-2 py-1.5 text-right" title="Clicks on dashboard CTAs (Book/Pricing/Talk) — client-side JS, scanner-immune">🎯 CTAs</th>
+                                  <th className="px-2 py-1.5 text-right" title="Cal.com clicks on multiple calendar days — multi-day = real human">📅 Cal-d</th>
                                   <th className="px-2 py-1.5">Outreach</th>
                                   <th className="px-2 py-1.5">Nurture</th>
                                 </tr>
@@ -3134,9 +3165,9 @@ export default function AnalyticsDashboard() {
                                         <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
                                         <div className="text-[10.5px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
                                       </td>
-                                      <td className="px-2 py-2 text-right font-bold text-rose-700 tabular-nums">{p.realSessions || '—'}</td>
-                                      <td className="px-2 py-2 text-right font-bold text-amber-700 tabular-nums">{p.distinctUrlClicks || '—'}</td>
-                                      <td className="px-2 py-2 text-right font-bold text-emerald-700 tabular-nums">{p.calClickDays || (p.calClicks ? `${p.calClicks}×` : '—')}</td>
+                                      <td className="px-2 py-2 text-right font-bold text-rose-700 tabular-nums">{(p.portalTotalDwellMs ?? 0) > 0 ? fmtTime(p.portalTotalDwellMs ?? 0) : '—'}</td>
+                                      <td className="px-2 py-2 text-right font-bold text-emerald-700 tabular-nums">{p.portalCtaClicks || '—'}</td>
+                                      <td className="px-2 py-2 text-right font-bold text-amber-700 tabular-nums">{p.calClickDays || (p.calClicks ? `${p.calClicks}×` : '—')}</td>
                                       <td className="px-2 py-2">
                                         {status ? (
                                           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${status.tone}`}>{status.label}</span>
@@ -3150,7 +3181,7 @@ export default function AnalyticsDashboard() {
                             </table>
                           </div>
                           <p className="text-[10.5px] text-rose-700/80 mt-2">
-                            Threshold: ≥2 real browser sessions, ≥3 distinct-URL clicks, or any cal.com click. Raw click count excluded — anti-malware scanners pre-fetch every email link once.
+                            Sorted by intent strength: dashboard CTA clicks ▶ cal multi-day ▶ engaged sessions ▶ time on portal. Threshold: ≥1 engaged session (&gt;30s) OR ≥1 dashboard CTA click OR ≥2 cal-click days. Sub-30s sessions excluded (likely anti-malware scanner).
                           </p>
                         </div>
                       )}
@@ -3279,9 +3310,9 @@ export default function AnalyticsDashboard() {
                                   <th className="text-left px-3 py-3 font-semibold">Nurture</th>
                                   <th className="text-left px-3 py-3 font-semibold">Tier</th>
                                   <th className="text-left px-3 py-3 font-semibold">Top signal</th>
-                                  <th className="text-center px-2 py-3 font-semibold" title="Real browser sessions on /p/[slug] — unfakeable">Sessions</th>
-                                  <th className="text-center px-2 py-3 font-semibold" title="Distinct URLs clicked in emails (anti-scanner)">URL clicks</th>
-                                  <th className="text-center px-2 py-3 font-semibold" title="Distinct calendar days clicking cal.com">Cal days</th>
+                                  <th className="text-center px-2 py-3 font-semibold" title="Total time on prospect portal (sum of all sessions) — real human dwell">⏱ Time</th>
+                                  <th className="text-center px-2 py-3 font-semibold" title="Clicks on dashboard CTAs (Book/Pricing/Talk) — client-side JS, scanner-immune">🎯 CTAs</th>
+                                  <th className="text-center px-2 py-3 font-semibold" title="Cal.com clicks on multiple calendar days (single-day click = scanner suspect)">📅 Cal-d</th>
                                   <th className="text-right px-3 py-3 font-semibold">Offer</th>
                                   <th className="text-left px-4 py-3 font-semibold">Why call</th>
                                 </tr>
@@ -3336,9 +3367,9 @@ export default function AnalyticsDashboard() {
                                         </span>
                                       </td>
                                       <td className="px-3 py-3 text-[11px] font-semibold text-[var(--foreground)]">{SIGNAL_LABELS[p.topSignal ?? 'none']}</td>
-                                      <td className="px-2 py-3 text-center text-sm font-bold text-rose-700">{p.realSessions || '—'}</td>
-                                      <td className="px-2 py-3 text-center text-sm font-bold text-amber-700">{p.distinctUrlClicks || '—'}</td>
-                                      <td className="px-2 py-3 text-center text-sm font-bold text-emerald-700">{p.calClickDays || (p.calClicks ? `${p.calClicks}×` : '—')}</td>
+                                      <td className="px-2 py-3 text-center text-sm font-bold text-rose-700 tabular-nums">{(p.portalTotalDwellMs ?? 0) > 0 ? fmtTime(p.portalTotalDwellMs ?? 0) : '—'}</td>
+                                      <td className="px-2 py-3 text-center text-sm font-bold text-emerald-700 tabular-nums">{p.portalCtaClicks || '—'}</td>
+                                      <td className="px-2 py-3 text-center text-sm font-bold text-amber-700 tabular-nums">{p.calClickDays || (p.calClicks ? `${p.calClicks}×` : '—')}</td>
                                       <td className="px-3 py-3 text-right text-xs">
                                         <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{offerLabel}</div>
                                       </td>
