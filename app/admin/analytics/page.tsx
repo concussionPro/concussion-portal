@@ -3634,6 +3634,124 @@ export default function AnalyticsDashboard() {
                               </div>
                             </div>
                           </div>
+                          {/* WHAT HAPPENS NEXT — full auto-sequence timeline + manual-outreach trigger.
+                              Answers two questions: (1) what subject + when will the next email fire?
+                              (2) when do we switch to manual? Predicts T2 subject from engagement state
+                              (clicked/opened/none mirrors the email-templates.ts gating). */}
+                          {(() => {
+                            // Predict the followup subject the auto-sequence would send next.
+                            // Mirrors the engagement-aware variant logic in lib/prospect/email-templates.ts.
+                            const engagedWithT1 =
+                              (sp.distinctUrlClicks ?? 0) > 0 || (sp.portalCtaClicks ?? 0) > 0
+                                ? 'clicked'
+                                : (sp.openDays ?? 0) > 0
+                                  ? 'opened'
+                                  : 'none'
+                            const predictedT2Subject =
+                              engagedWithT1 === 'clicked'
+                                ? `Saw ${sp.shortName} took a look — quick follow-up`
+                                : engagedWithT1 === 'opened'
+                                  ? `Re: Concussion hub — quick check`
+                                  : sp.city && !/unknown/i.test(sp.city)
+                                    ? `Re: Concussion hub for ${sp.city}`
+                                    : `Re: Concussion hub — ${sp.shortName}`
+                            const t2RevealsPrice = engagedWithT1 !== 'none'
+                            const predictedT3Subject = `Closing the loop — ${sp.shortName}`
+                            const t2Date = sp.scheduledSendAt ? new Date(sp.scheduledSendAt) : null
+                            const t2DaysAway = t2Date ? Math.round((t2Date.getTime() - Date.now()) / 86_400_000) : null
+                            // T3 fires ~8 BD after T2
+                            const t3Date = t2Date ? new Date(t2Date.getTime() + 9 * 86_400_000) : null
+                            const t3DaysAway = t3Date ? Math.round((t3Date.getTime() - Date.now()) / 86_400_000) : null
+                            const sentT1 = sp.sends.length >= 1
+                            const sentT2 = sp.sends.length >= 2
+                            const sentT3 = sp.sends.length >= 3
+                            const fmtDate = (d: Date) => d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+                            return (
+                              <div className="bg-white rounded-lg p-4 mb-4 border border-[var(--accent)]/20">
+                                <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-3">
+                                  Whats next · auto-sequence + manual trigger
+                                </div>
+                                <div className="space-y-2.5">
+                                  {/* T1 */}
+                                  {sentT1 && (
+                                    <div className="flex items-start gap-3">
+                                      <div className="text-emerald-600 text-sm font-bold mt-0.5 w-6 shrink-0">✓</div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-bold text-[var(--foreground)]">T1 · sent {sp.lastSentAt ? fmtDate(new Date(sp.lastSentAt)) : ''}</div>
+                                        <div className="text-[11px] text-[var(--muted-foreground)] truncate">&quot;{sp.lastSentSubject ?? ''}&quot;</div>
+                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{sp.totalOpens} opens · {sp.totalClicks} clicks · {sp.portalEngagedSessions ?? 0} engaged session{(sp.portalEngagedSessions ?? 0) === 1 ? '' : 's'}</div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* T2 — predicted */}
+                                  {!sentT2 && (
+                                    <div className="flex items-start gap-3">
+                                      <div className={`text-sm font-bold mt-0.5 w-6 shrink-0 ${t2Date && t2DaysAway != null && t2DaysAway <= 1 ? 'text-amber-600' : 'text-blue-600'}`}>🔜</div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-bold text-[var(--foreground)]">
+                                          T2 · {t2Date ? `${fmtDate(t2Date)} (${t2DaysAway === 0 ? 'today' : t2DaysAway === 1 ? 'tomorrow' : `${t2DaysAway}d`})` : 'not scheduled yet'}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--muted-foreground)] italic truncate">&quot;{predictedT2Subject}&quot;</div>
+                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
+                                          {t2RevealsPrice ? '💲 includes price reveal (engaged with T1)' : 'no price yet (pushes to dashboard)'}
+                                          {' · skipped if: reply · cal booking · personal-lane promotion'}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* T3 — predicted */}
+                                  {!sentT3 && (
+                                    <div className="flex items-start gap-3">
+                                      <div className="text-slate-500 text-sm font-bold mt-0.5 w-6 shrink-0">📨</div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] font-bold text-[var(--foreground)]">
+                                          T3 · {t3Date ? `~${fmtDate(t3Date)} (~${t3DaysAway}d)` : 'after T2 lands'}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--muted-foreground)] italic truncate">&quot;{predictedT3Subject}&quot;</div>
+                                        <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">💲 always discloses price · last touch · same skip conditions</div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* After T3 */}
+                                  {!sentT3 && (
+                                    <div className="flex items-start gap-3 pt-1.5 border-t border-slate-100">
+                                      <div className="text-rose-400 text-sm font-bold mt-0.5 w-6 shrink-0">↓</div>
+                                      <div className="flex-1 min-w-0 text-[10.5px] text-[var(--muted-foreground)]">
+                                        After T3 silence → archived to <strong>long-nurture</strong> (quarterly seasonal cadence: AIS guideline updates, AFL class-action news, regulatory changes). No more cold sends.
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                {/* Manual-outreach trigger panel */}
+                                <div className="mt-3 pt-3 border-t border-slate-100">
+                                  <div className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted-foreground)] mb-1.5">Switch to manual outreach when:</div>
+                                  <ul className="text-[10.5px] text-[var(--muted-foreground)] space-y-1 leading-snug">
+                                    <li>
+                                      <strong className={sp.outreachStatus === 'go' ? 'text-emerald-700' : 'text-[var(--muted-foreground)]'}>🟢 GO NOW window (48hr-7d after a hot signal)</strong>
+                                      {sp.outreachStatus === 'go' && <span className="text-emerald-700 font-semibold"> ← {sp.contactFirstName} is HERE</span>}
+                                      <span> — personal email today, T2 will be auto-skipped.</span>
+                                    </li>
+                                    <li>
+                                      <strong className={sp.outreachStatus === 'cool' ? 'text-amber-700' : 'text-[var(--muted-foreground)]'}>⏳ Cool window (0-48h after hot signal)</strong>
+                                      {sp.outreachStatus === 'cool' && <span className="text-amber-700 font-semibold"> ← {sp.contactFirstName} is HERE</span>}
+                                      <span> — wait, dont compete with fresh T1 memory.</span>
+                                    </li>
+                                    <li>
+                                      <strong className={sp.outreachStatus === 'last-chance' ? 'text-amber-700' : 'text-[var(--muted-foreground)]'}>🟡 Last chance (7-14d silent after hot)</strong>
+                                      {sp.outreachStatus === 'last-chance' && <span className="text-amber-700 font-semibold"> ← {sp.contactFirstName} is HERE</span>}
+                                      <span> — one tactical follow-up before dropping.</span>
+                                    </li>
+                                    <li>
+                                      <strong className={sp.outreachStatus === 'long-nurture' || sp.outreachStatus === 'not-hot' ? 'text-rose-700' : 'text-[var(--muted-foreground)]'}>🔴 14d+ silent · 🤖 scanner-only · no signal</strong>
+                                      {(sp.outreachStatus === 'long-nurture' || sp.outreachStatus === 'not-hot') && <span className="text-rose-700 font-semibold"> ← {sp.contactFirstName} is HERE</span>}
+                                      <span> — let auto-sequence finish, then long-nurture. No personal email.</span>
+                                    </li>
+                                  </ul>
+                                </div>
+                              </div>
+                            )
+                          })()}
+
                           {/* REAL portal engagement — time on page + dashboard CTA breakdown.
                               These are the unfakeable signals. Email "product click"
                               is mostly scanner pre-fetch, so we lean on these instead. */}
