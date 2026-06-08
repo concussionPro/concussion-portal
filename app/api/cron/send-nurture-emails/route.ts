@@ -58,6 +58,35 @@ export async function GET(request: Request) {
     const errors: string[] = []
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
+    // ── PER-USER WEEKLY CAP ──
+    // Hard ceiling on how many nurture emails any single user can receive
+    // in a rolling 7-day window. Across all the nurture sequences (SCAT
+    // mastery, post-purchase, abandoned-checkout, pre-workshop, online
+    // upgrade, re-engagement, reference upgrade, AI safety checklist),
+    // a heavy user could otherwise stack up 4-5 emails in a week. Cap at
+    // MAX_PER_USER_PER_WEEK to protect domain reputation + avoid the
+    // "annoying sender" perception that tanks reply rate.
+    const MAX_PER_USER_PER_WEEK = 3
+    const { rows: weeklyCounts } = await sql<{ recipient: string; n: number }>`
+      SELECT LOWER(recipient) AS recipient, COUNT(*)::int AS n
+      FROM email_events
+      WHERE event_type = 'sent'
+        AND created_at > NOW() - INTERVAL '7 days'
+        AND COALESCE(project, 'cea') = 'cea'
+      GROUP BY LOWER(recipient)
+    `
+    const recipientSendsThisWeek = new Map<string, number>(
+      weeklyCounts.map(r => [r.recipient, r.n] as const)
+    )
+    function exceedsWeeklyCap(email: string): boolean {
+      const n = recipientSendsThisWeek.get(email.toLowerCase()) ?? 0
+      return n >= MAX_PER_USER_PER_WEEK
+    }
+    function incrementWeeklySent(email: string): void {
+      const k = email.toLowerCase()
+      recipientSendsThisWeek.set(k, (recipientSendsThisWeek.get(k) ?? 0) + 1)
+    }
+
     // Stagger nurture sends across ~30-45 min with per-domain throttling so
     // the daily batch doesn't read as a marketing blast to inbox providers.
     // Resend holds each send until its scheduledAt timestamp.
@@ -66,6 +95,7 @@ export async function GET(request: Request) {
     // ── 1. SCAT6 Mastery Nurture Sequence (preview users) ──
     // Routes Day 7 and Day 10 to variant emails based on user activity/progress
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
       // AI Safety Checklist signups have their own dedicated sequence below — skip here
@@ -108,6 +138,7 @@ export async function GET(request: Request) {
                 },
               })
               emailsSent++
+            incrementWeeklySent(user.email)
               console.log(`[Nurture] Day 0 catch-up → ${redact(user.email)}`)
             } catch (err) {
               console.error(`[Nurture] Failed Day 0 catch-up for ${redact(user.email)}:`, err)
@@ -253,6 +284,7 @@ export async function GET(request: Request) {
 
     // ── 2. Post-Purchase Onboarding Sequence (paid users) ──
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel === 'preview') continue
       if (user.nurtureUnsubscribed) continue
 
@@ -294,6 +326,7 @@ export async function GET(request: Request) {
             })
 
             emailsSent++
+            incrementWeeklySent(user.email)
             console.log(`[Workshop Reservation] Day 1 → ${redact(user.email)} (${locationConfig.city})`)
           } catch (err) {
             console.error(`[Workshop Reservation] Failed to send to ${redact(user.email)}:`, err)
@@ -371,6 +404,7 @@ export async function GET(request: Request) {
 
     // ── 3. Pre-Workshop Prep Emails (full-course with confirmed dates) ──
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'full-course') continue
       if (user.nurtureUnsubscribed) continue
       if (!user.workshopLocation) continue
@@ -457,6 +491,7 @@ export async function GET(request: Request) {
 
     // ── 4. Workshop Momentum Emails (full-course users in collecting cities) ──
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'full-course') continue
       if (user.nurtureUnsubscribed) continue
       if (!user.workshopLocation) continue
@@ -523,6 +558,7 @@ export async function GET(request: Request) {
 
     // ── Online-only / full-course user sequences (upgrade nudge + re-engagement) ──
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'online-only' && user.accessLevel !== 'full-course') continue
       if (user.nurtureUnsubscribed) continue
 
@@ -561,6 +597,7 @@ export async function GET(request: Request) {
             })
 
             emailsSent++
+            incrementWeeklySent(user.email)
             console.log(`Sent upgrade nudge (Day ${daysSinceSignup}) to ${redact(user.email)}`)
           } catch (err) {
             console.error(`[Upgrade Nudge] Failed to send to ${redact(user.email)}:`, err)
@@ -600,6 +637,7 @@ export async function GET(request: Request) {
             })
 
             emailsSent++
+            incrementWeeklySent(user.email)
             console.log(`Sent re-engagement to ${redact(user.email)} (${daysSinceLogin} days since login)`)
           } catch (err) {
             console.error(`[Re-engagement] Failed to send to ${redact(user.email)}:`, err)
@@ -610,6 +648,7 @@ export async function GET(request: Request) {
 
     // ── 7. "Almost Done" Email (users who completed 7 of 8 modules) ──
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'online-only' && user.accessLevel !== 'full-course') continue
       if (user.nurtureUnsubscribed) continue
       if (user.progressEmailsOptedOut) continue
@@ -655,6 +694,7 @@ export async function GET(request: Request) {
               },
             })
             emailsSent++
+            incrementWeeklySent(user.email)
             console.log(`[Almost Done] Sent to ${redact(user.email)}`)
           } catch (err) {
             console.error(`[Almost Done] Failed to send to ${redact(user.email)}:`, err)
@@ -669,6 +709,7 @@ export async function GET(request: Request) {
     // Catches preview users who completed all 3 modules but didn't trigger upsell
     // via the certificate endpoint (e.g. downloaded PDF only, or never clicked certificate)
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
 
@@ -724,6 +765,7 @@ export async function GET(request: Request) {
 
     // ── 9. Free "Almost Done" (preview users with 2/3 SCAT modules) ──
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue
       if (user.nurtureUnsubscribed) continue
 
@@ -780,6 +822,7 @@ export async function GET(request: Request) {
     // emails just surface the offer. Stops automatically if they upgrade
     // (accessLevel changes) or unsubscribe.
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'preview') continue // upgraded → stop
       if (user.nurtureUnsubscribed) continue
       if (!user.referenceBookPurchasedAt) continue
@@ -835,6 +878,7 @@ export async function GET(request: Request) {
     const heidiVsLyrebirdBlog = `${baseUrl}/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians`
 
     for (const user of users) {
+      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.signupSource !== 'ai-safety-checklist') continue
       if (user.nurtureUnsubscribed) continue
       const signupDate = new Date(user.createdAt)
