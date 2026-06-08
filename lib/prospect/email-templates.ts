@@ -164,7 +164,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{portal_image_url}"><img src="{og_image_url}" alt="{clinic_short_name} preview" class="preview-img" width="548" height="288" /></a>
 
       <ul class="points" style="margin: 14px 0 14px;">
-        <li><strong>{clinical_team_count} {clinical_team_word} online</strong> — your team trained in their own time (additional seats $497 ea)</li>
+        <li><strong>{hub_seat_count} {clinical_team_word} + admin</strong> — Hub Pack ceiling, your team trained in their own time (additional clinical seats $497 ea)</li>
         <li><strong>Pre-populated clinical docs</strong> — GP letters, NDIS framework, school sport intake, RTP tracking, capability one-pager, every form auto-fills with {clinic_short_name}'s details</li>
         <li><strong>Admin pack</strong> — billing codes, intake workflow, discharge documentation</li>
         <li><strong>$497/clinician workshop upgrade</strong> when you want hands-on credentials</li>
@@ -304,14 +304,20 @@ export function mergeTemplate(
       </p>`
   } else {
     // Small / medium clinic — Hub Pack pitch.
-    // Clinical-team count is dynamic so the bento reads accurately for the
-    // actual clinic size (was hardcoded "5" — a 3-clinician clinic would
-    // see "5 clinicians" which is a credibility-killer at first read).
-    const clinicalTeamCount = clinicalCount(clinic.team) || 4
+    //
+    // Hub Pack actual scope (per Zac 2026-06-08): up to 5 clinicians + admin
+    // access. The bento reflects the ACTUAL offer ceiling, not the clinic's
+    // raw clinical headcount — overstating the included seats would be a
+    // misrepresentation. If the clinic happens to be ≤5 clinicians we show
+    // their exact count; if they're between 6 and on-site threshold we show
+    // "5 clinicians + admin" to set the right expectation. Extra seats ($497
+    // each) get mentioned in the followup body.
+    const rawClinical = clinicalCount(clinic.team) || 4
+    const hubSeatCount = Math.min(rawClinical, 5)
     statsBlock = `<table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
         <td class="stat teal">
-          <span class="headline"><span class="num">${clinicalTeamCount}</span><span class="unit"> clinician${clinicalTeamCount === 1 ? '' : 's'}</span></span>
-          <span class="sub">Whole team online · in own time</span>
+          <span class="headline"><span class="num">${hubSeatCount}</span><span class="unit"> clinician${hubSeatCount === 1 ? '' : 's'} + admin</span></span>
+          <span class="sub">${rawClinical > 5 ? `Hub Pack ceiling · extra seats $497 ea` : `Whole team online · in own time`}</span>
         </td>
         <td class="stat amber">
           <span class="headline"><span class="num">14</span><span class="unit"> CPD</span></span>
@@ -556,16 +562,19 @@ export function mergeTemplate(
       <span class="secondary">Or hit reply with one question — I'll answer in writing within a day.</span>`
   }
 
-  // Clinical team count is used in followup body copy so the bullet reads
-  // "{N} clinicians online" for the actual N — was hardcoded "5", which
-  // for a 3-person clinic killed credibility instantly.
-  const clinicalTeamCount = clinicalCount(clinic.team) || 4
+  // Hub Pack scope (per Zac 2026-06-08): up to 5 clinicians + admin. The
+  // followup bullet shows seat count CAPPED at 5 — for clinics with raw
+  // clinical count > 5 we say "5 + admin" and note extra seats are $497 ea.
+  // Misstating the included seats is a misrepresentation, so always min(raw, 5).
+  const rawClinicalCount = clinicalCount(clinic.team) || 4
+  const hubSeatCount = Math.min(rawClinicalCount, 5)
   const variables: Record<string, string | undefined> = {
     base_url: baseUrl,
     clinic_name: clinic.name,
     clinic_short_name: clinic.shortName,
-    clinical_team_count: String(clinicalTeamCount),
-    clinical_team_word: clinicalTeamCount === 1 ? 'clinician' : 'clinicians',
+    clinical_team_count: String(rawClinicalCount),
+    hub_seat_count: String(hubSeatCount),
+    clinical_team_word: hubSeatCount === 1 ? 'clinician' : 'clinicians',
     region: clinic.region,
     region_phrase: regionPhrase,
     city: clinic.city,
