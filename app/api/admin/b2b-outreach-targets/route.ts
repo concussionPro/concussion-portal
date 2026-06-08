@@ -55,12 +55,21 @@ type Row = {
 
   opens: number
   clicks: number
+  /** Distinct email URLs the prospect clicked — caps anti-malware scanner
+   *  inflation (Defender/Mimecast/Proofpoint pre-fetch every link once). */
+  distinctUrlClicks: number
+  /** Clicks on cal.com specifically — call-intent signal. */
+  calClicks: number
   lastClickedSubject: string | null
   lastClickAt: string | null
 
   pricingViews: number
   checkoutStarts: number
   portalViews: number
+  /** Real browser sessions on the prospect portal (analytics_events
+   *  session_id). The most reliable engagement signal — bot UAs are
+   *  filtered out at write time. */
+  realSessions: number
   lastSiteIntentAt: string | null
 
   wiSubmits: number
@@ -224,12 +233,41 @@ export async function GET(req: NextRequest) {
         SELECT LOWER(recipient) AS email,
                COUNT(*) FILTER (WHERE event_type='opened')::int  AS opens,
                COUNT(*) FILTER (WHERE event_type='clicked')::int AS clicks,
+               -- DISTINCT-URL clicks: anti-malware scanners (Defender, Mimecast,
+               -- Proofpoint, CF) pre-fetch every link in the email exactly once.
+               -- Raw click count inflates 4-5x. Distinct URLs caps the scanner
+               -- contribution and gives the real "different things the prospect
+               -- actually clicked" signal.
+               COUNT(DISTINCT click_url) FILTER (
+                 WHERE event_type='clicked'
+                 AND click_url IS NOT NULL
+                 AND click_url NOT ILIKE '%unsubscribe%'
+                 AND click_url NOT ILIKE '%osteopathy.org.au%'
+               )::int AS distinct_url_clicks,
+               COUNT(*) FILTER (
+                 WHERE event_type='clicked' AND click_url ILIKE '%cal.com%'
+               )::int AS cal_clicks,
                MAX(created_at) FILTER (WHERE event_type='clicked') AS last_click_at,
                MAX(subject)    FILTER (WHERE event_type='clicked') AS last_clicked_subject
         FROM email_events
         WHERE created_at >= NOW() - INTERVAL '90 days'
           AND COALESCE(project, 'cea') = 'cea'
         GROUP BY LOWER(recipient)
+      ),
+      -- Real browser sessions on the prospect portal — strongest signal.
+      -- analytics_events captures actual browser session_ids (bot UAs
+      -- filtered server-side at write time). Matched to clinic by slug.
+      real_portal_sessions AS (
+        SELECT LOWER(pc.contact_email) AS email,
+               COUNT(DISTINCT ae.session_id)::int AS real_sessions,
+               COUNT(DISTINCT ae.ip)::int         AS real_session_ips,
+               MAX(ae.created_at)                 AS last_real_session_at
+        FROM prospect_clinics pc
+        JOIN analytics_events ae ON ae.path LIKE '/p/' || pc.slug || '%'
+        WHERE ae.created_at >= NOW() - INTERVAL '90 days'
+          AND ae.session_id IS NOT NULL
+          AND ae.session_id NOT LIKE 'server_%'
+        GROUP BY LOWER(pc.contact_email)
       ),
       -- prospect_portal_views is the AUTHORITATIVE source for portal browsing
       -- (analytics_events.user_email is unreliably populated). Join via
@@ -316,6 +354,9 @@ export async function GET(req: NextRequest) {
           p.role, p.state, p.city, p.region, p.team_size AS "teamSize", p.source,
           COALESCE(e.opens, 0)::int  AS opens,
           COALESCE(e.clicks, 0)::int AS clicks,
+          COALESCE(e.distinct_url_clicks, 0)::int AS "distinctUrlClicks",
+          COALESCE(e.cal_clicks, 0)::int          AS "calClicks",
+          COALESCE(rs.real_sessions, 0)::int      AS "realSessions",
           e.last_clicked_subject     AS "lastClickedSubject",
           e.last_click_at            AS "lastClickAt",
           COALESCE(s.pricing_views, 0)::int   AS "pricingViews",
@@ -331,11 +372,17 @@ export async function GET(req: NextRequest) {
           COALESCE(w.submits, 0)::int AS "wiSubmits",
           w.cities AS "wiCities",
           (
-            COALESCE(s.pricing_views, 0) * 20
+            -- Real browser sessions are the strongest signal — actually
+            -- unfakeable by anti-malware scanners. Each session is +25.
+            COALESCE(rs.real_sessions, 0) * 25
+            + COALESCE(s.pricing_views, 0) * 20
             + COALESCE(s.checkout_starts, 0) * 30
-            + COALESCE(pe.portal_views, 0) * 5          -- 5/view because portal_views are page-level so they accumulate fast (each section scroll = +1)
+            -- Distinct-URL email clicks (scanner-deflated): +10 each. The
+            -- raw click count carries half-weight now (+2) since most of
+            -- it is scanner noise.
+            + COALESCE(e.distinct_url_clicks, 0) * 10
+            + COALESCE(e.clicks, 0) * 2
             + COALESCE(w.submits, 0) * 15
-            + COALESCE(e.clicks, 0) * 5
             + COALESCE(e.opens, 0) * 2
             + CASE WHEN p.team_size >= 16 THEN 20 WHEN p.team_size >= 8 THEN 10 ELSE 0 END
           )::int AS "intentScore",
@@ -346,10 +393,11 @@ export async function GET(req: NextRequest) {
             COALESCE(w.last_submit_at,      '1970-01-01'::timestamptz)
           ) AS "lastSignalAt"
         FROM pool p
-        LEFT JOIN email_engagement   e  ON e.email  = LOWER(p.email)
-        LEFT JOIN site_intent        s  ON s.email  = LOWER(p.email)
-        LEFT JOIN portal_engagement  pe ON pe.email = LOWER(p.email)
-        LEFT JOIN wi                 w  ON w.email  = LOWER(p.email)
+        LEFT JOIN email_engagement     e  ON e.email  = LOWER(p.email)
+        LEFT JOIN site_intent          s  ON s.email  = LOWER(p.email)
+        LEFT JOIN portal_engagement    pe ON pe.email = LOWER(p.email)
+        LEFT JOIN real_portal_sessions rs ON rs.email = LOWER(p.email)
+        LEFT JOIN wi                   w  ON w.email  = LOWER(p.email)
         WHERE LOWER(p.email) NOT IN (SELECT email FROM converted)
           AND LOWER(p.email) NOT IN (SELECT email FROM unsubbed)
       )

@@ -20,6 +20,9 @@ interface Target {
   source: string
   opens: number
   clicks: number
+  distinctUrlClicks: number
+  calClicks: number
+  realSessions: number
   lastClickedSubject: string | null
   lastClickAt: string | null
   pricingViews: number
@@ -178,14 +181,25 @@ export default function B2bOutreachPage() {
 
   const todayCount = useMemo(() => (data?.targets || []).filter((t) => t.priorityBucket === 'today').length, [data])
   const overdueCount = useMemo(() => (data?.targets || []).filter((t) => t.priorityBucket === 'overdue').length, [data])
-  // HOT NOW = anyone with portal_views ≥ 5 OR clicks ≥ 3 in the last 14 days.
-  // These are the prospects to email/call BEFORE the rest of the cold queue.
+  // HOT NOW threshold uses UNFAKEABLE signals only:
+  //   ≥2 real browser sessions on /p/[slug]  OR
+  //   ≥3 DISTINCT-URL email clicks (caps anti-malware scanner inflation) OR
+  //   ≥1 cal.com click (call-intent)
+  // Raw click count is excluded — Defender/Mimecast/Proofpoint pre-fetch
+  // every link in the email exactly once, which inflates raw clicks 4-5×.
   const hotNow = useMemo(() => {
     if (!data) return [] as Target[]
     return data.targets
-      .filter((t) => (t.portalViews ?? 0) >= 5 || (t.clicks ?? 0) >= 3)
+      .filter((t) =>
+        (t.realSessions ?? 0) >= 2 ||
+        (t.distinctUrlClicks ?? 0) >= 3 ||
+        (t.calClicks ?? 0) >= 1
+      )
       .filter((t) => !t.hasBookedCall && !t.hasTalkRequest)
-      .sort((a, b) => (b.portalViews + b.clicks * 2) - (a.portalViews + a.clicks * 2))
+      .sort((a, b) =>
+        (b.realSessions * 3 + b.distinctUrlClicks * 2 + b.calClicks * 5) -
+        (a.realSessions * 3 + a.distinctUrlClicks * 2 + a.calClicks * 5)
+      )
       .slice(0, 12)
   }, [data])
 
@@ -265,8 +279,9 @@ export default function B2bOutreachPage() {
                 <thead>
                   <tr className="text-left text-[10px] uppercase text-slate-500 font-bold border-b border-rose-200/50">
                     <th className="px-2 py-1">Contact / Clinic</th>
-                    <th className="px-2 py-1 text-right">Portal views</th>
-                    <th className="px-2 py-1 text-right">Clicks</th>
+                    <th className="px-2 py-1 text-right" title="Unique browser sessions on /p/[slug] — unfakeable">Sessions</th>
+                    <th className="px-2 py-1 text-right" title="Distinct URL clicks in emails (anti-scanner)">URL clicks</th>
+                    <th className="px-2 py-1 text-right" title="Clicks on cal.com — call intent">Cal</th>
                     <th className="px-2 py-1 text-right">Score</th>
                     <th className="px-2 py-1">Recent</th>
                   </tr>
@@ -278,8 +293,9 @@ export default function B2bOutreachPage() {
                         <div className="font-semibold text-slate-900">{t.firstName ?? '?'} <span className="text-slate-500 font-normal">— {t.clinic ?? '?'}</span></div>
                         <a href={`mailto:${t.email}?subject=${encodeURIComponent(`Quick follow-up on ${t.clinic ?? 'concussion training'}`)}`} className="text-[10.5px] text-blue-600 hover:underline">{t.email}</a>
                       </td>
-                      <td className="px-2 py-1.5 text-right font-bold text-rose-700 tabular-nums">{t.portalViews}</td>
-                      <td className="px-2 py-1.5 text-right font-bold text-amber-700 tabular-nums">{t.clicks}</td>
+                      <td className="px-2 py-1.5 text-right font-bold text-rose-700 tabular-nums">{t.realSessions || '—'}</td>
+                      <td className="px-2 py-1.5 text-right font-bold text-amber-700 tabular-nums">{t.distinctUrlClicks || '—'}</td>
+                      <td className="px-2 py-1.5 text-right font-bold text-emerald-700 tabular-nums">{t.calClicks || '—'}</td>
                       <td className="px-2 py-1.5 text-right font-bold text-slate-900 tabular-nums">{t.intentScore}</td>
                       <td className="px-2 py-1.5 text-[10px] text-slate-500 truncate max-w-[180px]">{t.lastClickedSubject ? `clicked: "${t.lastClickedSubject.slice(0, 28)}"` : daysAgo(t.lastSignalAt) + ' since last signal'}</td>
                     </tr>
@@ -288,7 +304,7 @@ export default function B2bOutreachPage() {
               </table>
             </div>
             <p className="text-[10.5px] text-rose-700/80 mt-2">
-              Threshold: ≥5 portal views or ≥3 email clicks · click email to draft a personal follow-up
+              Threshold: ≥2 real browser sessions, ≥3 distinct-URL clicks, or any cal.com click. Raw click count excluded — anti-malware scanners pre-fetch every email link once and inflate it 4-5×.
             </p>
           </div>
         )}
