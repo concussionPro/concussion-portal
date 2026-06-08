@@ -62,9 +62,21 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             <h2 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.02] mb-2 bg-gradient-to-br from-foreground via-foreground to-accent bg-clip-text text-transparent">
               {clinic.shortName} Dashboard
             </h2>
-            <p className="text-base sm:text-lg text-foreground/80 font-semibold max-w-2xl">
+            <p className="text-base sm:text-lg text-foreground/80 font-semibold max-w-2xl mb-4">
               {subhead}
             </p>
+            {/* Catchment opportunity strip — surfaces the regional volume the
+                program is built to handle, so the prospect sees scale before
+                they reach pricing. Same stats appear at end of Module 1 trial
+                but the dashboard placement front-loads the case. */}
+            {!regionUnknown && (
+              <div className="rounded-xl bg-gradient-to-br from-accent/5 via-white to-white border border-accent/15 px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl">
+                <CatchmentStat headline="~144k" label="Sport-related concussions in Australia / year" />
+                <CatchmentStat headline="~14%" label="Senior community AFL players concussed / season" />
+                <CatchmentStat headline="4–12%" label="Youth contact-sport athletes ≥1 / season" />
+                <CatchmentStat headline="60+" label={`Contact-sport clubs across ${clinic.region}`} />
+              </div>
+            )}
           </div>
 
           <div data-track-section="credibility">
@@ -444,6 +456,15 @@ function PricingTiers({ clinic, pricing }: { clinic: ProspectClinic; pricing: Pr
         </div>
       </div>
     </section>
+  )
+}
+
+function CatchmentStat({ headline, label }: { headline: string; label: string }) {
+  return (
+    <div>
+      <p className="text-base sm:text-lg font-bold text-accent leading-none mb-1">{headline}</p>
+      <p className="text-[10.5px] text-muted-foreground leading-snug">{label}</p>
+    </div>
   )
 }
 

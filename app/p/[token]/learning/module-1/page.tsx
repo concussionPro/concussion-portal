@@ -25,13 +25,14 @@ import { getClinicBySlug } from '@/lib/prospect/repo'
 import { AccessWall } from '@/components/prospect/ProspectLanding'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 
-// 6 sections + 3 quiz questions ≈ 10 minutes of reading on Module 1
-// (was 3 — too thin per Zac feedback). 6 covers myths/objectives,
-// definition + classification, pathophysiology basics, biomechanics,
-// red flags, and on-field recognition — enough for the prospect to
-// gauge clinical depth before the locked content gate.
-const TRIAL_SECTION_COUNT = 6
-const TRIAL_QUIZ_COUNT = 3
+// 7 sections + 4 quizzes ≈ 10 minutes — sweet spot per Zac. Cuts at
+// "TBI Classification: Severity, Imaging & Secondary Injury" and locks
+// at "Neuroanatomy: Brain Regions & Concussion Symptoms" — the next
+// section is the clinically juicy one (anatomy → symptom presentation),
+// so the cliffhanger lands at peak curiosity rather than after the
+// reader's already tapped out.
+const TRIAL_SECTION_COUNT = 7
+const TRIAL_QUIZ_COUNT = 4
 
 const PREVIEW_PRINT_CSS = `
   @media print {
