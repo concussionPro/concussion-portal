@@ -230,9 +230,6 @@ function Sidebar({ clinic }: { clinic: ProspectClinic }) {
             Concussion<span className="text-accent">Pro</span>
           </h1>
         </div>
-        <p className="text-[0.65rem] text-muted-foreground ml-12 uppercase tracking-widest font-medium">
-          Hub Program Preview
-        </p>
       </div>
 
       <div className="glass-premium rounded-xl p-3 mb-6">
@@ -550,7 +547,7 @@ function RiskReversal() {
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         {[
-          ['14 CPD or refund', "Every clinician walks away with an AHPRA-aligned certificate. If your team doesn't, full refund."],
+          ['7-day money-back', "Try the first modules — if the program isn't right for your team, email within 7 days for a full refund (less than 25% of online content accessed)."],
           ['Reschedule free outside 2 weeks', 'Push the on-site day to a future date at no cost, provided 2+ weeks notice.'],
           ['Lifetime portal access', 'Online modules, forms, references and templates stay accessible — no renewals, no expiry.'],
         ].map(([h, d]) => (

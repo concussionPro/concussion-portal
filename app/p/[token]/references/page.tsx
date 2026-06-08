@@ -272,9 +272,6 @@ function ProspectSidebar({
             Concussion<span className="text-accent">Pro</span>
           </h1>
         </div>
-        <p className="text-[0.65rem] text-muted-foreground ml-12 uppercase tracking-widest font-medium">
-          Hub Program Preview
-        </p>
       </div>
 
       <div className="glass-premium rounded-xl p-3 mb-6">
