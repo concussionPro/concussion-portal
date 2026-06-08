@@ -29,7 +29,7 @@ import { EMAIL_TEMPLATES, mergeTemplate } from '@/lib/prospect/email-templates'
 import type { EmailTemplateSlug } from '@/lib/prospect/types'
 
 const ZAC_INBOX = process.env.ZAC_INBOX ?? 'zac@concussion-education-australia.com'
-const COLD_FROM = 'Zac Lewis <partnerships@concussion-education-australia.com>'
+const COLD_FROM = 'Zac Lewis <zac@concussion-education-australia.com>'
 const TRANSACTIONAL_REPLY_TO = 'zac@concussion-education-australia.com'
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'

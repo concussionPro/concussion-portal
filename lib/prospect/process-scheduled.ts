@@ -37,7 +37,10 @@ import { EMAIL_TEMPLATES, mergeTemplate } from '@/lib/prospect/email-templates'
 import { preflightClinic, failureSummary } from '@/lib/prospect/preflight'
 import type { EmailTemplateSlug } from '@/lib/prospect/types'
 
-const COLD_FROM = 'Zac Lewis <partnerships@concussion-education-australia.com>'
+// 2026-06-09: switched From: partnerships@ -> zac@ — inbox-placement win.
+// Generic role mailboxes look like bulk lists to spam filters + recipients.
+// First-name @ company reads as personal correspondence.
+const COLD_FROM = 'Zac Lewis <zac@concussion-education-australia.com>'
 const REPLY_TO = 'zac@concussion-education-australia.com'
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
 
@@ -159,10 +162,44 @@ function isValidTemplateSlug(s: string | null): s is EmailTemplateSlug {
   return s === 'initial' || s === 'followup' || s === 'final'
 }
 
+/**
+ * Send-window check (AEST) — Mon-Sat morning only. Sun off.
+ * Per Zacs cold-outreach cadence: clinicians batch-read on Sat mornings,
+ * so we keep Sat in the window; Sun is the only off day.
+ */
+function isInOptimalSendWindow(): boolean {
+  const now = new Date()
+  const dayName = now.toLocaleString('en-AU', { weekday: 'short', timeZone: 'Australia/Sydney' })
+  const aestHour = parseInt(now.toLocaleString('en-AU', { hour: '2-digit', hour12: false, timeZone: 'Australia/Sydney' }), 10)
+  if (dayName === 'Sun') return false
+  return aestHour >= 6 && aestHour <= 12
+}
+
 export async function processScheduledSends(
   opts: ProcessScheduledOptions,
 ): Promise<ProcessScheduledResult> {
   const { dryRun, dailyCap, allowPatternGuess, force = false } = opts
+
+  // Send-window gate: Mon-Sat 06:00-12:00 AEST. Sun off. force=true bypasses.
+  if (!force && !dryRun && !isInOptimalSendWindow()) {
+    return {
+      summary: {
+        mode: 'production',
+        due: 0,
+        sent: 0,
+        sentDryRun: 0,
+        skippedLowConfidence: 0,
+        skippedSuppressed: 0,
+        skippedCap: 0,
+        skippedSignoffMissing: 0,
+        sendFailed: 0,
+        dailyCap: dailyCap ?? 0,
+        allowPatternGuess: !!allowPatternGuess,
+        byTemplate: { initial: 0, followup: 0, final: 0 },
+      },
+      results: [],
+    }
+  }
 
   // Pre-load signoff state for every template so we can per-row skip
   // without re-querying.

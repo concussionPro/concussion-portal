@@ -127,7 +127,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       {offer_block}
 
       <a href="{portal_url}" class="cta">See the {clinic_short_name} preview →</a>
-      <span class="secondary"><a href="{cal_booking_url}">Or book a 15-min discovery call</a> · <a href="{scat_pack_url}">grab the free SCAT6/SCOAT6 pack</a></span>
+      <span class="secondary"><a href="{cal_booking_url}">Or book a 15-min discovery call</a></span>
 
       <p style="margin: 20px 0 8px; font-size: 12px; color: #0a5a5e; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;">Multidisciplinary integration</p>
       <table class="role-bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
