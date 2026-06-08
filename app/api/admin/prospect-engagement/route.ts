@@ -44,6 +44,15 @@ interface ClinicDbRow {
   cal_booked_at: string | null
   cal_booking_id: string | null
   cal_booking_status: string | null
+  // Hunter verification (lazy-migrated columns)
+  verification_status: string | null
+  verification_result: string | null
+  verification_score: number | null
+  verification_role: boolean | null
+  verification_accept_all: boolean | null
+  verification_webmail: boolean | null
+  verification_disposable: boolean | null
+  last_verified_at: string | null
 }
 
 interface OutreachLogRow {
@@ -611,6 +620,16 @@ export async function GET(req: NextRequest) {
       const realSessionsCount = realRow ? Number(realRow.real_sessions ?? 0) : 0
       const lastRealSessionAt = realRow?.last_real_session_at ?? null
       const hasTalkRequest = c.contact_email ? talkRequestSet.has(c.contact_email.toLowerCase()) : false
+      // Hunter quality — gates HOT tier promotion. Low-quality contacts
+      // (score<80, role mailbox, accept-all domain) tend to be heavily
+      // gateway-scanned and yield false-positive "engagement". Even when
+      // they cross the score threshold, we hold them at WARM.
+      const hunterScore = c.verification_score ?? null
+      const isRoleMailbox = c.verification_role === true
+      const isAcceptAll = c.verification_accept_all === true
+      const isHighQualityEmail =
+        hunterScore == null ||  // never verified - default trust until checked
+        (hunterScore >= 80 && !isRoleMailbox && !isAcceptAll && c.verification_disposable !== true)
       const freeContent = c.slug ? freeContentByProspect.get(c.slug.toLowerCase()) : undefined
       const scatCourseSignups = freeContent ? Number(freeContent.scat_course_count ?? 0) : 0
       const preseasonSignups = freeContent ? Number(freeContent.preseason_count ?? 0) : 0
@@ -734,10 +753,10 @@ export async function GET(req: NextRequest) {
       if (c.status === 'won') engagementTier = 'won'
       else if (replies > 0) engagementTier = 'replied'
       else if (isCalBooked || hasTalkRequest) engagementTier = 'engaged' // terminal: contact confirmed
-      // Scanner-suspect can never promote to HOT (even if score crawls past
-      // threshold via residual non-portal signals). They sit in WARM/COLD
-      // with a clear scanner_suspect topSignal so the dashboard explains why.
-      else if (engagementScore >= 25 && !scannerSuspect) engagementTier = 'hot'
+      // Scanner-suspect AND low Hunter quality both block HOT promotion.
+      // Low-quality emails (score<80, role mailbox, accept-all) over-report
+      // engagement due to gateway scanning of shared inboxes.
+      else if (engagementScore >= 25 && !scannerSuspect && isHighQualityEmail) engagementTier = 'hot'
       else if (engagementScore >= 5) engagementTier = 'warm'
       else engagementTier = 'cold'
 
@@ -959,6 +978,16 @@ export async function GET(req: NextRequest) {
         // Personal-outreach candidate flag (HOT + 7-21d since T1, no booking)
         personalOutreachCandidate,
         daysSinceFirstSend,
+        // Hunter email-verification status (drives email-quality filtering)
+        hunterScore,
+        hunterStatus: c.verification_status,
+        hunterResult: c.verification_result,
+        hunterRole: isRoleMailbox,
+        hunterAcceptAll: isAcceptAll,
+        hunterWebmail: c.verification_webmail === true,
+        hunterDisposable: c.verification_disposable === true,
+        lastVerifiedAt: c.last_verified_at,
+        isHighQualityEmail,
         // portal flow — section funnel + CTA clicks + exit drop-off
         portalFlow: (() => {
           const f = portalFlowByClinic.get(c.id)

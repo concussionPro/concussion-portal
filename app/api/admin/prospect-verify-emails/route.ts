@@ -146,39 +146,78 @@ export async function POST(req: NextRequest) {
     const result = d?.result || 'unknown'
     const status = d?.status || 'unknown'
     const score = d?.score ?? 0
+    const isRole = false  // Hunter doesnt return role flag directly; mailbox-name heuristic below
+    const isAcceptAll = !!d?.accept_all || status === 'accept_all'
+    const isWebmail = !!d?.webmail || status === 'webmail'
+    const isDisposable = !!d?.disposable || status === 'disposable'
+    // Role detection from local-part since Hunter doesnt expose it on this endpoint
+    const localPart = (t.contact_email.split('@')[0] || '').toLowerCase()
+    const ROLE_PREFIXES = ['info', 'admin', 'reception', 'enquiries', 'office', 'contact', 'hello', 'mail', 'team', 'support', 'sales', 'help', 'enquiry', 'bookings', 'appointments']
+    const isRoleByPattern = ROLE_PREFIXES.includes(localPart) || ROLE_PREFIXES.some(p => localPart === p)
 
     // Decision matrix
     let decision: typeof results[number]['decision']
     let newProspectStatus: 'bounced' | undefined
-    if (result === 'undeliverable' || status === 'invalid' || status === 'disposable') {
+    if (result === 'undeliverable' || status === 'invalid' || isDisposable) {
       decision = dryRun ? 'dry-bounce' : 'bounced-by-hunter'
       newProspectStatus = dryRun ? undefined : 'bounced'
-    } else if (status === 'accept_all' || result === 'risky') {
-      // Accept-all domains: keep but flag; they're higher bounce risk
+    } else if (isAcceptAll || result === 'risky' || score < 80 || isRoleByPattern) {
+      // Higher bounce + scanner risk: keep but flag (score-based + role-based)
       decision = dryRun ? 'dry-flagged' : 'kept-flagged'
     } else {
-      // deliverable / webmail / valid / unknown — keep
+      // deliverable + score>=80 + non-role + non-accept-all - keep clean
       decision = dryRun ? 'dry-kept' : 'kept'
     }
 
     const noteTag = `[hunter-verified=${result}/${status}/${score}/${new Date().toISOString().slice(0, 10)}]`
 
     if (!dryRun) {
+      // Lazy migration — idempotent. Adds structured Hunter columns.
+      try {
+        await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_status TEXT`
+        await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_result TEXT`
+        await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_score INTEGER`
+        await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_role BOOLEAN`
+        await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_accept_all BOOLEAN`
+        await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_webmail BOOLEAN`
+        await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_disposable BOOLEAN`
+        await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS last_verified_at TIMESTAMPTZ`
+      } catch {
+        // Column already exists or perms differ — safe to continue
+      }
+
       if (newProspectStatus) {
         await sql`
           UPDATE prospect_clinics
           SET status = ${newProspectStatus},
-              notes = COALESCE(notes, '') || E'\n' || ${noteTag} || ' auto-quarantined: Hunter says ' || ${result}
+              notes = COALESCE(notes, '') || E'\n' || ${noteTag} || ' auto-quarantined: Hunter says ' || ${result},
+              verification_status = ${status},
+              verification_result = ${result},
+              verification_score = ${score},
+              verification_role = ${isRoleByPattern},
+              verification_accept_all = ${isAcceptAll},
+              verification_webmail = ${isWebmail},
+              verification_disposable = ${isDisposable},
+              last_verified_at = NOW()
           WHERE id = ${t.id}
         `
       } else {
         await sql`
           UPDATE prospect_clinics
-          SET notes = COALESCE(notes, '') || E'\n' || ${noteTag}
+          SET notes = COALESCE(notes, '') || E'\n' || ${noteTag},
+              verification_status = ${status},
+              verification_result = ${result},
+              verification_score = ${score},
+              verification_role = ${isRoleByPattern},
+              verification_accept_all = ${isAcceptAll},
+              verification_webmail = ${isWebmail},
+              verification_disposable = ${isDisposable},
+              last_verified_at = NOW()
           WHERE id = ${t.id}
         `
       }
     }
+    void isRole // intentionally unused (kept for symmetry with structured cols)
 
     results.push({
       id: t.id,

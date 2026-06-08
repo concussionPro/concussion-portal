@@ -210,6 +210,16 @@ interface ProspectRow {
   engagementScore?: number
   personalOutreachCandidate?: boolean
   daysSinceFirstSend?: number | null
+  // Hunter verification quality fields
+  hunterScore?: number | null
+  hunterStatus?: string | null
+  hunterResult?: string | null
+  hunterRole?: boolean
+  hunterAcceptAll?: boolean
+  hunterWebmail?: boolean
+  hunterDisposable?: boolean
+  lastVerifiedAt?: string | null
+  isHighQualityEmail?: boolean
   recommendedOffer?: 'hub-pack' | 'on-site-cohort'
   sizeBucket?: string
   dealValue?: number
@@ -3342,7 +3352,25 @@ export default function AnalyticsDashboard() {
                                       >
                                         <td className="px-3 py-3">
                                           <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
-                                          <div className="text-[11px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
+                                          <div className="text-[11px] text-[var(--muted-foreground)] flex items-center gap-1.5">
+                                            {p.contactEmail}
+                                            {p.hunterScore != null && (
+                                              <span
+                                                className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold ${
+                                                  p.isHighQualityEmail === false
+                                                    ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                                                    : (p.hunterScore ?? 0) >= 90
+                                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                      : 'bg-slate-50 text-slate-600 border border-slate-200'
+                                                }`}
+                                                title={`Hunter: ${p.hunterStatus ?? '?'} · ${p.hunterResult ?? '?'} · score ${p.hunterScore}${p.hunterRole ? ' · role mailbox' : ''}${p.hunterAcceptAll ? ' · accept-all domain' : ''}${p.hunterWebmail ? ' · webmail' : ''}`}
+                                              >
+                                                Hunter {p.hunterScore}
+                                                {p.hunterRole && ' · role'}
+                                                {p.hunterAcceptAll && ' · accept-all'}
+                                              </span>
+                                            )}
+                                          </div>
                                         </td>
                                         <td className={`px-2 py-3 text-center font-bold tabular-nums ${scoreColour}`}>{p.engagementScore ?? 0}</td>
                                         <td className="px-2 py-3">
