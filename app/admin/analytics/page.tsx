@@ -1065,6 +1065,11 @@ export default function AnalyticsDashboard() {
   const [prospectsError, setProspectsError] = useState<string | null>(null)
   const [prospectsSubTab, setProspectsSubTab] = useState<'overview' | 'schedule' | 'pipeline' | 'breakdowns' | 'queue'>('overview')
   const [selectedProspectId, setSelectedProspectId] = useState<number | null>(null)
+  // Sortable column state for the "Outreach sent" table (click column header
+  // to sort by that field; click again to toggle direction).
+  type SentSortCol = 'clinic' | 'tier' | 'location' | 'team' | 'offer' | 'sends' | 'opens' | 'clicks' | 'views' | 'replies' | 'lastSent' | 'status' | 'score'
+  const [sentSortCol, setSentSortCol] = useState<SentSortCol>('score')
+  const [sentSortDir, setSentSortDir] = useState<'asc' | 'desc'>('desc')
   const [bootstrapBusy, setBootstrapBusy] = useState(false)
   const [bootstrapMessage, setBootstrapMessage] = useState<string | null>(null)
 
@@ -4173,35 +4178,82 @@ export default function AnalyticsDashboard() {
                       )}
 
                       {/* Sent outreach */}
-                      {sentTable.length > 0 && (
+                      {sentTable.length > 0 && (() => {
+                        // Click column header to sort; click again to toggle.
+                        const handleSort = (col: SentSortCol) => {
+                          if (sentSortCol === col) {
+                            setSentSortDir(d => d === 'desc' ? 'asc' : 'desc')
+                          } else {
+                            setSentSortCol(col)
+                            setSentSortDir(col === 'clinic' || col === 'location' || col === 'tier' ? 'asc' : 'desc')
+                          }
+                        }
+                        const sortArrow = (col: SentSortCol) => sentSortCol === col ? (sentSortDir === 'desc' ? ' ↓' : ' ↑') : ''
+                        const SortableTh = ({ col, label, align = 'left', title }: { col: SentSortCol; label: string; align?: 'left' | 'right'; title?: string }) => (
+                          <th className={`text-${align} px-4 py-3 font-semibold cursor-pointer select-none hover:text-[var(--accent)] transition-colors ${sentSortCol === col ? 'text-[var(--accent)]' : ''}`} onClick={() => handleSort(col)} title={title ?? `Sort by ${label}`}>
+                            {label}{sortArrow(col)}
+                          </th>
+                        )
+                        // Column-aware value extractor for sorting.
+                        const colVal = (p: ProspectRow, col: SentSortCol): string | number => {
+                          switch (col) {
+                            case 'clinic':   return p.shortName || ''
+                            case 'tier':     {
+                              const rank: Record<string, number> = { replied: 6, engaged: 5, hot: 4, warm: 3, won: 2, cold: 1 }
+                              return rank[p.engagementTier] ?? 0
+                            }
+                            case 'location': return `${p.city || ''}, ${p.state || ''}, ${p.region || ''}`
+                            case 'team':     return p.clinicalCount ?? 0
+                            case 'offer':    return p.dealValue ?? p.recoCohortTotal ?? 0
+                            case 'sends':    return p.totalSends ?? 0
+                            case 'opens':    return p.totalOpens ?? 0
+                            case 'clicks':   return p.totalClicks ?? 0
+                            case 'views':    return p.totalPortalViews ?? 0
+                            case 'replies':  return p.replies ?? 0
+                            case 'lastSent': return p.lastSentAt ? new Date(p.lastSentAt).getTime() : 0
+                            case 'status':   return p.status || ''
+                            case 'score':    return p.engagementScore ?? 0
+                          }
+                        }
+                        const sortedRows = [...sentTable].sort((a, b) => {
+                          const va = colVal(a, sentSortCol)
+                          const vb = colVal(b, sentSortCol)
+                          let cmp = 0
+                          if (typeof va === 'number' && typeof vb === 'number') cmp = va - vb
+                          else cmp = String(va).localeCompare(String(vb))
+                          if (sentSortDir === 'desc') cmp = -cmp
+                          // Secondary stable sort: lastSent desc when primary ties
+                          if (cmp === 0) {
+                            const ta = a.lastSentAt ? new Date(a.lastSentAt).getTime() : 0
+                            const tb = b.lastSentAt ? new Date(b.lastSentAt).getTime() : 0
+                            return tb - ta
+                          }
+                          return cmp
+                        })
+                        return (
                         <div>
-                          <SectionTitle title="Outreach sent" subtitle="Every prospect with at least one send · sorted by engagement tier (hottest first) · click to drill in" />
+                          <SectionTitle title="Outreach sent" subtitle={`Every prospect with at least one send · click column headers to sort · currently: ${sentSortCol} ${sentSortDir}`} />
                           <div className="card rounded-2xl overflow-hidden overflow-x-auto">
                             <table className="w-full text-sm">
                               <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
                                 <tr>
-                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Tier</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Location</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Team</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Offer</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Sends</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Opens / Clicks</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Views</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Replies</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Last sent</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Status</th>
+                                  <SortableTh col="clinic" label="Clinic" />
+                                  <SortableTh col="score" label="Score" align="right" title="Behavioural lead score (HubSpot/Marketo model)" />
+                                  <SortableTh col="tier" label="Tier" />
+                                  <SortableTh col="location" label="Location" />
+                                  <SortableTh col="team" label="Team" align="right" />
+                                  <SortableTh col="offer" label="Offer" />
+                                  <SortableTh col="sends" label="Sends" align="right" />
+                                  <SortableTh col="opens" label="Opens" align="right" />
+                                  <SortableTh col="clicks" label="Clicks" align="right" />
+                                  <SortableTh col="views" label="Views" align="right" />
+                                  <SortableTh col="replies" label="Replies" align="right" />
+                                  <SortableTh col="lastSent" label="Last sent" align="right" />
+                                  <SortableTh col="status" label="Status" />
                                 </tr>
                               </thead>
                               <tbody>
-                                {[...sentTable].sort((a, b) => {
-                                  // Sort by engagement tier descending — hottest first
-                                  const rank: Record<string, number> = { replied: 6, engaged: 5, hot: 4, warm: 3, won: 2, cold: 1 }
-                                  const ra = rank[a.engagementTier] ?? 0
-                                  const rb = rank[b.engagementTier] ?? 0
-                                  if (rb !== ra) return rb - ra
-                                  return (b.lastSentAt ? new Date(b.lastSentAt).getTime() : 0) - (a.lastSentAt ? new Date(a.lastSentAt).getTime() : 0)
-                                }).map(p => {
+                                {sortedRows.map(p => {
                                   const tier = TIER_META.find(t => t.key === p.engagementTier) ?? TIER_META[0]
                                   const TierIcon = tier.icon
                                   const isOnSite = p.recommendedOffer === 'on-site-cohort'
@@ -4213,6 +4265,9 @@ export default function AnalyticsDashboard() {
                                           <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
                                         </div>
                                         <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-right font-bold tabular-nums">
+                                        <span className={(p.engagementScore ?? 0) >= 25 ? 'text-orange-600' : (p.engagementScore ?? 0) >= 5 ? 'text-amber-600' : 'text-[var(--muted-foreground)]'}>{p.engagementScore ?? 0}</span>
                                       </td>
                                       <td className="px-4 py-3">
                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${tier.badgeBg} ${tier.badgeText} text-[10px] font-bold uppercase tracking-wider`}>
@@ -4226,8 +4281,9 @@ export default function AnalyticsDashboard() {
                                         <div className="text-[var(--muted-foreground)]">{fmt$(p.dealValue ?? p.recoCohortTotal)}</div>
                                       </td>
                                       <td className="px-4 py-3 text-right">{p.totalSends}</td>
-                                      <td className="px-4 py-3 text-right">{p.totalOpens} / {p.totalClicks > 0 ? <span className="font-bold text-orange-600">{p.totalClicks}</span> : 0}</td>
-                                      <td className="px-4 py-3 text-right">{p.totalPortalViews > 0 ? <span className="font-bold text-[var(--accent)]">{p.totalPortalViews}</span> : 0}</td>
+                                      <td className="px-4 py-3 text-right tabular-nums">{p.totalOpens || '—'}</td>
+                                      <td className="px-4 py-3 text-right tabular-nums">{p.totalClicks > 0 ? <span className="font-bold text-orange-600">{p.totalClicks}</span> : '—'}</td>
+                                      <td className="px-4 py-3 text-right tabular-nums">{p.totalPortalViews > 0 ? <span className="font-bold text-[var(--accent)]">{p.totalPortalViews}</span> : '—'}</td>
                                       <td className="px-4 py-3 text-right">{p.replies > 0 ? <span className="font-bold text-emerald-600">{p.replies}</span> : '—'}</td>
                                       <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">{p.lastSentAt ? timeAgo(new Date(p.lastSentAt).getTime()) : '—'}<div>{p.lastSentTemplate}</div></td>
                                       <td className="px-4 py-3 text-xs"><span className="px-2 py-0.5 rounded-full bg-[rgba(13,115,119,0.1)] text-[var(--accent)] font-semibold">{p.status}</span></td>
@@ -4238,7 +4294,8 @@ export default function AnalyticsDashboard() {
                             </table>
                           </div>
                         </div>
-                      )}
+                        )
+                      })()}
                     </div>
                   )}
                 </div>
