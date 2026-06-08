@@ -55,11 +55,14 @@ export function ToolkitSidebar({
             : null}
       </div>
 
+      {/* Identical ordering to the Dashboard sidebar in ProspectLanding.tsx
+          so prospects don't see items jumping around as they navigate. */}
       <nav className="flex-1 space-y-1">
         <Item href={`${baseHref}?k=${k}`} label="Dashboard" icon={Home} />
         <Item href={`${baseHref}/learning?k=${k}`} label="Learning Suite" icon={BookOpen} />
         <Item href="/scat-forms" label="SCAT Forms" icon={Activity} external />
         <Item href="/preseason" label="Baseline Testing" icon={TrendingUp} external />
+        <Item href={`${baseHref}/references?k=${k}`} label="Reference Library" icon={Library} />
         <Item
           href={active === 'clinical' ? undefined : `${baseHref}/toolkit/clinical?k=${k}`}
           label="Clinical Toolkit"
@@ -78,7 +81,6 @@ export function ToolkitSidebar({
           icon={BookMarked}
           active={active === 'admin'}
         />
-        <Item href="#" label="Reference Library" icon={Library} disabled />
       </nav>
 
       <div className="pt-5 border-t border-white/30">

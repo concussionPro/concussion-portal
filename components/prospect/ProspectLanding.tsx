@@ -492,9 +492,18 @@ function CohortCard({
   publicRate: number
 }) {
   const save = publicRate - tier.perClinician
+  // Tier-specific cal.com UTM so post-call analytics can attribute which
+  // cohort size drove the booking. Lambda B2B reality: no-one checks out
+  // a $5–10k team training cold — they want to discuss scope, schedule,
+  // pricing nuance first. Card itself is the CTA.
+  const calUrl = `https://cal.com/zac-lewis-so8zjs/30min?utm_source=portal&utm_medium=cohort_card&utm_campaign=${encodeURIComponent(tier.name.toLowerCase().replace(/\s+/g, '-'))}`
   return (
-    <div
-      className={`relative rounded-xl p-4 overflow-hidden ${
+    <a
+      href={calUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-track-cta={`cohort-${tier.name.toLowerCase()}`}
+      className={`group relative rounded-xl p-4 overflow-hidden block hover:shadow-lg transition-all hover:-translate-y-0.5 ${
         tier.recommended
           ? 'bg-gradient-to-br from-accent/8 via-accent/3 to-white border border-accent/40 ring-1 ring-accent/30 shadow-md'
           : 'glass-premium border border-accent/8'
@@ -525,7 +534,11 @@ function CohortCard({
       <p className="text-[10px] text-emerald-700 font-semibold mt-1.5">
         Save A${save}/clinician vs public rate
       </p>
-    </div>
+      <div className={`mt-3 pt-3 border-t border-accent/10 flex items-center justify-between gap-2 ${tier.recommended ? 'text-accent' : 'text-foreground/70'}`}>
+        <span className="text-[11px] font-bold">Talk through this cohort →</span>
+        <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+      </div>
+    </a>
   )
 }
 
