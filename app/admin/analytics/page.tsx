@@ -3310,32 +3310,48 @@ export default function AnalyticsDashboard() {
                             2. Where they sit in the nurture sequence
                             3. Whether to prep a custom pitch for personal outreach */}
                       {(() => {
-                        // Show everyone with ANY activity - real or scanner-suspect.
-                        // Scanner-suspect activity is still useful to see (you know
-                        // who is being mail-gateway-scanned, who is on heavy IT
-                        // security, where the bot signal is concentrated). The
-                        // table flags scanner-suspect rows explicitly.
+                        // REAL HUMAN ENGAGEMENT ONLY. Per Zac 2026-06-09: the
+                        // dashboard was a "massive list of useless info" because
+                        // every scanner-suspect entry was being shown. Now only
+                        // prospects with at least ONE verifiable real human
+                        // signal appear in this table.
+                        //
+                        // Verifiable real human signals (any one qualifies):
+                        //   - Engaged portal session >60s (real dwell)
+                        //   - Dashboard CTA click (JS event, scanner immune)
+                        //   - Cal multi-day click (scanner only fetches once)
+                        //   - Free-content signup (form submission)
+                        //   - Talk request (form submission)
+                        //   - Cal booking (webhook confirmed)
+                        //   - Direct email reply
+                        //   - Multi-day opens with at least 3 total opens
+                        //     (rules out scanner pre-fetch + Apple MPP noise)
                         const engaging = prospects
                           .filter(p =>
-                            (p.engagementScore ?? 0) >= 1 ||
-                            p.engagementTier !== 'cold' ||
-                            (p.totalClicks ?? 0) >= 1 ||
-                            (p.totalPortalViews ?? 0) >= 1 ||
-                            (p.totalOpens ?? 0) >= 2 ||  // multi-day opens
-                            p.engagedToday === true
+                            (p.portalEngagedSessions ?? 0) >= 1 ||
+                            (p.portalCtaClicks ?? 0) >= 1 ||
+                            (p.calClickDays ?? 0) >= 2 ||
+                            p.hasFreeContentSignup === true ||
+                            p.hasTalkRequest === true ||
+                            (p.calBookedAt && p.calBookingStatus === 'booked') ||
+                            (p.replies ?? 0) >= 1 ||
+                            ((p.openDays ?? 0) >= 2 && (p.totalOpens ?? 0) >= 3)
                           )
-                          // Sort: real signals first (score), then scanner-suspect
-                          // by raw activity count so Zac sees what's most active
-                          .sort((a, b) => {
-                            const aScore = (a.engagementScore ?? 0)
-                            const bScore = (b.engagementScore ?? 0)
-                            if (bScore !== aScore) return bScore - aScore
-                            const aActivity = (a.totalClicks ?? 0) + (a.totalPortalViews ?? 0)
-                            const bActivity = (b.totalClicks ?? 0) + (b.totalPortalViews ?? 0)
-                            return bActivity - aActivity
-                          })
+                          .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
                           .slice(0, 40)
-                        if (engaging.length === 0) return null
+                        if (engaging.length === 0) {
+                          // Honest empty state - no real humans engaging right now
+                          return (
+                            <div className="card rounded-2xl p-6 text-center bg-slate-50/40">
+                              <div className="text-sm font-semibold text-[var(--foreground)] mb-1">No real human engagement yet</div>
+                              <p className="text-xs text-[var(--muted-foreground)] max-w-xl mx-auto leading-relaxed">
+                                After stripping scanner-suspect activity (mail-gateway pre-fetches, headless Chrome renders), zero prospects show verified human signals: no &gt;60s portal sessions, no dashboard CTA clicks, no multi-day cal clicks, no free-content signups, no replies, no bookings.
+                                <br /><br />
+                                <strong>This is the honest pipeline state.</strong> New T1 batch firing today should produce first real signals within 5-10 days as emails reach actual human inboxes (post-deliverability-fixes).
+                              </p>
+                            </div>
+                          )
+                        }
                         return (
                           <div>
                             <SectionTitle
