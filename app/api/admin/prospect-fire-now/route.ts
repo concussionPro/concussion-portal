@@ -87,6 +87,12 @@ export async function POST(req: NextRequest) {
       AND COALESCE(pc.short_name, '') !~* 'unknown'
       AND COALESCE(pc.contact_first_name, '') <> ''
       AND COALESCE(pc.contact_first_name, '') !~* '^(director|manager|principal|owner|founder|partner|ceo|md|head|chief|admin|reception|practice|clinic|info|unknown|n/a|na|none|test)\\s*$'
+      -- HARD GATE: Hunter-clean only. Same rule as processScheduledSends.
+      AND pc.verification_score IS NOT NULL
+      AND pc.verification_score >= 80
+      AND COALESCE(pc.verification_role, FALSE) = FALSE
+      AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
+      AND COALESCE(pc.verification_disposable, FALSE) = FALSE
     ORDER BY
       CASE WHEN pc.city IS NOT NULL AND pc.city !~* 'unknown' THEN 0 ELSE 1 END,
       CASE pc.status WHEN 'approved' THEN 0 WHEN 'opened' THEN 1 ELSE 2 END,
