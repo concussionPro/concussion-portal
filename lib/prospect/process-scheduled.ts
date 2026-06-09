@@ -300,6 +300,14 @@ export async function processScheduledSends(
           AND pc.scheduled_send_at IS NOT NULL
           AND pc.scheduled_send_at::date = CURRENT_DATE
           AND COALESCE(intent.intent_score, 0) < 20
+          -- HARD GATE: Hunter-clean only. Never email role mailboxes,
+          -- accept-all domains, disposable, or score-below-80. These are
+          -- the ones that bounce + get gateway-scanned + burn reputation.
+          AND pc.verification_score IS NOT NULL
+          AND pc.verification_score >= 80
+          AND COALESCE(pc.verification_role, FALSE) = FALSE
+          AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
+          AND COALESCE(pc.verification_disposable, FALSE) = FALSE
           AND NOT EXISTS (
             SELECT 1 FROM prospect_outreach_log ol
             WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug
@@ -335,6 +343,12 @@ export async function processScheduledSends(
           AND pc.scheduled_send_at IS NOT NULL
           AND pc.scheduled_send_at <= NOW()
           AND COALESCE(intent.intent_score, 0) < 20
+          -- HARD GATE: Hunter-clean only. Same rule as the force-mode query.
+          AND pc.verification_score IS NOT NULL
+          AND pc.verification_score >= 80
+          AND COALESCE(pc.verification_role, FALSE) = FALSE
+          AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
+          AND COALESCE(pc.verification_disposable, FALSE) = FALSE
           AND NOT EXISTS (
             SELECT 1 FROM prospect_outreach_log ol
             WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug

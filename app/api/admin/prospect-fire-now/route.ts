@@ -39,12 +39,10 @@ export async function POST(req: NextRequest) {
   }
   const dryRun = body.dryRun === true
   const requested = Math.max(1, Math.min(body.count ?? 10, 50))
-  // bypassCap: skips the adaptive-cap throttle. Use when domain-wide
-  // deliverability is healthy (per Resend metrics) but the cold-7d
-  // subset has spiked a sample-size-distorted bounce rate that
-  // triggered the safety throttle. Caller asserts the real reputation
-  // is fine. Logged to audit_key for compliance review.
-  const bypassCap = (body as { bypassCap?: boolean }).bypassCap === true
+  // bypassCap removed 2026-06-09: it was used to fire 30 emails to
+  // un-verified contacts which burned the cold-7d bounce rate. The
+  // adaptive cap exists to protect domain reputation. Bypass = no.
+  const bypassCap = false
 
   // How many fired today already?
   const { rows: todayCount } = await sql<{ n: number }>`
