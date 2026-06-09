@@ -258,6 +258,7 @@ export async function POST(request: NextRequest) {
         cpdPoints: certData.cpdPoints,
         certificateId,
         pdfBuffer,
+        userAccessLevel: resolvedUser?.accessLevel,
       })
 
       // After scat-mastery certificate: fire the completion upsell email
@@ -319,6 +320,8 @@ async function sendCertificateEmail(opts: {
   cpdPoints: number
   certificateId: string
   pdfBuffer: Buffer
+  /** access_level so we dont pitch the workshop to someone who already owns it */
+  userAccessLevel?: 'preview' | 'online-only' | 'full-course'
 }): Promise<boolean> {
   return sendEmailWithAttachment({
     to: opts.to,
@@ -372,7 +375,45 @@ async function sendCertificateEmail(opts: {
                 </div>
                 ` : ''}
 
-                <!-- What's next — flagship + poll. Short courses surface here only after they actually launch. -->
+                <!-- What's next — tailored to access level so we dont pitch
+                     the workshop to someone who already owns full-course. -->
+                ${opts.userAccessLevel === 'full-course' ? `
+                <!-- Full-course buyer — they already own online + workshop. No upsell. -->
+                <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                  <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
+                    Whats next
+                  </p>
+                  <p style="margin: 0 0 12px 0; font-size: 14px; color: #475569;">
+                    Youve already got the full Concussion Clinical Mastery course — your workshop seat is locked in for <strong>Sat 13 June 2026, Rydges Exhibition St (Melbourne CBD)</strong>. Logistics email goes out 1 week prior.
+                  </p>
+                  <p style="margin: 0 0 0 0; font-size: 13px; color: #475569;">
+                    Questions about the workshop, your modules, or CPD logging? Reply to this email.
+                  </p>
+                </div>
+                ` : opts.userAccessLevel === 'online-only' ? `
+                <!-- Online-only buyer — pitch the workshop UPGRADE, not the full course. -->
+                <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                  <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
+                    Whats next — workshop upgrade
+                  </p>
+                  <p style="margin: 0 0 16px 0; font-size: 14px; color: #475569;">
+                    Youve completed the online modules. Add the in-person workshop to bank the full 14 CPD hours + hands-on practice.
+                  </p>
+                  <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #a16207; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
+                      In-person workshop · Saturday 13 June 2026
+                    </div>
+                    <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 17px;">Concussion Clinical Mastery — workshop add-on</h3>
+                    <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569; line-height: 1.5;">
+                      Rydges Exhibition St (Melbourne CBD). Full-day hands-on practice: VOMS, oculomotor, BESS, cervical, return-to-play decision pathways. Brings your total to 14 CPD hours.
+                    </p>
+                    <a href="https://portal.concussion-education-australia.com/pricing?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=workshop-add-on" style="display: inline-block; padding: 9px 18px; background: #a16207; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
+                      Add the workshop →
+                    </a>
+                  </div>
+                </div>
+                ` : `
+                <!-- Preview / SCAT-only / free-course graduate — pitch the full course -->
                 <div style="margin: 32px 0 24px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                   <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">
                     What's next on your CPD plan
@@ -401,6 +442,7 @@ async function sendCertificateEmail(opts: {
                     Short specialty courses launching from June — <a href="https://portal.concussion-education-australia.com/courses/poll?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=poll" style="color: #0d9488; font-weight: 600;">vote on what gets built first</a>. Voters get 40% off the winner at launch.
                   </p>
                 </div>
+                `}
 
                 <p style="color: #64748b; font-size: 14px; margin-top: 24px;">
                   Questions about your certificate or CPD logging? Just reply to this email — comes straight to me.
