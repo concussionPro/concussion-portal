@@ -4194,6 +4194,44 @@ export default function AnalyticsDashboard() {
                             </div>
                             <button onClick={() => setSelectedProspectId(null)} className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Close ×</button>
                           </div>
+                          {/* ── PER-PROSPECT CUSTOM HOOK ──
+                              Region-specific case angle + custom-pitch suggestion
+                              based on their tier + signal mix. This is the data
+                              Zac needs when actually composing a personal email. */}
+                          {(() => {
+                            const region = (sp.region || '').toLowerCase()
+                            const regionAngle =
+                              region.includes('sydney') || sp.state === 'NSW' ? 'NSW Schools concussion management protocols (Education Dept guidelines released 2026-03) - school-sport intake is the top referral source for NSW physios this season.'
+                              : region.includes('melbourne') || sp.state === 'VIC' ? 'AFL class-action settlement (May 2026) is driving concussion case volume across VIC physio. Aussie Rules return-to-play protocols are the highest-demand workshop topic.'
+                              : sp.state === 'QLD' ? 'NRL Player Safety Standards 2026 + Queensland Schools rugby league concussion intake updates. SEQ caseload up ~30% YoY.'
+                              : sp.state === 'WA' ? 'WAFL concussion compliance + AFLW expansion driving demand. Perth physio market has fewest concussion-credentialed clinicians per capita in AU.'
+                              : sp.state === 'SA' ? 'SANFL + Adelaide United youth pathways. Recently published SA Health concussion guidelines push baseline-testing requirements.'
+                              : sp.state === 'TAS' ? 'TAS Health Department concussion advisory (2026-04) requires written RTP protocols at primary care level - your clinic-branded protocol pack solves this directly.'
+                              : 'AHPRA-aligned protocols + 2026 AIS/SMA + Amsterdam consensus directly applicable to your caseload.'
+                            const customPitch =
+                              (sp.preseasonSignups ?? 0) > 0 ? `${sp.contactFirstName} registered for the pre-season baseline-testing tool - lead the personal email with "Saw you registered athletes for baseline testing — wanted to share how the Hub Pack extends what youve started."`
+                              : (sp.scatCourseSignups ?? 0) > 0 ? `${sp.contactFirstName} signed up for the free SCAT mini-course - lead with "Glad you grabbed the SCAT refresher. The Hub Pack builds on it with the protocols + admin docs."`
+                              : (sp.portalCtaClicks ?? 0) > 0 ? `${sp.contactFirstName} clicked "${sp.portalTopCtaTarget ?? 'a CTA'}" on the dashboard - reference that specific button: "Noticed you tapped through to ${sp.portalTopCtaTarget ?? 'pricing'} — happy to walk through it on a 15-min call."`
+                              : (sp.calClickDays ?? 0) >= 2 ? `${sp.contactFirstName} clicked cal.com on ${sp.calClickDays} different days - lead with "Saw you almost booked twice — what slot works best for ${sp.shortName}?"`
+                              : (sp.engagementScore ?? 0) >= 25 ? `Sustained multi-touch engagement. Lead with the regional angle below + soft "wanted to make sure this hit you at the right time" close.`
+                              : 'No specific custom hook yet - let auto-sequence handle until they cross HOT.'
+                            return (
+                              <div className="rounded-lg border border-amber-200/40 bg-amber-50/30 p-3 mb-3">
+                                <div className="text-[10px] uppercase tracking-wider font-bold text-amber-700 mb-1.5">🎯 Custom outreach hook · {sp.state}</div>
+                                <p className="text-[11px] text-[var(--foreground)] leading-relaxed mb-2"><strong>Region angle:</strong> {regionAngle}</p>
+                                <p className="text-[11px] text-[var(--foreground)] leading-relaxed"><strong>Personal email opener:</strong> {customPitch}</p>
+                                {sp.lastSentSubject && (
+                                  <p className="text-[10.5px] text-[var(--muted-foreground)] mt-2 pt-2 border-t border-amber-200/40">
+                                    📧 They received T{sp.totalSends}: <em>&quot;{sp.lastSentSubject}&quot;</em>
+                                    {sp.hunterScore != null && (
+                                      <span className="ml-2"> · Hunter quality {sp.hunterScore}/100{sp.hunterRole ? ' · ⚠️ role mailbox' : ''}{sp.hunterAcceptAll ? ' · ⚠️ accept-all' : ''}</span>
+                                    )}
+                                  </p>
+                                )}
+                              </div>
+                            )
+                          })()}
+
                           {/* VERDICT — what to do, why, when. Replaces the buried buttons. */}
                           <div className={`rounded-lg border p-4 mb-4 ${verdictTone}`}>
                             <div className={`text-sm font-bold ${verdictText} mb-1`}>{verdict.headline}</div>
