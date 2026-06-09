@@ -259,7 +259,8 @@ export async function POST(req: NextRequest) {
           contact_first_name, contact_full_name, contact_email, contact_role,
           contact_discipline, team, travel_band, cohort_recommendation,
           status, research_source, notes, created_at, updated_at,
-          next_template_slug
+          next_template_slug, clinic_website_url, priority_wave, pitch_variant,
+          travel_surcharge, valid_until
         )
         SELECT
           ${newSlug}, ${newAccessKey}, name, short_name, city, state, region,
@@ -268,7 +269,11 @@ export async function POST(req: NextRequest) {
           'approved', 'hunter-requeue',
           COALESCE(notes, '') || E'\n[requeued-from=' || ${src.id} || '/' || ${src.contact_email} || '/' || ${new Date().toISOString().slice(0, 10)} || '] re-queued via Hunter Domain Search',
           NOW(), NOW(),
-          'initial'
+          'initial',
+          COALESCE(clinic_website_url, ''),
+          priority_wave, pitch_variant,
+          COALESCE(travel_surcharge, 0),
+          COALESCE(valid_until, NOW() + INTERVAL '90 days')
         FROM prospect_clinics WHERE id = ${src.id}
         RETURNING id
       `
