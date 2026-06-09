@@ -254,11 +254,14 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
   {
     hoursAfter: 1,
     subject: 'You left something behind',
-    template: (name: string) => emailShell(`
+    // recoveryUrl: Stripe-hosted link that re-opens the exact abandoned
+    // checkout (same product/price/discounts, valid 30 days). Falls back to
+    // /pricing for sessions created before recovery was enabled.
+    template: (name: string, recoveryUrl?: string) => emailShell(`
       <h2>Hi${name ? ` ${escapeHtml(name.split(' ')[0])}` : ''},</h2>
       <p>Looks like you started enrolling in the Concussion Management course but didn't finish.</p>
       <p>No worries — your spot is still available. If you ran into a technical issue or had questions, just reply to this email.</p>
-      <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_1h', 'complete_enrolment')}" class="cta-btn">Complete Your Enrolment</a></center>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_1h', 'complete_enrolment')}" class="cta-btn">Complete Your Enrolment</a></center>
       <div class="callout">
         <strong>What you'll get:</strong><br><br>
         &#8226; 8 online modules with lifetime access<br>
@@ -273,7 +276,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
   {
     hoursAfter: 24,
     subject: 'Still thinking it over?',
-    template: (name: string) => emailShell(`
+    template: (name: string, recoveryUrl?: string) => emailShell(`
       <h2>Hi${name ? ` ${escapeHtml(name.split(' ')[0])}` : ''},</h2>
       <p>I wanted to follow up in case you had questions about the course.</p>
       <p>Here's what clinicians ask most often:</p>
@@ -283,7 +286,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       The 8 online modules take approximately 8 hours total. Most clinicians complete them across a few sittings. You have lifetime access, so there's no rush.</p>
       <p><strong>"What if I want to add the workshop later?"</strong><br>
       Start with the online course ($${CONFIG.COURSE.PRICE_ONLINE}) and upgrade to include the hands-on workshop later — you'll only pay the difference.</p>
-      <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_24h', 'view_options')}" class="cta-btn">View Course Options</a></center>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_24h', 'view_options')}" class="cta-btn">View Course Options</a></center>
       <div class="sig">Zac</div>
     `),
   },
@@ -291,12 +294,12 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
   {
     hoursAfter: 72,
     subject: 'Last note from me about the course',
-    template: (name: string) => emailShell(`
+    template: (name: string, recoveryUrl?: string) => emailShell(`
       <h2>Hi${name ? ` ${escapeHtml(name.split(' ')[0])}` : ''},</h2>
       <p>This is the last email I'll send about this. I don't want to be pushy — but I also don't want you to miss out if the timing just wasn't right.</p>
       <p>If cost is a factor: the <strong>online-only option at $${CONFIG.COURSE.PRICE_ONLINE}</strong> gives you the full 8-module course with 8 CPD hours. You can always add the workshop later.</p>
       <p>If you have specific questions, just reply — I'm happy to chat.</p>
-      <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'enrol_now')}" class="cta-btn">Enrol Now</a></center>
+      <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'enrol_now')}" class="cta-btn">Enrol Now</a></center>
       <p class="ps">P.S. If you decided this course isn't for you, no hard feelings. The free SCAT6 Mastery course and SCAT6 forms are yours to keep.</p>
       <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
     `),

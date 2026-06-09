@@ -86,19 +86,31 @@ export async function POST(request: NextRequest) {
       sessionEmail = session.email
     }
 
+    // Pre-fill the checkout email whenever the visitor is identifiable
+    // (logged-in user or email-gated lead with a session cookie). Without it,
+    // an abandoned session expires with customer_email null and the
+    // checkout.session.expired recovery sequence has nobody to email — most
+    // expired sessions in Stripe show exactly that.
+    if (courseType !== 'workshop-upgrade' && !sessionEmail) {
+      const sessionCookie = request.cookies.get('session')?.value
+      if (sessionCookie) {
+        const session = verifySessionToken(sessionCookie)
+        if (session?.email) {
+          // Prefer the session email over any passed-in email so discounts
+          // can't be applied to a different account
+          sessionEmail = session.email
+        }
+      }
+    }
+
     // Detect bundle-owner discount eligibility. Applies to online-only and
     // full-course — NOT workshop-upgrade (already discounted) or
     // international-online (different currency / market).
     let bundleDiscountAud = 0
     if (courseType === 'online-only' || courseType === 'full-course') {
-      const sessionCookie = request.cookies.get('session')?.value
-      if (sessionCookie) {
-        const session = verifySessionToken(sessionCookie)
-        if (session && (await isBookOwner(session.email))) {
+      if (sessionEmail) {
+        if (await isBookOwner(sessionEmail)) {
           bundleDiscountAud = BUNDLE_OWNER_DISCOUNT_AUD
-          // Prefer the session email over any passed-in email so the discount
-          // can't be applied to a different account
-          sessionEmail = session.email
         }
       } else if (email) {
         // Unauthenticated buyer supplying an email — honour the discount if

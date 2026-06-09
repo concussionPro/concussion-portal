@@ -1040,7 +1040,9 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
 
       const unsubToken = generateUnsubscribeToken(checkout.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(checkout.email)}&token=${unsubToken}`
-      const html = nextEmail.template(checkout.name)
+      // recovery_url (Stripe-hosted, re-opens the exact checkout) is stored by
+      // the expired-session webhook; rows pre-dating the column fall back to /pricing.
+      const html = nextEmail.template(checkout.name, checkout.recovery_url || undefined)
         .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
       try {

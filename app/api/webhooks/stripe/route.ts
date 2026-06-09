@@ -845,6 +845,9 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   const name = session.customer_details?.name || ''
   const courseType = session.metadata?.courseType || 'unknown'
   const amount = (session.amount_total || 0) / 100
+  // Stripe-hosted recovery link (after_expiration.recovery enabled at session
+  // creation) — re-opens the exact abandoned checkout, valid 30 days.
+  const recoveryUrl = session.after_expiration?.recovery?.url || null
 
   console.log(`Checkout expired: ${redact(email)} — ${courseType} ($${amount})`)
 
@@ -896,8 +899,8 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${unsubToken}`
 
     if (!unsubscribed) {
-      const html = firstEmail.template(name)
-        .replace('{{unsubscribe_url}}', unsubscribeUrl)
+      const html = firstEmail.template(name, recoveryUrl || undefined)
+        .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
       await sendEmail({
         to: email,
@@ -919,9 +922,10 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
     // Store with emails_sent = 1 (or max if unsubscribed, so cron skips entirely)
     const emailsSent = unsubscribed ? ABANDONED_CHECKOUT_SEQUENCE.length : 1
+    await sql`ALTER TABLE abandoned_checkouts ADD COLUMN IF NOT EXISTS recovery_url TEXT`
     await sql`
-      INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered)
-      VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), ${emailsSent}, false)
+      INSERT INTO abandoned_checkouts (email, name, course_type, amount, abandoned_at, emails_sent, recovered, recovery_url)
+      VALUES (${email.toLowerCase()}, ${name}, ${courseType}, ${amount}, now(), ${emailsSent}, false, ${recoveryUrl})
     `
     console.log(`Stored abandoned checkout for ${redact(email)} (emails_sent: ${emailsSent})`)
   } catch (err) {

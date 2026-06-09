@@ -157,7 +157,7 @@ When to chain them:
 ## Pending / known issues
 
 - Existing users have `signupSource: undefined` (display as "Unknown" in admin)
-- Stripe Dashboard: enable `checkout.session.expired` on the webhook endpoint (code handles it end-to-end; recovery emails are dead until the event is ticked)
+- Stripe `checkout.session.expired` IS enabled and delivering 200s (verified in dashboard 2026-06-10 — earlier "pending" note was stale). Real historical gap: anonymous checkouts expired with `customer_email: null`, so most abandons were unrecoverable. Fixed: session email pre-filled for any identifiable visitor + Stripe `after_expiration.recovery` URL in all three recovery emails.
 - Vercel env to verify: `AI_COURSE_PUBLIC` (visibility only now — enrolled users always have access), `BUSINESS_GST_REGISTERED`, `RESEND_INBOUND_WEBHOOK_SECRET` (reply detection), `RESEND_WEBHOOK_SECRET` drift — rotate to align
 - Reply detection requires inbound mail forwarding: replies to cold outreach land in zac@'s inbox; forward them to the Resend inbound address or `status='replied'` never fires
 - Google Ads conversion actions (deprioritized — channel is cold outreach now): `scat_mastery_signup`, `free_course_complete`, `scat6_form_download`, `interest_registration`, `checkout_complete`

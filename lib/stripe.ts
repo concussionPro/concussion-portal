@@ -264,6 +264,12 @@ export async function createCourseCheckoutSession({
       },
     ],
     customer_email: customerEmail || undefined,
+    // Stripe-hosted cart recovery: expired sessions carry a recovery URL that
+    // re-opens the same checkout (same price/discounts) for 30 days. The
+    // checkout.session.expired handler puts it in the recovery emails.
+    after_expiration: {
+      recovery: { enabled: true },
+    },
     success_url: successUrl,
     cancel_url: cancelUrl,
     metadata: {
