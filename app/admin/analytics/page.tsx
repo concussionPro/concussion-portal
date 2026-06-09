@@ -3326,16 +3326,20 @@ export default function AnalyticsDashboard() {
                         //   - Direct email reply
                         //   - Multi-day opens with at least 3 total opens
                         //     (rules out scanner pre-fetch + Apple MPP noise)
+                        // Show anyone WARM+ tier (score >= 5) OR any verified
+                        // human signal. Threshold dropped from "real human action
+                        // only" because non-scanner clicks + views are themselves
+                        // real signal post-wipe + post-Hunter-gate.
                         const engaging = prospects
                           .filter(p =>
+                            (p.engagementScore ?? 0) >= 5 ||
                             (p.portalEngagedSessions ?? 0) >= 1 ||
                             (p.portalCtaClicks ?? 0) >= 1 ||
                             (p.calClickDays ?? 0) >= 2 ||
                             p.hasFreeContentSignup === true ||
                             p.hasTalkRequest === true ||
                             (p.calBookedAt && p.calBookingStatus === 'booked') ||
-                            (p.replies ?? 0) >= 1 ||
-                            ((p.openDays ?? 0) >= 2 && (p.totalOpens ?? 0) >= 3)
+                            (p.replies ?? 0) >= 1
                           )
                           .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
                           .slice(0, 40)
