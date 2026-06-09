@@ -1,4 +1,5 @@
 import { sql } from '@/lib/db'
+import { CONFIG } from '@/lib/config'
 import crypto from 'crypto'
 
 export interface User {
@@ -181,8 +182,25 @@ async function ensureEmailIndex() {
   emailIndexEnsured = true
 }
 
-// Count full-course enrollments for a specific workshop location
+// Count full-course enrollments for a specific workshop location.
+//
+// Scoped to the CURRENT round: if CONFIG.WORKSHOP.ROUND_START has a date for
+// this location, only users created on/after it are counted — otherwise an
+// all-time count would let past-round attendees consume seats/capacity for
+// the active workshop. created_at is the closest purchase-time proxy the
+// users table has (there is no per-purchase timestamp column); the round
+// start is deliberately generous so current-round buyers aren't missed.
 export async function getEnrollmentCount(location: string): Promise<number> {
+  const roundStart = CONFIG.WORKSHOP.ROUND_START[location]
+  if (roundStart) {
+    const { rows } = await sql`
+      SELECT COUNT(*)::int AS count FROM users
+      WHERE access_level = 'full-course'
+        AND workshop_location = ${location}
+        AND created_at >= ${roundStart}
+    `
+    return rows[0]?.count || 0
+  }
   const { rows } = await sql`
     SELECT COUNT(*)::int AS count FROM users
     WHERE access_level = 'full-course' AND workshop_location = ${location}

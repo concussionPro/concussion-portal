@@ -283,6 +283,12 @@ export async function signOffTemplate(slug: EmailTemplateSlug, by: string, notes
 // OUTREACH LOG
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Insert an outreach log row. Returns true if the row was inserted, false
+ * if the audit_key already existed (ON CONFLICT DO NOTHING) — callers use
+ * the false case to skip a duplicate send when two runs race on the same
+ * deterministic key.
+ */
 export async function logOutreach(input: {
   clinicId: number
   templateSlug: string
@@ -290,11 +296,31 @@ export async function logOutreach(input: {
   emailBody: string
   resendEmailId: string | null
   auditKey: string
-}): Promise<void> {
-  await sql`
+}): Promise<boolean> {
+  const { rowCount } = await sql`
     INSERT INTO prospect_outreach_log (clinic_id, template_slug, email_subject, email_body, resend_email_id, audit_key)
     VALUES (${input.clinicId}, ${input.templateSlug}, ${input.emailSubject}, ${input.emailBody}, ${input.resendEmailId}, ${input.auditKey})
     ON CONFLICT (audit_key) DO NOTHING
+  `
+  return (rowCount ?? 0) > 0
+}
+
+/** Attach the Resend email id to an insert-first log row after the send succeeds. */
+export async function setOutreachResendId(auditKey: string, resendEmailId: string | null): Promise<void> {
+  await sql`
+    UPDATE prospect_outreach_log
+    SET resend_email_id = ${resendEmailId}
+    WHERE audit_key = ${auditKey}
+  `
+}
+
+/**
+ * Remove an insert-first log row after a FAILED send so the sequence can
+ * retry — a failed send must never leave a permanent "sent" record.
+ */
+export async function deleteOutreachByAuditKey(auditKey: string): Promise<void> {
+  await sql`
+    DELETE FROM prospect_outreach_log WHERE audit_key = ${auditKey}
   `
 }
 
@@ -315,9 +341,12 @@ export async function recordPortalView(input: {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function todaysSentCount(): Promise<number> {
+  // Test-mode previews (audit_key contains ':test:') go to Zac's inbox, not
+  // prospects — they must not consume the production daily cap.
   const { rows } = await sql<{ count: string }>`
     SELECT COUNT(*) AS count FROM prospect_outreach_log
     WHERE sent_at::date = CURRENT_DATE
+      AND audit_key NOT LIKE '%:test:%'
   `
   return parseInt(rows[0]?.count ?? '0', 10)
 }

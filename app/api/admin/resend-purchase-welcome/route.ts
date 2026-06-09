@@ -12,7 +12,7 @@
  *   courseType?: 'online-only' | 'full-course' | 'workshop-upgrade' | 'international-online'
  *                            (default: 'online-only')
  *   workshopCity?: string    ('melbourne' | 'sydney' | 'byron-bay')
- *   amount?: number          (default: PRICE_ONLINE or PRICE_EARLY_BIRD based on courseType)
+ *   amount?: number          (default: PRICE_ONLINE / PRICE_REGULAR / upgrade delta based on courseType)
  *   currency?: string        (default: 'AUD')
  *   upgradeAccess?: boolean  (default: true — upgrade preview users to match courseType)
  * }
@@ -39,7 +39,9 @@ function labelForCourse(courseType: CourseType, accessLevel: string): string {
 }
 
 function defaultAmount(courseType: CourseType): number {
-  if (courseType === 'full-course' || courseType === 'workshop-upgrade') return CONFIG.COURSE.PRICE_EARLY_BIRD
+  if (courseType === 'full-course') return CONFIG.COURSE.PRICE_REGULAR
+  // Workshop upgrade = the delta between Complete and Online ($903)
+  if (courseType === 'workshop-upgrade') return CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
   if (courseType === 'international-online') return CONFIG.COURSE.PRICE_INTERNATIONAL
   return CONFIG.COURSE.PRICE_ONLINE
 }

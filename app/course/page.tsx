@@ -146,7 +146,7 @@ export default function CoursePage() {
             Investment in clinical excellence
           </h2>
           <p className="text-base text-muted-foreground mb-6">
-            Online course from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course with workshop from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} AUD
+            Online course from ${CONFIG.COURSE.PRICE_ONLINE} AUD · Complete course with workshop ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} AUD
           </p>
           <Link
             href="/pricing"

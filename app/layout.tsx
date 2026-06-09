@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(CONFIG.SEO.SITE_URL),
   title: {
     default: 'Concussion Management Course Australia | SCAT6 & VOMS Training',
-    template: '%s | ConcussionPro',
+    template: '%s | Concussion Education Australia',
   },
   description: CONFIG.SEO.DESCRIPTION,
   keywords: [
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
         url: CONFIG.SEO.OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: 'ConcussionPro - Professional Concussion Management Training',
+        alt: 'Concussion Education Australia - Professional Concussion Management Training',
       },
     ],
   },

@@ -39,6 +39,14 @@ export interface CourseCatalogueEntry {
   /** Where the course content lives */
   route: string
   priceAUD: number | null
+  /**
+   * Whether /api/courses/checkout may sell this entry directly as a
+   * short-course Stripe session. CCM is listed in the catalogue for display
+   * but MUST go through /pricing (full-course/online-only flow with workshop
+   * location, access levels and fulfilment) — selling it here would charge
+   * the buyer and fulfil nothing.
+   */
+  purchasableViaCheckout: boolean
   status: 'live' | 'coming-soon' | 'pilot'
   tags: string[]
   /** Early-access discount percentage applied at launch for waitlist signups */
@@ -155,6 +163,7 @@ export const COURSES: CourseCatalogueEntry[] = [
     description: 'AHPRA-aligned compliance training for AI use by Australian clinicians. Covers Privacy Act, APP 6/8/11, TGA boundaries, AHPRA documentation, indemnity carrier positions.',
     route: '/courses/ai-in-clinical-practice',
     priceAUD: 197,
+    purchasableViaCheckout: true,
     status: 'coming-soon',
     tags: ['compliance', 'ai', 'documentation', 'privacy', 'all-specialties'],
     earlyBirdDiscountPct: 50,
@@ -179,6 +188,7 @@ export const COURSES: CourseCatalogueEntry[] = [
     description: 'Evidence-based assessment + defensible interventions for autonomic dysfunction. Anatomy, red flags, phenotypes (POTS, post-concussion, long-COVID), interventions with honest evidence ranking. 6 modules · ~75 minutes.',
     route: '/courses/vagus-nerve',
     priceAUD: 97,
+    purchasableViaCheckout: true,
     status: 'pilot',
     tags: ['autonomic', 'concussion', 'pots', 'long-covid', 'evidence-based', 'all-specialties'],
     // Hidden from public pricing display until proper funnel exists (lead magnet + blog cluster + waitlist).
@@ -195,7 +205,10 @@ export const COURSES: CourseCatalogueEntry[] = [
     cpdRecognition: ['Osteopathy Australia–endorsed', 'AHPRA-aligned', 'MedCPD Career Health accredited'],
     description: '8 online modules + full-day workshop. SCAT6, VOMS, BESS, return-to-sport/learn/work protocols. Workshop confirmed for Melbourne 13 June 2026.',
     route: '/pricing',
-    priceAUD: 1190,
+    // Regular price — early bird ($1,190) ended 31 May 2026.
+    priceAUD: 1400,
+    // Display-only here: CCM checkout lives at /pricing (full-course flow).
+    purchasableViaCheckout: false,
     status: 'live',
     tags: ['concussion', 'sport-medicine', 'physio', 'osteo', 'gp'],
   },

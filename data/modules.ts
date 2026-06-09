@@ -4328,7 +4328,7 @@ export const modules: Module[] = [
         id: 'course-completion',
         title: 'Course Complete: Your Concussion Management Journey',
         content: [
-          '🎓 CONGRATULATIONS: You have completed the ConcussionPro Comprehensive Concussion Management course.',
+          '🎓 CONGRATULATIONS: You have completed the Concussion Education Australia Comprehensive Concussion Management course.',
           'Over 8 modules, you have built a complete clinical framework:',
           '✅ Module 1: The science — mechanisms, neuroanatomy, biochemistry, imaging, and biomarkers',
           '✅ Module 2: Diagnosis — GCS, SCAT6, VOMS, BESS, severity classification, and recovery timelines',

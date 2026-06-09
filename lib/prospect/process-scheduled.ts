@@ -6,12 +6,15 @@
  * into this. Logic isn't duplicated.
  *
  * Sequence model:
- *   T1 'initial'  → T2 'followup' (+4 business days) → T3 'final' (+5 BD) → DONE
+ *   T1 'initial'  → T2 'followup' (+7 business days) → T3 'final' (+8 BD) → DONE
  *
  * The cron sends whatever `next_template_slug` says, then advances state:
- *   - After 'initial' sent:  next='followup', scheduled = today + 4 BD, status='sent'
- *   - After 'followup' sent: next='final',    scheduled = today + 5 BD
+ *   - After 'initial' sent:  next='followup', scheduled = today + 7 BD, status='sent'
+ *   - After 'followup' sent: next='final',    scheduled = today + 8 BD
  *   - After 'final' sent:    next=NULL,       scheduled=NULL  (sequence end)
+ *
+ * Gaps are FIXED. Standing rule (Zac): never compress the cadence on an
+ * engagement signal — opens/clicks change template copy, not timing.
  *
  * Guardrails:
  *  - next_template_slug not NULL (anything else is sequence-complete / archived)
@@ -24,6 +27,9 @@
  *  - email_suppression check
  *  - daily cap (adaptive, computed in cron)
  *  - no double-send: NOT EXISTS outreach_log row for the same template
+ *    (test-mode previews — audit_key contains ':test:' — are excluded so a
+ *    preview never blocks the real send), PLUS an insert-first claim on a
+ *    deterministic audit_key so concurrent runs can't race a duplicate.
  */
 import { Resend } from 'resend'
 import { sql } from '@vercel/postgres'
@@ -32,9 +38,13 @@ import {
   getTemplateSignoff,
   isSuppressed,
   logOutreach,
+  setOutreachResendId,
+  deleteOutreachByAuditKey,
 } from '@/lib/prospect/repo'
 import { EMAIL_TEMPLATES, mergeTemplate } from '@/lib/prospect/email-templates'
 import { preflightClinic, failureSummary } from '@/lib/prospect/preflight'
+import { legacyAccessKey } from '@/lib/prospect/access-key'
+import { generateUnsubscribeToken } from '@/lib/prospect/unsubscribe-token'
 import type { EmailTemplateSlug } from '@/lib/prospect/types'
 
 // 2026-06-09: switched From: partnerships@ -> zac@ — inbox-placement win.
@@ -44,24 +54,14 @@ const COLD_FROM = 'Zac Lewis <zac@concussion-education-australia.com>'
 const REPLY_TO = 'zac@concussion-education-australia.com'
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://portal.concussion-education-australia.com'
 
-// Cadence — busy clinicians. Engagement-aware: cold prospects get the
-// standard wait; engaged prospects get T2 accelerated so the signal
-// doesnt go stale.
-//   T1 → T2 (COLD, no engagement): 7 BD — they need time + a value drop
-//                                  to remember why we emailed.
-//   T1 → T2 (ENGAGED with T1):     4 BD — capture them while T1 is
-//                                  fresh. Salesloft 2023 / Outreach.io:
-//                                  engagement-triggered follow-ups peak
-//                                  at 3-5 BD; static 7+ BD lets memory
-//                                  fade and reply rate drops 30-40%.
-//   T2 → T3: 14 BD — final-touch window per HubSpot 2024 / Salesloft
-//                    2023 / Outreach.io: 14-21 days is the sweet spot
-//                    for the breakup email. Healthcare specifically
-//                    needs 14+ for partner consults, budget cycles,
-//                    CPD-year timing.
-const FOLLOWUP_GAP_BUSINESS_DAYS = 7         // T1 → T2 (cold / no signal)
-// Engaged path uses 6 cal-days (~4 BD) inline in the acceleration SQL sweep.
-const FINAL_GAP_BUSINESS_DAYS = 14           // T2 → T3
+// Cadence — busy clinicians. Fixed gaps regardless of engagement signal
+// (standing rule per Zac: never compress on engagement signal — opens and
+// clicks drive template VARIANT selection, never timing).
+//   T1 → T2: 7 BD — they need time + a value drop to remember why we
+//                   emailed.
+//   T2 → T3: 8 BD — agreed breakup-email window for the cold cadence.
+const FOLLOWUP_GAP_BUSINESS_DAYS = 7         // T1 → T2
+const FINAL_GAP_BUSINESS_DAYS = 8            // T2 → T3
 
 interface QueueRow {
   id: number
@@ -111,6 +111,7 @@ export interface ProcessScheduledResult {
       | 'skipped-cap'
       | 'skipped-signoff-missing'
       | 'skipped-preflight'
+      | 'skipped-duplicate'
       | 'sent'
       | 'send-failed'
       | 'sent-dryrun'
@@ -166,19 +167,95 @@ function isValidTemplateSlug(s: string | null): s is EmailTemplateSlug {
  * Send-window check (AEST) — Mon-Sat morning only. Sun off.
  * Per Zacs cold-outreach cadence: clinicians batch-read on Sat mornings,
  * so we keep Sat in the window; Sun is the only off day.
+ *
+ * Uses NUMERIC date parts + UTC day arithmetic instead of locale weekday
+ * strings — `toLocaleString(..., { weekday: 'short' }) === 'Sun'` is
+ * ICU-fragile (rendering varies across ICU builds, e.g. trailing periods).
  */
 function isInOptimalSendWindow(): boolean {
   const now = new Date()
-  const dayName = now.toLocaleString('en-AU', { weekday: 'short', timeZone: 'Australia/Sydney' })
-  const aestHour = parseInt(now.toLocaleString('en-AU', { hour: '2-digit', hour12: false, timeZone: 'Australia/Sydney' }), 10)
-  if (dayName === 'Sun') return false
-  return aestHour >= 6 && aestHour <= 12
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Australia/Sydney',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    hour12: false,
+  }).formatToParts(now)
+  const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? '', 10)
+  const year = get('year')
+  const month = get('month')
+  const day = get('day')
+  let hour = get('hour')
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day) || Number.isNaN(hour)) {
+    return false // can't establish Sydney time — fail closed, cron retries tomorrow
+  }
+  if (hour === 24) hour = 0 // some ICU builds report midnight as 24
+  // Day-of-week of the Sydney calendar date via UTC arithmetic. 0 = Sunday.
+  const dow = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  if (dow === 0) return false
+  return hour >= 6 && hour <= 12
+}
+
+/**
+ * Defensive, idempotent schema bootstrap. Cheap (ALTER ... IF NOT EXISTS is
+ * a no-op once applied) and mirrors the inline-ALTER pattern used by the
+ * Resend webhook + prospect-verify-emails routes.
+ *
+ *  - email_events.user_agent: the prior-engagement lookup filters on it
+ *    (COALESCE(user_agent,'')), but the table was created without the
+ *    column — a missing column 42703-aborts the entire cron run.
+ *  - prospect_clinics.access_key: stored portal keys (see access-key.ts).
+ *    Backfills NULL/empty rows with the legacy slug-derived value so
+ *    already-sent ?k= links keep working.
+ */
+async function ensureSchemaBootstrap(): Promise<void> {
+  try {
+    await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS user_agent TEXT`
+  } catch (err) {
+    console.error('[process-scheduled] email_events.user_agent bootstrap failed:', err)
+  }
+  try {
+    await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS access_key TEXT`
+    const { rows: missingKeys } = await sql<{ id: number; slug: string }>`
+      SELECT id, slug FROM prospect_clinics
+      WHERE access_key IS NULL OR access_key = ''
+      LIMIT 500
+    `
+    for (const r of missingKeys) {
+      await sql`
+        UPDATE prospect_clinics
+        SET access_key = ${legacyAccessKey(r.slug)}
+        WHERE id = ${r.id} AND (access_key IS NULL OR access_key = '')
+      `
+    }
+    // Targeted continuity fix — Advanced Health Buderim. The live
+    // hand-built proposal site (app/proposals/advanced-health-buderim/
+    // _shared.tsx) hardcodes ACCESS_KEY 'ah2026' in links already in the
+    // wild, and /api/toolkit/download validates ?k= against
+    // prospect_clinics.access_key. The legacy-derived backfill above
+    // produces a DIFFERENT key for that row, so force the known value —
+    // must run even when access_key is already non-null (it may have just
+    // been backfilled with the derived value). Idempotent. Slug matched
+    // with LIKE because the engine-side slug for this hand-built clinic
+    // isn't pinned anywhere in the repo.
+    await sql`
+      UPDATE prospect_clinics
+      SET access_key = 'ah2026'
+      WHERE slug LIKE 'advanced-health%'
+        AND access_key IS DISTINCT FROM 'ah2026'
+    `
+  } catch (err) {
+    console.error('[process-scheduled] access_key bootstrap failed:', err)
+  }
 }
 
 export async function processScheduledSends(
   opts: ProcessScheduledOptions,
 ): Promise<ProcessScheduledResult> {
   const { dryRun, dailyCap, allowPatternGuess, force = false } = opts
+
+  await ensureSchemaBootstrap()
 
   // Send-window gate: Mon-Sat 06:00-12:00 AEST. Sun off. force=true bypasses.
   if (!force && !dryRun && !isInOptimalSendWindow()) {
@@ -209,60 +286,9 @@ export async function processScheduledSends(
     signoffByTemplate.set(slug, !!so.signedOffAt)
   }
 
-  // ── ENGAGEMENT-AWARE T2 ACCELERATION ──
-  // Any prospect whose next_template_slug='followup' and who has shown
-  // post-T1 engagement (open/click/portal-view) gets pulled forward to
-  // T1+4 BD (cal proxy: T1 + 6 calendar days). Without this, an engaged
-  // signal at day 3 still waits the full 7 BD for T2, by which point
-  // the prospect has cooled. Research: engagement-triggered follow-ups
-  // peak at 3-5 BD; static 7+ BD lets reply rate drop 30-40%.
-  // Skipped in dryRun.
-  if (!dryRun) {
-    try {
-      await sql`
-        WITH t1_sent AS (
-          SELECT pol.clinic_id, MIN(pol.sent_at) AS t1_at
-          FROM prospect_outreach_log pol
-          WHERE pol.template_slug = 'initial'
-            AND pol.resend_email_id IS NOT NULL
-          GROUP BY pol.clinic_id
-        ),
-        engaged_followups AS (
-          SELECT pc.id AS clinic_id, t1.t1_at,
-                 (t1.t1_at + INTERVAL '6 days') AS accel_target
-          FROM prospect_clinics pc
-          JOIN t1_sent t1 ON t1.clinic_id = pc.id
-          WHERE pc.next_template_slug = 'followup'
-            AND pc.status NOT IN ('archived','lost','bounced','engaged','won','replied','engaged-elsewhere')
-            AND pc.scheduled_send_at IS NOT NULL
-            AND pc.scheduled_send_at > NOW() + INTERVAL '2 days'
-            AND (
-              EXISTS (
-                SELECT 1 FROM email_events ee
-                JOIN prospect_outreach_log pol2 ON pol2.resend_email_id = ee.email_id
-                WHERE pol2.clinic_id = pc.id
-                  AND ee.event_type IN ('opened','clicked')
-                  AND ee.created_at > t1.t1_at
-              )
-              OR EXISTS (
-                SELECT 1 FROM prospect_portal_views ppv
-                WHERE ppv.clinic_id = pc.id
-                  AND ppv.viewed_at > t1.t1_at
-                  AND COALESCE(ppv.user_agent, '') !~* '(microsoft office|safelinks|mimecast|barracuda|proofpoint|googlebot|bingbot)'
-              )
-            )
-        )
-        UPDATE prospect_clinics pc
-        SET scheduled_send_at = LEAST(pc.scheduled_send_at, ef.accel_target),
-            updated_at = NOW()
-        FROM engaged_followups ef
-        WHERE pc.id = ef.clinic_id
-          AND pc.scheduled_send_at > ef.accel_target
-      `
-    } catch (err) {
-      console.error('[process-scheduled] T2 acceleration sweep failed:', err)
-    }
-  }
+  // NOTE: there is deliberately NO engagement-based acceleration sweep here.
+  // Standing rule (Zac): never compress the cadence on an engagement signal.
+  // Opens/clicks pick the template variant; scheduled_send_at stays put.
 
   // Driver query: every clinic whose next_template_slug says something is
   // due, that's not in a dead state, and that hasn't already had this
@@ -308,9 +334,12 @@ export async function processScheduledSends(
           AND COALESCE(pc.verification_role, FALSE) = FALSE
           AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
           AND COALESCE(pc.verification_disposable, FALSE) = FALSE
+          -- Test-mode previews (audit_key contains ':test:') go to Zac's
+          -- inbox, not the prospect — they must NOT block the real send.
           AND NOT EXISTS (
             SELECT 1 FROM prospect_outreach_log ol
             WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug
+              AND ol.audit_key NOT LIKE '%:test:%'
           )
         ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
         LIMIT 50
@@ -349,9 +378,12 @@ export async function processScheduledSends(
           AND COALESCE(pc.verification_role, FALSE) = FALSE
           AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
           AND COALESCE(pc.verification_disposable, FALSE) = FALSE
+          -- Test-mode previews (audit_key contains ':test:') go to Zac's
+          -- inbox, not the prospect — they must NOT block the real send.
           AND NOT EXISTS (
             SELECT 1 FROM prospect_outreach_log ol
             WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug
+              AND ol.audit_key NOT LIKE '%:test:%'
           )
         ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
         LIMIT 50
@@ -484,7 +516,7 @@ export async function processScheduledSends(
     }
 
     const template = EMAIL_TEMPLATES.find((t) => t.slug === templateSlug)!
-    const unsubToken = `${clinic.slug}-${Date.now().toString(36)}`
+    const unsubToken = generateUnsubscribeToken(clinic.slug)
 
     // For followup + final sends, look up engagement signal from the
     // previous template. Drives variant selection in mergeTemplate:
@@ -493,37 +525,77 @@ export async function processScheduledSends(
     //   - none    → generic followup
     // Bot/scanner UAs filtered out so SafeLinks pre-fetches don't trigger
     // the "we noticed you clicked" variant when no human actually engaged.
+    // (Webhook rows never carry user_agent — NULL coalesces to '' which the
+    // regex doesn't match, so those events count as human. Intentional.)
+    // Wrapped in try/catch: variant selection is cosmetic — a lookup failure
+    // degrades to the generic variant, it must never kill the send run.
     let priorEngagement: 'none' | 'opened' | 'clicked' = 'none'
     if (templateSlug !== 'initial') {
-      const priorSlug = templateSlug === 'followup' ? 'initial' : 'followup'
-      const { rows: priorSends } = await sql<{ resend_email_id: string | null }>`
-        SELECT resend_email_id FROM prospect_outreach_log
-        WHERE clinic_id = ${clinic.id}
-          AND template_slug = ${priorSlug}
-          AND resend_email_id IS NOT NULL
-        ORDER BY sent_at DESC LIMIT 1
-      `
-      const priorResendId = priorSends[0]?.resend_email_id
-      if (priorResendId) {
-        const { rows: events } = await sql<{ event_type: string }>`
-          SELECT event_type FROM email_events
-          WHERE email_id = ${priorResendId}
-            AND event_type IN ('opened', 'clicked')
-            AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|crawler|spider|slurp|facebook|linkedin|whatsapp|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+      try {
+        const priorSlug = templateSlug === 'followup' ? 'initial' : 'followup'
+        const { rows: priorSends } = await sql<{ resend_email_id: string | null }>`
+          SELECT resend_email_id FROM prospect_outreach_log
+          WHERE clinic_id = ${clinic.id}
+            AND template_slug = ${priorSlug}
+            AND resend_email_id IS NOT NULL
+          ORDER BY sent_at DESC LIMIT 1
         `
-        if (events.some((e) => e.event_type === 'clicked')) priorEngagement = 'clicked'
-        else if (events.some((e) => e.event_type === 'opened')) priorEngagement = 'opened'
+        const priorResendId = priorSends[0]?.resend_email_id
+        if (priorResendId) {
+          const { rows: events } = await sql<{ event_type: string }>`
+            SELECT event_type FROM email_events
+            WHERE email_id = ${priorResendId}
+              AND event_type IN ('opened', 'clicked')
+              AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|crawler|spider|slurp|facebook|linkedin|whatsapp|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+          `
+          if (events.some((e) => e.event_type === 'clicked')) priorEngagement = 'clicked'
+          else if (events.some((e) => e.event_type === 'opened')) priorEngagement = 'opened'
+        }
+      } catch (err) {
+        console.error(
+          `[process-scheduled] prior-engagement lookup failed for clinic ${clinic.id} — degrading to 'none':`,
+          err,
+        )
+        priorEngagement = 'none'
       }
     }
 
     const { subject, html, text } = mergeTemplate(template, clinic, BASE_URL, unsubToken, {
       priorEngagement,
     })
-    const auditKey = `outreach:${clinic.slug}:${templateSlug}:cron:${Date.now()}`
+    // Deterministic key — concurrent runs (cron + manual fire-now, or two
+    // overlapping cron invocations) collide on the UNIQUE audit_key instead
+    // of double-sending. Insert-first: claim the key BEFORE the send; if the
+    // claim conflicts another run already owns this send. The row is deleted
+    // if the send fails so a retry can occur.
+    const auditKey = `outreach:${clinic.slug}:${templateSlug}:prod`
 
+    const claimed = await logOutreach({
+      clinicId: clinic.id,
+      templateSlug: templateSlug,
+      emailSubject: subject,
+      emailBody: text,
+      resendEmailId: null,
+      auditKey,
+    })
+    if (!claimed) {
+      results.push({
+        id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
+        template: templateSlug,
+        decision: 'skipped-duplicate',
+        reason: `audit key ${auditKey} already claimed — concurrent run or prior send`,
+      })
+      continue
+    }
+
+    // Only the send call itself sits in this try/catch — if the email went
+    // out, the claimed log row must NEVER be deleted (deleting it after a
+    // post-send bookkeeping failure would re-queue an already-delivered
+    // email on the next run).
+    let sendOutcome: Awaited<ReturnType<Resend['emails']['send']>>
     try {
       const resend = new Resend(resendKey)
-      const result = await resend.emails.send({
+      sendOutcome = await resend.emails.send({
         from: COLD_FROM,
         to: clinic.contactEmail,
         replyTo: REPLY_TO,
@@ -545,69 +617,55 @@ export async function processScheduledSends(
           { name: 'mode', value: 'production-cron' },
         ],
       })
-
-      if (result.error) {
-        results.push({
-          id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
-          template: templateSlug,
-          decision: 'send-failed', reason: JSON.stringify(result.error).slice(0, 200),
-        })
-        continue
-      }
-
-      await logOutreach({
-        clinicId: clinic.id,
-        templateSlug: templateSlug,
-        emailSubject: subject,
-        emailBody: text,
-        resendEmailId: result.data?.id ?? null,
-        auditKey,
-      })
-
-      // Advance sequence state — drives the next cron run.
-      if (templateSlug === 'initial') {
-        const nextScheduled = addBusinessDays(new Date(), FOLLOWUP_GAP_BUSINESS_DAYS).toISOString()
-        await sql`
-          UPDATE prospect_clinics
-          SET next_template_slug = 'followup',
-              scheduled_send_at = ${nextScheduled},
-              status = CASE WHEN status IN ('researching', 'approved') THEN 'sent' ELSE status END,
-              updated_at = NOW()
-          WHERE id = ${clinic.id}
-        `
-      } else if (templateSlug === 'followup') {
-        const nextScheduled = addBusinessDays(new Date(), FINAL_GAP_BUSINESS_DAYS).toISOString()
-        await sql`
-          UPDATE prospect_clinics
-          SET next_template_slug = 'final',
-              scheduled_send_at = ${nextScheduled},
-              updated_at = NOW()
-          WHERE id = ${clinic.id}
-        `
-      } else if (templateSlug === 'final') {
-        await sql`
-          UPDATE prospect_clinics
-          SET next_template_slug = NULL,
-              scheduled_send_at = NULL,
-              updated_at = NOW()
-          WHERE id = ${clinic.id}
-        `
-      }
-
-      results.push({
-        id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
-        template: templateSlug,
-        decision: 'sent', resendId: result.data?.id,
-      })
-      sentCount += 1
     } catch (err) {
+      // Failed send — release the claimed audit key so a retry can occur.
+      // A failed send must never advance the sequence or leave a permanent
+      // "sent" record.
+      await deleteOutreachByAuditKey(auditKey).catch((e) =>
+        console.error('[process-scheduled] failed to release audit key after send exception:', e),
+      )
       const message = err instanceof Error ? err.message : String(err)
       results.push({
         id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
         template: templateSlug,
         decision: 'send-failed', reason: message,
       })
+      continue
     }
+
+    if (sendOutcome.error) {
+      // Resend rejected the send — nothing went out. Release the key.
+      await deleteOutreachByAuditKey(auditKey).catch((e) =>
+        console.error('[process-scheduled] failed to release audit key after Resend error:', e),
+      )
+      results.push({
+        id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
+        template: templateSlug,
+        decision: 'send-failed', reason: JSON.stringify(sendOutcome.error).slice(0, 200),
+      })
+      continue
+    }
+
+    // Email is out. Post-send bookkeeping failures are logged but the log
+    // row stays put — better a stale next_template_slug (self-corrects via
+    // the audit-key dedupe) than a duplicate cold email.
+    try {
+      await setOutreachResendId(auditKey, sendOutcome.data?.id ?? null)
+      // Advance sequence state — drives the next cron run.
+      await advanceSequenceAfterSend(clinic.id, templateSlug)
+    } catch (err) {
+      console.error(
+        `[process-scheduled] post-send bookkeeping failed for clinic ${clinic.id} (${auditKey}):`,
+        err,
+      )
+    }
+
+    results.push({
+      id: row.id, slug: row.slug, shortName: row.short_name, email: row.contact_email,
+      template: templateSlug,
+      decision: 'sent', resendId: sendOutcome.data?.id ?? undefined,
+    })
+    sentCount += 1
   }
 
   const byTemplate = { initial: 0, followup: 0, final: 0 }
@@ -633,5 +691,105 @@ export async function processScheduledSends(
       byTemplate,
     },
     results,
+  }
+}
+
+/**
+ * Advance the clinic's sequence pointer after a SUCCESSFUL production send.
+ * Shared by the cron driver and the manual /api/admin/prospect-send route
+ * so manual prod sends move the sequence exactly like cron sends do.
+ */
+export async function advanceSequenceAfterSend(
+  clinicId: number,
+  templateSlug: EmailTemplateSlug,
+): Promise<void> {
+  if (templateSlug === 'initial') {
+    const nextScheduled = addBusinessDays(new Date(), FOLLOWUP_GAP_BUSINESS_DAYS).toISOString()
+    await sql`
+      UPDATE prospect_clinics
+      SET next_template_slug = 'followup',
+          scheduled_send_at = ${nextScheduled},
+          status = CASE WHEN status IN ('researching', 'approved') THEN 'sent' ELSE status END,
+          updated_at = NOW()
+      WHERE id = ${clinicId}
+    `
+  } else if (templateSlug === 'followup') {
+    const nextScheduled = addBusinessDays(new Date(), FINAL_GAP_BUSINESS_DAYS).toISOString()
+    await sql`
+      UPDATE prospect_clinics
+      SET next_template_slug = 'final',
+          scheduled_send_at = ${nextScheduled},
+          updated_at = NOW()
+      WHERE id = ${clinicId}
+    `
+  } else if (templateSlug === 'final') {
+    await sql`
+      UPDATE prospect_clinics
+      SET next_template_slug = NULL,
+          scheduled_send_at = NULL,
+          updated_at = NOW()
+      WHERE id = ${clinicId}
+    `
+  }
+}
+
+export interface GateBlockedBreakdown {
+  /** Prospects that are otherwise due but fail the Hunter HARD GATE, by reason. */
+  total: number
+  unverified: number
+  lowScore: number
+  acceptAll: number
+  role: number
+  disposable: number
+}
+
+/**
+ * Visibility for the Hunter HARD GATE: counts due prospects that the gate
+ * is currently stranding, broken down by reason. A prospect can appear in
+ * more than one reason bucket (e.g. role + accept-all); `total` is distinct
+ * clinics. Read-only — never throws (degrades to zeros).
+ */
+export async function computeGateBlockedBreakdown(): Promise<GateBlockedBreakdown> {
+  try {
+    const { rows } = await sql<{
+      total: number
+      unverified: number
+      low_score: number
+      accept_all: number
+      role: number
+      disposable: number
+    }>`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE verification_score IS NULL)::int AS unverified,
+        COUNT(*) FILTER (WHERE verification_score IS NOT NULL AND verification_score < 80)::int AS low_score,
+        COUNT(*) FILTER (WHERE COALESCE(verification_accept_all, FALSE) = TRUE)::int AS accept_all,
+        COUNT(*) FILTER (WHERE COALESCE(verification_role, FALSE) = TRUE)::int AS role,
+        COUNT(*) FILTER (WHERE COALESCE(verification_disposable, FALSE) = TRUE)::int AS disposable
+      FROM prospect_clinics pc
+      WHERE pc.next_template_slug IS NOT NULL
+        AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
+        AND pc.scheduled_send_at IS NOT NULL
+        AND pc.scheduled_send_at <= NOW()
+        AND NOT (
+          pc.verification_score IS NOT NULL
+          AND pc.verification_score >= 80
+          AND COALESCE(pc.verification_role, FALSE) = FALSE
+          AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
+          AND COALESCE(pc.verification_disposable, FALSE) = FALSE
+        )
+    `
+    const r = rows[0]
+    return {
+      total: r?.total ?? 0,
+      unverified: r?.unverified ?? 0,
+      lowScore: r?.low_score ?? 0,
+      acceptAll: r?.accept_all ?? 0,
+      role: r?.role ?? 0,
+      disposable: r?.disposable ?? 0,
+    }
+  } catch (err) {
+    console.error('[process-scheduled] gateBlocked breakdown failed:', err)
+    return { total: 0, unverified: 0, lowScore: 0, acceptAll: 0, role: 0, disposable: 0 }
   }
 }

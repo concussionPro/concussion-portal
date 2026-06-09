@@ -22,6 +22,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { getClinicBySlug } from '@/lib/prospect/repo'
+import { accessKeyMatches } from '@/lib/prospect/access-key'
 
 const ALLOWED_INTERACTION_TYPES = new Set([
   'view',
@@ -80,7 +81,7 @@ export async function POST(
   if (!clinic) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
-  if (body.accessKey !== clinic.accessKey) {
+  if (!accessKeyMatches(body.accessKey, clinic)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -30,8 +30,10 @@ export async function trackServerPurchase(
   const endpoint = `https://www.google-analytics.com/mp/collect?measurement_id=${GA4_MEASUREMENT_ID}&api_secret=${apiSecret}`
 
   // Use a deterministic client_id derived from transactionId for dedup.
-  // GA4 deduplicates events with the same client_id + transaction_id.
-  const clientId = `server_${transactionId.replace('cs_', '').slice(0, 20)}.${Date.now()}`
+  // GA4 deduplicates events with the same client_id + transaction_id — a
+  // Date.now() suffix would make every webhook retry a fresh client_id and
+  // break dedup, double-counting purchases.
+  const clientId = `server_${transactionId.replace('cs_', '').slice(0, 20)}`
 
   const body = {
     client_id: clientId,

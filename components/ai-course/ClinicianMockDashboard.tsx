@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { PlayCircle, TrendingUp, Sparkles, Activity, ArrowLeft } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 /**
  * Mock clinician-state sidebar shown on the AI course landing inside
@@ -109,7 +110,7 @@ export function ClinicianMockDashboard() {
                 Concussion Clinical Mastery
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mb-1">
-                14 CPD hours · A$1,190 · OA-endorsed
+                14 CPD hours · A${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} · OA-endorsed
               </p>
               <p className="text-[10px] text-accent leading-snug">
                 Matches sports-medicine case patterns

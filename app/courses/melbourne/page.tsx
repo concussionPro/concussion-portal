@@ -5,16 +5,12 @@ import Image from 'next/image'
 import { MapPin, Calendar, ArrowRight, CheckCircle2, Utensils, Clock, BookOpen, FileText, Infinity, BedDouble, Car, Plane } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
-import CountdownTimer from '@/components/CountdownTimer'
 import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
 import { NextEarlyBirdCapture } from '@/components/NextEarlyBirdCapture'
 
 export default function MelbournePage() {
   const location = CONFIG.LOCATIONS.MELBOURNE
-  const earlyBirdDate = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T00:00:00')
-    .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
-  const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
 
   return (
     <>
@@ -81,26 +77,18 @@ export default function MelbournePage() {
                   Full day (8am–4pm) · catered lunch included · lifetime online access
                 </p>
 
-                <CountdownTimer className="justify-center mb-8" />
-
                 <a
                   href={`${CONFIG.SHOP_URL}?location=melbourne`}
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                  aria-label={`Enrol in Melbourne session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
+                  aria-label={`Enrol in Melbourne session for $${CONFIG.COURSE.PRICE_REGULAR}`}
                 >
-                  Enrol Now — ${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR}
+                  Enrol Now — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
 
-                {isEarlyBird ? (
-                  <p className="text-sm text-muted-foreground mt-4">
-                    Early bird ${CONFIG.COURSE.PRICE_EARLY_BIRD} — save ${CONFIG.COURSE.SAVINGS} vs regular ${CONFIG.COURSE.PRICE_REGULAR}. Ends {earlyBirdDate}.
-                  </p>
-                ) : (
-                  // Early-bird closed → no duplicate price line (button already shows it).
-                  // Instead capture missed-early-bird buyers for the next workshop.
-                  <NextEarlyBirdCapture defaultCity="melbourne" />
-                )}
+                {/* Early bird closed 31 May 2026 — capture buyers who missed
+                    it for the next workshop's early-bird list instead. */}
+                <NextEarlyBirdCapture defaultCity="melbourne" />
               </>
             ) : (
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
@@ -210,18 +198,6 @@ export default function MelbournePage() {
               Full travel logistics (venue door, parking entrance, nearest trains) are in the 2-weeks-out workshop email.
             </p>
           </div>
-
-          {/* Early bird strip */}
-          {isEarlyBird && (
-            <div className="rounded-2xl border-2 border-orange-200 bg-orange-50 p-6 mb-12 text-center">
-              <p className="text-sm font-semibold text-orange-900 mb-1">
-                Early bird pricing ends {earlyBirdDate}
-              </p>
-              <p className="text-sm text-orange-800">
-                Enrol now for ${CONFIG.COURSE.PRICE_EARLY_BIRD} (save ${CONFIG.COURSE.SAVINGS}). After that, regular pricing is ${CONFIG.COURSE.PRICE_REGULAR}.
-              </p>
-            </div>
-          )}
 
           {/* CTA */}
           <div className="glass rounded-2xl p-8 text-center bg-gradient-to-br from-blue-600/5 to-teal-600/5">

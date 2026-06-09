@@ -269,13 +269,13 @@ export async function sendPostPurchaseLoginEmail(opts: {
 
   return sendEmail({
     to: opts.email,
-    subject: isFullCourse ? "You're in — welcome to ConcussionPro" : "You're in — your course is ready",
+    subject: isFullCourse ? "You're in — welcome to Concussion Education Australia" : "You're in — your course is ready",
     html: `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Welcome to ConcussionPro</title>
+<title>Welcome to Concussion Education Australia</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; margin: 0; padding: 0; }
   .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -347,7 +347,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
 
   return sendEmail({
     to: email,
-    subject: 'Your ConcussionPro Login Link',
+    subject: 'Your Concussion Education Australia Login Link',
     tags: [{ name: 'sequence', value: 'magic-link' }],
     html: `
       <!DOCTYPE html>
@@ -355,7 +355,7 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>ConcussionPro Login</title>
+          <title>Concussion Education Australia Login</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -430,11 +430,11 @@ export async function sendMagicLinkEmail(email: string, token: string, origin?: 
         <body>
           <div class="container">
             <div class="header">
-              <h1>ConcussionPro</h1>
+              <h1>Concussion Education Australia</h1>
             </div>
             <div class="content">
               <h2 style="margin-top: 0;">Login to Your Course</h2>
-              <p>Click the button below to access your ConcussionPro dashboard:</p>
+              <p>Click the button below to access your Concussion Education Australia dashboard:</p>
 
               <center>
                 <a href="${loginUrl}&utm_source=email&utm_medium=email&utm_campaign=magic_link" class="button">

@@ -48,6 +48,19 @@ export async function GET(request: NextRequest) {
   console.log('[monitoring] Starting daily health checks...')
   const findings: Finding[] = []
 
+  // A check that THROWS is itself an alert — if Postgres is down every check
+  // throws, findings would stay empty and the route would report "all checks
+  // passed". Total blindness must surface as loud as any anomaly.
+  function recordCheckFailure(checkName: string, err: unknown) {
+    console.error(`[monitoring] ${checkName} failed:`, err)
+    findings.push({
+      severity: 'alert',
+      title: `Monitoring check failed: ${checkName}`,
+      detail: `The "${checkName}" check threw and could not run: ${err instanceof Error ? err.message : String(err)}`,
+      suggestion: 'The monitor is blind to this area. Check Postgres availability and Vercel runtime logs for /api/cron/monitoring.',
+    })
+  }
+
   // ── CHECK 1: Checkout funnel ─────────────────────
   // Three-stage funnel: pricing view → Enrol click (checkout_start event) →
   // Stripe session created. Splitting clicks from sessions lets us distinguish
@@ -110,7 +123,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`[monitoring] Check 1: ${pricingViews} pricing views → ${checkoutStarts} Enrol clicks → ${stripeSessions}+ Stripe sessions`)
   } catch (err) {
-    console.error('[monitoring] Check 1 (checkout funnel) failed:', err)
+    recordCheckFailure('Check 1 (checkout funnel)', err)
   }
 
   // ── CHECK 2: Email delivery ──────────────────────
@@ -139,7 +152,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`[monitoring] Check 2: ${emailsSent} emails sent in 24h, ${totalUsers} total users`)
   } catch (err) {
-    console.error('[monitoring] Check 2 (email delivery) failed:', err)
+    recordCheckFailure('Check 2 (email delivery)', err)
   }
 
   // ── CHECK 3: Cron health ──────────────────────────
@@ -166,7 +179,7 @@ export async function GET(request: NextRequest) {
       console.log('[monitoring] Check 3: No email audit entries found (new deployment?)')
     }
   } catch (err) {
-    console.error('[monitoring] Check 3 (cron health) failed:', err)
+    recordCheckFailure('Check 3 (cron health)', err)
   }
 
   // ── CHECK 4: New completions needing follow-up ────
@@ -199,7 +212,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`[monitoring] Check 4: ${newCompletions} new free-course completions`)
   } catch (err) {
-    console.error('[monitoring] Check 4 (completions) failed:', err)
+    recordCheckFailure('Check 4 (completions)', err)
   }
 
   // ── CHECK 5: Ad spend with zero signups ───────────
@@ -243,20 +256,24 @@ export async function GET(request: NextRequest) {
 
     console.log(`[monitoring] Check 5: ${paidSessions} paid sessions, ${totalConversions} conversions (7d)`)
   } catch (err) {
-    console.error('[monitoring] Check 5 (ad spend) failed:', err)
+    recordCheckFailure('Check 5 (ad spend)', err)
   }
 
   // ── Send alert email if findings exist ────────────
   const alerts = findings.filter(f => f.severity === 'alert')
   const infos = findings.filter(f => f.severity === 'info')
 
+  let alertEmailFailed = false
   if (findings.length > 0) {
     const subject = alerts.length > 0
       ? `CEA alert — ${alerts.length} issue${alerts.length > 1 ? 's' : ''} found`
       : `CEA daily — ${infos.length} item${infos.length > 1 ? 's' : ''} to note`
 
     try {
-      await sendEmail({
+      // sendEmail returns false on failure (it never throws) — treat both
+      // paths as a failed run so Vercel marks the cron red instead of the
+      // alert silently evaporating.
+      const sent = await sendEmail({
         to: CONFIG.CONTACT_EMAIL,
         subject,
         html: buildAlertEmail(findings),
@@ -265,12 +282,29 @@ export async function GET(request: NextRequest) {
           { name: 'alerts', value: String(alerts.length) },
         ],
       })
-      console.log(`[monitoring] Alert email sent: ${alerts.length} alerts, ${infos.length} infos`)
+      if (sent) {
+        console.log(`[monitoring] Alert email sent: ${alerts.length} alerts, ${infos.length} infos`)
+      } else {
+        alertEmailFailed = true
+        console.error('[monitoring] Alert email send returned false')
+      }
     } catch (emailErr) {
+      alertEmailFailed = true
       console.error('[monitoring] Failed to send alert email:', emailErr)
     }
   } else {
     console.log('[monitoring] All checks passed — no alerts')
+  }
+
+  if (alertEmailFailed) {
+    return NextResponse.json({
+      success: false,
+      error: 'Findings detected but alert email failed to send',
+      checks: 5,
+      alerts: alerts.length,
+      infos: infos.length,
+      findings,
+    }, { status: 500 })
   }
 
   return NextResponse.json({

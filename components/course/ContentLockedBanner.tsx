@@ -10,14 +10,14 @@ const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
 
 export function ContentLockedBanner({ remainingSections }: { remainingSections?: string[] }) {
   const [loading, setLoading] = useState<string | null>(null)
-
-  const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
+  const [error, setError] = useState<string | null>(null)
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     setLoading(courseType)
+    setError(null)
     trackEvent('checkout_start', { courseType, source: 'content_locked_banner' })
     const value = courseType === 'full-course'
-      ? (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR)
+      ? CONFIG.COURSE.PRICE_REGULAR
       : CONFIG.COURSE.PRICE_ONLINE
     trackLeadConversion(ENROL_CLICK_LABEL, value)
 
@@ -25,15 +25,23 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseType }),
+        // full-course requires a workshop location (lib/schemas.ts superRefine
+        // rejects it otherwise). Default to Melbourne — the only confirmed
+        // workshop — matching PricingOptions' default selection.
+        body: JSON.stringify({
+          courseType,
+          ...(courseType === 'full-course' ? { location: 'melbourne' } : {}),
+        }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (data.success && data.url) {
         window.location.href = data.url
       } else {
+        setError(data.error || 'Checkout unavailable — please try again or contact support.')
         setLoading(null)
       }
     } catch {
+      setError('Something went wrong. Please try again or contact support.')
       setLoading(null)
     }
   }
@@ -122,13 +130,18 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  Complete — ${isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString() : CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                  Complete — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </div>
 
+          {error && (
+            <p role="alert" aria-live="assertive" className="text-sm text-red-700 mt-2 max-w-md mx-auto">
+              {error}
+            </p>
+          )}
 
           <p className="text-muted-foreground text-xs mt-2">
             8 CPD hours (online) &middot; 14 CPD hours (complete with workshop)

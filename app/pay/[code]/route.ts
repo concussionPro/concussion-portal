@@ -15,20 +15,25 @@ import { findUserByEmail } from '@/lib/users'
  * click gets its own 24h window; from the recipient's perspective the
  * short link never expires.
  */
+// Personalised checkout links must never be indexed. This is a route handler
+// (no page component), so noindex is set via the X-Robots-Tag header rather
+// than a metadata export.
+const NOINDEX_HEADERS = { 'X-Robots-Tag': 'noindex, nofollow' }
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
   if (!code || !/^[A-Za-z0-9_-]{4,32}$/.test(code)) {
-    return NextResponse.json({ error: 'Invalid code' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid code' }, { status: 400, headers: NOINDEX_HEADERS })
   }
   try {
     const { rows } = await sql<{ email: string; location: string | null; course_type: string | null }>`
       SELECT email, location, course_type FROM pay_links WHERE code = ${code} LIMIT 1
     `
     if (rows.length === 0) {
-      return NextResponse.json({ error: 'Link not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Link not found' }, { status: 404, headers: NOINDEX_HEADERS })
     }
     const { email, location, course_type } = rows[0]
     const courseType = (course_type ?? 'workshop-upgrade') as CourseType
@@ -36,12 +41,12 @@ export async function GET(
     // Validate the user is still in a state where this upgrade makes sense.
     const user = await findUserByEmail(email)
     if (!user) {
-      return NextResponse.json({ error: 'Recipient account no longer exists.' }, { status: 410 })
+      return NextResponse.json({ error: 'Recipient account no longer exists.' }, { status: 410, headers: NOINDEX_HEADERS })
     }
     if (courseType === 'workshop-upgrade' && user.accessLevel !== 'online-only') {
       // Already upgraded — send them to the dashboard rather than charging again.
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-      return NextResponse.redirect(`${baseUrl}/dashboard`, 302)
+      return NextResponse.redirect(`${baseUrl}/dashboard`, { status: 302, headers: NOINDEX_HEADERS })
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
@@ -54,10 +59,10 @@ export async function GET(
     })
 
     if (!session.url) {
-      return NextResponse.json({ error: 'Stripe did not return a checkout URL' }, { status: 500 })
+      return NextResponse.json({ error: 'Stripe did not return a checkout URL' }, { status: 500, headers: NOINDEX_HEADERS })
     }
-    return NextResponse.redirect(session.url, 302)
+    return NextResponse.redirect(session.url, { status: 302, headers: NOINDEX_HEADERS })
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Lookup failed' }, { status: 500 })
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Lookup failed' }, { status: 500, headers: NOINDEX_HEADERS })
   }
 }

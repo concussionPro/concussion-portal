@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
     FROM prospect_outreach_log
     WHERE sent_at::date = CURRENT_DATE
       AND audit_key NOT LIKE '%manual%'
+      AND audit_key NOT LIKE '%:test:%'
       AND resend_email_id IS NOT NULL
   `
   const firedToday = todayCount[0]?.n ?? 0
@@ -76,12 +77,16 @@ export async function POST(req: NextRequest) {
     SELECT pc.id, pc.slug, pc.short_name, pc.city, pc.contact_first_name
     FROM prospect_clinics pc
     WHERE pc.next_template_slug = 'initial'  -- T1 only — never accelerate T2/T3
-      AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won')
+      -- Status exclusions mirror the cron driver in processScheduledSends —
+      -- keep in sync ('replied' / 'engaged-elsewhere' must never be fired).
+      AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
       AND pc.scheduled_send_at IS NOT NULL
       AND pc.scheduled_send_at::date > CURRENT_DATE
+      -- Test-mode previews (':test:' audit keys) must not block the real send.
       AND NOT EXISTS (
         SELECT 1 FROM prospect_outreach_log ol
         WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug
+          AND ol.audit_key NOT LIKE '%:test:%'
       )
       AND COALESCE(pc.short_name, '') <> ''
       AND COALESCE(pc.short_name, '') !~* 'unknown'

@@ -19,6 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
+import { generateAccessKey } from '@/lib/prospect/access-key'
 
 const APOLLO_BASE = 'https://api.apollo.io/api/v1'
 
@@ -123,15 +124,6 @@ function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64)
 }
 
-function generateAccessKey(slug: string): string {
-  const alphabet = 'abcdefghijkmnopqrstuvwxyz23456789'
-  let key = ''
-  for (let i = 0; i < 6; i++) {
-    const charCode = (slug.charCodeAt(i % slug.length) + i * 37) % alphabet.length
-    key += alphabet[charCode]
-  }
-  return key
-}
 
 export async function POST(req: NextRequest) {
   if (!isAdminRequest(req)) {
@@ -336,7 +328,7 @@ export async function POST(req: NextRequest) {
 
   for (const ins of inserts) {
     try {
-      const accessKey = generateAccessKey(ins.slug)
+      const accessKey = generateAccessKey()
       // Map Apollo state strings to AU state codes — best effort
       function mapState(s: string): string {
         const lower = s.toLowerCase()

@@ -12,6 +12,8 @@ import {
   createMedicalConditionSchema,
   AUTHORS,
 } from '@/lib/schema-markup'
+import { buildCourseSchema, buildEventSchema } from '@/components/SchemaMarkup'
+import { CONFIG } from '@/lib/config'
 
 describe('organizationSchema', () => {
   it('uses the customer-facing brand short form, not the internal folder name', () => {
@@ -30,9 +32,14 @@ describe('organizationSchema', () => {
   })
 
   it('exposes founder as a Person with credentials', () => {
+    expect(organizationSchema.founder['@type']).toBe('Person')
     expect(organizationSchema.founder.name).toBe('Zac Lewis')
     expect(organizationSchema.founder.hasCredential).toMatch(/Osteopath/)
     expect(organizationSchema.founder.hasCredential).toMatch(/AHPRA/)
+  })
+
+  it('points logo at the portal origin where /logo.png actually resolves (apex 404s)', () => {
+    expect(organizationSchema.logo).toBe(`${CONFIG.SEO.SITE_URL}/logo.png`)
   })
 
   it('lists Osteopathy Australia as memberOf', () => {
@@ -122,7 +129,7 @@ describe('createCourseSchema', () => {
           addressLocality: 'Melbourne',
           addressRegion: 'VIC',
         },
-        priceAUD: 1190,
+        priceAUD: 1400,
         availability: 'LimitedAvailability',
       }],
     })
@@ -136,7 +143,7 @@ describe('createCourseSchema', () => {
     expect(inst.startDate).toBe('2026-06-13T08:00:00+10:00')
     expect(inst.location.address.addressRegion).toBe('VIC')
     expect(inst.location.address.addressCountry).toBe('AU')
-    expect(inst.offers.price).toBe('1190.00')
+    expect(inst.offers.price).toBe('1400.00')
     expect(inst.offers.availability).toContain('LimitedAvailability')
   })
 
@@ -313,6 +320,70 @@ describe('createMedicalConditionSchema', () => {
   it('omits code field cleanly when no ICD-10 supplied', () => {
     const s = createMedicalConditionSchema({ name: 'Postural Tachycardia Syndrome' }) as Record<string, unknown>
     expect(s.code).toBeUndefined()
+  })
+})
+
+describe('buildCourseSchema (homepage/pricing Course markup)', () => {
+  it('does not carry a self-asserted aggregateRating (review-snippet spam-policy risk)', () => {
+    const s = buildCourseSchema()
+    expect(s.aggregateRating).toBeUndefined()
+  })
+
+  it('prices the offer from the online-course config constant', () => {
+    const s = buildCourseSchema() as { offers: { price: number; priceCurrency: string } }
+    expect(s.offers.price).toBe(CONFIG.COURSE.PRICE_ONLINE)
+    expect(s.offers.priceCurrency).toBe('AUD')
+  })
+
+  it('only emits instances for cities with confirmed dates, with local-offset startDate', () => {
+    const s = buildCourseSchema() as {
+      hasCourseInstance: Array<{ name: string; startDate: string }>
+    }
+    // Melbourne is the only confirmed city right now
+    expect(s.hasCourseInstance.length).toBe(1)
+    expect(s.hasCourseInstance[0].name).toBe('Melbourne Session')
+    expect(s.hasCourseInstance[0].startDate).toBe('2026-06-13T08:00:00+10:00')
+  })
+})
+
+describe('buildEventSchema (workshop EducationEvent markup)', () => {
+  it('returns null for cities still collecting interest (no confirmed date)', () => {
+    expect(buildEventSchema('SYDNEY')).toBeNull()
+    expect(buildEventSchema('BYRON_BAY')).toBeNull()
+  })
+
+  it('emits the real Melbourne venue with street address', () => {
+    const s = buildEventSchema('MELBOURNE') as {
+      location: { name: string; address: { streetAddress: string; addressLocality: string; addressRegion: string; postalCode: string; addressCountry: string } }
+    }
+    expect(s.location.name).toBe('Rydges Melbourne')
+    expect(s.location.address.streetAddress).toBe('186 Exhibition St')
+    expect(s.location.address.addressLocality).toBe('Melbourne')
+    expect(s.location.address.addressRegion).toBe('VIC')
+    expect(s.location.address.postalCode).toBe('3000')
+    expect(s.location.address.addressCountry).toBe('AU')
+  })
+
+  it('uses local-offset start/end dates, not UTC (which shifts the calendar date)', () => {
+    const s = buildEventSchema('MELBOURNE') as { startDate: string; endDate: string }
+    expect(s.startDate).toBe('2026-06-13T08:00:00+10:00')
+    expect(s.endDate).toBe('2026-06-13T16:00:00+10:00')
+  })
+
+  it('includes an image for rich results', () => {
+    const s = buildEventSchema('MELBOURNE') as { image: string }
+    expect(s.image).toBe(`${CONFIG.SEO.SITE_URL}/melbourne-workshop.jpg`)
+  })
+
+  it('prices the offer at the regular Complete Course price (early bird is over) with availability', () => {
+    const s = buildEventSchema('MELBOURNE') as {
+      offers: { price: number; priceCurrency: string; availability: string }
+    }
+    expect(s.offers.price).toBe(CONFIG.COURSE.PRICE_REGULAR)
+    expect(s.offers.price).toBe(1400)
+    expect(s.offers.price).not.toBe(CONFIG.COURSE.PRICE_EARLY_BIRD)
+    expect(s.offers.priceCurrency).toBe('AUD')
+    expect(s.offers.availability).toBe('https://schema.org/LimitedAvailability')
   })
 })
 

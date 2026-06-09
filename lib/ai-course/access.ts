@@ -1,13 +1,16 @@
 /**
  * Access gate for the "AI in Clinical Practice" course.
  *
- * Until the course is publicly launched, access is restricted to admin users
- * (httpOnly admin_session cookie OR x-admin-key header) OR users with an
- * explicit `aiCourseEnrolled` flag set via /api/admin/ai-course/enroll.
+ * Access is granted to admin users (httpOnly admin_session cookie OR
+ * x-admin-key header), demo-key holders, and ENROLLED users — i.e. anyone
+ * with users.ai_course_enrolled=true, set via purchase webhook or
+ * /api/admin/ai-course/enroll.
  *
- * Once Zac flips the launch switch (env var AI_COURSE_PUBLIC=true), the gate
- * relaxes to "any authenticated user." The course's purchase flow can be
- * wired in later; for now access is invitation-only via admin.
+ * The AI_COURSE_PUBLIC env flag only gates public/preview VISIBILITY
+ * surfaces (e.g. CourseGate) — it must never block a paying enrolled user
+ * from the course they bought. The course auto-launches on launchAt
+ * (2026-06-17, see provider-catalogue.ts) and the checkout flow enrols
+ * buyers immediately, so enrolment ⇒ access, unconditionally.
  */
 
 import { NextRequest } from 'next/server'
@@ -22,18 +25,12 @@ export type AccessResult =
 /**
  * Server-side access check for AI course routes and APIs.
  *
- * Until AI_COURSE_PUBLIC=true is set in the environment, this is
- * ADMIN-ONLY. The enrolled-user path is wired but dormant during preview
- * — even an enrolled user can't access the course unless they also carry
- * an admin session cookie or x-admin-key header. This is deliberate:
- * the user (Zac) wants the entire course catalogue hidden behind the
- * admin key while it's being demoed to partners (Heidi) and is not yet
- * being publicly sold.
- *
- * When Zac flips AI_COURSE_PUBLIC=true:
- *   - Admin still passes (unchanged)
- *   - Enrolled users (users.ai_course_enrolled=true) start passing
- *   - Unauthenticated users still rejected (the course is paid, not free)
+ *   - Admin always passes
+ *   - Demo-key holders pass (scoped partner demos)
+ *   - Enrolled users (users.ai_course_enrolled=true) ALWAYS pass —
+ *     regardless of AI_COURSE_PUBLIC. They paid; the visibility flag
+ *     must never lock them out.
+ *   - Everyone else is rejected (the course is paid, not free)
  */
 export async function checkAiCourseAccess(request: NextRequest): Promise<AccessResult> {
   // Admin always allowed — uses httpOnly admin_session cookie OR
@@ -55,12 +52,8 @@ export async function checkAiCourseAccess(request: NextRequest): Promise<AccessR
     }
   }
 
-  // Preview mode (default): admin or demo-key only. Enrolled users blocked.
-  if (process.env.AI_COURSE_PUBLIC !== 'true') {
-    return { ok: false, reason: 'not-admin-not-enrolled' }
-  }
-
-  // Post-launch mode (AI_COURSE_PUBLIC=true): enrolled users pass.
+  // Enrolled (purchased) users always pass — AI_COURSE_PUBLIC only gates
+  // public/preview visibility surfaces, never paid access.
   const session = readSessionEmail(request)
   if (!session) {
     return { ok: false, reason: 'unauthenticated' }

@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send ready-to-train notification email:', emailErr)
     }
 
-    console.log(`Ready-to-train: ${session.email} for ${cityLabel} (total: ${totalInPool})`)
+    console.log(`Ready-to-train: ${session.email.slice(0, 3)}*** for ${cityLabel} (total: ${totalInPool})`)
 
     return NextResponse.json({
       success: true,

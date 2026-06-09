@@ -7,7 +7,7 @@ import { CONFIG } from '@/lib/config'
 export default function AdminCreateUser() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const [amount, setAmount] = useState<'497' | '1190'>('1190')
+  const [amount, setAmount] = useState<'497' | '1400'>('1400')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [magicLink, setMagicLink] = useState('')
@@ -41,7 +41,7 @@ export default function AdminCreateUser() {
       setTimeout(() => {
         setEmail('')
         setName('')
-        setAmount('1190')
+        setAmount('1400')
         setStatus('idle')
         setMessage('')
         setMagicLink('')
@@ -121,14 +121,14 @@ export default function AdminCreateUser() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAmount('1190')}
+                  onClick={() => setAmount('1400')}
                   className={`p-4 rounded-xl border-2 transition-all ${
-                    amount === '1190'
+                    amount === '1400'
                       ? 'border-[#5b9aa6] bg-teal-50'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  <div className="text-2xl font-black text-slate-900">${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</div>
+                  <div className="text-2xl font-black text-slate-900">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</div>
                   <div className="text-xs text-slate-600 mt-1">Full Course</div>
                 </button>
               </div>
@@ -206,7 +206,7 @@ export default function AdminCreateUser() {
             <ol className="text-sm text-slate-600 space-y-2">
               <li><strong>1.</strong> Receive order notification from Squarespace</li>
               <li><strong>2.</strong> Copy customer email and name</li>
-              <li><strong>3.</strong> Select purchase amount (${CONFIG.COURSE.PRICE_ONLINE} or ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()})</li>
+              <li><strong>3.</strong> Select purchase amount (${CONFIG.COURSE.PRICE_ONLINE} or ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()})</li>
               <li><strong>4.</strong> Click "Create User & Send Email"</li>
               <li><strong>5.</strong> Customer receives login email instantly</li>
             </ol>

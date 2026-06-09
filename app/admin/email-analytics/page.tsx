@@ -4,11 +4,16 @@ import { useState, useEffect, useCallback } from 'react'
 import { Mail, MousePointerClick, Eye, AlertCircle, TrendingUp, Users, Loader2, RefreshCw, ExternalLink, Download } from 'lucide-react'
 
 interface Totals {
+  /** Sends from email_audit_log (rolled back on failure ≈ real sends) */
+  sends?: number
   emails: number
   delivered: number
   opened: number
   clicked: number
   bounced: number
+  bouncedPermanent?: number
+  bouncedTransient?: number
+  bouncedUnknown?: number
   complained: number
   deliveryRate: number
   openRate: number
@@ -19,6 +24,7 @@ interface Totals {
 
 interface SequenceRow {
   sequence: string
+  sends?: number
   emails: number
   delivered: number
   opened: number
@@ -210,11 +216,21 @@ export default function EmailAnalyticsPage() {
         {/* Totals */}
         {stats && stats.totals && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-            <StatCard icon={Mail} label="Emails" value={stats.totals.emails.toLocaleString()} sub={`${stats.totals.delivered} delivered`} color="slate" />
+            <StatCard icon={Mail} label="Sends" value={(stats.totals.sends ?? stats.totals.emails).toLocaleString()} sub={`${stats.totals.delivered} delivered`} color="slate" />
             <StatCard icon={TrendingUp} label="Delivery" value={`${stats.totals.deliveryRate}%`} sub={`${stats.totals.bounced} bounced`} color="emerald" />
             <StatCard icon={Eye} label="Open rate" value={`${stats.totals.openRate}%`} sub={`${stats.totals.opened} opened`} color="blue" />
             <StatCard icon={MousePointerClick} label="Click rate" value={`${stats.totals.clickRate}%`} sub={`${stats.totals.clicked} clicked`} color="purple" />
-            <StatCard icon={AlertCircle} label="Bounce rate" value={`${stats.totals.bounceRate}%`} sub={`${stats.totals.complained} complaints`} color={stats.totals.bounceRate > 2 ? 'red' : 'slate'} />
+            <StatCard
+              icon={AlertCircle}
+              label="Bounce rate"
+              value={`${stats.totals.bounceRate}%`}
+              sub={
+                stats.totals.bouncedPermanent != null
+                  ? `${stats.totals.bouncedPermanent} hard · ${stats.totals.bouncedTransient ?? 0} soft${(stats.totals.bouncedUnknown ?? 0) > 0 ? ` · ${stats.totals.bouncedUnknown} unk` : ''} · ${stats.totals.complained} compl.`
+                  : `${stats.totals.complained} complaints`
+              }
+              color={stats.totals.bounceRate > 2 ? 'red' : 'slate'}
+            />
           </div>
         )}
 
@@ -223,7 +239,7 @@ export default function EmailAnalyticsPage() {
           <div className="bg-white rounded-xl border border-slate-200 mb-6 overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-200">
               <h2 className="text-base font-bold text-slate-900">By sequence</h2>
-              <p className="text-xs text-slate-500">Emails grouped by the <code>sequence</code> tag set at send time.</p>
+              <p className="text-xs text-slate-500">Sends from the audit log (reliable since failed sends roll back) · engagement from Resend webhook events grouped by the <code>sequence</code> tag.</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -242,7 +258,7 @@ export default function EmailAnalyticsPage() {
                   {stats.bySequence.map((r) => (
                     <tr key={r.sequence} className="hover:bg-slate-50">
                       <Td className="font-medium">{r.sequence}</Td>
-                      <Td align="right">{r.emails}</Td>
+                      <Td align="right">{r.sends ?? r.emails}</Td>
                       <Td align="right">{r.delivered}</Td>
                       <Td align="right">{r.opened}</Td>
                       <Td align="right">{r.clicked}</Td>

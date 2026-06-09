@@ -13,6 +13,7 @@ import crypto from 'crypto'
 import { sql } from '@/lib/db'
 import { sendEmail, escapeHtml } from '@/lib/resend-client'
 import { isAdminRequest } from '@/lib/require-admin'
+import { CONFIG } from '@/lib/config'
 
 export const maxDuration = 120
 
@@ -79,10 +80,10 @@ function buildEmail(firstName: string): string {
         <li>SCAT6, VOMS &amp; BESS administration with expert coaching</li>
         <li>Practice on real subjects with immediate feedback</li>
         <li>6 CPD hours on top of the full online course <strong>(14 CPD hours total)</strong></li>
-        <li>Small group &mdash; capped at 20 per session</li>
+        <li>Small group &mdash; capped at ${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} per session</li>
       </ul>
 
-      <p>Early bird pricing is <strong>$1,190 all-in</strong> (course + workshop) until June 30, then $1,400. If you're bringing a colleague, ask me about group pricing.</p>
+      <p>The complete course is <strong>$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} all-in</strong> (online course + workshop). If you're bringing a colleague, ask me about group pricing.</p>
 
       <p>We're confirming numbers this week to lock in the venue &mdash; 8am to 4pm in the CBD.</p>
 
@@ -168,11 +169,11 @@ export async function POST(request: NextRequest) {
 
       if (ok) {
         sent++
-        console.log(`[outreach] ✓ ${sent}. ${firstName} <${email}>`)
+        console.log(`[outreach] ✓ ${sent}. ${firstName} <${email.slice(0, 3)}***>`)
       } else {
         failed++
         failures.push({ email, error: 'sendEmail returned false' })
-        console.log(`[outreach] ✗ ${email} — sendEmail returned false`)
+        console.log(`[outreach] ✗ ${email.slice(0, 3)}*** — sendEmail returned false`)
       }
 
       // Rate limit: 100ms between sends
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
       failed++
       const msg = err instanceof Error ? err.message : String(err)
       failures.push({ email, error: msg })
-      console.log(`[outreach] ✗ ${email} — ${msg}`)
+      console.log(`[outreach] ✗ ${email.slice(0, 3)}*** — ${msg}`)
     }
   }
 

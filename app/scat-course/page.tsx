@@ -137,7 +137,7 @@ export default function SCATCoursePage() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                ConcussionPro Home
+                Concussion Education Australia Home
               </Link>
               <h1 className="text-3xl font-bold mb-2">Free SCAT6/SCOAT6 Mastery Course</h1>
               <p className="text-blue-100">Welcome back! Continue your learning journey.</p>
@@ -286,7 +286,7 @@ export default function SCATCoursePage() {
                     Ready for the full course?
                   </p>
                   <p className="text-sm text-emerald-700 mb-3">
-                    Unlock {CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS, return-to-play protocols, phenotype-based rehabilitation, and more. Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} (early bird).
+                    Unlock {CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS, return-to-play protocols, phenotype-based rehabilitation, and more. Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}.
                   </p>
                   <Link
                     href="/pricing"
@@ -470,7 +470,7 @@ export default function SCATCoursePage() {
               </ul>
               <div className="bg-white/80 rounded-lg p-3 mb-5 border border-purple-100">
                 <p className="text-sm text-slate-800">
-                  <strong>Online from ${CONFIG.COURSE.PRICE_ONLINE}</strong> · Complete from <strong>${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} (early bird)</strong>
+                  <strong>Online from ${CONFIG.COURSE.PRICE_ONLINE}</strong> · Complete <strong>${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</strong>
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   7-day satisfaction guarantee · Afterpay / Klarna available

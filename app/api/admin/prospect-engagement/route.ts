@@ -53,6 +53,9 @@ interface ClinicDbRow {
   verification_webmail: boolean | null
   verification_disposable: boolean | null
   last_verified_at: string | null
+  // Reply detection (set by /api/webhooks/resend-inbound)
+  replied_at: string | null
+  reply_text: string | null
 }
 
 interface OutreachLogRow {
@@ -93,6 +96,8 @@ interface PortalViewRow {
 
 interface EventSignalRow {
   clinic_id: number
+  delivered_emails: number | string
+  bounced_emails: number | string
   open_days: number | string
   total_open_events: number | string
   cal_clicks: number | string
@@ -179,6 +184,9 @@ export async function GET(req: NextRequest) {
       await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS interaction_type TEXT NOT NULL DEFAULT 'view'`
       await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS target TEXT`
       await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS dwell_ms INTEGER`
+      // email_events.user_agent is written by the new webhook path — ensure
+      // it exists so the human-filtered open counting below can't 42703.
+      await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS user_agent TEXT`
     } catch (err) {
       console.error('[prospect-engagement] portal column migration failed:', err)
     }
@@ -404,10 +412,13 @@ export async function GET(req: NextRequest) {
               SELECT clinic_id, resend_email_id
               FROM prospect_outreach_log
               WHERE clinic_id = ${filterId} AND resend_email_id IS NOT NULL
+                AND audit_key NOT LIKE '%:test:%'
             )
             SELECT cs.clinic_id,
-              COUNT(DISTINCT CASE WHEN ee.event_type = 'opened' THEN ee.created_at::date END)::int AS open_days,
-              COUNT(CASE WHEN ee.event_type = 'opened' THEN 1 END)::int AS total_open_events,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'delivered' THEN ee.email_id END)::int AS delivered_emails,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'bounced' THEN ee.email_id END)::int AS bounced_emails,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'opened' AND (ee.user_agent IS NULL OR ee.user_agent !~* ${BOT_REGEX}) THEN ee.created_at::date END)::int AS open_days,
+              COUNT(CASE WHEN ee.event_type = 'opened' AND (ee.user_agent IS NULL OR ee.user_agent !~* ${BOT_REGEX}) THEN 1 END)::int AS total_open_events,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.id END)::int AS cal_clicks,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.created_at::date END)::int AS cal_click_days,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url IS NOT NULL AND ee.click_url !~* '(unsubscribe|osteopathy\\.org\\.au)' THEN ee.click_url END)::int AS distinct_url_clicks,
@@ -424,10 +435,13 @@ export async function GET(req: NextRequest) {
               SELECT clinic_id, resend_email_id
               FROM prospect_outreach_log
               WHERE resend_email_id IS NOT NULL
+                AND audit_key NOT LIKE '%:test:%'
             )
             SELECT cs.clinic_id,
-              COUNT(DISTINCT CASE WHEN ee.event_type = 'opened' THEN ee.created_at::date END)::int AS open_days,
-              COUNT(CASE WHEN ee.event_type = 'opened' THEN 1 END)::int AS total_open_events,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'delivered' THEN ee.email_id END)::int AS delivered_emails,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'bounced' THEN ee.email_id END)::int AS bounced_emails,
+              COUNT(DISTINCT CASE WHEN ee.event_type = 'opened' AND (ee.user_agent IS NULL OR ee.user_agent !~* ${BOT_REGEX}) THEN ee.created_at::date END)::int AS open_days,
+              COUNT(CASE WHEN ee.event_type = 'opened' AND (ee.user_agent IS NULL OR ee.user_agent !~* ${BOT_REGEX}) THEN 1 END)::int AS total_open_events,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.id END)::int AS cal_clicks,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url ~* '(cal\\.com|cal_booking|/calendar)' THEN ee.created_at::date END)::int AS cal_click_days,
               COUNT(DISTINCT CASE WHEN ee.event_type = 'clicked' AND ee.click_url IS NOT NULL AND ee.click_url !~* '(unsubscribe|osteopathy\\.org\\.au)' THEN ee.click_url END)::int AS distinct_url_clicks,
@@ -560,7 +574,14 @@ export async function GET(req: NextRequest) {
       const view = viewsByClinic.get(c.id)
       const totalOpens = sends.reduce((acc, s) => acc + (typeof s.opened_count === 'string' ? parseInt(s.opened_count, 10) : s.opened_count), 0)
       const totalClicks = sends.reduce((acc, s) => acc + (typeof s.clicked_count === 'string' ? parseInt(s.clicked_count, 10) : s.clicked_count), 0)
-      const replies = sends.filter((s) => s.replied_at).length
+      // Replies — the money signal. The inbound webhook mirrors the reply
+      // onto the latest outreach-log row AND sets prospect_clinics.replied_at
+      // / status='replied'. Use BOTH so a reply that matched the clinic but
+      // not a log row (e.g. log row filtered, or pre-log manual send) still
+      // counts. STOP replies land as status='lost' and are not "replies".
+      const logReplies = sends.filter((s) => s.replied_at).length
+      const clinicReplied = c.status === 'replied' || (!!c.replied_at && c.status !== 'lost')
+      const replies = Math.max(logReplies, clinicReplied ? 1 : 0)
       const lastSent = sends[0] // already ORDER BY sent_at DESC
 
       const pricing = computePricing(c.team, c.travel_band as TravelBand)
@@ -609,6 +630,8 @@ export async function GET(req: NextRequest) {
       const portalUniqueSections = view ? Number(view.unique_sections ?? 0) : 0
       const portalDeepestSection = view?.deepest_section ?? null
       const signal = signalsByClinic.get(c.id)
+      const totalDelivered = signal ? Number(signal.delivered_emails ?? 0) : 0
+      const totalBounced = signal ? Number(signal.bounced_emails ?? 0) : 0
       const openDays = signal ? Number(signal.open_days ?? 0) : 0
       const calClicks = signal ? Number(signal.cal_clicks ?? 0) : 0
       const calClickDays = signal ? Number(signal.cal_click_days ?? 0) : 0
@@ -925,9 +948,13 @@ export async function GET(req: NextRequest) {
         calBookingStatus: c.cal_booking_status ?? null,
         // outreach summary
         totalSends: sends.length,
+        totalDelivered,           // distinct delivered emails (Resend webhook)
+        totalBounced,             // distinct bounced emails
         totalOpens,
         totalClicks,
         replies,
+        repliedAt: c.replied_at ?? null,
+        replyText: c.reply_text ?? null,
         lastSentAt: lastSent?.sent_at ?? null,
         lastSentTemplate: lastSent?.template_slug ?? null,
         lastSentSubject: lastSent?.email_subject ?? null,
@@ -1065,12 +1092,17 @@ function buildAggregates(prospects: Array<{
   sizeBucket: string
   weightedPipelineValue: number
   totalSends: number
+  totalDelivered: number
+  totalBounced: number
   totalOpens: number
   totalClicks: number
   totalPortalViews: number
   replies: number
   engagementTier: string
   callRecommended: boolean
+  hunterResult: string | null
+  lastVerifiedAt: string | null
+  sends: Array<{ templateSlug: string }>
 }>) {
   const byStatus: Record<string, number> = {}
   const byRegion: Record<string, number> = {}
@@ -1093,12 +1125,56 @@ function buildAggregates(prospects: Array<{
 
   const DEAD_STATUS = new Set(['lost', 'archived', 'bounced', 'engaged-elsewhere'])
 
+  let totalDelivered = 0
+  let totalBouncedEmails = 0
+
+  // ── COLD-OUTREACH FUNNEL (clinic-level stage counts, full pool) ──
+  // pooled → verified (Hunter deliverable) → T1/T2/T3 sent → delivered →
+  // opened → clicked → portal viewed → replied → lost/unsubscribed.
+  // Counted over ALL prospects (incl. dead) so the funnel shows true
+  // attrition; the rate metrics below stay non-dead-scoped as before.
+  const coldFunnel = {
+    pooled: 0,
+    verifiedAny: 0,          // Hunter has checked the address
+    verifiedDeliverable: 0,  // Hunter says deliverable (sendable)
+    sentClinics: 0,          // ≥1 production send
+    t1Sent: 0, t2Sent: 0, t3Sent: 0,
+    deliveredClinics: 0,     // ≥1 delivered event
+    openedClinics: 0,        // ≥1 human-filtered open
+    clickedClinics: 0,       // ≥1 click
+    portalViewedClinics: 0,  // ≥1 portal view
+    repliedClinics: 0,       // the money signal
+    wonClinics: 0,
+    lostClinics: 0,          // STOP replies / explicit rejection
+    bouncedClinics: 0,
+  }
+
   for (const p of prospects) {
     byStatus[p.status] = (byStatus[p.status] ?? 0) + 1
     byOffer[p.recommendedOffer] = (byOffer[p.recommendedOffer] ?? 0) + 1
     bySizeBucket[p.sizeBucket] = (bySizeBucket[p.sizeBucket] ?? 0) + 1
     byEngagementTier[p.engagementTier] = (byEngagementTier[p.engagementTier] ?? 0) + 1
     if (p.callRecommended) callRecommendedCount += 1
+
+    // Funnel stage counts — full pool
+    coldFunnel.pooled += 1
+    if (p.lastVerifiedAt) coldFunnel.verifiedAny += 1
+    if (p.hunterResult === 'deliverable') coldFunnel.verifiedDeliverable += 1
+    if (p.totalSends > 0) coldFunnel.sentClinics += 1
+    for (const s of p.sends) {
+      if (s.templateSlug === 'initial') coldFunnel.t1Sent += 1
+      else if (s.templateSlug === 'followup') coldFunnel.t2Sent += 1
+      else if (s.templateSlug === 'final') coldFunnel.t3Sent += 1
+    }
+    if (p.totalDelivered > 0) coldFunnel.deliveredClinics += 1
+    if (p.totalOpens > 0) coldFunnel.openedClinics += 1
+    if (p.totalClicks > 0) coldFunnel.clickedClinics += 1
+    if (p.totalPortalViews > 0) coldFunnel.portalViewedClinics += 1
+    if (p.replies > 0) coldFunnel.repliedClinics += 1
+    if (p.status === 'won') coldFunnel.wonClinics += 1
+    if (p.status === 'lost') coldFunnel.lostClinics += 1
+    if (p.status === 'bounced') coldFunnel.bouncedClinics += 1
+
     // Skip dead-status clinics from aggregate rollups + region/cohort/travel
     // groupings — they're inflating the visible pipeline & "outreach sent"
     // panes with prospects that will never convert.
@@ -1111,6 +1187,8 @@ function buildAggregates(prospects: Array<{
     else onSitePipelineValue += p.dealValue
     weightedPipeline += p.weightedPipelineValue
     totalSends += p.totalSends
+    totalDelivered += p.totalDelivered
+    totalBouncedEmails += p.totalBounced
     totalOpens += p.totalOpens
     totalClicks += p.totalClicks
     totalViews += p.totalPortalViews
@@ -1122,6 +1200,7 @@ function buildAggregates(prospects: Array<{
   const openClickRate = totalOpens > 0 ? totalClicks / totalOpens : 0
   const sendReplyRate = totalSends > 0 ? totalReplies / totalSends : 0
   const replyToWinRate = totalReplies > 0 ? wins / totalReplies : 0
+  const deliveryRate = totalSends > 0 ? totalDelivered / totalSends : 0
 
   return {
     byStatus,
@@ -1140,8 +1219,9 @@ function buildAggregates(prospects: Array<{
       wins,
     },
     funnel: {
-      totalSends, totalOpens, totalClicks, totalViews, totalReplies, wins,
-      sendOpenRate, openClickRate, sendReplyRate, replyToWinRate,
+      totalSends, totalDelivered, totalBouncedEmails, totalOpens, totalClicks, totalViews, totalReplies, wins,
+      sendOpenRate, openClickRate, sendReplyRate, replyToWinRate, deliveryRate,
     },
+    coldFunnel,
   }
 }

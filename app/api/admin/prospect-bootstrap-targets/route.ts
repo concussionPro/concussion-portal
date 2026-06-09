@@ -14,17 +14,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
 import { createClinic, getClinicBySlug } from '@/lib/prospect/repo'
+import { generateAccessKey } from '@/lib/prospect/access-key'
 import { PROSPECT_TARGETS, buildSendSchedule, type ProspectSeed } from '@/data/prospect-targets'
-
-const ACCESS_KEY_ALPHABET = 'abcdefghijkmnopqrstuvwxyz23456789'
-function generateAccessKey(slug: string, length = 6): string {
-  let key = ''
-  for (let i = 0; i < length; i++) {
-    const charCode = (slug.charCodeAt(i % slug.length) + i * 37) % ACCESS_KEY_ALPHABET.length
-    key += ACCESS_KEY_ALPHABET[charCode]
-  }
-  return key
-}
 
 export async function POST(req: NextRequest) {
   if (!isAdminRequest(req)) {
@@ -106,7 +97,7 @@ export async function POST(req: NextRequest) {
         continue
       }
 
-      const accessKey = generateAccessKey(target.slug)
+      const accessKey = generateAccessKey()
       const created = await createClinic({
         slug: target.slug,
         accessKey,

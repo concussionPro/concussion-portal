@@ -12,6 +12,7 @@ import { sql } from '@/lib/db'
 import { SCAT_COMPLETION_UPSELL } from '@/lib/email-sequences'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { rateLimit } from '@/lib/rate-limit'
+import { CONFIG } from '@/lib/config'
 
 const SCAT_MODULE_IDS = [101, 102, 103]
 const PAID_MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -434,7 +435,7 @@ async function sendCertificateEmail(opts: {
                     <a href="https://portal.concussion-education-australia.com/pricing?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=ccm-flagship" style="display: inline-block; padding: 9px 18px; background: #a16207; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
                       View pricing →
                     </a>
-                    <span style="margin-left: 6px; font-size: 11px; color: #64748b;">A$1,190 · early bird ends 31 May</span>
+                    <span style="margin-left: 6px; font-size: 11px; color: #64748b;">A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
                   </div>
 
                   <!-- Poll — capture intent for upcoming short courses -->

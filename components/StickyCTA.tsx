@@ -5,9 +5,12 @@ import { usePathname } from 'next/navigation'
 import { ArrowRight, X } from 'lucide-react'
 import Link from 'next/link'
 
-// Pages where the sticky CTA should NOT appear
+// Pages where the sticky CTA should NOT appear.
+// Keep in sync (in intent) with ExitIntentPopup EXCLUDED_PREFIXES: workshop
+// pages (/courses/*) carry their own CTAs — don't stack another on top.
 const EXCLUDED_PATHS = [
   '/pricing',
+  '/courses',
   '/checkout',
   '/login',
   '/dashboard',

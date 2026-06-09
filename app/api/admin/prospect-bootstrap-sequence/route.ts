@@ -13,7 +13,7 @@
  *    pre-sequence era. For each clinic with an `initial` outreach_log
  *    row but no `followup` row, set:
  *       next_template_slug = 'followup'
- *       scheduled_send_at  = initial_log.sent_at + 4 business days
+ *       scheduled_send_at  = initial_log.sent_at + 7 business days
  *    Skip clinics in dead states (lost/bounced/engaged/won/archived).
  *    Skip clinics already past the T2 window so they don't get a fire
  *    20+ days late — those graduate straight to 'final' if still in
@@ -25,6 +25,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
 
+// Mirrors lib/prospect/process-scheduled.ts (canonical cadence):
+// business days = Mon–Sat — skip Sunday only. Saturday counts as a send
+// day per Zac 2026-06-05 (clinic owners catch up on admin email Saturday
+// morning).
 function addBusinessDays(from: Date, n: number): Date {
   const d = new Date(from)
   d.setUTCHours(0, 0, 0, 0)
@@ -32,13 +36,16 @@ function addBusinessDays(from: Date, n: number): Date {
   while (added < n) {
     d.setUTCDate(d.getUTCDate() + 1)
     const dow = d.getUTCDay()
-    if (dow !== 0 && dow !== 6) added += 1
+    if (dow !== 0) added += 1 // 0 = Sunday — skip; Saturday (6) counts
   }
   return d
 }
 
-const FOLLOWUP_GAP_BUSINESS_DAYS = 4
-const FINAL_GAP_BUSINESS_DAYS = 5
+// Cadence — keep in lockstep with lib/prospect/process-scheduled.ts.
+// Busy clinicians: T1 → T2 7 BD, T2 → T3 8 BD. Never compress on
+// engagement signal.
+const FOLLOWUP_GAP_BUSINESS_DAYS = 7         // T1 → T2
+const FINAL_GAP_BUSINESS_DAYS = 8            // T2 → T3
 
 export async function POST(req: NextRequest) {
   if (!isAdminRequest(req)) {
@@ -69,8 +76,8 @@ export async function POST(req: NextRequest) {
   // ── 2. Backfill sequence state for clinics with T1 already fired ──
   // Walk every clinic-with-T1 that's not in a dead state and has no
   // followup row yet. For each:
-  //   - if T1 sent_at + 4 BD is still in the future → schedule T2
-  //   - if T1 sent_at + 4 BD is in the past (cron missed it) → push out
+  //   - if T1 sent_at + 7 BD is still in the future → schedule T2
+  //   - if T1 sent_at + 7 BD is in the past (cron missed it) → push out
   //     to today + 1 BD so cron picks it up tomorrow morning
   // Only count REAL production T1 sends:
   //  - resend_email_id IS NOT NULL → excludes sentinel rows from

@@ -16,6 +16,10 @@ export const CONFIG = {
     CPD_BADGE_TEXT: 'Up to 14 CPD hours - AHPRA Aligned, Endorsed by Osteopathy Australia',
     PRICE_ONLINE: 497,
     PRICE_REGULAR: 1400,
+    // HISTORICAL — early bird ended 31 May 2026 (see EARLY_BIRD_DEADLINE).
+    // Do NOT use for display or charging: the current Complete Course price
+    // is PRICE_REGULAR everywhere. Kept only for past-sale reconciliation
+    // and deadline-gated code paths that now resolve to regular.
     PRICE_EARLY_BIRD: 1190,
     PRICE_INTERNATIONAL: 197,
     SAVINGS: 210,
@@ -74,11 +78,21 @@ export const CONFIG = {
     LEAD_TIME_WEEKS: 6,           // weeks of notice after threshold hit
     EARLY_BIRD_SEAT_THRESHOLD: 6, // 50% — early bird ends when this many seats sold (for confirmed cities)
     EARLY_BIRD_DAYS_BEFORE: 7,    // Early bird ends this many days before course date
-    // Early-bird ("registered-list") pricing applies to anyone on the
-    // interest list. No deadline pressure — pricing is locked in for
-    // everyone who registers. Far-future date keeps the price variable
-    // active without surfacing a countdown / "you missed it" framing.
-    EARLY_BIRD_DEADLINE: '2099-12-31',
+    // EARLY BIRD IS OVER (owner decision, June 2026). The Melbourne round's
+    // early-bird cutoff was 31 May 2026 — this date is the documented truth
+    // and is intentionally in the past so every client-side
+    // `new Date() < deadline` check resolves to regular pricing.
+    // The Complete Course is PRICE_REGULAR ($1,400) everywhere, display AND charge.
+    EARLY_BIRD_DEADLINE: '2026-05-31',
+    // Current-round enrolment scoping (per location slug). getEnrollmentCount()
+    // only counts full-course users created on/after this date so attendees of
+    // past rounds (e.g. Q1 2026 workshops) don't consume seats/capacity for the
+    // active round. Melbourne 13 June 2026 round: demand capture ran through
+    // 2026 before the date was confirmed (2026-04-18), so the round opens at
+    // the start of 2026. Update when the next round is announced.
+    ROUND_START: {
+      melbourne: '2026-01-01',
+    } as Record<string, string>,
     NEXT_ROUND: 'Melbourne — Sat 13 June 2026',   // Lead with confirmed Melbourne date
     Q1_COMPLETED: true,           // Q1 2026 workshops ran — used for social proof
   },

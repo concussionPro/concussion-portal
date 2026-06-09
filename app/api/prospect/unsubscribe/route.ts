@@ -9,7 +9,14 @@
  * pushed the domain to a 0.28% complaint rate against Google's 0.30% red
  * line.
  *
- * Token format from prospect-send:  `<clinic.slug>-<base36 timestamp>`
+ * Token format (current): `<clinic.slug>.<hmac>` — HMAC-SHA256-signed via
+ *   lib/prospect/unsubscribe-token.ts. The old `<slug>-<base36 timestamp>`
+ *   format was forgeable (anyone could suppress any clinic by guessing
+ *   slugs — a mass-unsubscribe attack surface).
+ * Legacy tokens are still honoured, but ONLY for clinics that have actually
+ *   been contacted (>=1 prospect_outreach_log row) — links already sent in
+ *   live emails must keep working (Spam Act unsubscribe promise) while the
+ *   enumeration attack on never-contacted clinics is closed.
  * Token format from sample-pitch:   literal `sample`
  *
  * - GET  shows a confirmation page (avoids unintentional unsubscribes when
@@ -22,6 +29,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { getClinicBySlug, suppress } from '@/lib/prospect/repo'
+import { parseUnsubscribeToken } from '@/lib/prospect/unsubscribe-token'
 
 export const runtime = 'nodejs'
 
@@ -34,35 +42,44 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;')
 }
 
-// Strip the base36-timestamp suffix off the token to recover the clinic slug.
-// Clinic slugs may themselves contain hyphens (e.g. `burleigh-heads-physio`),
-// so we drop only the final hyphen-delimited segment.
-function parseToken(token: string): { slug: string | null; isSample: boolean } {
-  if (token === 'sample') return { slug: null, isSample: true }
-  const lastHyphen = token.lastIndexOf('-')
-  if (lastHyphen <= 0) return { slug: null, isSample: false }
-  const slug = token.slice(0, lastHyphen)
-  return { slug, isSample: false }
+/**
+ * Resolve a token to a clinic, enforcing the legacy-format restriction:
+ * legacy (unsigned) tokens only resolve for clinics we have actually
+ * emailed. Returns null when the token shouldn't unsubscribe anyone.
+ */
+async function resolveClinicFromToken(token: string) {
+  const parsed = parseUnsubscribeToken(token)
+  if (!parsed) return null
+
+  const clinic = await getClinicBySlug(parsed.slug)
+  if (!clinic) return null
+
+  if (parsed.format === 'legacy') {
+    const { rows } = await sql`
+      SELECT 1 FROM prospect_outreach_log WHERE clinic_id = ${clinic.id} LIMIT 1
+    `
+    if (rows.length === 0) return null // never contacted — forged/guessed link
+  }
+  return clinic
 }
 
 export async function POST(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('t')
   if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 400 })
 
-  const { slug, isSample } = parseToken(token)
-  if (isSample) {
+  if (token === 'sample') {
     return NextResponse.json({ success: true, note: 'sample-pitch token — nothing to suppress' })
   }
-  if (!slug) return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
 
-  const clinic = await getClinicBySlug(slug)
+  const clinic = await resolveClinicFromToken(token)
   if (!clinic) {
-    // Idempotent — token was valid format but the clinic was deleted /
-    // archived. Respond 200 so the email client doesn't show an error.
+    // Idempotent — covers deleted clinics AND rejected (forged / legacy
+    // never-contacted) tokens. Respond 200 so the email client doesn't
+    // show an error, but suppress nothing.
     return NextResponse.json({ success: true, note: 'no-match' })
   }
 
-  await suppress(clinic.contactEmail, 'manual-unsubscribe', `prospect-unsubscribe:${slug}`)
+  await suppress(clinic.contactEmail, 'manual-unsubscribe', `prospect-unsubscribe:${clinic.slug}`)
   await sql`
     UPDATE prospect_clinics
     SET status = 'lost',
@@ -89,19 +106,15 @@ export async function GET(req: NextRequest) {
       headers: { 'Content-Type': 'text/html' },
     })
   }
-  const { slug, isSample } = parseToken(token)
-  if (isSample) {
+  if (token === 'sample') {
     return new NextResponse(successPage('your address'), {
       headers: { 'Content-Type': 'text/html' },
     })
   }
-  if (!slug) {
-    return new NextResponse(errorPage('Invalid unsubscribe link.'), {
-      headers: { 'Content-Type': 'text/html' },
-    })
-  }
-  const clinic = await getClinicBySlug(slug)
+  const clinic = await resolveClinicFromToken(token)
   if (!clinic) {
+    // Deleted clinic OR rejected (forged / never-contacted legacy) token —
+    // show the generic success page; never confirm or leak an address.
     return new NextResponse(successPage('your address'), {
       headers: { 'Content-Type': 'text/html' },
     })

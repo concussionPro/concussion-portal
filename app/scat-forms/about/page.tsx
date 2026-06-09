@@ -5,9 +5,9 @@ import { CONFIG } from '@/lib/config'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Free SCAT6 & SCOAT6 Forms - Digital Auto-Scoring Tools | Australia',
-  description: 'Free digitally fillable SCAT6 and SCOAT6 assessment forms with auto-scoring. Updated 2026. AHPRA-aligned for Australian healthcare professionals.',
-  keywords: 'SCAT6 form, SCOAT6 form, free SCAT6, digital SCAT6, fillable SCAT6, SCAT6 PDF, SCOAT6 PDF, concussion assessment form, sport concussion assessment tool',
+  title: 'How the SCAT6 & SCOAT6 Auto-Scoring Web Forms Work | Australia',
+  description: 'How the digital SCAT6 and SCOAT6 web forms auto-calculate scores, when to use each tool, and how to export assessments for medical records. AHPRA-aligned for Australian healthcare professionals.',
+  keywords: 'SCAT6 web form, SCOAT6 web form, digital SCAT6, SCAT6 auto-scoring, SCAT6 online form, SCOAT6 online form, concussion assessment form, sport concussion assessment tool',
   alternates: {
     canonical: 'https://portal.concussion-education-australia.com/scat-forms/about',
   },

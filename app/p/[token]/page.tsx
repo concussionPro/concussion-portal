@@ -3,22 +3,32 @@ import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { ProspectLanding, AccessWall } from '@/components/prospect/ProspectLanding'
 import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
+import { accessKeyMatches } from '@/lib/prospect/access-key'
 
 interface PageProps {
   params: Promise<{ token: string }>
   searchParams: Promise<{ k?: string }>
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { token } = await params
+  const { k } = await searchParams
   const clinic = await getClinicBySlug(token)
+  // Don't leak clinic name/city to visitors without the access key — the
+  // slug alone is guessable, metadata must stay generic behind the wall.
+  if (!clinic || !accessKeyMatches(k, clinic)) {
+    return {
+      title: 'Concussion Hub Program',
+      description: 'Private proposal portal.',
+      robots: 'noindex, nofollow',
+    }
+  }
   return {
-    title: clinic ? `Concussion Hub Program — ${clinic.shortName}` : 'Concussion Hub Program',
-    description: clinic
-      ? (clinic.city && !/unknown/i.test(clinic.city)
-          ? `Working preview portal for ${clinic.name}, ${clinic.city} ${clinic.state}.`
-          : `Working preview portal for ${clinic.name}.`)
-      : 'Private proposal portal.',
+    title: `Concussion Hub Program — ${clinic.shortName}`,
+    description:
+      clinic.city && !/unknown/i.test(clinic.city)
+        ? `Working preview portal for ${clinic.name}, ${clinic.city} ${clinic.state}.`
+        : `Working preview portal for ${clinic.name}.`,
     robots: 'noindex, nofollow',
   }
 }
@@ -30,7 +40,9 @@ export default async function ProspectPage({ params, searchParams }: PageProps) 
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
 
-  if (k !== clinic.accessKey) {
+  // Stored access_key (random for new prospects); legacy slug-derived value
+  // only when the stored key is missing — see lib/prospect/access-key.ts.
+  if (!accessKeyMatches(k, clinic)) {
     return <AccessWall clinicName={clinic.name} />
   }
 

@@ -600,7 +600,7 @@ function generatePdf(data: SubmitPayload, clinicName: string): Buffer {
 
   doc.setTextColor(91, 154, 166)
   doc.setFontSize(9)
-  doc.text('Powered by ConcussionPro — concussion-education-australia.com', margin, y)
+  doc.text('Powered by Concussion Education Australia — concussion-education-australia.com', margin, y)
   y += 6
   doc.text('Free SCAT6/SCOAT6 Mastery Course: portal.concussion-education-australia.com/scat-mastery', margin, y)
 
@@ -761,7 +761,7 @@ export async function POST(request: Request) {
               </div>
             </div>
             <div class="footer">
-              <p>ConcussionPro — Concussion Education Australia</p>
+              <p>Concussion Education Australia</p>
             </div>
           </div>
         </body>

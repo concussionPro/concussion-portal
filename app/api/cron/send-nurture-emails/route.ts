@@ -25,6 +25,51 @@ import { EmailScheduler } from '@/lib/email-scheduler'
 
 function redact(e: string) { return e.length > 3 ? e.slice(0, 3) + '***' : '***' }
 
+// Catch-up window: a missed cron day must not permanently skip a step.
+// Match when daysSince is within [e.day, e.day + CATCHUP_WINDOW_DAYS]. The
+// per-step email_audit_log dedupe key (keyed on the step's day, not the
+// calendar day it was sent) prevents double-sends inside the window. Pick
+// the LATEST eligible step so adjacent windows (e.g. post-purchase day 1 →
+// day 3) prefer the current step over a stale one.
+const CATCHUP_WINDOW_DAYS = 2
+function findCatchUp<T extends { day: number }>(seq: readonly T[], daysSince: number): T | undefined {
+  let match: T | undefined
+  for (const e of seq) {
+    if (daysSince >= e.day && daysSince <= e.day + CATCHUP_WINDOW_DAYS) {
+      if (!match || e.day > match.day) match = e
+    }
+  }
+  return match
+}
+
+/**
+ * Send + honour sendEmail's boolean contract. sendEmail never throws — it
+ * returns false on failure — so the audit-log dedupe row inserted BEFORE the
+ * send must be explicitly rolled back here, otherwise a failed send is
+ * permanently marked as sent and never retried.
+ */
+async function sendOrRollbackAudit(
+  options: Parameters<typeof sendEmail>[0],
+  auditKey: string,
+  label: string,
+): Promise<boolean> {
+  let sent = false
+  try {
+    sent = await sendEmail(options)
+  } catch (err) {
+    console.error(`[Nurture] ${label} send threw:`, err)
+  }
+  if (!sent) {
+    console.error(`[Nurture] ${label} → ${redact(options.to)} failed — rolling back audit row so next run retries`)
+    try {
+      await sql`DELETE FROM email_audit_log WHERE audit_key = ${auditKey}`
+    } catch (err) {
+      console.error(`[Nurture] Failed to roll back audit row ${auditKey}:`, err)
+    }
+  }
+  return sent
+}
+
 export const maxDuration = 120
 
 export async function GET(request: Request) {
@@ -67,10 +112,14 @@ export async function GET(request: Request) {
     // MAX_PER_USER_PER_WEEK to protect domain reputation + avoid the
     // "annoying sender" perception that tanks reply rate.
     const MAX_PER_USER_PER_WEEK = 3
+    // Count 'delivered' — the webhook subscribes delivered/opened/clicked/
+    // bounced/complained and never writes 'sent' rows, so counting only
+    // 'sent' made the cap a no-op. 'sent' stays in the IN list in case we
+    // ever subscribe to email.sent.
     const { rows: weeklyCounts } = await sql<{ recipient: string; n: number }>`
       SELECT LOWER(recipient) AS recipient, COUNT(*)::int AS n
       FROM email_events
-      WHERE event_type = 'sent'
+      WHERE event_type IN ('sent', 'delivered')
         AND created_at > NOW() - INTERVAL '7 days'
         AND COALESCE(project, 'cea') = 'cea'
       GROUP BY LOWER(recipient)
@@ -85,6 +134,19 @@ export async function GET(request: Request) {
     function incrementWeeklySent(email: string): void {
       const k = email.toLowerCase()
       recipientSendsThisWeek.set(k, (recipientSendsThisWeek.get(k) ?? 0) + 1)
+    }
+
+    // Global suppression list (hard bounces / complaints / manual opt-outs).
+    // Used to gate the operational workshop emails (section 3) and
+    // abandoned-checkout sends to addresses with no users row (section 5).
+    let suppressedEmails = new Set<string>()
+    try {
+      const { rows: suppressionRows } = await sql<{ email: string }>`
+        SELECT LOWER(email) AS email FROM email_suppression
+      `
+      suppressedEmails = new Set(suppressionRows.map(r => r.email))
+    } catch (err) {
+      console.error('[Nurture] Failed to load email_suppression — treating as empty:', err)
     }
 
     // Stagger nurture sends across ~30-45 min with per-domain throttling so
@@ -120,35 +182,33 @@ export async function GET(request: Request) {
         if (day0Email) {
           const { rowCount: day0Inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${day0AuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
           if (day0Inserted && day0Inserted > 0) {
-            try {
-              const html = day0Email.template(user.name, loginLink).replace('{{unsubscribe_url}}', unsubscribeUrl)
-              await sendEmail({
-                to: user.email,
-                scheduledAt: scheduler.next(user.email),
-                subject: day0Email.subject,
-                html,
-                tags: [
-                  { name: 'sequence', value: 'scat-mastery' },
-                  { name: 'day', value: '0' },
-                  { name: 'variant', value: 'catch-up' },
-                ],
-                headers: {
-                  'List-Unsubscribe': `<${unsubscribeUrl}>`,
-                  'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-                },
-              })
+            const html = day0Email.template(user.name, loginLink).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+            const sent = await sendOrRollbackAudit({
+              to: user.email,
+              scheduledAt: scheduler.next(user.email),
+              subject: day0Email.subject,
+              html,
+              tags: [
+                { name: 'sequence', value: 'scat-mastery' },
+                { name: 'day', value: '0' },
+                { name: 'variant', value: 'catch-up' },
+              ],
+              headers: {
+                'List-Unsubscribe': `<${unsubscribeUrl}>`,
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
+            }, day0AuditKey, 'Day 0 catch-up')
+            if (sent) {
               emailsSent++
-            incrementWeeklySent(user.email)
+              incrementWeeklySent(user.email)
               console.log(`[Nurture] Day 0 catch-up → ${redact(user.email)}`)
-            } catch (err) {
-              console.error(`[Nurture] Failed Day 0 catch-up for ${redact(user.email)}:`, err)
             }
           }
         }
         continue // They'll get their scheduled day email on the next cron run
       }
 
-      const email = SCAT_MASTERY_SEQUENCE.find(e => e.day === daysSinceSignup)
+      const email = findCatchUp(SCAT_MASTERY_SEQUENCE, daysSinceSignup)
       if (!email) continue
 
       // Load user progress for routing decisions (Day 7+)
@@ -171,7 +231,7 @@ export async function GET(request: Request) {
       //   never logged in       → FREE_USER_REENGAGEMENT (door-not-opened copy)
       //   logged in, 0 modules  → FREE_LOGGED_IN_NO_PROGRESS (door-opened-but-no-step copy)
       //   1+ SCAT modules done  → clinical case study (default sequence — handled below)
-      if (daysSinceSignup === 7 && (!user.lastLoginAt || scatCompletedCount === 0)) {
+      if (email.day === 7 && (!user.lastLoginAt || scatCompletedCount === 0)) {
         const ghoster = !user.lastLoginAt
         const variant = ghoster ? 'reengagement' : 'logged_in_no_progress'
         const tpl = ghoster ? FREE_USER_REENGAGEMENT : FREE_LOGGED_IN_NO_PROGRESS
@@ -180,28 +240,27 @@ export async function GET(request: Request) {
         if (inserted === 0) continue
 
         const html = tpl.template(user.name, loginLink)
-          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+          .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-        try {
-          await sendEmail({
-            to: user.email,
-            scheduledAt: scheduler.next(user.email),
-            subject: tpl.subject,
-            html,
-            tags: [
-              { name: 'sequence', value: 'scat-mastery' },
-              { name: 'day', value: '7' },
-              { name: 'variant', value: variant },
-            ],
-            headers: {
-              'List-Unsubscribe': `<${unsubscribeUrl}>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            },
-          })
+        const sent = await sendOrRollbackAudit({
+          to: user.email,
+          scheduledAt: scheduler.next(user.email),
+          subject: tpl.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'scat-mastery' },
+            { name: 'day', value: '7' },
+            { name: 'variant', value: variant },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }, auditKey, `Day 7 (${variant})`)
+        if (sent) {
           emailsSent++
+          incrementWeeklySent(user.email)
           console.log(`[Nurture] Day 7 (${variant}) → ${redact(user.email)}`)
-        } catch (err) {
-          console.error(`[Nurture] Failed to send Day 7 ${variant} to ${redact(user.email)}:`, err)
         }
         continue
       }
@@ -209,34 +268,33 @@ export async function GET(request: Request) {
       // ── Day 10: Route based on module completion ──
       // <3 modules → engagement push (SCAT_DAY10_ENGAGEMENT)
       // 3+ modules → promo code with 72h deadline (default sequence)
-      if (daysSinceSignup === 10 && scatCompletedCount < 3) {
+      if (email.day === 10 && scatCompletedCount < 3) {
         const auditKey = `scat_day10_engagement_${user.id}`
         const { rowCount: inserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         if (inserted === 0) continue
 
         const html = SCAT_DAY10_ENGAGEMENT.template(user.name, loginLink, scatCompletedCount)
-          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+          .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-        try {
-          await sendEmail({
-            to: user.email,
-            scheduledAt: scheduler.next(user.email),
-            subject: SCAT_DAY10_ENGAGEMENT.subject,
-            html,
-            tags: [
-              { name: 'sequence', value: 'scat-mastery' },
-              { name: 'day', value: '10' },
-              { name: 'variant', value: 'engagement' },
-            ],
-            headers: {
-              'List-Unsubscribe': `<${unsubscribeUrl}>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            },
-          })
+        const sent = await sendOrRollbackAudit({
+          to: user.email,
+          scheduledAt: scheduler.next(user.email),
+          subject: SCAT_DAY10_ENGAGEMENT.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'scat-mastery' },
+            { name: 'day', value: '10' },
+            { name: 'variant', value: 'engagement' },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }, auditKey, 'Day 10 engagement')
+        if (sent) {
           emailsSent++
+          incrementWeeklySent(user.email)
           console.log(`[Nurture] Day 10 (engagement, ${scatCompletedCount} modules) → ${redact(user.email)}`)
-        } catch (err) {
-          console.error(`[Nurture] Failed to send Day 10 engagement to ${redact(user.email)}:`, err)
         }
         continue
       }
@@ -248,37 +306,35 @@ export async function GET(request: Request) {
 
       // Calculate 72h expiry date for Day 10 and Day 28 promo emails
       let expiryDate: string | undefined
-      if (daysSinceSignup === 10 || daysSinceSignup === 28) {
+      if (email.day === 10 || email.day === 28) {
         const expiry = new Date(now.getTime() + 72 * 60 * 60 * 1000)
         expiryDate = expiry.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })
       }
 
       // Days 0-7: link to free course login. Days 14+: link to pricing/upgrade.
-      const ctaLink = daysSinceSignup <= 7 ? loginLink : upgradeLink
-      const html = (daysSinceSignup === 10 || daysSinceSignup === 28)
-        ? email.template(user.name, ctaLink, expiryDate).replace('{{unsubscribe_url}}', unsubscribeUrl)
-        : email.template(user.name, ctaLink).replace('{{unsubscribe_url}}', unsubscribeUrl)
+      const ctaLink = email.day <= 7 ? loginLink : upgradeLink
+      const html = (email.day === 10 || email.day === 28)
+        ? email.template(user.name, ctaLink, expiryDate).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+        : email.template(user.name, ctaLink).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-      try {
-        await sendEmail({
-          to: user.email,
-          scheduledAt: scheduler.next(user.email),
-          subject: email.subject,
-          html,
-          tags: [
-            { name: 'sequence', value: 'scat-mastery' },
-            { name: 'day', value: String(daysSinceSignup) },
-          ],
-          headers: {
-            'List-Unsubscribe': `<${unsubscribeUrl}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-        })
-
+      const sent = await sendOrRollbackAudit({
+        to: user.email,
+        scheduledAt: scheduler.next(user.email),
+        subject: email.subject,
+        html,
+        tags: [
+          { name: 'sequence', value: 'scat-mastery' },
+          { name: 'day', value: String(email.day) },
+        ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
+      }, auditKey, `Day ${email.day}`)
+      if (sent) {
         emailsSent++
-        console.log(`[Nurture] Day ${daysSinceSignup} → ${redact(user.email)}`)
-      } catch (err) {
-        console.error(`[Nurture] Failed to send Day ${daysSinceSignup} to ${redact(user.email)}:`, err)
+        incrementWeeklySent(user.email)
+        console.log(`[Nurture] Day ${email.day} → ${redact(user.email)}`)
       }
     }
 
@@ -297,7 +353,7 @@ export async function GET(request: Request) {
 
       // Day 1 for full-course users: send workshop reservation email instead of generic onboarding
       // Workshop logistics emails are NOT affected by progressEmailsOptedOut
-      if (daysSinceSignup === 1 && user.accessLevel === 'full-course' && user.workshopLocation) {
+      if (daysSinceSignup >= 1 && daysSinceSignup <= 1 + CATCHUP_WINDOW_DAYS && user.accessLevel === 'full-course' && user.workshopLocation) {
         const locationConfig = Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === user.workshopLocation)
         if (locationConfig && locationConfig.status === 'collecting') {
           const workshopResAuditKey = `workshop_reservation_${user.id}`
@@ -307,29 +363,26 @@ export async function GET(request: Request) {
           const count = await getEnrollmentCount(user.workshopLocation)
           const html = WORKSHOP_RESERVATION_EMAIL.template(
             user.name, loginLink, locationConfig.city, count, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD
-          ).replace('{{unsubscribe_url}}', unsubscribeUrl)
+          ).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-          try {
-            await sendEmail({
-              to: user.email,
-              scheduledAt: scheduler.next(user.email),
-              subject: WORKSHOP_RESERVATION_EMAIL.subject,
-              html,
-              tags: [
-                { name: 'sequence', value: 'workshop-reservation' },
-                { name: 'day', value: '1' },
-              ],
-              headers: {
-                'List-Unsubscribe': `<${unsubscribeUrl}>`,
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-              },
-            })
-
+          const sent = await sendOrRollbackAudit({
+            to: user.email,
+            scheduledAt: scheduler.next(user.email),
+            subject: WORKSHOP_RESERVATION_EMAIL.subject,
+            html,
+            tags: [
+              { name: 'sequence', value: 'workshop-reservation' },
+              { name: 'day', value: '1' },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          }, workshopResAuditKey, 'Workshop reservation Day 1')
+          if (sent) {
             emailsSent++
             incrementWeeklySent(user.email)
             console.log(`[Workshop Reservation] Day 1 → ${redact(user.email)} (${locationConfig.city})`)
-          } catch (err) {
-            console.error(`[Workshop Reservation] Failed to send to ${redact(user.email)}:`, err)
           }
           continue // Skip generic Day 1 onboarding for this user
         }
@@ -339,8 +392,9 @@ export async function GET(request: Request) {
       if (user.progressEmailsOptedOut) continue
 
       // Generic post-purchase onboarding (online-only users, or confirmed city full-course)
-      const email = POST_PURCHASE_SEQUENCE.find(
-        e => e.day === daysSinceSignup && e.accessLevels.includes(user.accessLevel as 'online-only' | 'full-course')
+      const email = findCatchUp(
+        POST_PURCHASE_SEQUENCE.filter(e => e.accessLevels.includes(user.accessLevel as 'online-only' | 'full-course')),
+        daysSinceSignup
       )
       if (!email) continue
 
@@ -376,37 +430,40 @@ export async function GET(request: Request) {
       if (onboardInserted === 0) continue // Already sent
 
       const html = useEmail.template(user.name, loginLink)
-        .replace('{{unsubscribe_url}}', unsubscribeUrl)
+        .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-      try {
-        await sendEmail({
-          to: user.email,
-          scheduledAt: scheduler.next(user.email),
-          subject: useEmail.subject,
-          html,
-          tags: [
-            { name: 'sequence', value: 'post-purchase' },
-            { name: 'day', value: String(daysSinceSignup) },
-            ...(useEmail !== email ? [{ name: 'variant', value: 'activation' }] : []),
-          ],
-          headers: {
-            'List-Unsubscribe': `<${unsubscribeUrl}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-        })
-
+      const sent = await sendOrRollbackAudit({
+        to: user.email,
+        scheduledAt: scheduler.next(user.email),
+        subject: useEmail.subject,
+        html,
+        tags: [
+          { name: 'sequence', value: 'post-purchase' },
+          { name: 'day', value: String(email.day) },
+          ...(useEmail !== email ? [{ name: 'variant', value: 'activation' }] : []),
+        ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
+      }, onboardAuditKey, `Onboarding Day ${email.day}`)
+      if (sent) {
         emailsSent++
-        console.log(`[Onboarding] Day ${daysSinceSignup}${useEmail !== email ? ' (activation)' : ''} → ${redact(user.email)}`)
-      } catch (err) {
-        console.error(`[Onboarding] Failed to send Day ${daysSinceSignup} to ${redact(user.email)}:`, err)
+        incrementWeeklySent(user.email)
+        console.log(`[Onboarding] Day ${email.day}${useEmail !== email ? ' (activation)' : ''} → ${redact(user.email)}`)
       }
     }
 
     // ── 3. Pre-Workshop Prep Emails (full-course with confirmed dates) ──
     for (const user of users) {
-      if (exceedsWeeklyCap(user.email)) continue  // per-user weekly cap (3/7d)
       if (user.accessLevel !== 'full-course') continue
-      if (user.nurtureUnsubscribed) continue
+      // TRANSACTIONAL, not marketing: these are operational logistics for a
+      // workshop the user has already paid to attend (venue, what to bring,
+      // "see you tomorrow"). A marketing unsubscribe (nurture_unsubscribed)
+      // or the weekly marketing cap must NOT block them. The only skip is a
+      // permanent entry in email_suppression (hard bounce / complaint) —
+      // we couldn't deliver to that address anyway.
+      if (suppressedEmails.has(user.email.toLowerCase())) continue
       if (!user.workshopLocation) continue
 
       // Find matching location config with a confirmed date
@@ -422,41 +479,48 @@ export async function GET(request: Request) {
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
-      // Check for logistics email (6 weeks = 42 days before)
-      if (daysUntilWorkshop === WORKSHOP_LOGISTICS_EMAIL.daysBefore) {
+      // Check for logistics email (6 weeks = 42 days before). Catch-up
+      // window: a missed cron day must not silently drop the email — match
+      // up to CATCHUP_WINDOW_DAYS late (per-step audit key dedupes).
+      if (
+        daysUntilWorkshop <= WORKSHOP_LOGISTICS_EMAIL.daysBefore &&
+        daysUntilWorkshop >= WORKSHOP_LOGISTICS_EMAIL.daysBefore - CATCHUP_WINDOW_DAYS
+      ) {
         const logisticsAuditKey = `workshop_logistics_${user.id}`
         const { rowCount: logisticsInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${logisticsAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
         if (logisticsInserted === 0) continue // Already sent
 
         const html = WORKSHOP_LOGISTICS_EMAIL.template(user.name, locationEntry.city, locationEntry.date)
-          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+          .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-        try {
-          await sendEmail({
-            to: user.email,
-            scheduledAt: scheduler.next(user.email),
-            subject: WORKSHOP_LOGISTICS_EMAIL.subject,
-            html,
-            tags: [
-              { name: 'sequence', value: 'workshop-logistics' },
-              { name: 'days-before', value: String(daysUntilWorkshop) },
-            ],
-            headers: {
-              'List-Unsubscribe': `<${unsubscribeUrl}>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            },
-          })
-
+        const sent = await sendOrRollbackAudit({
+          to: user.email,
+          scheduledAt: scheduler.next(user.email),
+          subject: WORKSHOP_LOGISTICS_EMAIL.subject,
+          html,
+          tags: [
+            { name: 'sequence', value: 'workshop-logistics' },
+            { name: 'days-before', value: String(daysUntilWorkshop) },
+          ],
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }, logisticsAuditKey, 'Workshop logistics')
+        if (sent) {
           emailsSent++
+          incrementWeeklySent(user.email)
           console.log(`[Workshop Logistics] ${daysUntilWorkshop}d before → ${redact(user.email)}`)
-        } catch (err) {
-          console.error(`[Workshop Logistics] Failed to send to ${redact(user.email)}:`, err)
         }
         continue
       }
 
-      // Existing pre-workshop prep emails (7 days, 1 day before)
-      const prepEmail = PRE_WORKSHOP_SEQUENCE.find(e => e.daysBefore === daysUntilWorkshop)
+      // Existing pre-workshop prep emails (7 days, 1 day before). Catch-up
+      // window matches up to CATCHUP_WINDOW_DAYS late, floored at 1 day out
+      // so day-of sends never get "tomorrow" copy. Prefer the latest step.
+      const prepEmail = PRE_WORKSHOP_SEQUENCE
+        .filter(e => daysUntilWorkshop <= e.daysBefore && daysUntilWorkshop >= Math.max(1, e.daysBefore - CATCHUP_WINDOW_DAYS))
+        .sort((a, b) => a.daysBefore - b.daysBefore)[0]
       if (!prepEmail) continue
 
       const prepAuditKey = `pre_workshop_${prepEmail.daysBefore}_${user.id}`
@@ -464,28 +528,26 @@ export async function GET(request: Request) {
       if (prepInserted === 0) continue // Already sent
 
       const html = prepEmail.template(user.name, locationEntry.city, locationEntry.date)
-        .replace('{{unsubscribe_url}}', unsubscribeUrl)
+        .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-      try {
-        await sendEmail({
-          to: user.email,
-          scheduledAt: scheduler.next(user.email),
-          subject: prepEmail.subject,
-          html,
-          tags: [
-            { name: 'sequence', value: 'pre-workshop' },
-            { name: 'days-before', value: String(daysUntilWorkshop) },
-          ],
-          headers: {
-            'List-Unsubscribe': `<${unsubscribeUrl}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-        })
-
+      const sent = await sendOrRollbackAudit({
+        to: user.email,
+        scheduledAt: scheduler.next(user.email),
+        subject: prepEmail.subject,
+        html,
+        tags: [
+          { name: 'sequence', value: 'pre-workshop' },
+          { name: 'days-before', value: String(daysUntilWorkshop) },
+        ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
+      }, prepAuditKey, `Workshop prep ${prepEmail.daysBefore}d`)
+      if (sent) {
         emailsSent++
+        incrementWeeklySent(user.email)
         console.log(`[Workshop Prep] ${daysUntilWorkshop}d before → ${redact(user.email)}`)
-      } catch (err) {
-        console.error(`[Workshop Prep] Failed to send to ${redact(user.email)}:`, err)
       }
     }
 
@@ -505,11 +567,13 @@ export async function GET(request: Request) {
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
 
-      const momentumEmail = WORKSHOP_MOMENTUM_EMAILS.find(e => e.day === daysSinceSignup)
+      const momentumEmail = findCatchUp(WORKSHOP_MOMENTUM_EMAILS, daysSinceSignup)
       if (!momentumEmail) continue
 
-      // Dedup via email_audit_log (INSERT-first, using audit_key pattern)
-      const auditKey = `workshop_momentum_d${daysSinceSignup}_${user.id}`
+      // Dedup via email_audit_log (INSERT-first, using audit_key pattern).
+      // Keyed on the STEP day (momentumEmail.day), not the calendar day, so
+      // the catch-up window can't double-send the same step.
+      const auditKey = `workshop_momentum_d${momentumEmail.day}_${user.id}`
       const { rowCount: momentumInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${auditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
       if (momentumInserted === 0) continue // Already sent
 
@@ -521,34 +585,32 @@ export async function GET(request: Request) {
 
       const subject = momentumEmail.subject(locationConfig.city, count, remaining)
       const html = momentumEmail.template(user.name, locationConfig.city, count, CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD)
-        .replace('{{unsubscribe_url}}', unsubscribeUrl)
+        .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-      try {
-        await sendEmail({
-          to: user.email,
-          scheduledAt: scheduler.next(user.email),
-          subject,
-          html,
-          tags: [
-            { name: 'sequence', value: 'workshop-momentum' },
-            { name: 'day', value: String(daysSinceSignup) },
-          ],
-          headers: {
-            'List-Unsubscribe': `<${unsubscribeUrl}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-        })
-
+      const sent = await sendOrRollbackAudit({
+        to: user.email,
+        scheduledAt: scheduler.next(user.email),
+        subject,
+        html,
+        tags: [
+          { name: 'sequence', value: 'workshop-momentum' },
+          { name: 'day', value: String(momentumEmail.day) },
+        ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
+      }, auditKey, `Workshop momentum Day ${momentumEmail.day}`)
+      if (sent) {
         emailsSent++
-        console.log(`[Workshop Momentum] Day ${daysSinceSignup} → ${redact(user.email)} (${locationConfig.city}: ${count}/${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD})`)
-      } catch (err) {
-        console.error(`[Workshop Momentum] Failed to send Day ${daysSinceSignup} to ${redact(user.email)}:`, err)
+        incrementWeeklySent(user.email)
+        console.log(`[Workshop Momentum] Day ${momentumEmail.day} → ${redact(user.email)} (${locationConfig.city}: ${count}/${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD})`)
       }
     }
 
     // ── 5. Abandoned Checkout Recovery Emails ──
     try {
-      const abandonedEmailsSent = await processAbandonedCheckouts(baseUrl, scheduler)
+      const abandonedEmailsSent = await processAbandonedCheckouts(baseUrl, scheduler, suppressedEmails)
       emailsSent += abandonedEmailsSent
     } catch (err) {
       // Log but don't fail the entire cron — other sequences already sent
@@ -572,35 +634,32 @@ export async function GET(request: Request) {
       // Upgrade nudge sequence (marketing — not affected by progressEmailsOptedOut)
       // Only applicable to online-only users
       if (user.accessLevel === 'online-only') {
-        const upgradeEmail = ONLINE_UPGRADE_SEQUENCE.find(e => e.day === daysSinceSignup)
+        const upgradeEmail = findCatchUp(ONLINE_UPGRADE_SEQUENCE, daysSinceSignup)
         if (upgradeEmail) {
           const upgradeAuditKey = `upgrade_day${upgradeEmail.day}_${user.id}`
           const { rowCount: upgradeInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${upgradeAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
           if (upgradeInserted === 0) continue // Already sent
 
-          try {
-            const html = upgradeEmail.template(user.name, upgradeLink)
-              .replace('{{unsubscribe_url}}', unsubscribeUrl)
-            await sendEmail({
-              to: user.email,
-              scheduledAt: scheduler.next(user.email),
-              subject: upgradeEmail.subject,
-              html,
-              tags: [
-                { name: 'sequence', value: 'online-upgrade' },
-                { name: 'day', value: String(daysSinceSignup) },
-              ],
-              headers: {
-                'List-Unsubscribe': `<${unsubscribeUrl}>`,
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-              },
-            })
-
+          const html = upgradeEmail.template(user.name, upgradeLink)
+            .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+          const sent = await sendOrRollbackAudit({
+            to: user.email,
+            scheduledAt: scheduler.next(user.email),
+            subject: upgradeEmail.subject,
+            html,
+            tags: [
+              { name: 'sequence', value: 'online-upgrade' },
+              { name: 'day', value: String(upgradeEmail.day) },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          }, upgradeAuditKey, `Upgrade nudge Day ${upgradeEmail.day}`)
+          if (sent) {
             emailsSent++
             incrementWeeklySent(user.email)
-            console.log(`Sent upgrade nudge (Day ${daysSinceSignup}) to ${redact(user.email)}`)
-          } catch (err) {
-            console.error(`[Upgrade Nudge] Failed to send to ${redact(user.email)}:`, err)
+            console.log(`Sent upgrade nudge (Day ${upgradeEmail.day}) to ${redact(user.email)}`)
           }
         }
       }
@@ -618,29 +677,26 @@ export async function GET(request: Request) {
           const { rowCount: reengInserted } = await sql`INSERT INTO email_audit_log (audit_key, sent_at) VALUES (${reengagementAuditKey}, NOW()) ON CONFLICT (audit_key) DO NOTHING`
           if (reengInserted === 0) continue // Already sent
 
-          try {
-            const html = REENGAGEMENT_EMAIL.template(user.name, loginLink)
-              .replace('{{unsubscribe_url}}', unsubscribeUrl)
-            await sendEmail({
-              to: user.email,
-              scheduledAt: scheduler.next(user.email),
-              subject: REENGAGEMENT_EMAIL.subject,
-              html,
-              tags: [
-                { name: 'sequence', value: 'reengagement' },
-                { name: 'day', value: String(daysSinceSignup) },
-              ],
-              headers: {
-                'List-Unsubscribe': `<${unsubscribeUrl}>`,
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-              },
-            })
-
+          const html = REENGAGEMENT_EMAIL.template(user.name, loginLink)
+            .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+          const sent = await sendOrRollbackAudit({
+            to: user.email,
+            scheduledAt: scheduler.next(user.email),
+            subject: REENGAGEMENT_EMAIL.subject,
+            html,
+            tags: [
+              { name: 'sequence', value: 'reengagement' },
+              { name: 'day', value: String(daysSinceSignup) },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          }, reengagementAuditKey, 'Re-engagement')
+          if (sent) {
             emailsSent++
             incrementWeeklySent(user.email)
             console.log(`Sent re-engagement to ${redact(user.email)} (${daysSinceLogin} days since login)`)
-          } catch (err) {
-            console.error(`[Re-engagement] Failed to send to ${redact(user.email)}:`, err)
           }
         }
       }
@@ -676,28 +732,26 @@ export async function GET(request: Request) {
           const unsubToken = generateUnsubscribeToken(user.email)
           const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
-          try {
-            const almostDoneHtml = ALMOST_DONE_EMAIL.template(user.name || 'there', almostDoneLoginLink)
-              .replace('{{unsubscribe_url}}', unsubscribeUrl)
-            await sendEmail({
-              to: user.email,
-              scheduledAt: scheduler.next(user.email),
-              subject: ALMOST_DONE_EMAIL.subject,
-              html: almostDoneHtml,
-              tags: [
-                { name: 'sequence', value: 'almost-done' },
-                { name: 'trigger', value: 'progress-7of8' },
-              ],
-              headers: {
-                'List-Unsubscribe': `<${unsubscribeUrl}>`,
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-              },
-            })
+          const almostDoneHtml = ALMOST_DONE_EMAIL.template(user.name || 'there', almostDoneLoginLink)
+            .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+          const sent = await sendOrRollbackAudit({
+            to: user.email,
+            scheduledAt: scheduler.next(user.email),
+            subject: ALMOST_DONE_EMAIL.subject,
+            html: almostDoneHtml,
+            tags: [
+              { name: 'sequence', value: 'almost-done' },
+              { name: 'trigger', value: 'progress-7of8' },
+            ],
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+          }, auditKey, 'Almost done')
+          if (sent) {
             emailsSent++
             incrementWeeklySent(user.email)
             console.log(`[Almost Done] Sent to ${redact(user.email)}`)
-          } catch (err) {
-            console.error(`[Almost Done] Failed to send to ${redact(user.email)}:`, err)
           }
         }
       } catch (err) {
@@ -739,9 +793,9 @@ export async function GET(request: Request) {
         const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
         const html = SCAT_COMPLETION_UPSELL.template(user.name || 'there', pricingLink)
-          .replace('{{unsubscribe_url}}', unsubscribeUrl)
+          .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-        await sendEmail({
+        const sent = await sendOrRollbackAudit({
           to: user.email,
           scheduledAt: scheduler.next(user.email),
           subject: SCAT_COMPLETION_UPSELL.subject,
@@ -754,10 +808,12 @@ export async function GET(request: Request) {
             'List-Unsubscribe': `<${unsubscribeUrl}>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
-        })
-
-        emailsSent++
-        console.log(`[Completion Upsell] Cron fallback → ${redact(user.email)}`)
+        }, auditKey, 'Completion upsell')
+        if (sent) {
+          emailsSent++
+          incrementWeeklySent(user.email)
+          console.log(`[Completion Upsell] Cron fallback → ${redact(user.email)}`)
+        }
       } catch (err) {
         console.error(`[Completion Upsell] Failed for ${redact(user.email)}:`, err)
       }
@@ -791,9 +847,9 @@ export async function GET(request: Request) {
           const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
           const html = FREE_ALMOST_DONE.template(user.name || 'there', loginLink)
-            .replace('{{unsubscribe_url}}', unsubscribeUrl)
+            .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-          await sendEmail({
+          const sent = await sendOrRollbackAudit({
             to: user.email,
             scheduledAt: scheduler.next(user.email),
             subject: FREE_ALMOST_DONE.subject,
@@ -806,10 +862,12 @@ export async function GET(request: Request) {
               'List-Unsubscribe': `<${unsubscribeUrl}>`,
               'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
             },
-          })
-
-          emailsSent++
-          console.log(`[Free Almost Done] 2/3 SCAT modules → ${redact(user.email)}`)
+          }, auditKey, 'Free almost done')
+          if (sent) {
+            emailsSent++
+            incrementWeeklySent(user.email)
+            console.log(`[Free Almost Done] 2/3 SCAT modules → ${redact(user.email)}`)
+          }
         }
       } catch (err) {
         console.error(`[Free Almost Done] Failed for ${redact(user.email)}:`, err)
@@ -830,7 +888,7 @@ export async function GET(request: Request) {
       const purchaseDate = new Date(user.referenceBookPurchasedAt)
       const daysSincePurchase = Math.floor((now.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24))
 
-      const candidate = REFERENCE_UPGRADE_SEQUENCE.find((e) => e.day === daysSincePurchase)
+      const candidate = findCatchUp(REFERENCE_UPGRADE_SEQUENCE, daysSincePurchase)
       if (!candidate) continue
 
       const auditKey = `ref_upgrade_day${candidate.day}_${user.id}`
@@ -841,28 +899,28 @@ export async function GET(request: Request) {
       const unsubToken = generateUnsubscribeToken(user.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(user.email)}&token=${unsubToken}`
 
-      try {
-        const html = candidate.template(user.name || 'there', pricingLink)
-          .replace('{{unsubscribe_url}}', unsubscribeUrl)
-        await sendEmail({
-          to: user.email,
-          scheduledAt: scheduler.next(user.email),
-          subject: candidate.subject,
-          html,
-          tags: [
-            { name: 'sequence', value: 'reference-upgrade' },
-            { name: 'day', value: String(candidate.day) },
-          ],
-          headers: {
-            'List-Unsubscribe': `<${unsubscribeUrl}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-        })
+      const html = candidate.template(user.name || 'there', pricingLink)
+        .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
+      const sent = await sendOrRollbackAudit({
+        to: user.email,
+        scheduledAt: scheduler.next(user.email),
+        subject: candidate.subject,
+        html,
+        tags: [
+          { name: 'sequence', value: 'reference-upgrade' },
+          { name: 'day', value: String(candidate.day) },
+        ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
+      }, auditKey, `Reference upgrade Day ${candidate.day}`)
+      if (sent) {
         emailsSent++
+        incrementWeeklySent(user.email)
         console.log(`[Reference Upgrade] Day ${candidate.day} → ${redact(user.email)}`)
-      } catch (err) {
-        console.error(`[Reference Upgrade] Failed for ${redact(user.email)}:`, err)
-        errors.push(`ref-upgrade day${candidate.day}: ${(err as Error).message}`)
+      } else {
+        errors.push(`ref-upgrade day${candidate.day}: send failed`)
       }
     }
 
@@ -883,7 +941,7 @@ export async function GET(request: Request) {
       if (user.nurtureUnsubscribed) continue
       const signupDate = new Date(user.createdAt)
       const daysSinceSignup = Math.floor((now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24))
-      const slot = aiChecklistSchedule.find(s => s.day === daysSinceSignup)
+      const slot = findCatchUp(aiChecklistSchedule, daysSinceSignup)
       if (!slot) continue
 
       const auditKey = `ai_checklist_${slot.tag}_${user.id}`
@@ -897,29 +955,28 @@ export async function GET(request: Request) {
       const html = (slot.day === 7
         ? (AI_SAFETY_CHECKLIST_DAY7.template(user.name, heidiVsLyrebirdBlog, aiCourseLink))
         : (slot.tpl as typeof AI_SAFETY_CHECKLIST_DAY3).template(user.name, aiCourseLink)
-      ).replace('{{unsubscribe_url}}', unsubscribeUrl)
+      ).replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
-      try {
-        await sendEmail({
-          to: user.email,
-          scheduledAt: scheduler.next(user.email),
-          subject: slot.tpl.subject,
-          html,
-          tags: [
-            { name: 'sequence', value: 'ai-safety-checklist' },
-            { name: 'day', value: String(slot.day) },
-          ],
-          headers: {
-            'List-Unsubscribe': `<${unsubscribeUrl}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-        })
+      const sent = await sendOrRollbackAudit({
+        to: user.email,
+        scheduledAt: scheduler.next(user.email),
+        subject: slot.tpl.subject,
+        html,
+        tags: [
+          { name: 'sequence', value: 'ai-safety-checklist' },
+          { name: 'day', value: String(slot.day) },
+        ],
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
+      }, auditKey, `AI checklist ${slot.tag}`)
+      if (sent) {
         emailsSent++
+        incrementWeeklySent(user.email)
         console.log(`[AI Checklist] ${slot.tag} → ${redact(user.email)}`)
-      } catch (err) {
-        console.error(`[AI Checklist] Failed ${slot.tag} for ${redact(user.email)}:`, err)
-        errors.push(`ai-checklist ${slot.tag}: ${(err as Error).message}`)
-        await sql`DELETE FROM email_audit_log WHERE audit_key = ${auditKey}` // roll back so next run retries
+      } else {
+        errors.push(`ai-checklist ${slot.tag}: send failed`)
       }
     }
 
@@ -938,7 +995,7 @@ export async function GET(request: Request) {
 /**
  * Process abandoned checkout recovery emails via Postgres
  */
-async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailScheduler): Promise<number> {
+async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailScheduler, suppressedEmails: Set<string>): Promise<number> {
   let emailsSent = 0
 
   const { rows } = await sql`
@@ -956,6 +1013,15 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
     const nextEmail = ABANDONED_CHECKOUT_SEQUENCE[checkout.emails_sent]
 
     if (hoursSinceAbandoned >= nextEmail.hoursAfter) {
+      // Global suppression check — abandoned checkouts often have NO users
+      // row, so the users.nurture_unsubscribed check below can't catch a
+      // bounced/complained address. email_suppression can.
+      if (suppressedEmails.has(String(checkout.email || '').toLowerCase())) {
+        await sql`UPDATE abandoned_checkouts SET emails_sent = ${ABANDONED_CHECKOUT_SEQUENCE.length} WHERE id = ${checkout.id}`
+        console.log(`[Abandoned] Skipped ${redact(checkout.email)} — suppressed`)
+        continue
+      }
+
       // Check if user has unsubscribed
       try {
         const { rows: userRows } = await sql`
@@ -975,10 +1041,12 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
       const unsubToken = generateUnsubscribeToken(checkout.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(checkout.email)}&token=${unsubToken}`
       const html = nextEmail.template(checkout.name)
-        .replace('{{unsubscribe_url}}', unsubscribeUrl)
+        .replaceAll('{{unsubscribe_url}}', unsubscribeUrl)
 
       try {
-        await sendEmail({
+        // sendEmail returns false (never throws) on failure — only advance
+        // the emails_sent counter on a real send, so failures retry next run.
+        const sent = await sendEmail({
           to: checkout.email,
           scheduledAt: scheduler.next(checkout.email),
           subject: nextEmail.subject,
@@ -992,6 +1060,11 @@ async function processAbandonedCheckouts(baseUrl: string, scheduler: EmailSchedu
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
         })
+
+        if (!sent) {
+          console.error(`[Abandoned Checkout] Send failed for ${redact(checkout.email)} — will retry next run`)
+          continue
+        }
 
         await sql`
           UPDATE abandoned_checkouts SET emails_sent = emails_sent + 1 WHERE id = ${checkout.id}

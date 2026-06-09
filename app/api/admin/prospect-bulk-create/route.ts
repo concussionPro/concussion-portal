@@ -17,19 +17,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/require-admin'
 import { createClinic, getClinicBySlug } from '@/lib/prospect/repo'
+import { generateAccessKey } from '@/lib/prospect/access-key'
 import type { CreateClinicInput } from '@/lib/prospect/repo'
 
-const ACCESS_KEY_ALPHABET = 'abcdefghijkmnopqrstuvwxyz23456789' // unambiguous, no 1/l/0/o
-
-function generateAccessKey(slug: string, length = 6): string {
-  // Deterministic-ish: seed off the slug so re-runs produce stable keys.
-  let key = ''
-  for (let i = 0; i < length; i++) {
-    const charCode = (slug.charCodeAt(i % slug.length) + i * 37) % ACCESS_KEY_ALPHABET.length
-    key += ACCESS_KEY_ALPHABET[charCode]
-  }
-  return key
-}
+// Access keys are RANDOM (crypto.randomBytes) — the old slug-derived keys
+// were computable by anyone who knew the public slug. Re-runs skip existing
+// slugs, so key stability across runs is irrelevant.
 
 export async function POST(req: NextRequest) {
   if (!isAdminRequest(req)) {
@@ -90,7 +83,7 @@ export async function POST(req: NextRequest) {
         continue
       }
 
-      const accessKey = raw.accessKey ?? generateAccessKey(raw.slug!)
+      const accessKey = raw.accessKey ?? generateAccessKey()
       const validUntil = raw.validUntil ? new Date(raw.validUntil) : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
 
       const created = await createClinic({

@@ -331,7 +331,7 @@ function LearningSuiteInner() {
                     <div className="flex-1">
                       <h3 className="text-base font-bold text-foreground mb-1">Ready to manage concussion cases with confidence?</h3>
                       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                        The full course goes beyond SCAT6 — learn VOMS screening, BESS scoring, return-to-play protocols, and phenotype-based rehabilitation. Add a <strong className="text-foreground">hands-on workshop</strong> to practice these skills with expert feedback. Online: <strong className="text-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD</strong> for ${CONFIG.COURSE.PRICE_ONLINE}. Complete (online + workshop): <strong className="text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD</strong> from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early bird. 7-day guarantee · Afterpay / Klarna available.
+                        The full course goes beyond SCAT6 — learn VOMS screening, BESS scoring, return-to-play protocols, and phenotype-based rehabilitation. Add a <strong className="text-foreground">hands-on workshop</strong> to practice these skills with expert feedback. Online: <strong className="text-foreground">{CONFIG.COURSE.ONLINE_CPD_POINTS} CPD</strong> for ${CONFIG.COURSE.PRICE_ONLINE}. Complete (online + workshop): <strong className="text-foreground">{CONFIG.COURSE.TOTAL_CPD_POINTS} CPD</strong> for ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}. 7-day guarantee · Afterpay / Klarna available.
                       </p>
                       <Link
                         href="/pricing"

@@ -67,8 +67,8 @@ When suggesting or implementing marketing/SEO changes, default to these — don'
 - Hosting: Vercel
 - Payments: Stripe Checkout (one-time payment mode)
 - Email: Resend
-- Storage: Vercel Blob (`users.json`) with local JSON fallback in dev
-- Analytics: custom Vercel Blob events + Vercel Analytics + Google Ads conversion API
+- Storage: Vercel Postgres (Neon) via `lib/db.ts` — the old Vercel Blob `users.json` store is fully retired (migration script remains in `scripts/`)
+- Analytics: custom Postgres event store + Vercel Analytics + Google Ads conversion API
 
 ## Conventions
 
@@ -90,7 +90,7 @@ When suggesting or implementing marketing/SEO changes, default to these — don'
 - `lib/email-scheduler.ts` — schedule/send orchestration.
 - `lib/stripe.ts` — Stripe client + checkout session helpers.
 - `lib/tax-invoice.ts` — GST-aware invoice generation, gated by env vars (see `EMAIL_AUTOMATION_GUIDE.md`).
-- `lib/users.ts` — user CRUD against Vercel Blob.
+- `lib/users.ts` — user CRUD against Postgres (atomic `INSERT … ON CONFLICT` upserts; access level can only ever upgrade).
 - `lib/analytics.ts` + `lib/measurement-protocol.ts` — custom event store + Google Ads CAPI.
 - `lib/require-admin.ts` — single source of truth for admin auth.
 - `app/api/webhooks/stripe/route.ts` — Stripe webhook with idempotency.
@@ -98,7 +98,7 @@ When suggesting or implementing marketing/SEO changes, default to these — don'
 
 ## Workshops
 
-- Melbourne: confirmed Sat 13 June 2026, CBD. Early bird cutoff 2026-05-31.
+- Melbourne: confirmed Sat 13 June 2026, CBD. Early bird ENDED 2026-05-31 — price is $1,400 everywhere (display and charge). After 13 June flip `CONFIG.LOCATIONS` Melbourne to `completed` (checkout already refuses past-date workshop sales from 14 June).
 - Sydney + Byron Bay: status `collecting` (demand capture only).
 - `workshopLocation` is required at full-course checkout — validate client-side.
 
@@ -157,6 +157,9 @@ When to chain them:
 ## Pending / known issues
 
 - Existing users have `signupSource: undefined` (display as "Unknown" in admin)
-- Stripe webhook events: add `checkout.session.expired`
-- Google Ads: conversion actions still pending for `scat_mastery_signup`, `free_course_complete`, `scat6_form_download`, `interest_registration`, `checkout_complete`
-- Resend webhook secret in Vercel env drifted vs `.env` — rotate to align
+- Stripe Dashboard: enable `checkout.session.expired` on the webhook endpoint (code handles it end-to-end; recovery emails are dead until the event is ticked)
+- Vercel env to verify: `AI_COURSE_PUBLIC` (visibility only now — enrolled users always have access), `BUSINESS_GST_REGISTERED`, `RESEND_INBOUND_WEBHOOK_SECRET` (reply detection), `RESEND_WEBHOOK_SECRET` drift — rotate to align
+- Reply detection requires inbound mail forwarding: replies to cold outreach land in zac@'s inbox; forward them to the Resend inbound address or `status='replied'` never fires
+- Google Ads conversion actions (deprioritized — channel is cold outreach now): `scat_mastery_signup`, `free_course_complete`, `scat6_form_download`, `interest_registration`, `checkout_complete`
+- Friday 2026-06-12 blog post `ahpra-ai-code-section-by-section` is `not-started`; blog schedule runs dry 2026-08-13 (cron now warns)
+- After a new workshop round opens: update `CONFIG.WORKSHOP.ROUND_START` for the city so enrollment counts scope to the round

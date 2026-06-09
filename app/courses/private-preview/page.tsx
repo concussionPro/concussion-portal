@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { ArrowRight, Award, BookOpen, Workflow, Activity, Layers, ShoppingBag } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'CEA · platform demo',
@@ -126,7 +127,7 @@ export default async function PreviewPage() {
                   <Award className="w-3 h-3" />
                   Live · OA-endorsed
                 </span>
-                <span className="text-[11px] font-bold text-slate-600">A$1,190</span>
+                <span className="text-[11px] font-bold text-slate-600">A${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
               </div>
               <h2 className="text-lg font-bold text-foreground leading-tight mb-1.5">
                 Concussion Clinical Mastery

@@ -46,18 +46,19 @@ export type AuthorObject = {
 }
 export type AuthorInput = string | AuthorObject
 
-function resolveAuthor(input: AuthorInput): AuthorObject {
+function resolveAuthor(input: AuthorInput): AuthorObject & { '@type': 'Person' } {
   if (typeof input === 'string') {
     const known = (AUTHORS as Record<string, AuthorObject>)[input]
-    if (known) return { ...known }
+    if (known) return { '@type': 'Person', ...known }
     return {
+      '@type': 'Person',
       name: input,
       jobTitle: 'Contributor',
       hasCredential: '',
       knowsAbout: ['Sport-Related Concussion'],
     }
   }
-  return input
+  return { '@type': 'Person', ...input }
 }
 
 /**
@@ -69,7 +70,9 @@ export const organizationSchema = {
   name: 'Concussion Education Australia',
   alternateName: 'CEA',
   url: MARKETING_URL,
-  logo: `${MARKETING_URL}/logo.png`,
+  // Logo must live where the file actually resolves — /logo.png 404s on the
+  // apex marketing domain but exists in the portal's public/ dir.
+  logo: `${SITE_URL}/logo.png`,
   description:
     'Australia\'s concussion CPD provider for GPs, physiotherapists, osteopaths and allied health clinicians. AHPRA-aligned, Osteopathy Australia endorsed. Also publishes AI in Clinical Practice training covering AHPRA AI guidelines, Australian Privacy Principles, NDIS-audit-safe documentation, and AI scribe selection (Heidi, Lyrebird, ChatGPT).',
   founder: resolveAuthor('Zac Lewis'),
@@ -425,7 +428,7 @@ export function createBlogPostSchema(params: {
       url: MARKETING_URL,
       logo: {
         '@type': 'ImageObject',
-        url: `${MARKETING_URL}/logo.png`,
+        url: `${SITE_URL}/logo.png`,
       },
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': params.url },

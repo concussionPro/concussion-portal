@@ -16,10 +16,14 @@ export interface GateResult {
 }
 
 /**
- * Admin-only during preview. The enrolled-user path is dormant until
- * AI_COURSE_PUBLIC=true is set. The user wants every part of the
- * AI-course surface behind the admin key (no public verify URL, no
- * public certificate PDF, no enrolled-user path until launch).
+ * Mirrors lib/ai-course/access.ts (checkAiCourseAccess):
+ *   - Admin always passes
+ *   - Demo-key holders pass
+ *   - ENROLLED users (users.ai_course_enrolled=true) ALWAYS pass —
+ *     regardless of AI_COURSE_PUBLIC. They paid; the visibility flag
+ *     must never lock them out.
+ *   - AI_COURSE_PUBLIC only gates public/preview visibility for
+ *     everyone else (no public path while it's unset).
  */
 export async function checkServerAccess(): Promise<GateResult> {
   const cookieStore = await cookies()
@@ -43,18 +47,24 @@ export async function checkServerAccess(): Promise<GateResult> {
     return { ok: true, reason: 'demo-key' }
   }
 
-  // Preview mode (default): admin or demo-key only. No enrolled-user path active.
+  // Enrolled (purchased) users ALWAYS pass — AI_COURSE_PUBLIC only gates
+  // public/preview visibility, never paid access (mirrors checkAiCourseAccess
+  // in lib/ai-course/access.ts).
+  const sessionCookie = cookieStore.get('session')?.value
+  const session = sessionCookie ? verifySessionToken(sessionCookie) : null
+  if (session) {
+    const enrolled = await isUserEnrolled(session.email)
+    if (enrolled) return { ok: true, reason: 'enrolled', email: session.email }
+  }
+
+  // Preview mode (flag unset): admin / demo-key / enrolled only — no public path.
   if (process.env.AI_COURSE_PUBLIC !== 'true') {
     return { ok: false, reason: 'admin-required' }
   }
 
-  // Post-launch mode: enrolled users pass.
-  const sessionCookie = cookieStore.get('session')?.value
+  // Flag is on but the visitor isn't enrolled — the course is paid, not free.
   if (!sessionCookie) return { ok: false, reason: 'no-session' }
-  const session = verifySessionToken(sessionCookie)
   if (!session) return { ok: false, reason: 'invalid-session' }
-  const enrolled = await isUserEnrolled(session.email)
-  if (enrolled) return { ok: true, reason: 'enrolled', email: session.email }
   return { ok: false, reason: 'not-enrolled', email: session.email }
 }
 

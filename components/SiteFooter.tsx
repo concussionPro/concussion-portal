@@ -10,7 +10,7 @@ export function SiteFooter() {
           {/* Brand */}
           <div>
             <div className="text-lg font-bold text-white mb-2">
-              Concussion<span className="text-[#5b9aa6]">Pro</span>
+              Concussion Education <span className="text-[#5b9aa6]">Australia</span>
             </div>
             <p className="text-sm leading-relaxed mb-3">
               Australia&apos;s most comprehensive concussion management training. AHPRA-aligned, evidence-based education for healthcare professionals.
@@ -31,6 +31,7 @@ export function SiteFooter() {
           <div>
             <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">Resources</h4>
             <ul className="space-y-2 text-sm">
+              <li><Link href="/courses" className="hover:text-white transition-colors">All Courses</Link></li>
               <li><Link href="/preview" className="hover:text-white transition-colors">Course Preview</Link></li>
               <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
               <li><Link href="/scat-forms" className="hover:text-white transition-colors">SCAT6 / SCOAT6 Forms</Link></li>

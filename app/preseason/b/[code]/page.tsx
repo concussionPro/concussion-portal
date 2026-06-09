@@ -714,7 +714,7 @@ export default function AthleteBaselineForm() {
               onClick={() => router.push('/')}
               className="btn-primary px-8 py-3 rounded-xl font-semibold"
             >
-              Go to ConcussionPro
+              Go to Concussion Education Australia
             </button>
           )}
         </div>

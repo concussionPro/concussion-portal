@@ -16,6 +16,33 @@
 import { CONFIG } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
 import { signSurveyAnswer } from '@/lib/survey-token'
+import { findCourse, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
+
+/**
+ * Truthful AI-course pricing at SEND time, derived from the provider
+ * catalogue (single source of truth for launch pricing). Never hardcode a
+ * deadline in template copy — these emails fire on rolling day-N schedules,
+ * so a fixed date becomes false urgency the day after it passes.
+ */
+function aiCoursePricing(): { priceLine: string; ctaLabel: string } {
+  const course = findCourse('ai-in-clinical-practice')
+  const fullPrice = course?.priceAUD ?? 197
+  const { price, isEarlyBird } = course
+    ? getEffectivePrice(course)
+    : { price: fullPrice, isEarlyBird: false }
+  const current = price ?? fullPrice
+  if (isEarlyBird && course?.earlyBirdEndsAt) {
+    const endsAt = new Date(course.earlyBirdEndsAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+    return {
+      priceLine: `<strong>Launch price: A$${current}</strong> (regular price A$${fullPrice}). Launch pricing ends ${escapeHtml(endsAt)}.`,
+      ctaLabel: `Get it at A$${current} (launch price)`,
+    }
+  }
+  return {
+    priceLine: `<strong>A$${current}</strong> &mdash; 3 CPD hours, fully online, certificate on completion.`,
+    ctaLabel: `See the course (A$${current})`,
+  }
+}
 
 /** Append UTM params to a URL. Handles existing query strings. */
 function utm(url: string, campaign: string, content?: string): string {
@@ -450,7 +477,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       </div>
       ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'scat_mastery_day14', 'see_course')}" class="cta-btn">See Full Course</a></center>
-      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} &middot; Online + workshop from $${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</p>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">Online from $${CONFIG.COURSE.PRICE_ONLINE} &middot; Online + workshop $${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -477,7 +504,7 @@ export const SCAT_MASTERY_SEQUENCE = [
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9; background: #f0fdfa;">
           <td style="padding: 14px 16px;"><strong>Complete Course</strong><br><span style="font-size: 13px; color: #64748b;">Online + workshop &middot; 14 CPD hours</span></td>
-          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</td>
+          <td style="padding: 14px 16px; text-align: right; font-weight: 700; white-space: nowrap;">$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}</td>
         </tr>
       </table>
       <center><a href="${utm(upgradeLink + (upgradeLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'scat_mastery_day28', 'last_chance')}" class="cta-btn">Use SCAT6 — A$${CONFIG.COURSE.PRICE_ONLINE - 50} instead of A$${CONFIG.COURSE.PRICE_ONLINE}</a></center>
@@ -497,7 +524,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p>If you're still considering the full course, here's the summary:</p>
       <ul>
         <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD hours, lifetime access</li>
-        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}):</strong> Online + full-day workshop, 14 CPD hours</li>
+        <li><strong>Complete Course ($${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}):</strong> Online + full-day workshop, 14 CPD hours</li>
       </ul>
       <p>Both include the clinical toolkit, reference repository, and digital certificate.</p>
       ${nextWorkshopCallout()}
@@ -782,7 +809,7 @@ export const REENGAGEMENT_EMAIL = {
   subject: 'Your concussion modules are waiting',
   template: (name: string, loginLink: string) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-    <p>Just a quick check-in — I noticed you haven't logged into ConcussionPro recently.</p>
+    <p>Just a quick check-in — I noticed you haven't logged into your Concussion Education Australia account recently.</p>
     <p>Your modules are still there, ready when you are. Most clinicians find it easiest to do one module per sitting (about 45–60 minutes each).</p>
     <div class="callout">
       <strong>Quick tip:</strong> Modules 3 and 6 are the most clinically actionable — they cover practical assessment skills and return-to-play/work/school protocols you can use immediately.
@@ -979,7 +1006,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
         &#8226; Optional Melbourne workshop for hands-on practice (6 more CPD hours)
       </div>
       <center><a href="${utm(pricingLink, 'ref_upgrade_d9', 'bundle_credit')}" class="cta-btn">See Your Discounted Price</a></center>
-      <p class="ps">P.S. The credit doesn't expire — but early-bird workshop pricing does (${escapeHtml(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE)}).</p>
+      <p class="ps">P.S. The credit doesn't expire — it's tied to your account, not a code.</p>
       <div class="sig">Zac</div>
     `),
   },
@@ -1003,7 +1030,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
         <li>You need CPD hours and want them in one structured block</li>
         <li>You want the confidence of watching it done before attempting it yourself</li>
       </ul>
-      <p>With the A$100 bundle credit, the online course is <strong>A$${CONFIG.COURSE.PRICE_ONLINE - 100}</strong> — about the cost of one private consult. Full course (online + Melbourne workshop) drops to <strong>A$${CONFIG.COURSE.PRICE_EARLY_BIRD - 100}</strong> at early-bird pricing.</p>
+      <p>With the A$100 bundle credit, the online course is <strong>A$${CONFIG.COURSE.PRICE_ONLINE - 100}</strong> — about the cost of one private consult. Full course (online + Melbourne workshop) drops to <strong>A$${(CONFIG.COURSE.PRICE_REGULAR - 100).toLocaleString('en-AU')}</strong>.</p>
       <center><a href="${utm(pricingLink, 'ref_upgrade_d21', 'comparison')}" class="cta-btn">View Course Options</a></center>
       <div class="sig">Zac</div>
     `),
@@ -1082,25 +1109,29 @@ export const PAID_NO_PROGRESS_NUDGE = {
  * attendees + unsubscribed + cold non-openers.
  *
  * Goal: convert engaged not-yet-paid users into Melbourne 13 Jun 2026
- * full-course attendees before early-bird closes 31 May.
+ * full-course attendees.
+ *
+ * RETIRED COPY (June 2026): the early-bird window closed 31 May 2026 and
+ * this blast already fired. The template below is the truthful post-early-
+ * bird version (regular price, no deadline) so an accidental re-trigger
+ * can't quote a price we no longer charge or a deadline that has passed.
  */
 export const MELBOURNE_EARLY_BIRD_LAST_CALL = {
-  subject: 'Melbourne workshop — early bird closes tomorrow (save A$210)',
+  subject: 'Melbourne workshop — Saturday 13 June 2026',
   template: (name: string, pricingLink: string) => emailShell(`
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p>Quick heads-up since you&rsquo;ve been engaging with our content &mdash; the early-bird price on the Melbourne Concussion Clinical Mastery workshop closes <strong>tomorrow (Sat 31 May)</strong>.</p>
+    <p>Quick heads-up since you&rsquo;ve been engaging with our content &mdash; the Melbourne Concussion Clinical Mastery workshop is locked in for <strong>Saturday 13 June 2026, Melbourne CBD (Rydges Exhibition St)</strong>.</p>
     <div class="callout">
-      <strong>A$1,190 early-bird</strong> → A$1,400 from Sunday onwards. <strong>Save A$210</strong> if you confirm before midnight.
+      <strong>A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')} all-in</strong> &mdash; online course + full-day workshop, 14 CPD hours.
     </div>
-    <p><strong>Saturday 13 June 2026, Melbourne CBD (Rydges Exhibition St)</strong></p>
     <ul>
       <li>14 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
       <li>Full day, 8am&ndash;4pm, buffet lunch included</li>
       <li>Capped at 12 clinicians for hands-on practice time</li>
       <li>25% off Rydges accommodation for attendees travelling in</li>
     </ul>
-    <center><a href="${utm(pricingLink, 'melbourne_eb_last_call_v1', 'enrol')}" class="cta-btn">Enrol at A$1,190 before midnight</a></center>
-    <p>If you have any questions about whether it fits your scope or schedule, just reply &mdash; I&rsquo;ll respond before tomorrow night.</p>
+    <center><a href="${utm(pricingLink, 'melbourne_eb_last_call_v1', 'enrol')}" class="cta-btn">Full details + enrol</a></center>
+    <p>If you have any questions about whether it fits your scope or schedule, just reply.</p>
     <div class="sig">
       Zac<br>
       Concussion Education Australia
@@ -1121,7 +1152,7 @@ export const MELBOURNE_WORKSHOP_PUSH = {
       <li>Capped at 12 clinicians for hands-on practice time</li>
     </ul>
     <center><a href="${utm(pricingLink, 'melbourne_push_v1', 'enrol')}" class="cta-btn">Full details + enrol</a></center>
-    <p>Early-bird pricing of <strong>$1,190</strong> closes 31 May (regular $1,400 after that).</p>
+    <p>The complete course (online + workshop) is <strong>$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}</strong> all-in.</p>
     <p>Any questions, just reply.</p>
     <div class="sig">
       Zac<br>
@@ -1189,8 +1220,8 @@ export const AI_SAFETY_CHECKLIST_DAY3 = {
       <li><strong>Missing consent record.</strong> A note that says &ldquo;AI scribe used&rdquo; but doesn&rsquo;t document the patient&rsquo;s explicit verbal consent is unsupportable under AHPRA AI guidelines. The consent line takes 8 seconds to add and prevents the entire problem.</li>
       <li><strong>Pasting personal information into ChatGPT.</strong> Most clinicians don&rsquo;t realise this is an offshore disclosure under Australian Privacy Principle 8. Even one patient name in a prompt creates a notifiable-disclosure risk.</li>
     </ol>
-    <p>The full Tier A / B / C framework for choosing AI tools that don&rsquo;t fall into these traps is in the upcoming course.</p>
-    <center><a href="${utm(courseLink, 'ai_checklist_day3', 'see_course')}" class="cta-btn">AI in Clinical Practice &rarr; A$99 launch week</a></center>
+    <p>The full Tier A / B / C framework for choosing AI tools that don&rsquo;t fall into these traps is in the AI in Clinical Practice course.</p>
+    <center><a href="${utm(courseLink, 'ai_checklist_day3', 'see_course')}" class="cta-btn">${aiCoursePricing().ctaLabel}</a></center>
     <div class="sig">
       Zac<br>
       Concussion Education Australia
@@ -1206,7 +1237,8 @@ export const AI_SAFETY_CHECKLIST_DAY7 = {
     <p>The short answer: both are healthcare-purpose-built AU scribes (Tier A in the checklist framework). Heidi has wider adoption and broader workflow support; Lyrebird is leaner and works better for solo practitioners. ChatGPT is a different category entirely &mdash; not a scribe, not Privacy Act-compliant by default.</p>
     <p>I wrote up the full comparison &mdash; including the AHPRA + Privacy Act differences and a side-by-side feature table &mdash; here:</p>
     <center><a href="${utm(blogLink, 'ai_checklist_day7', 'read_comparison')}" class="cta-btn">Read: Heidi vs Lyrebird vs ChatGPT</a></center>
-    <p>If you want the full Tier A / B / C framework with worked examples for physio, osteo, GP and naturopathy, that&rsquo;s the AI in Clinical Practice course &mdash; launching 1 June, A$99 launch week.</p>
+    <p>If you want the full Tier A / B / C framework with worked examples for physio, osteo, GP and naturopathy, that&rsquo;s the AI in Clinical Practice course.</p>
+    <p>${aiCoursePricing().priceLine}</p>
     <p>&mdash; <a href="${utm(courseLink, 'ai_checklist_day7', 'see_course')}">See the course</a></p>
     <div class="sig">
       Zac<br>
@@ -1216,13 +1248,14 @@ export const AI_SAFETY_CHECKLIST_DAY7 = {
 }
 
 export const AI_SAFETY_CHECKLIST_DAY14 = {
-  subject: 'Last call: AI in Clinical Practice — A$99 launch week ends Sunday',
+  // Fires on a rolling day-14 schedule — NEVER hardcode a deadline here.
+  // Pricing/urgency derives from the provider catalogue at send time.
+  subject: 'AI in Clinical Practice — the full framework behind your checklist',
   template: (name: string, courseLink: string) => emailShell(`
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p>Quick heads-up &mdash; the launch-week price on AI in Clinical Practice (A$99, 50% off the A$197 regular price) ends <strong>Wednesday 24 June at 23:59 AEST</strong>.</p>
-    <p>If you&rsquo;ve been on the fence, this is the moment. After Sunday it&rsquo;s A$197 indefinitely.</p>
-    <p>You already have the AI Safety Checklist &mdash; the course is the full framework behind it. 3 CPD hours, 9 modules, certificate.</p>
-    <center><a href="${utm(courseLink, 'ai_checklist_day14', 'last_chance')}" class="cta-btn">Get it at A$99 (ends Sunday)</a></center>
+    <p>Two weeks with the AI Safety Checklist &mdash; if it&rsquo;s earning its place in your workflow, the course is the full framework behind it. 3 CPD hours, 9 modules, certificate.</p>
+    <p>${aiCoursePricing().priceLine}</p>
+    <center><a href="${utm(courseLink, 'ai_checklist_day14', 'last_chance')}" class="cta-btn">${aiCoursePricing().ctaLabel}</a></center>
     <p>If you&rsquo;ve decided it&rsquo;s not for you, no worries &mdash; you&rsquo;ll stay on the list for the MBS Billing for Allied Health course landing in August.</p>
     <div class="sig">
       Zac<br>
@@ -1232,7 +1265,7 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
 }
 
 export const AI_COURSE_LAUNCH_BLAST = {
-  subject: 'AI in clinical practice — launching 1 June (50% off for engaged users)',
+  subject: 'AI in clinical practice — launching 17 June (launch pricing for engaged users)',
   template: (name: string, courseLink: string) => emailShell(`
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
     <p>Quick heads-up since you&rsquo;ve been engaging with our concussion content — I&rsquo;m launching a new short course on <strong>17 June 2026</strong> that you might find useful.</p>
@@ -1253,10 +1286,9 @@ export const AI_COURSE_LAUNCH_BLAST = {
     </ul>
     <p>3 CPD hours, fully online, certificate on completion.</p>
     <div class="callout">
-      <strong>Launch-week price: A$99</strong> (50% off the A$197 regular price). Available 1&ndash;8 June 2026 only.
+      ${aiCoursePricing().priceLine}
     </div>
-    <center><a href="${utm(courseLink, 'ai_course_launch_v1', 'reserve')}" class="cta-btn">See the course (A$99 launch week)</a></center>
-    <p>If it&rsquo;s relevant to your practice, the launch-week price disappears on Wednesday 24 June. After that it&rsquo;s A$197.</p>
+    <center><a href="${utm(courseLink, 'ai_course_launch_v1', 'reserve')}" class="cta-btn">${aiCoursePricing().ctaLabel}</a></center>
     <p>Reply if you have any questions about whether it fits your scope.</p>
     <div class="sig">
       Zac<br>

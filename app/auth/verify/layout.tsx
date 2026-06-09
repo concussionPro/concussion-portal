@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Verify Login | ConcussionPro',
-  description: 'Verifying your login to ConcussionPro.',
+  title: 'Verify Login',
+  description: 'Verifying your login to Concussion Education Australia.',
 }
 
 export default function VerifyLayout({ children }: { children: React.ReactNode }) {

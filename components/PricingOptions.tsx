@@ -211,9 +211,6 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
   const isCompact = variant === 'compact'
 
-  // Early bird: check deadline. Server is source of truth at checkout.
-  const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
-
   // Read pre-selected location, promo code, and UTM params from URL.
   //
   // Default to Melbourne — it's the only confirmed workshop, so any user
@@ -252,12 +249,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   }, [])
 
 
-  // Bundle owners get A$100 off online-only and full-course (applied at checkout)
+  // Bundle owners get A$100 off online-only and full-course (applied at checkout).
+  // Early bird is over (cutoff 2026-05-31) — the Complete Course is always
+  // PRICE_REGULAR. Server (lib/stripe.ts) is the source of truth at checkout.
   const BUNDLE_DISCOUNT = 100
   const onlinePrice = bookOwner ? CONFIG.COURSE.PRICE_ONLINE - BUNDLE_DISCOUNT : CONFIG.COURSE.PRICE_ONLINE
   const fullCoursePrice = bookOwner
-    ? (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD - BUNDLE_DISCOUNT : CONFIG.COURSE.PRICE_REGULAR - BUNDLE_DISCOUNT)
-    : (isEarlyBird ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR)
+    ? CONFIG.COURSE.PRICE_REGULAR - BUNDLE_DISCOUNT
+    : CONFIG.COURSE.PRICE_REGULAR
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     try {
@@ -286,9 +285,14 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       })
 
       if (!res.ok) {
-        const text = await res.text()
-        console.error('[checkout] API error:', res.status, text)
-        setError('Checkout unavailable — please try again or contact support.')
+        // Business-rule rejections (workshop sold out / already ran) come back
+        // as JSON with a buyer-readable error — show it instead of a generic line.
+        const data = await res.json().catch(() => null)
+        console.error('[checkout] API error:', res.status, data)
+        setError(
+          (data && typeof data.error === 'string' && data.error) ||
+            'Checkout unavailable — please try again or contact support.'
+        )
         setLoading(null)
         return
       }
@@ -397,29 +401,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <p className="text-[10px] text-slate-500 mb-3">Full Concussion Clinical Mastery — online modules + hands-on workshop</p>
 
             <div className="mb-4">
-              {isEarlyBird ? (
-                <>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-2xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
-                    <span className="text-[10px] text-slate-400">≈ $770 USD</span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
-                </>
-              ) : (
-                <>
-                  {bookOwner && (
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
-                    </div>
-                  )}
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-2xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
-                    <span className="text-[10px] text-slate-400">≈ $910 USD</span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
-                </>
+              {bookOwner && (
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
+                </div>
               )}
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
+                <span className="text-[10px] text-slate-400">≈ $910 USD</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD hours</p>
             </div>
 
@@ -665,29 +657,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </span>
             </div>
             <div className="text-right flex-shrink-0">
-              {isEarlyBird ? (
-                <>
-                  <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
-                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
-                  </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
-                </>
-              ) : (
-                <>
-                  {bookOwner && (
-                    <div className="flex items-center gap-1.5 justify-end mb-0.5">
-                      <span className="text-[11px] text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">−${BUNDLE_DISCOUNT}</span>
-                    </div>
-                  )}
-                  <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
-                    <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
-                  </div>
-                  <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
-                </>
+              {bookOwner && (
+                <div className="flex items-center gap-1.5 justify-end mb-0.5">
+                  <span className="text-[11px] text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">−${BUNDLE_DISCOUNT}</span>
+                </div>
               )}
+              <div className="flex items-baseline gap-1 justify-end">
+                <span className="text-2xl font-bold text-[var(--foreground)] tracking-tight">${fullCoursePrice.toLocaleString()}</span>
+                <span className="text-[11px] text-[var(--muted-foreground)]">AUD</span>
+              </div>
+              <p className="text-[10px] text-[var(--muted-foreground)]">or 4 x ${afterpayInstalment(fullCoursePrice)}</p>
             </div>
           </div>
 

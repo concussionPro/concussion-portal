@@ -202,7 +202,12 @@ export function generateTaxInvoicePdf(input: InvoiceInput): Buffer {
   doc.setTextColor(71, 85, 105)
   y += 22
 
-  if (biz.gstRegistered) {
+  // GST only applies to AUD (domestic) supplies. Non-AUD invoices (e.g. the
+  // USD international course) are exports of education services to
+  // non-residents — GST-free under s38-190 GST Act, so no GST line.
+  const isAudSupply = input.currency.toUpperCase() === 'AUD'
+
+  if (biz.gstRegistered && isAudSupply) {
     // Prices are GST-inclusive — break out GST = total / 11
     const gstCents = Math.round(input.totalCents / 11)
     const subtotalCents = input.totalCents - gstCents
@@ -212,6 +217,12 @@ export function generateTaxInvoicePdf(input: InvoiceInput): Buffer {
     doc.text('GST (10%)', MARGIN_X + 320, y, { align: 'right' })
     doc.text(formatCents(gstCents, input.currency), COL_RIGHT, y, { align: 'right' })
     y += 16
+  } else if (biz.gstRegistered && !isAudSupply) {
+    doc.setFontSize(9)
+    doc.setTextColor(71, 85, 105)
+    doc.text('GST-free export supply — no GST has been charged.', MARGIN_X, y)
+    y += 4
+    doc.setFontSize(10)
   } else {
     doc.setFontSize(9)
     doc.setTextColor(71, 85, 105)

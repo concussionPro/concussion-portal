@@ -39,6 +39,8 @@
  * }
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { lookup } from 'node:dns/promises'
+import net from 'node:net'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
 
@@ -85,20 +87,83 @@ function stripHtml(html: string): string {
     .trim()
 }
 
+// ── SSRF guard ───────────────────────────────────────────────────────────────
+// clinic_website_url comes from the DB (Apollo imports / manual entry) — an
+// attacker-controlled or typo'd URL must not let this route reach internal
+// services. Require http/https, resolve every hostname and reject private /
+// link-local / loopback / metadata ranges, and re-check each redirect hop.
+
+function isPrivateIPv4(ip: string): boolean {
+  const parts = ip.split('.').map(Number)
+  if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) return true
+  const [a, b] = parts
+  if (a === 0) return true // 0.0.0.0/8
+  if (a === 127) return true // loopback 127.0.0.0/8
+  if (a === 10) return true // 10.0.0.0/8
+  if (a === 172 && b >= 16 && b <= 31) return true // 172.16.0.0/12
+  if (a === 192 && b === 168) return true // 192.168.0.0/16
+  if (a === 169 && b === 254) return true // link-local + cloud metadata 169.254.0.0/16
+  return false
+}
+
+export function isPrivateIp(ip: string): boolean {
+  const family = net.isIP(ip)
+  if (family === 4) return isPrivateIPv4(ip)
+  if (family === 6) {
+    const lower = ip.toLowerCase()
+    if (lower === '::' || lower === '::1') return true // unspecified + loopback
+    if (lower.startsWith('fc') || lower.startsWith('fd')) return true // ULA fc00::/7
+    if (lower.startsWith('fe8') || lower.startsWith('fe9') || lower.startsWith('fea') || lower.startsWith('feb')) return true // link-local fe80::/10
+    // IPv4-mapped (::ffff:10.0.0.1) — check the embedded IPv4
+    const v4 = lower.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/)
+    if (v4) return isPrivateIPv4(v4[1])
+    return false
+  }
+  return true // not a valid IP — deny
+}
+
+/** True if the URL is http/https and its host resolves only to public IPs. */
+export async function isSafeUrl(url: URL): Promise<boolean> {
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+  const host = url.hostname.replace(/^\[|\]$/g, '') // strip IPv6 brackets
+  if (net.isIP(host)) return !isPrivateIp(host)
+  try {
+    const addrs = await lookup(host, { all: true })
+    if (addrs.length === 0) return false
+    return addrs.every((a) => !isPrivateIp(a.address))
+  } catch {
+    return false
+  }
+}
+
+const MAX_REDIRECTS = 5
+
 async function fetchPage(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml',
-      },
-      signal: AbortSignal.timeout(8000),
-      redirect: 'follow',
-    })
-    if (!res.ok) return null
-    const ct = res.headers.get('content-type') || ''
-    if (!ct.includes('html')) return null
-    return await res.text()
+    let current = new URL(url)
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      if (!(await isSafeUrl(current))) return null
+      const res = await fetch(current, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml',
+        },
+        signal: AbortSignal.timeout(8000),
+        redirect: 'manual',
+      })
+      // Follow redirects manually so every hop is re-checked against the guard
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get('location')
+        if (!location) return null
+        current = new URL(location, current)
+        continue
+      }
+      if (!res.ok) return null
+      const ct = res.headers.get('content-type') || ''
+      if (!ct.includes('html')) return null
+      return await res.text()
+    }
+    return null // too many redirects
   } catch {
     return null
   }

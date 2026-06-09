@@ -5,8 +5,8 @@ import { SiteNav } from '@/components/SiteNav'
 import { EmailCaptureInline } from '@/components/EmailCaptureInline'
 
 export const metadata: Metadata = {
-  title: 'Free SCAT6 & SCOAT6 Digital Forms | Concussion Education Australia',
-  description: 'Free digitally fillable SCAT6 and SCOAT6 concussion assessment forms with auto-scoring. AHPRA-aligned for Australian healthcare professionals.',
+  title: 'SCAT6 & SCOAT6 Web Forms — Auto-Scoring Digital Assessment Tools',
+  description: 'Complete SCAT6, SCOAT6 and Child SCAT6 assessments in your browser with automatic score calculation and PDF export for medical records. Built for Australian clinicians.',
 }
 
 export default function SCATFormsPage() {

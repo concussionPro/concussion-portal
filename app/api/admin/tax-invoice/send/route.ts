@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 
   const description = productType === 'reference-book'
     ? 'Concussion Clinical Mastery — Reference Text + Clinical Toolkit 2026 (256-page digital PDF, lifetime access)'
-    : `ConcussionPro — ${courseType || 'Online Course'}${location ? ` (workshop: ${location})` : ''}`
+    : `Concussion Education Australia — ${courseType || 'Online Course'}${location ? ` (workshop: ${location})` : ''}`
 
   const issueDate = new Date()
   const invNumber = invoiceNumberFromSession(session.id, paidAt)

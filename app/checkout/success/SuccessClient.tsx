@@ -128,7 +128,7 @@ function CheckoutSuccessContent() {
       <nav className="glass border-b border-border/30">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Link href="/" className="text-xl font-bold">
-            Concussion<span className="text-gradient">Pro</span>
+            Concussion Education <span className="text-gradient">Australia</span>
           </Link>
         </div>
       </nav>
@@ -156,14 +156,9 @@ function CheckoutSuccessContent() {
           </Link>
         </div>
 
-        {/* Early bird savings callout */}
-        {sessionData?.amountPaid && sessionData.amountPaid < CONFIG.COURSE.PRICE_REGULAR && isFullCourseType && (!sessionData?.currency || sessionData.currency === 'AUD') && (
-          <div className="text-center mb-8 py-3 px-5 rounded-xl bg-emerald-50 border border-emerald-200">
-            <p className="text-sm font-semibold text-emerald-800">
-              Early bird pricing — you saved ${(CONFIG.COURSE.PRICE_REGULAR - sessionData.amountPaid).toLocaleString()} AUD
-            </p>
-          </div>
-        )}
+        {/* Early-bird savings callout removed — early bird closed 31 May 2026.
+            (It also mislabelled workshop-upgrade and bundle-credit purchases,
+            which are below PRICE_REGULAR without being early-bird.) */}
 
         {/* Workshop info for full-course and workshop-upgrade */}
         {isFullCourseType && sessionData?.location && (() => {
@@ -314,10 +309,9 @@ function CheckoutSuccessContent() {
 
         {/* Workshop upsell for online-only buyers */}
         {sessionData?.courseType === 'online-only' && (() => {
-          const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
-          const upgradePrice = isEarlyBird
-            ? CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
-            : CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+          // Early bird is over — the server charges the regular upgrade
+          // delta ($903), so the displayed price must match.
+          const upgradePrice = CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
           return (
             <div className="mt-8 glass rounded-2xl p-6 border-2 border-orange-200/60">
               <div className="flex items-start gap-3 mb-3">

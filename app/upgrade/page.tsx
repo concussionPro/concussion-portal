@@ -16,7 +16,8 @@ const LOCATIONS = Object.values(CONFIG.LOCATIONS)
     date: loc.date,
   }))
 
-const UPGRADE_PRICE_EARLY = CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
+// Early bird is over (cutoff 2026-05-31) — the server charges
+// WORKSHOP_UPGRADE_REGULAR, so display must match ($903, never $693).
 const UPGRADE_PRICE_REGULAR = CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
 
 function UpgradeContent() {
@@ -28,8 +29,7 @@ function UpgradeContent() {
   const [error, setError] = useState('')
   const canceled = searchParams.get('canceled') === 'true'
 
-  const isEarlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
-  const upgradePrice = isEarlyBird ? UPGRADE_PRICE_EARLY : UPGRADE_PRICE_REGULAR
+  const upgradePrice = UPGRADE_PRICE_REGULAR
 
   // Auth guard
   useEffect(() => {
@@ -97,7 +97,7 @@ function UpgradeContent() {
       <nav className="glass border-b border-border/30">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="text-xl font-bold">
-            Concussion<span className="text-gradient">Pro</span>
+            Concussion Education <span className="text-gradient">Australia</span>
           </Link>
           <Link
             href="/dashboard"

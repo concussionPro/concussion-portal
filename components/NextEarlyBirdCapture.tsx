@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Loader2, Check, Sparkles } from 'lucide-react'
+import { trackInterestRegistration } from '@/lib/analytics'
 
 type CitySlug = 'sydney' | 'byron-bay' | 'adelaide' | 'wa' | 'melbourne'
 
@@ -52,6 +53,7 @@ export function NextEarlyBirdCapture({
       })
       const data = await res.json()
       if (data.success) {
+        trackInterestRegistration(city, email)
         setDone(true)
       } else {
         setError(data.error || 'Something went wrong.')

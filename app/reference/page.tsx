@@ -354,7 +354,7 @@ export default function ReferencePage() {
           {/* Final CTA */}
           <div className="text-center">
             <p className="text-sm text-slate-500 mb-4">
-              Instant PDF download after purchase · Lifetime access via your ConcussionPro account · 7-day satisfaction guarantee.
+              Instant PDF download after purchase · Lifetime access via your Concussion Education Australia account · 7-day satisfaction guarantee.
             </p>
             <button
               onClick={handleBuy}

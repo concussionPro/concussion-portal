@@ -57,20 +57,20 @@ export default function SydneyPage() {
                 <a
                   href={`${CONFIG.SHOP_URL}?location=sydney`}
                   className="btn-primary px-10 py-4 rounded-xl text-lg font-bold inline-flex items-center gap-2 shadow-2xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                  aria-label={`Enrol in Sydney session for $${CONFIG.COURSE.PRICE_EARLY_BIRD}`}
+                  aria-label={`Enrol in Sydney session for $${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}`}
                 >
-                  Enrol Now - ${CONFIG.COURSE.PRICE_EARLY_BIRD}
+                  Enrol Now - ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
 
                 <p className="text-sm text-muted-foreground mt-4">
-                  Early bird pricing — save ${CONFIG.COURSE.SAVINGS} (limited time)
+                  Complete course — online modules + full-day workshop · Afterpay / Klarna available
                 </p>
               </>
             ) : (
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
                 <Calendar className="w-4 h-4" aria-hidden="true" />
-                {CONFIG.WORKSHOP.NEXT_ROUND} — Reserve Your Spot Below
+                Sydney date to be confirmed — register your interest below
               </div>
             )}
           </div>
@@ -107,7 +107,11 @@ export default function SydneyPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold">Training Date</h3>
-                  <p className="text-sm text-muted-foreground">{location.date || CONFIG.WORKSHOP.NEXT_ROUND}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {location.status === 'confirmed' && location.date
+                      ? location.date
+                      : 'Date to be confirmed — register your interest'}
+                  </p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">

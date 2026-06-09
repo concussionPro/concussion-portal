@@ -3,7 +3,7 @@
  *
  * One-time payment checkout for concussion courses:
  *   - Online Only: $497 AUD
- *   - Full Course (online + in-person): $1,190 AUD (early bird) / $1,400 AUD (regular)
+ *   - Full Course (online + in-person): $1,400 AUD (early bird ended 31 May 2026)
  *
  * Uses Stripe Checkout in 'payment' mode (no subscriptions).
  * Environment variables required:
@@ -91,6 +91,18 @@ export const VALID_COURSE_TYPES = [
 export type CourseType = typeof VALID_COURSE_TYPES[number]
 
 /**
+ * Thrown when a checkout session can't be created for a legitimate business
+ * reason (workshop already ran, workshop sold out). The API route surfaces
+ * `message` to the buyer with a 4xx instead of a generic 500.
+ */
+export class CheckoutUnavailableError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'CheckoutUnavailableError'
+  }
+}
+
+/**
  * Create a Stripe Checkout Session for course purchase
  */
 export async function createCourseCheckoutSession({
@@ -115,6 +127,34 @@ export async function createCourseCheckoutSession({
   /** AUD dollars (not cents) of discount to apply for Reference+Toolkit bundle owners. */
   bundleDiscountAud?: number
 }) {
+  // Workshop-seat purchases: refuse sessions for workshops that have already
+  // run, and refuse when the confirmed city is at capacity. Online-only and
+  // international stay purchasable year-round.
+  if (courseType === 'full-course' || courseType === 'workshop-upgrade') {
+    const workshopConfig = location
+      ? Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === location)
+      : null
+    if (workshopConfig?.status === 'completed') {
+      throw new CheckoutUnavailableError(
+        `The ${workshopConfig.city} workshop has already run. The online course is still available, and you can register interest for the next ${workshopConfig.city} round.`
+      )
+    }
+    if (workshopConfig?.dateObj && workshopConfig.dateObj.getTime() < Date.now()) {
+      throw new CheckoutUnavailableError(
+        `The ${workshopConfig.city} workshop (${workshopConfig.date}) has already run. The online course is still available, and you can register interest for the next round.`
+      )
+    }
+    if (workshopConfig?.status === 'confirmed') {
+      const { getEnrollmentCount } = await import('@/lib/users')
+      const enrolled = await getEnrollmentCount(workshopConfig.slug)
+      if (enrolled >= CONFIG.WORKSHOP.CAPACITY_PER_COURSE) {
+        throw new CheckoutUnavailableError(
+          `The ${workshopConfig.city} workshop is sold out (${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats). The online course is still available — you can add a workshop seat when the next round opens.`
+        )
+      }
+    }
+  }
+
   const isEarlyBird = await isEarlyBirdActiveForLocation(location)
   let unitAmount: number
   let currency: string
@@ -130,12 +170,12 @@ export async function createCourseCheckoutSession({
     unitAmount = isEarlyBird ? COURSE_PRICING.WORKSHOP_UPGRADE_EARLY : COURSE_PRICING.WORKSHOP_UPGRADE_REGULAR
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
-    productName = `ConcussionPro — Workshop Upgrade (${locationLabel})`
+    productName = `Concussion Education Australia — Workshop Upgrade (${locationLabel})`
     productDescription = `Full-day in-person workshop (${locationLabel}) · 6 additional CPD hours (14 total) · AHPRA aligned · All materials included`
   } else if (courseType === 'online-only') {
     unitAmount = COURSE_PRICING.ONLINE_ONLY
     currency = 'aud'
-    productName = 'ConcussionPro — Online Course'
+    productName = 'Concussion Education Australia — Online Course'
     productDescription = '8 online modules (8 CPD hours) · Lifetime access · Clinical Toolkit · Reference Repository · Digital certificate'
   } else if (courseType === 'clinic-hub-pack') {
     unitAmount = COURSE_PRICING.CLINIC_HUB_PACK
@@ -157,7 +197,7 @@ export async function createCourseCheckoutSession({
     unitAmount = isEarlyBird ? COURSE_PRICING.FULL_COURSE_EARLY : COURSE_PRICING.FULL_COURSE_REGULAR
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
-    productName = `ConcussionPro — Complete Course (${locationLabel})`
+    productName = `Concussion Education Australia — Complete Course (${locationLabel})`
     productDescription = `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD hours · AHPRA aligned · All materials included`
   }
 
@@ -183,6 +223,10 @@ export async function createCourseCheckoutSession({
   let allowPromotionCodes: boolean | undefined
   if (courseType === 'workshop-upgrade') {
     // Already discounted — no promo codes allowed
+  } else if (bundleDiscountApplied > 0) {
+    // Bundle credit already applied to the line item — don't let a promo
+    // code stack a second discount on top of it.
+    allowPromotionCodes = false
   } else if (promoCode) {
     try {
       const promoCodes = await stripe.promotionCodes.list({ code: promoCode.toUpperCase(), active: true, limit: 1 })
@@ -262,8 +306,14 @@ export async function createCourseCheckoutSession({
 /**
  * Check if early bird pricing is active for a location.
  *
- * - Collecting cities: always early bird (incentivize early registrants)
- * - Confirmed cities: ends when EITHER condition is met:
+ * EARLY BIRD IS OVER (owner decision, June 2026): the hard deadline in
+ * CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE is 2026-05-31 (past), so this returns
+ * false for EVERY location and every charge is at regular price. The
+ * per-location rules below only matter if a future round re-opens early bird
+ * by moving the deadline forward:
+ * - Collecting cities: early bird while within the hard deadline
+ * - Confirmed cities: ALSO ends when EITHER condition is met (these
+ *   conditions can only disable early bird, never re-enable it):
  *     1. Within 7 days of course date
  *     2. 50% of seats sold (6/12)
  */

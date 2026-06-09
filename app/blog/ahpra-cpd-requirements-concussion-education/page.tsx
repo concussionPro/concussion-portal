@@ -347,7 +347,7 @@ export default function AHPRACPDPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD) &mdash; ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}
+                Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD) &mdash; ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
               </Link>
             </div>
           </div>

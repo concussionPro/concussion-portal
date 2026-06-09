@@ -19,10 +19,11 @@
  */
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { processScheduledSends } from '@/lib/prospect/process-scheduled'
+import { processScheduledSends, computeGateBlockedBreakdown } from '@/lib/prospect/process-scheduled'
 import { computeAdaptiveCap } from '@/lib/prospect/adaptive-cap'
+import { autoVerifyDueProspects } from '@/lib/prospect/hunter-verify'
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 export async function GET(request: Request) {
   // Guard: only run on the primary project (custom domain) — prevents
@@ -47,6 +48,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Auto-verify pass: prospects that are due/approaching but have never
+  // been Hunter-verified (verification_score IS NULL) can NEVER pass the
+  // HARD GATE — without this they strand silently. Capped at 25 lookups
+  // per run to control Hunter credits; never throws.
+  const autoVerify = await autoVerifyDueProspects(25)
+  console.log(
+    `[prospect cron] auto-verify examined=${autoVerify.examined} kept=${autoVerify.kept} ` +
+      `bounced=${autoVerify.bounced} apiErrors=${autoVerify.apiErrors}` +
+      (autoVerify.skipped ? ` skipped="${autoVerify.skipped}"` : ''),
+  )
+
   // Data-driven daily cap. computeAdaptiveCap looks at rolling 30-day
   // complaint + bounce rates and the 7-day cold-send volume. It ramps up
   // on clean weeks and throttles down when complaints spike, so cold
@@ -63,23 +75,28 @@ export async function GET(request: Request) {
       `reason="${capDecision.reason}"`,
   )
 
+  // Hunter HARD-GATE visibility: how many otherwise-due prospects are
+  // currently stranded by the gate, and why. Read-only.
+  const gateBlocked = await computeGateBlockedBreakdown()
+
   if (capDecision.cap === 0) {
     return NextResponse.json({
       skipped: true,
       reason: 'adaptive-cap=0',
       capDecision,
+      autoVerify,
+      gateBlocked,
     })
   }
 
-  // allowPatternGuess: true → cron sends to generic mailboxes (info@,
-  // reception@, etc) when no verified direct email is available. Per Zac:
-  // "just try info@ or reception@" — accept the slightly higher complaint
-  // risk on these because the adaptive cap auto-throttles if domain
-  // reputation drops below threshold.
+  // allowPatternGuess stays false: the SQL HARD GATE (Hunter score>=80,
+  // non-role, non-accept-all, non-disposable) means a role mailbox can
+  // never reach the per-row checks anyway — passing true here was dead,
+  // misleading plumbing.
   const result = await processScheduledSends({
     dryRun: false,
     dailyCap: capDecision.cap,
-    allowPatternGuess: true,
+    allowPatternGuess: false,
   })
 
   console.log(
@@ -90,8 +107,11 @@ export async function GET(request: Request) {
       `skipped(cap=${result.summary.skippedCap}, supp=${result.summary.skippedSuppressed}, ` +
       `lowConf=${result.summary.skippedLowConfidence}, ` +
       `signoff=${result.summary.skippedSignoffMissing}) ` +
-      `failed=${result.summary.sendFailed}`,
+      `failed=${result.summary.sendFailed} ` +
+      `gateBlocked(total=${gateBlocked.total}, unverified=${gateBlocked.unverified}, ` +
+      `lowScore=${gateBlocked.lowScore}, acceptAll=${gateBlocked.acceptAll}, ` +
+      `role=${gateBlocked.role}, disposable=${gateBlocked.disposable})`,
   )
 
-  return NextResponse.json({ ...result, capDecision })
+  return NextResponse.json({ ...result, capDecision, autoVerify, gateBlocked })
 }

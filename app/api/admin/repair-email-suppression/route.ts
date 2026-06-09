@@ -65,12 +65,21 @@ export async function POST(req: NextRequest) {
       AND COALESCE(project, 'cea') = 'cea'
       AND recipient IS NOT NULL
   `
+  // Bounces: only PERMANENT bounces warrant a permanent suppression row.
+  // Resend also reports transient bounces (full mailbox, greylisting) which
+  // must not be cemented as 'hard-bounce' forever. The webhook stores
+  // data.bounce.type in email_events.bounce_type; rows where it's NULL
+  // (legacy, pre-column events) are excluded — permanence is undeterminable
+  // for them, and any genuine hard bounce from that era was already
+  // suppressed by the webhook at event time.
+  await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS bounce_type TEXT`
   const { rows: bouncedRecipients } = await sql<{ recipient: string }>`
     SELECT DISTINCT LOWER(recipient) AS recipient
     FROM email_events
     WHERE event_type = 'bounced'
       AND COALESCE(project, 'cea') = 'cea'
       AND recipient IS NOT NULL
+      AND LOWER(COALESCE(bounce_type, '')) = 'permanent'
   `
 
   // 3. Existing suppression rows so we know what's already covered.

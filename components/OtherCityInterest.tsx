@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Loader2, Check, MapPin, Users } from 'lucide-react'
+import { trackInterestRegistration } from '@/lib/analytics'
 
 type CitySlug = 'sydney' | 'byron-bay' | 'adelaide' | 'wa'
 type Selection = CitySlug | 'team'
@@ -57,6 +58,7 @@ export function OtherCityInterest() {
         })
         const data = await res.json()
         if (data.success) {
+          trackInterestRegistration(selection, email)
           setMessage(data.message)
           setDone(true)
         } else {

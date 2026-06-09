@@ -41,6 +41,11 @@ import { isAdminRequest } from '@/lib/require-admin'
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
+/** Mail-gateway / scanner UA patterns — opens/clicks from these are
+ *  pre-fetches, not humans. Applied where email_events.user_agent exists
+ *  (NULL = legacy row, passes through). */
+const BOT_UA_REGEX = '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|wget|curl|python-requests|node-fetch|axios|go-http-client|okhttp)'
+
 type Row = {
   email: string
   clinic: string | null
@@ -86,6 +91,8 @@ type Row = {
   // Promotion + cadence
   hasBookedCall: boolean
   hasTalkRequest: boolean
+  /** Direct reply detected via inbound webhook — needs a response, not outreach */
+  hasReplied: boolean
   inPersonalLane: boolean
   reachByDate: string | null
   priorityBucket: 'today' | 'this-week' | 'calm' | 'overdue' | 'done'
@@ -244,6 +251,10 @@ export async function GET(req: NextRequest) {
   const statesCsv = states.join(',')
 
   try {
+    // Lazy column migration — user_agent is written by the new webhook path;
+    // ensure it exists on older DBs so the scanner filter below can't 42703.
+    await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS user_agent TEXT`
+
     const { rows } = await sql<Row>`
       WITH email_engagement AS (
         SELECT LOWER(recipient) AS email,
@@ -276,6 +287,9 @@ export async function GET(req: NextRequest) {
         FROM email_events
         WHERE created_at >= NOW() - INTERVAL '90 days'
           AND COALESCE(project, 'cea') = 'cea'
+          -- Human-filter: scanner UAs pre-fetch every link/pixel. Legacy rows
+          -- (user_agent NULL) pass through unchanged.
+          AND (user_agent IS NULL OR user_agent !~* ${BOT_UA_REGEX})
         GROUP BY LOWER(recipient)
       ),
       -- Real browser sessions on the prospect portal — strongest signal.
@@ -334,6 +348,10 @@ export async function GET(req: NextRequest) {
       ),
       unsubbed AS (
         SELECT LOWER(email) AS email FROM users WHERE nurture_unsubscribed = true
+        UNION
+        -- Global suppression (hard bounces, complaints, STOP replies) — a
+        -- suppressed address must never surface as a personal-outreach target.
+        SELECT LOWER(email) AS email FROM email_suppression
       ),
       pool AS (
         -- A. Cold prospect pool (has team-size data)
@@ -432,11 +450,14 @@ export async function GET(req: NextRequest) {
       LIMIT 60
     `
 
-    // Pull "have they already booked / submitted talk request?" so we can mark
-    // them DONE and skip the "reach out" urgency calculation.
+    // Pull "have they already booked / submitted talk request / REPLIED?" so
+    // we can mark them DONE and skip the "reach out" urgency calculation.
+    // Replies come from the inbound webhook (status='replied' / replied_at) —
+    // a replied prospect needs a manual RESPONSE, not another outreach nudge.
     const emails = rows.map((r) => r.email.toLowerCase()).filter(Boolean)
     const bookedSet = new Set<string>()
     const talkSet = new Set<string>()
+    const repliedSet = new Set<string>()
     if (emails.length) {
       const emailsCsv = emails.join(',')
       const { rows: booked } = await sql<{ email: string }>`
@@ -452,6 +473,13 @@ export async function GET(req: NextRequest) {
         WHERE LOWER(email) = ANY (string_to_array(${emailsCsv}, ','))
       `
       for (const t of talks) talkSet.add(t.email)
+      const { rows: replied } = await sql<{ email: string }>`
+        SELECT DISTINCT LOWER(contact_email) AS email
+        FROM prospect_clinics
+        WHERE LOWER(contact_email) = ANY (string_to_array(${emailsCsv}, ','))
+          AND (status = 'replied' OR replied_at IS NOT NULL)
+      `
+      for (const r of replied) repliedSet.add(r.email)
     }
 
     // Enrich each row: angle, signal date sanitisation, promotion flag,
@@ -464,13 +492,15 @@ export async function GET(req: NextRequest) {
       const emailLc = (r.email || '').toLowerCase()
       const hasBookedCall = bookedSet.has(emailLc)
       const hasTalkRequest = talkSet.has(emailLc)
+      const hasReplied = repliedSet.has(emailLc)
       // Promotion rule: anyone with intent ≥20 AND no call booked AND no talk
-      // request is "personal-lane". The cold cron should skip them so Zac's
-      // personal email doesn't collide with a templated send.
+      // request AND no direct reply is "personal-lane". The cold cron should
+      // skip them so Zac's personal email doesn't collide with a templated
+      // send. Replied prospects need a RESPONSE thread, not a fresh pitch.
       const inPersonalLane =
-        r.intentScore >= 20 && !hasBookedCall && !hasTalkRequest
+        r.intentScore >= 20 && !hasBookedCall && !hasTalkRequest && !hasReplied
       const reachBy = computeReachByDate(r.intentScore, lastSignal)
-      const priorityBucket: Row['priorityBucket'] = hasBookedCall || hasTalkRequest
+      const priorityBucket: Row['priorityBucket'] = hasBookedCall || hasTalkRequest || hasReplied
         ? 'done'
         : computePriorityBucket(reachBy)
       const personalScript = buildPersonalScript(r, lastSignal)
@@ -487,7 +517,7 @@ export async function GET(req: NextRequest) {
         ? Math.floor((Date.now() - new Date(lastSignal).getTime()) / 3600_000)
         : null
       let outreachStatus: Row['outreachStatus']
-      if (hasBookedCall || hasTalkRequest) {
+      if (hasBookedCall || hasTalkRequest || hasReplied) {
         outreachStatus = 'done'
       } else if (!isHot || hoursSinceHotSignal == null) {
         outreachStatus = 'not-hot'
@@ -507,6 +537,7 @@ export async function GET(req: NextRequest) {
         lastSignalAt: lastSignal,
         hasBookedCall,
         hasTalkRequest,
+        hasReplied,
         inPersonalLane,
         reachByDate: reachBy ? reachBy.toISOString() : null,
         priorityBucket,

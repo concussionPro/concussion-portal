@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     // Send confirmation email
     const emailSent = await sendEmail({
       to: email,
-      subject: 'Your Pre-Season Baseline Testing Link — ConcussionPro',
+      subject: 'Your Pre-Season Baseline Testing Link — Concussion Education Australia',
       html: `
         <!DOCTYPE html>
         <html>
@@ -179,7 +179,7 @@ export async function POST(request: Request) {
                 </div>
               </div>
               <div class="footer">
-                <p>ConcussionPro — Concussion Education Australia</p>
+                <p>Concussion Education Australia</p>
                 <p>${CONFIG.CONTACT_EMAIL}</p>
               </div>
             </div>

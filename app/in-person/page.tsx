@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { CONFIG } from '@/lib/config'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
+import { trackInterestRegistration } from '@/lib/analytics'
 
 export default function InPersonTrainingPage() {
   const [interestEmail, setInterestEmail] = useState('')
@@ -28,6 +29,7 @@ export default function InPersonTrainingPage() {
       })
       const data = await res.json()
       if (data.success) {
+        trackInterestRegistration(interestCity, interestEmail)
         setInterestSuccess(data.message)
         setInterestEmail('')
         setInterestName('')
@@ -247,7 +249,11 @@ export default function InPersonTrainingPage() {
                     <MapPin className="w-5 h-5 text-accent" />
                     <div>
                       <h4 className="font-bold">{location.city}</h4>
-                      <p className="text-sm text-muted-foreground">{location.date || CONFIG.WORKSHOP.NEXT_ROUND}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {location.status === 'confirmed' && location.date
+                          ? location.date
+                          : 'Date to be confirmed — register your interest below'}
+                      </p>
                     </div>
                   </div>
                   <span className={`text-xs font-semibold px-3 py-1 rounded-full ${location.status === 'confirmed' ? 'text-accent bg-accent/10' : 'text-muted-foreground bg-muted'}`}>
@@ -304,6 +310,8 @@ export default function InPersonTrainingPage() {
                       <option value="sydney">Sydney</option>
                       <option value="melbourne">Melbourne</option>
                       <option value="byron-bay">Byron Bay</option>
+                      <option value="adelaide">Adelaide</option>
+                      <option value="wa">Perth / WA</option>
                     </select>
                     <button
                       type="submit"

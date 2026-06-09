@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   const success = await unsubscribeUser(email)
   if (success) {
-    console.log(`Admin unsubscribed: ${email}`)
+    console.log(`Admin unsubscribed: ${email.slice(0, 3)}***`)
     return NextResponse.json({ success: true, message: `${email} unsubscribed` })
   } else {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })

@@ -1,33 +1,22 @@
 import { CONFIG } from '@/lib/config'
 
-export function OrganizationSchema() {
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'EducationalOrganization',
-    name: 'Concussion Education Australia',
-    description: CONFIG.SEO.DESCRIPTION,
-    url: CONFIG.SEO.SITE_URL,
-    logo: `${CONFIG.SEO.SITE_URL}/logo.png`,
-    contactPoint: {
-      '@type': 'ContactPoint',
-      email: CONFIG.CONTACT_EMAIL,
-      contactType: 'Customer Service',
-      areaServed: 'AU',
-    },
-    sameAs: [
-      // Add social media URLs when available
-    ],
-  }
+// NOTE: The Organization schema lives in lib/schema-markup.ts and is injected
+// globally by app/layout.tsx — don't add a second one here (duplicate/conflicting
+// org entities confuse Google's entity reconciliation).
 
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
-  )
+/**
+ * Format a Date as an AEST local-offset ISO string ('2026-06-13T08:00:00+10:00').
+ * Workshops are AU-local events — toISOString() would emit UTC and shift the
+ * calendar date in rich results. June is outside AEDT, so +10:00 is correct
+ * for all current workshop cities.
+ */
+function toAESTOffsetISO(date: Date): string {
+  const shifted = new Date(date.getTime() + 10 * 60 * 60 * 1000)
+  return shifted.toISOString().replace(/\.\d{3}Z$/, '+10:00')
 }
 
-export function CourseSchema() {
+/** Plain-object Course schema — exported separately so tests can assert on it. */
+export function buildCourseSchema(): Record<string, unknown> {
   // Only include course instances that have confirmed dates
   const courseInstances = []
 
@@ -46,14 +35,14 @@ export function CourseSchema() {
           addressCountry: 'AU',
         },
       },
-      startDate: CONFIG.LOCATIONS.MELBOURNE.dateObj.toISOString(),
+      startDate: toAESTOffsetISO(CONFIG.LOCATIONS.MELBOURNE.dateObj),
     })
   }
 
   if (CONFIG.LOCATIONS.SYDNEY.dateObj) {
     courseInstances.push({
       '@type': 'CourseInstance',
-      name: 'Sydney Session - March 2026',
+      name: 'Sydney Session',
       courseMode: 'blended',
       location: {
         '@type': 'Place',
@@ -65,14 +54,14 @@ export function CourseSchema() {
           addressCountry: 'AU',
         },
       },
-      startDate: CONFIG.LOCATIONS.SYDNEY.dateObj.toISOString(),
+      startDate: toAESTOffsetISO(CONFIG.LOCATIONS.SYDNEY.dateObj),
     })
   }
 
   if (CONFIG.LOCATIONS.BYRON_BAY.dateObj) {
     courseInstances.push({
       '@type': 'CourseInstance',
-      name: 'Byron Bay Session - March 2026',
+      name: 'Byron Bay Session',
       courseMode: 'blended',
       location: {
         '@type': 'Place',
@@ -84,7 +73,7 @@ export function CourseSchema() {
           addressCountry: 'AU',
         },
       },
-      startDate: CONFIG.LOCATIONS.BYRON_BAY.dateObj.toISOString(),
+      startDate: toAESTOffsetISO(CONFIG.LOCATIONS.BYRON_BAY.dateObj),
     })
   }
 
@@ -109,27 +98,29 @@ export function CourseSchema() {
     },
   }
 
-  // 7 verified testimonials across homepage + pricing page
-  schema.aggregateRating = {
-    '@type': 'AggregateRating',
-    ratingValue: '5',
-    bestRating: '5',
-    ratingCount: '7',
-  }
+  // No aggregateRating: self-asserted ratings without on-page, user-submitted
+  // reviews risk Google's review-snippet spam policy.
 
   if (courseInstances.length > 0) {
     schema.hasCourseInstance = courseInstances
   }
 
+  return schema
+}
+
+export function CourseSchema() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(buildCourseSchema()) }}
     />
   )
 }
 
-export function EventSchema({ location }: { location: 'MELBOURNE' | 'SYDNEY' | 'BYRON_BAY' }) {
+type EventLocationKey = 'MELBOURNE' | 'SYDNEY' | 'BYRON_BAY'
+
+/** Plain-object EducationEvent schema, or null when the city has no confirmed date. */
+export function buildEventSchema(location: EventLocationKey): Record<string, unknown> | null {
   const locationData = CONFIG.LOCATIONS[location]
 
   // If location has no confirmed date, don't render event schema
@@ -137,24 +128,41 @@ export function EventSchema({ location }: { location: 'MELBOURNE' | 'SYDNEY' | '
     return null
   }
 
-  const schema = {
+  // Confirmed workshops have a real venue (currently only Melbourne — Rydges).
+  const venue = location === 'MELBOURNE' ? CONFIG.VENUE_BENEFITS.MELBOURNE : null
+
+  return {
     '@context': 'https://schema.org',
     '@type': 'EducationEvent',
     name: `Concussion Management Training - ${locationData.city}`,
     description: 'Full-day practical training in SCAT6, VOMS, and BESS protocols for concussion assessment and management.',
-    startDate: locationData.dateObj.toISOString(),
-    endDate: new Date(locationData.dateObj.getTime() + 8 * 60 * 60 * 1000).toISOString(),
+    image: `${CONFIG.SEO.SITE_URL}/melbourne-workshop.jpg`,
+    startDate: toAESTOffsetISO(locationData.dateObj),
+    endDate: toAESTOffsetISO(new Date(locationData.dateObj.getTime() + 8 * 60 * 60 * 1000)),
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    location: {
-      '@type': 'Place',
-      name: locationData.city,
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: locationData.city,
-        addressCountry: 'AU',
-      },
-    },
+    location: venue
+      ? {
+          '@type': 'Place',
+          name: venue.hotelName,
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: '186 Exhibition St',
+            addressLocality: 'Melbourne',
+            addressRegion: 'VIC',
+            postalCode: '3000',
+            addressCountry: 'AU',
+          },
+        }
+      : {
+          '@type': 'Place',
+          name: locationData.city,
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: locationData.city,
+            addressCountry: 'AU',
+          },
+        },
     organizer: {
       '@type': 'Organization',
       name: 'Concussion Education Australia',
@@ -162,13 +170,19 @@ export function EventSchema({ location }: { location: 'MELBOURNE' | 'SYDNEY' | '
     },
     offers: {
       '@type': 'Offer',
-      price: CONFIG.COURSE.PRICE_EARLY_BIRD,
+      // Early bird is over — advertise the regular Complete Course price.
+      price: CONFIG.COURSE.PRICE_REGULAR,
       priceCurrency: 'AUD',
-      availability: 'https://schema.org/InStock',
+      availability: 'https://schema.org/LimitedAvailability',
       url: `${CONFIG.APP_URL}${CONFIG.SHOP_URL}`,
       validFrom: new Date().toISOString(),
     },
   }
+}
+
+export function EventSchema({ location }: { location: EventLocationKey }) {
+  const schema = buildEventSchema(location)
+  if (!schema) return null
 
   return (
     <script

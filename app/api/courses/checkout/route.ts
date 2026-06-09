@@ -41,6 +41,14 @@ export async function POST(request: NextRequest) {
   if (!course || getEffectiveStatus(course) !== 'live') {
     return NextResponse.json({ error: 'Course not found or not available for purchase' }, { status: 404 })
   }
+  // Catalogue entries that are display-only here (CCM) must not be sold as a
+  // short course — that would charge the buyer and fulfil nothing.
+  if (!course.purchasableViaCheckout) {
+    return NextResponse.json(
+      { error: 'Concussion Clinical Mastery is enrolled via the pricing page — head to /pricing to choose the online or complete course.' },
+      { status: 400 }
+    )
+  }
   if (course.priceAUD === null) {
     return NextResponse.json({ error: 'Course is not configured for direct purchase' }, { status: 400 })
   }

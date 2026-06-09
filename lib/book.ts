@@ -74,7 +74,7 @@ export async function createBookCheckoutSession({
     custom_text: {
       submit: {
         message:
-          "You'll receive instant download access after payment, plus a login link for your ConcussionPro account where the PDF lives for lifetime access.",
+          "You'll receive instant download access after payment, plus a login link for your Concussion Education Australia account where the PDF lives for lifetime access.",
       },
     },
   })

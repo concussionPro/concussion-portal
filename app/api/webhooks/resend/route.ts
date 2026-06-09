@@ -32,6 +32,11 @@ interface ResendWebhookEvent {
     // array form. Type both for safety.
     tags?: Array<{ name: string; value: string }> | Record<string, string>
     click?: { link: string }
+    // Present on email.bounced events. type is 'Permanent' | 'Transient'
+    // (Resend also documents 'Undetermined'). Only Permanent bounces should
+    // suppress an address — transient bounces (full mailbox, greylisting,
+    // temporary server issues) are retryable.
+    bounce?: { type?: string; subType?: string; message?: string }
   }
 }
 
@@ -173,13 +178,31 @@ export async function POST(request: NextRequest) {
     const day = tags.day || null
     const clickUrl = data.click?.link || null
 
-    // Ensure project column exists (one-shot migration; ALTER ... IF NOT EXISTS is safe)
-    await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS project TEXT`
+    // Open/click user agent — persisted so analytics can filter out mail-gateway
+    // scanners (Defender/Mimecast/SafeLinks) from human engagement counts.
+    const userAgent: string | null =
+      (data as { click?: { userAgent?: string }; open?: { userAgent?: string } }).click
+        ?.userAgent ||
+      (data as { open?: { userAgent?: string } }).open?.userAgent ||
+      null
 
-    // Store in email_events table — tagged with project for downstream scoping
+    // Bounce classification. Only PERMANENT bounces suppress — Resend also
+    // delivers Transient bounces (full mailbox, greylisting, temp outage)
+    // which must NOT permanently kill an address.
+    const bounceType = (data.bounce?.type || '').toLowerCase() || null
+    const isPermanentBounce = bounceType === 'permanent'
+
+    // Ensure project + bounce_type columns exist (one-shot migration; ALTER ... IF NOT EXISTS is safe)
+    await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS project TEXT`
+    await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS bounce_type TEXT`
+    await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS user_agent TEXT`
+
+    // Store in email_events table — tagged with project for downstream scoping.
+    // bounce_type is persisted so backfill jobs (repair-email-suppression) can
+    // tell permanent from transient bounces after the fact.
     await sql`
       INSERT INTO email_events (
-        email_id, recipient, event_type, subject, sequence, day, click_url, project, created_at
+        email_id, recipient, event_type, subject, sequence, day, click_url, project, bounce_type, user_agent, created_at
       ) VALUES (
         ${data.email_id},
         ${email},
@@ -189,21 +212,35 @@ export async function POST(request: NextRequest) {
         ${day},
         ${clickUrl},
         ${project},
+        ${bounceType},
+        ${userAgent},
         NOW()
       )
     `
 
-    // Handle bounces — suppress future emails
+    // The Resend account is shared with byronwebstudio — only CEA events may
+    // mutate CEA state (users.nurture_unsubscribed / email_suppression).
+    // Convention everywhere downstream is COALESCE(project, 'cea') = 'cea',
+    // i.e. NULL counts as CEA; here project is always computed, so gate on
+    // the resolved value. Foreign-project events still get their event row.
+    const isCeaEvent = project === 'cea'
+
+    // Handle bounces — suppress future emails (PERMANENT bounces only;
+    // transient bounces just keep their event row above)
     if (eventType === 'bounced') {
-      console.log(`[Resend] Bounce: ${email.slice(0, 3)}*** — suppressing from nurture`)
-      await sql`
-        UPDATE users SET nurture_unsubscribed = true
-        WHERE LOWER(email) = ${email}
-      `
+      if (isCeaEvent && isPermanentBounce) {
+        console.log(`[Resend] Permanent bounce: ${email.slice(0, 3)}*** — suppressing from nurture`)
+        await sql`
+          UPDATE users SET nurture_unsubscribed = true
+          WHERE LOWER(email) = ${email}
+        `
+      } else {
+        console.log(`[Resend] Bounce (${bounceType || 'unknown type'}, project=${project}): ${email.slice(0, 3)}*** — event logged, no suppression`)
+      }
     }
 
     // Handle complaints — suppress future emails globally + nurture-side
-    if (eventType === 'complained') {
+    if (eventType === 'complained' && isCeaEvent) {
       console.log(`[Resend] Complaint: ${email.slice(0, 3)}*** — suppressing globally`)
       await sql`
         UPDATE users SET nurture_unsubscribed = true
@@ -221,9 +258,9 @@ export async function POST(request: NextRequest) {
       `
     }
 
-    // Handle bounces — also add to global suppression (any further send to a
-    // hard-bouncing address compounds reputation damage).
-    if (eventType === 'bounced') {
+    // Handle permanent bounces — also add to global suppression (any further
+    // send to a hard-bouncing address compounds reputation damage).
+    if (eventType === 'bounced' && isCeaEvent && isPermanentBounce) {
       await sql`
         INSERT INTO email_suppression (email, reason, source)
         VALUES (${email}, 'hard-bounce', 'webhook:bounced:nurture')
@@ -278,6 +315,10 @@ export async function POST(request: NextRequest) {
               click_url: data.click?.link,
               resend_email_id: data.email_id,
             })
+          } else if (eventType === 'bounced' && !isPermanentBounce) {
+            // Transient bounce — retryable; don't suppress or change clinic
+            // status. The event row above is the record.
+            console.log(`[Resend prospect] transient bounce prospect=${pidNum} — no suppression`)
           } else if (eventType === 'bounced' || eventType === 'complained') {
             const reason = eventType === 'bounced' ? 'hard-bounce' : 'complained'
             await sql`

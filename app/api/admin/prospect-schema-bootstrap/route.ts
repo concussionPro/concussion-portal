@@ -73,6 +73,41 @@ export async function POST(req: NextRequest) {
     await run('prospect_clinics.pitch_variant column', () => sql`
       ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS pitch_variant TEXT
     `)
+    await run('prospect_clinics.access_key column', () => sql`
+      ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS access_key TEXT
+    `)
+    // Targeted continuity fix — Advanced Health Buderim. The live
+    // hand-built proposal site (app/proposals/advanced-health-buderim/
+    // _shared.tsx) hardcodes ACCESS_KEY 'ah2026' in links already in the
+    // wild, and /api/toolkit/download validates ?k= against
+    // prospect_clinics.access_key. Generic backfills (see
+    // ensureSchemaBootstrap in lib/prospect/process-scheduled.ts) derive a
+    // DIFFERENT key from the slug, so force the known value — must run even
+    // when access_key is already non-null. Idempotent. Slug matched with
+    // LIKE because the engine-side slug for this hand-built clinic isn't
+    // pinned anywhere in the repo.
+    await run('advanced-health ah2026 access_key continuity', () => sql`
+      UPDATE prospect_clinics
+      SET access_key = 'ah2026'
+      WHERE slug LIKE 'advanced-health%'
+        AND access_key IS DISTINCT FROM 'ah2026'
+    `)
+    await run('prospect_clinics.replied_at column', () => sql`
+      ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS replied_at TIMESTAMPTZ
+    `)
+    await run('prospect_clinics.reply_text column', () => sql`
+      ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS reply_text TEXT
+    `)
+    await run('prospect_clinics verification columns', async () => {
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_status TEXT`
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_result TEXT`
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_score INTEGER`
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_role BOOLEAN`
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_accept_all BOOLEAN`
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_webmail BOOLEAN`
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS verification_disposable BOOLEAN`
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS last_verified_at TIMESTAMPTZ`
+    })
     await run('idx_prospect_clinics_status', () => sql`
       CREATE INDEX IF NOT EXISTS idx_prospect_clinics_status ON prospect_clinics (status)
     `)
@@ -128,6 +163,32 @@ export async function POST(req: NextRequest) {
       INSERT INTO email_template_signoff (slug)
       VALUES ('initial'), ('followup'), ('final')
       ON CONFLICT (slug) DO NOTHING
+    `)
+
+    // email_events is normally created by scripts/add-email-events-table.ts;
+    // CREATE IF NOT EXISTS here keeps the user_agent ALTER below safe on a
+    // fresh database too.
+    await run('email_events table', () => sql`
+      CREATE TABLE IF NOT EXISTS email_events (
+        id SERIAL PRIMARY KEY,
+        email_id TEXT NOT NULL,
+        recipient TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        subject TEXT,
+        sequence TEXT,
+        day TEXT,
+        click_url TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `)
+    await run('email_events.project column', () => sql`
+      ALTER TABLE email_events ADD COLUMN IF NOT EXISTS project TEXT
+    `)
+    // The cron's prior-engagement lookup filters on COALESCE(user_agent,'') —
+    // the column was never added by the webhook, and a missing column
+    // 42703-aborts the whole send run.
+    await run('email_events.user_agent column', () => sql`
+      ALTER TABLE email_events ADD COLUMN IF NOT EXISTS user_agent TEXT
     `)
 
     await run('prospect_portal_views table', () => sql`

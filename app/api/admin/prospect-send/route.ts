@@ -22,10 +22,14 @@ import {
   getTemplateSignoff,
   isSuppressed,
   logOutreach,
+  setOutreachResendId,
+  deleteOutreachByAuditKey,
   todaysSentCount,
   updateClinicStatus,
 } from '@/lib/prospect/repo'
 import { EMAIL_TEMPLATES, mergeTemplate } from '@/lib/prospect/email-templates'
+import { advanceSequenceAfterSend } from '@/lib/prospect/process-scheduled'
+import { generateUnsubscribeToken } from '@/lib/prospect/unsubscribe-token'
 import type { EmailTemplateSlug } from '@/lib/prospect/types'
 
 const ZAC_INBOX = process.env.ZAC_INBOX ?? 'zac@concussion-education-australia.com'
@@ -105,7 +109,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ── BUILD EMAIL ──
-  const unsubscribeToken = `${clinic.slug}-${Date.now().toString(36)}`
+  const unsubscribeToken = generateUnsubscribeToken(clinic.slug)
   const { subject, html, text } = mergeTemplate(template, clinic, BASE_URL, unsubscribeToken, {
     regionalVariant: variant === 'regional',
     networkVariant:
@@ -122,6 +126,33 @@ export async function POST(req: NextRequest) {
   const resendKey = process.env.RESEND_API_KEY
   if (!resendKey) {
     return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 })
+  }
+
+  // ── CLAIM AUDIT KEY (production only, BEFORE sending) ──
+  // Production sends use the same deterministic key shape as the cron
+  // (`outreach:<slug>:<template>:prod`), claimed insert-first so a manual
+  // send can never race the cron — or a double-clicked admin button — into
+  // a duplicate email. Test previews keep a timestamped ':test:' key: they
+  // can repeat freely and are excluded from the cron dedupe + caps.
+  const auditKey = testMode
+    ? `outreach:${clinic.slug}:${slug}:test:${Date.now()}`
+    : `outreach:${clinic.slug}:${slug}:prod`
+
+  if (!testMode) {
+    const claimed = await logOutreach({
+      clinicId: clinic.id,
+      templateSlug: slug,
+      emailSubject: finalSubject,
+      emailBody: text,
+      resendEmailId: null,
+      auditKey,
+    })
+    if (!claimed) {
+      return NextResponse.json(
+        { error: 'This template was already sent to this clinic (audit key exists)', auditKey },
+        { status: 409 },
+      )
+    }
   }
 
   const resend = new Resend(resendKey)
@@ -151,24 +182,44 @@ export async function POST(req: NextRequest) {
       ],
     })
     if (result.error) {
+      // Failed send — release the claimed key so a retry can occur. A failed
+      // send must never leave a permanent "sent" record.
+      if (!testMode) {
+        await deleteOutreachByAuditKey(auditKey).catch((e) =>
+          console.error('[prospect-send] failed to release audit key after Resend error:', e),
+        )
+      }
       return NextResponse.json({ error: 'Resend send failed', detail: result.error }, { status: 502 })
     }
     resendEmailId = result.data?.id ?? null
   } catch (err) {
+    if (!testMode) {
+      await deleteOutreachByAuditKey(auditKey).catch((e) =>
+        console.error('[prospect-send] failed to release audit key after send exception:', e),
+      )
+    }
     const message = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: 'Resend exception', detail: message }, { status: 502 })
   }
 
-  // ── LOG ──
-  const auditKey = `outreach:${clinic.slug}:${slug}:${testMode ? 'test' : 'prod'}:${Date.now()}`
-  await logOutreach({
-    clinicId: clinic.id,
-    templateSlug: slug,
-    emailSubject: finalSubject,
-    emailBody: text,
-    resendEmailId,
-    auditKey,
-  })
+  // ── LOG + ADVANCE ──
+  if (testMode) {
+    // Test previews only need an audit trail row — they never touch sequence
+    // state and the ':test:' key keeps them out of dedupe + cap counting.
+    await logOutreach({
+      clinicId: clinic.id,
+      templateSlug: slug,
+      emailSubject: finalSubject,
+      emailBody: text,
+      resendEmailId,
+      auditKey,
+    })
+  } else {
+    await setOutreachResendId(auditKey, resendEmailId)
+    // Advance next_template_slug/scheduled_send_at exactly like the cron —
+    // a manual prod send IS the sequence send, not a side channel.
+    await advanceSequenceAfterSend(clinic.id, slug)
+  }
 
   if (!testMode && clinic.status === 'approved') {
     await updateClinicStatus(clinic.id, 'sent')

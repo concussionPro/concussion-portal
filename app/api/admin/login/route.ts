@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { ADMIN_COOKIE_NAME, adminCookieOptions, createAdminSessionToken } from '@/lib/admin-session'
+import { rateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/get-client-ip'
 
 function timingSafeStringEqual(a: string, b: string): boolean {
   const bufA = Buffer.from(a)
@@ -14,6 +16,14 @@ function timingSafeStringEqual(a: string, b: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 attempts per 5 minutes per IP — slows brute-forcing the
+  // admin key. Runs before the key comparison.
+  const ip = getClientIp(request)
+  const rl = await rateLimit({ key: `admin-login:${ip}`, limit: 5, windowSec: 5 * 60 })
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Too many login attempts. Try again later.' }, { status: 429 })
+  }
+
   const envKey = process.env.ADMIN_API_KEY
   if (!envKey) {
     return NextResponse.json({ error: 'Admin API not configured' }, { status: 503 })

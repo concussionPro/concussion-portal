@@ -21,12 +21,56 @@ import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { SiteNav } from '@/components/SiteNav'
 import { BreadcrumbSchema } from '@/components/SchemaMarkup'
-import { trackLeadConversion } from '@/lib/analytics'
 
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void
   }
+}
+
+const FREE_SIGNUP_CONVERSION = 'AW-17984048021/TVzUCLHT0IccEJWXu_9C'
+
+/**
+ * Fire the free-signup Google Ads conversion exactly once, navigating from
+ * gtag's event_callback so the hit is dispatched before the page unloads.
+ * A 2s safety timeout still navigates if gtag.js never executes the queued
+ * event (ad blocker / slow mobile). Mirrors lib/analytics trackLeadConversion
+ * (value + enhanced-conversion hashed email) but adds the navigation callback
+ * that helper doesn't support.
+ */
+async function fireSignupConversionThenNavigate(email: string, destination: string) {
+  let navigated = false
+  const navigate = () => {
+    if (navigated) return
+    navigated = true
+    window.location.href = destination
+  }
+  const safetyTimer = setTimeout(navigate, 2000)
+
+  if (typeof window.gtag !== 'function') return // safety timer handles navigation
+
+  const params: Record<string, unknown> = {
+    send_to: FREE_SIGNUP_CONVERSION,
+    value: 25,
+    currency: 'AUD',
+    event_callback: () => {
+      clearTimeout(safetyTimer)
+      navigate()
+    },
+    event_timeout: 2000,
+  }
+  // Enhanced conversions — SHA-256 hashed email for better attribution
+  try {
+    const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(email))
+    params.user_data = {
+      sha256_email_address: Array.from(new Uint8Array(buffer))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join(''),
+    }
+  } catch {
+    // crypto.subtle unavailable (HTTP or old browser) — fire without enhanced data
+  }
+  window.gtag('event', 'conversion', params)
 }
 
 export default function SCATMasteryPage() {
@@ -84,11 +128,14 @@ export default function SCATMasteryPage() {
       const data = await res.json()
 
       if (data.success) {
-        // Fire gtag lead conversion with value + enhanced data
-        trackLeadConversion('TVzUCLHT0IccEJWXu_9C', 25, email.trim().toLowerCase())
-        // Show success state, then redirect (cookie already set by API)
+        // Show success state (cookie already set by API), fire the gtag lead
+        // conversion, then navigate from gtag's event_callback so the hit is
+        // dispatched before the page unloads. A 2s safety timeout still
+        // navigates if gtag.js never loads (ad blocker / slow mobile) —
+        // previously a blind 1.5s setTimeout could navigate before gtag had
+        // even loaded, silently dropping the conversion.
         setSuccessData(data)
-        setTimeout(() => { window.location.href = '/scat-course' }, 1500)
+        await fireSignupConversionThenNavigate(email.trim().toLowerCase(), '/scat-course')
         return
       } else {
         setError(data.error || 'Something went wrong. Please try again.')

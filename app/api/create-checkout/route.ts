@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCourseCheckoutSession, VALID_LOCATIONS, VALID_COURSE_TYPES } from '@/lib/stripe'
+import { createCourseCheckoutSession, CheckoutUnavailableError, VALID_LOCATIONS, VALID_COURSE_TYPES } from '@/lib/stripe'
 import type { CourseType } from '@/lib/stripe'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { rateLimit } from '@/lib/rate-limit'
@@ -142,6 +142,11 @@ export async function POST(request: NextRequest) {
       url: checkoutSession.url,
     })
   } catch (error) {
+    // Business-rule rejections (workshop already ran / sold out) carry a
+    // buyer-readable message — surface it instead of a generic 500.
+    if (error instanceof CheckoutUnavailableError) {
+      return NextResponse.json({ error: error.message }, { status: 409 })
+    }
     console.error('Checkout session creation failed:', error)
     return NextResponse.json(
       { error: 'Failed to create checkout session. Please try again.' },

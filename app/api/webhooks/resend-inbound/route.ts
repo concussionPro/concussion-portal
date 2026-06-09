@@ -1,9 +1,21 @@
 /**
  * Resend Inbound webhook handler.
  *
- * Receives Squarespace form-submission notification emails (which currently
- * land in info@concussion-education-australia.com and only existed as inbox
- * notifications), parses them, and inserts a row into workshop_interest.
+ * TWO jobs, checked in order:
+ *
+ * 1. PROSPECT REPLY DETECTION (cold-outreach engine). Any inbound email
+ *    whose From address matches prospect_clinics.contact_email marks that
+ *    clinic status='replied' (+ replied_at / reply_text) so the cron stops
+ *    the sequence — replies previously went undetected and prospects kept
+ *    receiving T2/T3 after answering. STOP/UNSUBSCRIBE replies additionally
+ *    hit email_suppression + status='lost'.
+ *    Requires Zac's mailbox (zac@...) to forward replies to the Resend
+ *    inbound address — see setup notes below.
+ *
+ * 2. SQUARESPACE FORM NOTIFICATIONS. Receives Squarespace form-submission
+ *    notification emails (which currently land in
+ *    info@concussion-education-australia.com and only existed as inbox
+ *    notifications), parses them, and inserts a row into workshop_interest.
  *
  * The setup chain is:
  *   Squarespace form → info@... notification → forwarded to *@inbound.<domain>
@@ -111,6 +123,126 @@ function pickFirst<T>(...values: Array<T | undefined | null>): T | null {
   return null
 }
 
+/**
+ * Extract the sender address from the PARSED from field (string
+ * `"Name <email>"` / bare address, or `{ email, name }` object) — never
+ * from raw headers. Lowercased; null when absent/unparseable.
+ */
+function extractFromEmail(from: InboundPayload['from'] | null): string | null {
+  if (!from) return null
+  if (typeof from === 'object') {
+    const e = from.email?.trim().toLowerCase()
+    return e && e.includes('@') ? e : null
+  }
+  const raw = from.trim()
+  const angled = raw.match(/<([^<>\s]+@[^<>\s]+)>/)
+  if (angled) return angled[1].toLowerCase()
+  const bare = raw.match(/([^\s"',;<>]+@[^\s"',;<>]+)/)
+  return bare ? bare[1].toLowerCase() : null
+}
+
+const MAX_REPLY_TEXT_LENGTH = 4000
+
+/**
+ * Opt-out detection in a reply. Standalone STOP/UNSUBSCRIBE at the start of
+ * the subject/body or on its own line, plus unambiguous phrases. Word
+ * boundaries so "unstoppable"/"non-stop" never match.
+ */
+function isOptOutMessage(subject: string, bodyText: string): boolean {
+  const probe = `${subject}\n${bodyText.slice(0, 1000)}`
+  if (/(^|\n)\s*(stop|unsubscribe)\b/i.test(probe)) return true
+  return /\bunsubscribe\b|\bopt[\s-]?out\b|\bremove me\b|\btake me off\b|\bstop (emailing|contacting|sending)\b/i.test(probe)
+}
+
+/**
+ * Prospect-reply path. Returns true if the inbound email matched a cold
+ * prospect (handled — skip the Squarespace parser). Never throws.
+ */
+async function handleProspectReply(
+  fromEmail: string,
+  subject: string,
+  bodyText: string,
+): Promise<{ matched: boolean; optOut?: boolean; clinicId?: number }> {
+  try {
+    const { rows } = await sql<{ id: number; slug: string; contact_email: string; status: string }>`
+      SELECT id, slug, contact_email, status
+      FROM prospect_clinics
+      WHERE LOWER(contact_email) = ${fromEmail}
+      ORDER BY updated_at DESC
+      LIMIT 1
+    `
+    const clinic = rows[0]
+    if (!clinic) return { matched: false }
+
+    const replyText = `${subject ? `Subject: ${subject}\n` : ''}${bodyText}`.slice(0, MAX_REPLY_TEXT_LENGTH)
+    const optOut = isOptOutMessage(subject, bodyText)
+
+    // Defensive — columns also added by prospect-schema-bootstrap.
+    try {
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS replied_at TIMESTAMPTZ`
+      await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS reply_text TEXT`
+    } catch {
+      // Column already exists or perms differ — safe to continue
+    }
+
+    if (optOut) {
+      // STOP/UNSUBSCRIBE — suppress globally so they're never emailed again,
+      // and park the clinic in the opt-out status the engine already excludes.
+      await sql`
+        INSERT INTO email_suppression (email, reason, source)
+        VALUES (${fromEmail}, 'reply-opt-out', ${`resend-inbound:${clinic.slug}`})
+        ON CONFLICT (email) DO NOTHING
+      `
+      await sql`
+        UPDATE prospect_clinics
+        SET status = 'lost',
+            replied_at = COALESCE(replied_at, NOW()),
+            reply_text = ${replyText},
+            next_template_slug = NULL,
+            scheduled_send_at = NULL,
+            notes = COALESCE(notes, '') || ${'\n[auto] ' + new Date().toISOString() + ' reply contained STOP/UNSUBSCRIBE — suppressed'},
+            updated_at = NOW()
+        WHERE id = ${clinic.id}
+      `
+    } else {
+      await sql`
+        UPDATE prospect_clinics
+        SET status = 'replied',
+            replied_at = COALESCE(replied_at, NOW()),
+            reply_text = ${replyText},
+            notes = COALESCE(notes, '') || ${'\n[auto] ' + new Date().toISOString() + ' inbound reply detected — sequence stopped'},
+            updated_at = NOW()
+        WHERE id = ${clinic.id}
+      `
+    }
+
+    // Mirror onto the latest outreach-log row so per-send reply analytics work.
+    try {
+      await sql`
+        UPDATE prospect_outreach_log
+        SET replied_at = NOW(), reply_text = ${replyText}
+        WHERE id = (
+          SELECT id FROM prospect_outreach_log
+          WHERE clinic_id = ${clinic.id} AND replied_at IS NULL
+          ORDER BY sent_at DESC
+          LIMIT 1
+        )
+      `
+    } catch (err) {
+      console.error('[resend-inbound] outreach-log reply mirror failed:', err)
+    }
+
+    console.log(
+      `[resend-inbound] prospect reply from ${fromEmail.slice(0, 3)}*** → clinic ${clinic.id} ` +
+        (optOut ? 'OPT-OUT (suppressed)' : "status='replied'"),
+    )
+    return { matched: true, optOut, clinicId: clinic.id }
+  } catch (err) {
+    console.error('[resend-inbound] prospect reply handling failed:', err)
+    return { matched: false }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text()
@@ -142,6 +274,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Empty payload' }, { status: 400 })
     }
 
+    // ── 1. PROSPECT REPLY DETECTION ──
+    // Match the parsed From address against cold prospects BEFORE the
+    // Squarespace parser. A match stops the sequence (status='replied');
+    // a STOP/UNSUBSCRIBE reply additionally suppresses the address.
+    const fromEmail = extractFromEmail(pickFirst(payload.data?.from, payload.from))
+    if (fromEmail) {
+      const replyResult = await handleProspectReply(fromEmail, subject, bodyText)
+      if (replyResult.matched) {
+        return NextResponse.json({
+          success: true,
+          prospectReply: true,
+          optOut: replyResult.optOut ?? false,
+        })
+      }
+    }
+
+    // ── 2. SQUARESPACE FORM NOTIFICATIONS (unchanged path) ──
     const parsed = parseSquarespaceEmail({ subject, bodyText })
 
     if (!parsed.ok) {

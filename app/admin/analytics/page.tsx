@@ -52,6 +52,7 @@ import {
   Snowflake,
   Sparkles,
 } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface AnalyticsStats {
@@ -153,9 +154,13 @@ interface ProspectRow {
   travelSurcharge: number
   status: string
   totalSends: number
+  totalDelivered?: number
+  totalBounced?: number
   totalOpens: number
   totalClicks: number
   replies: number
+  repliedAt?: string | null
+  replyText?: string | null
   lastSentAt: string | null
   lastSentTemplate: string | null
   lastSentSubject: string | null
@@ -236,8 +241,25 @@ interface ProspectAggregates {
   callRecommendedCount?: number
   revenue: { totalRevenuePotential: number; weightedPipeline: number; wins: number; hubPackPipelineValue?: number; onSitePipelineValue?: number }
   funnel: {
-    totalSends: number; totalOpens: number; totalClicks: number; totalViews: number; totalReplies: number; wins: number
-    sendOpenRate: number; openClickRate: number; sendReplyRate: number; replyToWinRate: number
+    totalSends: number; totalDelivered?: number; totalBouncedEmails?: number; totalOpens: number; totalClicks: number; totalViews: number; totalReplies: number; wins: number
+    sendOpenRate: number; openClickRate: number; sendReplyRate: number; replyToWinRate: number; deliveryRate?: number
+  }
+  /** Full cold-outreach funnel: pooled → verified → sent → delivered →
+   *  opened → clicked → portal viewed → replied → won/lost. */
+  coldFunnel?: {
+    pooled: number
+    verifiedAny: number
+    verifiedDeliverable: number
+    sentClinics: number
+    t1Sent: number; t2Sent: number; t3Sent: number
+    deliveredClinics: number
+    openedClinics: number
+    clickedClinics: number
+    portalViewedClinics: number
+    repliedClinics: number
+    wonClinics: number
+    lostClinics: number
+    bouncedClinics: number
   }
 }
 interface FunnelSection {
@@ -3100,7 +3122,7 @@ export default function AnalyticsDashboard() {
                         <div className="card rounded-xl p-4">
                           <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Engagement</div>
                           <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{agg.funnel.totalOpens} opens</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.funnel.totalClicks} clicks · {agg.funnel.totalViews} portal views</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.funnel.totalDelivered != null ? `${agg.funnel.totalDelivered} delivered · ` : ''}{agg.funnel.totalClicks} clicks · {agg.funnel.totalViews} portal views</div>
                         </div>
                         <div className="card rounded-xl p-4" title={`Weighted ${fmt$(agg.revenue.weightedPipeline)} = stage probability × cohort value`}>
                           <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Replies / Wins</div>
@@ -3735,6 +3757,59 @@ export default function AnalyticsDashboard() {
                       </div>
                       )}
 
+                      {/* ── REPLIES · the money signal ──
+                          Populated by /api/webhooks/resend-inbound: any inbound
+                          email matching prospect_clinics.contact_email sets
+                          status='replied' + replied_at + reply_text. Previously
+                          untrackable — answer inside 2 business hours. */}
+                      {(() => {
+                        const repliedList = prospects
+                          .filter(p => p.replies > 0 || p.repliedAt || p.status === 'replied')
+                          .sort((a, b) => new Date(b.repliedAt ?? b.lastSentAt ?? 0).getTime() - new Date(a.repliedAt ?? a.lastSentAt ?? 0).getTime())
+                        if (repliedList.length === 0) return null
+                        return (
+                          <div>
+                            <SectionTitle
+                              title={`Replies (${repliedList.length}) · respond within 2 business hours`}
+                              subtitle="Direct replies detected via the inbound webhook — the strongest signal in the funnel. STOP replies are auto-suppressed and surface as Lost, not here."
+                            />
+                            <div className="card rounded-2xl overflow-hidden border-emerald-300">
+                              <table className="w-full text-sm">
+                                <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
+                                  <tr>
+                                    <th className="text-left px-4 py-3 font-semibold">Clinic / Contact</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Replied</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Reply</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Last template</th>
+                                    <th className="text-right px-4 py-3 font-semibold">Deal value</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {repliedList.map(p => (
+                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
+                                      <td className="px-4 py-3">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                        <div className="text-xs text-[var(--muted-foreground)]">{p.contactFirstName} · {p.contactEmail}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700 whitespace-nowrap">
+                                        {p.repliedAt ? new Date(p.repliedAt).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--foreground)] max-w-md">
+                                        {p.replyText
+                                          ? <span className="italic">&ldquo;{p.replyText.slice(0, 180)}{p.replyText.length > 180 ? '…' : ''}&rdquo;</span>
+                                          : <span className="text-[var(--muted-foreground)]">reply text not captured</span>}
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)]">{p.lastSentTemplate ?? '—'}</td>
+                                      <td className="px-4 py-3 text-right text-xs font-semibold text-[var(--accent)]">{fmt$(p.dealValue ?? p.recoCohortTotal)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )
+                      })()}
+
                       {/* Upcoming cal.com bookings — auto-populated by the cal.com
                           webhook (BOOKING_CREATED). Show before Call-now so Zac
                           sees scheduled meetings before lists of who-to-call. */}
@@ -3774,7 +3849,7 @@ export default function AnalyticsDashboard() {
                                       </td>
                                       <td className="px-4 py-3 text-xs font-bold text-emerald-700">{whenLabel}</td>
                                       <td className="px-4 py-3 text-right text-xs">
-                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{isOnSite ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}` : `Hub Pack · ${fmt$(p.dealValue ?? 1497)}`}</div>
+                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{isOnSite ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}` : `Hub Pack · ${fmt$(p.dealValue ?? CONFIG.COURSE.PRICE_CLINIC_HUB_PACK)}`}</div>
                                       </td>
                                       <td className="px-4 py-3 text-xs text-[var(--muted-foreground)] leading-snug">Review {p.shortName}&apos;s team mix + city · pull last portal-view section · 15-min agenda</td>
                                     </tr>
@@ -3825,7 +3900,7 @@ export default function AnalyticsDashboard() {
                                   const isOnSite = p.recommendedOffer === 'on-site-cohort'
                                   const offerLabel = isOnSite
                                     ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}`
-                                    : `Hub Pack · ${fmt$(p.dealValue ?? 1497)}`
+                                    : `Hub Pack · ${fmt$(p.dealValue ?? CONFIG.COURSE.PRICE_CLINIC_HUB_PACK)}`
                                   // Top-signal label — what's the strongest signal
                                   const SIGNAL_LABELS: Record<NonNullable<ProspectRow['topSignal']>, string> = {
                                     cal_booked: '📅 Cal booked',
@@ -3922,6 +3997,57 @@ export default function AnalyticsDashboard() {
                           </table>
                         </div>
                       </div>
+
+                      {/* ── COLD-OUTREACH FUNNEL · full path from pool to reply ──
+                          Real data end-to-end: pooled → Hunter-verified → T1/T2/T3
+                          sent → delivered → opened (scanner-filtered) → clicked →
+                          portal viewed → REPLIED → won/lost. Test sends
+                          (audit_key ':test:') excluded server-side. */}
+                      {agg.coldFunnel && (() => {
+                        const cf = agg.coldFunnel!
+                        const stages: Array<{ label: string; count: number; colour: string; hint?: string }> = [
+                          { label: 'Pooled', count: cf.pooled, colour: 'bg-slate-400', hint: 'Prospects in the pool (incl. dead statuses)' },
+                          { label: 'Verified', count: cf.verifiedDeliverable, colour: 'bg-sky-500', hint: `Hunter deliverable · ${cf.verifiedAny} checked total` },
+                          { label: 'Sent', count: cf.sentClinics, colour: 'bg-indigo-500', hint: `T1 ${cf.t1Sent} · T2 ${cf.t2Sent} · T3 ${cf.t3Sent} production sends` },
+                          { label: 'Delivered', count: cf.deliveredClinics, colour: 'bg-blue-500', hint: 'Clinics with ≥1 delivered event (Resend webhook)' },
+                          { label: 'Opened', count: cf.openedClinics, colour: 'bg-violet-500', hint: 'Human-filtered where user agent recorded' },
+                          { label: 'Clicked', count: cf.clickedClinics, colour: 'bg-purple-500', hint: 'Clinics with ≥1 email click' },
+                          { label: 'Portal viewed', count: cf.portalViewedClinics, colour: 'bg-fuchsia-500', hint: 'Opened their /p/[slug] dashboard' },
+                          { label: 'Replied', count: cf.repliedClinics, colour: 'bg-emerald-500', hint: 'Direct reply via inbound webhook — the money signal' },
+                          { label: 'Won', count: cf.wonClinics, colour: 'bg-emerald-700' },
+                        ]
+                        const maxCount = Math.max(...stages.map(s => s.count), 1)
+                        return (
+                          <div>
+                            <SectionTitle
+                              title="Cold-outreach funnel · pool → reply"
+                              subtitle={`Clinic-level stage counts from real send/webhook data · test sends excluded · ${cf.lostClinics} lost (incl. STOP replies) · ${cf.bouncedClinics} bounced`}
+                            />
+                            <div className="card rounded-2xl p-5 space-y-2">
+                              {stages.map((s, i) => {
+                                const prev = i > 0 ? stages[i - 1].count : null
+                                const convPct = prev != null && prev > 0 ? Math.round((s.count / prev) * 100) : null
+                                return (
+                                  <div key={s.label} className="flex items-center gap-3" title={s.hint}>
+                                    <div className="w-28 text-xs font-semibold text-[var(--foreground)]">{s.label}</div>
+                                    <div className="flex-1 bg-slate-100 rounded-lg h-7 relative overflow-hidden">
+                                      <div className={`absolute inset-y-0 left-0 ${s.colour} flex items-center justify-end pr-2 text-xs font-bold text-white`} style={{ width: `${(s.count / maxCount) * 100}%`, minWidth: s.count > 0 ? '34px' : 0 }}>
+                                        {s.count > 0 && s.count}
+                                      </div>
+                                    </div>
+                                    <div className="w-20 text-right text-[11px] tabular-nums text-[var(--muted-foreground)]">
+                                      {convPct != null ? `${convPct}% of prev` : ''}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                              <p className="text-[10.5px] text-[var(--muted-foreground)] pt-2 border-t border-slate-100">
+                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Replied = inbound-webhook detection — previously untrackable.
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {/* ── PIPELINE FUNNEL · collapsible · baked into Overview ── */}
                       <div className="card rounded-2xl border-slate-200 overflow-hidden">

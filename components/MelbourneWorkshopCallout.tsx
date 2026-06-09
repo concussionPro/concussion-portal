@@ -21,7 +21,6 @@ export function MelbourneWorkshopCallout({
   const mel = CONFIG.LOCATIONS.MELBOURNE
   if (mel.status !== 'confirmed') return null
 
-  const earlyBirdActive = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
   const href = `/courses/melbourne?utm_source=portal&utm_medium=internal&utm_campaign=melbourne_workshop&utm_content=${encodeURIComponent(source)}`
 
   if (variant === 'banner') {
@@ -84,11 +83,9 @@ export function MelbourneWorkshopCallout({
             See Melbourne workshop
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
           </span>
-          {earlyBirdActive && (
-            <span className="inline-flex items-center text-xs font-semibold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-2 rounded-lg">
-              From ${CONFIG.COURSE.PRICE_EARLY_BIRD}
-            </span>
-          )}
+          <span className="inline-flex items-center text-xs font-semibold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-2 rounded-lg">
+            ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} — online + workshop
+          </span>
         </div>
       </div>
     </Link>

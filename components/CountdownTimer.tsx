@@ -44,6 +44,13 @@ export default function CountdownTimer({ className = '' }: { className?: string 
         return null
       }
 
+      // Safety net: a deadline more than 60 days out means the config is
+      // pointing at a placeholder/far-future date — a 26,000-day countdown
+      // is false urgency, not marketing. Render nothing.
+      if (difference > 60 * 24 * 60 * 60 * 1000) {
+        return null
+      }
+
       return {
         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
         hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),

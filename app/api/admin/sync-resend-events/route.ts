@@ -35,6 +35,23 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms))
 }
 
+// Same project inference as the Resend webhook (app/api/webhooks/resend/
+// route.ts) — the Resend account is shared with byronwebstudio, and rows
+// without a project tag default-count as CEA downstream
+// (COALESCE(project, 'cea')). Replicated here because Next.js route files
+// can't export helpers.
+function inferProjectFromFrom(from: string | null | undefined): 'cea' | 'byronwebstudio' | 'other' | null {
+  if (!from) return null
+  const f = from.toLowerCase()
+  if (f.includes('concussion-education-australia.com') || f.includes('concussion-education.com')) {
+    return 'cea'
+  }
+  if (f.includes('byronwebstudio.com.au')) {
+    return 'byronwebstudio'
+  }
+  return 'other'
+}
+
 export async function POST(request: NextRequest) {
   if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -54,13 +71,17 @@ export async function POST(request: NextRequest) {
     // have an opened/clicked row. Newest first so partial runs hit the most
     // recent emails (most likely to carry open/click data, especially when
     // tracking was only recently enabled).
-    const { rows: candidates } = await sql<{ email_id: string; recipient: string; subject: string | null; sequence: string | null; day: string | null }>`
+    // Ensure project column exists (same one-shot migration as the webhook)
+    await sql`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS project TEXT`
+
+    const { rows: candidates } = await sql<{ email_id: string; recipient: string; subject: string | null; sequence: string | null; day: string | null; project: string | null }>`
       SELECT
         email_id,
         (ARRAY_AGG(recipient ORDER BY created_at DESC))[1] AS recipient,
         (ARRAY_AGG(subject   ORDER BY created_at DESC))[1] AS subject,
         (ARRAY_AGG(sequence  ORDER BY created_at DESC))[1] AS sequence,
         (ARRAY_AGG(day       ORDER BY created_at DESC))[1] AS day,
+        (ARRAY_AGG(project   ORDER BY created_at DESC))[1] AS project,
         MAX(created_at) AS latest_at
       FROM email_events
       WHERE event_type = 'delivered'
@@ -86,21 +107,26 @@ export async function POST(request: NextRequest) {
       try {
         const res = await resend!.emails.get(c.email_id)
         const last = res.data?.last_event
+        // Tag the synthesised rows with a project so they don't default-count
+        // as CEA downstream. Prefer the project already on the source
+        // delivered row; fall back to inferring from the Resend record's
+        // from address (same logic as the webhook).
+        const project = c.project ?? inferProjectFromFrom(res.data?.from)
         if (last === 'clicked') {
           await sql`
-            INSERT INTO email_events (email_id, recipient, event_type, subject, sequence, day, click_url, created_at)
-            VALUES (${c.email_id}, ${c.recipient}, 'opened', ${c.subject}, ${c.sequence}, ${c.day}, NULL, NOW())
+            INSERT INTO email_events (email_id, recipient, event_type, subject, sequence, day, click_url, project, created_at)
+            VALUES (${c.email_id}, ${c.recipient}, 'opened', ${c.subject}, ${c.sequence}, ${c.day}, NULL, ${project}, NOW())
           `
           await sql`
-            INSERT INTO email_events (email_id, recipient, event_type, subject, sequence, day, click_url, created_at)
-            VALUES (${c.email_id}, ${c.recipient}, 'clicked', ${c.subject}, ${c.sequence}, ${c.day}, NULL, NOW())
+            INSERT INTO email_events (email_id, recipient, event_type, subject, sequence, day, click_url, project, created_at)
+            VALUES (${c.email_id}, ${c.recipient}, 'clicked', ${c.subject}, ${c.sequence}, ${c.day}, NULL, ${project}, NOW())
           `
           opened++
           clicked++
         } else if (last === 'opened') {
           await sql`
-            INSERT INTO email_events (email_id, recipient, event_type, subject, sequence, day, click_url, created_at)
-            VALUES (${c.email_id}, ${c.recipient}, 'opened', ${c.subject}, ${c.sequence}, ${c.day}, NULL, NOW())
+            INSERT INTO email_events (email_id, recipient, event_type, subject, sequence, day, click_url, project, created_at)
+            VALUES (${c.email_id}, ${c.recipient}, 'opened', ${c.subject}, ${c.sequence}, ${c.day}, NULL, ${project}, NOW())
           `
           opened++
         } else {

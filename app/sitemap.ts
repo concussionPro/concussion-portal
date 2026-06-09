@@ -1,96 +1,129 @@
 import { MetadataRoute } from 'next'
 
+// Honest static lastModified date for non-blog pages — bump when page content
+// meaningfully changes. A rolling `new Date()` tells crawlers every page
+// changed on every build, which erodes crawl-priority signals.
+const STATIC_PAGES_LAST_MODIFIED = new Date('2026-06-01')
+
+// Blog posts carry their own datePublished/dateModified in their schema
+// markup — sitemap lastModified mirrors each post's dateModified.
+const BLOG_POSTS: Array<{ slug: string; dateModified: string; priority: number }> = [
+  { slug: 'heidi-vs-lyrebird-ai-scribe-australian-clinicians', dateModified: '2026-05-27', priority: 0.9 },
+  { slug: 'ahpra-ai-guidelines-explained-australian-clinicians', dateModified: '2026-05-27', priority: 0.9 },
+  { slug: 'chatgpt-ndis-reports-allied-health-australia', dateModified: '2026-05-27', priority: 0.9 },
+  { slug: 'ai-scribe-privacy-act-compliance-australia', dateModified: '2026-05-27', priority: 0.9 },
+  { slug: 'when-not-to-use-ai-clinical-notes-clinicians', dateModified: '2026-05-27', priority: 0.85 },
+  { slug: 'ai-medical-scribe-comparison-2026', dateModified: '2026-05-27', priority: 0.95 },
+  { slug: 'persistent-post-concussion-symptoms-clinician-workup', dateModified: '2026-05-27', priority: 0.9 },
+  { slug: 'cervicogenic-drivers-chronic-concussion', dateModified: '2026-05-27', priority: 0.85 },
+  { slug: 'vestibulo-ocular-workup-ppcs', dateModified: '2026-05-27', priority: 0.85 },
+  { slug: 'ahpra-cpd-requirements-concussion-education', dateModified: '2026-03-18', priority: 0.8 },
+  { slug: '21-day-concussion-stand-down-youth-sport-australia', dateModified: '2026-03-18', priority: 0.8 },
+  { slug: 'ais-concussion-brain-health-position-statement-2024', dateModified: '2026-03-18', priority: 0.8 },
+  { slug: 'nsw-mandatory-concussion-training-combat-sports', dateModified: '2026-03-18', priority: 0.8 },
+  { slug: 'free-scat6-pdf-download', dateModified: '2026-01-31', priority: 0.8 },
+  { slug: 'scat6-vs-scoat6-difference', dateModified: '2026-01-31', priority: 0.8 },
+  { slug: 'concussion-update-2026-wait-until-symptom-free-obsolete', dateModified: '2026-01-05', priority: 0.8 },
+  { slug: 'vestibular-ocular-screening-voms-concussion', dateModified: '2025-10-18', priority: 0.8 },
+  { slug: 'return-to-play-decisions-concussion-clinicians', dateModified: '2025-09-15', priority: 0.8 },
+  { slug: 'how-to-use-scat6-clinicians-guide', dateModified: '2025-08-01', priority: 0.8 },
+  { slug: 'bess-balance-testing-concussion-guide', dateModified: '2026-03-09', priority: 0.8 },
+  { slug: 'concussion-myths-clinicians-should-stop-believing', dateModified: '2026-03-09', priority: 0.8 },
+  { slug: 'pre-season-baseline-testing-concussion-guide', dateModified: '2026-03-09', priority: 0.8 },
+]
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 
-  return [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
       url: `${baseUrl}/pricing`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/pricing-international`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/scat-mastery`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/preview`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/course`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/in-person`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/resources`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
-    {
-      url: `${baseUrl}/trial`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
+    // /trial removed — it 301s to /scat-mastery, redirects don't belong in sitemaps
     {
       url: `${baseUrl}/preseason`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/scat6-download`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/scat-forms`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/scat-forms/about`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/scat-forms/scat6`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/scat-forms/scoat6`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/scat-forms/child-scat6`,
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
@@ -98,201 +131,78 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // /clinical-toolkit excluded — noindex page (authenticated content)
     {
       url: `${baseUrl}/terms`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/faq/scat-assessment`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/blog`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/blog/heidi-vs-lyrebird-ai-scribe-australian-clinicians`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blog/ahpra-ai-guidelines-explained-australian-clinicians`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blog/chatgpt-ndis-reports-allied-health-australia`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blog/ai-scribe-privacy-act-compliance-australia`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blog/when-not-to-use-ai-clinical-notes-clinicians`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.85,
-    },
-    {
       url: `${baseUrl}/ai-safety-checklist`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.95,
     },
     {
       url: `${baseUrl}/about/zac-lewis`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/blog/ai-medical-scribe-comparison-2026`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.95,
-    },
-    {
       url: `${baseUrl}/ppcs-waitlist`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/team-training`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/blog/persistent-post-concussion-symptoms-clinician-workup`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blog/cervicogenic-drivers-chronic-concussion`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
+      url: `${baseUrl}/courses`,
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
+      changeFrequency: 'weekly',
       priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/blog/vestibulo-ocular-workup-ppcs`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/blog/ahpra-cpd-requirements-concussion-education`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/21-day-concussion-stand-down-youth-sport-australia`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/ais-concussion-brain-health-position-statement-2024`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/nsw-mandatory-concussion-training-combat-sports`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/free-scat6-pdf-download`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/scat6-vs-scoat6-difference`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/concussion-update-2026-wait-until-symptom-free-obsolete`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/vestibular-ocular-screening-voms-concussion`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/return-to-play-decisions-concussion-clinicians`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/how-to-use-scat6-clinicians-guide`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/bess-balance-testing-concussion-guide`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/concussion-myths-clinicians-should-stop-believing`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog/pre-season-baseline-testing-concussion-guide`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/scat-forms/child-scat6`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
     },
     {
       url: `${baseUrl}/courses/byron-bay`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/courses/melbourne`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/courses/sydney`,
-      lastModified: new Date(),
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
   ]
+
+  const blogPages: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.dateModified),
+    changeFrequency: 'monthly',
+    priority: post.priority,
+  }))
+
+  return [...staticPages, ...blogPages]
 }

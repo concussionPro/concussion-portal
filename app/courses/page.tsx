@@ -6,6 +6,7 @@ import { COURSES, PROVIDERS, findProvider, getEffectiveStatus } from '@/lib/ai-c
 import { getAllEarlyAccessCounts } from '@/lib/early-access'
 import { ComingSoonSection } from '@/components/courses/ComingSoonSection'
 import { Check, AlertCircle, ShieldCheck, BookOpenCheck, Award, Stethoscope, Users, Building2 } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'CPD Courses — Concussion Education Australia',
@@ -94,7 +95,7 @@ export default async function CoursesIndexPage() {
                 <Building2 className="w-4 h-4 text-accent" />
                 <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Shipping product</p>
               </div>
-              <p className="text-sm font-bold text-foreground leading-tight">CCM at A$1,190</p>
+              <p className="text-sm font-bold text-foreground leading-tight">CCM at A${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Concussion Clinical Mastery</p>
             </div>
             <div className="px-4 py-4">

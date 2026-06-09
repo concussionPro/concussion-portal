@@ -11,7 +11,7 @@ import { CONFIG } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
 import { ABANDONED_CHECKOUT_SEQUENCE } from '@/lib/email-sequences'
 import { recordCoursePurchase } from '@/lib/course-purchases'
-import { enrolUser as enrolAiCourseUser } from '@/lib/ai-course/access'
+import { enrolUser as enrolAiCourseUser, unenrolUser as unenrolAiCourseUser } from '@/lib/ai-course/access'
 import { findCourse } from '@/lib/ai-course/provider-catalogue'
 
 function labelForCourse(courseType: string, accessLevel: string): string {
@@ -495,7 +495,10 @@ async function handleShortCoursePurchase(
     })
   }
 
-  // Record the purchase (idempotent per stripe session id).
+  // Record the purchase (idempotent per stripe session id). Fulfilment
+  // failures MUST rethrow — the idempotency cleanup in POST removes the
+  // processed_webhook_events row so Stripe retries the event. Alert the
+  // admin too so a persistent failure doesn't go unnoticed.
   try {
     await recordCoursePurchase({
       email: customerEmail,
@@ -505,20 +508,65 @@ async function handleShortCoursePurchase(
     })
   } catch (err) {
     console.error(`[short-course] recordCoursePurchase failed for ${courseSlug}:`, err)
+    try {
+      await sendEmail({
+        to: CONFIG.CONTACT_EMAIL,
+        subject: `ACTION REQUIRED: Short-course fulfilment failed for ${redact(customerEmail)}`,
+        html: `<p>A customer paid for a short course but <strong>recordCoursePurchase failed</strong> — they have no access yet.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Course:</strong> ${escapeHtml(courseSlug)}<br><strong>Amount:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br><strong>Session:</strong> <code>${escapeHtml(session.id)}</code></p><p>Error: ${escapeHtml(err instanceof Error ? err.message : String(err))}</p><p>Stripe will retry the webhook automatically.</p>`,
+      })
+    } catch (alertErr) { console.error('Admin alert email failed:', alertErr) }
+    throw err
   }
 
-  // Course-specific enrolment.
+  // Course-specific enrolment — same rethrow-so-Stripe-retries policy.
   if (courseSlug === 'ai-in-clinical-practice') {
     try {
       await enrolAiCourseUser(customerEmail)
     } catch (err) {
       console.error('[short-course] enrolAiCourseUser failed:', err)
+      try {
+        await sendEmail({
+          to: CONFIG.CONTACT_EMAIL,
+          subject: `ACTION REQUIRED: AI course enrolment failed for ${redact(customerEmail)}`,
+          html: `<p>A customer paid for the AI course but <strong>enrolAiCourseUser failed</strong> — they have no access yet.</p><p><strong>Email:</strong> ${escapeHtml(customerEmail)}<br><strong>Amount:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br><strong>Session:</strong> <code>${escapeHtml(session.id)}</code></p><p>Error: ${escapeHtml(err instanceof Error ? err.message : String(err))}</p><p>Stripe will retry the webhook automatically.</p>`,
+        })
+      } catch (alertErr) { console.error('Admin alert email failed:', alertErr) }
+      throw err
     }
   }
 
-  // Welcome email with magic link.
+  // Generate tax invoice — same best-effort policy as the CCM and book
+  // paths. A PDF failure must never block fulfilment.
+  let courseInvoice: { filename: string; content: Buffer } | undefined
+  try {
+    const { generateTaxInvoicePdf, invoiceNumberFromSession } = await import('@/lib/tax-invoice')
+    const issueDate = new Date()
+    const invNumber = invoiceNumberFromSession(session.id, issueDate)
+    const pdf = generateTaxInvoicePdf({
+      invoiceNumber: invNumber,
+      issueDate,
+      buyer: { name: customerName, email: customerEmail },
+      lineItems: [{
+        description: `${course.title} — online short course (${course.cpdHours} CPD ${course.cpdHours === 1 ? 'hour' : 'hours'})`,
+        quantity: 1,
+        unitPriceCents: amountCents,
+        totalCents: amountCents,
+      }],
+      totalCents: amountCents,
+      currency,
+      paidAt: issueDate,
+      paymentReference: session.id,
+    })
+    courseInvoice = { filename: `${invNumber}.pdf`, content: pdf }
+  } catch (invErr) {
+    console.error(`[short-course] Invoice PDF generation failed for ${redact(customerEmail)}:`, invErr)
+  }
+
+  // Welcome email with magic link. Use the user's existing access level —
+  // hardcoding 'preview' would downgrade an online-only/full-course user's
+  // session when they click the link (same pattern as handleBookPurchase).
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
-  const token = createMagicToken(userId, customerEmail, customerName, 'preview')
+  const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course')
   const loginUrl = `${baseUrl}/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=short_course_purchase&next=${encodeURIComponent(course.route)}`
 
   try {
@@ -535,7 +583,7 @@ async function handleShortCoursePurchase(
           </p>
           <div style="background: #f0fdfa; border-left: 3px solid #0d9488; padding: 14px 16px; margin: 20px 0; border-radius: 6px; font-size: 14px;">
             <strong>What you paid:</strong> ${escapeHtml(currency)} $${amountAud.toFixed(2)}<br>
-            <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>
+            <strong>Order ref:</strong> <code style="font-size: 12px;">${escapeHtml(session.id)}</code>${courseInvoice ? '<br><strong>Tax invoice:</strong> attached to this email' : ''}
           </div>
           <p style="margin: 14px 0 0; font-size: 14px; color: #475569;">Questions — just reply to this email.</p>
           <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">Zac Lewis<br>Concussion Education Australia</div>
@@ -545,6 +593,7 @@ async function handleShortCoursePurchase(
         { name: 'type', value: 'short-course-purchase' },
         { name: 'course', value: courseSlug },
       ],
+      ...(courseInvoice ? { attachments: [courseInvoice] } : {}),
     })
   } catch (emailErr) {
     console.error(`[short-course] Welcome email failed for ${redact(customerEmail)}:`, emailErr)
@@ -616,7 +665,7 @@ async function handleBookPurchase(
   try {
     await sendEmail({
       to: customerEmail,
-      subject: 'Your ConcussionPro Reference Text is ready',
+      subject: 'Your Concussion Education Australia Reference Text is ready',
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1e293b;">
           <div style="height: 4px; background: linear-gradient(90deg, #0d9488, #0ea5e9); border-radius: 2px; margin-bottom: 24px;"></div>
@@ -690,7 +739,19 @@ async function handleBookPurchase(
  * Handle failed payment — send recovery email
  */
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
-  const email = paymentIntent.receipt_email || paymentIntent.metadata?.email
+  let email: string | undefined = paymentIntent.receipt_email || paymentIntent.metadata?.email || undefined
+  // receipt_email / PI metadata are usually empty for Checkout-created
+  // PaymentIntents — fall back to the Checkout Session's customer_details,
+  // which Stripe populates from the email field on the checkout page.
+  if (!email && paymentIntent.id) {
+    try {
+      const { getStripe } = await import('@/lib/stripe')
+      const sessions = await getStripe().checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
+      email = sessions.data[0]?.customer_details?.email || sessions.data[0]?.customer_email || undefined
+    } catch (lookupErr) {
+      console.error('[Payment Failed] Checkout session lookup failed:', lookupErr)
+    }
+  }
   const errorMsg = paymentIntent.last_payment_error?.message || 'Unknown error'
   console.log(`Payment failed for ${redact(email)}: ${errorMsg}`)
 
@@ -807,7 +868,11 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
       return
     }
   } catch (err) {
-    console.error('Failed to check abandoned checkout dedup:', err)
+    // Fail-safe: if the dedup check itself failed we can't know whether this
+    // person was already emailed in the last 24h — skip rather than risk a
+    // duplicate recovery email.
+    console.error('Failed to check abandoned checkout dedup — skipping send:', err)
+    return
   }
 
   // Store abandoned checkout and send first recovery email immediately.
@@ -902,20 +967,66 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     return
   }
 
-  // Determine downgrade level: workshop-upgrade refunds downgrade to online-only
-  // (user still has their original online course purchase), all others to preview.
-  // Look up courseType from Stripe metadata for accuracy (price heuristic as fallback).
-  let downgradeLevel: 'preview' | 'online-only' = 'preview'
+  // Work out WHAT was refunded. The Checkout Session metadata is the source
+  // of truth for productType (reference-book / short-course / CCM course) —
+  // PI metadata only carries courseType for CCM purchases.
   let courseType: string | undefined
+  let productType: string | undefined
+  let refundedCourseSlug: string | undefined
   try {
     const { getStripe } = await import('@/lib/stripe')
     if (charge.payment_intent && typeof charge.payment_intent === 'string') {
       const pi = await getStripe().paymentIntents.retrieve(charge.payment_intent)
       courseType = pi.metadata?.courseType
+      const sessions = await getStripe().checkout.sessions.list({ payment_intent: charge.payment_intent, limit: 1 })
+      const sessionMeta = sessions.data[0]?.metadata
+      productType = sessionMeta?.productType
+      refundedCourseSlug = sessionMeta?.courseSlug
+      courseType = courseType || sessionMeta?.courseType
     }
-  } catch { /* fallback to heuristic */ }
+  } catch { /* fallback to heuristic below */ }
 
   const chargeAmount = (charge.amount || 0) / 100
+
+  // Reference-book refund → revoke the book flag (otherwise the $100 bundle
+  // discount keeps applying via isBookOwner). Never touches course access.
+  if (productType === 'reference-book') {
+    try {
+      await sql`
+        UPDATE users SET reference_book_purchased_at = NULL WHERE LOWER(email) = ${email.toLowerCase()}
+      `
+      console.log(`Revoked reference-book ownership for ${redact(email)} after full refund ($${chargeAmount})`)
+    } catch (err) {
+      console.error(`Failed to revoke book ownership for ${redact(email)} after refund:`, err)
+    }
+    return
+  }
+
+  // Short-course refund → remove the course_purchases row and any
+  // course-specific enrolment flag. Never touches CCM access.
+  if (productType === 'short-course') {
+    try {
+      if (refundedCourseSlug) {
+        await sql`
+          DELETE FROM course_purchases
+          WHERE user_email = ${email.toLowerCase()} AND course_slug = ${refundedCourseSlug}
+        `
+      }
+      if (refundedCourseSlug === 'ai-in-clinical-practice') {
+        await unenrolAiCourseUser(email)
+      }
+      console.log(`Revoked short-course access (${refundedCourseSlug || 'unknown slug'}) for ${redact(email)} after full refund ($${chargeAmount})`)
+    } catch (err) {
+      console.error(`Failed to revoke short-course access for ${redact(email)} after refund:`, err)
+    }
+    return
+  }
+
+  // CCM course refund — determine downgrade level: workshop-upgrade refunds
+  // downgrade to online-only (user still has their original online course
+  // purchase), all others to preview. Price heuristic as fallback when
+  // metadata lookup failed.
+  let downgradeLevel: 'preview' | 'online-only' = 'preview'
   const isWorkshopUpgradeRefund = courseType
     ? courseType === 'workshop-upgrade'
     : (user.accessLevel === 'full-course' && chargeAmount < 1000)

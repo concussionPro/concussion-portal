@@ -294,7 +294,7 @@ export function getOnlineCourseCertificateData(participantName: string, particip
   return {
     participantName,
     participantEmail,
-    courseTitle: 'ConcussionPro — Online Concussion Management Course',
+    courseTitle: 'Online Concussion Management Course',
     courseDescription: 'Comprehensive 8-module online course covering concussion science, SCAT6/SCOAT6 assessment, VOMS & BESS protocols, clinical phenotyping, return-to-activity frameworks, rehabilitation pathways, and medicolegal documentation for Australian health practitioners.',
     cpdPoints: 8,
     completionDate,
@@ -314,7 +314,7 @@ export function getFullCourseCertificateData(participantName: string, participan
   return {
     participantName,
     participantEmail,
-    courseTitle: 'ConcussionPro — Complete Concussion Management Certification',
+    courseTitle: 'Complete Concussion Management Certification',
     courseDescription: '8-module online course plus full-day in-person practical workshop covering concussion science, SCAT6/SCOAT6 assessment, VOMS & BESS protocols, hands-on clinical assessment techniques, clinical phenotyping, return-to-activity frameworks, rehabilitation pathways, and medicolegal documentation for Australian health practitioners.',
     cpdPoints: 14,
     completionDate,

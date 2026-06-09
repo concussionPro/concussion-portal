@@ -42,6 +42,15 @@ export async function GET(request: Request) {
   const overdue = getOverduePosts(now)
   const next = getNextScheduledPost(now)
 
+  // Schedule-runway check: when the pipeline runs dry the cron has nothing
+  // to remind about and the weekly drop dies silently. Warn loudly while
+  // there's still time to add entries to lib/blog-schedule.ts.
+  const upcoming = BLOG_SCHEDULE.filter((p) => new Date(p.publishAt) > now)
+  const scheduleWarning =
+    upcoming.length <= 2
+      ? `BLOG SCHEDULE RUNNING DRY: only ${upcoming.length} scheduled post${upcoming.length === 1 ? '' : 's'} remaining after today. Add new entries to lib/blog-schedule.ts or the Friday drop stops without notice.`
+      : null
+
   if (overdue.length === 0) {
     return NextResponse.json({
       ok: true,
@@ -49,12 +58,18 @@ export async function GET(request: Request) {
       overdueCount: 0,
       next: next ? { slug: next.slug, title: next.title, publishAt: next.publishAt } : null,
       message: 'No overdue posts. Nothing to remind.',
+      ...(scheduleWarning ? { warning: scheduleWarning } : {}),
     })
   }
 
   // Email Zac the reminder
   const html = `
     <p>Hi Zac,</p>
+    ${
+      scheduleWarning
+        ? `<p style="background:#fef2f2;border-left:4px solid #ef4444;padding:12px 16px;border-radius:4px;color:#991b1b;font-weight:bold">&#9888; ${scheduleWarning}</p>`
+        : ''
+    }
     <p>Friday blog-drop reminder. <strong>${overdue.length} post${overdue.length === 1 ? ' is' : 's are'} due to publish.</strong></p>
     <h3>Overdue posts</h3>
     <ul>
@@ -91,18 +106,31 @@ export async function GET(request: Request) {
     <p style="color:#888;font-size:12px">— Sent by the publish-scheduled-blog cron</p>
   `
 
+  // sendEmail returns false on failure (it never throws) — surface both
+  // paths as HTTP 500 so the Vercel cron run shows failed instead of a
+  // silent ok:false 200.
   try {
-    await sendEmail({
+    const sent = await sendEmail({
       to: CONFIG.CONTACT_EMAIL,
       subject: `📝 Friday blog drop reminder: ${overdue[0].title}`,
       html,
     })
+    if (!sent) {
+      return NextResponse.json(
+        { ok: false, error: 'Email send failed', ...(scheduleWarning ? { warning: scheduleWarning } : {}) },
+        { status: 500 }
+      )
+    }
   } catch (err) {
-    return NextResponse.json({
-      ok: false,
-      error: 'Email send failed',
-      details: err instanceof Error ? err.message : String(err),
-    })
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'Email send failed',
+        details: err instanceof Error ? err.message : String(err),
+        ...(scheduleWarning ? { warning: scheduleWarning } : {}),
+      },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({
@@ -112,5 +140,6 @@ export async function GET(request: Request) {
     overdue: overdue.map((p) => p.slug),
     scheduleCount: BLOG_SCHEDULE.length,
     next: next ? { slug: next.slug, title: next.title, publishAt: next.publishAt } : null,
+    ...(scheduleWarning ? { warning: scheduleWarning } : {}),
   })
 }

@@ -566,14 +566,17 @@ function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[]) 
   };
 }
 
-function buildExpandedFunnel(sessions: SessionSummary[]) {
-  // Direct funnel: Homepage → Preview → Pricing → Checkout
+function buildExpandedFunnel(sessions: SessionSummary[], rawEvents: StoredEvent[]) {
+  // Direct funnel: Homepage → Preview → Pricing → Checkout.
+  // Final step uses VERIFIED purchases (server-side purchase_complete events
+  // written by the Stripe webhook) instead of /checkout/success pageviews —
+  // refreshes / bookmarked success URLs were inflating the old count.
   const directFunnel = [
     { label: 'Homepage', count: sessions.filter((s) => s.pages.includes('/')).length },
     { label: 'Preview / Course', count: sessions.filter((s) => s.pages.some((p) => p.startsWith('/preview') || p.startsWith('/course') || p.startsWith('/scat-mastery'))).length },
     { label: 'Pricing Page', count: sessions.filter((s) => s.hasPricingView).length },
     { label: 'Enrol Click', count: sessions.filter((s) => s.hasEnrollClick).length },
-    { label: 'Checkout Success', count: sessions.filter((s) => s.hasConversion).length },
+    { label: 'Purchases (verified)', count: countVerifiedPurchases(rawEvents) },
   ];
 
   // Preseason funnel: Preseason Landing → Register → Baseline Submit → Pricing → Checkout
@@ -1078,7 +1081,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (type === 'funnel') {
     const currentEvents = await getEventsForDateRange(currentDates);
     const sessions = buildSessionSummaries(currentEvents);
-    const funnel = buildExpandedFunnel(sessions);
+    const funnel = buildExpandedFunnel(sessions, currentEvents);
     return NextResponse.json(funnel, {
       headers: { 'Cache-Control': 'no-store' },
     });

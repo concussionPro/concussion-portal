@@ -16,7 +16,9 @@ export const metadata: Metadata = {
     description: 'Web forms with auto-calculating scores + fillable PDFs. 2026 updated. Free training included.',
   },
   alternates: {
-    canonical: 'https://portal.concussion-education-australia.com/scat6-download',
+    // /scat-mastery is the canonical free-SCAT6 lead-magnet page — this page
+    // is its closest duplicate and was cannibalising the same query.
+    canonical: 'https://portal.concussion-education-australia.com/scat-mastery',
   },
 }
 

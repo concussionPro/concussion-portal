@@ -24,8 +24,11 @@ function VerifyContent() {
       return
     }
 
-    // Verify token
-    fetch(`/api/auth/verify?token=${token}`)
+    // Verify token. MUST be a POST — the API's GET path validates without
+    // consuming (email security scanners prefetch bare GETs and were
+    // burning one-time tokens before the user clicked). Only the POST
+    // consumes the token and sets the session cookie.
+    fetch(`/api/auth/verify?token=${encodeURIComponent(token)}`, { method: 'POST' })
       .then(async (res) => {
         if (!res.ok) {
           const error = await res.json()

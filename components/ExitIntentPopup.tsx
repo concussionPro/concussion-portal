@@ -15,10 +15,13 @@ import { trackEvent, trackLeadConversion } from '@/lib/analytics'
  * Excluded from: dashboard, login, admin, checkout, course pages.
  */
 
+// Keep in sync (in intent) with StickyCTA EXCLUDED_PATHS: never interrupt
+// buyer-intent pages (/pricing, /in-person, /courses) with a free-course
+// downsell, and never re-pitch the lead magnet on its own pages.
 const EXCLUDED_PREFIXES = [
-  '/dashboard', '/login', '/admin', '/checkout',
-  '/courses', '/course', '/learning', '/settings', '/scat-mastery',
-  '/scat-course', '/preseason/b',
+  '/dashboard', '/login', '/admin', '/checkout', '/pricing',
+  '/courses', '/course', '/in-person', '/learning', '/settings', '/scat-mastery',
+  '/scat6-download', '/scat-course', '/preseason/b',
 ]
 
 export function ExitIntentPopup() {

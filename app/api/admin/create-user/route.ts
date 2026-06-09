@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const now = Date.now()
     const lastSent = recentSends.get(dedupKey)
     if (lastSent && now - lastSent < DEDUP_WINDOW_MS) {
-      console.log(`[admin/create-user] Skipping duplicate send for ${email} (last send ${now - lastSent}ms ago)`)
+      console.log(`[admin/create-user] Skipping duplicate send for ${String(email).slice(0, 3)}*** (last send ${now - lastSent}ms ago)`)
       return NextResponse.json({
         success: true,
         duplicate: true,
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Sweep old entries so the map doesn't grow unbounded
     for (const [k, t] of recentSends) if (now - t > DEDUP_WINDOW_MS * 2) recentSends.delete(k)
 
-    console.log(`\u2705 User created via admin: ${email} (${accessLevel})`)
+    console.log(`\u2705 User created via admin: ${String(email).slice(0, 3)}*** (${accessLevel})`)
 
     return NextResponse.json({
       success: true,

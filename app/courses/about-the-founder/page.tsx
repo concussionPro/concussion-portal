@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { Award, BookOpen, Stethoscope, Code, Mail, ExternalLink, ShieldCheck } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'About the founder — Concussion Education Australia',
@@ -71,7 +72,7 @@ export default async function AboutFounderPage() {
               {
                 icon: BookOpen,
                 title: 'Concussion Clinical Mastery (CCM)',
-                body: 'Flagship product. 14 CPD hours. Osteopathy Australia endorsed. A$1,190. Live AU clinician subscriber base. Trading at concussion-education-australia.com.',
+                body: `Flagship product. 14 CPD hours. Osteopathy Australia endorsed. A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}. Live AU clinician subscriber base. Trading at concussion-education-australia.com.`,
                 evidence: 'concussion-education-australia.com',
               },
               {

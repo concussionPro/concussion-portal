@@ -30,6 +30,7 @@ loadEnv({ path: '.env.local' })
 
 import { sql } from '@vercel/postgres'
 import { bulkCreateClinics, type CreateClinicInput } from '@/lib/prospect/repo'
+import { generateAccessKey } from '@/lib/prospect/access-key'
 import type { ClinicTeam, Discipline, State } from '@/lib/prospect/types'
 
 // ─── Config ──────────────────────────────────────────────────────────
@@ -166,12 +167,6 @@ function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64)
 }
 
-function accessKey(slug: string): string {
-  const ab = 'abcdefghijkmnopqrstuvwxyz23456789'
-  let key = ''
-  for (let i = 0; i < 6; i++) key += ab[(slug.charCodeAt(i % slug.length) + i * 37) % ab.length]
-  return key
-}
 
 // ─── Places search ───────────────────────────────────────────────────
 
@@ -478,7 +473,7 @@ async function main() {
     team[disc] = 4
     inputs.push({
       slug,
-      accessKey: accessKey(slug),
+      accessKey: generateAccessKey(),
       name: e.name,
       shortName: e.name.split(/[—–-]| at /i)[0].trim().slice(0, 40),
       city: e.city,

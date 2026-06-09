@@ -88,7 +88,7 @@ function SuccessContent() {
                       Check your inbox
                     </h3>
                     <p className="text-sm text-teal-800 leading-relaxed mb-3">
-                      We&apos;ve sent a confirmation + login link. The PDF also lives inside your ConcussionPro account for lifetime access across devices.
+                      We&apos;ve sent a confirmation + login link. The PDF also lives inside your Concussion Education Australia account for lifetime access across devices.
                     </p>
                     <p className="text-sm text-teal-800 leading-relaxed">
                       <strong>Next step:</strong> book owners get A$100 off the full online course (8 CPD hours, interactive quizzes, curated clinical video library, CPD certificate). The reference is Part 1; the course is Part 2.

@@ -10,12 +10,30 @@ import {
   type AdminCourseModule,
 } from '@/data/hub-program-content'
 import { isAdminRequest } from '@/lib/require-admin'
-
-const PROSPECT_KEYS: Record<string, string> = {
-  'ah2026': 'Advanced-Health',
-}
+import { verifySessionToken } from '@/lib/jwt-session'
+import { isBookOwner } from '@/lib/users'
+import { sql } from '@/lib/db'
 
 type Kit = 'all' | 'clinical' | 'outreach' | 'admin'
+
+/**
+ * Look up a prospect access key against prospect_clinics. Returns the
+ * clinic short_name (filename-safe) on match, null otherwise. Wrapped in
+ * try/catch → deny if the access_key column doesn't exist yet (backfill
+ * in flight) or the DB is unreachable.
+ */
+async function lookupProspectKey(key: string): Promise<string | null> {
+  try {
+    const { rows } = await sql<{ short_name: string }>`
+      SELECT short_name FROM prospect_clinics WHERE access_key = ${key} LIMIT 1
+    `
+    if (rows.length === 0) return null
+    const shortName = (rows[0].short_name || 'Prospect').trim()
+    return shortName.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'Prospect'
+  } catch {
+    return null
+  }
+}
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
@@ -26,28 +44,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid kit' }, { status: 400 })
   }
 
-  // Auth — two paths:
-  //  1. Prospect access key (cold-pitch portals) — limited kits only.
-  //  2. Admin session (paid course users handled elsewhere). For now, admin
-  //     header gives full access; production paid-user gating is enforced at
-  //     the page level (ProtectedRoute + accessLevel check), so the download
-  //     button only renders when a user is authorised. Direct API calls
-  //     without auth from preview users are blocked here as a defence-in-depth.
+  // Auth — three paths:
+  //  1. Admin session / header — full access.
+  //  2. Paid user session cookie (same gating as /api/download): accessLevel
+  //     online-only / full-course, or bundle (reference + toolkit) buyer
+  //     flagged in the DB via reference_book_purchased_at.
+  //  3. Prospect access key (cold-pitch portals) — validated against
+  //     prospect_clinics.access_key, limited kits only.
   const isAdmin = isAdminRequest(req)
-  const prospectName = prospectKey ? PROSPECT_KEYS[prospectKey] : null
+  const prospectName = prospectKey && !isAdmin ? await lookupProspectKey(prospectKey) : null
 
   if (!isAdmin && !prospectName) {
-    // Allow same-origin requests from authenticated browser sessions —
-    // cookie-based auth check via Vercel session would go here. For now,
-    // gate by referer matching the production domain.
-    const ref = req.headers.get('referer') ?? ''
-    const allowedRefs = [
-      '/clinical-toolkit/templates',
-      '/outreach-kit',
-      '/admin-workflow',
-    ]
-    const fromPaidPage = allowedRefs.some((p) => ref.includes(p))
-    if (!fromPaidPage) {
+    const sessionToken = req.cookies.get('session')?.value
+    const sessionData = sessionToken ? verifySessionToken(sessionToken) : null
+    if (!sessionData) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    const paidAccess =
+      sessionData.accessLevel === 'online-only' ||
+      sessionData.accessLevel === 'full-course'
+    const bundleOwner = !paidAccess ? await isBookOwner(sessionData.email) : false
+    if (!paidAccess && !bundleOwner) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
   }

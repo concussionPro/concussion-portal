@@ -15,15 +15,11 @@ import { lookupSlug, resolveKeyForSlug } from '@/lib/ai-course/demo-slugs'
  */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
-  const adminKeyParam = url.searchParams.get('adminKey')
-  const adminKeyEnv = process.env.ADMIN_API_KEY
 
-  // Accept admin auth via x-admin-key header, admin_session cookie, OR
-  // ?adminKey= query param. The query-param path is for one-shot URL
-  // access (e.g. clicking a link in a chat). It's logged in browser
-  // history, so don't share these URLs anywhere persistent.
-  const queryAuthed = adminKeyParam && adminKeyEnv && adminKeyParam === adminKeyEnv
-  if (!queryAuthed && !isAdminRequest(request)) {
+  // Admin auth via x-admin-key / Bearer header or admin_session cookie
+  // only. No ?adminKey= query-param path — keys in URLs leak via browser
+  // history, server logs and Referer headers.
+  if (!isAdminRequest(request)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 401 })
   }
 

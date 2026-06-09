@@ -62,7 +62,7 @@ export function LockedModuleOverlay({ moduleNumber, moduleTitle }: {
               <ArrowRight className="w-4 h-4 inline-block ml-2" />
             </a>
             <p className="text-xs text-slate-500 mt-2 text-center">
-              Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} (early bird)
+              Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
             </p>
             <Link
               href="/dashboard"

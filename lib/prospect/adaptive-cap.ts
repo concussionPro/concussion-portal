@@ -24,16 +24,17 @@
  *        cold bounce    >= 8%   → THROTTLE (cap=3)
  *        cold complaint >= 0.5% → HOLD     (cap=5)
  *
- * Ramp ladder (BOTH gates clear):
- *   - cold_sends_7d <  5  →  cap = 8   (Day-1 baseline — generous open)
- *   - cold_sends_7d < 25  →  cap = 12  (Week 1+)
- *   - cold_sends_7d < 60  →  cap = 18  (Week 2-3)
- *   - cold_sends_7d ≥ 60  →  cap = 25  (Week 4+ ceiling — split identity past this)
+ * Ramp ladder (BOTH gates clear — per Zac 2026-06-08, domain proven clean
+ * over 612 sends; tiers bumped to drain the queue faster):
+ *   - cold_sends_7d <   5  →  cap = 20   (Day-1 baseline)
+ *   - cold_sends_7d <  30  →  cap = 35   (Week 1)
+ *   - cold_sends_7d <  80  →  cap = 50   (Week 2)
+ *   - cold_sends_7d < 200  →  cap = 75   (Week 3)
+ *   - cold_sends_7d ≥ 200  →  cap = 100  (ceiling — split identity past this)
  *
- * Why the bigger baseline (was 5/day, now 8/day): a single historical
- * complaint from a nurture send shouldn't permanently throttle cold
- * outreach. The new logic correctly distinguishes recent cold activity
- * from historical domain noise.
+ * Test-mode previews (audit_key contains ':test:') go to Zac's inbox, not
+ * prospects — they're excluded from cold_sends_7d so previewing templates
+ * can't inflate the ramp signal.
  *
  * PROSPECT_CRON_CAP_OVERRIDE env can force a cap for one-off events.
  * Adaptive value is always computed and logged either way.
@@ -98,6 +99,7 @@ export async function computeAdaptiveCap(): Promise<CapDecision> {
       FROM prospect_outreach_log
       WHERE sent_at >= NOW() - INTERVAL '7 days'
         AND resend_email_id IS NOT NULL
+        AND audit_key NOT LIKE '%:test:%'
     ),
     cold_events AS (
       SELECT
