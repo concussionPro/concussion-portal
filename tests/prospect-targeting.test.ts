@@ -96,12 +96,13 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     expect(solo.html).toContain("Module 1's unlocked to try free")
   })
 
-  it('every T1/T2 drives to the prospect portal (the screenshot is the hook)', () => {
+  it('every T1/T2 drives to the prospect portal via a naked text link (no image)', () => {
     for (const n of [1, 4, 8]) {
       for (const tpl of [T1, T2]) {
         const { html } = mergeTemplate(tpl, clinic({ team: team(n), slug: 'demo-clinic', accessKey: 'AK' }), 'https://example.com', 'tok')
-        expect(html).toMatch(/<img[^>]+og-image/i) // dashboard screenshot hero
+        expect(html).not.toMatch(/<img/i) // text-first — no embedded screenshot
         expect(html).toContain('/p/demo-clinic?k=AK') // single link = their portal
+        expect(html).toContain('concussion learning portal') // text framing is the hook
       }
     }
   })
@@ -149,11 +150,13 @@ describe('cold-email hygiene (2026-06-10 portal-led: the dashboard is the pitch,
     }
   })
 
-  it('T1 and T2 lead with the dashboard screenshot; T3 carries a portal link, no image', () => {
+  it('NO template embeds an image — all three are text-first with a portal link', () => {
     for (const [label, c] of tiers) {
-      expect(mergeTemplate(T1, c, 'x', 'tok').html, `${label} T1`).toMatch(/<img[^>]+og-image/i)
-      expect(mergeTemplate(T2, c, 'x', 'tok').html, `${label} T2`).toMatch(/<img[^>]+og-image/i)
-      expect(mergeTemplate(T3, c, 'x', 'tok').html, `${label} T3`).toMatch(/\/p\//)
+      expect(mergeTemplate(T1, c, 'x', 'tok').html, `${label} T1`).not.toMatch(/<img/i)
+      expect(mergeTemplate(T2, c, 'x', 'tok').html, `${label} T2`).not.toMatch(/<img/i)
+      expect(mergeTemplate(T3, c, 'x', 'tok').html, `${label} T3`).not.toMatch(/<img/i)
+      expect(mergeTemplate(T1, c, 'x', 'tok').html, `${label} T1 link`).toMatch(/\/p\//)
+      expect(mergeTemplate(T3, c, 'x', 'tok').html, `${label} T3 link`).toMatch(/\/p\//)
     }
   })
 

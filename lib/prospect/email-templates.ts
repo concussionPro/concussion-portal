@@ -129,12 +129,12 @@ const REGULATORY_LINE =
 // lives ON the portal, not in the email.
 const PORTAL_BASE = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
 // Bump the screenshot cache once per deploy (Gmail/Microlink cache by URL).
-const OG_VERSION = (process.env.VERCEL_GIT_COMMIT_SHA || 'v1').slice(0, 8)
-
-/** Clickable dashboard-screenshot hero — the single link in T1/T2. */
-function screenshotHero(portalUrl: string, ogUrl: string, clinicName: string): string {
-  return `<p style="margin:20px 0;"><a href="${portalUrl}" style="text-decoration:none;"><img src="${ogUrl}" alt="${clinicName} concussion training dashboard" width="600" style="width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #e2e8f0;display:block;" /></a></p>`
-}
+// Text-first cold sends (Zac 2026-06-11): NO embedded screenshot. Resend's
+// 98.57% deliverability proves the domain delivers, but that's server delivery
+// not Primary-inbox placement — and the prior image-heavy campaign delivered
+// fine yet got 0 human replies while complaint rate sits at 0.29% (near the
+// 0.3% line). So the email is a concise personal note with ONE naked UTM-tagged
+// portal link; the dashboard screenshot lives ON the portal, seen on landing.
 
 /** Deterministic per-prospect variant index — stable across retries. */
 function variantIndex(slug: string, length: number): number {
@@ -201,9 +201,13 @@ export function mergeTemplate(
     `${PORTAL_BASE}/p/${clinic.slug}?k=${clinic.accessKey ?? ''}` +
     `&utm_source=outreach&utm_medium=email&utm_campaign=${utmCampaign}` +
     `&utm_content=${encodeURIComponent(clinic.slug)}&utm_term=${term}`
-  const ogImageUrl = `${PORTAL_BASE}/api/prospect/og-image?slug=${encodeURIComponent(clinic.slug)}&v=${OG_VERSION}`
-  const hero = screenshotHero(portalUrlFor('dashboard_preview'), ogImageUrl, safeShortName)
-  const portalLink = `<a href="${portalUrlFor('dashboard_link')}">open ${safeShortName}'s dashboard</a>`
+  // Text-first (Zac 2026-06-11): NO embedded screenshot in the email. An
+  // image in an unsolicited cold send is the signal most likely to nudge the
+  // complaint rate (already 0.29%, near Gmail's 0.3% line) and trip Promotions
+  // filtering. The hook is the TEXT framing of the custom portal; the
+  // screenshot lives ON the portal, which they see the instant they land.
+  // One text link, UTM-tagged.
+  const portalLink = `<a href="${portalUrlFor('dashboard_link')}">${safeShortName}'s concussion learning portal</a>`
 
   // What's built for them + where the value lands — tier-matched. This is the
   // "what we do / what's in it for you" the email leads with before the
@@ -221,27 +225,26 @@ export function mergeTemplate(
     valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. Your team trains online and you get the branded clinical toolkit to run the protocol day to day — that's how ${safeShortName} owns concussion care locally.`
   }
 
-  // T1 — lead → screenshot hero → "what's inside, take a look" → portal link.
+  // T1 — concise text-first: what I built them → why now + their value →
+  // naked portal link. No image.
   const t1Body = [
     `<p>${builtLine}</p>`,
-    hero,
     `<p>${valueLine}</p>`,
-    `<p>Module 1's unlocked to try, and the pricing and a 15-minute call are in there too. Take a look — ${portalLink}.</p>`,
+    `<p>Module 1's unlocked to try, with pricing and a 15-minute call inside: ${portalLink}.</p>`,
   ].join('\n')
 
-  // T2 — short nudge back to the dashboard with one fresh angle + hero again.
+  // T2 — short nudge back to the portal with one fresh angle. No image.
   let t2Angle: string
   if (isOnSiteTarget) {
-    t2Angle = `The on-site day is the whole team trained together in one day — 14 CPD hours each, Osteopathy Australia endorsed — and the dashboard has the full cohort pricing for ${safeShortName}.`
+    t2Angle = `The on-site day is the whole team trained together in one day — 14 CPD hours each, Osteopathy Australia endorsed — and the portal has the full cohort pricing for ${safeShortName}.`
   } else if (isIndividualTarget) {
     t2Angle = `It's the complete protocol — SCAT6, VOMS, return-to-play — self-paced online, 8 CPD hours, Osteopathy Australia endorsed. Module 1's unlocked to try free.`
   } else {
-    t2Angle = `Your team trains online at their own pace — 14 CPD hours each, Osteopathy Australia endorsed — plus the clinic-branded toolkit. The dashboard has your Hub Pack pricing.`
+    t2Angle = `Your team trains online at their own pace — 14 CPD hours each, Osteopathy Australia endorsed — plus the clinic-branded toolkit. The portal has your Hub Pack pricing.`
   }
   const t2Body = [
-    `<p>Following up on the concussion dashboard I set up for ${safeShortName} last week.</p>`,
+    `<p>Following up on the concussion learning portal I set up for ${safeShortName} last week.</p>`,
     `<p>${t2Angle}</p>`,
-    hero,
     `<p>Worth a look — ${portalLink}. Or just reply with a question and I'll answer it.</p>`,
   ].join('\n')
 
