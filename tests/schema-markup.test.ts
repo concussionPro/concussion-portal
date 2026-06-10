@@ -375,7 +375,7 @@ describe('buildEventSchema (workshop EducationEvent markup)', () => {
     expect(s.image).toBe(`${CONFIG.SEO.SITE_URL}/melbourne-workshop.jpg`)
   })
 
-  it('prices the offer at the regular Complete Course price (early bird is over) with availability', () => {
+  it('prices the offer at the regular Complete Course price (early bird is over)', () => {
     const s = buildEventSchema('MELBOURNE') as {
       offers: { price: number; priceCurrency: string; availability: string }
     }
@@ -383,7 +383,16 @@ describe('buildEventSchema (workshop EducationEvent markup)', () => {
     expect(s.offers.price).toBe(1400)
     expect(s.offers.price).not.toBe(CONFIG.COURSE.PRICE_EARLY_BIRD)
     expect(s.offers.priceCurrency).toBe('AUD')
-    expect(s.offers.availability).toBe('https://schema.org/LimitedAvailability')
+  })
+
+  it('marks the offer SoldOut once the round is closed/completed, else LimitedAvailability', () => {
+    const s = buildEventSchema('MELBOURNE') as { offers: { availability: string } }
+    const status = CONFIG.LOCATIONS.MELBOURNE.status
+    const expected =
+      status === 'closed' || status === 'completed'
+        ? 'https://schema.org/SoldOut'
+        : 'https://schema.org/LimitedAvailability'
+    expect(s.offers.availability).toBe(expected)
   })
 })
 

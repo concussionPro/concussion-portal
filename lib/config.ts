@@ -53,21 +53,24 @@ export const CONFIG = {
       slug: 'sydney',
       date: '',
       dateObj: null as Date | null,
-      status: 'collecting' as 'collecting' | 'confirmed' | 'completed',
+      status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
     },
     BYRON_BAY: {
       city: 'Byron Bay',
       slug: 'byron-bay',
       date: '',
       dateObj: null as Date | null,
-      status: 'collecting' as 'collecting' | 'confirmed' | 'completed',
+      status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
     },
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',
       date: 'Saturday 13 June 2026',
       dateObj: new Date('2026-06-13T08:00:00+10:00') as Date | null,
-      status: 'confirmed' as 'collecting' | 'confirmed' | 'completed',
+      // 'closed' (2026-06-11): runs in 2 days — registration shut, no time for
+      // new participants. NOT 'completed' (workshop hasn't run; completion
+      // materials must NOT fire). Sales blocked; page reframes to the next round.
+      status: 'closed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
     },
   },
 
@@ -136,7 +139,7 @@ export const CONFIG = {
 export type LocationKey = keyof typeof CONFIG.LOCATIONS
 export type Location = LocationKey
 export type LocationConfig = typeof CONFIG.LOCATIONS[LocationKey]
-export type LocationStatus = 'collecting' | 'confirmed' | 'completed'
+export type LocationStatus = 'collecting' | 'confirmed' | 'closed' | 'completed'
 
 /** Calculate Afterpay/Klarna instalment amount (price / 4, rounded up to cents) */
 export function afterpayInstalment(price: number): string {

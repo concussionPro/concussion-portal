@@ -139,6 +139,13 @@ export async function createCourseCheckoutSession({
         `The ${workshopConfig.city} workshop has already run. The online course is still available, and you can register interest for the next ${workshopConfig.city} round.`
       )
     }
+    // 'closed' = registration shut for the current round (e.g. days out, prep
+    // locked) but the workshop hasn't run. Block new seats; point to next round.
+    if (workshopConfig?.status === 'closed') {
+      throw new CheckoutUnavailableError(
+        `Registration for the ${workshopConfig.city} workshop is closed. We run these regularly — the online course is available now, and you can register interest for the next ${workshopConfig.city} round.`
+      )
+    }
     if (workshopConfig?.dateObj && workshopConfig.dateObj.getTime() < Date.now()) {
       throw new CheckoutUnavailableError(
         `The ${workshopConfig.city} workshop (${workshopConfig.date}) has already run. The online course is still available, and you can register interest for the next round.`

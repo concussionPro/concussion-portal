@@ -11,6 +11,10 @@ import { NextEarlyBirdCapture } from '@/components/NextEarlyBirdCapture'
 
 export default function MelbournePage() {
   const location = CONFIG.LOCATIONS.MELBOURNE
+  const isConfirmed = location.status === 'confirmed'
+  // 'closed' = current round's registration shut (workshop still upcoming or
+  // just run) — reframe to the recurring series + next-round interest capture.
+  const isClosed = location.status === 'closed' || location.status === 'completed'
 
   return (
     <>
@@ -26,7 +30,7 @@ export default function MelbournePage() {
       <div className="min-h-screen bg-background pt-[120px] pb-20 px-6">
         <div className="max-w-4xl mx-auto">
           {/* Hero image — Melbourne workshop feature card (smaller, centred) */}
-          {location.status === 'confirmed' && (
+          {(isConfirmed || isClosed) && (
             <div className="relative mx-auto w-full max-w-sm aspect-[4/3] rounded-xl overflow-hidden mb-8 shadow-md">
               <Image
                 src="/melbourne-workshop.jpg"
@@ -57,7 +61,7 @@ export default function MelbournePage() {
               Full-day practical training with {CONFIG.COURSE.TOTAL_CPD_POINTS} AHPRA CPD hours.
             </p>
 
-            {location.status === 'confirmed' ? (
+            {isConfirmed ? (
               <>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-3">
                   <div className="flex items-center gap-2 text-slate-700">
@@ -86,8 +90,21 @@ export default function MelbournePage() {
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
 
-                {/* Early bird closed 31 May 2026 — capture buyers who missed
-                    it for the next workshop's early-bird list instead. */}
+                <NextEarlyBirdCapture defaultCity="melbourne" />
+              </>
+            ) : isClosed ? (
+              <>
+                <div className="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-700 px-5 py-2.5 rounded-full text-sm font-semibold mb-4">
+                  <Calendar className="w-4 h-4" aria-hidden="true" />
+                  Registration closed for this round
+                </div>
+                <p className="text-base text-slate-700 max-w-2xl mx-auto mb-2">
+                  This Melbourne workshop is full and registration is closed. <span className="font-semibold">We run Concussion Clinical Mastery workshops around Australia through the year</span> — the next Melbourne round is forming now.
+                </p>
+                <p className="text-sm text-slate-500 mb-6">
+                  Add your details below and you&apos;ll be first to hear the next date — before it opens publicly.
+                </p>
+                {/* Interest capture for the next round — NOT a buy button. */}
                 <NextEarlyBirdCapture defaultCity="melbourne" />
               </>
             ) : (
@@ -202,18 +219,30 @@ export default function MelbournePage() {
           {/* CTA */}
           <div className="glass rounded-2xl p-8 text-center bg-gradient-to-br from-blue-600/5 to-teal-600/5">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Secure Your Spot in {location.city}
+              {isClosed ? `Be first in line for the next Melbourne round` : `Secure Your Spot in ${location.city}`}
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Join Melbourne clinicians mastering evidence-based concussion management.{location.status === 'confirmed' ? ` Workshop date confirmed — limited spots for optimal hands-on practice.` : ` Reserve your spot now — dates confirmed once ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants per city are locked in.`}
+              {isConfirmed
+                ? `Join Melbourne clinicians mastering evidence-based concussion management. Workshop date confirmed — limited spots for optimal hands-on practice.`
+                : isClosed
+                ? `These workshops run regularly and fill fast. Register your interest and you'll get the next Melbourne date before it's public — plus you can start the online modules today.`
+                : `Join Melbourne clinicians mastering evidence-based concussion management. Reserve your spot now — dates confirmed once ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants per city are locked in.`}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              {location.status === 'confirmed' ? (
+              {isConfirmed ? (
                 <a
                   href={`${CONFIG.SHOP_URL}?location=melbourne`}
                   className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                 >
                   Enrol Now
+                  <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                </a>
+              ) : isClosed ? (
+                <a
+                  href="/pricing"
+                  className="btn-primary px-10 py-4 rounded-xl text-base font-bold inline-flex items-center gap-2 shadow-2xl w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                >
+                  Start the online course
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </a>
               ) : (

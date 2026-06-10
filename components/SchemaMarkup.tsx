@@ -173,7 +173,12 @@ export function buildEventSchema(location: EventLocationKey): Record<string, unk
       // Early bird is over — advertise the regular Complete Course price.
       price: CONFIG.COURSE.PRICE_REGULAR,
       priceCurrency: 'AUD',
-      availability: 'https://schema.org/LimitedAvailability',
+      // SoldOut once the round's registration is closed — avoids misleading
+      // "available" rich results for a workshop nobody can still book.
+      availability:
+        locationData.status === 'closed' || locationData.status === 'completed'
+          ? 'https://schema.org/SoldOut'
+          : 'https://schema.org/LimitedAvailability',
       url: `${CONFIG.APP_URL}${CONFIG.SHOP_URL}`,
       validFrom: new Date().toISOString(),
     },
