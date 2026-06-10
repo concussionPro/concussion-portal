@@ -338,6 +338,8 @@ interface ProspectTodayBox {
 }
 interface ProspectsData {
   count: number
+  /** Resolved engagement window (1/7/30/90 days) the windowed B2B panels reflect. */
+  windowDays?: number
   prospects: ProspectRow[]
   aggregates?: ProspectAggregates
   funnelSections?: FunnelSection[]
@@ -1255,11 +1257,16 @@ export default function AnalyticsDashboard() {
 
       // Fetch additional admin data (separate endpoints)
       try {
+        // B2B engagement follows the same time tabs as the rest of the portal
+        // ('24h'→'1d' to match the analytics API contract). loadAll is
+        // recreated whenever `period` changes (via the fetchData dep), so this
+        // re-fetches on every tab switch.
+        const apiPeriod = period === '24h' ? '1d' : period
         const [poolRes, preseasonRes, usersRes, prospectsRes] = await Promise.allSettled([
           fetch('/api/admin/ready-to-train', { cache: 'no-store' }),
           fetch('/api/admin/preseason', { cache: 'no-store' }),
           fetch('/api/admin/emails', { cache: 'no-store' }),
-          fetch('/api/admin/prospect-engagement', { cache: 'no-store' }),
+          fetch(`/api/admin/prospect-engagement?period=${apiPeriod}`, { cache: 'no-store' }),
         ])
 
         if (poolRes.status === 'fulfilled' && poolRes.value.ok) {
@@ -1312,7 +1319,7 @@ export default function AnalyticsDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [fetchData])
+  }, [fetchData, period])
 
   useEffect(() => { loadAll() }, [period, loadAll])
 
@@ -2880,6 +2887,12 @@ export default function AnalyticsDashboard() {
               }
 
               const { prospects, aggregates } = prospectsData
+              // Active engagement window (server-resolved 1/7/30/90). Drives the
+              // "last N days" labels on every WINDOWED B2B panel so the numbers
+              // can't be misread as lifetime. Current-state panels (pipeline
+              // matrix, review queue) get their own "not time-filtered" caption.
+              const windowDays = prospectsData.windowDays ?? 90
+              const windowLabel = windowDays === 1 ? 'last 24 hours' : `last ${windowDays} days`
               const agg = aggregates ?? {
                 byStatus: {}, byRegion: {}, byCohort: {}, byTravelBand: {},
                 byEngagementTier: {}, byOffer: {}, bySizeBucket: {}, callRecommendedCount: 0,
@@ -3277,7 +3290,7 @@ export default function AnalyticsDashboard() {
                           <div>
                             <SectionTitle
                               title="Pipeline matrix · where every target sits"
-                              subtitle="Rows = deal type in send-priority order · columns = mutually exclusive stages, left = closest to money · click any cell to load those prospects below"
+                              subtitle="Rows = deal type in send-priority order · columns = mutually exclusive stages, left = closest to money · click any cell to load those prospects below · current state, not time-filtered"
                             />
                             <div className="card rounded-2xl overflow-hidden">
                               <div className="overflow-x-auto">
@@ -3665,7 +3678,7 @@ export default function AnalyticsDashboard() {
                           <div>
                             <SectionTitle
                               title="Cold-outreach funnel · pool → reply"
-                              subtitle={`Clinic-level stage counts from real send/webhook data · test sends excluded · ${cf.lostClinics} lost (incl. STOP replies) · ${cf.bouncedClinics} bounced`}
+                              subtitle={`Clinic-level stage counts from real send/webhook data · test sends excluded · ${cf.lostClinics} lost (incl. STOP replies) · ${cf.bouncedClinics} bounced · delivered→portal-viewed scoped to ${windowLabel}; pooled/verified/sent + replied/won lifetime`}
                             />
                             <div className="card rounded-2xl p-5 space-y-2">
                               {stages.map((s, i) => {
@@ -3686,7 +3699,7 @@ export default function AnalyticsDashboard() {
                                 )
                               })}
                               <p className="text-[10.5px] text-[var(--muted-foreground)] pt-2 border-t border-slate-100">
-                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Replied = inbound-webhook detection — previously untrackable.
+                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Replied = inbound-webhook detection — previously untrackable. Note: <strong>Sent is lifetime</strong> but <strong>Delivered/Opened/Clicked/Portal-viewed count only the {windowLabel}</strong>, so the conversion %s read as &quot;windowed engagement vs all-time sends&quot; — not a same-window rate.
                               </p>
                             </div>
                           </div>
@@ -3702,7 +3715,7 @@ export default function AnalyticsDashboard() {
                         >
                           <div>
                             <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showTierBento ? '▼' : '▶'} Engagement tiers</div>
-                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">{tierCounts.warm ?? 0} warm · {tierCounts.hot ?? 0} hot · {tierCounts.engaged ?? 0} booked · score-based behavioural tiers</div>
+                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">{tierCounts.warm ?? 0} warm · {tierCounts.hot ?? 0} hot · {tierCounts.engaged ?? 0} booked · behavioural score over {windowLabel} (booked/replied lifetime)</div>
                           </div>
                           <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showTierBento ? 'hide' : 'show'}</span>
                         </button>
@@ -3746,7 +3759,7 @@ export default function AnalyticsDashboard() {
                         >
                           <div>
                             <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showWhoEngaging ? '▼' : '▶'} Who is engaging right now</div>
-                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Browsing + emailing prospects · ranked by behavioural score · prep-pitch flags</div>
+                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Browsing + emailing prospects · ranked by behavioural score · prep-pitch flags · {windowLabel}</div>
                           </div>
                           <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showWhoEngaging ? 'hide' : 'show'}</span>
                         </button>
@@ -3909,7 +3922,7 @@ export default function AnalyticsDashboard() {
                           >
                             <div>
                               <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showExitFunnel ? '▼' : '▶'} Page-optimisation data</div>
-                              <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Where prospects drop off · {prospectsData.funnelSections.length} sections tracked</div>
+                              <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Where prospects drop off · {prospectsData.funnelSections.length} sections tracked · {windowLabel}</div>
                             </div>
                             <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showExitFunnel ? 'hide' : 'show'}</span>
                           </button>
@@ -4000,7 +4013,7 @@ export default function AnalyticsDashboard() {
                               {/* CTA performance */}
                               {(prospectsData.ctaTargets ?? []).length > 0 && (
                                 <div>
-                                  <div className="text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold mb-2">CTA performance · which buttons actually pull</div>
+                                  <div className="text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold mb-2">CTA performance · which buttons actually pull · {windowLabel}</div>
                                   <div className="flex flex-wrap gap-2">
                                     {(prospectsData.ctaTargets ?? []).slice(0, 10).map(c => (
                                       <span key={c.target} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--accent)]/10 text-[var(--accent)] text-[11px] font-semibold border border-[var(--accent)]/20">
@@ -4031,7 +4044,7 @@ export default function AnalyticsDashboard() {
                         <div>
                           <SectionTitle
                             title="What's converting · subject lines"
-                            subtitle="Self-optimizing engine · scanner-filtered portal-visit rate per subject variant · the winner gets favoured once each variant has 15+ sends"
+                            subtitle={`Self-optimizing engine · scanner-filtered portal-visit rate per subject variant · the winner gets favoured once each variant has 15+ sends · Sends are lifetime, Visits count the ${windowLabel} — Rate reads as windowed visits ÷ all-time sends`}
                           />
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             {([

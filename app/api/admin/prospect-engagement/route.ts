@@ -218,6 +218,23 @@ export async function GET(req: NextRequest) {
     // not test+prod mixed. Test sends are tagged via audit_key containing ':test:'.
     const includeTest = url.searchParams.get('includeTest') === 'true'
 
+    // ── Time-window selector (2026-06-11) ─────────────────────────────────
+    // Drives the ENGAGEMENT queries (email opens/clicks, portal views, real
+    // sessions, funnel/CTA aggregates, subject-line attribution) so the B2B
+    // section follows the same 24h/7d/30d/90d tabs as the rest of the
+    // analytics portal. `period` maps '24h'→'1d' on the client. windowDays is
+    // resolved from a FIXED map (never raw input) so the integer fed into the
+    // `(${windowDays} || ' days')::interval` cast is always 1/7/30/90 and the
+    // tagged-template `sql` parameterises it — no string-concat of user input.
+    //
+    // Current-state metrics stay lifetime regardless of the tab: the pipeline
+    // stage matrix, review queue, adaptive cap, gate-blocked/awaiting counts,
+    // dealType pool totals, and the funnel's pooled/verified/sent/t1-t3 +
+    // terminal (replied/won/lost/bounced) stages. See per-query notes below.
+    const PERIOD_DAYS: Record<string, number> = { '1d': 1, '7d': 7, '30d': 30, '90d': 90 }
+    const periodParam = url.searchParams.get('period') ?? '90d'
+    const windowDays = PERIOD_DAYS[periodParam] ?? 90
+
     // ── Engagement-signal recalibration (2026-06-05) ──────────────────────
     // The previous heuristic (`totalOpens >= 3 → hot`) over-weighted single-
     // open noise from Apple Mail Privacy Protection, which pre-fetches every
@@ -254,6 +271,7 @@ export async function GET(req: NextRequest) {
             SELECT * FROM prospect_portal_views
             WHERE clinic_id = ${filterId}
               AND COALESCE(user_agent, '') !~* ${BOT_REGEX}
+              AND viewed_at >= NOW() - (${windowDays} || ' days')::interval
           ),
           sec AS (
             SELECT clinic_id, section_visited, COUNT(*)::int AS n
@@ -287,6 +305,7 @@ export async function GET(req: NextRequest) {
           WITH filtered AS (
             SELECT * FROM prospect_portal_views
             WHERE COALESCE(user_agent, '') !~* ${BOT_REGEX}
+              AND viewed_at >= NOW() - (${windowDays} || ' days')::interval
           ),
           sec AS (
             SELECT clinic_id, section_visited, COUNT(*)::int AS n
@@ -353,6 +372,7 @@ export async function GET(req: NextRequest) {
               SELECT * FROM prospect_portal_views
               WHERE clinic_id = ${filterId}
                 AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+                AND viewed_at >= NOW() - (${windowDays} || ' days')::interval
             ),
             top_cta AS (
               SELECT clinic_id, target
@@ -387,6 +407,7 @@ export async function GET(req: NextRequest) {
             WITH filtered AS (
               SELECT * FROM prospect_portal_views
               WHERE COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+                AND viewed_at >= NOW() - (${windowDays} || ' days')::interval
             ),
             top_cta AS (
               SELECT clinic_id, target
@@ -446,6 +467,7 @@ export async function GET(req: NextRequest) {
               MAX(ee.subject)    FILTER (WHERE ee.event_type = 'clicked') AS last_clicked_subject
             FROM cold_sent cs
             JOIN email_events ee ON ee.email_id = cs.resend_email_id
+            WHERE ee.created_at >= NOW() - (${windowDays} || ' days')::interval
             GROUP BY cs.clinic_id`
         : sql<EventSignalRow>`
             WITH cold_sent AS (
@@ -469,6 +491,7 @@ export async function GET(req: NextRequest) {
               MAX(ee.subject)    FILTER (WHERE ee.event_type = 'clicked') AS last_clicked_subject
             FROM cold_sent cs
             JOIN email_events ee ON ee.email_id = cs.resend_email_id
+            WHERE ee.created_at >= NOW() - (${windowDays} || ' days')::interval
             GROUP BY cs.clinic_id`,
       // Real browser sessions on /p/[slug] — unfakeable engagement.
       // analytics_events.session_id filtered to non-server sessions, with
@@ -482,7 +505,7 @@ export async function GET(req: NextRequest) {
             FROM prospect_clinics pc
             JOIN analytics_events ae ON ae.path LIKE '/p/' || pc.slug || '%'
             WHERE pc.id = ${filterId}
-              AND ae.created_at >= NOW() - INTERVAL '90 days'
+              AND ae.created_at >= NOW() - (${windowDays} || ' days')::interval
               AND ae.session_id IS NOT NULL
               AND ae.session_id NOT LIKE 'server_%'
             GROUP BY pc.id`
@@ -492,7 +515,7 @@ export async function GET(req: NextRequest) {
                    MAX(ae.created_at)                 AS last_real_session_at
             FROM prospect_clinics pc
             JOIN analytics_events ae ON ae.path LIKE '/p/' || pc.slug || '%'
-            WHERE ae.created_at >= NOW() - INTERVAL '90 days'
+            WHERE ae.created_at >= NOW() - (${windowDays} || ' days')::interval
               AND ae.session_id IS NOT NULL
               AND ae.session_id NOT LIKE 'server_%'
             GROUP BY pc.id`,
@@ -525,7 +548,7 @@ export async function GET(req: NextRequest) {
       sql<FunnelAggregateRow>`
         WITH filtered AS (
           SELECT * FROM prospect_portal_views
-          WHERE viewed_at >= NOW() - INTERVAL '90 days'
+          WHERE viewed_at >= NOW() - (${windowDays} || ' days')::interval
             AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
             AND section_visited IS NOT NULL
             AND section_visited <> ''
@@ -555,7 +578,7 @@ export async function GET(req: NextRequest) {
         WHERE interaction_type = 'cta_click'
           AND target IS NOT NULL
           AND target <> ''
-          AND viewed_at >= NOW() - INTERVAL '90 days'
+          AND viewed_at >= NOW() - (${windowDays} || ' days')::interval
           AND COALESCE(user_agent, '') !~* '(microsoft office|safelinks|mimecast|barracuda|proofpoint|googlebot|bingbot|crawler|wget|curl|python-requests|node-fetch)'
         GROUP BY target
         ORDER BY clicks DESC
@@ -1314,9 +1337,14 @@ export async function GET(req: NextRequest) {
             AND audit_key NOT LIKE '%:test:%'
         ),
         real_views AS (
+          -- Attribution (engagement) side is windowed; the sent CTE above
+          -- stays lifetime so the per-variant denominator (and the winner
+          -- min-sample threshold) does not collapse on a 1d/7d tab. The UI
+          -- labels this: real views in window over lifetime sends.
           SELECT clinic_id, utm_campaign
           FROM prospect_portal_views
           WHERE (duration_seconds >= 60 OR interaction_type = 'cta_click')
+            AND viewed_at >= NOW() - (${windowDays} || ' days')::interval
           GROUP BY clinic_id, utm_campaign
         )
         SELECT
@@ -1364,6 +1392,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       count: prospects.length,
+      // Resolved engagement window (1/7/30/90). The UI labels every windowed
+      // B2B panel with this so the numbers can't be misread as lifetime.
+      windowDays,
       prospects,
       aggregates,
       funnelSections,
@@ -1401,6 +1432,14 @@ function buildAggregates(prospects: Array<{
   totalOpens: number
   totalClicks: number
   totalPortalViews: number
+  // Windowed engagement signals (from the time-scoped email_events join) —
+  // used to keep the cold-funnel's opened/clicked stages on the selected
+  // window instead of the lifetime per-send log counters.
+  openDays: number
+  calClicks: number
+  productClicks: number
+  otherClicks: number
+  distinctUrlClicks: number
   replies: number
   engagementTier: string
   callRecommended: boolean
@@ -1502,9 +1541,15 @@ function buildAggregates(prospects: Array<{
       else if (s.templateSlug === 'followup') coldFunnel.t2Sent += 1
       else if (s.templateSlug === 'final') coldFunnel.t3Sent += 1
     }
+    // Engagement stages follow the selected time window. delivered + portal
+    // views are already windowed (their source queries are time-scoped);
+    // opened/clicked switch from the lifetime per-send log counters
+    // (totalOpens/totalClicks) to the windowed, bot-filtered email_events
+    // signals (openDays / cal+product+other+distinct URL clicks) so the whole
+    // delivered→opened→clicked→portal segment reflects the same window.
     if (p.totalDelivered > 0) coldFunnel.deliveredClinics += 1
-    if (p.totalOpens > 0) coldFunnel.openedClinics += 1
-    if (p.totalClicks > 0) coldFunnel.clickedClinics += 1
+    if (p.openDays > 0) coldFunnel.openedClinics += 1
+    if (p.calClicks > 0 || p.productClicks > 0 || p.otherClicks > 0 || p.distinctUrlClicks > 0) coldFunnel.clickedClinics += 1
     if (p.totalPortalViews > 0) coldFunnel.portalViewedClinics += 1
     if (p.replies > 0) coldFunnel.repliedClinics += 1
     if (p.status === 'won') coldFunnel.wonClinics += 1

@@ -168,21 +168,21 @@ function eligibleSubjectVariants(
   let allVariants: SubjectVariant[]
   if (templateSlug === 'initial') {
     allVariants = [
-      { subject: `concussion training for ${clinic.shortName}`, refs: 'shortName', key: 'name' },
-      { subject: `concussion protocol for ${clinic.city} clinics`, refs: 'city', key: 'city' },
-      { subject: `the 21-day stand-down — are you across it?`, refs: 'none', key: 'capability_q' },
-      { subject: `concussion CPD for ${clinic.shortName}`, refs: 'shortName', key: 'name_ready' },
+      { subject: `Concussion training for ${clinic.shortName}`, refs: 'shortName', key: 'name' },
+      { subject: `Concussion protocol for ${clinic.city} clinics`, refs: 'city', key: 'city' },
+      { subject: `The 21-day stand-down — are you across it?`, refs: 'none', key: 'capability_q' },
+      { subject: `Concussion CPD for ${clinic.shortName}`, refs: 'shortName', key: 'name_ready' },
     ]
   } else if (templateSlug === 'followup') {
     allVariants = [
-      { subject: `quick follow-up — ${clinic.shortName}`, refs: 'shortName', key: 'name_followup' },
-      { subject: `following up on concussion training`, refs: 'none', key: 'generic_followup' },
-      { subject: `one-pager on the concussion training`, refs: 'none', key: 'onepager' },
+      { subject: `Quick follow-up — ${clinic.shortName}`, refs: 'shortName', key: 'name_followup' },
+      { subject: `Following up on concussion training`, refs: 'none', key: 'generic_followup' },
+      { subject: `One-pager on the concussion training`, refs: 'none', key: 'onepager' },
     ]
   } else {
     allVariants = [
-      { subject: `closing the loop — ${clinic.shortName}`, refs: 'shortName', key: 'name_loop' },
-      { subject: `closing the loop on concussion training`, refs: 'none', key: 'generic_loop' },
+      { subject: `Closing the loop — ${clinic.shortName}`, refs: 'shortName', key: 'name_loop' },
+      { subject: `Closing the loop on concussion training`, refs: 'none', key: 'generic_loop' },
     ]
   }
 
@@ -196,7 +196,7 @@ function eligibleSubjectVariants(
   // (in practice each touch keeps a ≤50-char 'none' variant, so this never
   // fires). Falls back to the universal regulatory hook.
   if (eligible.length === 0) {
-    eligible.push({ subject: 'the 21-day stand-down — are you across it?', refs: 'none', key: 'fallback' })
+    eligible.push({ subject: 'The 21-day stand-down — are you across it?', refs: 'none', key: 'fallback' })
   }
   return eligible
 }
@@ -345,7 +345,7 @@ export function mergeTemplate(
     `<p>If the timing's wrong, no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`,
   ].join('\n')
 
-  // ── Subject lines — short, specific, lowercase-leaning, non-salesy ─────
+  // ── Subject lines — short, specific, sentence-case, non-salesy ─────────
   // Built by eligibleSubjectVariants() (guards + ≤50-char filter applied).
   // Selection: the deterministic slug-hash rotation by default; when the
   // optimizer supplies a forceSubjectKey that's eligible for THIS clinic, that

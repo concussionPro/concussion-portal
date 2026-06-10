@@ -223,7 +223,7 @@ describe('mergeTemplate — forceSubjectKey', () => {
       forceSubjectKey: 'city',
     })
     expect(subjectKey).toBe('city')
-    expect(subject).toBe('concussion protocol for Ballina clinics')
+    expect(subject).toBe('Concussion protocol for Ballina clinics')
   })
 
   it('honours a different eligible key', () => {
@@ -232,7 +232,7 @@ describe('mergeTemplate — forceSubjectKey', () => {
       forceSubjectKey: 'name',
     })
     expect(subjectKey).toBe('name')
-    expect(subject).toBe('concussion training for Test Clinic')
+    expect(subject).toBe('Concussion training for Test Clinic')
   })
 
   it('falls back gracefully when the forced key is ineligible (city unknown)', () => {
