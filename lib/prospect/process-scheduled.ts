@@ -665,14 +665,17 @@ export async function processScheduledSends(
         html,
         text,
         scheduledAt: scheduledAtIso,
+        // Headers tuned for PRIMARY-inbox placement of a low-volume (30/day)
+        // personal-style cold email. We deliberately do NOT send the bulk
+        // markers (Precedence: bulk, List-ID, List-Unsubscribe-Post one-click,
+        // X-Mailer) — those route a 1:1-looking note to Promotions/spam and are
+        // only required above Google's 5,000/day bulk threshold, which we're far
+        // under. A plain List-Unsubscribe (mailto + url) stays: it's the
+        // functional unsubscribe the AU Spam Act expects, Gmail trusts senders
+        // who honour it, and on its own it does NOT signal bulk marketing. The
+        // body's "reply STOP" line is the second unsubscribe path.
         headers: {
           'List-Unsubscribe': `<${BASE_URL}/api/prospect/unsubscribe?t=${unsubToken}>, <mailto:unsubscribe@concussion-education-australia.com>`,
-          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          'List-ID': 'prospect-outreach.concussion-education-australia.com',
-          Precedence: 'bulk',
-          'X-Mailer': 'CEA cron',
-          'X-Prospect-Id': String(clinic.id),
-          'X-Template-Slug': templateSlug,
         },
         tags: [
           { name: 'prospect-id', value: String(clinic.id) },
