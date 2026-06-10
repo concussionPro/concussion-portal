@@ -132,16 +132,23 @@ describe('cold-email hygiene (2026-06-10 rewrite: zero links, plain note, replie
     ['unknown city + name', clinic({ team: team(8), city: 'Unknown', shortName: 'Unknown' })],
   ]
 
-  it('NO template ever carries a body URL, image, or table (Safe Links detonates them)', () => {
+  it('the ONLY URL any template carries is the static cal.com walkthrough link (Zac 2026-06-10)', () => {
+    const CAL = process.env.CAL_BOOKING_URL || 'https://cal.com/zac-lewis-so8zjs/30min'
     for (const tpl of [T1, T2, T3]) {
-      for (const [, c] of tiers) {
+      for (const [label, c] of tiers) {
         const { html, text } = mergeTemplate(tpl, c, 'https://example.com', 'tok')
-        expect(html).not.toContain('http://')
-        expect(html).not.toContain('https://')
-        expect(text).not.toContain('http://')
-        expect(text).not.toContain('https://')
+        // Strip every occurrence of the sanctioned cal link, then assert no
+        // other URL of any kind survives — unique URLs are Safe Links bait.
+        const htmlStripped = html.split(CAL).join('').split(CAL.replace('https://', '')).join('')
+        const textStripped = text.split(CAL).join('').split(CAL.replace('https://', '')).join('')
+        expect(htmlStripped, `${label} ${tpl.slug} html`).not.toContain('http://')
+        expect(htmlStripped, `${label} ${tpl.slug} html`).not.toContain('https://')
+        expect(textStripped, `${label} ${tpl.slug} text`).not.toContain('http://')
+        expect(textStripped, `${label} ${tpl.slug} text`).not.toContain('https://')
         expect(html).not.toMatch(/<img/i)
         expect(html).not.toMatch(/<table/i)
+        // And the walkthrough link IS present in every touch.
+        expect(html, `${label} ${tpl.slug} carries cal link`).toContain(CAL)
       }
     }
   })
@@ -163,12 +170,11 @@ describe('cold-email hygiene (2026-06-10 rewrite: zero links, plain note, replie
     }
   })
 
-  it('T1 carries the interest-based soft CTA, not a calendar/link ask', () => {
+  it('T1 carries the confident walkthrough booking CTA (Zac 2026-06-10)', () => {
     const { text } = mergeTemplate(T1, clinic({}), 'https://example.com', 'tok')
-    expect(text).toContain('Worth a couple of minutes on the phone')
-    expect(text).toContain('Reply here')
-    expect(text).not.toMatch(/book a/i)
-    expect(text).not.toMatch(/calendar|cal\.com/i)
+    expect(text).toContain('book a walkthrough')
+    expect(text).toContain('cal.com/')
+    expect(text).not.toContain('Worth a couple of minutes on the phone')
   })
 
   it('T1 and T2 carry the STOP compliance line; no unsubscribe URL in any body', () => {

@@ -136,10 +136,13 @@ const SOLO_PLURAL: Record<Discipline, string> = {
 const REGULATORY_LINE =
   'Community sport now carries a mandatory 21-day stand-down (2024 AIS/SMA guidelines), and physios and GPs are named clearance providers.'
 
-// Interest-based soft CTA — modeled on the Gong Labs winner. No link, no
-// calendar, no specific time. Reply is the ask.
-const SOFT_CTA =
-  "Worth a couple of minutes on the phone in the next week or two? Reply here and I'll fit around your clinic hours."
+// Booking CTA (Zac 2026-06-10: confident walkthrough ask, not a soft phone
+// plea). ONE static cal.com link — same URL for every recipient, never
+// wrapped in tracking redirects, so Safe Links sees an established-reputation
+// domain instead of a unique detonation target. This is the ONLY link any
+// cold email carries.
+const CAL_URL = process.env.CAL_BOOKING_URL || 'https://cal.com/zac-lewis-so8zjs/30min'
+const BOOK_CTA_HTML = `If it's relevant, book a walkthrough and I'll show you exactly how it'd run: <a href="${CAL_URL}">${CAL_URL.replace('https://', '')}</a>`
 
 /** Deterministic per-prospect variant index — stable across retries. */
 function variantIndex(slug: string, length: number): number {
@@ -221,7 +224,7 @@ export function mergeTemplate(
     doesSentence = `I get teams like yours trained online, plus a clinic-branded clinical doc pack.`
   }
 
-  const t1Paragraphs = [opening, `${REGULATORY_LINE} ${doesSentence}`, SOFT_CTA]
+  const t1Paragraphs = [opening, `${REGULATORY_LINE} ${doesSentence}`, BOOK_CTA_HTML]
 
   // ── T2 paragraphs — one new size-matched angle + "want the one-pager?" ─
   let t2Pitch: string
@@ -230,15 +233,15 @@ export function mergeTemplate(
   if (isOnSiteTarget) {
     t2Pitch = `I floated this last week — short version: I bring the concussion training day to ${safeShortName}, the whole team trained together in one day, 14 CPD hours each, Osteopathy Australia endorsed.`
     t2Offer = `Happy to send through the one-page outline of how the day runs — want it?`
-    t2Cta = `Or if a quick call in the next week or two is easier, just reply and I'll fit around your clinic hours.`
+    t2Cta = BOOK_CTA_HTML
   } else if (isIndividualTarget) {
     t2Pitch = `I floated this last week — short version: the full concussion protocol (SCAT6, VOMS, return-to-play) as a self-paced online course, 8 CPD hours, Osteopathy Australia endorsed.`
     t2Offer = `Happy to send through the one-page outline — want it?`
-    t2Cta = `Or if a quick call in the next week or two is easier, just reply.`
+    t2Cta = BOOK_CTA_HTML
   } else {
     t2Pitch = `I floated this last week — short version: ${safeShortName}'s team does the training online, 14 CPD hours each, Osteopathy Australia endorsed, and you get a clinic-branded clinical doc pack to run the protocol day to day.`
     t2Offer = `Happy to send through the one-page outline — want it?`
-    t2Cta = `Or if a quick call in the next week or two is easier, just reply and I'll fit around your clinic hours.`
+    t2Cta = BOOK_CTA_HTML
   }
   const t2Paragraphs = [t2Pitch, t2Offer, t2Cta]
 
@@ -254,6 +257,7 @@ export function mergeTemplate(
   }
   const t3Paragraphs = [
     `Last one from me. In case price was the open question: ${priceLine}.`,
+    `If you want to see how it'd run at ${safeShortName}, the walkthrough link is <a href="${CAL_URL}">${CAL_URL.replace('https://', '')}</a>.`,
     `If the timing's wrong, no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.`,
   ]
 
