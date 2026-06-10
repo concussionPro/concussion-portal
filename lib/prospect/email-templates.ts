@@ -1,4 +1,4 @@
-import type { EmailTemplate, Discipline, ProspectClinic } from './types'
+import type { EmailTemplate, EmailTemplateSlug, Discipline, ProspectClinic } from './types'
 import { dominantDiscipline, clinicalCount, hubPackPriceFor, computePricing } from './pricing'
 import { CONFIG } from '@/lib/config'
 
@@ -142,6 +142,78 @@ function variantIndex(slug: string, length: number): number {
 }
 
 /**
+ * A subject-line variant. `key` is the STABLE, clinic-agnostic identifier for
+ * the TEMPLATE (not the rendered text) — it is what the self-optimizing engine
+ * records per send and scores on. `refs` drives the unknown-data guards.
+ */
+type SubjectVariant = { subject: string; refs: 'city' | 'shortName' | 'none'; key: string }
+
+/**
+ * Build the ELIGIBLE subject variants for a clinic + touch, applying the same
+ * unknown-city / unknown-name guards and ≤50-char mobile-preview filter the
+ * engine has always used. Pure — no DB, no randomness. Returned in a stable
+ * order so `variantIndex(slug, …)` reproduces the legacy deterministic pick.
+ *
+ * Shared by mergeTemplate (rendering) and eligibleSubjectKeys (so
+ * process-scheduled can ask "which variant keys could this send use?" without
+ * duplicating the guard logic).
+ */
+function eligibleSubjectVariants(
+  templateSlug: EmailTemplateSlug,
+  clinic: ProspectClinic,
+): SubjectVariant[] {
+  const hasUnknownCity = !clinic.city || /unknown/i.test(clinic.city)
+  const hasUnknownShortName = !clinic.shortName || /unknown/i.test(clinic.shortName)
+
+  let allVariants: SubjectVariant[]
+  if (templateSlug === 'initial') {
+    allVariants = [
+      { subject: `concussion training for ${clinic.shortName}`, refs: 'shortName', key: 'name' },
+      { subject: `concussion protocol for ${clinic.city} clinics`, refs: 'city', key: 'city' },
+      { subject: `the 21-day stand-down — are you across it?`, refs: 'none', key: 'capability_q' },
+      { subject: `concussion CPD for ${clinic.shortName}`, refs: 'shortName', key: 'name_ready' },
+    ]
+  } else if (templateSlug === 'followup') {
+    allVariants = [
+      { subject: `quick follow-up — ${clinic.shortName}`, refs: 'shortName', key: 'name_followup' },
+      { subject: `following up on concussion training`, refs: 'none', key: 'generic_followup' },
+      { subject: `one-pager on the concussion training`, refs: 'none', key: 'onepager' },
+    ]
+  } else {
+    allVariants = [
+      { subject: `closing the loop — ${clinic.shortName}`, refs: 'shortName', key: 'name_loop' },
+      { subject: `closing the loop on concussion training`, refs: 'none', key: 'generic_loop' },
+    ]
+  }
+
+  const eligible = allVariants
+    .filter((v) => !(v.refs === 'city' && hasUnknownCity))
+    .filter((v) => !(v.refs === 'shortName' && hasUnknownShortName))
+    // Keep subjects under 50 chars (mobile preview cutoff) — long clinic
+    // names knock out the name-bearing variants rather than truncating.
+    .filter((v) => v.subject.length <= 50)
+  // Degenerate guard — only reachable if every variant were filtered out
+  // (in practice each touch keeps a ≤50-char 'none' variant, so this never
+  // fires). Falls back to the universal regulatory hook.
+  if (eligible.length === 0) {
+    eligible.push({ subject: 'the 21-day stand-down — are you across it?', refs: 'none', key: 'fallback' })
+  }
+  return eligible
+}
+
+/**
+ * The stable variant keys a send for this clinic + touch could legitimately
+ * use (post-guards / post-length-filter), in eligible order. process-scheduled
+ * passes these to the optimizer as the candidate arms.
+ */
+export function eligibleSubjectKeys(
+  templateSlug: EmailTemplateSlug,
+  clinic: ProspectClinic,
+): string[] {
+  return eligibleSubjectVariants(templateSlug, clinic).map((v) => v.key)
+}
+
+/**
  * Merge a clinic's data into a template. Returns { subject, html, text }.
  *
  * Interface kept compatible with process-scheduled.ts and prospect-send:
@@ -167,8 +239,18 @@ export function mergeTemplate(
     nearestMetro?: string
     /** Accepted for interface compat — intentionally ignored (see above). */
     priorEngagement?: 'none' | 'opened' | 'clicked'
+    /**
+     * Self-optimizing engine hook. When set, render the subject variant with
+     * this stable `key` IF it survives the unknown-data guards + ≤50-char
+     * filter for this clinic; otherwise fall back to the deterministic
+     * slug-hash pick (so an ineligible forced key degrades gracefully). When
+     * omitted, behaviour is the legacy deterministic slug-hash rotation —
+     * existing callers and retry stability are unchanged. mergeTemplate stays
+     * pure: it does NOT query the DB; process-scheduled supplies the key.
+     */
+    forceSubjectKey?: string
   } = {},
-): { subject: string; html: string; text: string } {
+): { subject: string; html: string; text: string; subjectKey: string } {
   // ── Tier selection — the size tier decides the pitch ──────────────────
   // on-site (≥6 clinical): whole team trained in one day, on-site.
   // hub (2-5 clinical): team trained online + clinic-branded doc pack.
@@ -264,38 +346,19 @@ export function mergeTemplate(
   ].join('\n')
 
   // ── Subject lines — short, specific, lowercase-leaning, non-salesy ─────
-  // Rotated deterministically by slug hash; variants referencing city or
-  // shortName are filtered out when that field is unknown.
-  type SubjectVariant = { subject: string; refs: 'city' | 'shortName' | 'none' }
-  let allVariants: SubjectVariant[]
-  if (template.slug === 'initial') {
-    allVariants = [
-      { subject: `concussion training for ${clinic.shortName}`, refs: 'shortName' },
-      { subject: `concussion protocol for ${clinic.city} clinics`, refs: 'city' },
-      { subject: `the 21-day stand-down — are you across it?`, refs: 'none' },
-      { subject: `concussion CPD for ${clinic.shortName}`, refs: 'shortName' },
-    ]
-  } else if (template.slug === 'followup') {
-    allVariants = [
-      { subject: `quick follow-up — ${clinic.shortName}`, refs: 'shortName' },
-      { subject: `following up on concussion training`, refs: 'none' },
-      { subject: `one-pager on the concussion training`, refs: 'none' },
-    ]
-  } else {
-    allVariants = [
-      { subject: `closing the loop — ${clinic.shortName}`, refs: 'shortName' },
-      { subject: `closing the loop on concussion training`, refs: 'none' },
-    ]
+  // Built by eligibleSubjectVariants() (guards + ≤50-char filter applied).
+  // Selection: the deterministic slug-hash rotation by default; when the
+  // optimizer supplies a forceSubjectKey that's eligible for THIS clinic, that
+  // variant wins instead. An ineligible/unknown forced key degrades to the
+  // slug-hash pick. The CHOSEN key is returned so the send loop can log it.
+  const eligibleVariants = eligibleSubjectVariants(template.slug, clinic)
+  let chosenVariant = eligibleVariants[variantIndex(clinic.slug, eligibleVariants.length)]
+  if (options.forceSubjectKey) {
+    const forced = eligibleVariants.find((v) => v.key === options.forceSubjectKey)
+    if (forced) chosenVariant = forced
   }
-  const subjectVariants = allVariants
-    .filter((v) => !(v.refs === 'city' && hasUnknownCity))
-    .filter((v) => !(v.refs === 'shortName' && hasUnknownShortName))
-    // Keep subjects under 50 chars (mobile preview cutoff) — long clinic
-    // names knock out the name-bearing variants rather than truncating.
-    .filter((v) => v.subject.length <= 50)
-    .map((v) => v.subject)
-  if (subjectVariants.length === 0) subjectVariants.push('the 21-day stand-down — are you across it?')
-  const subjectVariant = subjectVariants[variantIndex(clinic.slug, subjectVariants.length)]
+  const subjectVariant = chosenVariant.subject
+  const subjectKey = chosenVariant.key
 
   const bodyHtml =
     template.slug === 'initial' ? t1Body : template.slug === 'followup' ? t2Body : t3Body
@@ -309,7 +372,7 @@ export function mergeTemplate(
   const subject = mergeVariables(template.subjectTemplate, variables)
   const html = mergeVariables(template.bodyTemplate, variables)
   const text = htmlToPlainText(html)
-  return { subject, html, text }
+  return { subject, html, text, subjectKey }
 }
 
 /**

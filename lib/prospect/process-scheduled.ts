@@ -41,7 +41,8 @@ import {
   setOutreachResendId,
   deleteOutreachByAuditKey,
 } from '@/lib/prospect/repo'
-import { EMAIL_TEMPLATES, mergeTemplate } from '@/lib/prospect/email-templates'
+import { EMAIL_TEMPLATES, mergeTemplate, eligibleSubjectKeys } from '@/lib/prospect/email-templates'
+import { chooseSubjectKey, type VariantStat } from '@/lib/prospect/subject-optimizer'
 import { preflightClinic, failureSummary } from '@/lib/prospect/preflight'
 import { legacyAccessKey } from '@/lib/prospect/access-key'
 import { generateUnsubscribeToken } from '@/lib/prospect/unsubscribe-token'
@@ -215,6 +216,15 @@ async function ensureSchemaBootstrap(): Promise<void> {
   } catch (err) {
     console.error('[process-scheduled] email_events.user_agent bootstrap failed:', err)
   }
+  // Self-optimizing subject engine: the chosen variant key is stamped on every
+  // production send so the optimizer can score variants on real engagement.
+  // Defensive ALTER mirrors the lazy one in logOutreach so the first write
+  // can never 42703 on a DB that predates the engine.
+  try {
+    await sql`ALTER TABLE prospect_outreach_log ADD COLUMN IF NOT EXISTS subject_key TEXT`
+  } catch (err) {
+    console.error('[process-scheduled] prospect_outreach_log.subject_key bootstrap failed:', err)
+  }
   try {
     await sql`ALTER TABLE prospect_clinics ADD COLUMN IF NOT EXISTS access_key TEXT`
     const { rows: missingKeys } = await sql<{ id: number; slug: string }>`
@@ -248,6 +258,77 @@ async function ensureSchemaBootstrap(): Promise<void> {
   } catch (err) {
     console.error('[process-scheduled] access_key bootstrap failed:', err)
   }
+}
+
+// Map a template slug to the utm_campaign its portal link carries, so a real
+// portal visit is attributed to the touch that drove it.
+const TOUCH_CAMPAIGN: Record<EmailTemplateSlug, string> = {
+  initial: 'cold_t1',
+  followup: 'cold_t2',
+  final: 'cold_t3',
+}
+
+/**
+ * Load live per-(template_slug, subject_key) performance for the optimizer.
+ *
+ *   sends     = production outreach-log rows that used this subject key for
+ *               this touch (test previews — audit_key '%:test:%' — excluded).
+ *   realViews = DISTINCT clinics with a scanner-filtered portal visit
+ *               (duration_seconds >= 60 OR interaction_type = 'cta_click')
+ *               whose utm_campaign matches the touch AND who received a send
+ *               that used this subject key.
+ *
+ * Keyed `${template_slug}::${subject_key}`. Tolerant of a fresh DB: if
+ * subject_key / interaction_type / utm_campaign columns don't exist yet the
+ * query 42703s, we swallow it and return an empty map — the optimizer then
+ * falls back to the deterministic slug-hash pick (uniform warmup).
+ */
+async function loadSubjectKeyStats(): Promise<Map<string, VariantStat>> {
+  const out = new Map<string, VariantStat>()
+  try {
+    const { rows } = await sql<{
+      template_slug: string
+      subject_key: string
+      sends: number
+      real_views: number
+    }>`
+      WITH sent AS (
+        SELECT template_slug, subject_key, clinic_id
+        FROM prospect_outreach_log
+        WHERE subject_key IS NOT NULL
+          AND audit_key NOT LIKE '%:test:%'
+      ),
+      real_views AS (
+        SELECT clinic_id, utm_campaign
+        FROM prospect_portal_views
+        WHERE (duration_seconds >= 60 OR interaction_type = 'cta_click')
+        GROUP BY clinic_id, utm_campaign
+      )
+      SELECT
+        s.template_slug,
+        s.subject_key,
+        COUNT(*)::int AS sends,
+        COUNT(DISTINCT CASE WHEN rv.clinic_id IS NOT NULL THEN s.clinic_id END)::int AS real_views
+      FROM sent s
+      LEFT JOIN real_views rv
+        ON rv.clinic_id = s.clinic_id
+        AND rv.utm_campaign = CASE s.template_slug
+          WHEN 'initial' THEN 'cold_t1'
+          WHEN 'followup' THEN 'cold_t2'
+          WHEN 'final' THEN 'cold_t3'
+        END
+      GROUP BY s.template_slug, s.subject_key
+    `
+    for (const r of rows) {
+      out.set(`${r.template_slug}::${r.subject_key}`, {
+        sends: Number(r.sends ?? 0),
+        realViews: Number(r.real_views ?? 0),
+      })
+    }
+  } catch (err) {
+    console.error('[process-scheduled] subject-key stats load failed — optimizer falls back to slug-hash:', err)
+  }
+  return out
 }
 
 export async function processScheduledSends(
@@ -437,6 +518,14 @@ export async function processScheduledSends(
   let sentCount = 0
   const resendKey = process.env.RESEND_API_KEY
 
+  // ── Self-optimizing subject engine: load live per-(touch, variant-key)
+  // performance ONCE for this run. The optimizer uses it to favour the
+  // best-converting subject variant per touch — but only after each variant
+  // has enough sends; until then it returns the deterministic slug-hash pick
+  // (uniform warmup). A load failure → empty map → pure slug-hash fallback,
+  // so the engine degrades to its prior behaviour, never blocks the send run.
+  const subjectStats = await loadSubjectKeyStats()
+
   // ── Stagger: spread the day's cold sends 7-10 min apart instead of blasting
   // them in one cron tick. Apollo-style human-cadence — inbox providers flag
   // sender→burst patterns, and brand-new creative (the portal-led templates)
@@ -616,8 +705,23 @@ export async function processScheduledSends(
       }
     }
 
-    const { subject, html, text } = mergeTemplate(template, clinic, BASE_URL, unsubToken, {
+    // ── DYNAMIC subject-line pick ──────────────────────────────────────
+    // Candidate keys = the subject variants eligible for THIS clinic + touch
+    // (after the unknown-data / ≤50-char guards). The optimizer favours the
+    // best-converting one once warmed up, else the deterministic slug-hash
+    // pick. Deterministic per slug, so a retry resolves to the same variant.
+    const candidateKeys = eligibleSubjectKeys(templateSlug, clinic)
+    const perKeyStats = new Map<string, VariantStat>()
+    for (const k of candidateKeys) {
+      perKeyStats.set(k, subjectStats.get(`${templateSlug}::${k}`) ?? { sends: 0, realViews: 0 })
+    }
+    const forceSubjectKey = candidateKeys.length
+      ? chooseSubjectKey({ candidateKeys, slug: clinic.slug, stats: perKeyStats })
+      : undefined
+
+    const { subject, html, text, subjectKey } = mergeTemplate(template, clinic, BASE_URL, unsubToken, {
       priorEngagement,
+      forceSubjectKey,
     })
     // Deterministic key — concurrent runs (cron + manual fire-now, or two
     // overlapping cron invocations) collide on the UNIQUE audit_key instead
@@ -633,6 +737,7 @@ export async function processScheduledSends(
       emailBody: text,
       resendEmailId: null,
       auditKey,
+      subjectKey,
     })
     if (!claimed) {
       results.push({

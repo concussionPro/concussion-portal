@@ -135,6 +135,15 @@ export async function POST(req: NextRequest) {
         audit_key         TEXT NOT NULL UNIQUE
       )
     `)
+    // Self-optimizing subject engine: stable, clinic-agnostic key of the
+    // subject VARIANT used on each send (e.g. 'name', 'city', 'capability_q').
+    // The optimizer scores variants on real engagement via this column.
+    await run('prospect_outreach_log.subject_key column', () => sql`
+      ALTER TABLE prospect_outreach_log ADD COLUMN IF NOT EXISTS subject_key TEXT
+    `)
+    await run('idx_prospect_outreach_log_subject_key', () => sql`
+      CREATE INDEX IF NOT EXISTS idx_prospect_outreach_log_subject_key ON prospect_outreach_log (template_slug, subject_key)
+    `)
     await run('idx_prospect_outreach_log_clinic_id', () => sql`
       CREATE INDEX IF NOT EXISTS idx_prospect_outreach_log_clinic_id ON prospect_outreach_log (clinic_id)
     `)

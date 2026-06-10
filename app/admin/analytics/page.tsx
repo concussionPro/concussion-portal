@@ -313,6 +313,21 @@ interface CtaTarget {
   clicks: number
   uniqueProspects: number
 }
+interface SubjectVariantPerf {
+  key: string
+  sends: number
+  realViews: number
+  convRate: number   // 0-1 fraction (realViews / sends)
+}
+interface SubjectTouchPerf {
+  variants: SubjectVariantPerf[]
+  winner: string | null   // null while still gathering data (<15 sends each)
+}
+interface SubjectPerformance {
+  t1: SubjectTouchPerf
+  t2: SubjectTouchPerf
+  t3: SubjectTouchPerf
+}
 interface ProspectTodayBox {
   sentToday: number
   cap: number | null
@@ -331,6 +346,8 @@ interface ProspectsData {
   reviewQueue?: ReviewQueueRow[]
   /** Pipeline matrix — rows = deal-type tiers, columns = mutually exclusive stages. */
   stageMatrix?: StageMatrix
+  /** Self-optimizing subject-line engine: per-touch variant performance + winner. */
+  subjectPerformance?: SubjectPerformance | null
   /** Today's machine state: sends vs cap, due tomorrow, gate-blocked. */
   today?: ProspectTodayBox
   /** Adaptive daily cap the cron will apply (computeAdaptiveCap). */
@@ -4003,6 +4020,77 @@ export default function AnalyticsDashboard() {
                           </div>
                         )
                       })()}
+
+                      {/* ── WHAT'S CONVERTING · SUBJECT LINES — the dynamic
+                          engine's live state. Self-optimizing: per touch it
+                          shows each subject variant's scanner-filtered portal-
+                          visit rate, highlights the current winner, and starts
+                          favouring it once each variant has 15+ sends. Muted
+                          slate, compact table per touch. Additive. */}
+                      {prospectsData.subjectPerformance && (
+                        <div>
+                          <SectionTitle
+                            title="What's converting · subject lines"
+                            subtitle="Self-optimizing engine · scanner-filtered portal-visit rate per subject variant · the winner gets favoured once each variant has 15+ sends"
+                          />
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {([
+                              ['t1', 'T1 · initial'],
+                              ['t2', 'T2 · follow-up'],
+                              ['t3', 'T3 · final'],
+                            ] as const).map(([touchKey, label]) => {
+                              const touch = prospectsData.subjectPerformance![touchKey]
+                              const anySends = touch.variants.some(v => v.sends > 0)
+                              return (
+                                <div key={touchKey} className="card rounded-2xl p-4 border-slate-200">
+                                  <div className="text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-2">{label}</div>
+                                  {touch.variants.length === 0 || !anySends ? (
+                                    <div className="text-[11.5px] text-slate-400">no production sends yet</div>
+                                  ) : (
+                                    <table className="w-full text-[11.5px]">
+                                      <thead className="text-[10px] uppercase tracking-wider text-slate-400">
+                                        <tr>
+                                          <th className="text-left font-semibold pb-1">Variant</th>
+                                          <th className="text-right font-semibold pb-1" title="Production sends that used this subject variant">Sends</th>
+                                          <th className="text-right font-semibold pb-1" title="Distinct clinics with a real (scanner-filtered) portal visit">Visits</th>
+                                          <th className="text-right font-semibold pb-1" title="Real visits ÷ sends">Rate</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {touch.variants.map(v => {
+                                          const isWinner = touch.winner === v.key
+                                          const warming = v.sends < 15
+                                          return (
+                                            <tr key={v.key} className={isWinner ? 'bg-emerald-50' : ''}>
+                                              <td className="py-0.5 font-medium text-slate-700">
+                                                {isWinner && <span className="text-emerald-600" title="current winner — favoured by the engine">★ </span>}
+                                                {v.key}
+                                              </td>
+                                              <td className="text-right text-slate-600 tabular-nums">{v.sends}</td>
+                                              <td className="text-right text-slate-600 tabular-nums">{v.realViews}</td>
+                                              <td className="text-right font-semibold text-slate-700 tabular-nums">
+                                                {warming
+                                                  ? <span className="text-slate-400" title="gathering data (<15 sends)">gathering</span>
+                                                  : `${(v.convRate * 100).toFixed(0)}%`}
+                                              </td>
+                                            </tr>
+                                          )
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  )}
+                                  {anySends && touch.winner == null && (
+                                    <div className="text-[10.5px] text-slate-400 mt-1.5">gathering data (&lt;15 sends per variant) — uniform warmup, even rotation</div>
+                                  )}
+                                  {touch.winner != null && (
+                                    <div className="text-[10.5px] text-emerald-600 mt-1.5 font-semibold">★ favouring: {touch.winner}</div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       {/* ── DEMOTED · Call-now list (collapsed) — clinics with
                           strong signals + no reply yet, sorted by signal strength. */}

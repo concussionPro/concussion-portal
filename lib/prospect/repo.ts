@@ -296,10 +296,15 @@ export async function logOutreach(input: {
   emailBody: string
   resendEmailId: string | null
   auditKey: string
+  /** Stable, clinic-agnostic subject-variant key — feeds the optimizer. */
+  subjectKey?: string | null
 }): Promise<boolean> {
+  // Lazy column (mirrors recordPortalView's inline-ALTER pattern) so any
+  // caller path works on a DB that predates the self-optimizing engine.
+  await sql`ALTER TABLE prospect_outreach_log ADD COLUMN IF NOT EXISTS subject_key TEXT`
   const { rowCount } = await sql`
-    INSERT INTO prospect_outreach_log (clinic_id, template_slug, email_subject, email_body, resend_email_id, audit_key)
-    VALUES (${input.clinicId}, ${input.templateSlug}, ${input.emailSubject}, ${input.emailBody}, ${input.resendEmailId}, ${input.auditKey})
+    INSERT INTO prospect_outreach_log (clinic_id, template_slug, email_subject, email_body, resend_email_id, audit_key, subject_key)
+    VALUES (${input.clinicId}, ${input.templateSlug}, ${input.emailSubject}, ${input.emailBody}, ${input.resendEmailId}, ${input.auditKey}, ${input.subjectKey ?? null})
     ON CONFLICT (audit_key) DO NOTHING
   `
   return (rowCount ?? 0) > 0

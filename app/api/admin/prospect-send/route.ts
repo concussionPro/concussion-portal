@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
 
   // ── BUILD EMAIL ──
   const unsubscribeToken = generateUnsubscribeToken(clinic.slug)
-  const { subject, html, text } = mergeTemplate(template, clinic, BASE_URL, unsubscribeToken, {
+  const { subject, html, text, subjectKey } = mergeTemplate(template, clinic, BASE_URL, unsubscribeToken, {
     regionalVariant: variant === 'regional',
     networkVariant:
       variant === 'network' && networkSize
@@ -146,6 +146,7 @@ export async function POST(req: NextRequest) {
       emailBody: text,
       resendEmailId: null,
       auditKey,
+      subjectKey,
     })
     if (!claimed) {
       return NextResponse.json(
@@ -213,6 +214,7 @@ export async function POST(req: NextRequest) {
       emailBody: text,
       resendEmailId,
       auditKey,
+      subjectKey,
     })
   } else {
     await setOutreachResendId(auditKey, resendEmailId)

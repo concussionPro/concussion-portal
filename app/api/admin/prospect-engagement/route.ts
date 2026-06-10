@@ -14,6 +14,7 @@ import type { ClinicTeam, CohortRecommendation, TravelBand } from '@/lib/prospec
 import { teamTotal, clinicalCount, computePricing, clinicSizeBucket, hubPackPriceFor, dealTypeForClinicalCount, type DealType } from '@/lib/prospect/pricing'
 import { classifyStage, isHunterClean, buildStageMatrix, type MatrixRowInput, type PipelineStage } from '@/lib/prospect/stage'
 import { computeAdaptiveCap, type CapDecision } from '@/lib/prospect/adaptive-cap'
+import { summarizeVariantPerformance, DEFAULT_MIN_SAMPLES_PER_KEY, type VariantStat, type VariantPerformanceRow } from '@/lib/prospect/subject-optimizer'
 
 interface ClinicDbRow {
   id: number
@@ -1288,6 +1289,78 @@ export async function GET(req: NextRequest) {
       }
     })
 
+    // ── SUBJECT-LINE PERFORMANCE — makes the dynamic engine's state visible ──
+    // Per touch (t1/t2/t3), the per-variant {key, sends, realViews, convRate}
+    // and which key is currently WINNING. Same attribution the optimizer uses:
+    // sends = prod outreach-log rows per (template_slug, subject_key);
+    // realViews = DISTINCT clinics with a scanner-filtered portal visit
+    // (duration_seconds>=60 OR cta_click) on the matching utm_campaign. A
+    // variant "wins" once it has the top conversion rate AND enough sends to
+    // trust it (>= the optimizer's warmup threshold). Read-only, never throws —
+    // tolerant of a fresh DB (missing columns → null → panel hidden).
+    interface SubjectTouchPerf { variants: VariantPerformanceRow[]; winner: string | null }
+    let subjectPerformance: { t1: SubjectTouchPerf; t2: SubjectTouchPerf; t3: SubjectTouchPerf } | null = null
+    try {
+      const { rows: spRows } = await sql<{
+        template_slug: string
+        subject_key: string
+        sends: number
+        real_views: number
+      }>`
+        WITH sent AS (
+          SELECT template_slug, subject_key, clinic_id
+          FROM prospect_outreach_log
+          WHERE subject_key IS NOT NULL
+            AND audit_key NOT LIKE '%:test:%'
+        ),
+        real_views AS (
+          SELECT clinic_id, utm_campaign
+          FROM prospect_portal_views
+          WHERE (duration_seconds >= 60 OR interaction_type = 'cta_click')
+          GROUP BY clinic_id, utm_campaign
+        )
+        SELECT
+          s.template_slug,
+          s.subject_key,
+          COUNT(*)::int AS sends,
+          COUNT(DISTINCT CASE WHEN rv.clinic_id IS NOT NULL THEN s.clinic_id END)::int AS real_views
+        FROM sent s
+        LEFT JOIN real_views rv
+          ON rv.clinic_id = s.clinic_id
+          AND rv.utm_campaign = CASE s.template_slug
+            WHEN 'initial' THEN 'cold_t1'
+            WHEN 'followup' THEN 'cold_t2'
+            WHEN 'final' THEN 'cold_t3'
+          END
+        GROUP BY s.template_slug, s.subject_key
+      `
+      const byTouch: Record<string, Map<string, VariantStat>> = {
+        initial: new Map(),
+        followup: new Map(),
+        final: new Map(),
+      }
+      for (const r of spRows) {
+        if (!r.subject_key) continue
+        const m = byTouch[r.template_slug]
+        if (m) m.set(r.subject_key, { sends: Number(r.sends ?? 0), realViews: Number(r.real_views ?? 0) })
+      }
+      const pack = (m: Map<string, VariantStat>): SubjectTouchPerf => {
+        const variants = summarizeVariantPerformance(m)
+        // Winner = best conversion rate among variants that have crossed the
+        // warmup threshold (otherwise it's still gathering data, no winner).
+        const trusted = variants.filter((v) => v.sends >= DEFAULT_MIN_SAMPLES_PER_KEY)
+        return { variants, winner: trusted.length ? trusted[0].key : null }
+      }
+      subjectPerformance = {
+        t1: pack(byTouch.initial),
+        t2: pack(byTouch.followup),
+        t3: pack(byTouch.final),
+      }
+    } catch (err) {
+      console.error('[prospect-engagement] subjectPerformance failed:', err)
+      subjectPerformance = null
+    }
+
     return NextResponse.json({
       ok: true,
       count: prospects.length,
@@ -1296,6 +1369,9 @@ export async function GET(req: NextRequest) {
       funnelSections,
       ctaTargets,
       reviewQueue,
+      // Self-optimizing subject-line engine state — per-touch variant
+      // performance + current winner. Additive; pipeline matrix untouched.
+      subjectPerformance,
       // Pipeline rebuild (2026-06-10): matrix spine + today's machine state
       // + the adaptive cap the cron will apply. Additive — all prior fields
       // unchanged.
