@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
 import type { ClinicTeam, CohortRecommendation, TravelBand } from '@/lib/prospect/types'
-import { teamTotal, clinicalCount, computePricing, clinicSizeBucket, hubPackPriceFor } from '@/lib/prospect/pricing'
+import { teamTotal, clinicalCount, computePricing, clinicSizeBucket, hubPackPriceFor, dealTypeForClinicalCount, type DealType } from '@/lib/prospect/pricing'
 
 interface ClinicDbRow {
   id: number
@@ -151,6 +151,18 @@ interface CtaAggregateRow {
   target: string
   clicks: number | string
   unique_prospects: number | string
+}
+
+interface ReviewQueueDbRow {
+  id: number
+  short_name: string
+  city: string | null
+  state: string | null
+  status: string
+  scheduled_send_at: string | null
+  verification_score: number | null
+  clinical_count: number | string
+  hunter_clean: boolean
 }
 
 export async function GET(req: NextRequest) {
@@ -307,7 +319,7 @@ export async function GET(req: NextRequest) {
     // Practice", slug 'zac-preview-demo'). Without this filter Zac's own
     // browsing inflates the engagement metrics and pollutes the "Call now"
     // list with himself.
-    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, freeContent, funnelAggregate, ctaAggregate, portalFlow] = await Promise.all([
+    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, freeContent, funnelAggregate, ctaAggregate, portalFlow, reviewQueueRows] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
         : sql<ClinicDbRow>`
@@ -545,6 +557,69 @@ export async function GET(req: NextRequest) {
         LIMIT 20
       `,
       portalFlowQuery,
+      // ── REVIEW QUEUE — unsent, non-terminal prospects awaiting Zac's
+      // approve/archive decision, organised by deal-type tier. "Unsent"
+      // means: still at T1 ('initial') with zero non-test production
+      // outreach-log rows. Ordering mirrors the send priority: deal-type
+      // tier ASC (on-site → hub-pack → individual), then Hunter-clean
+      // rows first (they're the ones the HARD GATE will actually let
+      // fire), then earliest scheduled. The size-tier CASE is copied
+      // verbatim from the lib/prospect/process-scheduled.ts ORDER BY —
+      // keep in lockstep with clinicalCount() in lib/prospect/pricing.ts
+      // (7 clinical keys, excludes practiceManager/admin).
+      sql<ReviewQueueDbRow>`
+        SELECT pc.id, pc.short_name, pc.city, pc.state, pc.status,
+          pc.scheduled_send_at, pc.verification_score,
+          (COALESCE((pc.team->>'osteopaths')::int, 0)
+            + COALESCE((pc.team->>'physiotherapists')::int, 0)
+            + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+            + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+            + COALESCE((pc.team->>'exercisePhys')::int, 0)
+            + COALESCE((pc.team->>'myotherapists')::int, 0)
+            + COALESCE((pc.team->>'remedialMassage')::int, 0)) AS clinical_count,
+          (pc.verification_score IS NOT NULL
+            AND pc.verification_score >= 80
+            AND COALESCE(pc.verification_role, FALSE) = FALSE
+            AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
+            AND COALESCE(pc.verification_disposable, FALSE) = FALSE) AS hunter_clean
+        FROM prospect_clinics pc
+        WHERE pc.next_template_slug = 'initial'
+          AND pc.status NOT IN ('archived', 'lost', 'bounced', 'won', 'replied', 'engaged-elsewhere')
+          AND NOT EXISTS (
+            SELECT 1 FROM prospect_outreach_log ol
+            WHERE ol.clinic_id = pc.id AND ol.audit_key NOT LIKE '%:test:%'
+          )
+          -- Same self/admin seed-data exclusion as the clinics query above
+          AND COALESCE(pc.slug, '') NOT ILIKE 'zac-preview%'
+          AND COALESCE(pc.short_name, '') NOT ILIKE '%zac%preview%'
+          AND COALESCE(LOWER(pc.contact_email), '') <> 'z.lew87@gmail.com'
+          AND COALESCE(LOWER(pc.contact_email), '') NOT LIKE '%@concussion-education-australia.com'
+        ORDER BY
+          CASE
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 2 THEN 1
+            ELSE 2
+          END ASC,
+          CASE WHEN (pc.verification_score IS NOT NULL
+            AND pc.verification_score >= 80
+            AND COALESCE(pc.verification_role, FALSE) = FALSE
+            AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
+            AND COALESCE(pc.verification_disposable, FALSE) = FALSE) THEN 0 ELSE 1 END ASC,
+          pc.scheduled_send_at ASC NULLS LAST
+        LIMIT 400
+      `,
     ])
 
     // Index helpers
@@ -1067,6 +1142,26 @@ export async function GET(req: NextRequest) {
       uniqueProspects: Number(r.unique_prospects ?? 0),
     }))
 
+    // Review queue — unsent, non-terminal prospects ordered by send
+    // priority (tier ASC → Hunter-clean first → earliest scheduled).
+    // dealType derives from the SQL clinical sum via the same
+    // dealTypeForClinicalCount() boundaries the breakdown uses.
+    const reviewQueue = reviewQueueRows.rows.map((r) => {
+      const clinical = Number(r.clinical_count ?? 0)
+      return {
+        id: r.id,
+        shortName: r.short_name,
+        city: r.city,
+        state: r.state,
+        clinicalCount: clinical,
+        dealType: dealTypeForClinicalCount(clinical),
+        status: r.status,
+        hunterScore: r.verification_score,
+        hunterClean: r.hunter_clean === true,
+        scheduledSendAt: r.scheduled_send_at,
+      }
+    })
+
     return NextResponse.json({
       ok: true,
       count: prospects.length,
@@ -1074,6 +1169,7 @@ export async function GET(req: NextRequest) {
       aggregates,
       funnelSections,
       ctaTargets,
+      reviewQueue,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
@@ -1103,6 +1199,12 @@ function buildAggregates(prospects: Array<{
   hunterResult: string | null
   lastVerifiedAt: string | null
   sends: Array<{ templateSlug: string }>
+  clinicalCount: number
+  nextTemplateSlug: string | null
+  hunterScore: number | null
+  hunterRole: boolean
+  hunterAcceptAll: boolean
+  hunterDisposable: boolean
 }>) {
   const byStatus: Record<string, number> = {}
   const byRegion: Record<string, number> = {}
@@ -1127,6 +1229,32 @@ function buildAggregates(prospects: Array<{
 
   let totalDelivered = 0
   let totalBouncedEmails = 0
+
+  // ── DEAL-TYPE BREAKDOWN (on-site / hub-pack / individual) ──
+  // Tier boundaries live in dealTypeForClinicalCount() in
+  // lib/prospect/pricing.ts — the same >=6 / 2-5 / <=1 clinical split
+  // the cron send-priority CASE uses. Counted over the full pool (like
+  // coldFunnel) so totals reconcile with `pooled`; dealValueTotal
+  // excludes dead statuses (mirrors revenue.totalRevenuePotential) and
+  // sums the same offer-matched computed dealValue used everywhere else
+  // in this route (there is no deal-value column in the DB).
+  const emptyTierStats = () => ({
+    total: 0,
+    hunterClean: 0,     // score>=80 AND not role/accept-all/disposable — passes the HARD GATE
+    gateBlocked: 0,     // the rest — stranded until re-verified / enriched
+    unsentQueued: 0,    // next='initial', zero production sends, non-terminal — the review-queue population
+    sent: 0,            // ≥1 production send
+    replied: 0,
+    dealValueTotal: 0,  // non-dead only
+  })
+  const dealTypeBreakdown: Record<DealType, ReturnType<typeof emptyTierStats>> = {
+    'on-site': emptyTierStats(),
+    'hub-pack': emptyTierStats(),
+    'individual': emptyTierStats(),
+  }
+  // Terminal statuses for the review queue — matches the exclusion list
+  // in the reviewQueue SQL above ('engaged' stays reviewable).
+  const REVIEW_TERMINAL = new Set(['archived', 'lost', 'bounced', 'won', 'replied', 'engaged-elsewhere'])
 
   // ── COLD-OUTREACH FUNNEL (clinic-level stage counts, full pool) ──
   // pooled → verified (Hunter deliverable) → T1/T2/T3 sent → delivered →
@@ -1174,6 +1302,21 @@ function buildAggregates(prospects: Array<{
     if (p.status === 'won') coldFunnel.wonClinics += 1
     if (p.status === 'lost') coldFunnel.lostClinics += 1
     if (p.status === 'bounced') coldFunnel.bouncedClinics += 1
+
+    // Deal-type tier rollup — full pool, dealValueTotal non-dead only
+    const tierStats = dealTypeBreakdown[dealTypeForClinicalCount(p.clinicalCount)]
+    tierStats.total += 1
+    const hunterClean =
+      p.hunterScore != null && p.hunterScore >= 80 &&
+      !p.hunterRole && !p.hunterAcceptAll && !p.hunterDisposable
+    if (hunterClean) tierStats.hunterClean += 1
+    else tierStats.gateBlocked += 1
+    if (p.nextTemplateSlug === 'initial' && p.totalSends === 0 && !REVIEW_TERMINAL.has(p.status)) {
+      tierStats.unsentQueued += 1
+    }
+    if (p.totalSends > 0) tierStats.sent += 1
+    if (p.replies > 0) tierStats.replied += 1
+    if (!DEAD_STATUS.has(p.status)) tierStats.dealValueTotal += p.dealValue
 
     // Skip dead-status clinics from aggregate rollups + region/cohort/travel
     // groupings — they're inflating the visible pipeline & "outreach sent"
@@ -1223,5 +1366,6 @@ function buildAggregates(prospects: Array<{
       sendOpenRate, openClickRate, sendReplyRate, replyToWinRate, deliveryRate,
     },
     coldFunnel,
+    dealTypeBreakdown,
   }
 }

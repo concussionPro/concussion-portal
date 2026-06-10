@@ -230,6 +230,31 @@ interface ProspectRow {
   dealValue?: number
   sends: ProspectSend[]
 }
+// Deal-type tiers — canonical boundaries live in dealTypeForClinicalCount()
+// in lib/prospect/pricing.ts (on-site ≥6 clinical · hub-pack 2-5 ·
+// individual ≤1). The API computes the classification; the UI only renders.
+type DealTypeKey = 'on-site' | 'hub-pack' | 'individual'
+interface DealTypeTierStats {
+  total: number
+  hunterClean: number
+  gateBlocked: number
+  unsentQueued: number
+  sent: number
+  replied: number
+  dealValueTotal: number
+}
+interface ReviewQueueRow {
+  id: number
+  shortName: string
+  city: string | null
+  state: string | null
+  clinicalCount: number
+  dealType: DealTypeKey
+  status: string
+  hunterScore: number | null
+  hunterClean: boolean
+  scheduledSendAt: string | null
+}
 interface ProspectAggregates {
   byStatus: Record<string, number>
   byRegion: Record<string, number>
@@ -261,6 +286,8 @@ interface ProspectAggregates {
     lostClinics: number
     bouncedClinics: number
   }
+  /** Deal-type tier rollup — on-site ≥6 clinical · hub-pack 2-5 · individual ≤1. */
+  dealTypeBreakdown?: Record<DealTypeKey, DealTypeTierStats>
 }
 interface FunnelSection {
   section: string
@@ -284,6 +311,8 @@ interface ProspectsData {
   aggregates?: ProspectAggregates
   funnelSections?: FunnelSection[]
   ctaTargets?: CtaTarget[]
+  /** Unsent, non-terminal prospects awaiting approve/archive — send-priority ordered, capped at 400. */
+  reviewQueue?: ReviewQueueRow[]
   status?: string
   message?: string
 }
@@ -1127,6 +1156,14 @@ export default function AnalyticsDashboard() {
   const [showPipelineFunnel, setShowPipelineFunnel] = useState(false)
   const [bootstrapBusy, setBootstrapBusy] = useState(false)
   const [bootstrapMessage, setBootstrapMessage] = useState<string | null>(null)
+  // Outreach-categories review & approve panel (deal-type tiers).
+  // One table + tier filter (matches the page's filter idiom); default
+  // filter = on-site (the priority tier), default expanded.
+  const [reviewTier, setReviewTier] = useState<DealTypeKey | 'all'>('on-site')
+  const [reviewSelected, setReviewSelected] = useState<Set<number>>(new Set())
+  const [showReviewQueue, setShowReviewQueue] = useState(true)
+  const [reviewBusy, setReviewBusy] = useState(false)
+  const [reviewMessage, setReviewMessage] = useState<string | null>(null)
 
 
   const fetchData = useCallback(
@@ -3997,6 +4034,247 @@ export default function AnalyticsDashboard() {
                           </table>
                         </div>
                       </div>
+
+                      {/* ── OUTREACH CATEGORIES · review & approve before sends ──
+                          Prospect pool organised by deal type / clinic size.
+                          Tier boundaries come from dealTypeForClinicalCount()
+                          in lib/prospect/pricing.ts via the API — the UI never
+                          re-derives them. Card order = send priority: the cron
+                          ORDER BY fires on-site (≥6 clinical) first, then Hub
+                          Pack (2-5), then individuals. */}
+                      {(() => {
+                        const dtb = agg.dealTypeBreakdown
+                        const queue = prospectsData.reviewQueue ?? []
+                        if (!dtb && queue.length === 0) return null
+                        const DEAL_META: Array<{ key: DealTypeKey; label: string; threshold: string; pitch: string; badgeBg: string; badgeText: string; border: string }> = [
+                          { key: 'on-site',    label: 'On-site training',  threshold: '≥6 clinical',  pitch: 'On-site cohort pitch · the priority tier', badgeBg: 'bg-[rgba(13,115,119,0.08)]', badgeText: 'text-[var(--accent)]', border: 'border-[rgba(13,115,119,0.35)]' },
+                          { key: 'hub-pack',   label: 'Hub Pack',          threshold: '2–5 clinical', pitch: 'Hub Pack pitch',                            badgeBg: 'bg-indigo-50',               badgeText: 'text-indigo-700',      border: 'border-indigo-300' },
+                          { key: 'individual', label: 'Individual course', threshold: '≤1 clinical',  pitch: 'Individual course pitch',                   badgeBg: 'bg-slate-100',               badgeText: 'text-slate-600',       border: 'border-slate-300' },
+                        ]
+                        const filteredQueue = reviewTier === 'all' ? queue : queue.filter(q => q.dealType === reviewTier)
+                        // researching → approvable + archivable · approved → archivable only
+                        const isSelectable = (q: ReviewQueueRow) => q.status === 'researching' || q.status === 'approved'
+                        const selectedRows = queue.filter(q => reviewSelected.has(q.id))
+                        const approveIds = selectedRows.filter(q => q.status === 'researching').map(q => q.id)
+                        const archiveIds = selectedRows.filter(isSelectable).map(q => q.id)
+                        const toggleRow = (id: number) => setReviewSelected(prev => {
+                          const next = new Set(prev)
+                          if (next.has(id)) next.delete(id); else next.add(id)
+                          return next
+                        })
+                        const visibleSelectable = filteredQueue.filter(isSelectable)
+                        const allVisibleSelected = visibleSelectable.length > 0 && visibleSelectable.every(q => reviewSelected.has(q.id))
+                        const toggleAllVisible = () => setReviewSelected(prev => {
+                          const next = new Set(prev)
+                          if (allVisibleSelected) visibleSelectable.forEach(q => next.delete(q.id))
+                          else visibleSelectable.forEach(q => next.add(q.id))
+                          return next
+                        })
+                        const runReviewAction = async (action: 'approve' | 'archive') => {
+                          const ids = action === 'approve' ? approveIds : archiveIds
+                          if (ids.length === 0 || reviewBusy) return
+                          setReviewBusy(true)
+                          setReviewMessage(null)
+                          try {
+                            const res = await fetch('/api/admin/prospect-approve', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ ids, action }),
+                              cache: 'no-store',
+                            })
+                            const json = await res.json()
+                            if (!res.ok) {
+                              setReviewMessage(`${action} failed: ${json.error ?? res.status}`)
+                            } else {
+                              setReviewMessage(`${action === 'approve' ? 'Approved' : 'Archived'} ${json.updated}${json.skipped > 0 ? ` · ${json.skipped} skipped (status moved on)` : ''}`)
+                              setReviewSelected(new Set())
+                              loadAll()
+                            }
+                          } catch (err) {
+                            setReviewMessage(`${action} network error: ${err instanceof Error ? err.message : String(err)}`)
+                          } finally {
+                            setReviewBusy(false)
+                          }
+                        }
+                        const fmtSched = (d: string | null) => d ? new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '—'
+                        return (
+                          <div>
+                            <SectionTitle
+                              title="Outreach categories · review & approve"
+                              subtitle="Prospect pool by deal type / clinic size · card order IS the send priority (cron fires on-site → Hub Pack → individual) · approve researching rows before the queue fires"
+                            />
+                            {/* Three category cards — priority order on-site → hub-pack → individual */}
+                            {dtb && (
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                {DEAL_META.map((m, i) => {
+                                  const t = dtb[m.key]
+                                  return (
+                                    <button
+                                      key={m.key}
+                                      onClick={() => { setReviewTier(m.key); setShowReviewQueue(true) }}
+                                      className={`card rounded-xl p-4 text-left transition-colors cursor-pointer hover:border-[var(--accent)] ${reviewTier === m.key ? m.border : ''}`}
+                                      title={`${m.pitch} · click to filter the review table`}
+                                    >
+                                      <div className="flex items-center justify-between mb-1.5">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${m.badgeBg} ${m.badgeText} text-[10px] font-bold uppercase tracking-wider`}>{i + 1} · {m.label}</span>
+                                        <span className="text-[10px] text-[var(--muted-foreground)]">{m.threshold}</span>
+                                      </div>
+                                      <div className="text-2xl font-bold text-[var(--foreground)]">{t.total}</div>
+                                      <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
+                                        <span className="text-emerald-700 font-semibold">{t.hunterClean} Hunter-clean</span> · {t.gateBlocked} gate-blocked
+                                      </div>
+                                      <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
+                                        {t.unsentQueued} unsent · {t.sent} sent · <span className={t.replied > 0 ? 'text-emerald-700 font-semibold' : ''}>{t.replied} replied</span>
+                                      </div>
+                                      {t.dealValueTotal > 0 && (
+                                        <div className="text-[11px] font-semibold text-[var(--accent)] mt-1">{fmt$(t.dealValueTotal)} potential</div>
+                                      )}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )}
+                            {/* Review queue — collapsible table with tier filter + bulk actions */}
+                            <div className="card rounded-2xl border-slate-200 overflow-hidden">
+                              <button
+                                onClick={() => setShowReviewQueue(v => !v)}
+                                className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
+                              >
+                                <div>
+                                  <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showReviewQueue ? '▼' : '▶'} Review queue</div>
+                                  <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">{queue.length} unsent prospect{queue.length === 1 ? '' : 's'} awaiting review · send-priority order</div>
+                                </div>
+                                <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showReviewQueue ? 'hide' : 'show'}</span>
+                              </button>
+                              {showReviewQueue && (
+                                <div className="border-t border-slate-100">
+                                  <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
+                                    <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.08)]">
+                                      {[
+                                        { key: 'all' as const, label: `All · ${queue.length}` },
+                                        ...DEAL_META.map(m => ({ key: m.key, label: `${m.label} · ${queue.filter(q => q.dealType === m.key).length}` })),
+                                      ].map(pill => (
+                                        <button
+                                          key={pill.key}
+                                          onClick={() => setReviewTier(pill.key)}
+                                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap ${
+                                            reviewTier === pill.key
+                                              ? 'bg-white shadow-sm text-[var(--accent)] border border-[rgba(13,115,119,0.1)]'
+                                              : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                                          }`}
+                                        >
+                                          {pill.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {reviewMessage && <span className="text-xs font-semibold text-[var(--foreground)]">{reviewMessage}</span>}
+                                      <button
+                                        onClick={() => runReviewAction('approve')}
+                                        disabled={reviewBusy || approveIds.length === 0}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent)] text-white hover:opacity-90 disabled:opacity-40"
+                                        title="Set selected 'researching' rows to 'approved' — never resurrects archived/terminal rows"
+                                      >
+                                        {reviewBusy ? 'Working…' : `Approve selected${approveIds.length > 0 ? ` (${approveIds.length})` : ''}`}
+                                      </button>
+                                      <button
+                                        onClick={() => runReviewAction('archive')}
+                                        disabled={reviewBusy || archiveIds.length === 0}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-40"
+                                        title="Archive selected researching/approved rows — pulls them from the send queue with an audit note"
+                                      >
+                                        {reviewBusy ? 'Working…' : `Archive selected${archiveIds.length > 0 ? ` (${archiveIds.length})` : ''}`}
+                                      </button>
+                                    </div>
+                                  </div>
+                                  {filteredQueue.length === 0 ? (
+                                    <div className="px-5 pb-5 text-sm text-[var(--muted-foreground)]">No unsent prospects in this category — pool more or widen the filter.</div>
+                                  ) : (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-sm">
+                                        <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                                          <tr>
+                                            <th className="px-3 py-3 w-8">
+                                              <input
+                                                type="checkbox"
+                                                checked={allVisibleSelected}
+                                                onChange={toggleAllVisible}
+                                                disabled={visibleSelectable.length === 0}
+                                                className="accent-[var(--accent)]"
+                                                title="Select all visible reviewable rows"
+                                              />
+                                            </th>
+                                            <th className="text-left px-3 py-3 font-semibold">Clinic</th>
+                                            <th className="text-left px-3 py-3 font-semibold">Location</th>
+                                            <th className="text-center px-2 py-3 font-semibold" title="Clinical headcount (7 clinical disciplines, excludes admin/PM)">Clinicians</th>
+                                            <th className="text-left px-3 py-3 font-semibold">Deal type</th>
+                                            <th className="text-left px-3 py-3 font-semibold" title="Hunter verification — green = score ≥80, not role/accept-all/disposable (passes the send HARD GATE)">Hunter</th>
+                                            <th className="text-left px-3 py-3 font-semibold">Status</th>
+                                            <th className="text-right px-3 py-3 font-semibold">Scheduled</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {filteredQueue.map(q => {
+                                            const meta = DEAL_META.find(m => m.key === q.dealType)!
+                                            const selectable = isSelectable(q)
+                                            return (
+                                              <tr key={q.id} className={`border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] ${reviewSelected.has(q.id) ? 'bg-[rgba(13,115,119,0.05)]' : ''}`}>
+                                                <td className="px-3 py-2.5">
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={reviewSelected.has(q.id)}
+                                                    onChange={() => toggleRow(q.id)}
+                                                    disabled={!selectable}
+                                                    className="accent-[var(--accent)] disabled:opacity-30"
+                                                    title={selectable ? (q.status === 'researching' ? 'Approve or archive' : 'Archive only (already approved)') : `status '${q.status}' — not reviewable`}
+                                                  />
+                                                </td>
+                                                <td className="px-3 py-2.5 font-semibold text-[var(--foreground)] cursor-pointer" onClick={() => { setSelectedProspectId(q.id); setProspectsSubTab('queue') }}>{q.shortName}</td>
+                                                <td className="px-3 py-2.5 text-xs text-[var(--muted-foreground)]">{q.city || 'Unknown'}{q.state ? `, ${q.state}` : ''}</td>
+                                                <td className="px-2 py-2.5 text-center tabular-nums font-semibold text-[var(--foreground)]">{q.clinicalCount}</td>
+                                                <td className="px-3 py-2.5">
+                                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${meta.badgeBg} ${meta.badgeText} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap`}>{meta.label}</span>
+                                                </td>
+                                                <td className="px-3 py-2.5">
+                                                  {q.hunterScore != null ? (
+                                                    <span
+                                                      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
+                                                        q.hunterClean
+                                                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                          : 'bg-amber-100 text-amber-700 border-amber-200'
+                                                      }`}
+                                                      title={q.hunterClean ? 'Passes the Hunter HARD GATE — will fire when due' : 'Blocked by the Hunter HARD GATE (score <80 or role/accept-all/disposable) — re-verify or enrich before it can send'}
+                                                    >
+                                                      {q.hunterScore}{q.hunterClean ? ' · clean' : ' · blocked'}
+                                                    </span>
+                                                  ) : (
+                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border bg-slate-50 text-slate-500 border-slate-200" title="Never Hunter-verified — gate-blocked until verified">unverified</span>
+                                                  )}
+                                                </td>
+                                                <td className="px-3 py-2.5">
+                                                  {q.status === 'approved' ? (
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50/70 text-emerald-600 border border-emerald-100">✓ approved</span>
+                                                  ) : (
+                                                    <span className="text-xs text-[var(--muted-foreground)] capitalize">{q.status}</span>
+                                                  )}
+                                                </td>
+                                                <td className="px-3 py-2.5 text-right text-xs text-[var(--muted-foreground)] whitespace-nowrap tabular-nums">{fmtSched(q.scheduledSendAt)}</td>
+                                              </tr>
+                                            )
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                  <p className="text-[10.5px] text-[var(--muted-foreground)] px-5 py-3 border-t border-slate-100">
+                                    Unsent = T1 pending with zero production sends · non-terminal statuses only · capped at 400 rows, ordered on-site → Hub Pack → individual (the cron&apos;s send priority), Hunter-clean first, earliest scheduled first. Only &lsquo;researching&rsquo; rows can be approved; archived rows are never resurrected.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {/* ── COLD-OUTREACH FUNNEL · full path from pool to reply ──
                           Real data end-to-end: pooled → Hunter-verified → T1/T2/T3

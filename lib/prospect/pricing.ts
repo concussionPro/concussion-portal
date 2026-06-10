@@ -184,6 +184,28 @@ export function clinicalCount(team: ClinicTeam): number {
 }
 
 /**
+ * Deal-type tier — which cold-outreach pitch a clinic gets, by CLINICAL
+ * headcount. This is the canonical TS-side mirror of the size-tier CASE
+ * expression in the lib/prospect/process-scheduled.ts ORDER BY (and the
+ * prospect-fire-now candidate query) — keep all three in lockstep.
+ *
+ *   on-site    : clinical >= 6  — on-site training pitch (the priority tier)
+ *   hub-pack   : clinical 2-5   — Hub Pack pitch
+ *   individual : clinical <= 1  — individual course pitch
+ */
+export type DealType = 'on-site' | 'hub-pack' | 'individual'
+
+export function dealTypeForClinicalCount(clinical: number): DealType {
+  if (clinical >= 6) return 'on-site'
+  if (clinical >= 2) return 'hub-pack'
+  return 'individual'
+}
+
+export function dealTypeFor(team: ClinicTeam): DealType {
+  return dealTypeForClinicalCount(clinicalCount(team))
+}
+
+/**
  * Returns the team's discipline "centre of gravity" — used to decide which
  * cold-email opening-line variant to use. Returns the discipline with the
  * highest count; ties broken by the order: osteo > physio > GP > sports med
