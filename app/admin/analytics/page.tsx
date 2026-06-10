@@ -2992,6 +2992,7 @@ export default function AnalyticsDashboard() {
               // blocked. The matrix + detail table + needs-you strip all
               // read from this one map.
               const STAGE_META: Record<PipelineStage, { label: string; sub: string }> = {
+                'booked':            { label: 'Booked',   sub: 'call confirmed · the conversion' },
                 'replied':           { label: 'Replied',  sub: 'your move' },
                 'engaged':           { label: 'Engaged',  sub: 'personal lane' },
                 't3-sent':           { label: 'T3 sent',  sub: 'sequence done' },

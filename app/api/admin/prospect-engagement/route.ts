@@ -761,6 +761,7 @@ export async function GET(req: NextRequest) {
       })
       const stage = classifyStage({
         status: c.status,
+        hasBooking: !!c.cal_booked_at && c.cal_booking_status !== 'cancelled',
         hasInitialSend: prodSends.some((s) => s.template_slug === 'initial'),
         hasFollowupSend: prodSends.some((s) => s.template_slug === 'followup'),
         hasFinalSend: prodSends.some((s) => s.template_slug === 'final'),
@@ -1265,6 +1266,7 @@ export async function GET(req: NextRequest) {
       // can only be ready / awaiting-approval / blocked.
       const stage: PipelineStage = classifyStage({
         status: r.status,
+        hasBooking: false,
         hasInitialSend: false,
         hasFollowupSend: false,
         hasFinalSend: false,

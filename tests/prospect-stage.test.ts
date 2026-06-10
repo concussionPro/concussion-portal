@@ -25,6 +25,7 @@ import {
 function input(overrides: Partial<StageInput> = {}): StageInput {
   return {
     status: 'researching',
+    hasBooking: false,
     hasInitialSend: false,
     hasFollowupSend: false,
     hasFinalSend: false,
@@ -34,7 +35,19 @@ function input(overrides: Partial<StageInput> = {}): StageInput {
 }
 
 describe('classifyStage — status terminals beat send depth', () => {
-  it('replied beats everything, even a completed T3 sequence', () => {
+  it('a booking is the conversion — it outranks replied/engaged/sends', () => {
+    expect(classifyStage(input({
+      status: 'engaged', hasBooking: true,
+      hasInitialSend: true, hasFollowupSend: true, hasFinalSend: true,
+    }))).toBe('booked')
+    expect(classifyStage(input({ status: 'replied', hasBooking: true }))).toBe('booked')
+  })
+
+  it('a booking on a dead clinic (lost/cancelled after) stays dead, not booked', () => {
+    expect(classifyStage(input({ status: 'lost', hasBooking: true }))).toBe('dead')
+  })
+
+  it('replied beats everything except a booking, even a completed T3 sequence', () => {
     expect(classifyStage(input({
       status: 'replied',
       hasInitialSend: true, hasFollowupSend: true, hasFinalSend: true,

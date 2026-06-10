@@ -35,6 +35,7 @@
 import type { DealType } from './pricing'
 
 export type PipelineStage =
+  | 'booked'
   | 'replied'
   | 'engaged'
   | 't3-sent'
@@ -45,8 +46,10 @@ export type PipelineStage =
   | 'blocked'
   | 'dead'
 
-/** Display order for the matrix columns (left → right). */
+/** Display order for the matrix columns (left → right). Booked first — it's
+ *  the conversion event this whole engine exists to produce. */
 export const PIPELINE_STAGES: PipelineStage[] = [
+  'booked',
   'replied',
   'engaged',
   't3-sent',
@@ -78,6 +81,8 @@ export function isHunterClean(h: HunterFields): boolean {
 
 export interface StageInput {
   status: string
+  /** A confirmed Cal.com booking (cal_booked_at set) — the conversion event. */
+  hasBooking: boolean
   /** Production sends only (audit_key NOT LIKE '%:test:%'). */
   hasInitialSend: boolean
   hasFollowupSend: boolean
@@ -86,6 +91,9 @@ export interface StageInput {
 }
 
 export function classifyStage(i: StageInput): PipelineStage {
+  // A booked call is the goal — it outranks every softer signal, and a
+  // not-yet-dead prospect with a booking belongs in Booked, not Engaged.
+  if (i.hasBooking && !DEAD_STATUSES.has(i.status)) return 'booked'
   if (i.status === 'replied') return 'replied'
   if (i.status === 'engaged') return 'engaged'
   if (DEAD_STATUSES.has(i.status)) return 'dead'
