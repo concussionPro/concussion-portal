@@ -53,6 +53,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import type { PipelineStage, StageMatrix } from '@/lib/prospect/stage'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface AnalyticsStats {
@@ -228,6 +229,11 @@ interface ProspectRow {
   recommendedOffer?: 'hub-pack' | 'on-site-cohort'
   sizeBucket?: string
   dealValue?: number
+  // Pipeline matrix fields (computed server-side in prospect-engagement)
+  stage?: PipelineStage
+  dealType?: DealTypeKey
+  hunterClean?: boolean
+  teamEnriched?: boolean
   sends: ProspectSend[]
 }
 // Deal-type tiers — canonical boundaries live in dealTypeForClinicalCount()
@@ -254,6 +260,8 @@ interface ReviewQueueRow {
   hunterScore: number | null
   hunterClean: boolean
   scheduledSendAt: string | null
+  stage?: PipelineStage
+  teamEnriched?: boolean
 }
 interface ProspectAggregates {
   byStatus: Record<string, number>
@@ -305,14 +313,28 @@ interface CtaTarget {
   clicks: number
   uniqueProspects: number
 }
+interface ProspectTodayBox {
+  sentToday: number
+  cap: number | null
+  capReason: string | null
+  dueTomorrow: number
+  unverifiedDue: number
+  gateBlocked: { total: number; unverified: number; lowScore: number; role: number; acceptAll: number; disposable: number }
+}
 interface ProspectsData {
   count: number
   prospects: ProspectRow[]
   aggregates?: ProspectAggregates
   funnelSections?: FunnelSection[]
   ctaTargets?: CtaTarget[]
-  /** Unsent, non-terminal prospects awaiting approve/archive — send-priority ordered, capped at 400. */
+  /** Unsent, non-terminal prospects awaiting approve/archive — send-priority ordered, capped at 600. */
   reviewQueue?: ReviewQueueRow[]
+  /** Pipeline matrix — rows = deal-type tiers, columns = mutually exclusive stages. */
+  stageMatrix?: StageMatrix
+  /** Today's machine state: sends vs cap, due tomorrow, gate-blocked. */
+  today?: ProspectTodayBox
+  /** Adaptive daily cap the cron will apply (computeAdaptiveCap). */
+  capDecision?: { cap: number; reason: string } | null
   status?: string
   message?: string
 }
@@ -1156,14 +1178,20 @@ export default function AnalyticsDashboard() {
   const [showPipelineFunnel, setShowPipelineFunnel] = useState(false)
   const [bootstrapBusy, setBootstrapBusy] = useState(false)
   const [bootstrapMessage, setBootstrapMessage] = useState<string | null>(null)
-  // Outreach-categories review & approve panel (deal-type tiers).
-  // One table + tier filter (matches the page's filter idiom); default
-  // filter = on-site (the priority tier), default expanded.
+  // Pipeline matrix → detail table (rebuilt 2026-06-10). Clicking a matrix
+  // cell filters the detail table: detailStage picks the column, reviewTier
+  // picks the row ('all' = the TOTAL row). Defaults: Awaiting approval,
+  // on-site tier first — the cell that most often needs Zac.
+  const [detailStage, setDetailStage] = useState<PipelineStage>('awaiting-approval')
   const [reviewTier, setReviewTier] = useState<DealTypeKey | 'all'>('on-site')
   const [reviewSelected, setReviewSelected] = useState<Set<number>>(new Set())
-  const [showReviewQueue, setShowReviewQueue] = useState(true)
   const [reviewBusy, setReviewBusy] = useState(false)
   const [reviewMessage, setReviewMessage] = useState<string | null>(null)
+  // Demoted panels — collapsed by default (reference data, not pipeline)
+  const [showWhoEngaging, setShowWhoEngaging] = useState(false)
+  const [showCallNow, setShowCallNow] = useState(false)
+  const [showTierBento, setShowTierBento] = useState(false)
+  const [showTopWeighted, setShowTopWeighted] = useState(false)
 
 
   const fetchData = useCallback(
@@ -2956,59 +2984,36 @@ export default function AnalyticsDashboard() {
               }
 
               const fmt$ = (n: number) => `A$${n.toLocaleString('en-AU')}`
+              const fmtK = (n: number) => n >= 1000 ? `A$${Math.round(n / 1000)}k` : `A$${n}`
 
-              // ── HOT NOW (rebuilt 2026-06-08) - ACTION required, no dwell-only ──
-              // Reading a marketing dashboard isnt buying intent. HOT NOW
-              // requires the prospect to have ACTED:
-              //   - >=1 dashboard CTA click (Book/Pricing/Talk - JS event)
-              //   - >=2 days of cal.com clicks (scanner only fetches once)
-              // Engaged sessions / time-on-portal alone -> WARM, not HOT.
-              const hotNowSortScore = (p: ProspectRow): number => {
-                let s = 0
-                s += (p.preseasonSignups ?? 0) * 25_000
-                s += (p.scatCourseSignups ?? 0) * 15_000
-                s += (p.portalCtaClicks ?? 0) * 10_000
-                if ((p.calClickDays ?? 0) >= 2) s += 5_000
-                s += (p.portalEngagedSessions ?? 0) * 1_000
-                s += Math.min(30, Math.round((p.portalTotalDwellMs ?? 0) / 60_000)) * 100
-                return s
+              // ── PIPELINE STAGE METADATA — mirrors classifyStage() in
+              // lib/prospect/stage.ts. Mutually exclusive, first match wins:
+              // replied → engaged → dead → T3 → T2 → T1 → ready → awaiting →
+              // blocked. The matrix + detail table + needs-you strip all
+              // read from this one map.
+              const STAGE_META: Record<PipelineStage, { label: string; sub: string }> = {
+                'replied':           { label: 'Replied',  sub: 'your move' },
+                'engaged':           { label: 'Engaged',  sub: 'personal lane' },
+                't3-sent':           { label: 'T3 sent',  sub: 'sequence done' },
+                't2-sent':           { label: 'T2 sent',  sub: 'awaiting T3' },
+                't1-sent':           { label: 'T1 sent',  sub: 'awaiting T2' },
+                'ready':             { label: 'Ready',    sub: 'approved · scheduled' },
+                'awaiting-approval': { label: 'Awaiting approval', sub: 'needs your sign-off' },
+                'blocked':           { label: 'Blocked',  sub: 'needs data' },
+                'dead':              { label: 'Dead',     sub: 'won ✓ · lost · bounced' },
               }
-              const hotNow = prospects
-                .filter(p =>
-                  ((p.portalCtaClicks ?? 0) >= 1 ||
-                   (p.calClickDays ?? 0) >= 2 ||
-                   (p.preseasonSignups ?? 0) >= 1 ||
-                   (p.scatCourseSignups ?? 0) >= 1) &&
-                  !(p.calBookedAt && p.calBookingStatus === 'booked') &&
-                  !p.hasTalkRequest &&
-                  p.replies === 0
-                )
-                .sort((a, b) => hotNowSortScore(b) - hotNowSortScore(a))
-                .slice(0, 12)
-              // Flag for the redundant panels now consolidated into the
-              // "Who is engaging right now" unified table at the top of Overview.
-              // Set to false 2026-06-09 per Zac: he wants ONE table answering
-              // "who's browsing, where in nurture, prep custom pitch?" rather
-              // than 4 separate panels each surfacing partial views.
-              const showLegacyEngagementPanels = false
-              // WARM tier — actively building interest. Shown beneath HOT NOW.
-              const warmNoAction = prospects
-                .filter(p =>
-                  p.engagementTier === 'warm' &&
-                  !(p.calBookedAt && p.calBookingStatus === 'booked') &&
-                  !p.hasTalkRequest &&
-                  p.replies === 0
-                )
-                .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
-                .slice(0, 10)
-              // PERSONAL OUTREACH CANDIDATES — HOT-tier prospects 7-21 days
-              // into the nurture sequence with no booking yet. Industry
-              // research (Salesloft/HubSpot/Outreach.io): manual touch in
-              // this window converts ~3x the average when behavioural score
-              // sits in the upper quartile.
-              const personalOutreachCandidates = prospects
-                .filter(p => p.personalOutreachCandidate === true)
-                .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
+              const TIER_LABELS: Record<DealTypeKey, string> = {
+                'on-site': 'On-site (≥6 clinical)',
+                'hub-pack': 'Hub Pack (2–5)',
+                'individual': 'Individual (≤1)',
+              }
+              // Jump from the needs-you strip to a matrix cell + anchor.
+              const jumpToStage = (stage: PipelineStage, anchor: string) => {
+                setProspectsSubTab('overview')
+                setDetailStage(stage)
+                setReviewTier('all')
+                setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+              }
 
               // Today's engagers — any signal in the last 24h, regardless of tier
               const engagedToday = prospects.filter(p => p.engagedToday)
@@ -3126,46 +3131,90 @@ export default function AnalyticsDashboard() {
 
               return (
                 <div className="space-y-6">
-                  {/* Header strip — pipeline summary always visible */}
+                  {/* ── 1 · NEEDS YOU — the only things requiring Zac's hands ── */}
                   {(() => {
-                    const activeStatuses = ['approved', 'sent', 'opened', 'engaged', 'replied', 'won']
-                    const activePipeline = prospects
-                      .filter(p => activeStatuses.includes(p.status))
-                      .reduce((acc, p) => acc + p.recoCohortTotal, 0)
-                    const activeCount = prospects.filter(p => activeStatuses.includes(p.status)).length
-                    const goNowCount = prospects.filter(p => p.outreachStatus === 'go').length
+                    const sm = prospectsData.stageMatrix
+                    const today = prospectsData.today
+                    const repliedCount = sm?.total['replied']?.count ?? 0
+                    const awaitingCount = sm?.total['awaiting-approval']?.count ?? 0
+                    const gate = today?.gateBlocked
+                    const gateTotal = gate?.total ?? 0
+                    if (repliedCount === 0 && awaitingCount === 0 && gateTotal === 0) {
+                      return (
+                        <div className="card rounded-xl px-4 py-2.5 text-xs text-[var(--muted-foreground)]">
+                          ✓ Nothing needs you right now — the sequence engine is running.
+                        </div>
+                      )
+                    }
                     return (
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <div
-                          className={`card rounded-xl p-4 ${hotNow.length > 0 ? 'border-rose-300 bg-gradient-to-br from-rose-50 to-amber-50' : ''}`}
-                          title="Real browser sessions ≥2 OR distinct-URL clicks ≥3 OR cal.com clicks ≥1 — unfakeable engagement"
-                        >
-                          <div className="text-xs text-rose-700 uppercase tracking-wider font-bold">🔥 HOT NOW</div>
-                          <div className="text-2xl font-bold text-rose-700 mt-1 tabular-nums">{hotNow.length}</div>
-                          <div className="text-xs text-rose-700/70 mt-0.5">
-                            {goNowCount > 0 ? `${goNowCount} 🟢 GO NOW · email today` : engagedToday.length > 0 ? `${engagedToday.length} engaged today` : 'no green-lights yet'}
-                          </div>
+                      <div className="card rounded-2xl border-2 border-amber-300 bg-amber-50/40 p-4">
+                        <div className="text-[10px] uppercase tracking-wider font-bold text-amber-700 mb-2">Needs you</div>
+                        <div className="flex flex-wrap gap-2.5">
+                          {repliedCount > 0 && (
+                            <button
+                              onClick={() => jumpToStage('replied', 'replies-panel')}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors"
+                              title="Direct replies — sequence stopped, respond inside 2 business hours"
+                            >
+                              <Mail size={14} /> {repliedCount} repl{repliedCount === 1 ? 'y' : 'ies'} awaiting your response →
+                            </button>
+                          )}
+                          {awaitingCount > 0 && (
+                            <button
+                              onClick={() => jumpToStage('awaiting-approval', 'pipeline-detail')}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-amber-300 text-amber-800 text-sm font-semibold hover:bg-amber-50 transition-colors"
+                              title="Hunter-clean, researching, zero sends — approve or archive in the table below"
+                            >
+                              <CheckCircle2 size={14} /> {awaitingCount} awaiting approval → review
+                            </button>
+                          )}
+                          {gateTotal > 0 && gate && (
+                            <button
+                              onClick={() => jumpToStage('blocked', 'pipeline-detail')}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-rose-200 text-rose-700 text-sm font-semibold hover:bg-rose-50 transition-colors"
+                              title="Due now but failing the Hunter HARD GATE — stranded until re-verified or enriched"
+                            >
+                              <AlertTriangle size={14} /> {gateTotal} due-now gate-blocked
+                              <span className="text-[10.5px] font-normal text-rose-600/80">
+                                {[
+                                  gate.unverified > 0 ? `${gate.unverified} unverified` : null,
+                                  gate.lowScore > 0 ? `${gate.lowScore} low-score` : null,
+                                  gate.role > 0 ? `${gate.role} role` : null,
+                                  gate.acceptAll > 0 ? `${gate.acceptAll} accept-all` : null,
+                                ].filter(Boolean).join(' · ')}
+                              </span>
+                            </button>
+                          )}
                         </div>
-                        <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Prospects</div>
-                          <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{prospects.length}</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.byStatus.researching ?? 0} researching · {agg.byStatus.approved ?? 0} approved</div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* ── 2 · TODAY — what the machine is doing right now ── */}
+                  {prospectsData.today && (() => {
+                    const t = prospectsData.today!
+                    return (
+                      <div className="card rounded-2xl px-4 py-3">
+                        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1.5">
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted-foreground)]">Today</span>
+                          <span className="text-sm text-[var(--foreground)]" title="Production sends logged today (UTC) vs the adaptive daily cap">
+                            <strong className="tabular-nums">{t.sentToday}{t.cap != null ? ` / ${t.cap}` : ''}</strong> sent today
+                          </span>
+                          <span className="text-sm text-[var(--foreground)]" title="Hunter-clean, non-terminal prospects with scheduled_send_at inside tomorrow — what the cron will fire">
+                            <strong className="tabular-nums">{t.dueTomorrow}</strong> due by tomorrow
+                          </span>
+                          <span className="text-sm text-[var(--foreground)]" title="Never Hunter-verified prospects due within 3 days — the cron auto-verify pass (25/run) chews these first">
+                            <strong className="tabular-nums">{t.unverifiedDue}</strong> unverified due (auto-verify)
+                          </span>
+                          <span className="text-sm text-[var(--foreground)]" title="Prospects with any engagement signal in the last 24h">
+                            <strong className="tabular-nums">{engagedToday.length}</strong> engaged today
+                          </span>
                         </div>
-                        <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Active pipeline</div>
-                          <div className="text-2xl font-bold text-[var(--accent)] mt-1">{fmt$(activePipeline)}</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{activeCount} approved+sent · {fmt$(agg.revenue.totalRevenuePotential)} total potential</div>
-                        </div>
-                        <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Engagement</div>
-                          <div className="text-2xl font-bold text-[var(--foreground)] mt-1">{agg.funnel.totalOpens} opens</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{agg.funnel.totalDelivered != null ? `${agg.funnel.totalDelivered} delivered · ` : ''}{agg.funnel.totalClicks} clicks · {agg.funnel.totalViews} portal views</div>
-                        </div>
-                        <div className="card rounded-xl p-4" title={`Weighted ${fmt$(agg.revenue.weightedPipeline)} = stage probability × cohort value`}>
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold">Replies / Wins</div>
-                          <div className="text-2xl font-bold text-emerald-600 mt-1">{agg.funnel.totalReplies} / {agg.revenue.wins}</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">{(agg.funnel.sendOpenRate * 100).toFixed(0)}% open · {(agg.funnel.sendReplyRate * 100).toFixed(1)}% reply · weighted {fmt$(agg.revenue.weightedPipeline)}</div>
-                        </div>
+                        {t.capReason && (
+                          <p className="text-[10.5px] text-[var(--muted-foreground)] mt-1">
+                            Cap {t.cap}: {t.capReason}
+                          </p>
+                        )}
                       </div>
                     )
                   })()}
@@ -3190,151 +3239,458 @@ export default function AnalyticsDashboard() {
 
                   {/* ── Overview ── */}
                   {prospectsSubTab === 'overview' && (() => {
-                    const goNow = prospects.filter(p => p.outreachStatus === 'go' && !p.calBookedAt && !p.hasTalkRequest && p.replies === 0)
-                    const coolWaiting = prospects.filter(p => p.outreachStatus === 'cool')
-                    const lastChance = prospects.filter(p => p.outreachStatus === 'last-chance')
-                    const dropToLongNurture = prospects.filter(p => p.outreachStatus === 'long-nurture')
-                    const totalActiveSends = prospects.filter(p => p.totalSends > 0).length
                     return (
                     <div className="space-y-6">
-                      {/* ── WHAT NEEDS YOU NOW · DEPRECATED 2026-06-09: empty-tile
-                          panel removed in favour of the unified engagement table
-                          + tier bento at the top of Overview. Suppressed via flag. */}
-                      {showLegacyEngagementPanels && (
-                      <div className="card rounded-2xl border-2 border-[var(--accent)]/30 bg-gradient-to-br from-[var(--accent)]/[0.04] via-white to-amber-50/30 p-5">
-                        <div className="flex items-start justify-between mb-3">
+                      {/* ── 3 · PIPELINE MATRIX — the spine. Every non-archived
+                          prospect in exactly one cell. Stage rules live in
+                          lib/prospect/stage.ts (classifyStage). ── */}
+                      {prospectsData.stageMatrix && (() => {
+                        const sm = prospectsData.stageMatrix!
+                        const tierRows: Array<{ key: DealTypeKey | 'total'; label: string }> = [
+                          { key: 'on-site', label: 'On-site (≥6)' },
+                          { key: 'hub-pack', label: 'Hub Pack (2–5)' },
+                          { key: 'individual', label: 'Individual (≤1)' },
+                          { key: 'total', label: 'TOTAL' },
+                        ]
+                        const cellFor = (tier: DealTypeKey | 'total', stage: PipelineStage) =>
+                          tier === 'total' ? sm.total[stage] : sm.cells[tier][stage]
+                        const matrixSum = sm.stages.reduce((acc, s) => acc + (sm.total[s]?.count ?? 0), 0)
+                        return (
                           <div>
-                            <div className="text-[10px] uppercase tracking-wider font-bold text-[var(--accent)]">Today · what needs you</div>
-                            <h3 className="text-base font-bold text-[var(--foreground)] mt-0.5">
-                              {goNow.length === 0 && upcomingBookings.length === 0
-                                ? 'Nothing on your plate — auto-sequence is running'
-                                : `${goNow.length + upcomingBookings.length} action${(goNow.length + upcomingBookings.length) === 1 ? '' : 's'} required`}
-                            </h3>
+                            <SectionTitle
+                              title="Pipeline matrix · where every target sits"
+                              subtitle="Rows = deal type in send-priority order · columns = mutually exclusive stages, left = closest to money · click any cell to load those prospects below"
+                            />
+                            <div className="card rounded-2xl overflow-hidden">
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead className="bg-[rgba(13,115,119,0.04)]">
+                                    <tr>
+                                      <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Deal type</th>
+                                      {sm.stages.map(s => (
+                                        <th key={s} className={`text-center px-2 py-2.5 ${s === 'dead' ? 'opacity-50' : ''}`}>
+                                          <div className="text-[10px] uppercase tracking-wider font-bold text-[var(--foreground)] whitespace-nowrap">{STAGE_META[s].label}</div>
+                                          <div className="text-[9.5px] font-normal normal-case tracking-normal text-[var(--muted-foreground)] whitespace-nowrap">{STAGE_META[s].sub}</div>
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {tierRows.map(row => {
+                                      const isTotal = row.key === 'total'
+                                      const tierKey: DealTypeKey | null = row.key === 'total' ? null : row.key
+                                      return (
+                                        <tr key={row.key} className={`border-t border-[rgba(13,115,119,0.06)] ${isTotal ? 'bg-slate-50/70' : ''}`}>
+                                          <td className={`px-3 py-1.5 text-xs whitespace-nowrap ${isTotal ? 'font-bold' : 'font-semibold'} text-[var(--foreground)]`}>{row.label}</td>
+                                          {sm.stages.map(s => {
+                                            const cell = cellFor(row.key, s)
+                                            const selected = detailStage === s && (isTotal ? reviewTier === 'all' : reviewTier === row.key)
+                                            const muted = s === 'dead'
+                                            return (
+                                              <td key={s} className="px-1 py-1 text-center">
+                                                <button
+                                                  onClick={() => { setDetailStage(s); setReviewTier(tierKey ?? 'all'); setReviewSelected(new Set()) }}
+                                                  title={`${tierKey ? TIER_LABELS[tierKey] : 'All tiers'} · ${STAGE_META[s].label} (${STAGE_META[s].sub}) · ${cell.count} prospect${cell.count === 1 ? '' : 's'} · ${fmt$(cell.dealValue)} potential`}
+                                                  className={`w-full rounded-md px-1.5 py-1.5 tabular-nums transition-colors cursor-pointer ${
+                                                    selected
+                                                      ? 'bg-[var(--accent)] text-white font-bold'
+                                                      : cell.count > 0
+                                                        ? muted
+                                                          ? 'text-slate-400 hover:bg-slate-100'
+                                                          : `text-[var(--foreground)] ${isTotal ? 'font-bold' : 'font-semibold'} hover:bg-[rgba(13,115,119,0.08)]`
+                                                        : 'text-slate-300 hover:bg-slate-50'
+                                                  }`}
+                                                >
+                                                  {cell.count}
+                                                  {s === 'dead' && cell.won > 0 && <span className="text-emerald-600 font-bold"> ✓{cell.won}</span>}
+                                                  {isTotal && cell.dealValue > 0 && s !== 'dead' && (
+                                                    <div className={`text-[9px] font-normal ${selected ? 'text-white/80' : 'text-[var(--muted-foreground)]'}`}>{fmtK(cell.dealValue)}</div>
+                                                  )}
+                                                </button>
+                                              </td>
+                                            )
+                                          })}
+                                        </tr>
+                                      )
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                              <p className="text-[10.5px] text-[var(--muted-foreground)] px-4 py-2.5 border-t border-slate-100">
+                                Pool {sm.poolSize} non-archived prospects = sum of all cells ({matrixSum}){sm.archived > 0 ? ` · +${sm.archived} archived excluded` : ''} · first match wins: replied → engaged (personal lane) → dead → T3 → T2 → T1 → ready → awaiting approval → blocked · sends counted from production outreach log only · hover any cell for its deal value
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-[10.5px] text-[var(--muted-foreground)] text-right">
-                            <div>{totalActiveSends} prospects in active outreach</div>
-                            <div>{hotNow.length} HOT · {engagedToday.length} engaged today</div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
-                          {/* GO NOW — actually email today */}
-                          <button
-                            onClick={() => goNow[0] && setSelectedProspectId(goNow[0].id)}
-                            disabled={goNow.length === 0}
-                            className={`text-left p-3 rounded-lg border transition-all ${goNow.length > 0 ? 'bg-emerald-50 border-emerald-300 hover:border-emerald-500 cursor-pointer' : 'bg-slate-50 border-slate-200 cursor-default opacity-60'}`}
-                          >
-                            <div className={`text-[10px] uppercase tracking-wider font-bold ${goNow.length > 0 ? 'text-emerald-700' : 'text-slate-500'}`}>🟢 GO NOW · email today</div>
-                            <div className={`text-2xl font-bold tabular-nums mt-0.5 ${goNow.length > 0 ? 'text-emerald-800' : 'text-slate-400'}`}>{goNow.length}</div>
-                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-1 leading-snug">
-                              {goNow.length === 0 ? 'No one crossed the 48hr digest window yet' : `${goNow[0].contactFirstName} · ${goNow[0].shortName}${goNow.length > 1 ? ` + ${goNow.length - 1} more` : ''}`}
-                            </div>
-                          </button>
-                          {/* Cal bookings */}
-                          <button
-                            onClick={() => upcomingBookings[0] && setSelectedProspectId(upcomingBookings[0].id)}
-                            disabled={upcomingBookings.length === 0}
-                            className={`text-left p-3 rounded-lg border transition-all ${upcomingBookings.length > 0 ? 'bg-emerald-50 border-emerald-400 hover:border-emerald-600 cursor-pointer' : 'bg-slate-50 border-slate-200 cursor-default opacity-60'}`}
-                          >
-                            <div className={`text-[10px] uppercase tracking-wider font-bold ${upcomingBookings.length > 0 ? 'text-emerald-800' : 'text-slate-500'}`}>📅 Calls booked · prep</div>
-                            <div className={`text-2xl font-bold tabular-nums mt-0.5 ${upcomingBookings.length > 0 ? 'text-emerald-900' : 'text-slate-400'}`}>{upcomingBookings.length}</div>
-                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-1 leading-snug">
-                              {upcomingBookings.length === 0 ? 'No upcoming cal.com bookings' : `Next: ${upcomingBookings[0].contactFirstName} · ${new Date(upcomingBookings[0].calBookedAt!).toLocaleDateString('en-AU')}`}
-                            </div>
-                          </button>
-                          {/* Wait — cool window */}
-                          <button
-                            onClick={() => coolWaiting[0] && setSelectedProspectId(coolWaiting[0].id)}
-                            disabled={coolWaiting.length === 0}
-                            className={`text-left p-3 rounded-lg border transition-all ${coolWaiting.length > 0 ? 'bg-amber-50 border-amber-300 hover:border-amber-500 cursor-pointer' : 'bg-slate-50 border-slate-200 cursor-default opacity-60'}`}
-                          >
-                            <div className="text-[10px] uppercase tracking-wider font-bold text-amber-700">⏳ WAIT · let T2 land</div>
-                            <div className="text-2xl font-bold text-amber-800 tabular-nums mt-0.5">{coolWaiting.length}</div>
-                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-1 leading-snug">
-                              {coolWaiting.length === 0 ? 'No fresh engagers in cool window' : 'Engaged in last 48h — personal outreach would compete with auto-sequence'}
-                            </div>
-                          </button>
-                          {/* Long-nurture drop */}
-                          <button
-                            onClick={() => dropToLongNurture[0] && setSelectedProspectId(dropToLongNurture[0].id)}
-                            disabled={dropToLongNurture.length === 0 && lastChance.length === 0}
-                            className={`text-left p-3 rounded-lg border transition-all ${(dropToLongNurture.length + lastChance.length) > 0 ? 'bg-rose-50 border-rose-200 hover:border-rose-400 cursor-pointer' : 'bg-slate-50 border-slate-200 cursor-default opacity-60'}`}
-                          >
-                            <div className="text-[10px] uppercase tracking-wider font-bold text-rose-700">🟡🔴 Fading / drop</div>
-                            <div className="text-2xl font-bold text-rose-800 tabular-nums mt-0.5">{lastChance.length}<span className="text-base text-rose-600 font-normal ml-1">+ {dropToLongNurture.length}</span></div>
-                            <div className="text-[10.5px] text-[var(--muted-foreground)] mt-1 leading-snug">
-                              {lastChance.length + dropToLongNurture.length === 0 ? 'No fading prospects' : `${lastChance.length} last-chance · ${dropToLongNurture.length} drop to long-nurture`}
-                            </div>
-                          </button>
-                        </div>
-                      </div>
-                      )}
+                        )
+                      })()}
 
-                      {/* HOT NOW — DEPRECATED 2026-06-09: content now in the unified
-                          "Who is engaging right now" table at the top of Overview. */}
-                      {showLegacyEngagementPanels && hotNow.length > 0 && (
-                        <div className="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 via-amber-50 to-white p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white animate-pulse">🔥 HOT NOW</span>
-                              <span className="text-sm font-bold text-[var(--foreground)]">
-                                {hotNow.length} prospect{hotNow.length === 1 ? '' : 's'} with deep engagement — manual outreach today
-                              </span>
+                      {/* ── 4 · DETAIL — the prospects in the selected matrix cell.
+                          Replaces the old review-queue table; bulk approve/archive
+                          via /api/admin/prospect-approve for reviewable rows. ── */}
+                      {(() => {
+                        const DEAL_BADGE: Record<DealTypeKey, { label: string; cls: string }> = {
+                          'on-site':    { label: 'On-site',    cls: 'bg-[rgba(13,115,119,0.08)] text-[var(--accent)]' },
+                          'hub-pack':   { label: 'Hub Pack',   cls: 'bg-indigo-50 text-indigo-700' },
+                          'individual': { label: 'Individual', cls: 'bg-slate-100 text-slate-600' },
+                        }
+                        const TIER_RANK: Record<DealTypeKey, number> = { 'on-site': 0, 'hub-pack': 1, 'individual': 2 }
+                        const FAR_FUTURE = 8.64e15
+                        const detailRows = prospects
+                          .filter(p => p.status !== 'archived' && p.stage === detailStage)
+                          .filter(p => reviewTier === 'all' || p.dealType === reviewTier)
+                          .sort((a, b) =>
+                            (TIER_RANK[a.dealType ?? 'individual'] - TIER_RANK[b.dealType ?? 'individual']) ||
+                            (Number(b.hunterClean ?? false) - Number(a.hunterClean ?? false)) ||
+                            ((a.scheduledSendAt ? new Date(a.scheduledSendAt).getTime() : FAR_FUTURE) -
+                             (b.scheduledSendAt ? new Date(b.scheduledSendAt).getTime() : FAR_FUTURE))
+                          )
+                        // researching → approvable + archivable · approved → archivable only
+                        const isSelectable = (p: ProspectRow) => p.status === 'researching' || p.status === 'approved'
+                        const selectedRows = detailRows.filter(p => reviewSelected.has(p.id))
+                        const approveIds = selectedRows.filter(p => p.status === 'researching').map(p => p.id)
+                        const archiveIds = selectedRows.filter(isSelectable).map(p => p.id)
+                        const toggleRow = (id: number) => setReviewSelected(prev => {
+                          const next = new Set(prev)
+                          if (next.has(id)) next.delete(id); else next.add(id)
+                          return next
+                        })
+                        const shown = detailRows.slice(0, 200)
+                        const visibleSelectable = shown.filter(isSelectable)
+                        const allVisibleSelected = visibleSelectable.length > 0 && visibleSelectable.every(p => reviewSelected.has(p.id))
+                        const toggleAllVisible = () => setReviewSelected(prev => {
+                          const next = new Set(prev)
+                          if (allVisibleSelected) visibleSelectable.forEach(p => next.delete(p.id))
+                          else visibleSelectable.forEach(p => next.add(p.id))
+                          return next
+                        })
+                        const runReviewAction = async (action: 'approve' | 'archive') => {
+                          const ids = action === 'approve' ? approveIds : archiveIds
+                          if (ids.length === 0 || reviewBusy) return
+                          setReviewBusy(true)
+                          setReviewMessage(null)
+                          try {
+                            const res = await fetch('/api/admin/prospect-approve', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ ids, action }),
+                              cache: 'no-store',
+                            })
+                            const json = await res.json()
+                            if (!res.ok) {
+                              setReviewMessage(`${action} failed: ${json.error ?? res.status}`)
+                            } else {
+                              setReviewMessage(`${action === 'approve' ? 'Approved' : 'Archived'} ${json.updated}${json.skipped > 0 ? ` · ${json.skipped} skipped (status moved on)` : ''}`)
+                              setReviewSelected(new Set())
+                              loadAll()
+                            }
+                          } catch (err) {
+                            setReviewMessage(`${action} network error: ${err instanceof Error ? err.message : String(err)}`)
+                          } finally {
+                            setReviewBusy(false)
+                          }
+                        }
+                        const fmtD = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '—'
+                        const tLabel = (slug: string | null) => slug === 'initial' ? 'T1' : slug === 'followup' ? 'T2' : slug === 'final' ? 'T3' : slug ?? 'sent'
+                        return (
+                          <div id="pipeline-detail">
+                            <SectionTitle
+                              title={`${STAGE_META[detailStage].label} · ${reviewTier === 'all' ? 'all tiers' : TIER_LABELS[reviewTier]} · ${detailRows.length} prospect${detailRows.length === 1 ? '' : 's'}`}
+                              subtitle={`${STAGE_META[detailStage].sub} · click a matrix cell above to change this view · sorted on-site → Hub Pack → individual, Hunter-clean first, earliest scheduled first`}
+                            />
+                            <div className="card rounded-2xl overflow-hidden">
+                              {(visibleSelectable.length > 0 || reviewMessage) && (
+                                <div className="flex items-center justify-end gap-2 flex-wrap px-4 py-2.5 border-b border-slate-100">
+                                  {reviewMessage && <span className="text-xs font-semibold text-[var(--foreground)] mr-auto">{reviewMessage}</span>}
+                                  <button
+                                    onClick={() => runReviewAction('approve')}
+                                    disabled={reviewBusy || approveIds.length === 0}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent)] text-white hover:opacity-90 disabled:opacity-40"
+                                    title="Set selected 'researching' rows to 'approved' — never resurrects archived/terminal rows"
+                                  >
+                                    {reviewBusy ? 'Working…' : `Approve selected${approveIds.length > 0 ? ` (${approveIds.length})` : ''}`}
+                                  </button>
+                                  <button
+                                    onClick={() => runReviewAction('archive')}
+                                    disabled={reviewBusy || archiveIds.length === 0}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-40"
+                                    title="Archive selected researching/approved rows — pulls them from the send queue with an audit note"
+                                  >
+                                    {reviewBusy ? 'Working…' : `Archive selected${archiveIds.length > 0 ? ` (${archiveIds.length})` : ''}`}
+                                  </button>
+                                </div>
+                              )}
+                              {detailRows.length === 0 ? (
+                                <div className="px-5 py-6 text-sm text-[var(--muted-foreground)]">No prospects in this cell — click another cell in the matrix above.</div>
+                              ) : (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
+                                      <tr>
+                                        <th className="px-3 py-3 w-8">
+                                          <input
+                                            type="checkbox"
+                                            checked={allVisibleSelected}
+                                            onChange={toggleAllVisible}
+                                            disabled={visibleSelectable.length === 0}
+                                            className="accent-[var(--accent)] disabled:opacity-30"
+                                            title="Select all visible reviewable rows"
+                                          />
+                                        </th>
+                                        <th className="text-left px-3 py-3 font-semibold">Clinic</th>
+                                        <th className="text-left px-3 py-3 font-semibold">Location</th>
+                                        <th className="text-center px-2 py-3 font-semibold" title="Clinical headcount (7 clinical disciplines, excludes admin/PM) · 'enriched' = counted from the clinic website by the team-size sweep · 'default' = seeded estimate, sweep hasn't verified yet">Clinicians</th>
+                                        <th className="text-left px-3 py-3 font-semibold">Deal type</th>
+                                        <th className="text-left px-3 py-3 font-semibold" title="Hunter verification — green = score ≥80, not role/accept-all/disposable (passes the send HARD GATE)">Hunter</th>
+                                        <th className="text-left px-3 py-3 font-semibold">Stage</th>
+                                        <th className="text-right px-3 py-3 font-semibold" title="Most recent production send / next scheduled send">Last / next send</th>
+                                        <th className="text-right px-3 py-3 font-semibold">Deal value</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {shown.map(p => {
+                                        const badge = DEAL_BADGE[p.dealType ?? 'individual']
+                                        const selectable = isSelectable(p)
+                                        return (
+                                          <tr key={p.id} className={`border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] ${reviewSelected.has(p.id) ? 'bg-[rgba(13,115,119,0.05)]' : ''}`}>
+                                            <td className="px-3 py-2.5">
+                                              <input
+                                                type="checkbox"
+                                                checked={reviewSelected.has(p.id)}
+                                                onChange={() => toggleRow(p.id)}
+                                                disabled={!selectable}
+                                                className="accent-[var(--accent)] disabled:opacity-30"
+                                                title={selectable ? (p.status === 'researching' ? 'Approve or archive' : 'Archive only (already approved)') : `status '${p.status}' — not reviewable`}
+                                              />
+                                            </td>
+                                            <td className="px-3 py-2.5 cursor-pointer" onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }}>
+                                              <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                              <div className="text-[10.5px] text-[var(--muted-foreground)]">{p.contactFirstName}{p.contactDiscipline ? ` · ${p.contactDiscipline}` : ''}</div>
+                                            </td>
+                                            <td className="px-3 py-2.5 text-xs text-[var(--muted-foreground)]">{p.city || 'Unknown'}{p.state ? `, ${p.state}` : ''}</td>
+                                            <td className="px-2 py-2.5 text-center whitespace-nowrap">
+                                              <span className="tabular-nums font-semibold text-[var(--foreground)]">{p.clinicalCount}</span>
+                                              <span
+                                                className={`ml-1.5 inline-flex items-center px-1 py-0 rounded text-[9px] font-bold border ${
+                                                  p.teamEnriched
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                    : 'bg-slate-50 text-slate-500 border-slate-200'
+                                                }`}
+                                                title={p.teamEnriched
+                                                  ? 'Team size counted from the clinic website (team-enrichment sweep) — real number'
+                                                  : 'Seeded default estimate — the team-size sweep has not verified this clinic yet'}
+                                              >
+                                                {p.teamEnriched ? 'enriched' : 'est. default'}
+                                              </span>
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${badge.cls} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap`}>{badge.label}</span>
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                              {p.hunterScore != null ? (
+                                                <span
+                                                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
+                                                    p.hunterClean
+                                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                      : 'bg-amber-100 text-amber-700 border-amber-200'
+                                                  }`}
+                                                  title={p.hunterClean ? 'Passes the Hunter HARD GATE — will fire when due' : `Blocked by the Hunter HARD GATE${p.hunterRole ? ' · role mailbox' : ''}${p.hunterAcceptAll ? ' · accept-all domain' : ''}${p.hunterDisposable ? ' · disposable' : ''} — re-verify or enrich before it can send`}
+                                                >
+                                                  {p.hunterScore}{p.hunterClean ? ' · clean' : ' · blocked'}
+                                                </span>
+                                              ) : (
+                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border bg-slate-50 text-slate-500 border-slate-200" title="Never Hunter-verified — gate-blocked until the auto-verify pass reaches it">unverified</span>
+                                              )}
+                                            </td>
+                                            <td className="px-3 py-2.5 text-[11px] font-semibold text-[var(--foreground)] whitespace-nowrap">{STAGE_META[p.stage ?? 'blocked'].label}</td>
+                                            <td className="px-3 py-2.5 text-right text-xs whitespace-nowrap tabular-nums">
+                                              <div className="text-[var(--foreground)]">{p.lastSentAt ? `${tLabel(p.lastSentTemplate)} ${fmtD(p.lastSentAt)}` : 'no sends'}</div>
+                                              <div className="text-[var(--muted-foreground)]">{p.scheduledSendAt && p.nextTemplateSlug ? `next ${fmtD(p.scheduledSendAt)}` : '—'}</div>
+                                            </td>
+                                            <td className="px-3 py-2.5 text-right text-xs font-semibold text-[var(--accent)] whitespace-nowrap">{fmt$(p.dealValue ?? p.recoCohortTotal)}</td>
+                                          </tr>
+                                        )
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                              <p className="text-[10.5px] text-[var(--muted-foreground)] px-4 py-2.5 border-t border-slate-100">
+                                {detailRows.length > shown.length ? `Showing first ${shown.length} of ${detailRows.length}. ` : ''}Only &lsquo;researching&rsquo; rows can be approved; &lsquo;approved&rsquo; rows can still be archived; archived rows are never resurrected. Team counts are being rewritten by the enrichment sweep — &lsquo;est. default&rsquo; numbers may move tier once verified.
+                              </p>
                             </div>
                           </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-left text-[10px] uppercase text-rose-700/70 font-bold border-b border-rose-200/50">
-                                  <th className="px-2 py-1.5">Contact / Clinic</th>
-                                  <th className="px-2 py-1.5 text-right" title="Total time on prospect portal (sum of all sessions) — real human dwell">⏱ Time</th>
-                                  <th className="px-2 py-1.5 text-right" title="Clicks on dashboard CTAs (Book/Pricing/Talk) — client-side JS, scanner-immune">🎯 CTAs</th>
-                                  <th className="px-2 py-1.5 text-right" title="Cal.com clicks on multiple calendar days — multi-day = real human">📅 Cal-d</th>
-                                  <th className="px-2 py-1.5">Outreach</th>
-                                  <th className="px-2 py-1.5">Nurture</th>
+                        )
+                      })()}
+                      {/* ── 5 · REPLIES · the money signal ──
+                          Populated by /api/webhooks/resend-inbound: any inbound
+                          email matching prospect_clinics.contact_email sets
+                          status='replied' + replied_at + reply_text. Answer
+                          inside 2 business hours. */}
+                      {(() => {
+                        const repliedList = prospects
+                          .filter(p => p.replies > 0 || p.repliedAt || p.status === 'replied')
+                          .sort((a, b) => new Date(b.repliedAt ?? b.lastSentAt ?? 0).getTime() - new Date(a.repliedAt ?? a.lastSentAt ?? 0).getTime())
+                        if (repliedList.length === 0) return null
+                        return (
+                          <div id="replies-panel">
+                            <SectionTitle
+                              title={`Replies (${repliedList.length}) · respond within 2 business hours`}
+                              subtitle="Direct replies detected via the inbound webhook — the strongest signal in the funnel. STOP replies are auto-suppressed and surface as Lost, not here."
+                            />
+                            <div className="card rounded-2xl overflow-hidden border-emerald-300">
+                              <table className="w-full text-sm">
+                                <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
+                                  <tr>
+                                    <th className="text-left px-4 py-3 font-semibold">Clinic / Contact</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Replied</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Reply</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Last template</th>
+                                    <th className="text-right px-4 py-3 font-semibold">Deal value</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {repliedList.map(p => (
+                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
+                                      <td className="px-4 py-3">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                        <div className="text-xs text-[var(--muted-foreground)]">{p.contactFirstName} · {p.contactEmail}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700 whitespace-nowrap">
+                                        {p.repliedAt ? new Date(p.repliedAt).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--foreground)] max-w-md">
+                                        {p.replyText
+                                          ? <span className="italic">&ldquo;{p.replyText.slice(0, 180)}{p.replyText.length > 180 ? '…' : ''}&rdquo;</span>
+                                          : <span className="text-[var(--muted-foreground)]">reply text not captured</span>}
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)]">{p.lastSentTemplate ?? '—'}</td>
+                                      <td className="px-4 py-3 text-right text-xs font-semibold text-[var(--accent)]">{fmt$(p.dealValue ?? p.recoCohortTotal)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )
+                      })()}
+
+                      {/* Upcoming cal.com bookings — auto-populated by the cal.com
+                          webhook (BOOKING_CREATED). Prep, don't outreach. */}
+                      {upcomingBookings.length > 0 && (
+                        <div>
+                          <SectionTitle
+                            title={`Upcoming bookings (${upcomingBookings.length})`}
+                            subtitle="Cal.com booked via the prospect cold-outreach pipeline · prep, don't outreach"
+                          />
+                          <div className="card rounded-2xl overflow-hidden border-emerald-200">
+                            <table className="w-full text-sm">
+                              <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
+                                <tr>
+                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Contact</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Scheduled</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Offer</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Prep</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {hotNow.map(p => {
-                                  const status = outreachStatusBadge(p)
-                                  const stage = nurtureStage(p)
+                                {upcomingBookings.map(p => {
+                                  const when = p.calBookedAt ? new Date(p.calBookedAt) : null
+                                  const whenLabel = when
+                                    ? when.toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                                    : '—'
+                                  const isOnSite = p.recommendedOffer === 'on-site-cohort'
                                   return (
-                                    <tr
-                                      key={p.id}
-                                      onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }}
-                                      className="border-b border-rose-100/40 hover:bg-white/60 cursor-pointer"
-                                    >
-                                      <td className="px-2 py-2">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
-                                        <div className="text-[10.5px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
+                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
+                                      <td className="px-4 py-3">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                        <div className="text-xs text-[var(--muted-foreground)]">{p.city || 'Unknown'}, {p.state} · {p.clinicalCount} clinical</div>
                                       </td>
-                                      <td className="px-2 py-2 text-right font-bold text-rose-700 tabular-nums">{(p.portalTotalDwellMs ?? 0) > 0 ? fmtTime(p.portalTotalDwellMs ?? 0) : '—'}</td>
-                                      <td className="px-2 py-2 text-right font-bold text-emerald-700 tabular-nums">{p.portalCtaClicks || '—'}</td>
-                                      <td className="px-2 py-2 text-right font-bold text-amber-700 tabular-nums">{p.calClickDays || (p.calClicks ? `${p.calClicks}×` : '—')}</td>
-                                      <td className="px-2 py-2">
-                                        {status ? (
-                                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${status.tone}`}>{status.label}</span>
-                                        ) : <span className="text-[10px] text-[var(--muted-foreground)]">—</span>}
+                                      <td className="px-4 py-3 text-xs">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName}</div>
+                                        <div className="text-[var(--muted-foreground)]">{p.contactDiscipline}</div>
                                       </td>
-                                      <td className={`px-2 py-2 text-[10.5px] font-semibold ${stage.tone}`}>{stage.label}</td>
+                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700">{whenLabel}</td>
+                                      <td className="px-4 py-3 text-right text-xs">
+                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{isOnSite ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}` : `Hub Pack · ${fmt$(p.dealValue ?? CONFIG.COURSE.PRICE_CLINIC_HUB_PACK)}`}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)] leading-snug">Review {p.shortName}&apos;s team mix + city · pull last portal-view section · 15-min agenda</td>
                                     </tr>
                                   )
                                 })}
                               </tbody>
                             </table>
                           </div>
-                          <p className="text-[10.5px] text-rose-700/80 mt-2">
-                            HOT requires ACTION — dashboard CTA click (Book/Pricing/Talk) OR cal.com clicks on 2+ days. Dwell-alone doesnt count (warm at best). Sorted by intent: CTA ▶ cal multi-day ▶ engaged sessions ▶ time.
-                          </p>
                         </div>
                       )}
 
-                      {/* ── ENGAGEMENT BENTO · HEADLINE ── 6-tile tier breakdown at the
-                          very top so Zac sees Cold/Warm/Hot/Booked/Replied/Won at a glance. */}
+                      {/* ── 6 · COLD-OUTREACH FUNNEL · full path from pool to reply ──
+                          Real data end-to-end: pooled → Hunter-verified → T1/T2/T3
+                          sent → delivered → opened (scanner-filtered) → clicked →
+                          portal viewed → REPLIED → won/lost. Test sends
+                          (audit_key ':test:') excluded server-side. */}
+                      {agg.coldFunnel && (() => {
+                        const cf = agg.coldFunnel!
+                        const stages: Array<{ label: string; count: number; colour: string; hint?: string }> = [
+                          { label: 'Pooled', count: cf.pooled, colour: 'bg-slate-400', hint: 'Prospects in the pool (incl. dead statuses)' },
+                          { label: 'Verified', count: cf.verifiedDeliverable, colour: 'bg-sky-500', hint: `Hunter deliverable · ${cf.verifiedAny} checked total` },
+                          { label: 'Sent', count: cf.sentClinics, colour: 'bg-indigo-500', hint: `T1 ${cf.t1Sent} · T2 ${cf.t2Sent} · T3 ${cf.t3Sent} production sends` },
+                          { label: 'Delivered', count: cf.deliveredClinics, colour: 'bg-blue-500', hint: 'Clinics with ≥1 delivered event (Resend webhook)' },
+                          { label: 'Opened', count: cf.openedClinics, colour: 'bg-violet-500', hint: 'Human-filtered where user agent recorded' },
+                          { label: 'Clicked', count: cf.clickedClinics, colour: 'bg-purple-500', hint: 'Clinics with ≥1 email click' },
+                          { label: 'Portal viewed', count: cf.portalViewedClinics, colour: 'bg-fuchsia-500', hint: 'Opened their /p/[slug] dashboard' },
+                          { label: 'Replied', count: cf.repliedClinics, colour: 'bg-emerald-500', hint: 'Direct reply via inbound webhook — the money signal' },
+                          { label: 'Won', count: cf.wonClinics, colour: 'bg-emerald-700' },
+                        ]
+                        const maxCount = Math.max(...stages.map(s => s.count), 1)
+                        return (
+                          <div>
+                            <SectionTitle
+                              title="Cold-outreach funnel · pool → reply"
+                              subtitle={`Clinic-level stage counts from real send/webhook data · test sends excluded · ${cf.lostClinics} lost (incl. STOP replies) · ${cf.bouncedClinics} bounced`}
+                            />
+                            <div className="card rounded-2xl p-5 space-y-2">
+                              {stages.map((s, i) => {
+                                const prev = i > 0 ? stages[i - 1].count : null
+                                const convPct = prev != null && prev > 0 ? Math.round((s.count / prev) * 100) : null
+                                return (
+                                  <div key={s.label} className="flex items-center gap-3" title={s.hint}>
+                                    <div className="w-28 text-xs font-semibold text-[var(--foreground)]">{s.label}</div>
+                                    <div className="flex-1 bg-slate-100 rounded-lg h-7 relative overflow-hidden">
+                                      <div className={`absolute inset-y-0 left-0 ${s.colour} flex items-center justify-end pr-2 text-xs font-bold text-white`} style={{ width: `${(s.count / maxCount) * 100}%`, minWidth: s.count > 0 ? '34px' : 0 }}>
+                                        {s.count > 0 && s.count}
+                                      </div>
+                                    </div>
+                                    <div className="w-20 text-right text-[11px] tabular-nums text-[var(--muted-foreground)]">
+                                      {convPct != null ? `${convPct}% of prev` : ''}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                              <p className="text-[10.5px] text-[var(--muted-foreground)] pt-2 border-t border-slate-100">
+                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Replied = inbound-webhook detection — previously untrackable.
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })()}
+
+                      {/* ── DEMOTED · Engagement tiers (collapsed) — score-based
+                          behavioural tier bento. Reference data, not pipeline. ── */}
+                      <div className="card rounded-2xl border-slate-200 overflow-hidden">
+                        <button
+                          onClick={() => setShowTierBento(v => !v)}
+                          className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
+                        >
+                          <div>
+                            <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showTierBento ? '▼' : '▶'} Engagement tiers</div>
+                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">{tierCounts.warm ?? 0} warm · {tierCounts.hot ?? 0} hot · {tierCounts.engaged ?? 0} booked · score-based behavioural tiers</div>
+                          </div>
+                          <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showTierBento ? 'hide' : 'show'}</span>
+                        </button>
+                      </div>
+                      {showTierBento && (
                       <div>
-                        <SectionTitle
-                          title="Engagement tiers · who is in the pipeline right now"
-                          subtitle={`${tierCounts.warm ?? 0} warm · ${tierCounts.hot ?? 0} hot · ${tierCounts.engaged ?? 0} booked · score-based, behavioural · all tiers continue receiving the nurture sequence`}
-                        />
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                           {TIER_META.map(t => {
                             const count = tierCounts[t.key] ?? 0
@@ -3360,15 +3716,24 @@ export default function AnalyticsDashboard() {
                           })}
                         </div>
                       </div>
+                      )}
 
-                      {/* ── WHOS ENGAGING RIGHT NOW · single unified table ──
-                          Replaces the three separate panels (HOT NOW, WARM, Personal
-                          outreach) with one prioritized list answering all three
-                          questions at a glance:
-                            1. Which clinics + people are actively browsing
-                            2. Where they sit in the nurture sequence
-                            3. Whether to prep a custom pitch for personal outreach */}
-                      {(() => {
+                      {/* ── DEMOTED · Who is engaging right now (collapsed) ──
+                          One prioritized list: who's browsing, where they sit in
+                          the nurture sequence, whether to prep a custom pitch. */}
+                      <div className="card rounded-2xl border-slate-200 overflow-hidden">
+                        <button
+                          onClick={() => setShowWhoEngaging(v => !v)}
+                          className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
+                        >
+                          <div>
+                            <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showWhoEngaging ? '▼' : '▶'} Who is engaging right now</div>
+                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Browsing + emailing prospects · ranked by behavioural score · prep-pitch flags</div>
+                          </div>
+                          <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showWhoEngaging ? 'hide' : 'show'}</span>
+                        </button>
+                      </div>
+                      {showWhoEngaging && (() => {
                         // REAL HUMAN ENGAGEMENT ONLY. Per Zac 2026-06-09: the
                         // dashboard was a "massive list of useless info" because
                         // every scanner-suspect entry was being shown. Now only
@@ -3513,126 +3878,6 @@ export default function AnalyticsDashboard() {
                         )
                       })()}
 
-                      {/* PERSONAL OUTREACH CANDIDATES — HOT-tier 7-21d into nurture.
-                          This is the only sub-list that warrants Zacs personal email
-                          per industry-standard 7-10d post-T1 manual touch window. */}
-                      {showLegacyEngagementPanels && personalOutreachCandidates.length > 0 && (
-                        <div className="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50/30 p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-orange-600 text-white">👤 PERSONAL OUTREACH · candidates</span>
-                              <span className="text-sm font-bold text-[var(--foreground)]">
-                                {personalOutreachCandidates.length} HOT prospect{personalOutreachCandidates.length === 1 ? '' : 's'} · 7-21d into nurture · manual nudge converts ~3× here
-                              </span>
-                            </div>
-                          </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-left text-[10px] uppercase text-orange-700/70 font-bold border-b border-orange-200/50">
-                                  <th className="px-2 py-1.5">Contact / Clinic</th>
-                                  <th className="px-2 py-1.5 text-right" title="Behavioural lead score - HubSpot/Marketo model">Score</th>
-                                  <th className="px-2 py-1.5 text-right">Day</th>
-                                  <th className="px-2 py-1.5">Top signal</th>
-                                  <th className="px-2 py-1.5">Nurture stage</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {personalOutreachCandidates.map(p => {
-                                  const stage = nurtureStage(p)
-                                  return (
-                                    <tr
-                                      key={p.id}
-                                      onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }}
-                                      className="border-b border-orange-100/40 hover:bg-white/60 cursor-pointer"
-                                    >
-                                      <td className="px-2 py-2">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
-                                        <div className="text-[10.5px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
-                                      </td>
-                                      <td className="px-2 py-2 text-right font-bold text-orange-700 tabular-nums">{p.engagementScore ?? 0}</td>
-                                      <td className="px-2 py-2 text-right font-semibold text-orange-700 tabular-nums">{p.daysSinceFirstSend ?? '—'}d</td>
-                                      <td className="px-2 py-2 text-[10.5px] text-[var(--foreground)]">{whyCallCopy(p).split(' — ')[0].slice(0, 38)}</td>
-                                      <td className={`px-2 py-2 text-[10.5px] font-semibold ${stage.tone}`}>{stage.label}</td>
-                                    </tr>
-                                  )
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                          <p className="text-[10.5px] text-orange-700/80 mt-2">
-                            HOT (score ≥25) + 7-21 days since T1 + no booking yet = research-backed manual-touch window. All still receive auto-nurture in parallel.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* WARM panel — DEPRECATED 2026-06-09: content now in unified table. */}
-                      {showLegacyEngagementPanels && warmNoAction.length > 0 && (
-                        <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-600 text-white">🟡 WARM · no action yet</span>
-                              <span className="text-sm font-bold text-[var(--foreground)]">
-                                {warmNoAction.length} prospect{warmNoAction.length === 1 ? '' : 's'} reading but not clicking — auto-sequence handles
-                              </span>
-                            </div>
-                          </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-left text-[10px] uppercase text-amber-700/70 font-bold border-b border-amber-200/50">
-                                  <th className="px-2 py-1.5">Contact / Clinic</th>
-                                  <th className="px-2 py-1.5 text-right">⏱ Time</th>
-                                  <th className="px-2 py-1.5 text-right">🔥 Sessions &gt;60s</th>
-                                  <th className="px-2 py-1.5 text-right">📅 Open days</th>
-                                  <th className="px-2 py-1.5">Nurture</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {warmNoAction.map(p => {
-                                  const stage = nurtureStage(p)
-                                  return (
-                                    <tr
-                                      key={p.id}
-                                      onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }}
-                                      className="border-b border-amber-100/40 hover:bg-white/60 cursor-pointer"
-                                    >
-                                      <td className="px-2 py-2">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName} <span className="text-[var(--muted-foreground)] font-normal">— {p.shortName}</span></div>
-                                        <div className="text-[10.5px] text-[var(--muted-foreground)]">{p.contactEmail}</div>
-                                      </td>
-                                      <td className="px-2 py-2 text-right font-semibold text-amber-700 tabular-nums">{(p.portalTotalDwellMs ?? 0) > 0 ? fmtTime(p.portalTotalDwellMs ?? 0) : '—'}</td>
-                                      <td className="px-2 py-2 text-right font-semibold text-amber-700 tabular-nums">{p.portalEngagedSessions || '—'}</td>
-                                      <td className="px-2 py-2 text-right font-semibold text-amber-700 tabular-nums">{p.openDays || '—'}</td>
-                                      <td className={`px-2 py-2 text-[10.5px] font-semibold ${stage.tone}`}>{stage.label}</td>
-                                    </tr>
-                                  )
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                          <p className="text-[10.5px] text-amber-700/80 mt-2">
-                            These are reading the dashboard but havent clicked a CTA or booked a call. T2 (value-led, free SCAT + baseline tools) will fire ~4 BD after T1 instead of 7 BD — cron auto-accelerates when engagement detected. No manual outreach unless they cross into HOT.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Today's engagement — count + quick context if no HOT/WARM above */}
-                      {engagedToday.length > 0 && hotNow.length === 0 && (
-                        <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-bold text-[var(--foreground)]">📬 {engagedToday.length} prospect{engagedToday.length === 1 ? '' : 's'} engaged today</span>
-                            <button
-                              onClick={() => setProspectsSubTab('queue')}
-                              className="text-[11px] text-amber-700 font-semibold hover:underline"
-                            >View all in Queue →</button>
-                          </div>
-                          <p className="text-[11px] text-[var(--muted-foreground)]">
-                            Below the unfakeable HOT NOW threshold but still showing live activity — let the auto-sequence handle them unless they cross the green-light window.
-                          </p>
-                        </div>
-                      )}
-
                       {/* ── WHERE PROSPECTS DROP OFF · cross-portal exit funnel ──
                           Collapsible — this is page-optimisation data, not action data,
                           so it shouldnt dominate the top of the dashboard. Default
@@ -3758,152 +4003,23 @@ export default function AnalyticsDashboard() {
                         )
                       })()}
 
-                      {/* Engagement tier strip — DEPRECATED 2026-06-09: moved to TOP of Overview as the headline. */}
-                      {showLegacyEngagementPanels && (
-                      <div>
-                        <SectionTitle
-                          title="Engagement tiers"
-                          subtitle="Calibrated against B2B + healthcare-CPD benchmarks · Apple-MPP-resistant · click destinations classified (cal · product · other)"
-                        />
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                          {TIER_META.map(t => {
-                            const count = tierCounts[t.key] ?? 0
-                            const pct = tierTotalForPct > 0 ? (count / tierTotalForPct) * 100 : 0
-                            const Icon = t.icon
-                            return (
-                              <button
-                                key={t.key}
-                                onClick={() => setProspectsSubTab('queue')}
-                                className="card rounded-xl p-4 text-left hover:border-[var(--accent)] transition-colors cursor-pointer group"
-                                title={`${count} ${t.label.toLowerCase()} prospects · threshold: ${t.threshold}`}
-                              >
-                                <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${t.badgeBg} ${t.badgeText} text-[10px] font-bold uppercase tracking-wider mb-2`}>
-                                  <Icon size={11} />{t.label}
-                                </div>
-                                <div className="text-2xl font-bold text-[var(--foreground)]">{count}</div>
-                                <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{pct.toFixed(0)}% of pipeline</div>
-                                <div className={`mt-2 h-1 rounded-full bg-slate-100 overflow-hidden`}>
-                                  <div className={`h-full ${t.colour}`} style={{ width: `${pct}%` }} />
-                                </div>
-                                <p className="text-[10.5px] text-[var(--muted-foreground)]/80 mt-2.5 leading-snug italic">{t.threshold}</p>
-                                <p className="text-[11px] text-[var(--foreground)] mt-1.5 leading-snug font-semibold">{t.action}</p>
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                      )}
-
-                      {/* ── REPLIES · the money signal ──
-                          Populated by /api/webhooks/resend-inbound: any inbound
-                          email matching prospect_clinics.contact_email sets
-                          status='replied' + replied_at + reply_text. Previously
-                          untrackable — answer inside 2 business hours. */}
-                      {(() => {
-                        const repliedList = prospects
-                          .filter(p => p.replies > 0 || p.repliedAt || p.status === 'replied')
-                          .sort((a, b) => new Date(b.repliedAt ?? b.lastSentAt ?? 0).getTime() - new Date(a.repliedAt ?? a.lastSentAt ?? 0).getTime())
-                        if (repliedList.length === 0) return null
-                        return (
-                          <div>
-                            <SectionTitle
-                              title={`Replies (${repliedList.length}) · respond within 2 business hours`}
-                              subtitle="Direct replies detected via the inbound webhook — the strongest signal in the funnel. STOP replies are auto-suppressed and surface as Lost, not here."
-                            />
-                            <div className="card rounded-2xl overflow-hidden border-emerald-300">
-                              <table className="w-full text-sm">
-                                <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
-                                  <tr>
-                                    <th className="text-left px-4 py-3 font-semibold">Clinic / Contact</th>
-                                    <th className="text-left px-4 py-3 font-semibold">Replied</th>
-                                    <th className="text-left px-4 py-3 font-semibold">Reply</th>
-                                    <th className="text-left px-4 py-3 font-semibold">Last template</th>
-                                    <th className="text-right px-4 py-3 font-semibold">Deal value</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {repliedList.map(p => (
-                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
-                                      <td className="px-4 py-3">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
-                                        <div className="text-xs text-[var(--muted-foreground)]">{p.contactFirstName} · {p.contactEmail}</div>
-                                      </td>
-                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700 whitespace-nowrap">
-                                        {p.repliedAt ? new Date(p.repliedAt).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
-                                      </td>
-                                      <td className="px-4 py-3 text-xs text-[var(--foreground)] max-w-md">
-                                        {p.replyText
-                                          ? <span className="italic">&ldquo;{p.replyText.slice(0, 180)}{p.replyText.length > 180 ? '…' : ''}&rdquo;</span>
-                                          : <span className="text-[var(--muted-foreground)]">reply text not captured</span>}
-                                      </td>
-                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)]">{p.lastSentTemplate ?? '—'}</td>
-                                      <td className="px-4 py-3 text-right text-xs font-semibold text-[var(--accent)]">{fmt$(p.dealValue ?? p.recoCohortTotal)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )
-                      })()}
-
-                      {/* Upcoming cal.com bookings — auto-populated by the cal.com
-                          webhook (BOOKING_CREATED). Show before Call-now so Zac
-                          sees scheduled meetings before lists of who-to-call. */}
-                      {upcomingBookings.length > 0 && (
-                        <div>
-                          <SectionTitle
-                            title={`Upcoming bookings (${upcomingBookings.length})`}
-                            subtitle="Cal.com booked via the prospect cold-outreach pipeline · prep, don't outreach"
-                          />
-                          <div className="card rounded-2xl overflow-hidden border-emerald-200">
-                            <table className="w-full text-sm">
-                              <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
-                                <tr>
-                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Contact</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Scheduled</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Offer</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Prep</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {upcomingBookings.map(p => {
-                                  const when = p.calBookedAt ? new Date(p.calBookedAt) : null
-                                  const whenLabel = when
-                                    ? when.toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-                                    : '—'
-                                  const isOnSite = p.recommendedOffer === 'on-site-cohort'
-                                  return (
-                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
-                                      <td className="px-4 py-3">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
-                                        <div className="text-xs text-[var(--muted-foreground)]">{p.city || 'Unknown'}, {p.state} · {p.clinicalCount} clinical</div>
-                                      </td>
-                                      <td className="px-4 py-3 text-xs">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName}</div>
-                                        <div className="text-[var(--muted-foreground)]">{p.contactDiscipline}</div>
-                                      </td>
-                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700">{whenLabel}</td>
-                                      <td className="px-4 py-3 text-right text-xs">
-                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{isOnSite ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}` : `Hub Pack · ${fmt$(p.dealValue ?? CONFIG.COURSE.PRICE_CLINIC_HUB_PACK)}`}</div>
-                                      </td>
-                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)] leading-snug">Review {p.shortName}&apos;s team mix + city · pull last portal-view section · 15-min agenda</td>
-                                    </tr>
-                                  )
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Call-now list — clinics with strong signals + no reply yet.
-                          This is the actionable surface: Zac's time goes here.
-                          Outreach + Nurture columns surface time-frame green
-                          light + current sequence stage so Zac sees both
-                          WHO to chase AND WHERE they sit in the cold cron. */}
+                      {/* ── DEMOTED · Call-now list (collapsed) — clinics with
+                          strong signals + no reply yet, sorted by signal strength. */}
                       {callRecommendedList.length > 0 && (
+                        <div className="card rounded-2xl border-slate-200 overflow-hidden">
+                          <button
+                            onClick={() => setShowCallNow(v => !v)}
+                            className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
+                          >
+                            <div>
+                              <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showCallNow ? '▼' : '▶'} Call now · {callRecommendedList.length}</div>
+                              <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Click/view signal but no reply yet · manual outreach candidates</div>
+                            </div>
+                            <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showCallNow ? 'hide' : 'show'}</span>
+                          </button>
+                        </div>
+                      )}
+                      {showCallNow && callRecommendedList.length > 0 && (
                         <div>
                           <SectionTitle
                             title={`Call now (${callRecommendedList.length})`}
@@ -3997,9 +4113,21 @@ export default function AnalyticsDashboard() {
                         </div>
                       )}
 
-                      {/* Top 10 by weighted value */}
+                      {/* ── DEMOTED · Top 10 by weighted value (collapsed) ── */}
+                      <div className="card rounded-2xl border-slate-200 overflow-hidden">
+                        <button
+                          onClick={() => setShowTopWeighted(v => !v)}
+                          className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
+                        >
+                          <div>
+                            <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showTopWeighted ? '▼' : '▶'} Top weighted prospects</div>
+                            <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">Highest expected-value prospects · weighted by stage probability</div>
+                          </div>
+                          <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showTopWeighted ? 'hide' : 'show'}</span>
+                        </button>
+                      </div>
+                      {showTopWeighted && (
                       <div>
-                        <SectionTitle title="Top weighted prospects" subtitle="Highest expected-value prospects · weighted by stage probability" />
                         <div className="card rounded-2xl overflow-hidden">
                           <table className="w-full text-sm">
                             <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
@@ -4034,298 +4162,7 @@ export default function AnalyticsDashboard() {
                           </table>
                         </div>
                       </div>
-
-                      {/* ── OUTREACH CATEGORIES · review & approve before sends ──
-                          Prospect pool organised by deal type / clinic size.
-                          Tier boundaries come from dealTypeForClinicalCount()
-                          in lib/prospect/pricing.ts via the API — the UI never
-                          re-derives them. Card order = send priority: the cron
-                          ORDER BY fires on-site (≥6 clinical) first, then Hub
-                          Pack (2-5), then individuals. */}
-                      {(() => {
-                        const dtb = agg.dealTypeBreakdown
-                        const queue = prospectsData.reviewQueue ?? []
-                        if (!dtb && queue.length === 0) return null
-                        const DEAL_META: Array<{ key: DealTypeKey; label: string; threshold: string; pitch: string; badgeBg: string; badgeText: string; border: string }> = [
-                          { key: 'on-site',    label: 'On-site training',  threshold: '≥6 clinical',  pitch: 'On-site cohort pitch · the priority tier', badgeBg: 'bg-[rgba(13,115,119,0.08)]', badgeText: 'text-[var(--accent)]', border: 'border-[rgba(13,115,119,0.35)]' },
-                          { key: 'hub-pack',   label: 'Hub Pack',          threshold: '2–5 clinical', pitch: 'Hub Pack pitch',                            badgeBg: 'bg-indigo-50',               badgeText: 'text-indigo-700',      border: 'border-indigo-300' },
-                          { key: 'individual', label: 'Individual course', threshold: '≤1 clinical',  pitch: 'Individual course pitch',                   badgeBg: 'bg-slate-100',               badgeText: 'text-slate-600',       border: 'border-slate-300' },
-                        ]
-                        const filteredQueue = reviewTier === 'all' ? queue : queue.filter(q => q.dealType === reviewTier)
-                        // researching → approvable + archivable · approved → archivable only
-                        const isSelectable = (q: ReviewQueueRow) => q.status === 'researching' || q.status === 'approved'
-                        const selectedRows = queue.filter(q => reviewSelected.has(q.id))
-                        const approveIds = selectedRows.filter(q => q.status === 'researching').map(q => q.id)
-                        const archiveIds = selectedRows.filter(isSelectable).map(q => q.id)
-                        const toggleRow = (id: number) => setReviewSelected(prev => {
-                          const next = new Set(prev)
-                          if (next.has(id)) next.delete(id); else next.add(id)
-                          return next
-                        })
-                        const visibleSelectable = filteredQueue.filter(isSelectable)
-                        const allVisibleSelected = visibleSelectable.length > 0 && visibleSelectable.every(q => reviewSelected.has(q.id))
-                        const toggleAllVisible = () => setReviewSelected(prev => {
-                          const next = new Set(prev)
-                          if (allVisibleSelected) visibleSelectable.forEach(q => next.delete(q.id))
-                          else visibleSelectable.forEach(q => next.add(q.id))
-                          return next
-                        })
-                        const runReviewAction = async (action: 'approve' | 'archive') => {
-                          const ids = action === 'approve' ? approveIds : archiveIds
-                          if (ids.length === 0 || reviewBusy) return
-                          setReviewBusy(true)
-                          setReviewMessage(null)
-                          try {
-                            const res = await fetch('/api/admin/prospect-approve', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ ids, action }),
-                              cache: 'no-store',
-                            })
-                            const json = await res.json()
-                            if (!res.ok) {
-                              setReviewMessage(`${action} failed: ${json.error ?? res.status}`)
-                            } else {
-                              setReviewMessage(`${action === 'approve' ? 'Approved' : 'Archived'} ${json.updated}${json.skipped > 0 ? ` · ${json.skipped} skipped (status moved on)` : ''}`)
-                              setReviewSelected(new Set())
-                              loadAll()
-                            }
-                          } catch (err) {
-                            setReviewMessage(`${action} network error: ${err instanceof Error ? err.message : String(err)}`)
-                          } finally {
-                            setReviewBusy(false)
-                          }
-                        }
-                        const fmtSched = (d: string | null) => d ? new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '—'
-                        return (
-                          <div>
-                            <SectionTitle
-                              title="Outreach categories · review & approve"
-                              subtitle="Prospect pool by deal type / clinic size · card order IS the send priority (cron fires on-site → Hub Pack → individual) · approve researching rows before the queue fires"
-                            />
-                            {/* Three category cards — priority order on-site → hub-pack → individual */}
-                            {dtb && (
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                                {DEAL_META.map((m, i) => {
-                                  const t = dtb[m.key]
-                                  return (
-                                    <button
-                                      key={m.key}
-                                      onClick={() => { setReviewTier(m.key); setShowReviewQueue(true) }}
-                                      className={`card rounded-xl p-4 text-left transition-colors cursor-pointer hover:border-[var(--accent)] ${reviewTier === m.key ? m.border : ''}`}
-                                      title={`${m.pitch} · click to filter the review table`}
-                                    >
-                                      <div className="flex items-center justify-between mb-1.5">
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${m.badgeBg} ${m.badgeText} text-[10px] font-bold uppercase tracking-wider`}>{i + 1} · {m.label}</span>
-                                        <span className="text-[10px] text-[var(--muted-foreground)]">{m.threshold}</span>
-                                      </div>
-                                      <div className="text-2xl font-bold text-[var(--foreground)]">{t.total}</div>
-                                      <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
-                                        <span className="text-emerald-700 font-semibold">{t.hunterClean} Hunter-clean</span> · {t.gateBlocked} gate-blocked
-                                      </div>
-                                      <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
-                                        {t.unsentQueued} unsent · {t.sent} sent · <span className={t.replied > 0 ? 'text-emerald-700 font-semibold' : ''}>{t.replied} replied</span>
-                                      </div>
-                                      {t.dealValueTotal > 0 && (
-                                        <div className="text-[11px] font-semibold text-[var(--accent)] mt-1">{fmt$(t.dealValueTotal)} potential</div>
-                                      )}
-                                    </button>
-                                  )
-                                })}
-                              </div>
-                            )}
-                            {/* Review queue — collapsible table with tier filter + bulk actions */}
-                            <div className="card rounded-2xl border-slate-200 overflow-hidden">
-                              <button
-                                onClick={() => setShowReviewQueue(v => !v)}
-                                className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50/60 transition-colors"
-                              >
-                                <div>
-                                  <div className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)]">{showReviewQueue ? '▼' : '▶'} Review queue</div>
-                                  <div className="text-sm font-bold text-[var(--foreground)] mt-0.5">{queue.length} unsent prospect{queue.length === 1 ? '' : 's'} awaiting review · send-priority order</div>
-                                </div>
-                                <span className="text-[10.5px] text-[var(--muted-foreground)]">click to {showReviewQueue ? 'hide' : 'show'}</span>
-                              </button>
-                              {showReviewQueue && (
-                                <div className="border-t border-slate-100">
-                                  <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
-                                    <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-[rgba(13,115,119,0.04)] border border-[rgba(13,115,119,0.08)]">
-                                      {[
-                                        { key: 'all' as const, label: `All · ${queue.length}` },
-                                        ...DEAL_META.map(m => ({ key: m.key, label: `${m.label} · ${queue.filter(q => q.dealType === m.key).length}` })),
-                                      ].map(pill => (
-                                        <button
-                                          key={pill.key}
-                                          onClick={() => setReviewTier(pill.key)}
-                                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap ${
-                                            reviewTier === pill.key
-                                              ? 'bg-white shadow-sm text-[var(--accent)] border border-[rgba(13,115,119,0.1)]'
-                                              : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                                          }`}
-                                        >
-                                          {pill.label}
-                                        </button>
-                                      ))}
-                                    </div>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      {reviewMessage && <span className="text-xs font-semibold text-[var(--foreground)]">{reviewMessage}</span>}
-                                      <button
-                                        onClick={() => runReviewAction('approve')}
-                                        disabled={reviewBusy || approveIds.length === 0}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent)] text-white hover:opacity-90 disabled:opacity-40"
-                                        title="Set selected 'researching' rows to 'approved' — never resurrects archived/terminal rows"
-                                      >
-                                        {reviewBusy ? 'Working…' : `Approve selected${approveIds.length > 0 ? ` (${approveIds.length})` : ''}`}
-                                      </button>
-                                      <button
-                                        onClick={() => runReviewAction('archive')}
-                                        disabled={reviewBusy || archiveIds.length === 0}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-40"
-                                        title="Archive selected researching/approved rows — pulls them from the send queue with an audit note"
-                                      >
-                                        {reviewBusy ? 'Working…' : `Archive selected${archiveIds.length > 0 ? ` (${archiveIds.length})` : ''}`}
-                                      </button>
-                                    </div>
-                                  </div>
-                                  {filteredQueue.length === 0 ? (
-                                    <div className="px-5 pb-5 text-sm text-[var(--muted-foreground)]">No unsent prospects in this category — pool more or widen the filter.</div>
-                                  ) : (
-                                    <div className="overflow-x-auto">
-                                      <table className="w-full text-sm">
-                                        <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
-                                          <tr>
-                                            <th className="px-3 py-3 w-8">
-                                              <input
-                                                type="checkbox"
-                                                checked={allVisibleSelected}
-                                                onChange={toggleAllVisible}
-                                                disabled={visibleSelectable.length === 0}
-                                                className="accent-[var(--accent)]"
-                                                title="Select all visible reviewable rows"
-                                              />
-                                            </th>
-                                            <th className="text-left px-3 py-3 font-semibold">Clinic</th>
-                                            <th className="text-left px-3 py-3 font-semibold">Location</th>
-                                            <th className="text-center px-2 py-3 font-semibold" title="Clinical headcount (7 clinical disciplines, excludes admin/PM)">Clinicians</th>
-                                            <th className="text-left px-3 py-3 font-semibold">Deal type</th>
-                                            <th className="text-left px-3 py-3 font-semibold" title="Hunter verification — green = score ≥80, not role/accept-all/disposable (passes the send HARD GATE)">Hunter</th>
-                                            <th className="text-left px-3 py-3 font-semibold">Status</th>
-                                            <th className="text-right px-3 py-3 font-semibold">Scheduled</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {filteredQueue.map(q => {
-                                            const meta = DEAL_META.find(m => m.key === q.dealType)!
-                                            const selectable = isSelectable(q)
-                                            return (
-                                              <tr key={q.id} className={`border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)] ${reviewSelected.has(q.id) ? 'bg-[rgba(13,115,119,0.05)]' : ''}`}>
-                                                <td className="px-3 py-2.5">
-                                                  <input
-                                                    type="checkbox"
-                                                    checked={reviewSelected.has(q.id)}
-                                                    onChange={() => toggleRow(q.id)}
-                                                    disabled={!selectable}
-                                                    className="accent-[var(--accent)] disabled:opacity-30"
-                                                    title={selectable ? (q.status === 'researching' ? 'Approve or archive' : 'Archive only (already approved)') : `status '${q.status}' — not reviewable`}
-                                                  />
-                                                </td>
-                                                <td className="px-3 py-2.5 font-semibold text-[var(--foreground)] cursor-pointer" onClick={() => { setSelectedProspectId(q.id); setProspectsSubTab('queue') }}>{q.shortName}</td>
-                                                <td className="px-3 py-2.5 text-xs text-[var(--muted-foreground)]">{q.city || 'Unknown'}{q.state ? `, ${q.state}` : ''}</td>
-                                                <td className="px-2 py-2.5 text-center tabular-nums font-semibold text-[var(--foreground)]">{q.clinicalCount}</td>
-                                                <td className="px-3 py-2.5">
-                                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${meta.badgeBg} ${meta.badgeText} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap`}>{meta.label}</span>
-                                                </td>
-                                                <td className="px-3 py-2.5">
-                                                  {q.hunterScore != null ? (
-                                                    <span
-                                                      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
-                                                        q.hunterClean
-                                                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                          : 'bg-amber-100 text-amber-700 border-amber-200'
-                                                      }`}
-                                                      title={q.hunterClean ? 'Passes the Hunter HARD GATE — will fire when due' : 'Blocked by the Hunter HARD GATE (score <80 or role/accept-all/disposable) — re-verify or enrich before it can send'}
-                                                    >
-                                                      {q.hunterScore}{q.hunterClean ? ' · clean' : ' · blocked'}
-                                                    </span>
-                                                  ) : (
-                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border bg-slate-50 text-slate-500 border-slate-200" title="Never Hunter-verified — gate-blocked until verified">unverified</span>
-                                                  )}
-                                                </td>
-                                                <td className="px-3 py-2.5">
-                                                  {q.status === 'approved' ? (
-                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50/70 text-emerald-600 border border-emerald-100">✓ approved</span>
-                                                  ) : (
-                                                    <span className="text-xs text-[var(--muted-foreground)] capitalize">{q.status}</span>
-                                                  )}
-                                                </td>
-                                                <td className="px-3 py-2.5 text-right text-xs text-[var(--muted-foreground)] whitespace-nowrap tabular-nums">{fmtSched(q.scheduledSendAt)}</td>
-                                              </tr>
-                                            )
-                                          })}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  )}
-                                  <p className="text-[10.5px] text-[var(--muted-foreground)] px-5 py-3 border-t border-slate-100">
-                                    Unsent = T1 pending with zero production sends · non-terminal statuses only · capped at 400 rows, ordered on-site → Hub Pack → individual (the cron&apos;s send priority), Hunter-clean first, earliest scheduled first. Only &lsquo;researching&rsquo; rows can be approved; archived rows are never resurrected.
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })()}
-
-                      {/* ── COLD-OUTREACH FUNNEL · full path from pool to reply ──
-                          Real data end-to-end: pooled → Hunter-verified → T1/T2/T3
-                          sent → delivered → opened (scanner-filtered) → clicked →
-                          portal viewed → REPLIED → won/lost. Test sends
-                          (audit_key ':test:') excluded server-side. */}
-                      {agg.coldFunnel && (() => {
-                        const cf = agg.coldFunnel!
-                        const stages: Array<{ label: string; count: number; colour: string; hint?: string }> = [
-                          { label: 'Pooled', count: cf.pooled, colour: 'bg-slate-400', hint: 'Prospects in the pool (incl. dead statuses)' },
-                          { label: 'Verified', count: cf.verifiedDeliverable, colour: 'bg-sky-500', hint: `Hunter deliverable · ${cf.verifiedAny} checked total` },
-                          { label: 'Sent', count: cf.sentClinics, colour: 'bg-indigo-500', hint: `T1 ${cf.t1Sent} · T2 ${cf.t2Sent} · T3 ${cf.t3Sent} production sends` },
-                          { label: 'Delivered', count: cf.deliveredClinics, colour: 'bg-blue-500', hint: 'Clinics with ≥1 delivered event (Resend webhook)' },
-                          { label: 'Opened', count: cf.openedClinics, colour: 'bg-violet-500', hint: 'Human-filtered where user agent recorded' },
-                          { label: 'Clicked', count: cf.clickedClinics, colour: 'bg-purple-500', hint: 'Clinics with ≥1 email click' },
-                          { label: 'Portal viewed', count: cf.portalViewedClinics, colour: 'bg-fuchsia-500', hint: 'Opened their /p/[slug] dashboard' },
-                          { label: 'Replied', count: cf.repliedClinics, colour: 'bg-emerald-500', hint: 'Direct reply via inbound webhook — the money signal' },
-                          { label: 'Won', count: cf.wonClinics, colour: 'bg-emerald-700' },
-                        ]
-                        const maxCount = Math.max(...stages.map(s => s.count), 1)
-                        return (
-                          <div>
-                            <SectionTitle
-                              title="Cold-outreach funnel · pool → reply"
-                              subtitle={`Clinic-level stage counts from real send/webhook data · test sends excluded · ${cf.lostClinics} lost (incl. STOP replies) · ${cf.bouncedClinics} bounced`}
-                            />
-                            <div className="card rounded-2xl p-5 space-y-2">
-                              {stages.map((s, i) => {
-                                const prev = i > 0 ? stages[i - 1].count : null
-                                const convPct = prev != null && prev > 0 ? Math.round((s.count / prev) * 100) : null
-                                return (
-                                  <div key={s.label} className="flex items-center gap-3" title={s.hint}>
-                                    <div className="w-28 text-xs font-semibold text-[var(--foreground)]">{s.label}</div>
-                                    <div className="flex-1 bg-slate-100 rounded-lg h-7 relative overflow-hidden">
-                                      <div className={`absolute inset-y-0 left-0 ${s.colour} flex items-center justify-end pr-2 text-xs font-bold text-white`} style={{ width: `${(s.count / maxCount) * 100}%`, minWidth: s.count > 0 ? '34px' : 0 }}>
-                                        {s.count > 0 && s.count}
-                                      </div>
-                                    </div>
-                                    <div className="w-20 text-right text-[11px] tabular-nums text-[var(--muted-foreground)]">
-                                      {convPct != null ? `${convPct}% of prev` : ''}
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                              <p className="text-[10.5px] text-[var(--muted-foreground)] pt-2 border-t border-slate-100">
-                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Replied = inbound-webhook detection — previously untrackable.
-                              </p>
-                            </div>
-                          </div>
-                        )
-                      })()}
+                      )}
 
                       {/* ── PIPELINE FUNNEL · collapsible · baked into Overview ── */}
                       <div className="card rounded-2xl border-slate-200 overflow-hidden">

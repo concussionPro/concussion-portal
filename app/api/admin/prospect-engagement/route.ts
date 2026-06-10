@@ -12,6 +12,8 @@ import { sql } from '@vercel/postgres'
 import { isAdminRequest } from '@/lib/require-admin'
 import type { ClinicTeam, CohortRecommendation, TravelBand } from '@/lib/prospect/types'
 import { teamTotal, clinicalCount, computePricing, clinicSizeBucket, hubPackPriceFor, dealTypeForClinicalCount, type DealType } from '@/lib/prospect/pricing'
+import { classifyStage, isHunterClean, buildStageMatrix, type MatrixRowInput, type PipelineStage } from '@/lib/prospect/stage'
+import { computeAdaptiveCap, type CapDecision } from '@/lib/prospect/adaptive-cap'
 
 interface ClinicDbRow {
   id: number
@@ -61,6 +63,7 @@ interface ClinicDbRow {
 interface OutreachLogRow {
   id: number
   clinic_id: number
+  audit_key: string | null
   template_slug: string
   email_subject: string
   email_body: string
@@ -163,6 +166,7 @@ interface ReviewQueueDbRow {
   verification_score: number | null
   clinical_count: number | string
   hunter_clean: boolean
+  team_enriched: boolean
 }
 
 export async function GET(req: NextRequest) {
@@ -319,7 +323,7 @@ export async function GET(req: NextRequest) {
     // Practice", slug 'zac-preview-demo'). Without this filter Zac's own
     // browsing inflates the engagement metrics and pollutes the "Call now"
     // list with himself.
-    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, freeContent, funnelAggregate, ctaAggregate, portalFlow, reviewQueueRows] = await Promise.all([
+    const [clinics, outreach, views, eventSignals, realSessions, talkRequests, freeContent, funnelAggregate, ctaAggregate, portalFlow, reviewQueueRows, capDecision] = await Promise.all([
       filterId !== null && !isNaN(filterId)
         ? sql<ClinicDbRow>`SELECT * FROM prospect_clinics WHERE id = ${filterId}`
         : sql<ClinicDbRow>`
@@ -581,7 +585,8 @@ export async function GET(req: NextRequest) {
             AND pc.verification_score >= 80
             AND COALESCE(pc.verification_role, FALSE) = FALSE
             AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
-            AND COALESCE(pc.verification_disposable, FALSE) = FALSE) AS hunter_clean
+            AND COALESCE(pc.verification_disposable, FALSE) = FALSE) AS hunter_clean,
+          (COALESCE(pc.notes, '') LIKE '%[team-enriched=%') AS team_enriched
         FROM prospect_clinics pc
         WHERE pc.next_template_slug = 'initial'
           AND pc.status NOT IN ('archived', 'lost', 'bounced', 'won', 'replied', 'engaged-elsewhere')
@@ -618,8 +623,14 @@ export async function GET(req: NextRequest) {
             AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
             AND COALESCE(pc.verification_disposable, FALSE) = FALSE) THEN 0 ELSE 1 END ASC,
           pc.scheduled_send_at ASC NULLS LAST
-        LIMIT 400
+        LIMIT 600
       `,
+      // Adaptive daily cap — same computation the cron uses. Never lets a
+      // cap failure kill the dashboard: degrades to null.
+      computeAdaptiveCap().catch((err): null => {
+        console.error('[prospect-engagement] computeAdaptiveCap failed:', err)
+        return null
+      }),
     ])
 
     // Index helpers
@@ -735,6 +746,31 @@ export async function GET(req: NextRequest) {
       const preseasonFirstAt = freeContent?.preseason_first_at ?? null
       const hasFreeContentSignup = scatCourseSignups > 0 || preseasonSignups > 0
       const everSent = sends.length > 0
+
+      // ── Pipeline-stage classification (the matrix spine) ──
+      // Production sends only — when ?includeTest=true the sends array
+      // contains test previews too, so re-filter via audit_key here.
+      const prodSends = includeTest
+        ? sends.filter((s) => !(s.audit_key ?? '').includes(':test:'))
+        : sends
+      const hunterClean = isHunterClean({
+        score: hunterScore,
+        role: isRoleMailbox,
+        acceptAll: isAcceptAll,
+        disposable: c.verification_disposable === true,
+      })
+      const stage = classifyStage({
+        status: c.status,
+        hasInitialSend: prodSends.some((s) => s.template_slug === 'initial'),
+        hasFollowupSend: prodSends.some((s) => s.template_slug === 'followup'),
+        hasFinalSend: prodSends.some((s) => s.template_slug === 'final'),
+        hunterClean,
+      })
+      const dealType = dealTypeForClinicalCount(clinicalCount(c.team))
+      // Team-size confidence — the enrichment sweep tags notes with
+      // [team-enriched=N/...] when it counted real clinicians from the
+      // clinic website. Untagged rows are running on seeded defaults.
+      const teamEnriched = (c.notes ?? '').includes('[team-enriched=')
 
       // Top non-reply signal — what the strongest engagement marker is
       // for this clinic. Drives both tier and "why call this prospect"
@@ -1009,6 +1045,12 @@ export async function GET(req: NextRequest) {
         travelSurcharge: c.travel_surcharge,
         // status + lifecycle
         status: c.status,
+        // Pipeline matrix fields — mutually exclusive stage, deal-type tier,
+        // cron-gate pass/fail, team-size data confidence
+        stage,
+        dealType,
+        hunterClean,
+        teamEnriched,
         researchSource: c.research_source,
         validUntil: c.valid_until,
         notes: c.notes,
@@ -1121,6 +1163,76 @@ export async function GET(req: NextRequest) {
     // Aggregations
     const aggregates = buildAggregates(prospects)
 
+    // ── STAGE MATRIX — the pipeline spine ──
+    // Rows = deal-type tiers, columns = mutually exclusive stages. Every
+    // non-archived prospect lands in exactly one cell (classifyStage is
+    // exhaustive); poolSize reconciles with the sum of all cells. Computed
+    // from the prospect rows already in memory — no extra query, and always
+    // live (the team-enrichment sweep rewrites counts pool-wide).
+    const matrixRows: MatrixRowInput[] = prospects
+      .filter((p) => p.status !== 'archived')
+      .map((p) => ({ stage: p.stage, dealType: p.dealType, dealValue: p.dealValue, status: p.status }))
+    const stageMatrix = buildStageMatrix(
+      matrixRows,
+      prospects.filter((p) => p.status === 'archived').length,
+    )
+
+    // ── TODAY — what the machine is doing right now ──
+    // All computed live from rows already in memory. Terminal set mirrors
+    // the cron driver-query exclusion in lib/prospect/process-scheduled.ts.
+    const CRON_TERMINAL = new Set(['archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied'])
+    const now = Date.now()
+    const todayUtc = new Date().toISOString().slice(0, 10)
+    const endOfTomorrowUtc = new Date(now)
+    endOfTomorrowUtc.setUTCDate(endOfTomorrowUtc.getUTCDate() + 1)
+    endOfTomorrowUtc.setUTCHours(23, 59, 59, 999)
+    const autoVerifyHorizon = now + 3 * 86_400_000 // mirrors autoVerifyDueProspects (NOW() + 3 days)
+
+    // Production sends today (UTC). Default outreach query already excludes
+    // test sends; re-filter when includeTest=true.
+    const prodOutreachRows = includeTest
+      ? outreach.rows.filter((o) => !(o.audit_key ?? '').includes(':test:'))
+      : outreach.rows
+    const sentToday = prodOutreachRows.filter(
+      (o) => new Date(o.sent_at).toISOString().slice(0, 10) === todayUtc,
+    ).length
+
+    const inCronQueue = (p: (typeof prospects)[number]) =>
+      p.nextTemplateSlug != null && p.scheduledSendAt != null && !CRON_TERMINAL.has(p.status)
+    // Due through end of tomorrow AND Hunter-clean — what the cron will fire.
+    const dueTomorrow = prospects.filter(
+      (p) => inCronQueue(p) && new Date(p.scheduledSendAt!).getTime() <= endOfTomorrowUtc.getTime() && p.hunterClean,
+    ).length
+    // Never-verified prospects inside the auto-verify window — what the
+    // cron's Hunter pass (25/run) will chew through next.
+    const unverifiedDue = prospects.filter(
+      (p) => inCronQueue(p) && new Date(p.scheduledSendAt!).getTime() <= autoVerifyHorizon && p.hunterScore == null,
+    ).length
+    // HARD-GATE blocked: due NOW but failing the Hunter gate — stranded
+    // until re-verified / enriched. Reason buckets can overlap; total is
+    // distinct prospects. TS mirror of computeGateBlockedBreakdown().
+    const gateBlockedRows = prospects.filter(
+      (p) => inCronQueue(p) && new Date(p.scheduledSendAt!).getTime() <= now && !p.hunterClean,
+    )
+    const gateBlocked = {
+      total: gateBlockedRows.length,
+      unverified: gateBlockedRows.filter((p) => p.hunterScore == null).length,
+      lowScore: gateBlockedRows.filter((p) => p.hunterScore != null && p.hunterScore < 80).length,
+      role: gateBlockedRows.filter((p) => p.hunterRole).length,
+      acceptAll: gateBlockedRows.filter((p) => p.hunterAcceptAll).length,
+      disposable: gateBlockedRows.filter((p) => p.hunterDisposable).length,
+    }
+
+    const cap: CapDecision | null = capDecision
+    const today = {
+      sentToday,
+      cap: cap?.cap ?? null,
+      capReason: cap?.reason ?? null,
+      dueTomorrow,
+      unverifiedDue,
+      gateBlocked,
+    }
+
     // Funnel + CTA aggregates — across-all-portals view for the "where
     // prospects drop off" panel. Computed once per request, sent down
     // so the UI can render the conversion-bottleneck story without
@@ -1148,6 +1260,16 @@ export async function GET(req: NextRequest) {
     // dealTypeForClinicalCount() boundaries the breakdown uses.
     const reviewQueue = reviewQueueRows.rows.map((r) => {
       const clinical = Number(r.clinical_count ?? 0)
+      const hunterClean = r.hunter_clean === true
+      // These rows are by definition unsent + non-terminal, so the stage
+      // can only be ready / awaiting-approval / blocked.
+      const stage: PipelineStage = classifyStage({
+        status: r.status,
+        hasInitialSend: false,
+        hasFollowupSend: false,
+        hasFinalSend: false,
+        hunterClean,
+      })
       return {
         id: r.id,
         shortName: r.short_name,
@@ -1157,8 +1279,10 @@ export async function GET(req: NextRequest) {
         dealType: dealTypeForClinicalCount(clinical),
         status: r.status,
         hunterScore: r.verification_score,
-        hunterClean: r.hunter_clean === true,
+        hunterClean,
         scheduledSendAt: r.scheduled_send_at,
+        stage,
+        teamEnriched: r.team_enriched === true,
       }
     })
 
@@ -1170,6 +1294,12 @@ export async function GET(req: NextRequest) {
       funnelSections,
       ctaTargets,
       reviewQueue,
+      // Pipeline rebuild (2026-06-10): matrix spine + today's machine state
+      // + the adaptive cap the cron will apply. Additive — all prior fields
+      // unchanged.
+      stageMatrix,
+      today,
+      capDecision: cap,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
