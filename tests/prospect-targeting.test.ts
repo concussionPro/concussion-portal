@@ -66,12 +66,11 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     expect(html).not.toContain('1190')
   })
 
-  it('medium clinic (2-5 clinical) gets the team-online + branded toolkit, owns-locally pitch', () => {
+  it('medium clinic (2-5 clinical) gets the team-online + branded toolkit pitch', () => {
     for (const n of [2, 5]) {
       const { html } = mergeTemplate(T1, clinic({ team: team(n) }), 'https://example.com', 'tok')
       expect(html).toContain('Your team trains online')
       expect(html).toContain('branded clinical toolkit')
-      expect(html).toContain('owns concussion care locally')
       expect(html).not.toMatch(/one on-site day/i)
     }
   })
@@ -80,8 +79,16 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     for (const n of [6, 8, 21]) {
       const { html } = mergeTemplate(T1, clinic({ team: team(n) }), 'https://example.com', 'tok')
       expect(html).toContain('one on-site day')
-      expect(html).toContain('becomes the clinic that is')
+      expect(html).toContain('whole team')
     }
+  })
+
+  it('T1 leads with free tools inside the portal (give-before-you-ask)', () => {
+    const { html } = mergeTemplate(T1, clinic({ team: team(4) }), 'https://example.com', 'tok')
+    expect(html).toContain('free to use')
+    expect(html).toMatch(/SCAT6.*forms/i)
+    expect(html).toContain('baseline-testing tool')
+    expect(html).not.toMatch(/I built/i) // facts-first, no "I built you a dashboard" preamble
   })
 
   it('T2 keeps the size-matched angle per tier', () => {

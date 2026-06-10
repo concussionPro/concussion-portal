@@ -209,28 +209,25 @@ export function mergeTemplate(
   // One text link, UTM-tagged.
   const portalLink = `<a href="${portalUrlFor('dashboard_link')}">${safeShortName}'s concussion learning portal</a>`
 
-  // What's built for them + where the value lands — tier-matched. This is the
-  // "what we do / what's in it for you" the email leads with before the
-  // screenshot. The regulatory opening is the WHY-NOW.
-  let builtLine: string // what I made them
-  let valueLine: string // why it matters for THEM
+  // Facts-first (Zac 2026-06-11): lead with the regulatory WHY-NOW + the
+  // tier-matched offer. No "I built you a dashboard…" preamble — prospects
+  // don't care what we set up, they care what's changed and what it does.
+  let valueLine: string
   if (isOnSiteTarget) {
-    builtLine = `I built ${safeShortName} a working concussion-training dashboard — your team's learning suite, the SCAT6/SCOAT6 tools, baseline testing, and a clinic-branded clinical toolkit, all set up under your name.`
-    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. I train your whole team in the protocol in one on-site day — that's how ${safeShortName} becomes the clinic that is.`
+    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. I train your whole team in the protocol in one on-site day — 14 CPD hours each, Osteopathy Australia endorsed.`
   } else if (isIndividualTarget) {
-    builtLine = `I built you a working concussion-training dashboard — the full learning suite, SCAT6/SCOAT6 tools, and a clinical toolkit, set up ready to use.`
-    valueLine = `${REGULATORY_LINE} ${soloPlural.replace(/^./, (c) => c.toUpperCase())} working solo get the clearance questions first. The whole protocol — SCAT6, VOMS, return-to-play — is self-paced online, 8 CPD hours.`
+    valueLine = `${REGULATORY_LINE} ${soloPlural.replace(/^./, (c) => c.toUpperCase())} working solo get the clearance questions first. The whole protocol — SCAT6, VOMS, return-to-play — is self-paced online, 8 CPD hours, Osteopathy Australia endorsed.`
   } else {
-    builtLine = `I built ${safeShortName} a working concussion-training dashboard — your team's learning suite, the SCAT6/SCOAT6 tools, baseline testing, and a clinic-branded clinical toolkit, all set up under your name.`
-    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. Your team trains online and you get the branded clinical toolkit to run the protocol day to day — that's how ${safeShortName} owns concussion care locally.`
+    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. Your team trains online with a clinic-branded clinical toolkit to run the protocol day to day — 14 CPD hours each, Osteopathy Australia endorsed.`
   }
 
-  // T1 — concise text-first: what I built them → why now + their value →
-  // naked portal link. No image.
+  // T1 — facts-first: regulatory why-now + offer → portal link. The portal
+  // leads with FREE, immediately-usable tools (SCAT6 forms, baseline testing,
+  // Module 1 trial) — give-before-you-ask lowers the click barrier and lifts
+  // first-touch conversion. All inside the ONE portal link (no extra links).
   const t1Body = [
-    `<p>${builtLine}</p>`,
     `<p>${valueLine}</p>`,
-    `<p>Module 1's unlocked to try, with pricing and a 15-minute call inside: ${portalLink}.</p>`,
+    `<p>I've set up a learning portal for ${safeShortName} — the SCAT6/SCOAT6 forms, a baseline-testing tool and Module 1 are free to use, with pricing and a 15-minute call inside: ${portalLink}.</p>`,
   ].join('\n')
 
   // T2 — short nudge back to the portal with one fresh angle. No image.
@@ -245,7 +242,7 @@ export function mergeTemplate(
   const t2Body = [
     `<p>Following up on the concussion learning portal I set up for ${safeShortName} last week.</p>`,
     `<p>${t2Angle}</p>`,
-    `<p>Worth a look — ${portalLink}. Or just reply with a question and I'll answer it.</p>`,
+    `<p>Even if the timing's not right, the SCAT6/SCOAT6 forms and baseline-testing tool in there are free to use — worth a look: ${portalLink}. Or just reply with a question and I'll answer it.</p>`,
   ].join('\n')
 
   // T3 — breakup with price transparency in text + one last portal link.
