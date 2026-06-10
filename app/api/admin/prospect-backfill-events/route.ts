@@ -80,12 +80,17 @@ export async function POST(req: NextRequest) {
               clicked_count = ${clicks}
           WHERE id = ${m.id}
         `
-        // Bump clinic status if appropriate
+        // Bump clinic status if appropriate. NEVER promote to 'engaged' on
+        // raw click counts — mail-gateway scanners (Defender/Mimecast) click
+        // every link, and 'engaged' suppresses T2/T3 (personal-lane logic).
+        // Audit 2026-06-10: all 21 'engaged' rows were scanner clicks with
+        // zero >=60s portal dwell. 'engaged' is reserved for verified human
+        // signals (dwell, form submit, cal booking, reply).
         if (clicks > 0) {
           await sql`
             UPDATE prospect_clinics
-            SET status = 'engaged', updated_at = NOW()
-            WHERE id = ${m.clinic_id} AND status IN ('sent', 'opened', 'approved')
+            SET status = 'opened', updated_at = NOW()
+            WHERE id = ${m.clinic_id} AND status IN ('sent', 'approved')
           `
         } else if (opens > 0) {
           await sql`

@@ -19,6 +19,7 @@
  */
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { sql } from '@/lib/db'
 import { processScheduledSends, computeGateBlockedBreakdown } from '@/lib/prospect/process-scheduled'
 import { computeAdaptiveCap } from '@/lib/prospect/adaptive-cap'
 import { autoVerifyDueProspects } from '@/lib/prospect/hunter-verify'
@@ -74,6 +75,32 @@ export async function GET(request: Request) {
       `7d_cold_bounce=${(capDecision.metrics.coldBounceRate7d * 100).toFixed(2)}%  ` +
       `reason="${capDecision.reason}"`,
   )
+
+  // Auto-promote (Zac 2026-06-10: "why am I manually approving? this is
+  // what the engine is built for"). Hunter verification + per-send preflight
+  // ARE the quality gate — researching prospects that are Hunter-clean and
+  // have never been sent get promoted straight into the schedule. Marking
+  // them due NOW is deliberate: the adaptive cap meters volume and the
+  // size-tier ORDER BY decides sequence, so the backlog drains largest-
+  // clinics-first at whatever rate reputation allows.
+  const promoted = await sql`
+    UPDATE prospect_clinics pc
+    SET status = 'approved',
+        scheduled_send_at = COALESCE(pc.scheduled_send_at, NOW()),
+        next_template_slug = COALESCE(pc.next_template_slug, 'initial'),
+        updated_at = NOW()
+    WHERE pc.status = 'researching'
+      AND pc.verification_score IS NOT NULL
+      AND pc.verification_score >= 80
+      AND COALESCE(pc.verification_role, FALSE) = FALSE
+      AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
+      AND COALESCE(pc.verification_disposable, FALSE) = FALSE
+      AND NOT EXISTS (
+        SELECT 1 FROM prospect_outreach_log ol
+        WHERE ol.clinic_id = pc.id AND ol.audit_key NOT LIKE '%:test:%'
+      )
+  `
+  console.log(`[prospect cron] auto-promoted ${promoted.rowCount ?? 0} hunter-clean researching prospects into the schedule`)
 
   // Hunter HARD-GATE visibility: how many otherwise-due prospects are
   // currently stranded by the gate, and why. Read-only.
