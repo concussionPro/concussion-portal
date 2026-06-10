@@ -103,22 +103,6 @@ ${SIGNOFF_HTML}`,
   },
 ]
 
-/**
- * Discipline → team-noun phrase (article included — "an osteo team",
- * "a physio clinic"). Drives the T1 opening-line personalization.
- */
-const TEAM_PHRASE: Record<Discipline, string> = {
-  osteopaths: 'an osteo',
-  physiotherapists: 'a physio',
-  generalPractitioners: 'a GP',
-  sportsMedicineDoctors: 'a sports medicine',
-  exercisePhys: 'an exercise physiology',
-  myotherapists: 'a myotherapy',
-  remedialMassage: 'a remedial massage',
-  practiceManager: 'an allied health',
-  admin: 'an allied health',
-}
-
 /** Discipline → plural clinician noun for the solo-clinician opening line. */
 const SOLO_PLURAL: Record<Discipline, string> = {
   osteopaths: 'osteos',
@@ -136,13 +120,21 @@ const SOLO_PLURAL: Record<Discipline, string> = {
 const REGULATORY_LINE =
   'Community sport now carries a mandatory 21-day stand-down (2024 AIS/SMA guidelines), and physios and GPs are named clearance providers.'
 
-// Booking CTA (Zac 2026-06-10: confident walkthrough ask, not a soft phone
-// plea). ONE static cal.com link — same URL for every recipient, never
-// wrapped in tracking redirects, so Safe Links sees an established-reputation
-// domain instead of a unique detonation target. This is the ONLY link any
-// cold email carries.
-const CAL_URL = process.env.CAL_BOOKING_URL || 'https://cal.com/zac-lewis-so8zjs/30min'
-const BOOK_CTA_HTML = `If it's relevant, book a walkthrough and I'll show you exactly how it'd run: <a href="${CAL_URL}">${CAL_URL.replace('https://', '')}</a>`
+// The pitch IS the custom portal (Zac 2026-06-10). Every prospect has a
+// pre-built, clinic-branded dashboard at /p/<slug> — their learning suite
+// (Module 1 unlocked to try), SCAT tools, clinical toolkit, tier pricing AND
+// the inline Cal.com booking. The email's only job is to get them there. So:
+// ONE link — their portal — fronted by a real screenshot of that dashboard
+// (the screenshot sells the value even if they never click). The booking CTA
+// lives ON the portal, not in the email.
+const PORTAL_BASE = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
+// Bump the screenshot cache once per deploy (Gmail/Microlink cache by URL).
+const OG_VERSION = (process.env.VERCEL_GIT_COMMIT_SHA || 'v1').slice(0, 8)
+
+/** Clickable dashboard-screenshot hero — the single link in T1/T2. */
+function screenshotHero(portalUrl: string, ogUrl: string, clinicName: string): string {
+  return `<p style="margin:20px 0;"><a href="${portalUrl}" style="text-decoration:none;"><img src="${ogUrl}" alt="${clinicName} concussion training dashboard" width="600" style="width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #e2e8f0;display:block;" /></a></p>`
+}
 
 /** Deterministic per-prospect variant index — stable across retries. */
 function variantIndex(slug: string, length: number): number {
@@ -196,56 +188,55 @@ export function mergeTemplate(
   const cityPhrase = hasUnknownCity ? '' : ` in ${clinic.city}`
 
   const discipline = dominantDiscipline(clinic.team)
-  const teamPhrase = TEAM_PHRASE[discipline] ?? 'an allied health'
   const soloPlural = SOLO_PLURAL[discipline] ?? 'clinicians'
 
-  // ── T1 paragraphs ──────────────────────────────────────────────────────
-  let opening: string
-  if (options.networkVariant) {
-    opening = `${options.networkVariant.networkSize} locations across ${safeRegion} — one concussion protocol rolled out everywhere beats piecemeal CPD.`
-  } else if (isOnSiteTarget) {
-    opening = options.regionalVariant
-      ? `${safeShortName} — ${teamPhrase} team your size${cityPhrase} is exactly who the new concussion rules land on.`
-      : `Came across ${safeShortName} — ${teamPhrase} team your size${cityPhrase} is exactly who the new concussion rules land on.`
-  } else if (isIndividualTarget) {
-    opening = `Came across ${safeShortName}${cityPhrase} — ${soloPlural} working solo tend to get the concussion clearance questions first.`
-  } else {
-    opening = `Came across ${safeShortName} — ${teamPhrase} clinic your size${cityPhrase} is well placed to own concussion care.`
-  }
+  // ── The portal: the single link, fronted by its screenshot ────────────
+  const portalUrl = `${PORTAL_BASE}/p/${clinic.slug}?k=${clinic.accessKey ?? ''}`
+  const ogImageUrl = `${PORTAL_BASE}/api/prospect/og-image?slug=${encodeURIComponent(clinic.slug)}&v=${OG_VERSION}`
+  const hero = screenshotHero(portalUrl, ogImageUrl, safeShortName)
+  const portalLink = `<a href="${portalUrl}">open ${safeShortName}'s dashboard</a>`
 
-  let doesSentence: string
+  // What's built for them + where the value lands — tier-matched. This is the
+  // "what we do / what's in it for you" the email leads with before the
+  // screenshot. The regulatory opening is the WHY-NOW.
+  let builtLine: string // what I made them
+  let valueLine: string // why it matters for THEM
   if (isOnSiteTarget) {
-    doesSentence = options.regionalVariant
-      ? `I'm based in Byron Bay and come to you — whole team, one day, on-site.`
-      : `I train whole clinic teams in the protocol — one day, on-site.`
+    builtLine = `I built ${safeShortName} a working concussion-training dashboard — your team's learning suite, the SCAT6/SCOAT6 tools, baseline testing, and a clinic-branded clinical toolkit, all set up under your name.`
+    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. I train your whole team in the protocol in one on-site day — that's how ${safeShortName} becomes the clinic that is.`
   } else if (isIndividualTarget) {
-    doesSentence = `I run the full protocol — SCAT6, VOMS, return-to-play — self-paced online, 8 CPD hours.`
+    builtLine = `I built you a working concussion-training dashboard — the full learning suite, SCAT6/SCOAT6 tools, and a clinical toolkit, set up ready to use.`
+    valueLine = `${REGULATORY_LINE} ${soloPlural.replace(/^./, (c) => c.toUpperCase())} working solo get the clearance questions first. The whole protocol — SCAT6, VOMS, return-to-play — is self-paced online, 8 CPD hours.`
   } else {
-    doesSentence = `I get teams like yours trained online, plus a clinic-branded clinical doc pack.`
+    builtLine = `I built ${safeShortName} a working concussion-training dashboard — your team's learning suite, the SCAT6/SCOAT6 tools, baseline testing, and a clinic-branded clinical toolkit, all set up under your name.`
+    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. Your team trains online and you get the branded clinical toolkit to run the protocol day to day — that's how ${safeShortName} owns concussion care locally.`
   }
 
-  const t1Paragraphs = [opening, `${REGULATORY_LINE} ${doesSentence}`, BOOK_CTA_HTML]
+  // T1 — lead → screenshot hero → "what's inside, take a look" → portal link.
+  const t1Body = [
+    `<p>${builtLine}</p>`,
+    hero,
+    `<p>${valueLine}</p>`,
+    `<p>Module 1's unlocked to try, and the pricing and a 15-minute call are in there too. Take a look — ${portalLink}.</p>`,
+  ].join('\n')
 
-  // ── T2 paragraphs — one new size-matched angle + "want the one-pager?" ─
-  let t2Pitch: string
-  let t2Offer: string
-  let t2Cta: string
+  // T2 — short nudge back to the dashboard with one fresh angle + hero again.
+  let t2Angle: string
   if (isOnSiteTarget) {
-    t2Pitch = `I floated this last week — short version: I bring the concussion training day to ${safeShortName}, the whole team trained together in one day, 14 CPD hours each, Osteopathy Australia endorsed.`
-    t2Offer = `Happy to send through the one-page outline of how the day runs — want it?`
-    t2Cta = BOOK_CTA_HTML
+    t2Angle = `The on-site day is the whole team trained together in one day — 14 CPD hours each, Osteopathy Australia endorsed — and the dashboard has the full cohort pricing for ${safeShortName}.`
   } else if (isIndividualTarget) {
-    t2Pitch = `I floated this last week — short version: the full concussion protocol (SCAT6, VOMS, return-to-play) as a self-paced online course, 8 CPD hours, Osteopathy Australia endorsed.`
-    t2Offer = `Happy to send through the one-page outline — want it?`
-    t2Cta = BOOK_CTA_HTML
+    t2Angle = `It's the complete protocol — SCAT6, VOMS, return-to-play — self-paced online, 8 CPD hours, Osteopathy Australia endorsed. Module 1's unlocked to try free.`
   } else {
-    t2Pitch = `I floated this last week — short version: ${safeShortName}'s team does the training online, 14 CPD hours each, Osteopathy Australia endorsed, and you get a clinic-branded clinical doc pack to run the protocol day to day.`
-    t2Offer = `Happy to send through the one-page outline — want it?`
-    t2Cta = BOOK_CTA_HTML
+    t2Angle = `Your team trains online at their own pace — 14 CPD hours each, Osteopathy Australia endorsed — plus the clinic-branded toolkit. The dashboard has your Hub Pack pricing.`
   }
-  const t2Paragraphs = [t2Pitch, t2Offer, t2Cta]
+  const t2Body = [
+    `<p>Following up on the concussion dashboard I set up for ${safeShortName} last week.</p>`,
+    `<p>${t2Angle}</p>`,
+    hero,
+    `<p>Worth a look — ${portalLink}. Or just reply with a question and I'll answer it.</p>`,
+  ].join('\n')
 
-  // ── T3 paragraphs — breakup with price transparency (config-derived) ──
+  // T3 — breakup with price transparency in text + one last portal link.
   let priceLine: string
   if (isOnSiteTarget) {
     const fromTotal = Math.min(...cohortPricing.cohortTiers.map((t) => t.total))
@@ -253,13 +244,12 @@ export function mergeTemplate(
   } else if (isIndividualTarget) {
     priceLine = `the online course is A$${CONFIG.COURSE.PRICE_ONLINE.toLocaleString('en-AU')}`
   } else {
-    priceLine = `the Hub Pack — the team trained online plus the clinic-branded doc pack — is A$${CONFIG.COURSE.PRICE_CLINIC_HUB_PACK.toLocaleString('en-AU')}`
+    priceLine = `the Hub Pack — your team trained online plus the clinic-branded toolkit — is A$${CONFIG.COURSE.PRICE_CLINIC_HUB_PACK.toLocaleString('en-AU')}`
   }
-  const t3Paragraphs = [
-    `Last one from me. In case price was the open question: ${priceLine}.`,
-    `If you want to see how it'd run at ${safeShortName}, the walkthrough link is <a href="${CAL_URL}">${CAL_URL.replace('https://', '')}</a>.`,
-    `If the timing's wrong, no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.`,
-  ]
+  const t3Body = [
+    `<p>Last one from me. In case price was the open question: ${priceLine} — full breakdown and a 15-minute call are on ${safeShortName}'s dashboard: ${portalLink}.</p>`,
+    `<p>If the timing's wrong, no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`,
+  ].join('\n')
 
   // ── Subject lines — short, specific, lowercase-leaning, non-salesy ─────
   // Rotated deterministically by slug hash; variants referencing city or
@@ -295,12 +285,12 @@ export function mergeTemplate(
   if (subjectVariants.length === 0) subjectVariants.push('the 21-day stand-down — are you across it?')
   const subjectVariant = subjectVariants[variantIndex(clinic.slug, subjectVariants.length)]
 
-  const bodyParagraphs =
-    template.slug === 'initial' ? t1Paragraphs : template.slug === 'followup' ? t2Paragraphs : t3Paragraphs
+  const bodyHtml =
+    template.slug === 'initial' ? t1Body : template.slug === 'followup' ? t2Body : t3Body
 
   const variables: Record<string, string | undefined> = {
     contact_first_name: safeFirstName(clinic.contactFirstName),
-    body_paragraphs: bodyParagraphs.map((p) => `<p>${p}</p>`).join('\n'),
+    body_paragraphs: bodyHtml,
     subject_variant: subjectVariant,
   }
 

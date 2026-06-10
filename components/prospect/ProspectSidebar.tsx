@@ -121,8 +121,8 @@ function SidebarBody({
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-md shadow-accent/15">
             <Brain className="w-5 h-5 text-white" strokeWidth={2} />
           </div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight">
-            Concussion<span className="text-accent">Pro</span>
+          <h1 className="text-base font-bold text-foreground tracking-tight leading-tight">
+            Concussion Education<br /><span className="text-accent">Australia</span>
           </h1>
         </div>
       </div>

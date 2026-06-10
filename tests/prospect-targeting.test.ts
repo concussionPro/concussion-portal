@@ -52,10 +52,9 @@ function bodyWordCount(html: string): number {
 describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub > individuals)', () => {
   it('solo clinician (1 clinical) gets the individual self-paced pitch, not a team product', () => {
     const { html } = mergeTemplate(T1, clinic({ team: team(1) }), 'https://example.com', 'tok')
-    expect(html).toContain('self-paced')
-    expect(html).toContain('8 CPD hours')
+    expect(html).toContain('self-paced online, 8 CPD hours')
+    expect(html).toContain('working solo')
     expect(html).not.toContain('Hub Pack')
-    expect(html).not.toContain('doc pack')
     expect(html).not.toMatch(/on-site/i)
   })
 
@@ -67,22 +66,21 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     expect(html).not.toContain('1190')
   })
 
-  it('medium clinic (2-5 clinical) gets the team-online + clinic doc pack pitch', () => {
+  it('medium clinic (2-5 clinical) gets the team-online + branded toolkit, owns-locally pitch', () => {
     for (const n of [2, 5]) {
       const { html } = mergeTemplate(T1, clinic({ team: team(n) }), 'https://example.com', 'tok')
-      expect(html).toContain('trained online')
-      expect(html).toContain('clinic-branded clinical doc pack')
-      expect(html).not.toMatch(/on-site/i)
+      expect(html).toContain('Your team trains online')
+      expect(html).toContain('branded clinical toolkit')
+      expect(html).toContain('owns concussion care locally')
+      expect(html).not.toMatch(/one on-site day/i)
     }
   })
 
   it('large clinic (>=6 clinical) gets the whole-team one-day on-site pitch', () => {
     for (const n of [6, 8, 21]) {
       const { html } = mergeTemplate(T1, clinic({ team: team(n) }), 'https://example.com', 'tok')
-      expect(html).toMatch(/on-site/i)
-      expect(html).toContain('whole clinic teams')
-      expect(html).toContain('one day')
-      expect(html).not.toContain('doc pack')
+      expect(html).toContain('one on-site day')
+      expect(html).toContain('becomes the clinic that is')
     }
   })
 
@@ -91,18 +89,20 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     expect(onsite.html).toContain('whole team trained together in one day')
     expect(onsite.html).toContain('14 CPD hours')
     const hub = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok')
-    expect(hub.html).toContain('clinic-branded clinical doc pack')
-    expect(hub.html).toContain('training online')
+    expect(hub.html).toContain('clinic-branded toolkit')
+    expect(hub.html).toContain('Hub Pack pricing')
     const solo = mergeTemplate(T2, clinic({ team: team(1) }), 'https://example.com', 'tok')
-    expect(solo.html).toContain('self-paced')
-    expect(solo.html).toContain('8 CPD hours')
+    expect(solo.html).toContain('self-paced online, 8 CPD hours')
+    expect(solo.html).toContain("Module 1's unlocked to try free")
   })
 
-  it('T2 offers to SEND the one-page outline (reply-bait, no link)', () => {
+  it('every T1/T2 drives to the prospect portal (the screenshot is the hook)', () => {
     for (const n of [1, 4, 8]) {
-      const { html } = mergeTemplate(T2, clinic({ team: team(n) }), 'https://example.com', 'tok')
-      expect(html).toContain('one-page outline')
-      expect(html).toContain('want it?')
+      for (const tpl of [T1, T2]) {
+        const { html } = mergeTemplate(tpl, clinic({ team: team(n), slug: 'demo-clinic', accessKey: 'AK' }), 'https://example.com', 'tok')
+        expect(html).toMatch(/<img[^>]+og-image/i) // dashboard screenshot hero
+        expect(html).toContain('/p/demo-clinic?k=AK') // single link = their portal
+      }
     }
   })
 
@@ -124,7 +124,7 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
   })
 })
 
-describe('cold-email hygiene (2026-06-10 rewrite: zero links, plain note, replies are the metric)', () => {
+describe('cold-email hygiene (2026-06-10 portal-led: the dashboard is the pitch, one link)', () => {
   const tiers: Array<[string, ProspectClinic]> = [
     ['individual', clinic({ team: team(1) })],
     ['hub', clinic({ team: team(4) })],
@@ -132,49 +132,48 @@ describe('cold-email hygiene (2026-06-10 rewrite: zero links, plain note, replie
     ['unknown city + name', clinic({ team: team(8), city: 'Unknown', shortName: 'Unknown' })],
   ]
 
-  it('the ONLY URL any template carries is the static cal.com walkthrough link (Zac 2026-06-10)', () => {
-    const CAL = process.env.CAL_BOOKING_URL || 'https://cal.com/zac-lewis-so8zjs/30min'
+  it('the ONLY links any template carries point to the prospect portal — no cal.com, no third-party URLs in the body', () => {
     for (const tpl of [T1, T2, T3]) {
       for (const [label, c] of tiers) {
-        const { html, text } = mergeTemplate(tpl, c, 'https://example.com', 'tok')
-        // Strip every occurrence of the sanctioned cal link, then assert no
-        // other URL of any kind survives — unique URLs are Safe Links bait.
-        const htmlStripped = html.split(CAL).join('').split(CAL.replace('https://', '')).join('')
-        const textStripped = text.split(CAL).join('').split(CAL.replace('https://', '')).join('')
-        expect(htmlStripped, `${label} ${tpl.slug} html`).not.toContain('http://')
-        expect(htmlStripped, `${label} ${tpl.slug} html`).not.toContain('https://')
-        expect(textStripped, `${label} ${tpl.slug} text`).not.toContain('http://')
-        expect(textStripped, `${label} ${tpl.slug} text`).not.toContain('https://')
-        expect(html).not.toMatch(/<img/i)
+        const { html } = mergeTemplate(tpl, c, 'https://example.com', 'tok')
+        // Every URL in the email must be a /p/<slug> portal link or the
+        // portal's own og-image screenshot. The booking CTA lives ON the
+        // portal, never in the email body.
+        const urls = html.match(/https?:\/\/[^\s"'<>]+/g) ?? []
+        for (const u of urls) {
+          expect(u, `${label} ${tpl.slug} stray url: ${u}`).toMatch(/\/p\/|\/api\/prospect\/og-image/)
+        }
+        expect(html, `${label} ${tpl.slug}`).not.toMatch(/cal\.com/i)
         expect(html).not.toMatch(/<table/i)
-        // And the walkthrough link IS present in every touch.
-        expect(html, `${label} ${tpl.slug} carries cal link`).toContain(CAL)
       }
     }
   })
 
-  it('T1 body is under 80 words for every tier (strip tags, count to signature)', () => {
+  it('T1 and T2 lead with the dashboard screenshot; T3 carries a portal link, no image', () => {
     for (const [label, c] of tiers) {
-      const { html } = mergeTemplate(T1, c, 'https://example.com', 'tok')
-      const words = bodyWordCount(html)
-      expect(words, `${label} T1 = ${words} words`).toBeLessThan(80)
+      expect(mergeTemplate(T1, c, 'x', 'tok').html, `${label} T1`).toMatch(/<img[^>]+og-image/i)
+      expect(mergeTemplate(T2, c, 'x', 'tok').html, `${label} T2`).toMatch(/<img[^>]+og-image/i)
+      expect(mergeTemplate(T3, c, 'x', 'tok').html, `${label} T3`).toMatch(/\/p\//)
     }
   })
 
-  it('T2 body is under 90 words and T3 under 70, for every tier', () => {
+  it('bodies stay tight — T1 under 120 words, T2/T3 under 90 (screenshot-led, not a wall of text)', () => {
     for (const [label, c] of tiers) {
-      const t2Words = bodyWordCount(mergeTemplate(T2, c, 'https://example.com', 'tok').html)
-      expect(t2Words, `${label} T2 = ${t2Words} words`).toBeLessThan(90)
-      const t3Words = bodyWordCount(mergeTemplate(T3, c, 'https://example.com', 'tok').html)
-      expect(t3Words, `${label} T3 = ${t3Words} words`).toBeLessThan(70)
+      const t1 = bodyWordCount(mergeTemplate(T1, c, 'x', 'tok').html)
+      expect(t1, `${label} T1 = ${t1} words`).toBeLessThan(120)
+      const t2 = bodyWordCount(mergeTemplate(T2, c, 'x', 'tok').html)
+      expect(t2, `${label} T2 = ${t2} words`).toBeLessThan(90)
+      const t3 = bodyWordCount(mergeTemplate(T3, c, 'x', 'tok').html)
+      expect(t3, `${label} T3 = ${t3} words`).toBeLessThan(90)
     }
   })
 
-  it('T1 carries the confident walkthrough booking CTA (Zac 2026-06-10)', () => {
-    const { text } = mergeTemplate(T1, clinic({}), 'https://example.com', 'tok')
-    expect(text).toContain('book a walkthrough')
-    expect(text).toContain('cal.com/')
-    expect(text).not.toContain('Worth a couple of minutes on the phone')
+  it('the booking CTA is NOT in the email — it lives on the portal', () => {
+    const { html } = mergeTemplate(T1, clinic({}), 'https://example.com', 'tok')
+    expect(html).not.toMatch(/book a walkthrough/i)
+    expect(html).not.toMatch(/cal\.com/i)
+    // The email drives to the dashboard, where the call CTA lives.
+    expect(html).toMatch(/dashboard/i)
   })
 
   it('T1 and T2 carry the STOP compliance line; no unsubscribe URL in any body', () => {
