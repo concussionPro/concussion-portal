@@ -437,6 +437,18 @@ export async function processScheduledSends(
   let sentCount = 0
   const resendKey = process.env.RESEND_API_KEY
 
+  // ── Stagger: spread the day's cold sends 7-10 min apart instead of blasting
+  // them in one cron tick. Apollo-style human-cadence — inbox providers flag
+  // sender→burst patterns, and brand-new creative (the portal-led templates)
+  // must prove its bounce/spam profile gradually. Resend schedules each email
+  // for delivery at a future time (supports up to 72h ahead), so the cron just
+  // queues them and returns; Resend handles the timed delivery.
+  // Min/max gap configurable via env; defaults 7-10 min.
+  const STAGGER_MIN_MS = (parseInt(process.env.COLD_STAGGER_MIN_MIN || '7', 10) || 7) * 60_000
+  const STAGGER_MAX_MS = (parseInt(process.env.COLD_STAGGER_MAX_MIN || '10', 10) || 10) * 60_000
+  const runStart = Date.now()
+  let staggerCursorMs = 0 // offset from runStart for the NEXT send
+
   for (const row of due) {
     const templateSlug = row.next_template_slug
     if (!isValidTemplateSlug(templateSlug)) {
@@ -636,6 +648,12 @@ export async function processScheduledSends(
     // out, the claimed log row must NEVER be deleted (deleting it after a
     // post-send bookkeeping failure would re-queue an already-delivered
     // email on the next run).
+    // Schedule this send at runStart + cursor (first email ~now, each later
+    // one 7-10 min after the previous), then advance the cursor for the next.
+    const scheduledAtIso = new Date(runStart + staggerCursorMs).toISOString()
+    const gap = STAGGER_MIN_MS + Math.random() * (STAGGER_MAX_MS - STAGGER_MIN_MS)
+    staggerCursorMs += gap
+
     let sendOutcome: Awaited<ReturnType<Resend['emails']['send']>>
     try {
       const resend = new Resend(resendKey)
@@ -646,6 +664,7 @@ export async function processScheduledSends(
         subject,
         html,
         text,
+        scheduledAt: scheduledAtIso,
         headers: {
           'List-Unsubscribe': `<${BASE_URL}/api/prospect/unsubscribe?t=${unsubToken}>, <mailto:unsubscribe@concussion-education-australia.com>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

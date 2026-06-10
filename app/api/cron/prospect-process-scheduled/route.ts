@@ -116,13 +116,25 @@ export async function GET(request: Request) {
     })
   }
 
+  // New-creative safety ceiling (Zac 2026-06-11): the portal-led templates are
+  // brand-new and unproven. Hold cold volume at 30/day regardless of the
+  // adaptive ramp until their bounce/complaint profile is validated, then
+  // raise COLD_SEND_DAILY_MAX to let the adaptive cap take over again. Sends
+  // are also staggered 7-10 min apart inside processScheduledSends so 30/day
+  // is delivered as a human cadence, never a burst.
+  const COLD_SEND_DAILY_MAX = parseInt(process.env.COLD_SEND_DAILY_MAX || '30', 10) || 30
+  const effectiveCap = Math.min(capDecision.cap, COLD_SEND_DAILY_MAX)
+  console.log(
+    `[prospect cron] adaptive-cap=${capDecision.cap} · new-creative ceiling=${COLD_SEND_DAILY_MAX} · effective=${effectiveCap}`,
+  )
+
   // allowPatternGuess stays false: the SQL HARD GATE (Hunter score>=80,
   // non-role, non-accept-all, non-disposable) means a role mailbox can
   // never reach the per-row checks anyway — passing true here was dead,
   // misleading plumbing.
   const result = await processScheduledSends({
     dryRun: false,
-    dailyCap: capDecision.cap,
+    dailyCap: effectiveCap,
     allowPatternGuess: false,
   })
 
