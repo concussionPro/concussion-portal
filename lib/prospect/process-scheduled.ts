@@ -341,7 +341,29 @@ export async function processScheduledSends(
             WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug
               AND ol.audit_key NOT LIKE '%:test:%'
           )
-        ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
+        -- Size-tier priority (Zac 2026-06-10): large clinics (on-site training
+        -- pitch, >=6 clinical) > medium clinics (Hub Pack, 2-5) > individuals.
+        -- Clinical sum must stay in lockstep with clinicalCount() in
+        -- lib/prospect/pricing.ts (7 clinical keys, excludes practiceManager/admin).
+        ORDER BY
+          CASE
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 2 THEN 1
+            ELSE 2
+          END ASC,
+          pc.scheduled_send_at ASC, pc.priority_wave ASC
         LIMIT 50
       `
     : await sql<QueueRow>`
@@ -385,7 +407,29 @@ export async function processScheduledSends(
             WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug
               AND ol.audit_key NOT LIKE '%:test:%'
           )
-        ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
+        -- Size-tier priority (Zac 2026-06-10): large clinics (on-site training
+        -- pitch, >=6 clinical) > medium clinics (Hub Pack, 2-5) > individuals.
+        -- Clinical sum must stay in lockstep with clinicalCount() in
+        -- lib/prospect/pricing.ts (7 clinical keys, excludes practiceManager/admin).
+        ORDER BY
+          CASE
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 2 THEN 1
+            ELSE 2
+          END ASC,
+          pc.scheduled_send_at ASC, pc.priority_wave ASC
         LIMIT 50
       `
 

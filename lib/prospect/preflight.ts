@@ -44,6 +44,8 @@ export type PreflightFailureCode =
   | 'email_mx_missing'
   | 'email_dns_error'
   | 'email_suppressed'
+  // ICP fit
+  | 'institutional_target'
 
 export interface PreflightResult {
   ok: boolean
@@ -156,6 +158,25 @@ export async function preflightClinic(
     failures.push({ code: 'state_invalid', detail: clinic.state })
   }
 
+  // ─── ICP gate (Zac 2026-06-10): universities and hospitals are NOT
+  // outreach targets. Private clinics with "Health Services" in the name are
+  // fine — only quarantine on unambiguous institutional signals: hospital/
+  // university/TAFE in the name, .edu/.gov email or website domains, and
+  // known public-health-network domains (monashhealth.org etc).
+  const institutionalName = /(universit|hospital|tafe|local health district|public health unit|community health (centre|service)|health department|department of health)/i
+  const institutionalDomain = /@[^@\s]*\.(edu|gov)(\.[a-z]{2})?$|@[^@\s]*\.(edu|gov)\.au$/i
+  const healthNetworkDomain = /@(monashhealth|easternhealth|westernhealth|austinhealth|alfredhealth|barwonhealth|nthqldhealth|healthdirect)\.[a-z.]+$|@health\.(nsw|qld|vic|wa|sa|tas|act|nt)\.gov\.au$|@[^@\s]*health\.org(\.[a-z]{2})?$/i
+  const websiteInstitutional = /\.(edu|gov)\.au(\/|$)/i
+  const emailLower = (clinic.contactEmail ?? '').trim().toLowerCase()
+  if (
+    institutionalName.test(clinic.shortName ?? '') ||
+    institutionalDomain.test(emailLower) ||
+    healthNetworkDomain.test(emailLower) ||
+    websiteInstitutional.test(clinic.clinicWebsiteUrl ?? '')
+  ) {
+    failures.push({ code: 'institutional_target', detail: clinic.shortName ?? emailLower })
+  }
+
   // Team must have at least 1 clinical role; cohort math degrades otherwise
   const t = clinic.team
   const clinicalCount =
@@ -217,6 +238,7 @@ export async function preflightClinic(
     'short_name_missing', 'short_name_unknown',
     'team_clinical_zero',
     'email_format', 'email_disposable', 'email_mx_missing', 'email_suppressed',
+    'institutional_target',
   ])
   const ENRICH_CODES = new Set<PreflightFailureCode>([
     'email_role_only', 'email_dns_error',

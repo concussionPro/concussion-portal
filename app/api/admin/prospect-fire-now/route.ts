@@ -99,6 +99,26 @@ export async function POST(req: NextRequest) {
       AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
       AND COALESCE(pc.verification_disposable, FALSE) = FALSE
     ORDER BY
+      -- Size-tier priority (Zac 2026-06-10): large (on-site pitch, >=6 clinical)
+      -- > medium (Hub Pack, 2-5) > individuals. Keep in lockstep with
+      -- clinicalCount() in lib/prospect/pricing.ts (7 clinical keys).
+      CASE
+        WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+            + COALESCE((pc.team->>'physiotherapists')::int, 0)
+            + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+            + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+            + COALESCE((pc.team->>'exercisePhys')::int, 0)
+            + COALESCE((pc.team->>'myotherapists')::int, 0)
+            + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
+        WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+            + COALESCE((pc.team->>'physiotherapists')::int, 0)
+            + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+            + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+            + COALESCE((pc.team->>'exercisePhys')::int, 0)
+            + COALESCE((pc.team->>'myotherapists')::int, 0)
+            + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 2 THEN 1
+        ELSE 2
+      END,
       CASE WHEN pc.city IS NOT NULL AND pc.city !~* 'unknown' THEN 0 ELSE 1 END,
       CASE pc.status WHEN 'approved' THEN 0 WHEN 'opened' THEN 1 ELSE 2 END,
       pc.scheduled_send_at ASC,

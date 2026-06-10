@@ -1,5 +1,6 @@
 import type { EmailTemplate, Discipline, ProspectClinic } from './types'
 import { dominantDiscipline, teamBreakdownString, teamTotal, clinicalCount, hubPackPriceFor, computePricing } from './pricing'
+import { CONFIG } from '@/lib/config'
 
 /**
  * Discipline-aware T1 opening line. Single sentence — sets context fast.
@@ -196,10 +197,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
       <p style="margin: 12px 0 14px; font-size: 14px; color: #1a2332; line-height: 1.55;">Two ways the program can land:</p>
 
-      <ul style="margin: 0 0 14px; padding: 0 0 0 18px; font-size: 13.5px; color: #1a2332; line-height: 1.6;">
-        <li style="margin-bottom: 8px;"><strong>Online Hub Pack</strong> — your team trained in their own time, lifetime access, clinic-branded clinical pack. Best fit for self-paced teams.</li>
-        <li><strong>On-site cohort day</strong> — full day at {clinic_short_name}, hands-on with the whole team, on a Saturday that suits. Best fit for 6+ clinicians.</li>
-      </ul>
+      {program_options_block}
 
       {followup_price_block}
 
@@ -276,6 +274,10 @@ export function mergeTemplate(
   const hubPricing = hubPackPriceFor(clinic.team)
   const cohortPricing = computePricing(clinic.team, clinic.travelBand)
   const isOnSiteTarget = hubPricing.recommendedOffer === 'on-site-cohort'
+  // Solo clinicians (≤1 clinical) get the individual-course pitch, not the
+  // Hub Pack — a "covers up to 5 clinicians" team offer mismatches a solo
+  // practice (Zac 2026-06-10: large on-site > medium hub pack > individuals).
+  const isIndividualTarget = !isOnSiteTarget && clinicalCount(clinic.team) <= 1
 
   let statsBlock: string
   let offerBlock: string
@@ -320,6 +322,29 @@ export function mergeTemplate(
       : ''
     offerBlock = `<p style="margin: 18px 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
         ${headerLine}${invitingNote}
+      </p>`
+  } else if (isIndividualTarget) {
+    // Solo clinician — individual course pitch. Claims limited to existing
+    // approved copy: 8 online modules / 8 CPD hours online (14 incl. the
+    // hands-on workshop), OA endorsed, lifetime access, SCAT6/VOMS/BESS
+    // curriculum. No price in T1 (same gating as the other variants), no
+    // fabricated deadlines/discounts, no workshop dates.
+    statsBlock = `<table class="bento" role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td class="stat teal">
+          <span class="headline"><span class="num">8</span><span class="unit"> modules</span></span>
+          <span class="sub">Online, at your own pace · lifetime access</span>
+        </td>
+        <td class="stat amber">
+          <span class="headline"><span class="num">1</span><span class="unit"> protocol</span></span>
+          <span class="sub">SCAT6/SCOAT6 · VOMS · BESS · cervical · RTP</span>
+        </td>
+        <td class="stat indigo">
+          <span class="headline"><span class="num">8</span><span class="unit"> CPD</span></span>
+          <span class="sub">OA endorsed · 14 with the hands-on workshop</span>
+        </td>
+      </tr></table>`
+    offerBlock = `<p style="margin: 18px 0 16px; font-size: 14.5px; line-height: 1.55; color: #1a2332;">
+        <strong>8 CPD hours — Osteopathy Australia endorsed, AHPRA-aligned.</strong> The complete Concussion Clinical Mastery online curriculum (SCAT6/SCOAT6, VOMS, oculomotor, BESS, cervical, return-to-play protocols), built so a single clinician can run a structured concussion protocol without a multidisciplinary team on site. Includes the Clinical Toolkit — referral templates, RTP forms, clearance letters.
       </p>`
   } else {
     // Small / medium clinic — Hub Pack pitch.
@@ -456,6 +481,15 @@ export function mergeTemplate(
         <strong>2. Pre-season baseline testing — free</strong> — athletes self-administer their SCAT6 baseline remotely. No appointment, no setup on your end. Massive head-start if a concussion happens mid-season: <a href="{preseason_url}">{base_url_short}/preseason</a>
       </p>
       <p style="margin: 14px 0 0;">Both are genuinely free, no upsell trap. If they're useful and you want the bigger picture for ${clinic.shortName}, a full on-site cohort day is the next step:</p>`
+  } else if (isIndividualTarget) {
+    followupIntro = `<p>Quick follow-up — wanted to share two free tools you can use this week, no strings:</p>
+      <p style="margin: 10px 0; padding: 10px 12px; background: #f0fdfa; border-radius: 6px; font-size: 13.5px; line-height: 1.55;">
+        <strong>1. Free SCAT mastery mini-course</strong> — 1-hr CPD-eligible refresher (SCAT6, SCOAT6, oculomotor, BESS). Free to take: <a href="{scat_pack_url}">{base_url_short}/scat-mastery</a>
+      </p>
+      <p style="margin: 10px 0; padding: 10px 12px; background: #f0fdfa; border-radius: 6px; font-size: 13.5px; line-height: 1.55;">
+        <strong>2. Pre-season baseline testing — free</strong> — your athletes self-administer their SCAT6 baseline remotely. No appointment, no setup on your end. Massive head-start when a concussion happens: <a href="{preseason_url}">{base_url_short}/preseason</a>
+      </p>
+      <p style="margin: 14px 0 0;">Both genuinely free. If they fit how you practise, the full online course is the rest of the picture (complete protocol, RTP tracking, clinical document pack):</p>`
   } else {
     followupIntro = `<p>Quick follow-up — wanted to share two free tools ${clinic.shortName} can use this week, no strings:</p>
       <p style="margin: 10px 0; padding: 10px 12px; background: #f0fdfa; border-radius: 6px; font-size: 13.5px; line-height: 1.55;">
@@ -478,6 +512,10 @@ export function mergeTemplate(
       const cohortPriceFormatted = `A$${recoCohortFp.total.toLocaleString('en-AU')}`
       followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
         <strong>${cohortPriceFormatted}</strong> for ${recoCohortFp.clinicians} clinicians, full-day on-site at ${clinic.shortName}. Includes lifetime online access for everyone in the cohort.
+      </p>`
+    } else if (isIndividualTarget) {
+      followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
+        <strong>$${CONFIG.COURSE.PRICE_ONLINE} online course</strong> — the complete 8-module curriculum, 8 CPD hours, lifetime access. Hands-on workshop upgrade available later if you want the full 14 CPD hours.
       </p>`
     } else {
       followupPriceBlock = `<p style="margin: 0 0 12px; font-size: 14px; color: #1a2332; line-height: 1.55;">
@@ -621,6 +659,12 @@ export function mergeTemplate(
       <li><strong>${recoCohort.clinicians} clinicians trained together in one day at ${clinic.shortName}</strong> — hands-on practice with VOMS, oculomotor, BESS, cervical, SCAT6/SCOAT6. No staggered training over months.</li>
       <li><strong>Clinic-branded admin pack included</strong> — pre-built GP referrals, NDIS framework, school sport intake, RTP clearance docs — every form auto-fills with ${clinic.shortName}'s details.</li>
     </ul>`
+  } else if (isIndividualTarget) {
+    followupBullets = `<ul class="points" style="margin: 14px 0 14px;">
+      <li><strong>8 CPD hours online — OA endorsed, AHPRA-aligned</strong> (14 with the hands-on workshop)</li>
+      <li><strong>The complete protocol for one clinician</strong> — SCAT6/SCOAT6, VOMS, oculomotor, BESS, cervical, return-to-play — completed online at your own pace, lifetime access.</li>
+      <li><strong>Clinical Toolkit included</strong> — referral templates, RTP forms, clearance letters, ready to use with your own caseload.</li>
+    </ul>`
   } else {
     followupBullets = `<ul class="points" style="margin: 14px 0 14px;">
       <li><strong>14 CPD hours per clinician — OA endorsed, AHPRA-aligned</strong></li>
@@ -628,10 +672,23 @@ export function mergeTemplate(
       <li><strong>Clinic-branded admin pack included</strong> — pre-built GP referrals, NDIS framework, school sport intake, RTP clearance docs — every form auto-fills with ${clinic.shortName}'s details. $497/clinician workshop upgrade when you want hands-on credentials.</li>
     </ul>`
   }
+  // T3 "two ways the program can land" list — offer-type aware so the solo
+  // variant never pitches team products (Hub Pack / on-site cohort).
+  const programOptionsBlock = isIndividualTarget
+    ? `<ul style="margin: 0 0 14px; padding: 0 0 0 18px; font-size: 13.5px; color: #1a2332; line-height: 1.6;">
+        <li style="margin-bottom: 8px;"><strong>Online course</strong> — the complete 8-module curriculum at your own pace, lifetime access, 8 CPD hours.</li>
+        <li><strong>Hands-on workshop day</strong> — add it later for the full 14 CPD hours when a round opens near you.</li>
+      </ul>`
+    : `<ul style="margin: 0 0 14px; padding: 0 0 0 18px; font-size: 13.5px; color: #1a2332; line-height: 1.6;">
+        <li style="margin-bottom: 8px;"><strong>Online Hub Pack</strong> — your team trained in their own time, lifetime access, clinic-branded clinical pack. Best fit for self-paced teams.</li>
+        <li><strong>On-site cohort day</strong> — full day at ${clinic.shortName}, hands-on with the whole team, on a Saturday that suits. Best fit for 6+ clinicians.</li>
+      </ul>`
+
   const variables: Record<string, string | undefined> = {
     base_url: baseUrl,
     clinic_name: clinic.name,
     clinic_short_name: clinic.shortName,
+    program_options_block: programOptionsBlock,
     clinical_team_count: String(rawClinicalCount),
     hub_seat_count: String(hubSeatCount),
     clinical_team_word: hubSeatCount === 1 ? 'clinician' : 'clinicians',
