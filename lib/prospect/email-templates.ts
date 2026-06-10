@@ -190,11 +190,20 @@ export function mergeTemplate(
   const discipline = dominantDiscipline(clinic.team)
   const soloPlural = SOLO_PLURAL[discipline] ?? 'clinicians'
 
-  // ── The portal: the single link, fronted by its screenshot ────────────
-  const portalUrl = `${PORTAL_BASE}/p/${clinic.slug}?k=${clinic.accessKey ?? ''}`
+  // ── The portal: the single destination, fronted by its screenshot ─────
+  // UTM-tagged so analytics attributes the visit to the outreach campaign,
+  // which touch (T1/T2/T3 = utm_campaign), which clinic (utm_content), and
+  // which link position drove it (utm_term: hero screenshot vs text link).
+  // The portal landing reads these and stamps them on the portal-view row.
+  const utmCampaign =
+    template.slug === 'initial' ? 'cold_t1' : template.slug === 'followup' ? 'cold_t2' : 'cold_t3'
+  const portalUrlFor = (term: string) =>
+    `${PORTAL_BASE}/p/${clinic.slug}?k=${clinic.accessKey ?? ''}` +
+    `&utm_source=outreach&utm_medium=email&utm_campaign=${utmCampaign}` +
+    `&utm_content=${encodeURIComponent(clinic.slug)}&utm_term=${term}`
   const ogImageUrl = `${PORTAL_BASE}/api/prospect/og-image?slug=${encodeURIComponent(clinic.slug)}&v=${OG_VERSION}`
-  const hero = screenshotHero(portalUrl, ogImageUrl, safeShortName)
-  const portalLink = `<a href="${portalUrl}">open ${safeShortName}'s dashboard</a>`
+  const hero = screenshotHero(portalUrlFor('dashboard_preview'), ogImageUrl, safeShortName)
+  const portalLink = `<a href="${portalUrlFor('dashboard_link')}">open ${safeShortName}'s dashboard</a>`
 
   // What's built for them + where the value lands — tier-matched. This is the
   // "what we do / what's in it for you" the email leads with before the

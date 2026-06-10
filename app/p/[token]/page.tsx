@@ -7,7 +7,7 @@ import { accessKeyMatches } from '@/lib/prospect/access-key'
 
 interface PageProps {
   params: Promise<{ token: string }>
-  searchParams: Promise<{ k?: string }>
+  searchParams: Promise<{ k?: string; utm_source?: string; utm_campaign?: string; utm_term?: string }>
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
@@ -35,7 +35,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
 export default async function ProspectPage({ params, searchParams }: PageProps) {
   const { token } = await params
-  const { k } = await searchParams
+  const { k, utm_source, utm_campaign, utm_term } = await searchParams
 
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
@@ -56,6 +56,9 @@ export default async function ProspectPage({ params, searchParams }: PageProps) 
     viewerIp,
     userAgent,
     section: 'landing',
+    utmSource: utm_source,
+    utmCampaign: utm_campaign,
+    utmTerm: utm_term,
   }).catch((err) => console.error('[Portal view tracking failed]', err))
 
   return <ProspectLanding clinic={clinic} />

@@ -629,7 +629,7 @@ function NextStepCTA({ clinic }: { clinic: ProspectClinic }) {
       <div className="mb-4">
         <a
           data-track-cta="next-step-book-cal"
-          href="https://cal.com/zac-lewis-so8zjs/30min"
+          href={`https://cal.com/zac-lewis-so8zjs/30min?utm_source=portal&utm_medium=next_step_cta&utm_campaign=cohort_booking&utm_content=${encodeURIComponent(clinic.slug)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group px-6 py-5"

@@ -329,10 +329,19 @@ export async function recordPortalView(input: {
   viewerIp?: string
   userAgent?: string
   section: string
+  utmSource?: string
+  utmCampaign?: string
+  utmTerm?: string
 }): Promise<void> {
+  // utm_* captured so a real portal visit is attributed back to the outreach
+  // touch (T1/T2/T3 = utm_campaign) and the link position that drove it
+  // (utm_term). Lazy columns — idempotent, safe on every call.
+  await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS utm_source TEXT`
+  await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS utm_campaign TEXT`
+  await sql`ALTER TABLE prospect_portal_views ADD COLUMN IF NOT EXISTS utm_term TEXT`
   await sql`
-    INSERT INTO prospect_portal_views (clinic_id, viewer_ip, user_agent, section_visited)
-    VALUES (${input.clinicId}, ${input.viewerIp ?? null}, ${input.userAgent ?? null}, ${input.section})
+    INSERT INTO prospect_portal_views (clinic_id, viewer_ip, user_agent, section_visited, utm_source, utm_campaign, utm_term)
+    VALUES (${input.clinicId}, ${input.viewerIp ?? null}, ${input.userAgent ?? null}, ${input.section}, ${input.utmSource ?? null}, ${input.utmCampaign ?? null}, ${input.utmTerm ?? null})
   `
 }
 
