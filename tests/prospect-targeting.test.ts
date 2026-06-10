@@ -87,8 +87,10 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     const { html } = mergeTemplate(T1, clinic({ team: team(4) }), 'https://example.com', 'tok')
     expect(html).toContain('free to use')
     expect(html).toMatch(/SCAT6.*forms/i)
-    expect(html).toContain('baseline-testing tool')
+    expect(html).toContain('baseline testing')
     expect(html).not.toMatch(/I built/i) // facts-first, no "I built you a dashboard" preamble
+    const words = html.replace(/<[^>]+>/g, ' ').split('Zac Lewis')[0].split(/\s+/).filter((w) => /[a-z0-9]/i.test(w)).length
+    expect(words, `T1 = ${words} words`).toBeLessThan(80) // elite first-touch benchmark
   })
 
   it('T2 keeps the size-matched angle per tier', () => {

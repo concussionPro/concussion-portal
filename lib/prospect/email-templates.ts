@@ -212,22 +212,25 @@ export function mergeTemplate(
   // Facts-first (Zac 2026-06-11): lead with the regulatory WHY-NOW + the
   // tier-matched offer. No "I built you a dashboard…" preamble — prospects
   // don't care what we set up, they care what's changed and what it does.
+  // Hard-hitting facts + offer, kept tight so T1 lands UNDER 80 words (the
+  // elite first-touch benchmark — Instantly 2025 / 3M-email analysis). Clinic
+  // name is mentioned ONCE (in the portal link) to keep long names from
+  // blowing the count.
   let valueLine: string
   if (isOnSiteTarget) {
-    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. I train your whole team in the protocol in one on-site day — 14 CPD hours each, Osteopathy Australia endorsed.`
+    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't ready. I train your whole team in one on-site day — 14 CPD hours each, Osteopathy Australia endorsed.`
   } else if (isIndividualTarget) {
-    valueLine = `${REGULATORY_LINE} ${soloPlural.replace(/^./, (c) => c.toUpperCase())} working solo get the clearance questions first. The whole protocol — SCAT6, VOMS, return-to-play — is self-paced online, 8 CPD hours, Osteopathy Australia endorsed.`
+    valueLine = `${REGULATORY_LINE} ${soloPlural.replace(/^./, (c) => c.toUpperCase())} working solo get the clearance questions first. The full protocol — SCAT6, VOMS, return-to-play — is self-paced online, 8 CPD hours, OA endorsed.`
   } else {
-    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't set up for it. Your team trains online with a clinic-branded clinical toolkit to run the protocol day to day — 14 CPD hours each, Osteopathy Australia endorsed.`
+    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't ready. Your team trains online with a clinic-branded clinical toolkit — 14 CPD hours each, Osteopathy Australia endorsed.`
   }
 
-  // T1 — facts-first: regulatory why-now + offer → portal link. The portal
-  // leads with FREE, immediately-usable tools (SCAT6 forms, baseline testing,
-  // Module 1 trial) — give-before-you-ask lowers the click barrier and lifts
-  // first-touch conversion. All inside the ONE portal link (no extra links).
+  // T1 — facts → free-tools value offer → ONE portal link. The portal leads
+  // with FREE, immediately-usable tools (SCAT6 forms, baseline testing, Module
+  // 1) — give-before-you-ask lifts first-touch conversion, all inside the one link.
   const t1Body = [
     `<p>${valueLine}</p>`,
-    `<p>I've set up a learning portal for ${safeShortName} — the SCAT6/SCOAT6 forms, a baseline-testing tool and Module 1 are free to use, with pricing and a 15-minute call inside: ${portalLink}.</p>`,
+    `<p>The SCAT6/SCOAT6 forms, baseline testing and Module 1 are free to use — pricing and a 15-minute call are inside too: ${portalLink}.</p>`,
   ].join('\n')
 
   // T2 — short nudge back to the portal with one fresh angle. No image.
