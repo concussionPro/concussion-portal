@@ -252,28 +252,49 @@ describe('cold-email hygiene (2026-06-10 portal-led: the dashboard is the pitch,
   })
 })
 
-describe('institutional preflight gate (Zac 2026-06-10: unis and hospitals are not targets)', () => {
-  const cases: Array<[string, Partial<ProspectClinic>]> = [
+describe('ICP preflight gate — AU private clinics only (regression: 2026-06-11 leaks)', () => {
+  // Every one of these ACTUALLY GOT SENT or queued on 2026-06-11 and must be blocked.
+  const mustBlock: Array<[string, Partial<ProspectClinic>]> = [
+    ['UK clinic (.co.uk)', { shortName: 'LSO London Sports Orthopaedics', contactEmail: 'anthony.tang@sportsortho.co.uk', city: 'London' }],
+    ['Epworth hospital (.org.au)', { shortName: 'Epworth', contactEmail: 'aidan.davey@epworth.org.au' }],
+    ['UQ Sport (university, .com.au)', { shortName: 'UQ Sport', contactEmail: 'davidh@uqsport.com.au' }],
+    ['Hunter Academy (.org.au)', { shortName: 'Hunter Academy of Sport', contactEmail: 'sallie@hunteracademy.org.au' }],
+    ['Far North Community Services (.org.au)', { shortName: 'Far North Community Services', contactEmail: 'edward.hanrahan@farnorth.org.au' }],
+    ['Laser I.T. (.biz, non-clinic)', { shortName: 'Laser I.T.', contactEmail: 'adrian@laserit.biz' }],
+    ['Salvation Army (.org.au)', { shortName: 'The Salvation Army Australia', contactEmail: 'cameron.strathdee@salvationarmy.org.au' }],
+    ['Brain Injury SA (.org.au)', { shortName: 'Brain Injury SA', contactEmail: 'dylanc@braininjurysa.org.au' }],
+    ['Therapy Focus (.org.au)', { shortName: 'Therapy Focus', contactEmail: 'chelsea.petrovic@therapyfocus.org.au' }],
+    ['Primary Health Care Limited (corporate)', { shortName: 'Primary Health Care Limited', contactEmail: 'donald.otasowie@primaryhealthcare.com.au' }],
+    ['Strength Clinic Academy Singapore', { shortName: 'Strength Clinic Academy', contactEmail: 'james@strengthclinicacademy.com', city: 'Singapore' }],
+    ['NZ chiro (.co.nz)', { shortName: 'Connect Chiropractic', contactEmail: 'matt@connectchiro.co.nz' }],
+    ['NZ osteo website', { shortName: 'The Osteopathic Clinic', contactEmail: 'matt@connecthealth.nz' }],
+    ['UK physio (.co.uk)', { shortName: 'Inspire Physio & Fitness', contactEmail: 'jubilee@inspire-physio.co.uk' }],
     ['hospital in name', { shortName: 'University Hospital Geelong' }],
     ['health network email', { contactEmail: 'jane@monashhealth.org' }],
-    ['UK public health email', { contactEmail: 'jane@health.org.uk' }],
     ['edu.au email', { contactEmail: 'jane@unimelb.edu.au' }],
     ['gov.au email', { contactEmail: 'jane@health.nsw.gov.au' }],
-    ['edu.au website', { clinicWebsiteUrl: 'https://sport.monash.edu.au/clinic' }],
-    ['university in name', { shortName: 'University Sports Medicine Centre' }],
   ]
-  for (const [label, overrides] of cases) {
-    it(`quarantines: ${label}`, async () => {
+  for (const [label, overrides] of mustBlock) {
+    it(`BLOCKS: ${label}`, async () => {
       const result = await preflightClinic(clinic(overrides), { verifyEmail: false })
-      expect(result.failures.map((f) => f.code)).toContain('institutional_target')
+      expect(result.failures.map((f) => f.code), label).toContain('institutional_target')
       expect(result.severity).toBe('quarantine')
     })
   }
 
-  it('does NOT flag private clinics with "Health Services" in the name', async () => {
-    for (const name of ['Inspire Health Services', 'Minerva Allied Health Services', 'Momentum Physiotherapy & Health Services']) {
-      const result = await preflightClinic(clinic({ shortName: name }), { verifyEmail: false })
-      expect(result.failures.map((f) => f.code)).not.toContain('institutional_target')
-    }
-  })
+  // Legit AU private clinics on .com.au / .com — must NOT be blocked.
+  const mustPass: Array<[string, Partial<ProspectClinic>]> = [
+    ['Barwon Sports Physiotherapy', { shortName: 'Barwon Sports Physiotherapy', contactEmail: 'marcus@barwonsportsphysio.com.au' }],
+    ['Momentum Physiotherapy & Health Services', { shortName: 'Momentum Physiotherapy & Health Services', contactEmail: 'simonetsang@momentumphysio.com' }],
+    ['Sydney Physios and Allied Health Service', { shortName: 'Sydney Physios and Allied Health Service', contactEmail: 'hai@sydneyphysios.com.au' }],
+    ['Minerva Allied Health Services', { shortName: 'Minerva Allied Health Services', contactEmail: 'samanthab@minervaalliedhealth.com' }],
+    ['Inspire Health Services (.com.au)', { shortName: 'Inspire Health Services', contactEmail: 'will.morris@inspirehealthservices.com.au' }],
+    ['Super Clinic Physio', { shortName: 'Super Clinic Physio', contactEmail: 'admin@superclinicphysio.com.au' }],
+  ]
+  for (const [label, overrides] of mustPass) {
+    it(`PASSES: ${label}`, async () => {
+      const result = await preflightClinic(clinic(overrides), { verifyEmail: false })
+      expect(result.failures.map((f) => f.code), label).not.toContain('institutional_target')
+    })
+  }
 })

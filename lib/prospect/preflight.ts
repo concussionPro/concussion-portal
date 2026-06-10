@@ -158,21 +158,42 @@ export async function preflightClinic(
     failures.push({ code: 'state_invalid', detail: clinic.state })
   }
 
-  // ─── ICP gate (Zac 2026-06-10): universities and hospitals are NOT
-  // outreach targets. Private clinics with "Health Services" in the name are
-  // fine — only quarantine on unambiguous institutional signals: hospital/
-  // university/TAFE in the name, .edu/.gov email or website domains, and
-  // known public-health-network domains (monashhealth.org etc).
-  const institutionalName = /(universit|hospital|tafe|local health district|public health unit|community health (centre|service)|health department|department of health)/i
-  const institutionalDomain = /@[^@\s]*\.(edu|gov)(\.[a-z]{2})?$|@[^@\s]*\.(edu|gov)\.au$/i
-  const healthNetworkDomain = /@(monashhealth|easternhealth|westernhealth|austinhealth|alfredhealth|barwonhealth|nthqldhealth|healthdirect)\.[a-z.]+$|@health\.(nsw|qld|vic|wa|sa|tas|act|nt)\.gov\.au$|@[^@\s]*health\.org(\.[a-z]{2})?$/i
-  const websiteInstitutional = /\.(edu|gov)\.au(\/|$)/i
+  // ─── ICP gate. CEA targets AUSTRALIAN PRIVATE allied-health CLINICS only.
+  // Quarantine anything else — and the gate is DOMAIN-first because the domain
+  // TLD is the reliable signal (names over-match: "Barwon Sports Physio" is a
+  // legit clinic, "Health Services" in a name is fine).
+  //
+  // (a) BAD EMAIL DOMAIN — the decisive check:
+  //   - .org.au / .edu / .gov / .edu.au / .gov.au → AU institutions, charities,
+  //     hospitals, health services, universities, academies (epworth.org.au,
+  //     hunteracademy.org.au, salvationarmy.org.au, *.gov.au …)
+  //   - foreign TLDs (.uk/.co.uk, .nz/.co.nz, .sg, .ie, .ca, .us) → not Australia
+  //   - .biz and other non-clinic TLDs → junk data (laserit.biz)
+  //   AU PRIVATE clinics legitimately use .com.au / .net.au / .physio / .health /
+  //   .com — those are NOT blocked here.
+  const badEmailDomain =
+    /@[^@\s]*\.(org\.au|edu\.au|gov\.au|asn\.au|edu|gov|uk|nz|sg|ie|ca|us|biz)$/i
+  // (b) UNAMBIGUOUS INSTITUTIONAL NAMES / brands (tight — no loose "health
+  //     services"): hospitals, universities (incl. UQ), TAFEs, academies,
+  //     charities, corporate health operators, public-health bodies.
+  const institutionalName =
+    /(\buniversit|\buni\b|\buq\b|\btafe\b|hospital|epworth|salvation army|st vincent|brain injury|\bacademy\b|primary health care|local health district|public health|community health (centre|service)|health department|department of health|\bhealthcare limited\b)/i
+  // (c) Health-network mail domains on non-.au TLDs (monashhealth.org etc.)
+  const healthNetworkDomain =
+    /@(monashhealth|easternhealth|westernhealth|austinhealth|alfredhealth|barwonhealth|nthqldhealth|healthdirect|svha|svhm)\b/i
+  // (d) Foreign or institutional WEBSITE domain.
+  const websiteBad = /\.(edu|gov)\.au(\/|$)|\.(co\.)?(uk|nz)(\/|$)|\.(sg|ie|biz)(\/|$)/i
+  // (e) Non-AU CITY (foreign clinics that slipped an AU-looking domain).
+  const foreignCity = /\b(london|singapore|auckland|wellington|dublin|toronto|new york|manchester|christchurch)\b/i
+
   const emailLower = (clinic.contactEmail ?? '').trim().toLowerCase()
   if (
+    badEmailDomain.test(emailLower) ||
     institutionalName.test(clinic.shortName ?? '') ||
-    institutionalDomain.test(emailLower) ||
     healthNetworkDomain.test(emailLower) ||
-    websiteInstitutional.test(clinic.clinicWebsiteUrl ?? '')
+    websiteBad.test(clinic.clinicWebsiteUrl ?? '') ||
+    foreignCity.test(clinic.city ?? '') ||
+    foreignCity.test(clinic.shortName ?? '')
   ) {
     failures.push({ code: 'institutional_target', detail: clinic.shortName ?? emailLower })
   }
