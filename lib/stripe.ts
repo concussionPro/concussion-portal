@@ -379,7 +379,7 @@ function getCheckoutSubmitMessage(location?: string): string {
     return `Your workshop: ${cityName}, ${locationConfig.date}. You'll receive a login link by email after purchase.`
   }
 
-  return `Your workshop location: ${cityName}. Your date will be confirmed once ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians are registered. You'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice.`
+  return `Your workshop location: ${cityName}. Your date will be confirmed as demand opens up in your city. You'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice.`
 }
 
 /**

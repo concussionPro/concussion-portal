@@ -308,7 +308,7 @@ export function NextActionCard() {
                   Ready for Hands-On Training?
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                  Join the waiting pool for your nearest city. Once 8+ clinicians are ready, we&apos;ll lock in a workshop date and send you booking details.
+                  Join the waiting pool for your nearest city. We run workshops as demand opens up in each city — we&apos;ll send booking details when the next date is confirmed.
                 </p>
 
                 {poolResult?.success ? (

@@ -88,7 +88,7 @@ export function OtherCityInterest() {
       <p className="text-[12px] text-slate-600 leading-snug mb-3">
         {isTeam
           ? 'In-house training for clinics, sports orgs, and hospital networks. Pricing scoped privately on a short call.'
-          : `Once ${cityLabel} hits 8 registrations we lock in a date — you'll be the first to know.`}
+          : `We run ${cityLabel} workshops as demand opens up — register and you'll be the first to know when the next date is confirmed.`}
       </p>
 
       {done ? (

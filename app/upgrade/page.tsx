@@ -159,7 +159,7 @@ function UpgradeContent() {
         <div className="glass rounded-2xl p-6 md:p-8 mb-8">
           <h2 className="font-bold text-lg mb-2">Choose your workshop location</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            We confirm dates once {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians register per city. You&apos;ll get at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
+            We confirm workshop dates as demand opens up in each city — you&apos;ll get at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {LOCATIONS.map(loc => (

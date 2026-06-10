@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (rowCount === 0) {
       return NextResponse.json({
         success: true,
-        message: `You're already in the ${cityLabel} pool. We'll notify you when 8+ clinicians are ready.`,
+        message: `You're already in the ${cityLabel} pool. We'll notify you when the next date is confirmed.`,
         duplicate: true,
       })
     }
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `You're in the ${cityLabel} pool! We'll notify you when 8+ clinicians are ready.`,
+      message: `You're in the ${cityLabel} pool! We'll notify you when the next date is confirmed.`,
       totalInPool,
     })
   } catch (error) {
@@ -173,7 +173,7 @@ function buildConfirmationEmail(name: string, city: string): string {
 
       <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 20px; margin: 24px 0;">
         <p style="font-size: 14px; color: #0f766e; margin: 0; font-weight: 600;">
-          Once 8+ clinicians are ready in ${city}, we'll lock in a date and send you booking details.
+          We'll confirm a ${city} date as demand opens up and send you booking details.
         </p>
       </div>
 

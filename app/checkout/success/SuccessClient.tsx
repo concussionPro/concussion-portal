@@ -186,7 +186,7 @@ function CheckoutSuccessContent() {
               <p className="text-sm font-semibold text-accent uppercase tracking-wider mb-2">Your Workshop — {location.city}</p>
               <p className="text-lg font-bold mb-2">Your spot is reserved</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                We confirm dates once {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants are locked in per city. You&apos;ll be notified at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop.
+                We confirm dates as demand opens up in each city. You&apos;ll be notified at least {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop.
               </p>
             </div>
           )

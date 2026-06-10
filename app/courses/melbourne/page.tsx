@@ -226,7 +226,7 @@ export default function MelbournePage() {
                 ? `Join Melbourne clinicians mastering evidence-based concussion management. Workshop date confirmed — limited spots for optimal hands-on practice.`
                 : isClosed
                 ? `These workshops run regularly and fill fast. Register your interest and you'll get the next Melbourne date before it's public — plus you can start the online modules today.`
-                : `Join Melbourne clinicians mastering evidence-based concussion management. Reserve your spot now — dates confirmed once ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants per city are locked in.`}
+                : `Join Melbourne clinicians mastering evidence-based concussion management. We run workshops as demand opens up — register and you'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice when the next date is confirmed.`}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               {isConfirmed ? (

@@ -379,7 +379,7 @@ function WorkshopCard({
         </div>
         <p className="text-sm text-foreground font-semibold mb-2">Choose Your Workshop City</p>
         <p className="text-xs text-muted-foreground mb-3">
-          Online modules complete. Nominate your city — once {CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} clinicians register, we confirm a date.
+          Online modules complete. Nominate your city — we confirm dates as demand opens up.
         </p>
         <select
           value={selectedCity}

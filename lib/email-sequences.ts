@@ -663,13 +663,12 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
   },
   {
     day: 21,
-    subject: (city: string, count: number, remaining: number) =>
-      `${city}: ${count} registered — ${remaining} more to confirm your date`,
-    template: (name: string, city: string, count: number, threshold: number) => {
-      const remaining = threshold - count
+    subject: (city: string, _count?: number, _remaining?: number) =>
+      `Your ${city} concussion workshop — building the next date`,
+    template: (name: string, city: string, _count?: number, _threshold?: number) => {
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-        <p>${city} progress: <strong>${count} of ${threshold}</strong> spots filled${remaining > 0 ? ` — ${remaining} more to go` : ''}.</p>
+        <p>Just a note that you're on the list for the next ${city} hands-on concussion workshop — we run these as demand opens up in each city and you'll get plenty of notice once the date's confirmed.</p>
         <p>If you know anyone who'd benefit from hands-on concussion training, send them our way:</p>
         <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d21', 'share')}" class="cta-secondary">Share the Course</a></center>
         <div class="sig">Zac</div>
@@ -678,14 +677,13 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
   },
   {
     day: 28,
-    subject: (city: string, count: number, remaining: number) =>
-      `${city}: ${count} registered — ${remaining} more to confirm your date`,
-    template: (name: string, city: string, count: number, threshold: number) => {
-      const remaining = threshold - count
+    subject: (city: string, _count?: number, _remaining?: number) =>
+      `${city} concussion workshop — still on your radar?`,
+    template: (name: string, city: string, _count?: number, _threshold?: number) => {
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-        <p>Month check-in: <strong>${city}</strong> has <strong>${count} of ${threshold}</strong> registrants${remaining > 0 ? ` — ${remaining} more to lock in a date` : ' — date confirmation coming soon'}.</p>
-        <p>Every new registrant brings your workshop closer. Share with colleagues who manage concussions:</p>
+        <p>Month check-in — you're still on the list for the next ${city} hands-on concussion workshop. We confirm dates as demand opens up in each city, and you'll get plenty of notice when yours lands.</p>
+        <p>Know a colleague who manages concussions? Send them our way:</p>
         <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d28', 'share')}" class="cta-secondary">Share with a Colleague</a></center>
         <div class="sig">Zac</div>
       `)

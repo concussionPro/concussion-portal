@@ -141,7 +141,7 @@ export default function SydneyPage() {
               Secure Your Spot in {location.city}
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Join Sydney clinicians mastering evidence-based concussion management.{location.status === 'confirmed' ? ` Workshop date confirmed — limited spots for optimal hands-on practice.` : ` Reserve your spot now — dates confirmed once ${CONFIG.WORKSHOP.CONFIRMATION_THRESHOLD} registrants per city are locked in.`}
+              Join Sydney clinicians mastering evidence-based concussion management.{location.status === 'confirmed' ? ` Workshop date confirmed — limited spots for optimal hands-on practice.` : ` We run workshops as demand opens up — register and you'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice when the next date is confirmed.`}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               {location.status === 'confirmed' ? (
