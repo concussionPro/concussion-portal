@@ -368,8 +368,25 @@ interface ProspectsData {
   today?: ProspectTodayBox
   /** Adaptive daily cap the cron will apply (computeAdaptiveCap). */
   capDecision?: { cap: number; reason: string } | null
+  /** Targets organised by the four segment pitches. Non-terminal only. */
+  targetsByType?: TargetsByType
   status?: string
   message?: string
+}
+/** The four outreach segment pitches Zac runs:
+ *  on-site (≥6 clinical) · Hub Pack (2-5) · individual (≤1) from
+ *  prospect_clinics, plus Partnership telehealth from partner_institutions. */
+interface ClinicTargetTier {
+  total: number
+  researching: number   // status='researching' (still being qualified)
+  approved: number      // status='approved' (queued, not yet sent)
+  contacted: number     // sent / opened / engaged (everything else non-terminal)
+}
+interface TargetsByType {
+  onSite: ClinicTargetTier
+  hub: ClinicTargetTier
+  individual: ClinicTargetTier
+  partnership: { total: number; lead: number; contacted: number; active: number }
 }
 
 
@@ -3287,6 +3304,97 @@ export default function AnalyticsDashboard() {
                   {prospectsSubTab === 'overview' && (() => {
                     return (
                     <div className="space-y-6">
+                      {/* ── TARGETS BY TYPE — the outreach pool split into the
+                          four segment pitches Zac runs. On-site / Hub Pack /
+                          individual come from prospect_clinics (size-tier from
+                          the 7-key clinical sum); Partnership is the telehealth
+                          funnel from partner_institutions. Non-terminal only. ── */}
+                      {prospectsData.targetsByType && (() => {
+                        const t = prospectsData.targetsByType!
+                        const cards = [
+                          {
+                            label: 'On-site team training',
+                            sub: 'Large clinics · ≥6 clinical',
+                            total: t.onSite.total,
+                            cardCls: 'border-emerald-200 bg-emerald-50/40',
+                            dotCls: 'bg-emerald-500',
+                            numCls: 'text-emerald-700',
+                            splits: [
+                              { label: 'Researching', value: t.onSite.researching },
+                              { label: 'Approved', value: t.onSite.approved },
+                              { label: 'Contacted', value: t.onSite.contacted },
+                            ],
+                          },
+                          {
+                            label: 'Hub Pack',
+                            sub: 'Medium clinics · 2–5 clinical',
+                            total: t.hub.total,
+                            cardCls: 'border-sky-200 bg-sky-50/40',
+                            dotCls: 'bg-sky-500',
+                            numCls: 'text-sky-700',
+                            splits: [
+                              { label: 'Researching', value: t.hub.researching },
+                              { label: 'Approved', value: t.hub.approved },
+                              { label: 'Contacted', value: t.hub.contacted },
+                            ],
+                          },
+                          {
+                            label: 'Individual',
+                            sub: 'Single clinician · ≤1 clinical',
+                            total: t.individual.total,
+                            cardCls: 'border-slate-200 bg-slate-50/60',
+                            dotCls: 'bg-slate-400',
+                            numCls: 'text-slate-700',
+                            splits: [
+                              { label: 'Researching', value: t.individual.researching },
+                              { label: 'Approved', value: t.individual.approved },
+                              { label: 'Contacted', value: t.individual.contacted },
+                            ],
+                          },
+                          {
+                            label: 'Partnership telehealth',
+                            sub: 'Sports institutions · funnel',
+                            total: t.partnership.total,
+                            cardCls: 'border-violet-200 bg-violet-50/40',
+                            dotCls: 'bg-violet-500',
+                            numCls: 'text-violet-700',
+                            splits: [
+                              { label: 'Lead', value: t.partnership.lead },
+                              { label: 'Contacted', value: t.partnership.contacted },
+                              { label: 'Active', value: t.partnership.active },
+                            ],
+                          },
+                        ]
+                        return (
+                          <div>
+                            <SectionTitle
+                              title="Targets by type · the four outreach segments"
+                              subtitle="Non-terminal targets bucketed into the segment pitch each gets · clinic size from the 7-key clinical sum (on-site ≥6 · Hub Pack 2–5 · individual ≤1) · Partnership is the separate telehealth funnel"
+                            />
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                              {cards.map((c) => (
+                                <div key={c.label} className={`card rounded-2xl border ${c.cardCls} p-4`}>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className={`inline-block w-2 h-2 rounded-full ${c.dotCls}`} />
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--foreground)]">{c.label}</span>
+                                  </div>
+                                  <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{c.sub}</div>
+                                  <div className={`text-3xl font-bold tabular-nums mt-2 ${c.numCls}`}>{c.total}</div>
+                                  <div className="mt-2.5 space-y-1 border-t border-slate-100 pt-2">
+                                    {c.splits.map((s) => (
+                                      <div key={s.label} className="flex items-center justify-between text-[11px]">
+                                        <span className="text-[var(--muted-foreground)]">{s.label}</span>
+                                        <span className="font-semibold tabular-nums text-[var(--foreground)]">{s.value}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })()}
+
                       {/* ── 3 · PIPELINE MATRIX — the spine. Every non-archived
                           prospect in exactly one cell. Stage rules live in
                           lib/prospect/stage.ts (classifyStage). ── */}

@@ -1486,6 +1486,95 @@ export async function GET(req: NextRequest) {
       upcomingPitches = []
     }
 
+    // ── TARGETS BY TYPE — the outreach pool split into the four segment
+    // pitches Zac runs: on-site team training (>=6 clinical), Hub Pack
+    // (2-5 clinical), individual self-paced (<=1 clinical) — all from
+    // prospect_clinics — plus the telehealth Partnership funnel from the
+    // separate partner_institutions table. Non-terminal only. The size-tier
+    // CASE is the same 7-key clinical sum the cron ORDER BY + dealType pool
+    // use (copied verbatim). Each clinic tier carries a status split:
+    //   researching (status='researching'), approved (status='approved'),
+    //   contacted (everything else non-terminal = sent / opened / engaged).
+    // Read-only, additive. Tolerant of a missing partner_institutions table
+    // (Concussion Care arm may not be seeded yet) → partnership defaults 0.
+    interface ClinicTargetRow {
+      tier: DealType
+      total: number | string
+      researching: number | string
+      approved: number | string
+      contacted: number | string
+    }
+    const emptyTargetTier = () => ({ total: 0, researching: 0, approved: 0, contacted: 0 })
+    const targetsByType = {
+      onSite: emptyTargetTier(),
+      hub: emptyTargetTier(),
+      individual: emptyTargetTier(),
+      partnership: { total: 0, lead: 0, contacted: 0, active: 0 },
+    }
+    try {
+      const { rows: tRows } = await sql<ClinicTargetRow>`
+        SELECT
+          CASE
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 'on-site'
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 2 THEN 'hub-pack'
+            ELSE 'individual'
+          END AS tier,
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE pc.status = 'researching')::int AS researching,
+          COUNT(*) FILTER (WHERE pc.status = 'approved')::int AS approved,
+          COUNT(*) FILTER (WHERE pc.status NOT IN ('researching', 'approved'))::int AS contacted
+        FROM prospect_clinics pc
+        WHERE pc.status NOT IN ('archived', 'lost', 'bounced', 'won', 'engaged-elsewhere', 'replied', 'partner-lead')
+          -- Same self/admin seed-data exclusion as the clinics query above
+          AND COALESCE(pc.slug, '') NOT ILIKE 'zac-preview%'
+          AND COALESCE(pc.short_name, '') NOT ILIKE '%zac%preview%'
+          AND COALESCE(LOWER(pc.contact_email), '') <> 'z.lew87@gmail.com'
+          AND COALESCE(LOWER(pc.contact_email), '') NOT LIKE '%@concussion-education-australia.com'
+        GROUP BY tier
+      `
+      for (const r of tRows) {
+        const bucket =
+          r.tier === 'on-site' ? targetsByType.onSite
+          : r.tier === 'hub-pack' ? targetsByType.hub
+          : targetsByType.individual
+        bucket.total = Number(r.total ?? 0)
+        bucket.researching = Number(r.researching ?? 0)
+        bucket.approved = Number(r.approved ?? 0)
+        bucket.contacted = Number(r.contacted ?? 0)
+      }
+    } catch (err) {
+      console.error('[prospect-engagement] targetsByType clinic split failed:', err)
+    }
+    try {
+      const { rows: pRows } = await sql<{ status: string; n: number | string }>`
+        SELECT status, COUNT(*)::int AS n
+        FROM partner_institutions
+        GROUP BY status
+      `
+      for (const r of pRows) {
+        const n = Number(r.n ?? 0)
+        if (r.status === 'lead') targetsByType.partnership.lead = n
+        else if (r.status === 'contacted') targetsByType.partnership.contacted = n
+        else if (r.status === 'active') targetsByType.partnership.active = n
+        // 'declined' is terminal — kept out of the live-target total.
+        if (r.status !== 'declined') targetsByType.partnership.total += n
+      }
+    } catch (err) {
+      console.error('[prospect-engagement] targetsByType partnership split failed:', err)
+    }
+
     return NextResponse.json({
       ok: true,
       count: prospects.length,
@@ -1509,6 +1598,10 @@ export async function GET(req: NextRequest) {
       stageMatrix,
       today,
       capDecision: cap,
+      // Targets organised by the four segment pitches (on-site / Hub Pack /
+      // individual from prospect_clinics + Partnership telehealth from
+      // partner_institutions). Non-terminal only. Additive.
+      targetsByType,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
