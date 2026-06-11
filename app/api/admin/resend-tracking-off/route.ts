@@ -29,6 +29,9 @@ export async function POST(req: NextRequest) {
     if (!domains.length) return NextResponse.json({ ok: false, error: 'no domains returned', raw: list.error })
 
     for (const d of domains) {
+      // Resend caps at 2 req/sec — space the updates out so the second domain
+      // isn't rejected (list + update + update fires 3 calls in <1s otherwise).
+      await new Promise((r) => setTimeout(r, 700))
       try {
         const upd = await resend.domains.update({
           id: d.id,
