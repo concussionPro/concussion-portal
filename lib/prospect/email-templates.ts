@@ -284,24 +284,26 @@ export function mergeTemplate(
   const FREE_URL = `${PORTAL_BASE}/p/${clinic.slug}`
   const FREE_LINK = `<a href="${FREE_URL}">${FREE_URL.replace(/^https?:\/\//, '')}</a>`
 
-  // T1 — the value prop, plain text (Zac 2026-06-11): the 3 free, immediately-
-  // usable tools a clinician actually wants → ONE clean link. No tier pitch, no
-  // image, no tracking — that lives on /free. Under 80 words.
+  // T1 — tailored per tier, accurate to the REAL portal products (Zac
+  // 2026-06-11): free SCAT6/SCOAT6 forms + baseline tool, the Module 1 TRIAL
+  // (a preview — NOT a free module), and the clinical toolkit / admin pack /
+  // reference docs; then ONE tier-matched line — on-site for large (≥6),
+  // Hub Pack for medium (2-5), self-paced course for solo (≤1) — + clean link.
+  const tierLine = isOnSiteTarget
+    ? `For a team ${safeShortName}'s size the step up is an on-site practical day — your clinicians trained on your own cases, 14 CPD hours each, OA endorsed.`
+    : isIndividualTarget
+      ? `The full course is self-paced online — 14 CPD hours, OA endorsed.`
+      : `For a team your size the Hub Pack trains everyone online plus your own clinic-branded toolkit — 14 CPD hours each, OA endorsed.`
   const t1Body = [
     `<p>${REGULATORY_LINE} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
-    `<p>I've put free, ready-to-use concussion kit on one page for ${safeShortName}:</p>`,
-    `<ul>`,
-    `<li>Fillable SCAT6/SCOAT6 assessment forms — auto-scoring, for the sideline and in clinic</li>`,
-    `<li>A return-to-play baseline-testing tool — free for your patients</li>`,
-    `<li>A free CPD module on the new concussion protocol</li>`,
-    `</ul>`,
-    `<p>It's all here: ${FREE_LINK}</p>`,
+    `<p>I've put a working concussion kit on one page for ${safeShortName} — the fillable SCAT6/SCOAT6 forms and a return-to-play baseline tool (both free to use), the Module 1 trial, and the clinical toolkit (GP/NDIS/school letters, billing), admin pack and full reference docs.</p>`,
+    `<p>${tierLine} It's all here: ${FREE_LINK}</p>`,
   ].join('\n')
 
-  // T2 — short nudge, re-state the free kit + the clean link.
+  // T2 — re-offer: free tools + the toolkit/docs value + the tier line, clean link.
   const t2Body = [
-    `<p>Circling back — the free concussion kit for ${safeShortName} is still here: ${FREE_LINK}</p>`,
-    `<p>The fillable SCAT6/SCOAT6 forms and the return-to-play baseline tool are yours to use whether or not you ever do the course — worth a couple of minutes.</p>`,
+    `<p>Circling back — the concussion kit for ${safeShortName} is still here: ${FREE_LINK}</p>`,
+    `<p>The SCAT6/SCOAT6 forms and baseline tool are free to use either way, and the clinical toolkit (GP/NDIS/school letters, billing flow), admin pack and reference docs are in there too. ${tierLine}</p>`,
   ].join('\n')
 
   // T3 — breakup. Free kit stays available; price transparency for the course.

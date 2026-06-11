@@ -50,17 +50,31 @@ function bodyWordCount(html: string): number {
 }
 
 describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub > individuals)', () => {
-  it('T1 is the universal free-kit value prop — the 3 free tools, not a tier pitch', () => {
+  it('T1 lists the real free/trial products accurately — Module 1 is a TRIAL, never a free module', () => {
     for (const n of [1, 4, 8]) {
       const { html } = mergeTemplate(T1, clinic({ team: team(n) }), 'https://example.com', 'tok')
-      expect(html).toMatch(/SCAT6\/SCOAT6 assessment forms/i)
-      expect(html).toMatch(/baseline-testing tool/i)
-      expect(html).toMatch(/free CPD module/i)
-      // The paid tier pitch no longer rides in T1 — it lives on the portal / T3.
-      expect(html).not.toMatch(/Hub Pack/i)
-      expect(html).not.toMatch(/one on-site day/i)
+      expect(html).toMatch(/SCAT6\/SCOAT6 forms/i)
+      expect(html).toMatch(/baseline tool/i)
+      expect(html).toMatch(/Module 1 trial/i)
+      expect(html).toMatch(/clinical toolkit/i)
+      expect(html).toMatch(/admin pack/i)
+      expect(html).toMatch(/reference docs/i)
+      // Correction (Zac 2026-06-11): Module 1 is NOT free — it's a trial section.
+      expect(html).not.toMatch(/free (CPD )?module/i)
       expect(html).not.toMatch(/I built/i)
     }
+  })
+
+  it('T1 is tailored per tier — on-site (large) / Hub Pack (medium) / self-paced (solo)', () => {
+    const solo = mergeTemplate(T1, clinic({ team: team(1) }), 'x', 'tok').html
+    expect(solo).toMatch(/self-paced online/i)
+    expect(solo).not.toMatch(/Hub Pack/i)
+    expect(solo).not.toMatch(/on-site practical day/i)
+    const hub = mergeTemplate(T1, clinic({ team: team(4) }), 'x', 'tok').html
+    expect(hub).toMatch(/Hub Pack/i)
+    expect(hub).not.toMatch(/on-site practical day/i)
+    const onsite = mergeTemplate(T1, clinic({ team: team(8) }), 'x', 'tok').html
+    expect(onsite).toMatch(/on-site practical day/i)
   })
 
   it('T1 never mentions the Melbourne workshop date or stale prices', () => {
@@ -71,17 +85,17 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     expect(html).not.toContain('1190')
   })
 
-  it('T1 stays under 80 words (elite first-touch benchmark)', () => {
-    const { html } = mergeTemplate(T1, clinic({ team: team(4) }), 'https://example.com', 'tok')
+  it('T1 stays tight (product-led, under 110 words)', () => {
+    const { html } = mergeTemplate(T1, clinic({ team: team(8) }), 'https://example.com', 'tok')
     const words = html.replace(/<[^>]+>/g, ' ').split('Zac Lewis')[0].split(/\s+/).filter((w) => /[a-z0-9]/i.test(w)).length
-    expect(words, `T1 = ${words} words`).toBeLessThan(80)
+    expect(words, `T1 = ${words} words`).toBeLessThan(110)
   })
 
-  it('T2 re-offers the free kit + clean link (no tier pitch)', () => {
+  it('T2 re-offers the free tools + the toolkit/docs value', () => {
     const { html } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok')
-    expect(html).toMatch(/free concussion kit/i)
     expect(html).toMatch(/SCAT6\/SCOAT6 forms/i)
-    expect(html).not.toMatch(/Hub Pack/i)
+    expect(html).toMatch(/clinical toolkit/i)
+    expect(html).toMatch(/admin pack/i)
   })
 
   it('every T1/T2 link is the CLEAN per-clinic portal path — no ?k=, no utm, no image', () => {
