@@ -383,20 +383,23 @@ export async function processScheduledSends(
         SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
                pc.scheduled_send_at, pc.next_template_slug, pc.status
         FROM prospect_clinics pc
+        -- Intent = REAL signals only (Zac 2026-06-11). Email opens/clicks are
+        -- scanner noise (Defender/CloudFront prefetch) — counting them here
+        -- falsely inflated intent>=20 and locked every cold prospect out of the
+        -- send. Use scanner-proof signals: real portal dwell (>=60s) / CTA
+        -- clicks (by clinic_id) + workshop-interest submits (by email).
         LEFT JOIN LATERAL (
           SELECT
-            COALESCE(ee_inner.clicks, 0) * 5 + COALESCE(ee_inner.opens, 0) * 2
+            COALESCE(pv_inner.real_views, 0) * 5
             + COALESCE(wi_inner.submits, 0) * 15
             AS intent_score
           FROM
-            (SELECT
-              COUNT(*) FILTER (WHERE event_type='clicked')::int clicks,
-              COUNT(*) FILTER (WHERE event_type='opened')::int opens
-             FROM email_events
-             WHERE LOWER(recipient) = LOWER(pc.contact_email)
-               AND created_at >= NOW() - INTERVAL '90 days'
-               AND COALESCE(project, 'cea') = 'cea'
-            ) ee_inner
+            (SELECT COUNT(*)::int real_views
+             FROM prospect_portal_views
+             WHERE clinic_id = pc.id
+               AND viewed_at >= NOW() - INTERVAL '90 days'
+               AND (COALESCE(duration_seconds, 0) >= 60 OR interaction_type = 'cta_click')
+            ) pv_inner
           CROSS JOIN
             (SELECT COUNT(*)::int submits FROM workshop_interest
              WHERE LOWER(email) = LOWER(pc.contact_email)
@@ -451,20 +454,23 @@ export async function processScheduledSends(
         SELECT pc.id, pc.slug, pc.short_name, pc.contact_email, pc.contact_first_name,
                pc.scheduled_send_at, pc.next_template_slug, pc.status
         FROM prospect_clinics pc
+        -- Intent = REAL signals only (Zac 2026-06-11). Email opens/clicks are
+        -- scanner noise (Defender/CloudFront prefetch) — counting them here
+        -- falsely inflated intent>=20 and locked every cold prospect out of the
+        -- send. Use scanner-proof signals: real portal dwell (>=60s) / CTA
+        -- clicks (by clinic_id) + workshop-interest submits (by email).
         LEFT JOIN LATERAL (
           SELECT
-            COALESCE(ee_inner.clicks, 0) * 5 + COALESCE(ee_inner.opens, 0) * 2
+            COALESCE(pv_inner.real_views, 0) * 5
             + COALESCE(wi_inner.submits, 0) * 15
             AS intent_score
           FROM
-            (SELECT
-              COUNT(*) FILTER (WHERE event_type='clicked')::int clicks,
-              COUNT(*) FILTER (WHERE event_type='opened')::int opens
-             FROM email_events
-             WHERE LOWER(recipient) = LOWER(pc.contact_email)
-               AND created_at >= NOW() - INTERVAL '90 days'
-               AND COALESCE(project, 'cea') = 'cea'
-            ) ee_inner
+            (SELECT COUNT(*)::int real_views
+             FROM prospect_portal_views
+             WHERE clinic_id = pc.id
+               AND viewed_at >= NOW() - INTERVAL '90 days'
+               AND (COALESCE(duration_seconds, 0) >= 60 OR interaction_type = 'cta_click')
+            ) pv_inner
           CROSS JOIN
             (SELECT COUNT(*)::int submits FROM workshop_interest
              WHERE LOWER(email) = LOWER(pc.contact_email)
