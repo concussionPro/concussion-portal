@@ -1,6 +1,40 @@
 # Concussion Care Arm — Scope (DRAFT, nothing live)
 
-Status: **SCOPING ONLY.** No Stripe live, no public telehealth booking, no athlete data collected yet. This documents the model, the regulatory reality, the data/system architecture, and a phased build. Owner (Zac) decisions flagged throughout.
+Status: **SCOPING ONLY.** No Stripe live, no public telehealth booking, no athlete data collected yet. This documents the model, the regulatory reality, the data/system architecture, and a phased build. Owner (Zac) decisions flagged throughout. **NeuroVision is explicitly OUT of this arm** (separate patent-pending project) — the cognitive tool here is CEA's own (SCAT6 baseline / a dedicated repeatable test).
+
+---
+
+## 0. Market sizing — Australia (researched 2026-06, real figures)
+
+Target = institutions with athlete cohorts at concussion risk (collision/contact sport). Three segments:
+
+### A. Elite / sports-focused SCHOOLS — the core SOM
+- **9,653 schools total** in AU (2024 ACARA): ~6,728 government, ~1,757 Catholic, ~1,168 independent.
+- The high-fit subset = SECONDARY independent/Catholic schools with serious sport programs + government selective/sports high schools. Of the elite end, the formal inter-school sport associations are publicly named and enumerable:
+  - **AAGPS NSW: 9** · **CAS NSW: 6** · **GPS QLD: 9** · **APS VIC: 11** — plus ISA, AGSV, ACS and state equivalents.
+  - → **~50–80 "flagship" elite-sport private schools** nationally in the named associations (the obvious first-wave list).
+  - Broader independent + Catholic SECONDARY schools with sport/high-performance programs: **~600–1,000**.
+
+### B. SPORTS ACADEMIES — small, highest-fit
+- **AIS + 8 state/territory institutes** (NSWIS, VIS, QAS, SASI, WAIS, TIS, NTSA, ACTAS) = 9.
+- **Regional Academies of Sport**: NSW 9, VIC 6, + QLD/SA/WA regional academies → **~30–40 regional academies** nationally.
+- → **~40–50 institutes + academies.** Tiny number, perfect ICP (athlete pathways, concussion-aware, duty of care). Hunter Academy of Sport sits here.
+
+### C. Collision-sport CLUBS / associations — the long tail
+- ~**70,000** community sporting clubs cited nationally (commonly quoted, not cleanly verified in ASC/AusPlay — treat as order-of-magnitude); **800+ state sporting organisations**.
+- Realistic targets = larger **representative/junior clubs + regional associations** in rugby union, rugby league, AFL, football (the collision codes where concussion governance matters): order **~500–2,000** addressable bodies.
+
+### TAM / SAM / SOM
+- **TAM** (any institution with at-risk athletes): tens of thousands (incl. the club long tail).
+- **SAM** (best-fit for a free-tool partnership): **~2,000–2,500** — independent/Catholic secondary + sports-focused gov schools (~1,500) + academies (~45) + larger collision-sport clubs/assocs (~500–1,000).
+- **SOM** (first wave to prospect NOW): **~150–250** — the named elite-sport school associations (~50–80), all institutes + regional academies (~45), and a curated ~50–100 elite/representative clubs. **This is the list to build first.**
+
+**Sourcing the list:** the named school associations (AAGPS/CAS/GPS/APS/ISA/AGSV) publish member rosters → directly enumerable. Academies are a fixed public list (~45). Clubs via state sporting bodies. No Apollo guesswork needed for the SOM — it's largely hand-enumerable and high-quality.
+
+**Sources:** ACARA National Report on Schooling 2024 (school counts); ASC Clearinghouse — Regional Academies & National Institute Network; AAGPS/CAS/GPS-QLD/APS-VIC association rosters; ASC AusPlay (participation).
+
+### Outreach track (separate from the clinic cold engine)
+These institutions go in a **partner lane** with **partnership copy** (free athlete cognitive tool + duty-of-care + concussion-governance angle) — NOT the clinic Hub-Pack pitch, and NOT auto-fired through the clinic send cron. Needs its own template + a careful, deliberately-paced rollout (founder-led at the elite-school/academy end; the engine assists with sourcing + sequencing, not blasting). Build this as a distinct track so it can't destabilise the clinic engine.
 
 ---
 
