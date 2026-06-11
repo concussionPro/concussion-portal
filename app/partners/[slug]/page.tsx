@@ -82,10 +82,10 @@ export default async function PartnerPage({ params }: PageProps) {
             <br className="hidden sm:block" /> concussion-covered.
           </h1>
           <p className="text-base sm:text-xl text-foreground/80 font-medium max-w-2xl leading-relaxed">
-            <span className="text-accent font-semibold">Free</span> pre-season baseline testing, the
-            clinical SCAT tools, and a concussion refresher for your trainers &mdash; set up for every
-            athlete, from the team that trains Australia&rsquo;s concussion clinicians. Nothing for {name} to
-            pay or run.
+            <span className="text-accent font-semibold">Free</span>{' '}
+            pre-season baseline testing, the clinical SCAT tools, and a concussion refresher for your
+            trainers &mdash; set up for every athlete, from the team that trains Australia&rsquo;s
+            concussion clinicians. Nothing for {name} to pay or run.
           </p>
         </section>
 
@@ -121,8 +121,8 @@ export default async function PartnerPage({ params }: PageProps) {
             <MiniCard
               href="/scat-mastery"
               icon={<GraduationCap className="w-4 h-4" />}
-              title="Free concussion refresher for your trainers"
-              body="A short refresher for the staff on your sidelines — from the team that trains the clinicians."
+              title="Free SCAT6 mini-course for your trainers"
+              body="Our 1-hour SCAT6 mastery course — recognise concussion, run a sideline SCAT6/SCOAT6, and know when to pull an athlete. Free for your trainers and staff; the same curriculum we teach clinicians."
             />
           </div>
         </section>
@@ -153,11 +153,12 @@ export default async function PartnerPage({ params }: PageProps) {
         {/* ── 3. The expert backup — LAST, framed as a safety net not a sales pitch ── */}
         <section className="mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
-            And if an athlete&rsquo;s knocked &mdash; expert backup
+            Use the baseline to inform an expert assessment
           </h2>
           <p className="text-sm text-foreground/60 mb-5">
-            The free tools flag it; from there your {orgWord} has a concussion specialist to lean on, so you
-            don&rsquo;t carry the clinical risk.
+            If an athlete&rsquo;s knocked, Zac assesses them against their own pre-season baseline &mdash; so
+            the return-to-play call is objective and expert, not a guess. The {orgWord} doesn&rsquo;t carry
+            the clinical risk.
           </p>
 
           <div className="grid md:grid-cols-5 gap-0 rounded-3xl overflow-hidden border border-accent/20 bg-white shadow-sm mb-4">
