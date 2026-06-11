@@ -3082,9 +3082,6 @@ export default function AnalyticsDashboard() {
                 setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
               }
 
-              // Today's engagers — any signal in the last 24h, regardless of tier
-              const engagedToday = prospects.filter(p => p.engagedToday)
-
               // Outreach-status badge — time-frame green-light for personal email
               const outreachStatusBadge = (p: ProspectRow): { label: string; tone: string; sortKey: number } | null => {
                 if (!p.outreachStatus || p.outreachStatus === 'not-hot') return null
@@ -3299,9 +3296,6 @@ export default function AnalyticsDashboard() {
                           </span>
                           <span className="text-sm text-[var(--foreground)]" title="Never Hunter-verified prospects due within 3 days — the cron auto-verify pass (25/run) chews these first">
                             <strong className="tabular-nums">{t.unverifiedDue}</strong> unverified due (auto-verify)
-                          </span>
-                          <span className="text-sm text-[var(--foreground)]" title="Prospects with any engagement signal in the last 24h">
-                            <strong className="tabular-nums">{engagedToday.length}</strong> engaged today
                           </span>
                         </div>
                         {t.capReason && (
