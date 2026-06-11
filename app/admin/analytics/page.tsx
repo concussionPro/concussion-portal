@@ -1248,6 +1248,7 @@ export default function AnalyticsDashboard() {
   const [showCallNow, setShowCallNow] = useState(false)
   const [showTierBento, setShowTierBento] = useState(false)
   const [showTopWeighted, setShowTopWeighted] = useState(false)
+  const [showOverviewExtra, setShowOverviewExtra] = useState(false)
 
 
   const fetchData = useCallback(
@@ -3834,6 +3835,17 @@ export default function AnalyticsDashboard() {
                         </div>
                       )}
 
+                      {/* Detailed analytics panels collapsed by default — Overview
+                          stays scorecard + targets + pipeline (Zac 2026-06-11). The
+                          funnel, subject lines, engagement tiers & breakdowns live
+                          behind this toggle. */}
+                      <div className="pt-1">
+                        <button onClick={() => setShowOverviewExtra(v => !v)} className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+                          {showOverviewExtra ? '▼ Hide' : '▶ Show'} detailed panels · funnel · subject lines · engagement breakdowns
+                        </button>
+                      </div>
+                      {showOverviewExtra && (<>
+
                       {/* ── 6 · COLD-OUTREACH FUNNEL · full path from pool to booking ──
                           Trustworthy signals only: pooled → Hunter-verified →
                           T1/T2/T3 sent → delivered → REAL portal views (≥60s
@@ -4553,6 +4565,7 @@ export default function AnalyticsDashboard() {
                           </div>
                         )}
                       </div>
+                      </>)}
                     </div>
                     )
                   })()}
