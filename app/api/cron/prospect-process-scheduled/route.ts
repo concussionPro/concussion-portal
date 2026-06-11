@@ -143,10 +143,16 @@ export async function GET(request: Request) {
   // non-role, non-accept-all, non-disposable) means a role mailbox can
   // never reach the per-row checks anyway — passing true here was dead,
   // misleading plumbing.
+  // Manual admin trigger may pass ?force=true to select by today's date
+  // (scheduled_send_at::date = CURRENT_DATE) instead of the <= NOW() clause,
+  // and fire every eligible today. Stagger + send-window guard + daily cap
+  // still apply in the send loop. Admin-only — never honoured for cron Bearer.
+  const force = isAdmin && new URL(request.url).searchParams.get('force') === 'true'
   const result = await processScheduledSends({
     dryRun: false,
     dailyCap: effectiveCap,
     allowPatternGuess: false,
+    force,
   })
 
   console.log(
