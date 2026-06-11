@@ -3335,6 +3335,36 @@ export default function AnalyticsDashboard() {
                   {prospectsSubTab === 'overview' && (() => {
                     return (
                     <div className="space-y-6">
+                      {/* ── COLD OUTREACH AT A GLANCE — the only honest top-line.
+                          Sent/Delivered/Bounced are real (Resend emits them);
+                          opens/clicks are NOT tracked (were 100% scanner). Judge
+                          on delivered → replies → bookings. ── */}
+                      {agg.coldFunnel && (
+                        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-semibold text-[var(--foreground)]">Cold outreach — at a glance</h3>
+                            <span className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] px-2 py-0.5 rounded bg-[var(--muted)]">opens/clicks not tracked</span>
+                          </div>
+                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                            {[
+                              { label: 'Sent', value: agg.coldFunnel.sentClinics, hint: 'clinics with ≥1 production send (lifetime)' },
+                              { label: 'Delivered', value: agg.coldFunnel.deliveredClinics, hint: 'Resend confirmed delivery' },
+                              { label: 'Bounced', value: agg.funnel.totalBouncedEmails ?? 0, hint: 'bounced + suppressed' },
+                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥60s portal dwell or CTA click — scanner-immune', good: true },
+                              { label: 'Replied', value: agg.funnel.totalReplies, hint: 'real inbound reply', good: true },
+                              { label: 'Booked', value: agg.coldFunnel.bookedClinics ?? 0, hint: 'cal.com booking', good: true },
+                            ].map((m) => (
+                              <div key={m.label} title={m.hint} className="text-center">
+                                <div className={`text-2xl font-bold ${m.good ? 'text-emerald-600' : 'text-[var(--foreground)]'}`}>{m.value}</div>
+                                <div className="text-[10.5px] text-[var(--muted-foreground)] uppercase tracking-wider mt-0.5">{m.label}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-[10.5px] text-[var(--muted-foreground)] mt-3 pt-3 border-t border-[var(--border)]">
+                            <strong>Opens &amp; clicks are not tracked</strong> — they were 100% mail-scanner noise. Engagement = <strong>delivered → real views → replies → bookings</strong> only. (Sent is lifetime; the rest reflect the {windowLabel}.)
+                          </p>
+                        </div>
+                      )}
                       {/* ── TARGETS BY TYPE — the outreach pool split into the
                           four segment pitches Zac runs. On-site / Hub Pack /
                           individual come from prospect_clinics (size-tier from
