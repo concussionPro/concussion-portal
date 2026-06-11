@@ -538,7 +538,22 @@ export async function processScheduledSends(
   const runStart = Date.now()
   let staggerCursorMs = 0 // offset from runStart for the NEXT send
 
+  // ── Send window (Zac 2026-06-11): deliver Mon-Fri until 5:30pm AEST, Sat
+  // until 1pm AEST, never Sunday. AEST = UTC+10 (no DST — AU east-coast winter /
+  // QLD year-round). We stop QUEUEING once the next staggered slot would fall
+  // past today's window-end; the leftover prospects wait for the next run
+  // (9am Mon-Fri / 8am Sat). Env override COLD_WINDOW_END_HOUR for testing.
+  const AEST_OFFSET_MS = 10 * 3_600_000
+  const aestNow = new Date(runStart + AEST_OFFSET_MS)
+  const aestDay = aestNow.getUTCDay() // 0=Sun … 6=Sat, evaluated in AEST
+  const aestMidnightUtcMs =
+    Date.UTC(aestNow.getUTCFullYear(), aestNow.getUTCMonth(), aestNow.getUTCDate()) - AEST_OFFSET_MS
+  const windowEndHourAest = aestDay === 0 ? 0 : aestDay === 6 ? 13 : 17.5 // Sun none · Sat 1pm · wk 5:30pm
+  const windowEndUtcMs = aestMidnightUtcMs + windowEndHourAest * 3_600_000
+
   for (const row of due) {
+    // Stop queueing once the next staggered slot falls past today's window-end.
+    if (runStart + staggerCursorMs > windowEndUtcMs) break
     const templateSlug = row.next_template_slug
     if (!isValidTemplateSlug(templateSlug)) {
       // Defensive — DB has a slug we don't know how to handle. Skip.
