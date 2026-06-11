@@ -51,6 +51,7 @@ import {
   Phone,
   Snowflake,
   Sparkles,
+  Send,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import type { PipelineStage, StageMatrix } from '@/lib/prospect/stage'
@@ -328,6 +329,17 @@ interface SubjectPerformance {
   t2: SubjectTouchPerf
   t3: SubjectTouchPerf
 }
+interface UpcomingPitch {
+  slug: string
+  shortName: string
+  city: string | null
+  state: string | null
+  templateSlug: string   // 'initial' | 'followup' | 'final'
+  tier: 'on-site' | 'hub-pack' | 'individual'
+  scheduledSendAt: string | null
+  verificationScore: number | null
+  pitchUrl: string
+}
 interface ProspectTodayBox {
   sentToday: number
   cap: number | null
@@ -346,6 +358,8 @@ interface ProspectsData {
   ctaTargets?: CtaTarget[]
   /** Unsent, non-terminal prospects awaiting approve/archive — send-priority ordered, capped at 600. */
   reviewQueue?: ReviewQueueRow[]
+  /** Next clinics the cron will actually pitch (real eligibility mirror), soonest-scheduled first, capped at 100. */
+  upcomingPitches?: UpcomingPitch[]
   /** Pipeline matrix — rows = deal-type tiers, columns = mutually exclusive stages. */
   stageMatrix?: StageMatrix
   /** Self-optimizing subject-line engine: per-touch variant performance + winner. */
@@ -1183,7 +1197,7 @@ export default function AnalyticsDashboard() {
   // B2B prospects data
   const [prospectsData, setProspectsData] = useState<ProspectsData | null>(null)
   const [prospectsError, setProspectsError] = useState<string | null>(null)
-  const [prospectsSubTab, setProspectsSubTab] = useState<'overview' | 'schedule' | 'pipeline' | 'breakdowns' | 'queue'>('overview')
+  const [prospectsSubTab, setProspectsSubTab] = useState<'overview' | 'upcoming' | 'schedule' | 'pipeline' | 'breakdowns' | 'queue'>('overview')
   const [selectedProspectId, setSelectedProspectId] = useState<number | null>(null)
   // Sortable column state for the "Outreach sent" table (click column header
   // to sort by that field; click again to toggle direction).
@@ -3154,6 +3168,7 @@ export default function AnalyticsDashboard() {
 
               const subTabs: Array<{ id: typeof prospectsSubTab; label: string; icon: React.ElementType }> = [
                 { id: 'overview', label: 'Overview', icon: BarChart2 },
+                { id: 'upcoming', label: 'Upcoming pitches', icon: Send },
                 { id: 'schedule', label: 'Schedule', icon: Clock },
                 { id: 'pipeline', label: 'Pipeline', icon: TrendingUp },
                 { id: 'breakdowns', label: 'Breakdowns', icon: MapPin },
@@ -4366,6 +4381,97 @@ export default function AnalyticsDashboard() {
                   })()}
 
                   {/* ── Schedule ── */}
+                  {/* ── Upcoming pitches — the next clinics the cron will
+                      actually email, mirroring the real send eligibility
+                      (Hunter-clean, scheduled, not yet sent for that touch).
+                      Soonest-scheduled first, grouped by AEST send date. ── */}
+                  {prospectsSubTab === 'upcoming' && (() => {
+                    const pitches = prospectsData.upcomingPitches ?? []
+                    const TIER_BADGE: Record<UpcomingPitch['tier'], { label: string; cls: string }> = {
+                      'on-site': { label: 'Team training', cls: 'bg-emerald-100 text-emerald-800' },
+                      'hub-pack': { label: 'Hub pack', cls: 'bg-sky-100 text-sky-800' },
+                      'individual': { label: 'Individual', cls: 'bg-slate-100 text-slate-700' },
+                    }
+                    const TOUCH: Record<string, string> = { initial: 'T1', followup: 'T2', final: 'T3' }
+                    const fmtAestDay = (s: string) =>
+                      new Date(s).toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney', weekday: 'long', day: 'numeric', month: 'short' })
+                    const fmtAestTime = (s: string) =>
+                      new Date(s).toLocaleTimeString('en-AU', { timeZone: 'Australia/Sydney', hour: 'numeric', minute: '2-digit' })
+                    // Group by AEST calendar day, preserving the server's
+                    // soonest-first ordering.
+                    const groups: Array<[string, UpcomingPitch[]]> = []
+                    const groupIndex = new Map<string, UpcomingPitch[]>()
+                    for (const p of pitches) {
+                      const key = p.scheduledSendAt ? fmtAestDay(p.scheduledSendAt) : 'Unscheduled'
+                      let bucket = groupIndex.get(key)
+                      if (!bucket) { bucket = []; groupIndex.set(key, bucket); groups.push([key, bucket]) }
+                      bucket.push(p)
+                    }
+                    return (
+                      <div className="space-y-4">
+                        <div className="card rounded-2xl p-4 bg-[rgba(13,115,119,0.03)]">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-bold text-[var(--foreground)]">Upcoming pitches · {pitches.length}</div>
+                              <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+                                The next clinics the cron will email — Hunter-clean, scheduled, not yet sent for that touch. Soonest first (times AEST). Capped at 100.
+                              </p>
+                            </div>
+                            <Send size={18} className="text-[var(--accent)] shrink-0" />
+                          </div>
+                        </div>
+                        {pitches.length === 0 ? (
+                          <div className="card rounded-2xl p-6 text-center text-sm text-[var(--muted-foreground)]">No pitches queued.</div>
+                        ) : (
+                          <div className="space-y-3">
+                            {groups.map(([day, items]) => (
+                              <div key={day} className="card rounded-2xl overflow-hidden">
+                                <div className="px-4 py-3 bg-[rgba(13,115,119,0.04)] flex items-center justify-between">
+                                  <div className="text-sm font-bold text-[var(--foreground)]">{day}</div>
+                                  <div className="text-xs text-[var(--muted-foreground)]">{items.length} pitch{items.length === 1 ? '' : 'es'}</div>
+                                </div>
+                                <table className="w-full text-sm">
+                                  <tbody>
+                                    {items.map((p) => {
+                                      const badge = TIER_BADGE[p.tier]
+                                      return (
+                                        <tr key={p.slug} className="border-t border-[rgba(13,115,119,0.06)] hover:bg-[rgba(13,115,119,0.04)]">
+                                          <td className="px-4 py-2.5">
+                                            <a
+                                              href={p.pitchUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="font-semibold text-[var(--accent)] hover:underline inline-flex items-center gap-1"
+                                            >
+                                              {p.shortName}
+                                              <ExternalLink size={12} className="opacity-60" />
+                                            </a>
+                                            <div className="text-xs text-[var(--muted-foreground)]">
+                                              {[p.city, p.state].filter(Boolean).join(', ') || '—'}
+                                            </div>
+                                          </td>
+                                          <td className="px-4 py-2.5">
+                                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${badge.cls}`}>{badge.label}</span>
+                                          </td>
+                                          <td className="px-4 py-2.5 text-xs">
+                                            <span className="px-2 py-0.5 rounded-full bg-slate-100 font-semibold text-slate-700">{TOUCH[p.templateSlug] ?? p.templateSlug}</span>
+                                          </td>
+                                          <td className="px-4 py-2.5 text-right text-xs text-[var(--muted-foreground)]">
+                                            {p.scheduledSendAt ? fmtAestTime(p.scheduledSendAt) : '—'}
+                                          </td>
+                                        </tr>
+                                      )
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+
                   {prospectsSubTab === 'schedule' && (
                     <div className="space-y-6">
                       <div className="card rounded-2xl p-4 bg-[rgba(13,115,119,0.03)]">

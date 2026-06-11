@@ -1389,6 +1389,103 @@ export async function GET(req: NextRequest) {
       subjectPerformance = null
     }
 
+    // ── UPCOMING PITCHES — the next clinics the cron will ACTUALLY email ──
+    // Mirrors the REAL cron eligibility in lib/prospect/process-scheduled.ts:
+    // non-terminal status, next_template_slug + scheduled_send_at set, Hunter
+    // HARD GATE (score>=80, not role/accept-all/disposable), and not already
+    // logged for that exact template (test previews excluded). Ordered the way
+    // the cron fires: soonest scheduled first, then size-tier priority
+    // (on-site > hub > individual). The size-tier CASE + clinical sum are kept
+    // verbatim from the process-scheduled ORDER BY (7 clinical keys). Tolerant
+    // of a missing column/table → defaults to []. Read-only.
+    interface UpcomingPitchDbRow {
+      slug: string
+      short_name: string
+      city: string | null
+      state: string | null
+      next_template_slug: string
+      clinical_count: number | string
+      scheduled_send_at: string | null
+      verification_score: number | null
+    }
+    let upcomingPitches: Array<{
+      slug: string
+      shortName: string
+      city: string | null
+      state: string | null
+      templateSlug: string
+      tier: DealType
+      scheduledSendAt: string | null
+      verificationScore: number | null
+      pitchUrl: string
+    }> = []
+    try {
+      const { rows: upRows } = await sql<UpcomingPitchDbRow>`
+        SELECT pc.slug, pc.short_name, pc.city, pc.state,
+          pc.next_template_slug, pc.scheduled_send_at, pc.verification_score,
+          (COALESCE((pc.team->>'osteopaths')::int, 0)
+            + COALESCE((pc.team->>'physiotherapists')::int, 0)
+            + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+            + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+            + COALESCE((pc.team->>'exercisePhys')::int, 0)
+            + COALESCE((pc.team->>'myotherapists')::int, 0)
+            + COALESCE((pc.team->>'remedialMassage')::int, 0)) AS clinical_count
+        FROM prospect_clinics pc
+        WHERE pc.next_template_slug IS NOT NULL
+          AND pc.scheduled_send_at IS NOT NULL
+          AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied', 'partner-lead')
+          AND pc.verification_score IS NOT NULL
+          AND pc.verification_score >= 80
+          AND COALESCE(pc.verification_role, FALSE) = FALSE
+          AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
+          AND COALESCE(pc.verification_disposable, FALSE) = FALSE
+          AND NOT EXISTS (
+            SELECT 1 FROM prospect_outreach_log ol
+            WHERE ol.clinic_id = pc.id AND ol.template_slug = pc.next_template_slug
+              AND ol.audit_key NOT LIKE '%:test:%'
+          )
+          -- Same self/admin seed-data exclusion as the clinics query above
+          AND COALESCE(pc.slug, '') NOT ILIKE 'zac-preview%'
+          AND COALESCE(pc.short_name, '') NOT ILIKE '%zac%preview%'
+          AND COALESCE(LOWER(pc.contact_email), '') <> 'z.lew87@gmail.com'
+          AND COALESCE(LOWER(pc.contact_email), '') NOT LIKE '%@concussion-education-australia.com'
+        ORDER BY
+          pc.scheduled_send_at ASC,
+          CASE
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
+            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
+                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
+                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
+                + COALESCE((pc.team->>'exercisePhys')::int, 0)
+                + COALESCE((pc.team->>'myotherapists')::int, 0)
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 2 THEN 1
+            ELSE 2
+          END ASC
+        LIMIT 100
+      `
+      upcomingPitches = upRows.map((r) => ({
+        slug: r.slug,
+        shortName: r.short_name,
+        city: r.city,
+        state: r.state,
+        templateSlug: r.next_template_slug,
+        tier: dealTypeForClinicalCount(Number(r.clinical_count ?? 0)),
+        scheduledSendAt: r.scheduled_send_at,
+        verificationScore: r.verification_score,
+        pitchUrl: `/p/${r.slug}`,
+      }))
+    } catch (err) {
+      console.error('[prospect-engagement] upcomingPitches failed:', err)
+      upcomingPitches = []
+    }
+
     return NextResponse.json({
       ok: true,
       count: prospects.length,
@@ -1400,6 +1497,9 @@ export async function GET(req: NextRequest) {
       funnelSections,
       ctaTargets,
       reviewQueue,
+      // Next clinics the cron will actually pitch (real eligibility mirror),
+      // soonest-scheduled first. Additive — nothing else changes.
+      upcomingPitches,
       // Self-optimizing subject-line engine state — per-touch variant
       // performance + current winner. Additive; pipeline matrix untouched.
       subjectPerformance,

@@ -17,6 +17,9 @@ Disallow: /checkout
 Disallow: /learning
 Disallow: /modules/
 Disallow: /pay/
+# Custom per-prospect pitch pages + partner pages — private, never index
+Disallow: /p/
+Disallow: /partners/
 
 # AI Crawlers — explicitly allowed
 User-agent: GPTBot
