@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     ` • The fillable SCAT6/SCOAT6 assessment forms`,
     ` • A short concussion refresher for your trainers`,
     ``,
-    `And if an athlete's knocked, their family can book a fast telehealth assessment with me — I assess them against their own baseline, write the report, and refer to a local concussion clinician. That part's on the family, not ${name}.`,
+    `If one of your athletes is concussed, the tools above help flag whether they need an assessment. I offer telehealth assessments exclusively to partners — I review the athlete, write up a report, and connect them with a local clinician suited to their rehabilitation.`,
     ``,
     `Here's what it looks like for ${name}: ${link}`,
     ``,
