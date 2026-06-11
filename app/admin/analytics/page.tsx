@@ -3347,12 +3347,12 @@ export default function AnalyticsDashboard() {
                           </div>
                           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                             {[
-                              { label: 'Sent', value: agg.coldFunnel.sentClinics, hint: 'clinics with ≥1 production send (lifetime)' },
-                              { label: 'Delivered', value: agg.coldFunnel.deliveredClinics, hint: 'Resend confirmed delivery' },
+                              { label: 'Sent', value: agg.funnel.totalSends, hint: `production sends in the ${windowLabel}` },
+                              { label: 'Delivered', value: agg.funnel.totalDelivered ?? 0, hint: 'Resend confirmed delivery' },
                               { label: 'Bounced', value: agg.funnel.totalBouncedEmails ?? 0, hint: 'bounced + suppressed' },
-                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥60s portal dwell or CTA click — scanner-immune', good: true },
+                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥60s portal dwell or CTA click — scanner-immune (all-time)', good: true },
                               { label: 'Replied', value: agg.funnel.totalReplies, hint: 'real inbound reply', good: true },
-                              { label: 'Booked', value: agg.coldFunnel.bookedClinics ?? 0, hint: 'cal.com booking', good: true },
+                              { label: 'Booked', value: agg.coldFunnel.bookedClinics ?? 0, hint: 'cal.com booking (all-time)', good: true },
                             ].map((m) => (
                               <div key={m.label} title={m.hint} className="text-center">
                                 <div className={`text-2xl font-bold ${m.good ? 'text-emerald-600' : 'text-[var(--foreground)]'}`}>{m.value}</div>
@@ -3361,7 +3361,7 @@ export default function AnalyticsDashboard() {
                             ))}
                           </div>
                           <p className="text-[10.5px] text-[var(--muted-foreground)] mt-3 pt-3 border-t border-[var(--border)]">
-                            <strong>Opens &amp; clicks are not tracked</strong> — they were 100% mail-scanner noise. Engagement = <strong>delivered → real views → replies → bookings</strong> only. (Sent is lifetime; the rest reflect the {windowLabel}.)
+                            ⚠ <strong>Clean send architecture (new format, clean link, tracking off) is only live since ~5:40pm today.</strong> Earlier sends were the old scanner-bait format — judge the engine on the <strong>24h tab</strong>, not lifetime. Sent/Delivered/Bounced/Replied reflect the {windowLabel}. <strong>Opens &amp; clicks are not tracked</strong> (were 100% scanner) — engagement = delivered → real views → replies → bookings.
                           </p>
                         </div>
                       )}
