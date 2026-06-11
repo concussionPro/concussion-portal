@@ -40,9 +40,89 @@ These institutions go in a **partner lane** with **partnership copy** (free athl
 
 ## 1. One-liner
 
-A B2B2C concussion-safety arm: give sports **institutions** (academies, clubs, schools) the **free cognitive baseline + ongoing testing tool** for their athletes; when a post-incident test drops below baseline it **triggers a private telehealth assessment with Zac** (booked via Cal.com, paid via Stripe), who **triages and refers the athlete to a local concussion clinician** from a curated list.
+A B2B2C concussion-care arm: give sports **institutions** (academies, elite schools, clubs) the **free SCAT6/SCOAT6 docs + baseline cognitive testing + ongoing tool** for their athletes (pure give, zero cost to them). When a post-incident test drops below baseline it **triggers a private telehealth assessment with Zac** — who runs a **structured concussion care pathway** (initial assessment + written report + referral → mid-recovery check-in → final readiness assessment), booked via Cal.com, paid via Stripe. The free tool is the top of funnel; the **care pathway is a steady, recurring patient stream for Zac.**
 
-Distinct from the cold-clinic outreach engine. This is **founder-led partnership prospecting** to institutions, NOT cold email to clinics. (Hunter Academy of Sport is lead #1 — see [partner lead memory].)
+Distinct from the cold-clinic outreach engine. **Founder-led partnership prospecting** to institutions, NOT cold email to clinics. (Hunter Academy of Sport is lead #1.)
+
+---
+
+## 1a. Service model — the concussion care pathway (Zac's vision, 2026-06-11)
+
+The value isn't a one-off triage — it's an **episode-of-care pathway** per concussion, each touch a paid telehealth consult with a documented deliverable:
+
+| Touch | What Zac does | Deliverable | When |
+|---|---|---|---|
+| **1. Initial assessment** | Telehealth concussion assessment (history, symptom load, the flagged cognitive scores, red-flag screen) | **Written concussion report + management plan + referral** to a curated local clinician | Within 24–72h of the flag |
+| **2. Mid-recovery check-in** | Progress review against the plan, symptom/return-to-learn-and-train trajectory | Updated progress note to athlete/parent/institution | ~1–2 weeks in (as needed) |
+| **3. Final readiness assessment** | Return-to-activity **readiness review** + repeat cognitive test vs baseline | **RTP-readiness report** supporting the treating clinician's medical clearance | End of graded return |
+
+**Scope-of-practice note (important):** Zac (osteopath) **assesses, documents, monitors, coordinates, and reports** — the **medical RTP clearance is signed by the referred doctor/clinician** per the AIS/SMA protocol. Zac's "final assessment" is a *readiness report that supports* clearance, not the clearance itself. This keeps him in scope and limits liability. The written report + referral coordination is the premium differentiator (a one-off sports-physician consult rarely includes a structured report + a named local pathway).
+
+The free tool **lead** = the existing **SCAT6/SCOAT6 fillable docs** (`/scat-forms`) + **baseline cognitive testing** (`/preseason`). Lead with the free value; the pathway is the back end.
+
+---
+
+## 1b. Who pays — the institution offer is FREE (Zac 2026-06-11)
+
+**The institution pays nothing. The cost sits with the athlete/family at point of need** (unless the institution chooses to fund/subsidise it from an athlete-welfare budget). This makes the institution sell a **no-brainer**:
+
+- **Institution gets, at $0:** free SCAT6/SCOAT6 docs + free season-long baseline + ongoing cognitive testing for every athlete + a named concussion expert their athletes can reach fast. Pure duty-of-care upgrade, nothing to approve up the chain, looks great to parents.
+- **Athlete/family pays** for the telehealth pathway *if and when* their athlete is flagged/concussed — high willingness-to-pay at that moment (it's their kid's brain; the alternative is a weeks-long wait for a sports physician).
+- **Optional institution funding:** academies/elite schools with welfare budgets can pre-fund a block of consults — upsell, not a barrier.
+
+Pitch framing to the institution: *"A premium concussion resource for your athletes, at no cost to you."*
+
+---
+
+## 1c. Pricing — premium, athlete-pays (market-anchored, out-of-pocket)
+
+Market anchors (AU, telehealth, Jan 2026): **Specialist Sport & Exercise Physician initial telehealth $320** (Medicare-rebated to ~$168 out-of-pocket *with a GP referral*); **Sports Doctor concussion extended consult $230**. Zac (osteo) has **no Medicare** here (acute condition — see §3) but is premium-positioned via CEA authority + OA endorsement + research + speaking, and **bundles a written report + referral** a one-off physician consult doesn't.
+
+Proposed athlete pricing (out-of-pocket; possible *partial* private-health rebate the family self-claims, fund-dependent — never promised):
+
+| Service | Price | Notes |
+|---|---|---|
+| **Initial assessment + written report + referral** | **$250** | Below the $320 physician initial; the report + named local referral is the value. Fast access is the hook. |
+| **Mid-recovery check-in** | **$120** | As clinically needed. |
+| **Final readiness assessment + RTP-readiness report** | **$160** | Supports the treating clinician's clearance. |
+| **Full pathway bundle** | **$480** | vs $530 à la carte — optional, for families who want the whole episode handled. |
+
+Rationale: priced **premium but below specialist** — positioned as *faster, concussion-specialised, fully-documented* care for a worried family, delivered by the body that trains the clinicians. The report/referral/coordination is what justifies it over a generic consult.
+
+---
+
+## 1d. Patient-stream economics — the actual business case
+
+The free institution tool exists to generate a **steady, recurring, founder-delivered patient stream**. Order-of-magnitude (conservative; verify concussion-incidence assumptions clinically):
+
+- A partner institution with **~300 contact-sport athletes** at a ~5–10% season concussion incidence → **~15–30 flagged concussions/season** → ~15–30 **initial assessments**.
+- Per partner institution to Zac: **~20 initials × $250 = ~$5,000/season** on initials alone, more as families take the mid/final pathway.
+- **At 30 active partner institutions** (well within the ~150–250 SOM): ~600 initials/yr × $250 = **~$150k/yr on initials**, materially more with pathway uptake — a steady clinical income stream *on top of* the CEA course business, with the institutions delivering athletes at no acquisition cost.
+
+This is the reason the free tool is worth building: it's a zero-CAC patient-acquisition channel for a premium recurring service.
+
+---
+
+## 1e. Authority positioning — lean on CEA + OA + research + speaking
+
+The whole pitch rides on Zac/CEA being the **concussion authority**, not just another telehealth osteo. Every institution-facing surface leads with:
+- **Concussion Education Australia** — the CPD provider that *trains the clinicians* in concussion management (14 CPD hours, the flagship course).
+- **Osteopathy Australia endorsed** — independent professional-body endorsement.
+- **Research** — [Zac to supply: publications / studies / contributions — cite specifics].
+- **Conference speaking** — [Zac to supply: named conferences / talks — cite specifics].
+
+Line that sells it: *"The team that trains Australia's clinicians in concussion management — now supporting your athletes directly."* (Do NOT fabricate research/speaking specifics — placeholders above must be filled with real items before any send; AHPRA advertising rules apply.)
+
+---
+
+## 1f. The authority flywheel — partnerships feed the whole brand (Zac 2026-06-11)
+
+Each institution partnership is also a **credibility asset for CEA itself**:
+- **"Trusted by" wall** on the CEA site + course pages — elite school / academy / club names + logos as athlete-welfare partners. Powerful E-E-A-T for the YMYL healthcare niche (Google + buyers both weight it).
+- **Compounds both businesses:** clinicians are more likely to buy CEA courses from a brand visibly trusted by elite institutions; and new institutions are easier to land when the wall already shows respected peers. Partners → authority → more partners AND more course sales.
+- **Hard requirement:** written permission to use each institution's name/logo (their brand policy + AHPRA advertising). Elite schools are protective — bake a "we'd love to list you as a partner (with your OK)" line into the agreement; never display a name without sign-off.
+
+This makes the free tool worth even more: it's a patient-acquisition channel **and** a brand-authority engine.
 
 ---
 
@@ -116,6 +196,19 @@ This shapes pricing and messaging. Do **not** advertise rebates until each is co
 - Per-prospect branded portal pattern (`/p/[slug]`) → becomes a **per-institution athlete dashboard** (gated, access-key model already exists).
 - Cal webhook + Stripe checkout + tax-invoice pipeline — extend, don't rebuild.
 - Prospect engine — reuse for **institution** prospecting in a **partner lane** (status `partner-lead`, founder-led, never auto-emailed).
+
+### The per-institution PARTNER PORTAL PAGE (Zac 2026-06-11 — reuse the engine, new content)
+**Decision: YES, wire it into the custom portal engine** — same mechanics as the clinic `/p/[slug]` portal (per-institution slug + access key + og-image screenshot hero + view tracking + the "something to view" email hook), but a **different content template**. NOT the clinic education portal (no learning suite / Hub-Pack pricing). The partner page shows the FREE athlete resources + the offer:
+
+- **Hero:** "[Institution] — Concussion care for your athletes" (branded, their name).
+- **Free SCAT6/SCOAT6 docs** — the fillable forms, free to download/use.
+- **Free baseline cognitive testing** — how their athletes get set up (links the existing `/preseason` flow).
+- **The free mini SCAT course / refresher** — the existing free SCAT mastery content, for their staff/trainers.
+- **The care pathway** — what happens if an athlete is flagged: initial → report + referral → mid → final, booked with Zac (athlete-pays; institution free).
+- **Authority block** — CEA / Osteopathy Australia endorsed / research / speaking.
+- **CTA:** "Set [Institution] up — it's free" → a short call / the onboarding flow. NO public Stripe, NO public booking on this page (booking is gated behind a flagged athlete result).
+
+Build as a **new route + content template** (e.g. `/partners/[slug]` or a `variant` on the existing portal), reusing the slug/access-key/og-image/tracking primitives. The partner email leads with the screenshot of *their* page — same proven hook, athlete-resource content. **Build live only on Zac's go — not shipped yet.**
 
 ---
 
