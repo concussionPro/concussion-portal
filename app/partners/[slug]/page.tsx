@@ -82,57 +82,14 @@ export default async function PartnerPage({ params }: PageProps) {
             <br className="hidden sm:block" /> concussion-covered.
           </h1>
           <p className="text-base sm:text-xl text-foreground/80 font-medium max-w-2xl leading-relaxed">
-            Free pre-season baseline testing and the clinical SCAT tools for every athlete &mdash;
-            plus <span className="text-accent font-semibold">direct specialist assessment with Zac</span> the
-            moment one&rsquo;s knocked. Run by the team that trains Australia&rsquo;s concussion clinicians.
-            Nothing for {name} to pay or run.
+            <span className="text-accent font-semibold">Free</span> pre-season baseline testing, the
+            clinical SCAT tools, and a concussion refresher for your trainers &mdash; set up for every
+            athlete, from the team that trains Australia&rsquo;s concussion clinicians. Nothing for {name} to
+            pay or run.
           </p>
         </section>
 
-        {/* ── The differentiator: specialist access to Zac (hero bento) ── */}
-        <section className="mb-6">
-          <div className="grid md:grid-cols-5 gap-0 rounded-3xl overflow-hidden border border-accent/20 bg-white shadow-sm">
-            <div className="md:col-span-2 relative min-h-[240px] md:min-h-full">
-              <Image
-                src="/zac-lewis.jpg"
-                alt="Zac Lewis, Osteopath — Concussion Education Australia"
-                fill
-                sizes="(max-width: 768px) 100vw, 40vw"
-                className="object-cover object-top"
-              />
-            </div>
-            <div className="md:col-span-3 p-6 sm:p-8">
-              <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-accent mb-2">
-                The difference for your athletes
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight">
-                Specialist concussion assessment &mdash; direct with Zac
-              </h2>
-              <p className="text-sm sm:text-base text-foreground/75 leading-relaxed mb-4">
-                When an athlete&rsquo;s knocked, their family books a telehealth assessment with
-                <strong> Zac Lewis</strong> &mdash; osteopath and the educator behind Australia&rsquo;s
-                leading concussion CPD course. An expert assessment, a written report, and a referral
-                to a local clinician &mdash; in <strong>days, not the weeks</strong> it takes to get a
-                sports-physician appointment.
-              </p>
-              <ul className="grid sm:grid-cols-2 gap-y-1.5 gap-x-4 text-sm text-foreground/80">
-                {[
-                  'Fast telehealth — no waitlist',
-                  'Written report + management plan',
-                  'Referral to a local clinician',
-                  'Recovery & return-to-play follow-up',
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* ── What every athlete gets, free (image bentos) ─────────────── */}
+        {/* ── 1. The FREE give — leads, so it doesn't read as asking for patients ── */}
         <section className="mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
             Set up free for every {name} athlete
@@ -160,46 +117,17 @@ export default async function PartnerPage({ params }: PageProps) {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 mt-4">
+          <div className="mt-4">
             <MiniCard
               href="/scat-mastery"
               icon={<GraduationCap className="w-4 h-4" />}
               title="Free concussion refresher for your trainers"
               body="A short refresher for the staff on your sidelines — from the team that trains the clinicians."
             />
-            <MiniCard
-              href={ZAC_CAL}
-              external
-              icon={<Stethoscope className="w-4 h-4" />}
-              title="A named concussion expert, on call"
-              body="Your athletes and staff have a direct line to Zac for the assessments and questions that matter."
-            />
           </div>
         </section>
 
-        {/* ── The care pathway ─────────────────────────────────────────── */}
-        <section className="mb-6 mt-12">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
-            If an athlete&rsquo;s flagged &mdash; the full pathway
-          </h2>
-          <p className="text-sm text-foreground/60 mb-5">
-            Handled end-to-end, so your {orgWord} doesn&rsquo;t carry the clinical risk.
-          </p>
-          <div className="rounded-2xl border border-slate-200 bg-white/70 backdrop-blur px-5 py-6 sm:px-7 sm:py-7">
-            <ol className="grid sm:grid-cols-2 gap-x-8 gap-y-5">
-              <PathwayStep n={1} icon={<Stethoscope className="w-4 h-4" />} title="Initial assessment" body="Fast telehealth concussion assessment of the flagged athlete." />
-              <PathwayStep n={2} icon={<FileText className="w-4 h-4" />} title="Report + referral" body="A written report and management plan, with a referral to a local clinician." />
-              <PathwayStep n={3} icon={<ClipboardCheck className="w-4 h-4" />} title="Mid-recovery check-in" body="A progress review against the plan as the athlete recovers." />
-              <PathwayStep n={4} icon={<CalendarCheck className="w-4 h-4" />} title="Return-to-play readiness" body="A readiness review that supports the treating clinician's clearance." />
-            </ol>
-            <p className="mt-6 text-xs text-foreground/55 border-t border-slate-100 pt-4">
-              Assessments are billed privately to the family &mdash; there&rsquo;s nothing for {name} to
-              fund or administer. (If your {orgWord} prefers to fund athlete assessments, we can set that up too.)
-            </p>
-          </div>
-        </section>
-
-        {/* ── Authority ────────────────────────────────────────────────── */}
+        {/* ── 2. Authority ─────────────────────────────────────────────── */}
         <section className="mb-12">
           <div className="rounded-2xl border border-accent/15 bg-gradient-to-br from-accent/5 via-white to-white px-5 py-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4">
             <Image
@@ -219,6 +147,66 @@ export default async function PartnerPage({ params }: PageProps) {
                 {SPEAKING_LINE ? ` ${SPEAKING_LINE}.` : ''}
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* ── 3. The expert backup — LAST, framed as a safety net not a sales pitch ── */}
+        <section className="mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
+            And if an athlete&rsquo;s knocked &mdash; expert backup
+          </h2>
+          <p className="text-sm text-foreground/60 mb-5">
+            The free tools flag it; from there your {orgWord} has a concussion specialist to lean on, so you
+            don&rsquo;t carry the clinical risk.
+          </p>
+
+          <div className="grid md:grid-cols-5 gap-0 rounded-3xl overflow-hidden border border-accent/20 bg-white shadow-sm mb-4">
+            <div className="md:col-span-2 relative min-h-[240px] md:min-h-full">
+              <Image
+                src="/zac-lewis.jpg"
+                alt="Zac Lewis, Osteopath — Concussion Education Australia"
+                fill
+                sizes="(max-width: 768px) 100vw, 40vw"
+                className="object-cover object-top"
+              />
+            </div>
+            <div className="md:col-span-3 p-6 sm:p-8">
+              <h3 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight">
+                A concussion specialist your athletes can reach
+              </h3>
+              <p className="text-sm sm:text-base text-foreground/75 leading-relaxed mb-4">
+                If a flagged athlete&rsquo;s family wants it, they can book a telehealth assessment with
+                <strong> Zac Lewis</strong> &mdash; osteopath and the educator behind Australia&rsquo;s
+                leading concussion CPD course &mdash; in <strong>days, not the weeks</strong> it takes to
+                get a sports-physician appointment.
+              </p>
+              <ul className="grid sm:grid-cols-2 gap-y-1.5 gap-x-4 text-sm text-foreground/80">
+                {[
+                  'Fast telehealth — no waitlist',
+                  'Written report + management plan',
+                  'Referral to a local clinician',
+                  'Recovery & return-to-play follow-up',
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white/70 backdrop-blur px-5 py-6 sm:px-7 sm:py-7">
+            <ol className="grid sm:grid-cols-2 gap-x-8 gap-y-5">
+              <PathwayStep n={1} icon={<Stethoscope className="w-4 h-4" />} title="Initial assessment" body="Fast telehealth concussion assessment of the flagged athlete." />
+              <PathwayStep n={2} icon={<FileText className="w-4 h-4" />} title="Report + referral" body="A written report and management plan, with a referral to a local clinician." />
+              <PathwayStep n={3} icon={<ClipboardCheck className="w-4 h-4" />} title="Mid-recovery check-in" body="A progress review against the plan as the athlete recovers." />
+              <PathwayStep n={4} icon={<CalendarCheck className="w-4 h-4" />} title="Return-to-play readiness" body="A readiness review that supports the treating clinician's clearance." />
+            </ol>
+            <p className="mt-6 text-xs text-foreground/55 border-t border-slate-100 pt-4">
+              Assessments are billed privately to the family &mdash; there&rsquo;s nothing for {name} to
+              fund or administer. (If your {orgWord} prefers to fund athlete assessments, we can set that up too.)
+            </p>
           </div>
         </section>
 
