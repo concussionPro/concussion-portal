@@ -272,65 +272,39 @@ export function mergeTemplate(
   const discipline = dominantDiscipline(clinic.team)
   const soloPlural = SOLO_PLURAL[discipline] ?? 'clinicians'
 
-  // ── The portal: the single destination, fronted by its screenshot ─────
-  // UTM-tagged so analytics attributes the visit to the outreach campaign,
-  // which touch (T1/T2/T3 = utm_campaign), which clinic (utm_content), and
-  // which link position drove it (utm_term: hero screenshot vs text link).
-  // The portal landing reads these and stamps them on the portal-view row.
-  const utmCampaign =
-    template.slug === 'initial' ? 'cold_t1' : template.slug === 'followup' ? 'cold_t2' : 'cold_t3'
-  const portalUrlFor = (term: string) =>
-    `${PORTAL_BASE}/p/${clinic.slug}?k=${clinic.accessKey ?? ''}` +
-    `&utm_source=outreach&utm_medium=email&utm_campaign=${utmCampaign}` +
-    `&utm_content=${encodeURIComponent(clinic.slug)}&utm_term=${term}`
-  // Text-first (Zac 2026-06-11): NO embedded screenshot in the email. An
-  // image in an unsolicited cold send is the signal most likely to nudge the
-  // complaint rate (already 0.29%, near Gmail's 0.3% line) and trip Promotions
-  // filtering. The hook is the TEXT framing of the custom portal; the
-  // screenshot lives ON the portal, which they see the instant they land.
-  // One text link, UTM-tagged.
-  const portalLink = `<a href="${portalUrlFor('dashboard_link')}">${safeShortName}'s concussion learning portal</a>`
+  // ── The per-clinic link that passes spam filters (Zac 2026-06-11) ────────
+  // Personalised per clinic (their name in the path) AND spam-safe. What gets
+  // sandbox-detonated by Defender/Gmail is the random access KEY + UTM tracking
+  // PARAMS + tracking redirect — NOT the mere fact a URL is unique. So: a CLEAN
+  // PATH with the clinic's human-readable slug, NO query string, NO random key,
+  // NO tracking redirect (tracking off). Reads like a real page for their
+  // clinic, not a tracking link. Shown as a naked URL (anchor text = destination
+  // — a mismatch is itself a phishing signal). The portal at this path leads
+  // with the free kit the email promises (message-match), course as next step.
+  const FREE_URL = `${PORTAL_BASE}/p/${clinic.slug}`
+  const FREE_LINK = `<a href="${FREE_URL}">${FREE_URL.replace(/^https?:\/\//, '')}</a>`
 
-  // Facts-first (Zac 2026-06-11): lead with the regulatory WHY-NOW + the
-  // tier-matched offer. No "I built you a dashboard…" preamble — prospects
-  // don't care what we set up, they care what's changed and what it does.
-  // Hard-hitting facts + offer, kept tight so T1 lands UNDER 80 words (the
-  // elite first-touch benchmark — Instantly 2025 / 3M-email analysis). Clinic
-  // name is mentioned ONCE (in the portal link) to keep long names from
-  // blowing the count.
-  let valueLine: string
-  if (isOnSiteTarget) {
-    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't ready. I train your whole team in one on-site day — 14 CPD hours each, Osteopathy Australia endorsed.`
-  } else if (isIndividualTarget) {
-    valueLine = `${REGULATORY_LINE} ${soloPlural.replace(/^./, (c) => c.toUpperCase())} working solo get the clearance questions first. The full protocol — SCAT6, VOMS, return-to-play — is self-paced online, 8 CPD hours, OA endorsed.`
-  } else {
-    valueLine = `${REGULATORY_LINE} Most clinics${cityPhrase} aren't ready. Your team trains online with a clinic-branded clinical toolkit — 14 CPD hours each, Osteopathy Australia endorsed.`
-  }
-
-  // T1 — facts → free-tools value offer → ONE portal link. The portal leads
-  // with FREE, immediately-usable tools (SCAT6 forms, baseline testing, Module
-  // 1) — give-before-you-ask lifts first-touch conversion, all inside the one link.
+  // T1 — the value prop, plain text (Zac 2026-06-11): the 3 free, immediately-
+  // usable tools a clinician actually wants → ONE clean link. No tier pitch, no
+  // image, no tracking — that lives on /free. Under 80 words.
   const t1Body = [
-    `<p>${valueLine}</p>`,
-    `<p>The SCAT6/SCOAT6 forms, baseline testing and Module 1 are free to use — pricing and a 15-minute call are inside too: ${portalLink}.</p>`,
+    `<p>${REGULATORY_LINE} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
+    `<p>I've put free, ready-to-use concussion kit on one page for ${safeShortName}:</p>`,
+    `<ul>`,
+    `<li>Fillable SCAT6/SCOAT6 assessment forms — auto-scoring, for the sideline and in clinic</li>`,
+    `<li>A return-to-play baseline-testing tool — free for your patients</li>`,
+    `<li>A free CPD module on the new concussion protocol</li>`,
+    `</ul>`,
+    `<p>It's all here: ${FREE_LINK}</p>`,
   ].join('\n')
 
-  // T2 — short nudge back to the portal with one fresh angle. No image.
-  let t2Angle: string
-  if (isOnSiteTarget) {
-    t2Angle = `The on-site day is the whole team trained together in one day — 14 CPD hours each, Osteopathy Australia endorsed — and the portal has the full cohort pricing for ${safeShortName}.`
-  } else if (isIndividualTarget) {
-    t2Angle = `It's the complete protocol — SCAT6, VOMS, return-to-play — self-paced online, 8 CPD hours, Osteopathy Australia endorsed. Module 1's unlocked to try free.`
-  } else {
-    t2Angle = `Your team trains online at their own pace — 14 CPD hours each, Osteopathy Australia endorsed — plus the clinic-branded toolkit. The portal has your Hub Pack pricing.`
-  }
+  // T2 — short nudge, re-state the free kit + the clean link.
   const t2Body = [
-    `<p>Following up on the concussion learning portal I set up for ${safeShortName} last week.</p>`,
-    `<p>${t2Angle}</p>`,
-    `<p>Even if the timing's not right, the SCAT6/SCOAT6 forms and baseline-testing tool in there are free to use — worth a look: ${portalLink}. Or just reply with a question and I'll answer it.</p>`,
+    `<p>Circling back — the free concussion kit for ${safeShortName} is still here: ${FREE_LINK}</p>`,
+    `<p>The fillable SCAT6/SCOAT6 forms and the return-to-play baseline tool are yours to use whether or not you ever do the course — worth a couple of minutes.</p>`,
   ].join('\n')
 
-  // T3 — breakup with price transparency in text + one last portal link.
+  // T3 — breakup. Free kit stays available; price transparency for the course.
   let priceLine: string
   if (isOnSiteTarget) {
     const fromTotal = Math.min(...cohortPricing.cohortTiers.map((t) => t.total))
@@ -341,8 +315,8 @@ export function mergeTemplate(
     priceLine = `the Hub Pack — your team trained online plus the clinic-branded toolkit — is A$${CONFIG.COURSE.PRICE_CLINIC_HUB_PACK.toLocaleString('en-AU')}`
   }
   const t3Body = [
-    `<p>Last one from me. In case price was the open question: ${priceLine} — full breakdown and a 15-minute call are on ${safeShortName}'s dashboard: ${portalLink}.</p>`,
-    `<p>If the timing's wrong, no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`,
+    `<p>Last one from me. The free SCAT6/SCOAT6 forms, baseline tool and CPD module are at ${FREE_LINK} whenever you want them.</p>`,
+    `<p>And if you ever want the full course, ${priceLine}. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`,
   ].join('\n')
 
   // ── Subject lines — short, specific, sentence-case, non-salesy ─────────

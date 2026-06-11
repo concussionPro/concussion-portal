@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { ProspectLanding, AccessWall } from '@/components/prospect/ProspectLanding'
+import { ProspectLanding } from '@/components/prospect/ProspectLanding'
 import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 import { accessKeyMatches } from '@/lib/prospect/access-key'
 
@@ -35,16 +35,17 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
 export default async function ProspectPage({ params, searchParams }: PageProps) {
   const { token } = await params
-  const { k, utm_source, utm_campaign, utm_term } = await searchParams
+  const { utm_source, utm_campaign, utm_term } = await searchParams
 
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
 
-  // Stored access_key (random for new prospects); legacy slug-derived value
-  // only when the stored key is missing — see lib/prospect/access-key.ts.
-  if (!accessKeyMatches(k, clinic)) {
-    return <AccessWall clinicName={clinic.name} />
-  }
+  // Clean per-clinic URL (Zac 2026-06-11): cold emails link to /p/<slug> with
+  // NO access key — a clean path is what passes spam filters (the ?k= random
+  // key + UTM params are the sandbox-detonation profile). So the portal renders
+  // for any valid clinic slug; this is non-sensitive marketing content (free
+  // tools + course pitch), and the slug is the clinic's own name. The key is
+  // still honoured when present (legacy links) but no longer required.
 
   // Engagement signal — fire-and-forget. Failures don't block the render.
   const h = await headers()
