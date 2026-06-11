@@ -34,19 +34,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ skipped: true, reason: 'Not primary project' })
   }
 
-  if (!process.env.CRON_SECRET) {
-    console.error('CRON_SECRET not configured — refusing to run')
-    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
-  }
+  // Auth: Vercel cron injects Bearer CRON_SECRET. ALSO allow a manual admin
+  // trigger (x-admin-key === ADMIN_API_KEY) so a human can kick a run off
+  // the schedule (e.g. begin firing a freshly re-queued batch now).
+  const adminKey = request.headers.get('x-admin-key')
+  const adminSecret = process.env.ADMIN_API_KEY
+  const isAdmin =
+    !!adminKey && !!adminSecret &&
+    adminKey.length === adminSecret.length &&
+    crypto.timingSafeEqual(Buffer.from(adminKey), Buffer.from(adminSecret))
 
-  const authHeader = request.headers.get('authorization')
-  const expected = `Bearer ${process.env.CRON_SECRET}`
-  if (
-    !authHeader ||
-    authHeader.length !== expected.length ||
-    !crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
-  ) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!isAdmin) {
+    if (!process.env.CRON_SECRET) {
+      console.error('CRON_SECRET not configured — refusing to run')
+      return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
+    }
+    const authHeader = request.headers.get('authorization')
+    const expected = `Bearer ${process.env.CRON_SECRET}`
+    if (
+      !authHeader ||
+      authHeader.length !== expected.length ||
+      !crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
+    ) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
 
   // Auto-verify pass: prospects that are due/approaching but have never
