@@ -1,34 +1,40 @@
 /**
  * Public per-institution PARTNER page for the Concussion Care arm.
  *
- * Reuses the proven per-prospect portal *visual language* (dashboard-bg,
- * glass cards, accent) but with entirely DIFFERENT content: free athlete
- * concussion resources + the care pathway. NOT the clinic education portal
- * — no pricing tables, no public Stripe, no public booking widget.
+ * Visual-first, value-prop-obvious page for elite sports institutions.
+ * Leads with the differentiator (direct specialist assessment with Zac) +
+ * an EXPLAINED free baseline test, real imagery (Zac, OA endorsement,
+ * training), and a clean care pathway. NOT the clinic education portal.
  *
  * Fully isolated from the cold-clinic engine (lib/prospect/*).
  */
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import {
   Brain,
-  ShieldCheck,
-  GraduationCap,
   FileText,
   Activity,
+  GraduationCap,
   Stethoscope,
-  ArrowRight,
-  ArrowUpRight,
   ClipboardCheck,
   CalendarCheck,
+  ArrowRight,
+  ArrowUpRight,
   Phone,
   Mail,
+  Check,
 } from 'lucide-react'
 import { getPartnerBySlug } from '@/lib/partners/repo'
 
 const ZAC_EMAIL = 'zac@concussion-education-australia.com'
 const ZAC_CAL = 'https://cal.com/zac-lewis-so8zjs'
+
+// Real credentials only — Zac fills these with specific items when ready.
+// Empty entries are NOT rendered (no broken "[research]" placeholders).
+const RESEARCH_LINE = '' // e.g. 'Published concussion research — [journal, year]'
+const SPEAKING_LINE = '' // e.g. 'Speaker — [SMA / OA national conference]'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -37,12 +43,10 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const partner = await getPartnerBySlug(slug)
-  if (!partner) {
-    return { title: 'Concussion care for your athletes', robots: 'noindex, nofollow' }
-  }
+  if (!partner) return { title: 'Concussion care for your athletes', robots: 'noindex, nofollow' }
   return {
     title: `${partner.name} — Concussion care for your athletes`,
-    description: `A free concussion resource for ${partner.name}'s athletes, from Concussion Education Australia.`,
+    description: `Free baseline testing + specialist concussion assessment for ${partner.name}'s athletes, from Concussion Education Australia.`,
     robots: 'noindex, nofollow',
   }
 }
@@ -53,170 +57,198 @@ export default async function PartnerPage({ params }: PageProps) {
   if (!partner) notFound()
 
   const name = partner.name
+  const orgWord = partner.type === 'school' ? 'school' : partner.type === 'club' ? 'club' : 'academy'
 
   return (
     <div className="min-h-screen dashboard-bg">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         {/* ── Hero ─────────────────────────────────────────────────── */}
-        <section className="mb-10">
-          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-3 flex items-center gap-1.5">
-            <Brain className="w-3.5 h-3.5" />
-            Concussion Education Australia
-          </p>
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.03] mb-4 bg-gradient-to-br from-foreground via-foreground to-accent bg-clip-text text-transparent">
-            {name} — Concussion care for your athletes
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-5">
+            <Image src="/logo.png" alt="" width={28} height={28} className="rounded-lg" />
+            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-accent">
+              Concussion Education Australia
+            </span>
+            <Image
+              src="/osteopathy-australia-endorsed.png"
+              alt="Osteopathy Australia endorsed"
+              width={108}
+              height={36}
+              className="h-7 w-auto opacity-90"
+            />
+          </div>
+          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.03] mb-5 bg-gradient-to-br from-foreground via-foreground to-accent bg-clip-text text-transparent">
+            {name}&rsquo;s athletes,
+            <br className="hidden sm:block" /> concussion-covered.
           </h1>
-          <p className="text-base sm:text-lg text-foreground/80 font-medium max-w-2xl">
-            A free concussion resource for {name}&rsquo;s athletes, from Concussion Education
-            Australia.
+          <p className="text-base sm:text-xl text-foreground/80 font-medium max-w-2xl leading-relaxed">
+            Free pre-season baseline testing and the clinical SCAT tools for every athlete &mdash;
+            plus <span className="text-accent font-semibold">direct specialist assessment with Zac</span> the
+            moment one&rsquo;s knocked. Run by the team that trains Australia&rsquo;s concussion clinicians.
+            Nothing for {name} to pay or run.
           </p>
         </section>
 
-        {/* ── Authority strip ──────────────────────────────────────── */}
-        <section className="mb-12">
-          <div className="rounded-2xl border border-accent/15 bg-gradient-to-br from-accent/5 via-white to-white px-5 py-5 sm:px-7 sm:py-6">
-            <p className="text-sm sm:text-base font-semibold text-foreground flex items-start gap-2.5">
-              <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-              <span>
-                We train Australia&rsquo;s clinicians in concussion management
-                <span className="text-foreground/40"> · </span>
-                Osteopathy Australia endorsed
-              </span>
-            </p>
-            {/* TODO(Zac): fill the authority strip with REAL research +
-                speaking credentials before any send — AHPRA advertising
-                rules apply, do not fabricate. */}
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold">
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-500">
-                {/* TODO(Zac): research — e.g. named publications/studies */}
-                [research]
-              </span>
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-500">
-                {/* TODO(Zac): speaking — e.g. named conferences/talks */}
-                [speaking]
-              </span>
+        {/* ── The differentiator: specialist access to Zac (hero bento) ── */}
+        <section className="mb-6">
+          <div className="grid md:grid-cols-5 gap-0 rounded-3xl overflow-hidden border border-accent/20 bg-white shadow-sm">
+            <div className="md:col-span-2 relative min-h-[240px] md:min-h-full">
+              <Image
+                src="/zac-lewis.jpg"
+                alt="Zac Lewis, Osteopath — Concussion Education Australia"
+                fill
+                sizes="(max-width: 768px) 100vw, 40vw"
+                className="object-cover object-top"
+              />
+            </div>
+            <div className="md:col-span-3 p-6 sm:p-8">
+              <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-accent mb-2">
+                The difference for your athletes
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight">
+                Specialist concussion assessment &mdash; direct with Zac
+              </h2>
+              <p className="text-sm sm:text-base text-foreground/75 leading-relaxed mb-4">
+                When an athlete&rsquo;s knocked, their family books a telehealth assessment with
+                <strong> Zac Lewis</strong> &mdash; osteopath and the educator behind Australia&rsquo;s
+                leading concussion CPD course. An expert assessment, a written report, and a referral
+                to a local clinician &mdash; in <strong>days, not the weeks</strong> it takes to get a
+                sports-physician appointment.
+              </p>
+              <ul className="grid sm:grid-cols-2 gap-y-1.5 gap-x-4 text-sm text-foreground/80">
+                {[
+                  'Fast telehealth — no waitlist',
+                  'Written report + management plan',
+                  'Referral to a local clinician',
+                  'Recovery & return-to-play follow-up',
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>
 
-        {/* ── Free resources ───────────────────────────────────────── */}
-        <section className="mb-12">
+        {/* ── What every athlete gets, free (image bentos) ─────────────── */}
+        <section className="mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
-            Free for {name}&rsquo;s athletes
+            Set up free for every {name} athlete
           </h2>
-          <p className="text-sm text-foreground/60 mb-5">
-            Three concussion resources, set up at no cost to the {partner.type === 'school' ? 'school' : partner.type}.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <ResourceCard
-              href="/scat-forms"
-              icon={<FileText className="w-5 h-5" />}
-              title="SCAT6 & SCOAT6 forms — free"
-              body="The fillable concussion assessment forms, free to download and use sideline and in clinic."
-            />
-            <ResourceCard
+          <p className="text-sm text-foreground/60 mb-5">No cost to the {orgWord}. No admin to run.</p>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Baseline — the one that needs explaining, given the most room */}
+            <ImageBento
               href="/preseason"
-              icon={<Activity className="w-5 h-5" />}
-              title="Baseline cognitive testing — free for your athletes"
-              body="Season-long baseline testing so a post-knock result can be compared against each athlete's own normal."
+              image="/workshop-training.jpg"
+              icon={<Activity className="w-4 h-4" />}
+              eyebrow="The smart bit"
+              title="Free pre-season baseline testing"
+              body="Every athlete does a 10-minute cognitive baseline before the season. If they're concussed later, we compare against their own normal — so returning them to play is an objective medical call, not a guess. This is what turns a knock into a managed decision."
             />
-            <ResourceCard
+            {/* SCAT tools */}
+            <ImageBento
+              href="/scat-forms"
+              image="/online-course-preview.jpg"
+              icon={<FileText className="w-4 h-4" />}
+              eyebrow="Clinical tools"
+              title="Free SCAT6 & SCOAT6 assessment tools"
+              body="The fillable clinical concussion assessment forms your sideline and medical staff use — auto-scoring, free to use."
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 mt-4">
+            <MiniCard
               href="/scat-mastery"
-              icon={<GraduationCap className="w-5 h-5" />}
-              title="Concussion refresher for your trainers — free"
-              body="A short concussion refresher for the staff and trainers on your sidelines."
+              icon={<GraduationCap className="w-4 h-4" />}
+              title="Free concussion refresher for your trainers"
+              body="A short refresher for the staff on your sidelines — from the team that trains the clinicians."
+            />
+            <MiniCard
+              href={ZAC_CAL}
+              external
+              icon={<Stethoscope className="w-4 h-4" />}
+              title="A named concussion expert, on call"
+              body="Your athletes and staff have a direct line to Zac for the assessments and questions that matter."
             />
           </div>
         </section>
 
-        {/* ── If an athlete's flagged: the care pathway ────────────── */}
-        <section className="mb-12">
+        {/* ── The care pathway ─────────────────────────────────────────── */}
+        <section className="mb-6 mt-12">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
-            If an athlete&rsquo;s flagged
+            If an athlete&rsquo;s flagged &mdash; the full pathway
           </h2>
           <p className="text-sm text-foreground/60 mb-5">
-            A clear concussion care pathway — booked directly with Zac if and when it&rsquo;s needed.
+            Handled end-to-end, so your {orgWord} doesn&rsquo;t carry the clinical risk.
           </p>
           <div className="rounded-2xl border border-slate-200 bg-white/70 backdrop-blur px-5 py-6 sm:px-7 sm:py-7">
-            <ol className="space-y-4">
-              <PathwayStep
-                n={1}
-                icon={<Stethoscope className="w-4 h-4" />}
-                title="Initial assessment"
-                body="A telehealth concussion assessment of the flagged athlete."
-              />
-              <PathwayStep
-                n={2}
-                icon={<FileText className="w-4 h-4" />}
-                title="Written report + referral"
-                body="A concussion report and management plan, with a referral to a local clinician for ongoing care."
-              />
-              <PathwayStep
-                n={3}
-                icon={<ClipboardCheck className="w-4 h-4" />}
-                title="Mid-recovery check-in"
-                body="A progress review against the plan as the athlete recovers."
-              />
-              <PathwayStep
-                n={4}
-                icon={<CalendarCheck className="w-4 h-4" />}
-                title="Final readiness assessment"
-                body="A return-to-activity readiness review that supports the treating clinician's clearance."
-              />
+            <ol className="grid sm:grid-cols-2 gap-x-8 gap-y-5">
+              <PathwayStep n={1} icon={<Stethoscope className="w-4 h-4" />} title="Initial assessment" body="Fast telehealth concussion assessment of the flagged athlete." />
+              <PathwayStep n={2} icon={<FileText className="w-4 h-4" />} title="Report + referral" body="A written report and management plan, with a referral to a local clinician." />
+              <PathwayStep n={3} icon={<ClipboardCheck className="w-4 h-4" />} title="Mid-recovery check-in" body="A progress review against the plan as the athlete recovers." />
+              <PathwayStep n={4} icon={<CalendarCheck className="w-4 h-4" />} title="Return-to-play readiness" body="A readiness review that supports the treating clinician's clearance." />
             </ol>
-            <div className="mt-6 rounded-xl bg-accent/5 border border-accent/15 px-4 py-3">
-              <p className="text-sm font-semibold text-foreground">
-                Cost sits with the family, not {name}.
+            <p className="mt-6 text-xs text-foreground/55 border-t border-slate-100 pt-4">
+              Assessments are billed privately to the family &mdash; there&rsquo;s nothing for {name} to
+              fund or administer. (If your {orgWord} prefers to fund athlete assessments, we can set that up too.)
+            </p>
+          </div>
+        </section>
+
+        {/* ── Authority ────────────────────────────────────────────────── */}
+        <section className="mb-12">
+          <div className="rounded-2xl border border-accent/15 bg-gradient-to-br from-accent/5 via-white to-white px-5 py-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4">
+            <Image
+              src="/osteopathy-australia-endorsed.png"
+              alt="Osteopathy Australia endorsed"
+              width={150}
+              height={50}
+              className="h-12 w-auto shrink-0"
+            />
+            <div>
+              <p className="text-sm sm:text-base font-semibold text-foreground">
+                We train Australia&rsquo;s clinicians in concussion management.
               </p>
-              <p className="text-xs text-foreground/60 mt-1">
-                The pathway is booked directly with Zac if/when an athlete is flagged — there&rsquo;s
-                nothing to pay or book here, and nothing for {name} to fund.
+              <p className="text-xs sm:text-sm text-foreground/65 mt-0.5">
+                Concussion Clinical Mastery &mdash; 14 CPD hours, Osteopathy Australia endorsed.
+                {RESEARCH_LINE ? ` ${RESEARCH_LINE}.` : ''}
+                {SPEAKING_LINE ? ` ${SPEAKING_LINE}.` : ''}
               </p>
             </div>
           </div>
         </section>
 
-        {/* ── CTA ──────────────────────────────────────────────────── */}
+        {/* ── CTA ──────────────────────────────────────────────────────── */}
         <section className="mb-14">
           <div className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-white to-white px-6 py-8 sm:px-10 sm:py-10 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              Set {name} up — it&rsquo;s free
+              Set {name} up &mdash; it&rsquo;s free
             </h2>
             <p className="text-sm text-foreground/70 max-w-xl mx-auto mb-6">
-              Ten minutes to switch on a premium concussion resource for your athletes, at no cost to
-              the {partner.type === 'school' ? 'school' : partner.type}.
+              Ten minutes to give your athletes pre-season baselines, the clinical tools, and a specialist
+              on call &mdash; at no cost to the {orgWord}.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a
-                href={ZAC_CAL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white hover:bg-accent-light transition-colors"
-              >
-                <Phone className="w-4 h-4" />
-                Book a 10-min call
-                <ArrowRight className="w-4 h-4" />
+              <a href={ZAC_CAL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white hover:bg-accent-light transition-colors">
+                <Phone className="w-4 h-4" /> Book a 10-min call <ArrowRight className="w-4 h-4" />
               </a>
-              <a
-                href={`mailto:${ZAC_EMAIL}?subject=${encodeURIComponent(`Concussion resource for ${name}`)}`}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-foreground hover:border-accent transition-colors"
-              >
-                <Mail className="w-4 h-4" />
-                Email Zac
+              <a href={`mailto:${ZAC_EMAIL}?subject=${encodeURIComponent(`Concussion resource for ${name}`)}`} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-foreground hover:border-accent transition-colors">
+                <Mail className="w-4 h-4" /> Email Zac
               </a>
             </div>
           </div>
         </section>
 
-        {/* ── Footer ───────────────────────────────────────────────── */}
         <footer className="border-t border-slate-200 pt-6 text-center">
           <p className="text-xs font-bold text-accent flex items-center justify-center gap-1.5">
-            <Brain className="w-3.5 h-3.5" />
-            Concussion Education Australia
+            <Brain className="w-3.5 h-3.5" /> Concussion Education Australia
           </p>
           <p className="text-[11px] text-foreground/50 mt-1">
-            Training Australia&rsquo;s clinicians in concussion management · Osteopathy Australia
-            endorsed
+            Training Australia&rsquo;s clinicians in concussion management &middot; Osteopathy Australia endorsed
           </p>
         </footer>
       </main>
@@ -224,52 +256,53 @@ export default async function PartnerPage({ params }: PageProps) {
   )
 }
 
-function ResourceCard({
-  href,
-  icon,
-  title,
-  body,
-}: {
-  href: string
-  icon: React.ReactNode
-  title: string
-  body: string
-}) {
+function ImageBento({
+  href, image, icon, eyebrow, title, body,
+}: { href: string; image: string; icon: React.ReactNode; eyebrow: string; title: string; body: string }) {
   return (
-    <Link
-      href={href}
-      className="group flex flex-col rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-5 hover:border-accent hover:shadow-sm transition-all"
-    >
-      <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-accent/10 text-accent mb-3">
-        {icon}
-      </span>
-      <p className="text-sm font-bold text-foreground mb-1 flex items-center gap-1">
-        {title}
-        <ArrowUpRight className="w-3.5 h-3.5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-      </p>
-      <p className="text-xs text-foreground/60 leading-relaxed">{body}</p>
+    <Link href={href} className="group flex flex-col rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-accent hover:shadow-md transition-all">
+      <div className="relative h-40 w-full overflow-hidden">
+        <Image src={image} alt="" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-accent">
+          {icon} {eyebrow}
+        </span>
+      </div>
+      <div className="p-5">
+        <p className="text-base font-bold text-foreground mb-1.5 flex items-center gap-1">
+          {title}
+          <ArrowUpRight className="w-4 h-4 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+        </p>
+        <p className="text-sm text-foreground/65 leading-relaxed">{body}</p>
+      </div>
     </Link>
   )
 }
 
-function PathwayStep({
-  n,
-  icon,
-  title,
-  body,
-}: {
-  n: number
-  icon: React.ReactNode
-  title: string
-  body: string
-}) {
+function MiniCard({
+  href, external, icon, title, body,
+}: { href: string; external?: boolean; icon: React.ReactNode; title: string; body: string }) {
+  const inner = (
+    <>
+      <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-accent/10 text-accent mb-2.5">{icon}</span>
+      <p className="text-sm font-bold text-foreground mb-1">{title}</p>
+      <p className="text-xs text-foreground/60 leading-relaxed">{body}</p>
+    </>
+  )
+  const cls = 'group flex flex-col rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-5 hover:border-accent hover:shadow-sm transition-all'
+  return external ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+  ) : (
+    <Link href={href} className={cls}>{inner}</Link>
+  )
+}
+
+function PathwayStep({ n, icon, title, body }: { n: number; icon: React.ReactNode; title: string; body: string }) {
   return (
     <li className="flex items-start gap-4">
       <span className="relative flex items-center justify-center w-9 h-9 shrink-0 rounded-full bg-accent/10 text-accent">
         {icon}
-        <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-accent text-white text-[9px] font-bold">
-          {n}
-        </span>
+        <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-accent text-white text-[9px] font-bold">{n}</span>
       </span>
       <div>
         <p className="text-sm font-bold text-foreground">{title}</p>
