@@ -52,6 +52,7 @@ import {
   Snowflake,
   Sparkles,
   Send,
+  Info,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import type { PipelineStage, StageMatrix } from '@/lib/prospect/stage'
@@ -279,7 +280,10 @@ interface ProspectAggregates {
     sendOpenRate: number; openClickRate: number; sendReplyRate: number; replyToWinRate: number; deliveryRate?: number
   }
   /** Full cold-outreach funnel: pooled → verified → sent → delivered →
-   *  opened → clicked → portal viewed → replied → won/lost. */
+   *  real portal views (≥60s, scanner-filtered) → replied → booked → won.
+   *  openedClinics/clickedClinics are retained for backward compat only —
+   *  open/click tracking is OFF (scanner-polluted) and they are NEVER shown
+   *  as engagement. */
   coldFunnel?: {
     pooled: number
     verifiedAny: number
@@ -287,9 +291,11 @@ interface ProspectAggregates {
     sentClinics: number
     t1Sent: number; t2Sent: number; t3Sent: number
     deliveredClinics: number
-    openedClinics: number
-    clickedClinics: number
-    portalViewedClinics: number
+    openedClinics: number       // ⚠ scanner — not engagement (tracking off)
+    clickedClinics: number      // ⚠ scanner — not engagement (tracking off)
+    portalViewedClinics: number // raw — includes headless scanner renders
+    realPortalEngagedClinics?: number // ≥60s dwell OR dashboard CTA click — trustworthy
+    bookedClinics?: number      // confirmed cal.com booking
     repliedClinics: number
     wonClinics: number
     lostClinics: number
@@ -2998,9 +3004,8 @@ export default function AnalyticsDashboard() {
                 if ((p.portalEngagedSessions ?? 0) >= 1) {
                   s += Math.max(0, (p.viewDays ?? 0) - 1) * 500
                 }
-                if ((p.totalOpens ?? 0) >= 3) {
-                  s += Math.max(0, (p.openDays ?? 0) - 1) * 50
-                }
+                // Email opens deliberately contribute NOTHING — open tracking is
+                // off and every historical open was scanner noise.
                 return s
               }
 
@@ -3055,7 +3060,7 @@ export default function AnalyticsDashboard() {
               const STAGE_META: Record<PipelineStage, { label: string; sub: string }> = {
                 'booked':            { label: 'Booked',   sub: 'call confirmed · the conversion' },
                 'replied':           { label: 'Replied',  sub: 'your move' },
-                'engaged':           { label: 'Engaged',  sub: 'personal lane' },
+                'engaged':           { label: 'Engaged',  sub: 'legacy email-click status' },
                 't3-sent':           { label: 'T3 sent',  sub: 'sequence done' },
                 't2-sent':           { label: 'T2 sent',  sub: 'awaiting T3' },
                 't1-sent':           { label: 'T1 sent',  sub: 'awaiting T2' },
@@ -3146,11 +3151,19 @@ export default function AnalyticsDashboard() {
 
               // Derived data sets for sub-tabs
               const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000
+              // Re-engage queue — REAL signals only (opens/clicks excluded:
+              // tracking off, scanner-polluted). Qualifies on ≥60s portal dwell,
+              // a dashboard CTA click, multi-day cal clicks, or a free-content
+              // signup. Ranked by the server's scanner-aware engagementScore.
               const reEngageQueue = prospects
-                .filter(p => p.replies === 0 && (p.totalOpens > 0 || p.totalClicks > 0 || p.totalPortalViews > 0))
+                .filter(p => p.replies === 0 && (
+                  (p.portalEngagedSessions ?? 0) > 0 ||
+                  (p.portalCtaClicks ?? 0) > 0 ||
+                  (p.calClickDays ?? 0) >= 2 ||
+                  p.hasFreeContentSignup === true
+                ))
                 .filter(p => !p.lastSentAt || new Date(p.lastSentAt).getTime() < fourteenDaysAgo)
-                .map(p => ({ ...p, engagementScore: p.totalPortalViews * 3 + p.totalClicks * 2 + p.totalOpens }))
-                .sort((a, b) => b.engagementScore - a.engagementScore)
+                .sort((a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0))
 
               const sentTable = prospects
                 .filter(p => p.totalSends > 0)
@@ -3169,12 +3182,18 @@ export default function AnalyticsDashboard() {
                 .sort((a, b) => a[0].localeCompare(b[0]))
                 .slice(0, 30) // next 30 days
 
-              const FUNNEL_STAGES = [
+              // The status-based pipeline funnel. NOTE: the 'opened' and
+              // 'engaged' statuses are set by the Resend open/click webhook
+              // (status='opened' on open, status='engaged' on click) — both are
+              // open/click-derived and therefore scanner-polluted now that
+              // tracking is off. They are flagged `scanner` so they render
+              // greyed and labelled "not engagement", never as a real stage.
+              const FUNNEL_STAGES: Array<{ key: string; label: string; colour: string; scanner?: boolean }> = [
                 { key: 'researching', label: 'Researching', colour: 'bg-slate-400' },
                 { key: 'approved', label: 'Approved', colour: 'bg-blue-500' },
                 { key: 'sent', label: 'Sent', colour: 'bg-indigo-500' },
-                { key: 'opened', label: 'Opened', colour: 'bg-violet-500' },
-                { key: 'engaged', label: 'Engaged', colour: 'bg-purple-500' },
+                { key: 'opened', label: 'Opened', colour: 'bg-slate-300', scanner: true },
+                { key: 'engaged', label: 'Engaged', colour: 'bg-slate-300', scanner: true },
                 { key: 'replied', label: 'Replied', colour: 'bg-amber-500' },
                 { key: 'won', label: 'Won', colour: 'bg-emerald-500' },
               ]
@@ -3194,6 +3213,18 @@ export default function AnalyticsDashboard() {
 
               return (
                 <div className="space-y-6">
+                  {/* ── 0 · TRACKING-HONESTY BANNER ───────────────────────────
+                      Open/click tracking is OFF (scanner-polluted: every open
+                      and click was a Microsoft Defender / CloudFront prefetch,
+                      never a human). Opens/clicks are NOISE — engagement below
+                      is delivered, real portal dwell, replies & bookings only. */}
+                  <div className="card rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 flex items-start gap-2.5">
+                    <Info size={15} className="text-slate-500 shrink-0 mt-0.5" />
+                    <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
+                      <strong className="text-[var(--foreground)]">Open/click tracking is OFF</strong> — those signals were scanner-polluted (every open/click was a Microsoft Defender / CloudFront prefetch, never a human). Engagement below = <strong className="text-[var(--foreground)]">delivered, real portal dwell (≥60s), replies &amp; bookings only</strong>. Any open/click numbers still visible are greyed and historical scanner noise — they no longer update.
+                    </p>
+                  </div>
+
                   {/* ── 1 · NEEDS YOU — the only things requiring Zac's hands ── */}
                   {(() => {
                     const sm = prospectsData.stageMatrix
@@ -3471,7 +3502,8 @@ export default function AnalyticsDashboard() {
                                 </table>
                               </div>
                               <p className="text-[10.5px] text-[var(--muted-foreground)] px-4 py-2.5 border-t border-slate-100">
-                                Pool {sm.poolSize} non-archived prospects = sum of all cells ({matrixSum}){sm.archived > 0 ? ` · +${sm.archived} archived excluded` : ''} · first match wins: replied → engaged (personal lane) → dead → T3 → T2 → T1 → ready → awaiting approval → blocked · sends counted from production outreach log only · hover any cell for its deal value
+                                Pool {sm.poolSize} non-archived prospects = sum of all cells ({matrixSum}){sm.archived > 0 ? ` · +${sm.archived} archived excluded` : ''} · first match wins: replied → engaged → dead → T3 → T2 → T1 → ready → awaiting approval → blocked · sends counted from production outreach log only · hover any cell for its deal value
+                                <br /><strong className="text-slate-400">Engaged</strong> = legacy email-click status (set by the old open/click webhook). Open/click tracking is OFF (scanner-polluted) so this column no longer grows and is historical only — real engagement lives in the dwell / replies / bookings panels above. Confirmed bookings sit in Booked, not here.
                               </p>
                             </div>
                           </div>
@@ -3778,30 +3810,31 @@ export default function AnalyticsDashboard() {
                         </div>
                       )}
 
-                      {/* ── 6 · COLD-OUTREACH FUNNEL · full path from pool to reply ──
-                          Real data end-to-end: pooled → Hunter-verified → T1/T2/T3
-                          sent → delivered → opened (scanner-filtered) → clicked →
-                          portal viewed → REPLIED → won/lost. Test sends
-                          (audit_key ':test:') excluded server-side. */}
+                      {/* ── 6 · COLD-OUTREACH FUNNEL · full path from pool to booking ──
+                          Trustworthy signals only: pooled → Hunter-verified →
+                          T1/T2/T3 sent → delivered → REAL portal views (≥60s
+                          dwell or CTA click, scanner-filtered) → REPLIED →
+                          booked → won. Opens/clicks are EXCLUDED from the funnel
+                          (tracking off, scanner-polluted) and shown greyed below
+                          as historical noise only. Test sends excluded server-side. */}
                       {agg.coldFunnel && (() => {
                         const cf = agg.coldFunnel!
                         const stages: Array<{ label: string; count: number; colour: string; hint?: string }> = [
                           { label: 'Pooled', count: cf.pooled, colour: 'bg-slate-400', hint: 'Prospects in the pool (incl. dead statuses)' },
                           { label: 'Verified', count: cf.verifiedDeliverable, colour: 'bg-sky-500', hint: `Hunter deliverable · ${cf.verifiedAny} checked total` },
                           { label: 'Sent', count: cf.sentClinics, colour: 'bg-indigo-500', hint: `T1 ${cf.t1Sent} · T2 ${cf.t2Sent} · T3 ${cf.t3Sent} production sends` },
-                          { label: 'Delivered', count: cf.deliveredClinics, colour: 'bg-blue-500', hint: 'Clinics with ≥1 delivered event (Resend webhook)' },
-                          { label: 'Opened', count: cf.openedClinics, colour: 'bg-violet-500', hint: 'Human-filtered where user agent recorded' },
-                          { label: 'Clicked', count: cf.clickedClinics, colour: 'bg-purple-500', hint: 'Clinics with ≥1 email click' },
-                          { label: 'Portal viewed', count: cf.portalViewedClinics, colour: 'bg-fuchsia-500', hint: 'Opened their /p/[slug] dashboard' },
+                          { label: 'Delivered', count: cf.deliveredClinics, colour: 'bg-blue-500', hint: 'Clinics with ≥1 delivered event (Resend webhook) — clean, Resend still emits this' },
+                          { label: 'Real portal views', count: cf.realPortalEngagedClinics ?? 0, colour: 'bg-fuchsia-500', hint: '≥60s real dwell OR a dashboard CTA click — server-side, scanner-filtered. Replaces opens/clicks as the trustworthy portal signal.' },
                           { label: 'Replied', count: cf.repliedClinics, colour: 'bg-emerald-500', hint: 'Direct reply via inbound webhook — the money signal' },
+                          { label: 'Booked', count: cf.bookedClinics ?? 0, colour: 'bg-emerald-600', hint: 'Confirmed cal.com booking — the conversion' },
                           { label: 'Won', count: cf.wonClinics, colour: 'bg-emerald-700' },
                         ]
                         const maxCount = Math.max(...stages.map(s => s.count), 1)
                         return (
                           <div>
                             <SectionTitle
-                              title="Cold-outreach funnel · pool → reply"
-                              subtitle={`Clinic-level stage counts from real send/webhook data · test sends excluded · ${cf.lostClinics} lost (incl. STOP replies) · ${cf.bouncedClinics} bounced · delivered→portal-viewed scoped to ${windowLabel}; pooled/verified/sent + replied/won lifetime`}
+                              title="Cold-outreach funnel · pool → booking"
+                              subtitle={`Trustworthy stage counts only (opens/clicks excluded — tracking off) · test sends excluded · ${cf.lostClinics} lost (incl. STOP replies) · ${cf.bouncedClinics} bounced · delivered→real-portal-views scoped to ${windowLabel}; pooled/verified/sent + replied/booked/won lifetime`}
                             />
                             <div className="card rounded-2xl p-5 space-y-2">
                               {stages.map((s, i) => {
@@ -3821,8 +3854,14 @@ export default function AnalyticsDashboard() {
                                   </div>
                                 )
                               })}
+                              {/* Excluded scanner signals — shown greyed, never as engagement */}
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 mt-1 border-t border-dashed border-slate-200 text-[10.5px] text-slate-400 line-through decoration-slate-300">
+                                <span title="Open tracking is OFF — every historical open was a scanner prefetch. Frozen, no new events.">Opened {cf.openedClinics} (scanner — not engagement)</span>
+                                <span title="Click tracking is OFF — every historical click was a scanner prefetch. Frozen, no new events.">Clicked {cf.clickedClinics} (scanner — not engagement)</span>
+                                <span title="Raw portal views include headless scanner renders — use Real portal views above instead.">Raw portal views {cf.portalViewedClinics} (incl. scanner renders)</span>
+                              </div>
                               <p className="text-[10.5px] text-[var(--muted-foreground)] pt-2 border-t border-slate-100">
-                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Replied = inbound-webhook detection — previously untrackable. Note: <strong>Sent is lifetime</strong> but <strong>Delivered/Opened/Clicked/Portal-viewed count only the {windowLabel}</strong>, so the conversion %s read as &quot;windowed engagement vs all-time sends&quot; — not a same-window rate.
+                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Real portal views = ≥60s dwell or a dashboard CTA click (scanner-immune). Replied = inbound-webhook detection. <strong>Opens/clicks are excluded — tracking is off and every historical value was scanner noise; a 0 here means &quot;not tracked&quot;, not &quot;no interest&quot;.</strong> Note: <strong>Sent is lifetime</strong> but <strong>Delivered/Real-portal-views count only the {windowLabel}</strong>, so the conversion %s read as &quot;windowed engagement vs all-time sends&quot; — not a same-window rate.
                               </p>
                             </div>
                           </div>
@@ -4411,7 +4450,10 @@ export default function AnalyticsDashboard() {
                                 .reduce((acc, p) => acc + p.recoCohortTotal, 0)
                               return (
                                 <div key={stage.key} className="flex items-center gap-3">
-                                  <div className="w-24 text-xs font-semibold text-[var(--foreground)]">{stage.label}</div>
+                                  <div className={`w-24 text-xs font-semibold ${stage.scanner ? 'text-slate-400' : 'text-[var(--foreground)]'}`}>
+                                    {stage.label}
+                                    {stage.scanner && <span className="block text-[9px] font-normal text-slate-400 leading-tight">scanner · not engagement</span>}
+                                  </div>
                                   <div className="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
                                     <div className={`absolute inset-y-0 left-0 ${stage.colour} flex items-center justify-end pr-3 text-xs font-bold text-white`} style={{ width: `${widthPct}%`, minWidth: count > 0 ? '40px' : 0 }}>
                                       {count > 0 && count}
@@ -4421,16 +4463,18 @@ export default function AnalyticsDashboard() {
                                 </div>
                               )
                             })}
+                            {/* Conversion KPIs — opens/clicks REMOVED (tracking off, scanner-polluted).
+                                Re-based onto clean signals: delivery (Resend) + replies + wins. */}
                             <div className="grid md:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
                               <div className="text-xs">
-                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Send → Open</div>
-                                <div className="text-lg font-bold text-[var(--accent)]">{(agg.funnel.sendOpenRate * 100).toFixed(1)}%</div>
-                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalOpens} / {agg.funnel.totalSends}</div>
+                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Send → Delivered</div>
+                                <div className="text-lg font-bold text-[var(--accent)]">{((agg.funnel.deliveryRate ?? 0) * 100).toFixed(1)}%</div>
+                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalDelivered ?? 0} / {agg.funnel.totalSends}</div>
                               </div>
                               <div className="text-xs">
-                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Open → Click</div>
-                                <div className="text-lg font-bold text-[var(--accent)]">{(agg.funnel.openClickRate * 100).toFixed(1)}%</div>
-                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalClicks} / {agg.funnel.totalOpens}</div>
+                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Delivered → Reply</div>
+                                <div className="text-lg font-bold text-[var(--accent)]">{(((agg.funnel.totalDelivered ?? 0) > 0 ? agg.funnel.totalReplies / (agg.funnel.totalDelivered ?? 1) : 0) * 100).toFixed(2)}%</div>
+                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalReplies} / {agg.funnel.totalDelivered ?? 0}</div>
                               </div>
                               <div className="text-xs">
                                 <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Send → Reply</div>
@@ -4443,6 +4487,7 @@ export default function AnalyticsDashboard() {
                                 <div className="text-[10px] text-[var(--muted-foreground)]">{agg.revenue.wins} / {agg.funnel.totalReplies}</div>
                               </div>
                             </div>
+                            <p className="text-[10px] text-slate-400 mt-2">Open/click conversion removed — tracking off (scanner-polluted). Delivery is from Resend; replies &amp; wins are real.</p>
                           </div>
                         )}
                       </div>
@@ -4658,16 +4703,17 @@ export default function AnalyticsDashboard() {
                         </div>
                       </div>
 
+                      {/* Opens/clicks REMOVED (tracking off, scanner-polluted) — re-based on clean delivery + replies. */}
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Send → Open conversion</div>
-                          <div className="text-3xl font-bold text-[var(--accent)]">{(agg.funnel.sendOpenRate * 100).toFixed(1)}%</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalOpens} opens / {agg.funnel.totalSends} sends</div>
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Send → Delivered conversion</div>
+                          <div className="text-3xl font-bold text-[var(--accent)]">{((agg.funnel.deliveryRate ?? 0) * 100).toFixed(1)}%</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalDelivered ?? 0} delivered / {agg.funnel.totalSends} sends</div>
                         </div>
                         <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Open → Click conversion</div>
-                          <div className="text-3xl font-bold text-[var(--accent)]">{(agg.funnel.openClickRate * 100).toFixed(1)}%</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalClicks} clicks / {agg.funnel.totalOpens} opens</div>
+                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Delivered → Reply conversion</div>
+                          <div className="text-3xl font-bold text-[var(--accent)]">{(((agg.funnel.totalDelivered ?? 0) > 0 ? agg.funnel.totalReplies / (agg.funnel.totalDelivered ?? 1) : 0) * 100).toFixed(2)}%</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalReplies} replies / {agg.funnel.totalDelivered ?? 0} delivered</div>
                         </div>
                         <div className="card rounded-xl p-4">
                           <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Send → Reply conversion</div>
@@ -5097,9 +5143,11 @@ export default function AnalyticsDashboard() {
                             </div>
                           </div>
 
-                          {/* Email signals — secondary, lower trust */}
-                          <div className="bg-slate-50 rounded-lg p-4 mb-4">
-                            <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-3">Email signals · scanner-prone</div>
+                          {/* Email signals — open/click tracking is OFF (scanner-polluted).
+                              These are FROZEN historical values, shown greyed for audit
+                              only — never treat as current engagement. */}
+                          <div className="bg-slate-50 rounded-lg p-4 mb-4 opacity-70">
+                            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Email signals · tracking OFF · scanner-polluted · frozen historical (not engagement)</div>
                             <div className="grid grid-cols-3 gap-3">
                               <div>
                                 <div className="text-[10px] uppercase tracking-wider text-amber-700 font-bold">URL clicks</div>
@@ -5114,14 +5162,14 @@ export default function AnalyticsDashboard() {
                                 <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-bold">Cal.com clicks</div>
                                 <div className="text-lg font-bold text-emerald-700 tabular-nums">{sp.calClickDays ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">days</span></div>
                                 <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
-                                  {(sp.calClickDays ?? 0) >= 2 ? 'multi-day = human' : (sp.calClicks ?? 0) > 0 ? '1 day — scanner suspect' : 'none'}
+                                  tracking off · historical only
                                 </div>
                               </div>
                               <div>
                                 <div className="text-[10px] uppercase tracking-wider text-slate-600 font-bold">Open days</div>
                                 <div className="text-lg font-bold text-[var(--foreground)] tabular-nums">{sp.openDays ?? 0}<span className="text-sm text-[var(--muted-foreground)] font-normal ml-1">/ {sp.totalOpens}</span></div>
                                 <div className="text-[10.5px] text-[var(--muted-foreground)] leading-snug mt-0.5">
-                                  {(sp.openDays ?? 0) >= 2 ? 'real interest' : 'Apple MPP noise possible'}
+                                  tracking off · scanner noise
                                 </div>
                               </div>
                             </div>
@@ -5214,7 +5262,7 @@ export default function AnalyticsDashboard() {
                       {/* Re-engage queue */}
                       {reEngageQueue.length > 0 && (
                         <div>
-                          <SectionTitle title="Re-engage queue" subtitle="Engaged but no reply · last contact 14+ days ago · ranked by engagement score" />
+                          <SectionTitle title="Re-engage queue" subtitle="Real engagement (≥60s dwell · dashboard CTA · multi-day cal click · free-content signup) but no reply · last contact 14+ days ago · ranked by scanner-aware score · opens/clicks excluded (tracking off)" />
                           <div className="card rounded-2xl overflow-hidden">
                             <table className="w-full text-sm">
                               <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
@@ -5234,7 +5282,7 @@ export default function AnalyticsDashboard() {
                                       <div className="text-xs text-[var(--muted-foreground)]">{p.contactFullName} · {p.contactDiscipline}</div>
                                     </td>
                                     <td className="px-4 py-3 text-[var(--muted-foreground)]">{p.region}, {p.state}</td>
-                                    <td className="px-4 py-3 text-right font-bold text-[var(--accent)]">{p.engagementScore}</td>
+                                    <td className="px-4 py-3 text-right font-bold text-[var(--accent)]">{p.engagementScore ?? 0}</td>
                                     <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">
                                       {p.lastPortalViewAt ? `viewed ${timeAgo(new Date(p.lastPortalViewAt).getTime())}` : p.lastSentAt ? `sent ${timeAgo(new Date(p.lastSentAt).getTime())}` : '—'}
                                     </td>
@@ -5314,8 +5362,8 @@ export default function AnalyticsDashboard() {
                                   <SortableTh col="team" label="Team" align="right" />
                                   <SortableTh col="offer" label="Offer" />
                                   <SortableTh col="sends" label="Sends" align="right" />
-                                  <SortableTh col="opens" label="Opens" align="right" />
-                                  <SortableTh col="clicks" label="Clicks" align="right" />
+                                  <SortableTh col="opens" label="Opens ⚠" align="right" title="Open tracking is OFF — scanner-polluted, frozen. Not engagement." />
+                                  <SortableTh col="clicks" label="Clicks ⚠" align="right" title="Click tracking is OFF — scanner-polluted, frozen. Not engagement." />
                                   <SortableTh col="views" label="Views" align="right" />
                                   <SortableTh col="replies" label="Replies" align="right" />
                                   <SortableTh col="lastSent" label="Last sent" align="right" />
@@ -5351,8 +5399,8 @@ export default function AnalyticsDashboard() {
                                         <div className="text-[var(--muted-foreground)]">{fmt$(p.dealValue ?? p.recoCohortTotal)}</div>
                                       </td>
                                       <td className="px-4 py-3 text-right">{p.totalSends}</td>
-                                      <td className="px-4 py-3 text-right tabular-nums">{p.totalOpens || '—'}</td>
-                                      <td className="px-4 py-3 text-right tabular-nums">{p.totalClicks > 0 ? <span className="font-bold text-orange-600">{p.totalClicks}</span> : '—'}</td>
+                                      <td className="px-4 py-3 text-right tabular-nums text-slate-400 line-through decoration-slate-300" title="Open tracking off — scanner noise, not engagement">{p.totalOpens || '—'}</td>
+                                      <td className="px-4 py-3 text-right tabular-nums text-slate-400 line-through decoration-slate-300" title="Click tracking off — scanner noise, not engagement">{p.totalClicks || '—'}</td>
                                       <td className="px-4 py-3 text-right tabular-nums">{p.totalPortalViews > 0 ? <span className="font-bold text-[var(--accent)]">{p.totalPortalViews}</span> : '—'}</td>
                                       <td className="px-4 py-3 text-right">{p.replies > 0 ? <span className="font-bold text-emerald-600">{p.replies}</span> : '—'}</td>
                                       <td className="px-4 py-3 text-right text-xs text-[var(--muted-foreground)]">{p.lastSentAt ? timeAgo(new Date(p.lastSentAt).getTime()) : '—'}<div>{p.lastSentTemplate}</div></td>

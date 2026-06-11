@@ -1625,6 +1625,14 @@ function buildAggregates(prospects: Array<{
   totalOpens: number
   totalClicks: number
   totalPortalViews: number
+  // Real (scanner-filtered) portal engagement — ≥60s dwell sessions + client-
+  // side dashboard CTA clicks. These replace opens/clicks as the funnel's
+  // trustworthy portal signal now that open/click tracking is off.
+  portalEngagedSessions: number
+  portalCtaClicks: number
+  // cal.com booking — the conversion event for the funnel's Booked stage.
+  calBookedAt: string | null
+  calBookingStatus: string | null
   // Windowed engagement signals (from the time-scoped email_events join) —
   // used to keep the cold-funnel's opened/clicked stages on the selected
   // window instead of the lifetime per-send log counters.
@@ -1698,7 +1706,10 @@ function buildAggregates(prospects: Array<{
 
   // ── COLD-OUTREACH FUNNEL (clinic-level stage counts, full pool) ──
   // pooled → verified (Hunter deliverable) → T1/T2/T3 sent → delivered →
-  // opened → clicked → portal viewed → replied → lost/unsubscribed.
+  // REAL portal engagement (≥60s dwell or CTA click) → replied → booked → won.
+  // Open/click tracking is OFF (scanner-polluted), so openedClinics/
+  // clickedClinics are retained for backward compat only and are NEVER
+  // surfaced as engagement in the UI.
   // Counted over ALL prospects (incl. dead) so the funnel shows true
   // attrition; the rate metrics below stay non-dead-scoped as before.
   const coldFunnel = {
@@ -1708,9 +1719,15 @@ function buildAggregates(prospects: Array<{
     sentClinics: 0,          // ≥1 production send
     t1Sent: 0, t2Sent: 0, t3Sent: 0,
     deliveredClinics: 0,     // ≥1 delivered event
-    openedClinics: 0,        // ≥1 human-filtered open
-    clickedClinics: 0,       // ≥1 click
-    portalViewedClinics: 0,  // ≥1 portal view
+    // OPENED/CLICKED RETAINED FOR BACKWARD COMPAT ONLY — open/click tracking
+    // is OFF (scanner-polluted: every event was a Defender/CloudFront prefetch,
+    // never a human). These two no longer receive new events and every
+    // historical value was scanner noise. NOT presented as engagement in the UI.
+    openedClinics: 0,        // ⚠ scanner — not engagement
+    clickedClinics: 0,       // ⚠ scanner — not engagement
+    portalViewedClinics: 0,  // ≥1 portal view (raw — includes headless scanner renders)
+    realPortalEngagedClinics: 0,  // ≥60s real dwell OR a dashboard CTA click — scanner-filtered, server-side
+    bookedClinics: 0,        // confirmed cal.com booking — the conversion
     repliedClinics: 0,       // the money signal
     wonClinics: 0,
     lostClinics: 0,          // STOP replies / explicit rejection
@@ -1741,9 +1758,16 @@ function buildAggregates(prospects: Array<{
     // signals (openDays / cal+product+other+distinct URL clicks) so the whole
     // delivered→opened→clicked→portal segment reflects the same window.
     if (p.totalDelivered > 0) coldFunnel.deliveredClinics += 1
+    // openedClinics/clickedClinics kept for backward compat — open/click
+    // tracking is OFF and these were 100% scanner. Not shown as engagement.
     if (p.openDays > 0) coldFunnel.openedClinics += 1
     if (p.calClicks > 0 || p.productClicks > 0 || p.otherClicks > 0 || p.distinctUrlClicks > 0) coldFunnel.clickedClinics += 1
     if (p.totalPortalViews > 0) coldFunnel.portalViewedClinics += 1
+    // REAL portal engagement — ≥60s server-measured dwell OR a client-side
+    // dashboard CTA click. Scanners can't fire either. This is the trustworthy
+    // portal signal that replaces opens/clicks in the funnel.
+    if (p.portalEngagedSessions > 0 || p.portalCtaClicks > 0) coldFunnel.realPortalEngagedClinics += 1
+    if (p.calBookedAt && p.calBookingStatus === 'booked') coldFunnel.bookedClinics += 1
     if (p.replies > 0) coldFunnel.repliedClinics += 1
     if (p.status === 'won') coldFunnel.wonClinics += 1
     if (p.status === 'lost') coldFunnel.lostClinics += 1
