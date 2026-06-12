@@ -3220,7 +3220,7 @@ export default function AnalyticsDashboard() {
                   <div className="card rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 flex items-start gap-2.5">
                     <Info size={15} className="text-slate-500 shrink-0 mt-0.5" />
                     <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
-                      <strong className="text-[var(--foreground)]">Open/click tracking is OFF</strong> — those signals were scanner-polluted (every open/click was a Microsoft Defender / CloudFront prefetch, never a human). Engagement below = <strong className="text-[var(--foreground)]">delivered, real portal dwell (≥60s), replies &amp; bookings only</strong>. Any open/click numbers still visible are greyed and historical scanner noise — they no longer update.
+                      <strong className="text-[var(--foreground)]">Tracking off</strong> — opens/clicks were 100% scanner. Real engagement = portal reads (≥10s, scanner-proof), replies &amp; bookings.
                     </p>
                   </div>
 
@@ -3346,7 +3346,7 @@ export default function AnalyticsDashboard() {
                               { label: 'Sent', value: agg.funnel.totalSends, hint: `production sends in the ${windowLabel}` },
                               { label: 'Delivered', value: agg.funnel.totalDelivered ?? 0, hint: 'Resend confirmed delivery' },
                               { label: 'Bounced', value: agg.funnel.totalBouncedEmails ?? 0, hint: 'bounced + suppressed' },
-                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥60s portal dwell or CTA click — scanner-immune (all-time)', good: true },
+                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥10s real portal dwell or CTA click — scanner-immune', good: true },
                               { label: 'Replied', value: agg.funnel.totalReplies, hint: 'positive inbound reply (auto-captured only if reply-forwarding is wired — see note)', good: true },
                               { label: 'Opt-outs', value: agg.coldFunnel.optOuts ?? 0, hint: 'STOP / opt-out replies — proof a real human received + READ the email and replied', amber: true },
                               { label: 'Booked', value: agg.coldFunnel.bookedClinics ?? 0, hint: 'cal.com booking (all-time)', good: true },
@@ -3358,7 +3358,7 @@ export default function AnalyticsDashboard() {
                             ))}
                           </div>
                           <p className="text-[10.5px] text-[var(--muted-foreground)] mt-3 pt-3 border-t border-[var(--border)]">
-                            ⚠ <strong>Opt-outs (STOP) prove emails are landing &amp; being read by real humans.</strong> But <strong>positive replies aren&apos;t auto-captured</strong> — they land in your inbox, and the reply-forwarding webhook isn&apos;t wired, so &quot;Replied&quot; can read 0 even when people reply. · Clean send format live since ~5:40pm today — judge the engine on the <strong>24h tab</strong>, not lifetime. Sent/Delivered/Bounced reflect the {windowLabel}. Opens &amp; clicks not tracked (100% scanner).
+                            Opens/clicks off (scanner). Trust real reads · replies · bookings. Positive replies land in your inbox (not auto-counted). On the 24h tab you see clean-format sends only.
                           </p>
                         </div>
                       )}
@@ -3450,11 +3450,18 @@ export default function AnalyticsDashboard() {
                           funnel from partner_institutions. Non-terminal only. ── */}
                       {prospectsData.targetsByType && (() => {
                         const t = prospectsData.targetsByType!
-                        const cards = [
+                        type TargetCard = {
+                          label: string; sub: string; total: number
+                          cardCls: string; dotCls: string; numCls: string
+                          splits: Array<{ label: string; value: number }>
+                          tier?: DealTypeKey; href?: string
+                        }
+                        const cards: TargetCard[] = [
                           {
                             label: 'On-site team training',
                             sub: 'Large clinics · ≥6 clinical',
                             total: t.onSite.total,
+                            tier: 'on-site',
                             cardCls: 'border-emerald-200 bg-emerald-50/40',
                             dotCls: 'bg-emerald-500',
                             numCls: 'text-emerald-700',
@@ -3468,6 +3475,7 @@ export default function AnalyticsDashboard() {
                             label: 'Hub Pack',
                             sub: 'Medium clinics · 2–5 clinical',
                             total: t.hub.total,
+                            tier: 'hub-pack',
                             cardCls: 'border-sky-200 bg-sky-50/40',
                             dotCls: 'bg-sky-500',
                             numCls: 'text-sky-700',
@@ -3481,6 +3489,7 @@ export default function AnalyticsDashboard() {
                             label: 'Individual',
                             sub: 'Single clinician · ≤1 clinical',
                             total: t.individual.total,
+                            tier: 'individual',
                             cardCls: 'border-slate-200 bg-slate-50/60',
                             dotCls: 'bg-slate-400',
                             numCls: 'text-slate-700',
@@ -3494,6 +3503,7 @@ export default function AnalyticsDashboard() {
                             label: 'Partnership telehealth',
                             sub: 'Sports institutions · funnel',
                             total: t.partnership.total,
+                            href: '/admin/partnerships',
                             cardCls: 'border-violet-200 bg-violet-50/40',
                             dotCls: 'bg-violet-500',
                             numCls: 'text-violet-700',
@@ -3504,31 +3514,52 @@ export default function AnalyticsDashboard() {
                             ],
                           },
                         ]
+                        // Whole-tier drill-down — reuse the matrix detail path
+                        // (detailStage + reviewTier drive the prospect list at
+                        // #pipeline-detail). Default to 'awaiting-approval', the
+                        // matrix's own default + the actionable "needs sign-off" cell.
+                        const openTierDetail = (tier: DealTypeKey) => {
+                          setDetailStage('awaiting-approval')
+                          setReviewTier(tier)
+                          setReviewSelected(new Set())
+                          setTimeout(() => document.getElementById('pipeline-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+                        }
                         return (
                           <div>
                             <SectionTitle
                               title="Targets by type · the four outreach segments"
-                              subtitle="Non-terminal targets bucketed into the segment pitch each gets · clinic size from the 7-key clinical sum (on-site ≥6 · Hub Pack 2–5 · individual ≤1) · Partnership is the separate telehealth funnel"
+                              subtitle="Non-terminal targets bucketed into the segment pitch each gets · clinic size from the 7-key clinical sum (on-site ≥6 · Hub Pack 2–5 · individual ≤1) · Partnership is the separate telehealth funnel · click a card to drill into its prospects"
                             />
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                              {cards.map((c) => (
-                                <div key={c.label} className={`card rounded-2xl border ${c.cardCls} p-4`}>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className={`inline-block w-2 h-2 rounded-full ${c.dotCls}`} />
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--foreground)]">{c.label}</span>
-                                  </div>
-                                  <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{c.sub}</div>
-                                  <div className={`text-3xl font-bold tabular-nums mt-2 ${c.numCls}`}>{c.total}</div>
-                                  <div className="mt-2.5 space-y-1 border-t border-slate-100 pt-2">
-                                    {c.splits.map((s) => (
-                                      <div key={s.label} className="flex items-center justify-between text-[11px]">
-                                        <span className="text-[var(--muted-foreground)]">{s.label}</span>
-                                        <span className="font-semibold tabular-nums text-[var(--foreground)]">{s.value}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
+                              {cards.map((c) => {
+                                const inner = (
+                                  <>
+                                    <div className="flex items-center gap-1.5">
+                                      <span className={`inline-block w-2 h-2 rounded-full ${c.dotCls}`} />
+                                      <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--foreground)]">{c.label}</span>
+                                    </div>
+                                    <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{c.sub}</div>
+                                    <div className={`text-3xl font-bold tabular-nums mt-2 ${c.numCls}`}>{c.total}</div>
+                                    <div className="mt-2.5 space-y-1 border-t border-slate-100 pt-2">
+                                      {c.splits.map((s) => (
+                                        <div key={s.label} className="flex items-center justify-between text-[11px]">
+                                          <span className="text-[var(--muted-foreground)]">{s.label}</span>
+                                          <span className="font-semibold tabular-nums text-[var(--foreground)]">{s.value}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </>
+                                )
+                                const cardCls = `card rounded-2xl border ${c.cardCls} p-4 text-left w-full block cursor-pointer transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]`
+                                if (c.href) {
+                                  return (
+                                    <a key={c.label} href={c.href} className={cardCls}>{inner}</a>
+                                  )
+                                }
+                                return (
+                                  <button key={c.label} type="button" onClick={() => c.tier && openTierDetail(c.tier)} className={cardCls}>{inner}</button>
+                                )
+                              })}
                             </div>
                           </div>
                         )
@@ -3611,7 +3642,7 @@ export default function AnalyticsDashboard() {
                               </div>
                               <p className="text-[10.5px] text-[var(--muted-foreground)] px-4 py-2.5 border-t border-slate-100">
                                 Pool {sm.poolSize} non-archived prospects = sum of all cells ({matrixSum}){sm.archived > 0 ? ` · +${sm.archived} archived excluded` : ''} · first match wins: replied → engaged → dead → T3 → T2 → T1 → ready → awaiting approval → blocked · sends counted from production outreach log only · hover any cell for its deal value
-                                <br /><strong className="text-slate-400">Engaged</strong> = legacy email-click status (set by the old open/click webhook). Open/click tracking is OFF (scanner-polluted) so this column no longer grows and is historical only — real engagement lives in the dwell / replies / bookings panels above. Confirmed bookings sit in Booked, not here.
+                                <br /><strong className="text-slate-400">Engaged</strong> column is dead (legacy email-click, tracking off) — real engagement is the portal-reads panel above.
                               </p>
                             </div>
                           </div>
@@ -3943,7 +3974,7 @@ export default function AnalyticsDashboard() {
                           { label: 'Verified', count: cf.verifiedDeliverable, colour: 'bg-sky-500', hint: `Hunter deliverable · ${cf.verifiedAny} checked total` },
                           { label: 'Sent', count: cf.sentClinics, colour: 'bg-indigo-500', hint: `T1 ${cf.t1Sent} · T2 ${cf.t2Sent} · T3 ${cf.t3Sent} production sends` },
                           { label: 'Delivered', count: cf.deliveredClinics, colour: 'bg-blue-500', hint: 'Clinics with ≥1 delivered event (Resend webhook) — clean, Resend still emits this' },
-                          { label: 'Real portal views', count: cf.realPortalEngagedClinics ?? 0, colour: 'bg-fuchsia-500', hint: '≥60s real dwell OR a dashboard CTA click — server-side, scanner-filtered. Replaces opens/clicks as the trustworthy portal signal.' },
+                          { label: 'Real portal views', count: cf.realPortalEngagedClinics ?? 0, colour: 'bg-fuchsia-500', hint: '≥10s real dwell OR a dashboard CTA click — server-side, scanner-filtered. Replaces opens/clicks as the trustworthy portal signal.' },
                           { label: 'Replied', count: cf.repliedClinics, colour: 'bg-emerald-500', hint: 'Direct reply via inbound webhook — the money signal' },
                           { label: 'Booked', count: cf.bookedClinics ?? 0, colour: 'bg-emerald-600', hint: 'Confirmed cal.com booking — the conversion' },
                           { label: 'Won', count: cf.wonClinics, colour: 'bg-emerald-700' },
@@ -3980,7 +4011,7 @@ export default function AnalyticsDashboard() {
                                 <span title="Raw portal views include headless scanner renders — use Real portal views above instead.">Raw portal views {cf.portalViewedClinics} (incl. scanner renders)</span>
                               </div>
                               <p className="text-[10.5px] text-[var(--muted-foreground)] pt-2 border-t border-slate-100">
-                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Real portal views = ≥60s dwell or a dashboard CTA click (scanner-immune). Replied = inbound-webhook detection. <strong>Opens/clicks are excluded — tracking is off and every historical value was scanner noise; a 0 here means &quot;not tracked&quot;, not &quot;no interest&quot;.</strong> Note: <strong>Sent is lifetime</strong> but <strong>Delivered/Real-portal-views count only the {windowLabel}</strong>, so the conversion %s read as &quot;windowed engagement vs all-time sends&quot; — not a same-window rate.
+                                Verified = Hunter says deliverable ({cf.verifiedAny} addresses checked). Sent = ≥1 production T-send (T1 {cf.t1Sent} · T2 {cf.t2Sent} · T3 {cf.t3Sent}). Real portal views = ≥10s dwell or a dashboard CTA click (scanner-immune). Replied = inbound-webhook detection. <strong>Opens/clicks are excluded — tracking is off and every historical value was scanner noise; a 0 here means &quot;not tracked&quot;, not &quot;no interest&quot;.</strong> Note: <strong>Sent is lifetime</strong> but <strong>Delivered/Real-portal-views count only the {windowLabel}</strong>, so the conversion %s read as &quot;windowed engagement vs all-time sends&quot; — not a same-window rate.
                               </p>
                             </div>
                           </div>
@@ -5382,7 +5413,7 @@ export default function AnalyticsDashboard() {
                       {/* Re-engage queue */}
                       {reEngageQueue.length > 0 && (
                         <div>
-                          <SectionTitle title="Re-engage queue" subtitle="Real engagement (≥60s dwell · dashboard CTA · multi-day cal click · free-content signup) but no reply · last contact 14+ days ago · ranked by scanner-aware score · opens/clicks excluded (tracking off)" />
+                          <SectionTitle title="Re-engage queue" subtitle="Real engagement (≥10s dwell · dashboard CTA · multi-day cal click · free-content signup) but no reply · last contact 14+ days ago · ranked by scanner-aware score · opens/clicks excluded (tracking off)" />
                           <div className="card rounded-2xl overflow-hidden">
                             <table className="w-full text-sm">
                               <thead className="bg-[rgba(13,115,119,0.04)] text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
