@@ -299,9 +299,13 @@ async function loadSubjectKeyStats(): Promise<Map<string, VariantStat>> {
           AND audit_key NOT LIKE '%:test:%'
       ),
       real_views AS (
+        -- REAL engagement (Zac 2026-06-12): dwell lives in dwell_ms, NOT
+        -- duration_seconds (which is never populated → was always 0, zeroing
+        -- the whole metric). Scanners can't fire the exit/dwell beacon, so any
+        -- dwell_ms is a real human; ≥10s = a genuine read.
         SELECT clinic_id, utm_campaign
         FROM prospect_portal_views
-        WHERE (duration_seconds >= 60 OR interaction_type = 'cta_click')
+        WHERE (COALESCE(dwell_ms, 0) >= 10000 OR interaction_type = 'cta_click')
         GROUP BY clinic_id, utm_campaign
       )
       SELECT

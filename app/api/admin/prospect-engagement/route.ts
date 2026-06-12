@@ -86,7 +86,7 @@ interface PortalViewRow {
   // Real time-on-portal signals derived from interaction_type='exit' rows.
   // dwell_ms on an exit event = total session duration (page-load → tab-close).
   // total_dwell_ms = sum across all sessions. max_dwell_ms = longest session.
-  // engaged_sessions = sessions where dwell > 30s (not a bounce).
+  // engaged_sessions = sessions with dwell >= 10s (real read; scanners can't fire the dwell beacon at all).
   total_dwell_ms: number | string
   max_dwell_ms: number | string
   engaged_sessions: number | string
@@ -396,7 +396,7 @@ export async function GET(req: NextRequest) {
               MIN(f.viewed_at) AS first_viewed_at, MAX(f.viewed_at) AS last_viewed_at,
               COALESCE(SUM(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::bigint AS total_dwell_ms,
               COALESCE(MAX(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::int AS max_dwell_ms,
-              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms > 60000)::int AS engaged_sessions,
+              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms >= 10000)::int AS engaged_sessions,
               COUNT(*) FILTER (WHERE f.interaction_type = 'cta_click')::int AS cta_clicks,
               (SELECT target FROM top_cta WHERE clinic_id = f.clinic_id) AS top_cta_target,
               COUNT(DISTINCT f.section_visited) FILTER (WHERE f.interaction_type IN ('view','section_view'))::int AS unique_sections,
@@ -431,7 +431,7 @@ export async function GET(req: NextRequest) {
               MIN(f.viewed_at) AS first_viewed_at, MAX(f.viewed_at) AS last_viewed_at,
               COALESCE(SUM(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::bigint AS total_dwell_ms,
               COALESCE(MAX(CASE WHEN f.interaction_type = 'exit' AND f.dwell_ms IS NOT NULL THEN f.dwell_ms ELSE 0 END), 0)::int AS max_dwell_ms,
-              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms > 60000)::int AS engaged_sessions,
+              COUNT(*) FILTER (WHERE f.interaction_type = 'exit' AND f.dwell_ms >= 10000)::int AS engaged_sessions,
               COUNT(*) FILTER (WHERE f.interaction_type = 'cta_click')::int AS cta_clicks,
               (SELECT target FROM top_cta WHERE clinic_id = f.clinic_id) AS top_cta_target,
               COUNT(DISTINCT f.section_visited) FILTER (WHERE f.interaction_type IN ('view','section_view'))::int AS unique_sections,
@@ -1363,7 +1363,7 @@ export async function GET(req: NextRequest) {
           -- labels this: real views in window over lifetime sends.
           SELECT clinic_id, utm_campaign
           FROM prospect_portal_views
-          WHERE (duration_seconds >= 60 OR interaction_type = 'cta_click')
+          WHERE (COALESCE(dwell_ms, 0) >= 10000 OR interaction_type = 'cta_click')
             AND viewed_at >= NOW() - (${windowDays} || ' days')::interval
           GROUP BY clinic_id, utm_campaign
         )
