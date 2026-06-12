@@ -3362,6 +3362,87 @@ export default function AnalyticsDashboard() {
                           </p>
                         </div>
                       )}
+                      {/* ── REAL PORTAL ENGAGEMENT — the only scanner-proof signal.
+                          dwell_ms is recorded server-side on 'exit' events
+                          (page-load → tab-close). Anti-malware scanners render
+                          the page headless and bail in 2-3s WITHOUT firing the
+                          exit beacon, so any session ≥10s OR an engaged-session
+                          count is a real human who read their pitch page. This
+                          is the good-news engagement Zac asked to see up top. ── */}
+                      {(() => {
+                        const TIER_BADGE: Record<DealTypeKey, { label: string; cls: string }> = {
+                          'on-site':    { label: 'On-site',    cls: 'bg-[rgba(13,115,119,0.08)] text-[var(--accent)]' },
+                          'hub-pack':   { label: 'Hub Pack',   cls: 'bg-indigo-50 text-indigo-700' },
+                          'individual': { label: 'Individual', cls: 'bg-slate-100 text-slate-600' },
+                        }
+                        const fmtVisit = (d: string | null | undefined) =>
+                          d ? new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : null
+                        // Real read = a session ≥10s OR a counted engaged session.
+                        const realReads = prospects
+                          .filter(p => (p.portalMaxDwellMs ?? 0) >= 10000 || (p.portalEngagedSessions ?? 0) > 0)
+                          .sort((a, b) => (b.portalMaxDwellMs ?? 0) - (a.portalMaxDwellMs ?? 0))
+                        // Any real session at all (≥1ms dwell) — lighter sub-stat.
+                        const anyRealSession = prospects.filter(p => (p.portalMaxDwellMs ?? 0) > 0).length
+                        return (
+                          <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
+                            <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+                              <h3 className="text-sm font-semibold text-emerald-800">
+                                Real portal engagement · {realReads.length} {realReads.length === 1 ? 'clinic' : 'clinics'} read their pitch
+                                <span className="font-normal text-emerald-700"> (≥10s, scanner-proof)</span>
+                              </h3>
+                              <span className="text-[10px] uppercase tracking-wider text-emerald-700 px-2 py-0.5 rounded bg-emerald-100">trustworthy signal</span>
+                            </div>
+                            <p className="text-[11px] text-emerald-700/90 mb-3">
+                              Server-side dwell on tab-close — scanners can&apos;t fire it, so every row is a real human.
+                              {anyRealSession > realReads.length && (
+                                <> · {anyRealSession} clinic{anyRealSession === 1 ? '' : 's'} had any real session (&gt;0s).</>
+                              )}
+                            </p>
+                            {realReads.length === 0 ? (
+                              <div className="text-[13px] text-emerald-700/80 py-3">
+                                No real portal reads yet — clinics who click through and spend ≥10s on their pitch will appear here.
+                              </div>
+                            ) : (
+                              <div className="divide-y divide-emerald-100">
+                                {realReads.map((p) => {
+                                  const badge = p.dealType ? TIER_BADGE[p.dealType] : null
+                                  const seconds = Math.round((p.portalMaxDwellMs ?? 0) / 1000)
+                                  const visits = p.totalPortalViews ?? 0
+                                  const sessions = p.portalEngagedSessions ?? 0
+                                  const lastVisit = fmtVisit(p.lastPortalViewAt)
+                                  return (
+                                    <div key={p.id} className="flex items-center gap-2 py-2 flex-wrap">
+                                      <a
+                                        href={`/p/${p.slug}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[13px] font-semibold text-emerald-800 hover:underline"
+                                      >
+                                        {p.shortName}
+                                      </a>
+                                      {badge && (
+                                        <span className={`text-[9.5px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${badge.cls}`}>
+                                          {badge.label}
+                                        </span>
+                                      )}
+                                      <span className="ml-auto flex items-center gap-2.5 text-[11.5px] text-emerald-700">
+                                        <span className="font-bold tabular-nums text-emerald-700">{seconds}s</span>
+                                        {sessions > 0 && (
+                                          <span className="tabular-nums">{sessions} session{sessions === 1 ? '' : 's'}</span>
+                                        )}
+                                        {visits > 1 && sessions === 0 && (
+                                          <span className="tabular-nums">{visits} visits</span>
+                                        )}
+                                        {lastVisit && <span className="text-emerald-600/80">{lastVisit}</span>}
+                                      </span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })()}
                       {/* ── TARGETS BY TYPE — the outreach pool split into the
                           four segment pitches Zac runs. On-site / Hub Pack /
                           individual come from prospect_clinics (size-tier from

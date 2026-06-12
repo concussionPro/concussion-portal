@@ -53,7 +53,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
       <ProspectTracker token={clinic.slug} accessKey={clinic.accessKey} />
       <Sidebar clinic={clinic} />
       <main className="flex-1 ml-0 md:ml-64">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 pt-16 md:pt-8 pb-6 sm:pb-8">
           {/* Greeting */}
           <div data-track-section="hero" className="mb-6">
             <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">
@@ -632,7 +632,7 @@ function NextStepCTA({ clinic }: { clinic: ProspectClinic }) {
           href={`https://cal.com/zac-lewis-so8zjs/30min?utm_source=portal&utm_medium=next_step_cta&utm_campaign=cohort_booking&utm_content=${encodeURIComponent(clinic.slug)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group px-6 py-5"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg hover:shadow-xl transition-shadow group px-6 py-5"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">

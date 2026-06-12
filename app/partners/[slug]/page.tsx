@@ -64,7 +64,7 @@ export default async function PartnerPage({ params }: PageProps) {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         {/* ── Hero ─────────────────────────────────────────────────── */}
         <section className="mb-12">
-          <div className="flex items-center gap-3 mb-5">
+          <div className="flex flex-wrap items-center gap-3 mb-5">
             <Image src="/logo.png" alt="" width={28} height={28} className="rounded-lg" />
             <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-accent">
               Concussion Education Australia
