@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import { modules } from '@/data/modules'
 import { getClinicBySlug } from '@/lib/prospect/repo'
-import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 
@@ -75,10 +75,14 @@ export default async function ProspectModuleOneTrial({
   searchParams: Promise<{ k?: string }>
 }) {
   const { token } = await params
-  const { k } = await searchParams
+  await searchParams
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
-  if (k !== clinic.accessKey) return <AccessWall clinicName={clinic.name} />
+  // Keyless per-clinic URL (Zac 2026-06-11): cold emails link to /p/<slug>
+  // with NO access key. This is non-sensitive marketing content (the Module 1
+  // trial), so any valid clinic slug renders. The key is honoured when present
+  // (legacy links) but no longer required — otherwise prospects arriving from
+  // the keyless landing hit an access wall and can't open the trial.
 
   const m1 = modules.find((m) => m.id === 1)
   if (!m1) notFound()
@@ -90,6 +94,7 @@ export default async function ProspectModuleOneTrial({
 
   return (
     <div className="flex min-h-screen dashboard-bg">
+      <ProspectTracker token={clinic.slug} accessKey={clinic.accessKey ?? ''} />
       <style dangerouslySetInnerHTML={{ __html: PREVIEW_PRINT_CSS }} />
       <ProspectSidebar
         slug={slug}
@@ -100,7 +105,7 @@ export default async function ProspectModuleOneTrial({
         active="learning"
       />
       <main className="flex-1 ml-0 md:ml-64">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+        <div data-track-section="module-1-trial" className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Link
             href={`/p/${slug}/learning?k=${ak}`}
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors mb-4"

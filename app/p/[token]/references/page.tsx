@@ -15,7 +15,7 @@ import {
   ArrowLeft, ExternalLink, TrendingUp, Stethoscope,
 } from 'lucide-react'
 import { getClinicBySlug } from '@/lib/prospect/repo'
-import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 
@@ -148,10 +148,13 @@ export default async function ProspectReferences({
   searchParams: Promise<{ k?: string }>
 }) {
   const { token } = await params
-  const { k } = await searchParams
+  await searchParams
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
-  if (k !== clinic.accessKey) return <AccessWall clinicName={clinic.name} />
+  // Keyless per-clinic URL (Zac 2026-06-11): cold emails link to /p/<slug>
+  // with NO access key. This is non-sensitive marketing content, so any valid
+  // clinic slug renders. The key is honoured when present (legacy links) but
+  // no longer required.
 
   const totalShown = Object.values(PROSPECT_REFS).reduce((acc, arr) => acc + arr.length, 0)
   const slug = clinic.slug
@@ -159,6 +162,7 @@ export default async function ProspectReferences({
 
   return (
     <div className="flex min-h-screen dashboard-bg">
+      <ProspectTracker token={clinic.slug} accessKey={clinic.accessKey ?? ''} />
       <ProspectSidebar
         slug={slug}
         accessKey={ak}
@@ -168,7 +172,7 @@ export default async function ProspectReferences({
         active="references"
       />
       <main className="flex-1 ml-0 md:ml-64">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+        <div data-track-section="reference-library" className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Link
             href={`/p/${slug}?k=${ak}`}
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors mb-4"

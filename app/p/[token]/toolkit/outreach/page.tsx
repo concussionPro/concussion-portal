@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
-import { AccessWall } from '@/components/prospect/ProspectLanding'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { OUTREACH_TEMPLATES } from '@/data/hub-program-content'
 import { OutreachToolkitDoc } from '@/components/toolkit/OutreachToolkitDoc'
@@ -27,10 +26,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function OutreachKitPage({ params, searchParams }: PageProps) {
   const { token } = await params
-  const { k } = await searchParams
+  await searchParams
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
-  if (k !== clinic.accessKey) return <AccessWall clinicName={clinic.name} />
+  // Keyless per-clinic URL (Zac 2026-06-11): cold emails link to /p/<slug>
+  // with NO access key. This is non-sensitive marketing content, so any valid
+  // clinic slug renders. The key is honoured when present (legacy links) but
+  // no longer required.
 
   const accessKey = clinic.accessKey
   const baseHref = `/p/${clinic.slug}`

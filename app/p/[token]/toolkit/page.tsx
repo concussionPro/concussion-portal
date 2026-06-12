@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation'
 import { FileText, ArrowLeft, Mail, GraduationCap } from 'lucide-react'
 import { ToolkitSidebar } from './_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
-import { AccessWall } from '@/components/prospect/ProspectLanding'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { getClinicBySlug } from '@/lib/prospect/repo'
 
@@ -27,10 +26,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ToolkitLauncherPage({ params, searchParams }: PageProps) {
   const { token } = await params
-  const { k } = await searchParams
+  await searchParams
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
-  if (k !== clinic.accessKey) return <AccessWall clinicName={clinic.name} />
+  // Keyless per-clinic URL (Zac 2026-06-11): cold emails link to /p/<slug>
+  // with NO access key. This is non-sensitive marketing content, so any valid
+  // clinic slug renders. The key is honoured when present (legacy links) but
+  // no longer required.
 
   const accessKey = clinic.accessKey
   const baseHref = `/p/${clinic.slug}`
@@ -50,7 +52,7 @@ export default async function ToolkitLauncherPage({ params, searchParams }: Page
             Back to dashboard
           </Link>
 
-          <div data-track-section="toolkit-launcher">
+          <div data-track-section="toolkit-pack">
             <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
               Hub Program · Asset Library
             </p>

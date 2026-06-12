@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Lock, Clock } from 'lucide-react'
 import { getClinicBySlug } from '@/lib/prospect/repo'
-import { AccessWall } from '@/components/prospect/ProspectLanding'
+import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { getModulesMeta } from '@/data/module-meta'
@@ -20,11 +20,14 @@ export const metadata: Metadata = {
 
 export default async function ProspectLearningSuite({ params, searchParams }: PageProps) {
   const { token } = await params
-  const { k } = await searchParams
+  await searchParams
 
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
-  if (k !== clinic.accessKey) return <AccessWall clinicName={clinic.name} />
+  // Keyless per-clinic URL (Zac 2026-06-11): cold emails link to /p/<slug>
+  // with NO access key. This is non-sensitive marketing content, so any valid
+  // clinic slug renders. The key is honoured when present (legacy links) but
+  // no longer required.
 
   const modules = getModulesMeta()
   const m1 = modules.find((m) => m.id === 1)!
@@ -32,6 +35,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
 
   return (
     <div className="flex min-h-screen dashboard-bg">
+      <ProspectTracker token={clinic.slug} accessKey={clinic.accessKey ?? ''} />
       <ProspectSidebar
         slug={clinic.slug}
         accessKey={clinic.accessKey}
@@ -41,7 +45,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
         active="learning"
       />
       <main className="flex-1 ml-0 md:ml-64">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+        <div data-track-section="learning-suite" className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Link
             href={`/p/${clinic.slug}?k=${clinic.accessKey}`}
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors mb-4"
