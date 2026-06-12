@@ -1732,6 +1732,7 @@ function buildAggregates(prospects: Array<{
     wonClinics: 0,
     lostClinics: 0,          // STOP replies / explicit rejection
     bouncedClinics: 0,
+    optOuts: 0,              // STOP / opt-out replies — proof emails landed + were read by a human
   }
 
   for (const p of prospects) {
@@ -1771,6 +1772,7 @@ function buildAggregates(prospects: Array<{
     if (p.replies > 0) coldFunnel.repliedClinics += 1
     if (p.status === 'won') coldFunnel.wonClinics += 1
     if (p.status === 'lost') coldFunnel.lostClinics += 1
+    if (p.replySentiment === 'opt-out') coldFunnel.optOuts += 1
     if (p.status === 'bounced') coldFunnel.bouncedClinics += 1
 
     // Deal-type tier rollup — full pool, dealValueTotal non-dead only

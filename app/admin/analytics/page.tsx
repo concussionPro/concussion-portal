@@ -300,6 +300,7 @@ interface ProspectAggregates {
     wonClinics: number
     lostClinics: number
     bouncedClinics: number
+    optOuts?: number            // STOP / opt-out replies — proof a human received + read it
   }
   /** Deal-type tier rollup — on-site ≥6 clinical · hub-pack 2-5 · individual ≤1. */
   dealTypeBreakdown?: Record<DealTypeKey, DealTypeTierStats>
@@ -3340,23 +3341,24 @@ export default function AnalyticsDashboard() {
                             <h3 className="text-sm font-semibold text-[var(--foreground)]">Cold outreach — at a glance</h3>
                             <span className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] px-2 py-0.5 rounded bg-[var(--muted)]">opens/clicks not tracked</span>
                           </div>
-                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                          <div className="grid grid-cols-3 sm:grid-cols-7 gap-3">
                             {[
                               { label: 'Sent', value: agg.funnel.totalSends, hint: `production sends in the ${windowLabel}` },
                               { label: 'Delivered', value: agg.funnel.totalDelivered ?? 0, hint: 'Resend confirmed delivery' },
                               { label: 'Bounced', value: agg.funnel.totalBouncedEmails ?? 0, hint: 'bounced + suppressed' },
                               { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥60s portal dwell or CTA click — scanner-immune (all-time)', good: true },
-                              { label: 'Replied', value: agg.funnel.totalReplies, hint: 'real inbound reply', good: true },
+                              { label: 'Replied', value: agg.funnel.totalReplies, hint: 'positive inbound reply (auto-captured only if reply-forwarding is wired — see note)', good: true },
+                              { label: 'Opt-outs', value: agg.coldFunnel.optOuts ?? 0, hint: 'STOP / opt-out replies — proof a real human received + READ the email and replied', amber: true },
                               { label: 'Booked', value: agg.coldFunnel.bookedClinics ?? 0, hint: 'cal.com booking (all-time)', good: true },
                             ].map((m) => (
                               <div key={m.label} title={m.hint} className="text-center">
-                                <div className={`text-2xl font-bold ${m.good ? 'text-emerald-600' : 'text-[var(--foreground)]'}`}>{m.value}</div>
+                                <div className={`text-2xl font-bold ${m.good ? 'text-emerald-600' : m.amber ? 'text-amber-600' : 'text-[var(--foreground)]'}`}>{m.value}</div>
                                 <div className="text-[10.5px] text-[var(--muted-foreground)] uppercase tracking-wider mt-0.5">{m.label}</div>
                               </div>
                             ))}
                           </div>
                           <p className="text-[10.5px] text-[var(--muted-foreground)] mt-3 pt-3 border-t border-[var(--border)]">
-                            ⚠ <strong>Clean send architecture (new format, clean link, tracking off) is only live since ~5:40pm today.</strong> Earlier sends were the old scanner-bait format — judge the engine on the <strong>24h tab</strong>, not lifetime. Sent/Delivered/Bounced/Replied reflect the {windowLabel}. <strong>Opens &amp; clicks are not tracked</strong> (were 100% scanner) — engagement = delivered → real views → replies → bookings.
+                            ⚠ <strong>Opt-outs (STOP) prove emails are landing &amp; being read by real humans.</strong> But <strong>positive replies aren&apos;t auto-captured</strong> — they land in your inbox, and the reply-forwarding webhook isn&apos;t wired, so &quot;Replied&quot; can read 0 even when people reply. · Clean send format live since ~5:40pm today — judge the engine on the <strong>24h tab</strong>, not lifetime. Sent/Delivered/Bounced reflect the {windowLabel}. Opens &amp; clicks not tracked (100% scanner).
                           </p>
                         </div>
                       )}
