@@ -1187,6 +1187,12 @@ export async function GET(req: NextRequest) {
 
     // Aggregations
     const aggregates = buildAggregates(prospects)
+    // Opt-outs (STOP replies) — proof emails land + are read. Direct count
+    // because the buildAggregates prospect shape doesn't carry reply_sentiment.
+    try {
+      const oo = await sql`SELECT COUNT(*)::int n FROM prospect_clinics WHERE reply_sentiment = 'opt-out'`
+      if (aggregates.coldFunnel) aggregates.coldFunnel.optOuts = oo.rows[0]?.n ?? 0
+    } catch { /* reply_sentiment column may not exist yet */ }
 
     // ── STAGE MATRIX — the pipeline spine ──
     // Rows = deal-type tiers, columns = mutually exclusive stages. Every
@@ -1772,7 +1778,6 @@ function buildAggregates(prospects: Array<{
     if (p.replies > 0) coldFunnel.repliedClinics += 1
     if (p.status === 'won') coldFunnel.wonClinics += 1
     if (p.status === 'lost') coldFunnel.lostClinics += 1
-    if (p.replySentiment === 'opt-out') coldFunnel.optOuts += 1
     if (p.status === 'bounced') coldFunnel.bouncedClinics += 1
 
     // Deal-type tier rollup — full pool, dealValueTotal non-dead only
