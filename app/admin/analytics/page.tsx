@@ -1223,6 +1223,9 @@ export default function AnalyticsDashboard() {
   const [prospectsError, setProspectsError] = useState<string | null>(null)
   const [prospectsSubTab, setProspectsSubTab] = useState<'overview' | 'upcoming' | 'schedule' | 'pipeline' | 'breakdowns' | 'queue'>('overview')
   const [selectedProspectId, setSelectedProspectId] = useState<number | null>(null)
+  // Expanded clinic rows in the "Real portal engagement" panel — drill into
+  // a clinic's section-view journey (buying-intent signal) on click.
+  const [expandedEngagementRows, setExpandedEngagementRows] = useState<Set<number>>(new Set())
   // Sortable column state for the "Outreach sent" table (click column header
   // to sort by that field; click again to toggle direction).
   type SentSortCol = 'clinic' | 'tier' | 'location' | 'team' | 'offer' | 'sends' | 'opens' | 'clicks' | 'views' | 'replies' | 'lastSent' | 'status' | 'score'
@@ -3377,6 +3380,19 @@ export default function AnalyticsDashboard() {
                         }
                         const fmtVisit = (d: string | null | undefined) =>
                           d ? new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : null
+                        // High-intent sections = buying signals. A clinic that
+                        // reads Pricing / Next-step is researching the purchase.
+                        const HIGH_INTENT = new Set(['pricing', 'next-step', 'trial-cta', 'individual-signup', 'onsite-hero', 'toolkit-callout'])
+                        // "pricing" / "next-step" are the hottest — flag on the
+                        // collapsed row so Zac spots them without expanding.
+                        const HOT_INTENT = new Set(['pricing', 'next-step'])
+                        const niceSection = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+                        const toggleRow = (id: number) =>
+                          setExpandedEngagementRows((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(id)) next.delete(id); else next.add(id)
+                            return next
+                          })
                         // Real read = a session ≥10s OR a counted engaged session.
                         const realReads = prospects
                           .filter(p => (p.portalMaxDwellMs ?? 0) >= 10000 || (p.portalEngagedSessions ?? 0) > 0)
@@ -3410,31 +3426,84 @@ export default function AnalyticsDashboard() {
                                   const visits = p.totalPortalViews ?? 0
                                   const sessions = p.portalEngagedSessions ?? 0
                                   const lastVisit = fmtVisit(p.lastPortalViewAt)
+                                  // ── Drill-down: this clinic's section-view journey ──
+                                  const sectionFunnel = p.portalFlow?.sectionFunnel ?? {}
+                                  const sectionEntries = Object.entries(sectionFunnel)
+                                    .filter(([, n]) => (n ?? 0) > 0)
+                                    .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+                                  const hitHighIntent = sectionEntries.filter(([s]) => HIGH_INTENT.has(s)).map(([s]) => s)
+                                  const hotIntent = sectionEntries.some(([s]) => HOT_INTENT.has(s))
+                                  const ctaEntries = Object.entries(p.portalFlow?.ctaClicks ?? {}).filter(([, n]) => (n ?? 0) > 0)
+                                  const hasJourney = sectionEntries.length > 0
+                                  const expanded = expandedEngagementRows.has(p.id)
                                   return (
-                                    <div key={p.id} className="flex items-center gap-2 py-2 flex-wrap">
-                                      <a
-                                        href={`/p/${p.slug}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-[13px] font-semibold text-emerald-800 hover:underline"
+                                    <div key={p.id} className="py-2">
+                                      <div
+                                        className={`flex items-center gap-2 flex-wrap ${hasJourney ? 'cursor-pointer' : ''}`}
+                                        onClick={hasJourney ? () => toggleRow(p.id) : undefined}
                                       >
-                                        {p.shortName}
-                                      </a>
-                                      {badge && (
-                                        <span className={`text-[9.5px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${badge.cls}`}>
-                                          {badge.label}
+                                        {hasJourney
+                                          ? <span className="text-emerald-600 text-[10px] w-3 select-none">{expanded ? '▼' : '▶'}</span>
+                                          : <span className="w-3" />}
+                                        <a
+                                          href={`/p/${p.slug}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-[13px] font-semibold text-emerald-800 hover:underline"
+                                        >
+                                          {p.shortName}
+                                        </a>
+                                        {badge && (
+                                          <span className={`text-[9.5px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${badge.cls}`}>
+                                            {badge.label}
+                                          </span>
+                                        )}
+                                        {hotIntent && (
+                                          <span className="text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                                            🔥 high intent
+                                          </span>
+                                        )}
+                                        <span className="ml-auto flex items-center gap-2.5 text-[11.5px] text-emerald-700">
+                                          <span className="font-bold tabular-nums text-emerald-700">{seconds}s</span>
+                                          {sessions > 0 && (
+                                            <span className="tabular-nums">{sessions} session{sessions === 1 ? '' : 's'}</span>
+                                          )}
+                                          {visits > 1 && sessions === 0 && (
+                                            <span className="tabular-nums">{visits} visits</span>
+                                          )}
+                                          {lastVisit && <span className="text-emerald-600/80">{lastVisit}</span>}
                                         </span>
+                                      </div>
+                                      {expanded && hasJourney && (
+                                        <div className="mt-2 ml-5 rounded-lg bg-white/70 border border-emerald-100 p-2.5">
+                                          <div className="text-[11px] text-emerald-800 mb-1.5">
+                                            Viewed {sectionEntries.length} section{sectionEntries.length === 1 ? '' : 's'}
+                                            {hitHighIntent.length > 0 && (
+                                              <span className="font-semibold"> · hit {hitHighIntent.map(niceSection).join(' + ')}</span>
+                                            )}
+                                          </div>
+                                          <div className="flex flex-wrap gap-1">
+                                            {sectionEntries.map(([s, n]) => {
+                                              const hi = HIGH_INTENT.has(s)
+                                              return (
+                                                <span
+                                                  key={s}
+                                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${hi ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-slate-100 text-slate-500'}`}
+                                                  title={s}
+                                                >
+                                                  {niceSection(s)} <span className="opacity-70">×{n}</span>
+                                                </span>
+                                              )
+                                            })}
+                                          </div>
+                                          {ctaEntries.length > 0 && (
+                                            <div className="text-[10.5px] text-emerald-700 mt-1.5">
+                                              Clicked: {ctaEntries.map(([t, n]) => `${t}${n > 1 ? ` ×${n}` : ''}`).join(', ')}
+                                            </div>
+                                          )}
+                                        </div>
                                       )}
-                                      <span className="ml-auto flex items-center gap-2.5 text-[11.5px] text-emerald-700">
-                                        <span className="font-bold tabular-nums text-emerald-700">{seconds}s</span>
-                                        {sessions > 0 && (
-                                          <span className="tabular-nums">{sessions} session{sessions === 1 ? '' : 's'}</span>
-                                        )}
-                                        {visits > 1 && sessions === 0 && (
-                                          <span className="tabular-nums">{visits} visits</span>
-                                        )}
-                                        {lastVisit && <span className="text-emerald-600/80">{lastVisit}</span>}
-                                      </span>
                                     </div>
                                   )
                                 })}
@@ -3854,6 +3923,11 @@ export default function AnalyticsDashboard() {
                       {(() => {
                         const repliedList = prospects
                           .filter(p => p.replies > 0 || p.repliedAt || p.status === 'replied')
+                          // STOP / opt-out replies are NOT active replies — they
+                          // surface in the "Opt-outs" stat and as Lost, never
+                          // here. Exclude status 'lost' AND any opt-out-sentiment
+                          // send so Andrew (Balwyn) drops off the active panel.
+                          .filter(p => p.status !== 'lost' && !p.sends.some(s => s.replySentiment === 'opt-out'))
                           .sort((a, b) => new Date(b.repliedAt ?? b.lastSentAt ?? 0).getTime() - new Date(a.repliedAt ?? a.lastSentAt ?? 0).getTime())
                         if (repliedList.length === 0) return null
                         return (
