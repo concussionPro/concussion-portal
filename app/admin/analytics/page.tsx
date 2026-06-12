@@ -1226,6 +1226,9 @@ export default function AnalyticsDashboard() {
   // Expanded clinic rows in the "Real portal engagement" panel — drill into
   // a clinic's section-view journey (buying-intent signal) on click.
   const [expandedEngagementRows, setExpandedEngagementRows] = useState<Set<number>>(new Set())
+  // One-click copy feedback for the "Hot leads · reach out" action panel —
+  // holds the email currently flashed as "Copied" (clears after a beat).
+  const [copiedHotEmail, setCopiedHotEmail] = useState<string | null>(null)
   // Sortable column state for the "Outreach sent" table (click column header
   // to sort by that field; click again to toggle direction).
   type SentSortCol = 'clinic' | 'tier' | 'location' | 'team' | 'offer' | 'sends' | 'opens' | 'clicks' | 'views' | 'replies' | 'lastSent' | 'status' | 'score'
@@ -3334,6 +3337,153 @@ export default function AnalyticsDashboard() {
                   {prospectsSubTab === 'overview' && (() => {
                     return (
                     <div className="space-y-6">
+                      {/* ── HOT LEADS · REACH OUT — the action list, first thing
+                          Zac sees. Any clinic that viewed a high-intent section
+                          (pricing / next-step / trial / on-site / toolkit /
+                          individual-signup) or OPENED THE MODULE-1 TRIAL is a
+                          warm lead. His personal email converts far better than
+                          the auto-sequence, so this sits ABOVE the scorecard.
+                          Read-only — the full journey lives in the engagement
+                          panel below; this stays tight and action-focused. ── */}
+                      {(() => {
+                        // High-intent sections = buying signals. Superset of the
+                        // engagement panel's set + the newly tracked module-1
+                        // trial (strongest signal — they opened the product).
+                        const HOT_SECTIONS = new Set(['pricing', 'next-step', 'trial-cta', 'individual-signup', 'onsite-hero', 'toolkit-callout', 'module-1-trial'])
+                        const SECTION_LABEL: Record<string, string> = {
+                          'pricing': 'Pricing',
+                          'next-step': 'Next-step',
+                          'trial-cta': 'Trial CTA',
+                          'individual-signup': 'Individual signup',
+                          'onsite-hero': 'On-site',
+                          'toolkit-callout': 'Toolkit',
+                          'module-1-trial': 'Trial',
+                        }
+                        const niceHot = (s: string) => SECTION_LABEL[s] ?? (s.charAt(0).toUpperCase() + s.slice(1))
+                        const HOT_TIER_BADGE: Record<DealTypeKey, { label: string; cls: string }> = {
+                          'on-site':    { label: 'On-site',    cls: 'bg-[rgba(13,115,119,0.08)] text-[var(--accent)]' },
+                          'hub-pack':   { label: 'Hub Pack',   cls: 'bg-indigo-50 text-indigo-700' },
+                          'individual': { label: 'Individual', cls: 'bg-slate-100 text-slate-600' },
+                        }
+                        type HotLead = {
+                          p: ProspectRow
+                          hitEntries: Array<[string, number]>
+                          intentScore: number
+                          openedTrial: boolean
+                          seconds: number
+                        }
+                        const hotLeads: HotLead[] = prospects
+                          .map((p): HotLead | null => {
+                            const funnel = p.portalFlow?.sectionFunnel ?? {}
+                            const hitEntries = Object.entries(funnel)
+                              .filter(([s, n]) => HOT_SECTIONS.has(s) && (n ?? 0) > 0)
+                              .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+                            if (hitEntries.length === 0) return null
+                            return {
+                              p,
+                              hitEntries,
+                              // Intent score = count of DISTINCT high-intent sections hit.
+                              intentScore: hitEntries.length,
+                              openedTrial: hitEntries.some(([s]) => s === 'module-1-trial'),
+                              seconds: Math.round((p.portalMaxDwellMs ?? 0) / 1000),
+                            }
+                          })
+                          .filter((x): x is HotLead => x !== null)
+                          // Most distinct intent signals first, then longest dwell.
+                          .sort((a, b) => (b.intentScore - a.intentScore) || ((b.p.portalMaxDwellMs ?? 0) - (a.p.portalMaxDwellMs ?? 0)))
+                          .slice(0, 15)
+                        const copyEmail = (email: string) => {
+                          navigator.clipboard?.writeText(email).then(
+                            () => {
+                              setCopiedHotEmail(email)
+                              window.setTimeout(() => setCopiedHotEmail((cur) => (cur === email ? null : cur)), 1600)
+                            },
+                            () => {},
+                          )
+                        }
+                        return (
+                          <div className="rounded-xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 to-emerald-50/30 p-4 shadow-sm">
+                            <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+                              <h3 className="text-[15px] font-bold text-emerald-900">
+                                🔥 Hot leads · reach out personally — {hotLeads.length} {hotLeads.length === 1 ? 'clinic' : 'clinics'} showed buying intent
+                              </h3>
+                              <span className="text-[10px] uppercase tracking-wider text-emerald-800 px-2 py-0.5 rounded bg-emerald-200 font-semibold">act first</span>
+                            </div>
+                            <p className="text-[11.5px] text-emerald-800/90 mb-3">
+                              Viewed pricing / opened the trial / hit the next-step CTA. Email them while warm — your replies convert.
+                            </p>
+                            {hotLeads.length === 0 ? (
+                              <div className="text-[13px] text-emerald-700/80 py-3">
+                                No buying-intent yet — clinics who view pricing or open the trial will surface here to action.
+                              </div>
+                            ) : (
+                              <div className="divide-y divide-emerald-200/70">
+                                {hotLeads.map(({ p, hitEntries, openedTrial, seconds }) => {
+                                  const badge = p.dealType ? HOT_TIER_BADGE[p.dealType] : null
+                                  const intentSummary = hitEntries
+                                    .map(([s, n]) => `${niceHot(s)}${(n ?? 0) > 1 ? ` ×${n}` : ''}`)
+                                    .join(' · ')
+                                  const subject = `Concussion training for ${p.shortName}`
+                                  const mailto = `mailto:${p.contactEmail}?subject=${encodeURIComponent(subject)}`
+                                  const copied = copiedHotEmail === p.contactEmail
+                                  return (
+                                    <div key={p.id} className="py-2.5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <a
+                                            href={`/p/${p.slug}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-[13.5px] font-bold text-emerald-900 hover:underline"
+                                          >
+                                            {p.shortName}
+                                          </a>
+                                          {badge && (
+                                            <span className={`text-[9.5px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${badge.cls}`}>
+                                              {badge.label}
+                                            </span>
+                                          )}
+                                          {openedTrial && (
+                                            <span className="text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                                              📘 Opened trial
+                                            </span>
+                                          )}
+                                          <span className="text-[11px] font-bold tabular-nums text-emerald-700">{seconds}s</span>
+                                        </div>
+                                        <div className="text-[11.5px] text-emerald-800/90 mt-0.5">
+                                          {p.contactFullName || p.contactFirstName}
+                                          {p.contactEmail && <span className="text-emerald-700/70"> · {p.contactEmail}</span>}
+                                        </div>
+                                        <div className="text-[11px] text-emerald-700 mt-0.5">
+                                          <span className="font-semibold">Intent:</span> {intentSummary}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        <a
+                                          href={mailto}
+                                          className="px-3 py-1.5 text-[12px] font-bold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5"
+                                        >
+                                          ✉️ Email
+                                        </a>
+                                        {p.contactEmail && (
+                                          <button
+                                            type="button"
+                                            onClick={() => copyEmail(p.contactEmail)}
+                                            title="Copy email address"
+                                            className="px-2.5 py-1.5 text-[12px] font-semibold rounded-lg bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+                                          >
+                                            {copied ? 'Copied ✓' : 'Copy'}
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })()}
                       {/* ── COLD OUTREACH AT A GLANCE — the only honest top-line.
                           Sent/Delivered/Bounced are real (Resend emits them);
                           opens/clicks are NOT tracked (were 100% scanner). Judge
