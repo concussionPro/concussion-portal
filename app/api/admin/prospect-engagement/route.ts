@@ -1193,6 +1193,20 @@ export async function GET(req: NextRequest) {
       const oo = await sql`SELECT COUNT(*)::int n FROM prospect_clinics WHERE reply_sentiment = 'opt-out'`
       if (aggregates.coldFunnel) aggregates.coldFunnel.optOuts = oo.rows[0]?.n ?? 0
     } catch { /* reply_sentiment column may not exist yet */ }
+    // Opens/clicks — override the windowed/bot-filtered loop estimate with the
+    // ACTUAL distinct-clinic counts from email_events (ground truth). Still
+    // scanner-polluted + frozen (tracking off), but now the numbers are real.
+    try {
+      const oc = await sql`
+        SELECT
+          COUNT(DISTINCT p.id) FILTER (WHERE e.event_type='opened')::int opened,
+          COUNT(DISTINCT p.id) FILTER (WHERE e.event_type='clicked')::int clicked
+        FROM email_events e JOIN prospect_clinics p ON LOWER(p.contact_email)=LOWER(e.recipient)`
+      if (aggregates.coldFunnel) {
+        aggregates.coldFunnel.openedClinics = oc.rows[0]?.opened ?? 0
+        aggregates.coldFunnel.clickedClinics = oc.rows[0]?.clicked ?? 0
+      }
+    } catch { /* tolerate */ }
 
     // ── STAGE MATRIX — the pipeline spine ──
     // Rows = deal-type tiers, columns = mutually exclusive stages. Every
