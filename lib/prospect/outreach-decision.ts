@@ -72,43 +72,55 @@ const LABEL: Record<string, string> = {
   'toolkit-pack': 'toolkit pack',
 }
 
-const DIRECT_SCORE_THRESHOLD = 25
-
 /**
  * Decide direct-vs-nurture from engagement signals. Pure.
+ *
+ * THRESHOLD MODEL (Zac 2026-06-14): a manual email from Zac is the CLOSE, not a
+ * nudge — the dashboard already pitches the product, so a personal note only
+ * adds value once a prospect is genuinely WARM. Initial interest (a single
+ * pricing view, a browse) is NOT warm — the intent-aware T2 handles that and we
+ * WAIT for the real buy signal: a return visit. 'direct' fires only on a
+ * genuine buying signal worth Zac's time.
  */
 export function decideOutreach(sig: EngagementSignals): OutreachDecision {
   const funnel = sig.sectionFunnel ?? {}
   const dwellS = Math.round((sig.maxDwellMs ?? 0) / 1000)
   const sessions = sig.sessions ?? 1
   const openedTrial = (funnel['module-1-trial'] ?? 0) > 0
+  const sawPricing = (funnel['pricing'] ?? 0) > 0
+  const hitNextStep = (funnel['next-step'] ?? 0) > 0
+  const returned = sessions >= 2
 
-  // Score = weighted sum of intent sections (capped per section so a single
-  // re-viewed section can't dominate) + dwell bonus + return-visit bonus.
-  let score = 0
   const fired: string[] = []
-  for (const [section, weight] of Object.entries(INTENT_WEIGHTS)) {
-    const views = funnel[section] ?? 0
-    if (views > 0) {
-      // diminishing returns on repeat views: full weight + 20% per extra view, capped
-      score += Math.min(weight * 1.6, weight + (views - 1) * weight * 0.2)
-      fired.push(section)
-    }
+  for (const section of Object.keys(INTENT_WEIGHTS)) {
+    if ((funnel[section] ?? 0) > 0) fired.push(section)
   }
-  if (dwellS >= 60) score += 20
-  else if (dwellS >= 30) score += 12
-  else if (dwellS >= 10) score += 5
-  if (sessions >= 2) score += 12 // came back — high intent
+  const salesReady = fired.filter((s) => SALES_READY.has(s))
+
+  // ── The 'direct' gate — only genuine buying signals (the CLOSE) ──────────
+  //  • RETURNED to the page (sessions ≥2) with any real intent — the #1 signal
+  //  • hit the NEXT-STEP CTA — explicit "what's next"
+  //  • opened the TRIAL *and* viewed pricing — deep, both feet in
+  //  • studied pricing hard (≥45s dwell on a pricing visit)
+  const returnedWarm = returned && (salesReady.length > 0 || dwellS >= 20)
+  const deepTrial = openedTrial && sawPricing
+  const studiedPricing = sawPricing && dwellS >= 45
+  const isDirect = returnedWarm || hitNextStep || deepTrial || studiedPricing
+
+  // Score (for sorting only) — rewards the direct triggers heavily.
+  let score = 0
+  for (const [section, weight] of Object.entries(INTENT_WEIGHTS)) {
+    if ((funnel[section] ?? 0) > 0) score += weight
+  }
+  if (returned) score += 35
+  if (hitNextStep) score += 20
+  if (deepTrial) score += 25
+  if (dwellS >= 45) score += 15
+  else if (dwellS >= 20) score += 8
   score = Math.min(100, Math.round(score))
 
-  // Sales-ready sections present?
-  const salesReady = fired.filter((s) => SALES_READY.has(s))
-  const action: OutreachAction = score >= DIRECT_SCORE_THRESHOLD ? 'direct' : 'nurture'
-
-  // Build the human reason.
-  const reason = buildReason({ action, salesReady, fired, dwellS, sessions, openedTrial })
-
-  // Signals list = the sales-ready ones first (named), for chips.
+  const action: OutreachAction = isDirect ? 'direct' : 'nurture'
+  const reason = buildReason({ action, salesReady, fired, dwellS, sessions, openedTrial, returned, hitNextStep, deepTrial, studiedPricing, sawPricing })
   const signals = [...salesReady, ...fired.filter((s) => !SALES_READY.has(s))].map((s) => LABEL[s] ?? s)
 
   return { action, score, reason, signals, openedTrial }
@@ -121,29 +133,35 @@ function buildReason(p: {
   dwellS: number
   sessions: number
   openedTrial: boolean
+  returned: boolean
+  hitNextStep: boolean
+  deepTrial: boolean
+  studiedPricing: boolean
+  sawPricing: boolean
 }): string {
-  const { action, salesReady, fired, dwellS, sessions, openedTrial } = p
+  const { action, salesReady, fired, dwellS, sessions, openedTrial, returned, hitNextStep, deepTrial, studiedPricing, sawPricing } = p
   const named = salesReady.map((s) => LABEL[s] ?? s)
 
   if (action === 'direct') {
-    const bits: string[] = []
-    if (openedTrial) bits.push('opened the Module 1 trial')
-    const otherReady = named.filter((n) => n !== 'opened the trial')
-    if (otherReady.length) bits.push(`viewed ${otherReady.join(' + ')}`)
-    if (sessions >= 2) bits.push(`came back ${sessions}×`)
-    if (dwellS >= 30) bits.push(`${dwellS}s on the page`)
-    const why = bits.length ? bits.join(', ') : `${fired.length} sections, ${dwellS}s`
-    return `Reach out personally — ${why}. Buying intent is clear; a warm note converts far better than another sequenced email.`
+    // Lead with the SPECIFIC buying signal that earned the close.
+    if (returned) return `Close personally — came back ${sessions}× (the strongest signal). They're considering, not just curious; a human reply closes a warm lead the sequence can't.`
+    if (hitNextStep) return `Close personally — hit the next-step CTA, an explicit "what now?". They've asked; reply with the next step before the moment cools.`
+    if (deepTrial) return `Close personally — opened the trial AND viewed pricing. Both feet in; a tailored note (dates, a quote for their clinic) closes it.`
+    if (studiedPricing) return `Close personally — studied pricing for ${dwellS}s. Seriously evaluating cost; offer to walk the numbers through for their clinic.`
+    return `Close personally — ${named.join(' + ')}, ${dwellS}s. Genuine buying intent worth a human close.`
   }
 
-  // nurture
-  if (dwellS < 10 && fired.length <= 1) {
-    return `Keep in nurture — only skimmed (${dwellS}s), didn't reach pricing or the trial. Too early for a personal note; let the sequence warm them.`
+  // nurture — explain WHY waiting beats interrupting
+  if (studiedPricing === false && sawPricing) {
+    return `Let the T2 land, then watch for a RETURN visit. Viewed pricing once = curious, not ready — your email adds nothing the page didn't. The pricing-aware T2 nudges; a return visit is the signal to step in.`
+  }
+  if (!salesReady.length && dwellS < 10) {
+    return `Keep in nurture — skimmed ${dwellS}s, didn't reach pricing or the trial. Far too early to spend your time; the sequence warms them.`
   }
   if (!salesReady.length) {
-    return `Keep in nurture — engaged (${dwellS}s) but didn't hit pricing, the trial or next-step. Interested, not yet sales-ready; the follow-up keeps them moving.`
+    return `Keep in nurture — read ${dwellS}s but no pricing / trial / next-step. Interested, not warm; the sequence is the right next touch — watch for a return visit.`
   }
-  return `Keep in nurture — light touch on ${named.join(' + ')} (${dwellS}s). Some signal but not enough to interrupt; the sequence is the right next touch.`
+  return `Keep in nurture — light touch on ${named.join(' + ')} (${dwellS}s), single visit. Not warm enough to interrupt; the dashboard already pitches it. Wait for a return visit.`
 }
 
 /** Convenience: classify a batch + split into direct vs nurture, sorted hot-first. */
