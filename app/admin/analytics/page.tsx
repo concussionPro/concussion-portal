@@ -1257,6 +1257,7 @@ export default function AnalyticsDashboard() {
   const [showTierBento, setShowTierBento] = useState(false)
   const [showTopWeighted, setShowTopWeighted] = useState(false)
   const [showOverviewExtra, setShowOverviewExtra] = useState(false)
+  const [showPipelineMatrix, setShowPipelineMatrix] = useState(false)
 
 
   const fetchData = useCallback(
@@ -3337,7 +3338,39 @@ export default function AnalyticsDashboard() {
                   {/* ── Overview ── */}
                   {prospectsSubTab === 'overview' && (() => {
                     return (
-                    <div className="space-y-6">
+                    <div className="space-y-4">
+                      {/* ── COLD OUTREACH AT A GLANCE — the only honest top-line.
+                          Sent/Delivered/Bounced are real (Resend emits them);
+                          opens/clicks are NOT tracked (were 100% scanner). Judge
+                          on delivered → replies → bookings. ── */}
+                      {agg.coldFunnel && (
+                        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-sm font-semibold text-[var(--foreground)]">Cold outreach — at a glance</h3>
+                            <span className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] px-2 py-0.5 rounded bg-[var(--muted)]">opens/clicks not tracked</span>
+                          </div>
+                          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                            {[
+                              { label: 'Sent', value: agg.funnel.totalSends, hint: `production sends in the ${windowLabel}` },
+                              { label: 'Delivered', value: agg.funnel.totalDelivered ?? 0, hint: 'Resend confirmed delivery' },
+                              { label: 'Bounced', value: agg.funnel.totalBouncedEmails ?? 0, hint: 'bounced + suppressed' },
+                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥10s real portal dwell or CTA click — scanner-immune', good: true },
+                              { label: 'Replied', value: agg.funnel.totalReplies, hint: 'positive inbound reply (auto-captured only if reply-forwarding is wired — see note)', good: true },
+                              { label: 'Opt-outs', value: agg.coldFunnel.optOuts ?? 0, hint: 'STOP / opt-out replies — proof a real human received + READ the email and replied', amber: true },
+                              { label: 'Booked', value: agg.coldFunnel.bookedClinics ?? 0, hint: 'cal.com booking (all-time)', good: true },
+                            ].map((m) => (
+                              <div key={m.label} title={m.hint} className="text-center">
+                                <div className={`text-xl font-bold ${m.good ? 'text-emerald-600' : m.amber ? 'text-amber-600' : 'text-[var(--foreground)]'}`}>{m.value}</div>
+                                <div className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider mt-0.5">{m.label}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-[10px] text-[var(--muted-foreground)] mt-2 pt-2 border-t border-[var(--border)]">
+                            Opens/clicks off (scanner). Trust real reads · replies · bookings. Positive replies land in your inbox (not auto-counted). On the 24h tab you see clean-format sends only.
+                          </p>
+                        </div>
+                      )}
+
                       {/* ── HOT LEADS · REACH OUT — the action list, first thing
                           Zac sees. Any clinic that viewed a high-intent section
                           (pricing / next-step / trial / on-site / toolkit /
@@ -3411,6 +3444,13 @@ export default function AnalyticsDashboard() {
                             () => {},
                           )
                         }
+                        if (hotLeads.length === 0) {
+                          return (
+                            <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 px-3.5 py-2 text-[12.5px] text-emerald-800">
+                              <span className="font-semibold">🔥 Hot leads:</span> No buying-intent leads right now — all engaged prospects are nurturing.
+                            </div>
+                          )
+                        }
                         return (
                           <div className="rounded-xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 to-emerald-50/30 p-4 shadow-sm">
                             <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
@@ -3422,12 +3462,7 @@ export default function AnalyticsDashboard() {
                             <p className="text-[11.5px] text-emerald-800/90 mb-3">
                               Viewed pricing / opened the trial / hit the next-step CTA. Email them while warm — your replies convert.
                             </p>
-                            {hotLeads.length === 0 ? (
-                              <div className="text-[13px] text-emerald-700/80 py-3">
-                                No buying-intent yet — clinics who view pricing or open the trial will surface here to action.
-                              </div>
-                            ) : (
-                              <div className="divide-y divide-emerald-200/70">
+                            <div className="divide-y divide-emerald-200/70">
                                 {hotLeads.map(({ p, hitEntries, openedTrial, seconds }) => {
                                   const badge = p.dealType ? HOT_TIER_BADGE[p.dealType] : null
                                   const intentSummary = hitEntries
@@ -3500,41 +3535,118 @@ export default function AnalyticsDashboard() {
                                   )
                                 })}
                               </div>
-                            )}
                           </div>
                         )
                       })()}
-                      {/* ── COLD OUTREACH AT A GLANCE — the only honest top-line.
-                          Sent/Delivered/Bounced are real (Resend emits them);
-                          opens/clicks are NOT tracked (were 100% scanner). Judge
-                          on delivered → replies → bookings. ── */}
-                      {agg.coldFunnel && (
-                        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-semibold text-[var(--foreground)]">Cold outreach — at a glance</h3>
-                            <span className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] px-2 py-0.5 rounded bg-[var(--muted)]">opens/clicks not tracked</span>
+
+                      {/* ── 5 · REPLIES · the money signal ──
+                          Populated by /api/webhooks/resend-inbound: any inbound
+                          email matching prospect_clinics.contact_email sets
+                          status='replied' + replied_at + reply_text. Answer
+                          inside 2 business hours. */}
+                      {(() => {
+                        const repliedList = prospects
+                          .filter(p => p.replies > 0 || p.repliedAt || p.status === 'replied')
+                          // STOP / opt-out replies are NOT active replies — they
+                          // surface in the "Opt-outs" stat and as Lost, never
+                          // here. Exclude status 'lost' AND any opt-out-sentiment
+                          // send so Andrew (Balwyn) drops off the active panel.
+                          .filter(p => p.status !== 'lost' && !p.sends.some(s => s.replySentiment === 'opt-out'))
+                          .sort((a, b) => new Date(b.repliedAt ?? b.lastSentAt ?? 0).getTime() - new Date(a.repliedAt ?? a.lastSentAt ?? 0).getTime())
+                        if (repliedList.length === 0) return null
+                        return (
+                          <div id="replies-panel">
+                            <SectionTitle
+                              title={`Replies (${repliedList.length}) · respond within 2 business hours`}
+                              subtitle="Direct replies detected via the inbound webhook — the strongest signal in the funnel. STOP replies are auto-suppressed and surface as Lost, not here."
+                            />
+                            <div className="card rounded-2xl overflow-hidden border-emerald-300">
+                              <table className="w-full text-sm">
+                                <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
+                                  <tr>
+                                    <th className="text-left px-4 py-3 font-semibold">Clinic / Contact</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Replied</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Reply</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Last template</th>
+                                    <th className="text-right px-4 py-3 font-semibold">Deal value</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {repliedList.map(p => (
+                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
+                                      <td className="px-4 py-3">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                        <div className="text-xs text-[var(--muted-foreground)]">{p.contactFirstName} · {p.contactEmail}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700 whitespace-nowrap">
+                                        {p.repliedAt ? new Date(p.repliedAt).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--foreground)] max-w-md">
+                                        {p.replyText
+                                          ? <span className="italic">&ldquo;{p.replyText.slice(0, 180)}{p.replyText.length > 180 ? '…' : ''}&rdquo;</span>
+                                          : <span className="text-[var(--muted-foreground)]">reply text not captured</span>}
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)]">{p.lastSentTemplate ?? '—'}</td>
+                                      <td className="px-4 py-3 text-right text-xs font-semibold text-[var(--accent)]">{fmt$(p.dealValue ?? p.recoCohortTotal)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
-                          <div className="grid grid-cols-3 sm:grid-cols-7 gap-3">
-                            {[
-                              { label: 'Sent', value: agg.funnel.totalSends, hint: `production sends in the ${windowLabel}` },
-                              { label: 'Delivered', value: agg.funnel.totalDelivered ?? 0, hint: 'Resend confirmed delivery' },
-                              { label: 'Bounced', value: agg.funnel.totalBouncedEmails ?? 0, hint: 'bounced + suppressed' },
-                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥10s real portal dwell or CTA click — scanner-immune', good: true },
-                              { label: 'Replied', value: agg.funnel.totalReplies, hint: 'positive inbound reply (auto-captured only if reply-forwarding is wired — see note)', good: true },
-                              { label: 'Opt-outs', value: agg.coldFunnel.optOuts ?? 0, hint: 'STOP / opt-out replies — proof a real human received + READ the email and replied', amber: true },
-                              { label: 'Booked', value: agg.coldFunnel.bookedClinics ?? 0, hint: 'cal.com booking (all-time)', good: true },
-                            ].map((m) => (
-                              <div key={m.label} title={m.hint} className="text-center">
-                                <div className={`text-2xl font-bold ${m.good ? 'text-emerald-600' : m.amber ? 'text-amber-600' : 'text-[var(--foreground)]'}`}>{m.value}</div>
-                                <div className="text-[10.5px] text-[var(--muted-foreground)] uppercase tracking-wider mt-0.5">{m.label}</div>
-                              </div>
-                            ))}
+                        )
+                      })()}
+
+                      {/* Upcoming cal.com bookings — auto-populated by the cal.com
+                          webhook (BOOKING_CREATED). Prep, don't outreach. */}
+                      {upcomingBookings.length > 0 && (
+                        <div>
+                          <SectionTitle
+                            title={`Upcoming bookings (${upcomingBookings.length})`}
+                            subtitle="Cal.com booked via the prospect cold-outreach pipeline · prep, don't outreach"
+                          />
+                          <div className="card rounded-2xl overflow-hidden border-emerald-200">
+                            <table className="w-full text-sm">
+                              <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
+                                <tr>
+                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Contact</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Scheduled</th>
+                                  <th className="text-right px-4 py-3 font-semibold">Offer</th>
+                                  <th className="text-left px-4 py-3 font-semibold">Prep</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {upcomingBookings.map(p => {
+                                  const when = p.calBookedAt ? new Date(p.calBookedAt) : null
+                                  const whenLabel = when
+                                    ? when.toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                                    : '—'
+                                  const isOnSite = p.recommendedOffer === 'on-site-cohort'
+                                  return (
+                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
+                                      <td className="px-4 py-3">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
+                                        <div className="text-xs text-[var(--muted-foreground)]">{p.city || 'Unknown'}, {p.state} · {p.clinicalCount} clinical</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs">
+                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName}</div>
+                                        <div className="text-[var(--muted-foreground)]">{p.contactDiscipline}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700">{whenLabel}</td>
+                                      <td className="px-4 py-3 text-right text-xs">
+                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{isOnSite ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}` : `Hub Pack · ${fmt$(p.dealValue ?? CONFIG.COURSE.PRICE_CLINIC_HUB_PACK)}`}</div>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)] leading-snug">Review {p.shortName}&apos;s team mix + city · pull last portal-view section · 15-min agenda</td>
+                                    </tr>
+                                  )
+                                })}
+                              </tbody>
+                            </table>
                           </div>
-                          <p className="text-[10.5px] text-[var(--muted-foreground)] mt-3 pt-3 border-t border-[var(--border)]">
-                            Opens/clicks off (scanner). Trust real reads · replies · bookings. Positive replies land in your inbox (not auto-counted). On the 24h tab you see clean-format sends only.
-                          </p>
                         </div>
                       )}
+
                       {/* ── REAL PORTAL ENGAGEMENT — the only scanner-proof signal.
                           dwell_ms is recorded server-side on 'exit' events
                           (page-load → tab-close). Anti-malware scanners render
@@ -3682,6 +3794,7 @@ export default function AnalyticsDashboard() {
                           </div>
                         )
                       })()}
+
                       {/* ── TARGETS BY TYPE — the outreach pool split into the
                           four segment pitches Zac runs. On-site / Hub Pack /
                           individual come from prospect_clinics (size-tier from
@@ -3761,6 +3874,9 @@ export default function AnalyticsDashboard() {
                           setDetailStage('awaiting-approval')
                           setReviewTier(tier)
                           setReviewSelected(new Set())
+                          // The matrix + detail table live behind a collapse on the
+                          // overview — open it so the #pipeline-detail scroll lands.
+                          setShowPipelineMatrix(true)
                           setTimeout(() => document.getElementById('pipeline-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
                         }
                         return (
@@ -3804,6 +3920,17 @@ export default function AnalyticsDashboard() {
                         )
                       })()}
 
+                      {/* ── PIPELINE MATRIX + DETAIL · collapsed by default ──
+                          The biggest scroll-eater on the overview and reference
+                          detail, not immediate action. Hidden behind a toggle;
+                          drilling a Targets card auto-opens it. Deep pipeline work
+                          lives on the dedicated 'pipeline' sub-tab. (Zac 2026-06-15) */}
+                      <div className="pt-1">
+                        <button onClick={() => setShowPipelineMatrix(v => !v)} className="text-xs uppercase tracking-wider font-bold text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+                          {showPipelineMatrix ? '▼ Hide' : '▶ Show'} pipeline matrix · where every target sits + cell detail
+                        </button>
+                      </div>
+                      {showPipelineMatrix && (<>
                       {/* ── 3 · PIPELINE MATRIX — the spine. Every non-archived
                           prospect in exactly one cell. Stage rules live in
                           lib/prospect/stage.ts (classifyStage). ── */}
@@ -4085,113 +4212,7 @@ export default function AnalyticsDashboard() {
                           </div>
                         )
                       })()}
-                      {/* ── 5 · REPLIES · the money signal ──
-                          Populated by /api/webhooks/resend-inbound: any inbound
-                          email matching prospect_clinics.contact_email sets
-                          status='replied' + replied_at + reply_text. Answer
-                          inside 2 business hours. */}
-                      {(() => {
-                        const repliedList = prospects
-                          .filter(p => p.replies > 0 || p.repliedAt || p.status === 'replied')
-                          // STOP / opt-out replies are NOT active replies — they
-                          // surface in the "Opt-outs" stat and as Lost, never
-                          // here. Exclude status 'lost' AND any opt-out-sentiment
-                          // send so Andrew (Balwyn) drops off the active panel.
-                          .filter(p => p.status !== 'lost' && !p.sends.some(s => s.replySentiment === 'opt-out'))
-                          .sort((a, b) => new Date(b.repliedAt ?? b.lastSentAt ?? 0).getTime() - new Date(a.repliedAt ?? a.lastSentAt ?? 0).getTime())
-                        if (repliedList.length === 0) return null
-                        return (
-                          <div id="replies-panel">
-                            <SectionTitle
-                              title={`Replies (${repliedList.length}) · respond within 2 business hours`}
-                              subtitle="Direct replies detected via the inbound webhook — the strongest signal in the funnel. STOP replies are auto-suppressed and surface as Lost, not here."
-                            />
-                            <div className="card rounded-2xl overflow-hidden border-emerald-300">
-                              <table className="w-full text-sm">
-                                <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
-                                  <tr>
-                                    <th className="text-left px-4 py-3 font-semibold">Clinic / Contact</th>
-                                    <th className="text-left px-4 py-3 font-semibold">Replied</th>
-                                    <th className="text-left px-4 py-3 font-semibold">Reply</th>
-                                    <th className="text-left px-4 py-3 font-semibold">Last template</th>
-                                    <th className="text-right px-4 py-3 font-semibold">Deal value</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {repliedList.map(p => (
-                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
-                                      <td className="px-4 py-3">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
-                                        <div className="text-xs text-[var(--muted-foreground)]">{p.contactFirstName} · {p.contactEmail}</div>
-                                      </td>
-                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700 whitespace-nowrap">
-                                        {p.repliedAt ? new Date(p.repliedAt).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
-                                      </td>
-                                      <td className="px-4 py-3 text-xs text-[var(--foreground)] max-w-md">
-                                        {p.replyText
-                                          ? <span className="italic">&ldquo;{p.replyText.slice(0, 180)}{p.replyText.length > 180 ? '…' : ''}&rdquo;</span>
-                                          : <span className="text-[var(--muted-foreground)]">reply text not captured</span>}
-                                      </td>
-                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)]">{p.lastSentTemplate ?? '—'}</td>
-                                      <td className="px-4 py-3 text-right text-xs font-semibold text-[var(--accent)]">{fmt$(p.dealValue ?? p.recoCohortTotal)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )
-                      })()}
-
-                      {/* Upcoming cal.com bookings — auto-populated by the cal.com
-                          webhook (BOOKING_CREATED). Prep, don't outreach. */}
-                      {upcomingBookings.length > 0 && (
-                        <div>
-                          <SectionTitle
-                            title={`Upcoming bookings (${upcomingBookings.length})`}
-                            subtitle="Cal.com booked via the prospect cold-outreach pipeline · prep, don't outreach"
-                          />
-                          <div className="card rounded-2xl overflow-hidden border-emerald-200">
-                            <table className="w-full text-sm">
-                              <thead className="bg-emerald-50 text-xs uppercase tracking-wider text-emerald-700">
-                                <tr>
-                                  <th className="text-left px-4 py-3 font-semibold">Clinic</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Contact</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Scheduled</th>
-                                  <th className="text-right px-4 py-3 font-semibold">Offer</th>
-                                  <th className="text-left px-4 py-3 font-semibold">Prep</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {upcomingBookings.map(p => {
-                                  const when = p.calBookedAt ? new Date(p.calBookedAt) : null
-                                  const whenLabel = when
-                                    ? when.toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-                                    : '—'
-                                  const isOnSite = p.recommendedOffer === 'on-site-cohort'
-                                  return (
-                                    <tr key={p.id} onClick={() => { setSelectedProspectId(p.id); setProspectsSubTab('queue') }} className="border-t border-emerald-100/60 hover:bg-emerald-50/40 cursor-pointer">
-                                      <td className="px-4 py-3">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.shortName}</div>
-                                        <div className="text-xs text-[var(--muted-foreground)]">{p.city || 'Unknown'}, {p.state} · {p.clinicalCount} clinical</div>
-                                      </td>
-                                      <td className="px-4 py-3 text-xs">
-                                        <div className="font-semibold text-[var(--foreground)]">{p.contactFirstName}</div>
-                                        <div className="text-[var(--muted-foreground)]">{p.contactDiscipline}</div>
-                                      </td>
-                                      <td className="px-4 py-3 text-xs font-bold text-emerald-700">{whenLabel}</td>
-                                      <td className="px-4 py-3 text-right text-xs">
-                                        <div className={`font-semibold ${isOnSite ? 'text-[var(--accent)]' : 'text-[var(--foreground)]'}`}>{isOnSite ? `On-site · ${fmt$(p.dealValue ?? p.recoCohortTotal)}` : `Hub Pack · ${fmt$(p.dealValue ?? CONFIG.COURSE.PRICE_CLINIC_HUB_PACK)}`}</div>
-                                      </td>
-                                      <td className="px-4 py-3 text-xs text-[var(--muted-foreground)] leading-snug">Review {p.shortName}&apos;s team mix + city · pull last portal-view section · 15-min agenda</td>
-                                    </tr>
-                                  )
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
+                      </>)}
 
                       {/* Detailed analytics panels collapsed by default — Overview
                           stays scorecard + targets + pipeline (Zac 2026-06-11). The
