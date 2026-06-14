@@ -184,6 +184,31 @@ const STATE_NAME_TO_CODE: Record<string, StateCode> = {
   'Northern Territory': 'NT',
 }
 
+// Pull the likely town from a clinic name's tail. Strips trailing legal/clinic
+// words, returns the last 1-2 capitalised tokens (the suburb/town) — or null if
+// the name is generic. e.g. "Discover Chiropractic Mackay" → "Mackay";
+// "Aspire Physiotherapy Bunbury" → "Bunbury"; "Core Physio" → null.
+const NON_PLACE_TAIL = new Set([
+  'physio', 'physiotherapy', 'chiropractic', 'chiro', 'osteopathy', 'osteo', 'health', 'clinic',
+  'centre', 'center', 'rehab', 'rehabilitation', 'sports', 'medicine', 'medical', 'wellness',
+  'group', 'solutions', 'services', 'care', 'allied', 'pilates', 'therapy', 'co', 'pty', 'ltd',
+  'and', 'the', 'practice', 'plus', 'studio',
+])
+function placeTailFromName(name: string): string | null {
+  const tokens = name.replace(/[®™&,.()]/g, ' ').split(/\s+/).filter(Boolean)
+  if (tokens.length < 2) return null
+  // Walk from the end, collect up to 2 trailing tokens that look like a place
+  // (capitalised, not a generic clinic word).
+  const place: string[] = []
+  for (let i = tokens.length - 1; i >= 0 && place.length < 2; i--) {
+    const t = tokens[i]
+    if (NON_PLACE_TAIL.has(t.toLowerCase())) break
+    if (!/^[A-Z][a-zA-Z'-]+$/.test(t)) break
+    place.unshift(t)
+  }
+  return place.length ? place.join(' ') : null
+}
+
 async function nominatimLookup(shortName: string, stateHint?: string): Promise<ExtractedAddress | null> {
   await throttleNominatim()
   const stateBit = stateHint && /^(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)$/i.test(stateHint) ? ` ${stateHint.toUpperCase()}` : ''
@@ -384,6 +409,18 @@ export async function POST(req: NextRequest) {
         const fromOsm = await nominatimLookup(c.short_name, c.state ?? undefined)
         if (fromOsm) {
           return { c, status: 'recovered', found: { extracted: fromOsm, hitPath: 'nominatim' } }
+        }
+        // Fallback 1b: many clinics embed their town in the NAME
+        // ("Aspire Physiotherapy Bunbury", "Discover Chiropractic Mackay").
+        // Nominatim fails on the full business name but resolves the bare
+        // town. Try the trailing 1-2 words as a place query. Free, and
+        // regional-biased (regional clinics name themselves after their town).
+        const tail = placeTailFromName(c.short_name)
+        if (tail) {
+          const fromTail = await nominatimLookup(tail, c.state ?? undefined)
+          if (fromTail) {
+            return { c, status: 'recovered', found: { extracted: fromTail, hitPath: 'name-tail' } }
+          }
         }
         // Fallback 2: Google Places (paid, env-gated). Higher accuracy
         // for SPA / sparse-website clinics that OSM doesn't cover.
