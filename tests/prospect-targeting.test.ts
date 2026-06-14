@@ -246,6 +246,91 @@ describe('cold-email hygiene (2026-06-10 portal-led: the dashboard is the pitch,
   })
 })
 
+describe('intent-aware follow-ups (Zac 2026-06-14: T2/T3 adapt to what they viewed on the portal)', () => {
+  // One naked /p/ link, no image, never surveillance-y, under 90 words — the
+  // invariants every hinted variant must keep.
+  function assertHygiene(html: string, label: string) {
+    expect(html, `${label} no image`).not.toMatch(/<img/i)
+    // Exactly one anchor, and it points at the /p/ portal path. (The naked
+    // URL renders /p/ twice — href + visible text — so count <a> tags.)
+    const anchors = html.match(/<a\s+href=/gi) ?? []
+    expect(anchors.length, `${label} exactly one link`).toBe(1)
+    expect(html, `${label} link is the portal path`).toMatch(/href="[^"]*\/p\//)
+    expect(html, `${label} no ?k=`).not.toContain('?k=')
+    expect(html, `${label} no utm`).not.toMatch(/utm_/i)
+    // Never creepy — no "I saw/noticed you viewed X" framing.
+    expect(html, `${label} not surveillance-y`).not.toMatch(/saw you|noticed you|i see you|you viewed|you looked at|you visited/i)
+    const words = bodyWordCount(html)
+    expect(words, `${label} = ${words} words (<90)`).toBeLessThan(90)
+  }
+
+  it("T2 hint='pricing' leads with an offer to talk pricing/options for the clinic", () => {
+    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: 'pricing' })
+    expect(text).toMatch(/pricing was the question/i)
+    expect(text).toMatch(/walk through what it'd look like for Test Clinic/i)
+    expect(text).toMatch(/just reply/i)
+    assertHygiene(html, "T2 pricing")
+  })
+
+  it("T2 hint='trial' references the Module 1 trial → full program value", () => {
+    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: 'trial' })
+    expect(text).toMatch(/Module 1/i)
+    expect(text).toMatch(/full program/i)
+    expect(text).toMatch(/14 CPD hours/i)
+    assertHygiene(html, "T2 trial")
+  })
+
+  it("T2 hint='toolkit' nudges the practical toolkit value + the full-course upsell", () => {
+    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: 'toolkit' })
+    expect(text).toMatch(/clinical toolkit/i)
+    expect(text).toMatch(/full course/i)
+    assertHygiene(html, "T2 toolkit")
+  })
+
+  it('T2 hint=null (or omitted) is the GENERIC re-offer — identical to no-hint', () => {
+    const generic = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok')
+    const explicitNull = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: null })
+    expect(explicitNull.html).toBe(generic.html)
+    // Generic keeps the full docs recap; doesn't carry the pricing-talk sentence.
+    expect(generic.html).toMatch(/admin pack and reference docs/i)
+    expect(generic.html).not.toMatch(/pricing was the question/i)
+  })
+
+  it('each T2 hint produces DISTINCT copy from the generic', () => {
+    const generic = mergeTemplate(T2, clinic({ team: team(4) }), 'x', 'tok').html
+    for (const h of ['pricing', 'trial', 'toolkit'] as const) {
+      const hinted = mergeTemplate(T2, clinic({ team: team(4) }), 'x', 'tok', { engagementHint: h }).html
+      expect(hinted, `hint=${h} differs from generic`).not.toBe(generic)
+    }
+  })
+
+  it("T3 hint='pricing' offers to talk the numbers through but keeps the breakup close", () => {
+    const { html, text } = mergeTemplate(T3, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: 'pricing' })
+    expect(text).toMatch(/talk through the options for Test Clinic/i)
+    expect(text).toContain("reply 'later' and I'll check back next season")
+    expect(text).toContain("STOP and I won't email again")
+    // Still the config-derived price, still one link, still hygienic.
+    expect(text).toContain('A$1,497')
+    assertHygiene(html, "T3 pricing")
+    expect(html).not.toMatch(/saw you|noticed you/i)
+  })
+
+  it('T3 hint=null is the generic breakup (unchanged)', () => {
+    const generic = mergeTemplate(T3, clinic({ team: team(4) }), 'x', 'tok')
+    const explicitNull = mergeTemplate(T3, clinic({ team: team(4) }), 'x', 'tok', { engagementHint: null })
+    expect(explicitNull.html).toBe(generic.html)
+    expect(generic.html).toMatch(/if you ever want the full course/i)
+  })
+
+  it('engagementHint never leaks into T1 copy (T1 = no prior engagement)', () => {
+    const base = mergeTemplate(T1, clinic({ team: team(4) }), 'x', 'tok').html
+    for (const h of ['pricing', 'trial', 'toolkit', null] as const) {
+      const hinted = mergeTemplate(T1, clinic({ team: team(4) }), 'x', 'tok', { engagementHint: h }).html
+      expect(hinted, `T1 ignores hint=${h}`).toBe(base)
+    }
+  })
+})
+
 describe('ICP preflight gate — AU private clinics only (regression: 2026-06-11 leaks)', () => {
   // Every one of these ACTUALLY GOT SENT or queued on 2026-06-11 and must be blocked.
   const mustBlock: Array<[string, Partial<ProspectClinic>]> = [

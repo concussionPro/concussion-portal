@@ -335,6 +335,61 @@ async function loadSubjectKeyStats(): Promise<Map<string, VariantStat>> {
   return out
 }
 
+// Bot/scanner UA filter — shared by the prior-engagement lookup and the
+// intent-hint derivation. SafeLinks/Mimecast/etc fetch landing URLs but never
+// execute the portal JS that fires section beacons, so section_view rows are
+// inherently human; we still filter known bot UAs defensively (webhook rows
+// carry NULL UA → COALESCE '' → no match → counted as human, intentional).
+const BOT_UA_REGEX =
+  '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|crawler|spider|slurp|facebook|linkedin|whatsapp|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
+
+// Sections that map to a 'toolkit' intent hint (practical-value viewers).
+const TOOLKIT_SECTIONS = [
+  'toolkit-pack',
+  'toolkit-callout',
+  'toolkit-clinical',
+  'toolkit-admin',
+  'toolkit-outreach',
+  'learning-suite',
+  'reference-library',
+]
+
+/**
+ * Intent-aware follow-up hint (Zac 2026-06-14). Reads what this clinic
+ * actually VIEWED on their portal (prospect_portal_views section beacons) and
+ * derives the single strongest signal so the T2/T3 copy can speak to it:
+ *   pricing  > trial (Module 1 opened) > toolkit/learning > null (generic).
+ * Unlike email open/click (scanner noise — ignored), section beacons are
+ * human: scanners don't run the page JS that fires them. Bot UAs are still
+ * filtered defensively. Read-only, never throws — degrades to null so a lookup
+ * hiccup just yields the generic follow-up, never kills the send run.
+ */
+async function deriveEngagementHint(
+  clinicId: number,
+): Promise<'pricing' | 'trial' | 'toolkit' | null> {
+  try {
+    const { rows } = await sql<{ section_visited: string | null }>`
+      SELECT DISTINCT LOWER(section_visited) AS section_visited
+      FROM prospect_portal_views
+      WHERE clinic_id = ${clinicId}
+        AND section_visited IS NOT NULL
+        AND interaction_type IN ('view', 'section_view', 'cta_click')
+        AND COALESCE(user_agent, '') !~* ${BOT_UA_REGEX}
+    `
+    const sections = new Set(rows.map((r) => r.section_visited ?? ''))
+    if (sections.has('pricing')) return 'pricing'
+    if (sections.has('module-1-trial')) return 'trial'
+    if (TOOLKIT_SECTIONS.some((s) => sections.has(s))) return 'toolkit'
+    return null
+  } catch (err) {
+    console.error(
+      `[process-scheduled] engagement-hint lookup failed for clinic ${clinicId} — degrading to generic:`,
+      err,
+    )
+    return null
+  }
+}
+
 export async function processScheduledSends(
   opts: ProcessScheduledOptions,
 ): Promise<ProcessScheduledResult> {
@@ -708,9 +763,19 @@ export async function processScheduledSends(
       ? chooseSubjectKey({ candidateKeys, slug: clinic.slug, stats: perKeyStats })
       : undefined
 
+    // Intent-aware follow-up (Zac 2026-06-14): tailor ONE sentence of the
+    // T2/T3 copy to what the prospect actually viewed on their portal. T1 has
+    // no prior engagement, so we only look it up for followup/final touches.
+    // Read-only + degrades to null → generic copy; never blocks the send.
+    let engagementHint: 'pricing' | 'trial' | 'toolkit' | null = null
+    if (templateSlug !== 'initial') {
+      engagementHint = await deriveEngagementHint(clinic.id)
+    }
+
     const { subject, html, text, subjectKey } = mergeTemplate(template, clinic, BASE_URL, unsubToken, {
       priorEngagement,
       forceSubjectKey,
+      engagementHint,
     })
     // Deterministic key — concurrent runs (cron + manual fire-now, or two
     // overlapping cron invocations) collide on the UNIQUE audit_key instead

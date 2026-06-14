@@ -240,6 +240,22 @@ export function mergeTemplate(
     /** Accepted for interface compat — intentionally ignored (see above). */
     priorEngagement?: 'none' | 'opened' | 'clicked'
     /**
+     * Intent-aware follow-up (Zac 2026-06-14). Unlike `priorEngagement` (email
+     * open/click — scanner noise, ignored), this is derived from what the human
+     * actually viewed ON the portal (prospect_portal_views section beacons,
+     * which scanners never fire because they don't run the page JS). It tailors
+     * ONE sentence of the T2 (and T3) follow-up to the prospect's strongest
+     * prior signal — value-framed, never surveillance-y ("I saw you viewed…"):
+     *   - 'pricing' → lead with an offer to talk pricing/options for the clinic
+     *   - 'trial'   → reference the Module 1 trial → full-program value
+     *   - 'toolkit' → nudge the practical toolkit/learning value
+     *   - null/omitted → the generic follow-up copy (unchanged)
+     * mergeTemplate stays PURE — process-scheduled derives the hint from the DB
+     * and passes it in. T1 ('initial') has no prior engagement, so the hint is
+     * a no-op there.
+     */
+    engagementHint?: 'pricing' | 'trial' | 'toolkit' | null
+    /**
      * Self-optimizing engine hook. When set, render the subject variant with
      * this stable `key` IF it survives the unknown-data guards + ≤50-char
      * filter for this clinic; otherwise fall back to the deterministic
@@ -300,10 +316,31 @@ export function mergeTemplate(
     `<p>${tierLine} It's all here: ${FREE_LINK}</p>`,
   ].join('\n')
 
-  // T2 — re-offer: free tools + the toolkit/docs value + the tier line, clean link.
+  // T2 — re-offer: free tools + the toolkit/docs value + the tier line, clean
+  // link. When an engagementHint is supplied, the SECOND paragraph is swapped
+  // for a value-framed sentence matched to what they viewed on the portal
+  // (pricing / trial / toolkit). Never says "I saw you viewed…" — it's framed
+  // as a helpful option, not surveillance. Hinted variants drop the generic
+  // tier-line (the tailored sentence already carries the upsell) to stay tight.
+  // null/omitted → the generic re-offer below, unchanged.
+  const hint = options.engagementHint ?? null
+  let t2SecondPara: string
+  if (hint === 'pricing') {
+    t2SecondPara =
+      `<p>If the pricing was the question, I'm happy to walk through what it'd look like for ${safeShortName} — just reply. The SCAT6/SCOAT6 forms and baseline tool stay free to use either way. ${tierLine}</p>`
+  } else if (hint === 'trial') {
+    t2SecondPara =
+      `<p>Hope Module 1 was a useful start — the full program builds from there into the hands-on protocol, 14 CPD hours each, OA endorsed. The SCAT6/SCOAT6 forms and baseline tool stay free to use either way.</p>`
+  } else if (hint === 'toolkit') {
+    t2SecondPara =
+      `<p>The clinical toolkit in there (GP/NDIS/school letters, billing) is yours to use — the full course adds the protocol training and 14 CPD hours. The SCAT6/SCOAT6 forms and baseline tool stay free either way.</p>`
+  } else {
+    t2SecondPara =
+      `<p>The SCAT6/SCOAT6 forms and baseline tool are free to use either way, and the clinical toolkit (GP/NDIS/school letters, billing flow), admin pack and reference docs are in there too. ${tierLine}</p>`
+  }
   const t2Body = [
     `<p>Circling back — the concussion kit for ${safeShortName} is still here: ${FREE_LINK}</p>`,
-    `<p>The SCAT6/SCOAT6 forms and baseline tool are free to use either way, and the clinical toolkit (GP/NDIS/school letters, billing flow), admin pack and reference docs are in there too. ${tierLine}</p>`,
+    t2SecondPara,
   ].join('\n')
 
   // T3 — breakup. Free kit stays available; price transparency for the course.
@@ -316,9 +353,17 @@ export function mergeTemplate(
   } else {
     priceLine = `the Hub Pack — your team trained online plus the clinic-branded toolkit — is A$${CONFIG.COURSE.PRICE_CLINIC_HUB_PACK.toLocaleString('en-AU')}`
   }
+  // T3 second paragraph — when they looked at pricing, lead with the offer to
+  // talk the numbers through (value-framed, not "I saw you viewed pricing").
+  // Every other hint (and null) keeps the standard breakup price line. Both
+  // keep the identical "reply 'later' / STOP" close.
+  const t3SecondPara =
+    hint === 'pricing'
+      ? `<p>And if cost was the sticking point — ${priceLine}, and I'm happy to talk through the options for ${safeShortName} if it helps; just reply. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+      : `<p>And if you ever want the full course, ${priceLine}. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
   const t3Body = [
     `<p>Last one from me. The free SCAT6/SCOAT6 forms, baseline tool and CPD module are at ${FREE_LINK} whenever you want them.</p>`,
-    `<p>And if you ever want the full course, ${priceLine}. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`,
+    t3SecondPara,
   ].join('\n')
 
   // ── Subject lines — short, specific, sentence-case, non-salesy ─────────

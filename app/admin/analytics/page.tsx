@@ -56,6 +56,7 @@ import {
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import type { PipelineStage, StageMatrix } from '@/lib/prospect/stage'
+import { decideOutreach } from '@/lib/prospect/outreach-decision'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface AnalyticsStats {
@@ -3426,6 +3427,13 @@ export default function AnalyticsDashboard() {
                                   const subject = `Concussion training for ${p.shortName}`
                                   const mailto = `mailto:${p.contactEmail}?subject=${encodeURIComponent(subject)}`
                                   const copied = copiedHotEmail === p.contactEmail
+                                  // Same decision engine the daily outreach report uses —
+                                  // surfaces WHY this clinic warrants a personal email now.
+                                  const decision = decideOutreach({
+                                    sectionFunnel: p.portalFlow?.sectionFunnel ?? {},
+                                    maxDwellMs: p.portalMaxDwellMs ?? 0,
+                                    sessions: p.portalEngagedSessions || 1,
+                                  })
                                   return (
                                     <div key={p.id} className="py-2.5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
                                       <div className="min-w-0 flex-1">
@@ -3456,6 +3464,9 @@ export default function AnalyticsDashboard() {
                                         </div>
                                         <div className="text-[11px] text-emerald-700 mt-0.5">
                                           <span className="font-semibold">Intent:</span> {intentSummary}
+                                        </div>
+                                        <div className="text-[11px] italic text-emerald-700/80 mt-0.5">
+                                          {decision.reason}
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-1.5 shrink-0">
