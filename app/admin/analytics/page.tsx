@@ -3376,21 +3376,30 @@ export default function AnalyticsDashboard() {
                         const hotLeads: HotLead[] = prospects
                           .map((p): HotLead | null => {
                             const funnel = p.portalFlow?.sectionFunnel ?? {}
+                            // ONLY genuine buying signals (Zac 2026-06-15): the
+                            // decision engine gates on dwell + real intent, so a
+                            // 2-5s scanner skim that merely fired a section
+                            // IntersectionObserver is NOT a hot lead. Show only
+                            // clinics the engine says warrant a personal CLOSE.
+                            const decision = decideOutreach({
+                              sectionFunnel: funnel,
+                              maxDwellMs: p.portalMaxDwellMs ?? 0,
+                              sessions: p.portalEngagedSessions || 1,
+                            })
+                            if (decision.action !== 'direct') return null
                             const hitEntries = Object.entries(funnel)
                               .filter(([s, n]) => HOT_SECTIONS.has(s) && (n ?? 0) > 0)
                               .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
-                            if (hitEntries.length === 0) return null
                             return {
                               p,
                               hitEntries,
-                              // Intent score = count of DISTINCT high-intent sections hit.
-                              intentScore: hitEntries.length,
-                              openedTrial: hitEntries.some(([s]) => s === 'module-1-trial'),
+                              intentScore: decision.score,
+                              openedTrial: decision.openedTrial,
                               seconds: Math.round((p.portalMaxDwellMs ?? 0) / 1000),
                             }
                           })
                           .filter((x): x is HotLead => x !== null)
-                          // Most distinct intent signals first, then longest dwell.
+                          // Highest conversion score first.
                           .sort((a, b) => (b.intentScore - a.intentScore) || ((b.p.portalMaxDwellMs ?? 0) - (a.p.portalMaxDwellMs ?? 0)))
                           .slice(0, 15)
                         const copyEmail = (email: string) => {
