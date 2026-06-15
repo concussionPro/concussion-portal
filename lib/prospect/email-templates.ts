@@ -312,7 +312,7 @@ export function mergeTemplate(
       : `For a team your size the Hub Pack trains everyone online plus your own clinic-branded toolkit — 14 CPD hours each, OA endorsed.`
   const t1Body = [
     `<p>${REGULATORY_LINE} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
-    `<p>I've put a concussion kit together for ${safeShortName}: the fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial — free to try. You can also preview the course — the clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library — which unlock when you enrol.</p>`,
+    `<p>I've put a concussion kit together for ${safeShortName}: the fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial — yours to use. You can also preview the course — the clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library — which unlock when you enrol.</p>`,
     `<p>${tierLine} It's all here: ${FREE_LINK}</p>`,
   ].join('\n')
 
@@ -327,16 +327,16 @@ export function mergeTemplate(
   let t2SecondPara: string
   if (hint === 'pricing') {
     t2SecondPara =
-      `<p>If the pricing was the question, I'm happy to walk through what it'd look like for ${safeShortName} — just reply. The SCAT6/SCOAT6 forms and baseline tool stay free to use either way. ${tierLine}</p>`
+      `<p>If the pricing was the question, I'm happy to walk through what it'd look like for ${safeShortName} — just reply. The SCAT6/SCOAT6 forms and baseline tool are yours to use either way. ${tierLine}</p>`
   } else if (hint === 'trial') {
     t2SecondPara =
-      `<p>Hope Module 1 was a useful start — the full program builds from there into the hands-on protocol, 14 CPD hours each, OA endorsed. The SCAT6/SCOAT6 forms and baseline tool stay free to use either way.</p>`
+      `<p>Hope Module 1 was a useful start — the full program builds from there into the hands-on protocol, 14 CPD hours each, OA endorsed. The SCAT6/SCOAT6 forms and baseline tool are yours to use either way.</p>`
   } else if (hint === 'toolkit') {
     t2SecondPara =
-      `<p>The clinical toolkit (GP/NDIS/school letters, billing) unlocks with the full course — along with the protocol training and 14 CPD hours. The SCAT6/SCOAT6 forms and baseline tool stay free either way.</p>`
+      `<p>The clinical toolkit (GP/NDIS/school letters, billing) unlocks with the full course — along with the protocol training and 14 CPD hours. The SCAT6/SCOAT6 forms and baseline tool are yours either way.</p>`
   } else {
     t2SecondPara =
-      `<p>The SCAT6/SCOAT6 forms and baseline tool are free to use either way. The clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library are previewable on the page — they unlock with the course. ${tierLine}</p>`
+      `<p>The SCAT6/SCOAT6 forms and baseline tool are yours to use either way. The clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library are previewable on the page — they unlock with the course. ${tierLine}</p>`
   }
   const t2Body = [
     `<p>Circling back — the concussion kit for ${safeShortName} is still here: ${FREE_LINK}</p>`,
@@ -362,7 +362,7 @@ export function mergeTemplate(
       ? `<p>And if cost was the sticking point — ${priceLine}, and I'm happy to talk through the options for ${safeShortName} if it helps; just reply. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
       : `<p>And if you ever want the full course, ${priceLine}. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
   const t3Body = [
-    `<p>Last one from me. The free SCAT6/SCOAT6 forms, baseline tool and CPD module are at ${FREE_LINK} whenever you want them.</p>`,
+    `<p>Last one from me. The SCAT6/SCOAT6 forms, baseline tool and CPD module are at ${FREE_LINK} whenever you want them.</p>`,
     t3SecondPara,
   ].join('\n')
 
