@@ -30,13 +30,19 @@ export interface ConversionInputs {
   /** Distinct real portal sessions. */
   sessions?: number
   contactFirstName?: string | null
+  /** Clinic name — used to detect best-fit concussion buyers (sports clinics). */
+  shortName?: string | null
 }
+
+/** Sports-focused clinics are the prime concussion buyers: they see athletes +
+ *  head injuries and want return-to-play capability = highest concussion revenue. */
+const SPORTS_FIT = /\b(sports?|sport (medicine|injur)|athletic|performance|sports? (and|&) spinal|sports? (physio|medicine))\b/i
 
 export interface ConversionScore {
   score: number          // 0-100
   reachable: boolean     // passed the Hunter gate
   band: 'A' | 'B' | 'C' | 'D'
-  parts: { regional: number; tier: number; engagement: number; quality: number }
+  parts: { regional: number; tier: number; engagement: number; quality: number; fit: number }
 }
 
 export function conversionScore(c: ConversionInputs): ConversionScore {
@@ -46,7 +52,7 @@ export function conversionScore(c: ConversionInputs): ConversionScore {
     !c.hunterRole &&
     !c.hunterAcceptAll
   if (!reachable) {
-    return { score: 0, reachable: false, band: 'D', parts: { regional: 0, tier: 0, engagement: 0, quality: 0 } }
+    return { score: 0, reachable: false, band: 'D', parts: { regional: 0, tier: 0, engagement: 0, quality: 0, fit: 0 } }
   }
 
   // Regional accessibility (0-45) — the conversion-weighted signal.
@@ -64,12 +70,16 @@ export function conversionScore(c: ConversionInputs): ConversionScore {
   else if (dwellS >= 10) engagement = 11
   else if (dwellS > 0) engagement = 6
 
-  // Data quality (0-10) — a real, locatable lead beats an unknown blob.
+  // Data quality (0-8) — a real, locatable lead beats an unknown blob.
   const hasCity = !!c.city && !/unknown/i.test(c.city)
   const hasName = !!c.contactFirstName && c.contactFirstName.length > 1 && !/unknown|there/i.test(c.contactFirstName)
-  const quality = (hasCity ? 6 : 0) + (hasName ? 4 : 0)
+  const quality = (hasCity ? 5 : 0) + (hasName ? 3 : 0)
 
-  const score = Math.min(100, regional + tier + engagement + quality)
+  // Concussion FIT (0-12) — sports clinics are the prime buyers (athletes +
+  // head injuries + RTP demand = highest concussion revenue). Fire them first.
+  const fit = c.shortName && SPORTS_FIT.test(c.shortName) ? 12 : 0
+
+  const score = Math.min(100, regional + tier + engagement + quality + fit)
   const band: ConversionScore['band'] = score >= 70 ? 'A' : score >= 50 ? 'B' : score >= 30 ? 'C' : 'D'
-  return { score, reachable: true, band, parts: { regional, tier, engagement, quality } }
+  return { score, reachable: true, band, parts: { regional, tier, engagement, quality, fit } }
 }
