@@ -34,6 +34,12 @@ export async function GET(request: NextRequest) {
     let paidTotal = 0
 
     for (const loc of Object.values(CONFIG.LOCATIONS)) {
+      // Skip COMPLETED workshops — their registrants are ALUMNI (the workshop
+      // ran), not pending paid registrants counting toward a threshold. Showing
+      // Melbourne as "6/8 — 2 more to confirm" after it ran is wrong; those 6
+      // live in the Alumni view now. Only collecting/confirmed cities belong in
+      // the "to confirm a date" threshold board.
+      if (loc.status === 'completed') continue
       const count = await getEnrollmentCount(loc.slug)
       const registrants = await getEnrollmentsByLocation(loc.slug)
       paidEnrollments.push({
