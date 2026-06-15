@@ -95,10 +95,15 @@ export async function GET(request: NextRequest) {
 
   const resend = new Resend(resendKey)
   const runStart = Date.now()
-  let staggerMs = 0
+  // First send is ~5 min out (must be strictly FUTURE for Resend scheduledAt),
+  // then 8-12 min apart — founder-paced, never a blast.
+  let staggerMs = 5 * 60_000
   const results: Array<{ name: string; outcome: string }> = []
 
   for (const inst of due) {
+    // Space the API CALLS to stay under Resend's 2 req/sec limit (the stagger
+    // above is delivery time; this delay is the call rate).
+    await new Promise((r) => setTimeout(r, 700))
     const firstName = (inst.contact_name && !/reception|office|general/i.test(inst.contact_name))
       ? inst.contact_name.split(' ')[0] : 'there'
     const { subject, text, html } = buildPitch(inst.name, inst.slug, firstName)
