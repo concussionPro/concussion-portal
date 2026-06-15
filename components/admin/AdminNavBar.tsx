@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Mail, MailOpen, Users, ClipboardList, UserPlus, LogOut, Upload, Handshake } from 'lucide-react'
+import { BarChart3, Mail, MailOpen, Users, ClipboardList, UserPlus, LogOut, Upload, Handshake, GraduationCap } from 'lucide-react'
 
 const NAV_LINKS = [
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/admin/create-user', label: 'Create User', icon: UserPlus },
   { href: '/admin/import-contacts', label: 'Import Contacts', icon: Upload },
   { href: '/admin/partnerships', label: 'Partnerships', icon: Handshake },
+  { href: '/admin/alumni', label: 'Alumni', icon: GraduationCap },
 ]
 
 export default function AdminNavBar() {
