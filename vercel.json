@@ -39,6 +39,10 @@
     {
       "path": "/api/cron/daily-outreach-report",
       "schedule": "0 22 * * 0-4"
+    },
+    {
+      "path": "/api/cron/partner-process-scheduled",
+      "schedule": "30 23 * * 0-4"
     }
   ]
 }
