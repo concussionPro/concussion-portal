@@ -393,7 +393,6 @@ function formatLocation(slug: string): string {
   const map: Record<string, string> = {
     'sydney': 'Sydney',
     'melbourne': 'Melbourne',
-    'byron-bay': 'Byron Bay',
   }
   return map[slug] || slug || ''
 }

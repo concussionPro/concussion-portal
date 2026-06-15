@@ -54,17 +54,19 @@ export default async function ClinicalToolkitPage({ params, searchParams }: Page
           </Link>
 
           <div data-track-section="toolkit-clinical">
-            {/* Preview policy:
-                  - Show 3 of 6 templates IN FULL so prospects see the
-                    branding land in real content (clinic.name flows into
-                    every {clinic_name} field via FillableDoc defaultValues)
-                  - Lock 3 templates as teaser cards — keeps the "unlock with
-                    Hub Program" tension visible
-                  - FillableDoc previewMode (auto-on because previewedSlugs
-                    is an array) blocks print/PDF via the global @media print
-                    CSS injected by PreviewPrintBlock
-                  - Download API (`/api/toolkit/download`) rejects dynamic
-                    per-clinic access keys (allow-list contains only 'ah2026')
+            {/* Preview policy (title/structure-only — no copyable content):
+                  - The 3 "visible" templates render as the structure-only lock
+                    (title, branded letterhead, section outline) — NOT the full
+                    copyable body, sign-off, or compliance text. Forced by
+                    ClinicalToolkitDoc whenever previewedSlugs is set.
+                  - The other 3 render as locked teaser cards.
+                  - FillableDoc previewMode (auto-on because previewedSlugs is
+                    an array) adds `select-none` (text can't be selected/copied)
+                    AND blocks print/PDF via the @media print CSS in
+                    PreviewPrintBlock.
+                  - Download API (`/api/toolkit/download`) is PAID-ONLY: it
+                    ignores prospect access keys and 403s anyone without an
+                    admin or paid session, so prospects can't pull the files.
             */}
             <ClinicalToolkitDoc
               templates={DISCHARGE_TEMPLATES}

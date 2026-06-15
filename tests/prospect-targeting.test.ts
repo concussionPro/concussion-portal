@@ -58,7 +58,7 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
       expect(html).toMatch(/Module 1 trial/i)
       expect(html).toMatch(/clinical toolkit/i)
       expect(html).toMatch(/admin pack/i)
-      expect(html).toMatch(/reference docs/i)
+      expect(html).toMatch(/reference library/i)
       // Correction (Zac 2026-06-11): Module 1 is NOT free — it's a trial section.
       expect(html).not.toMatch(/free (CPD )?module/i)
       expect(html).not.toMatch(/I built/i)
@@ -292,7 +292,7 @@ describe('intent-aware follow-ups (Zac 2026-06-14: T2/T3 adapt to what they view
     const explicitNull = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: null })
     expect(explicitNull.html).toBe(generic.html)
     // Generic keeps the full docs recap; doesn't carry the pricing-talk sentence.
-    expect(generic.html).toMatch(/admin pack and reference docs/i)
+    expect(generic.html).toMatch(/admin pack and reference library/i)
     expect(generic.html).not.toMatch(/pricing was the question/i)
   })
 

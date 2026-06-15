@@ -23,13 +23,16 @@ export function OutreachToolkitDoc({
 }) {
   const isPreviewMode = Array.isArray(previewedSlugs)
   const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
+  // Preview = title/structure only. Visible templates are truncated to the
+  // structure-only lock so prospects can't lift a usable document before paying.
+  const effectiveSectionLimit = isPreviewMode ? (previewSectionLimit ?? 0) : previewSectionLimit
   return (
     <FillableDoc storageKey="outreach-kit" defaultValues={defaultValues} previewMode={isPreviewMode}>
       <Cover isPreviewMode={isPreviewMode} />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
         isVisible(t.slug)
-          ? <OutreachBlock key={t.slug} template={t} sectionLimit={previewSectionLimit} unlockHref={unlockHref} />
+          ? <OutreachBlock key={t.slug} template={t} sectionLimit={effectiveSectionLimit} unlockHref={unlockHref} />
           : <LockedOutreachCard key={t.slug} template={t} unlockHref={unlockHref} />
       )}
     </FillableDoc>
@@ -157,7 +160,9 @@ function OutreachBlock({
   unlockHref?: string
 }) {
   const totalSections = template.sections.length
-  const sectionsToRender = sectionLimit ? template.sections.slice(0, sectionLimit) : template.sections
+  // `!= null` so a limit of 0 truncates everything (structure-only preview);
+  // a plain `sectionLimit ?` treated 0 as "no limit" and leaked the full body.
+  const sectionsToRender = sectionLimit != null ? template.sections.slice(0, sectionLimit) : template.sections
   const hiddenSectionCount = totalSections - sectionsToRender.length
   const isTruncated = hiddenSectionCount > 0
   return (

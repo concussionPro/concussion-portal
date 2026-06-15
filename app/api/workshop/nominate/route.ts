@@ -8,7 +8,7 @@ import { sql } from '@/lib/db'
  * POST /api/workshop/nominate
  *
  * Allows full-course users to nominate their preferred workshop city.
- * Body: { location: 'sydney' | 'melbourne' | 'byron-bay' }
+ * Body: { location: 'sydney' | 'melbourne' }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     if (!location || !VALID_LOCATIONS.includes(location)) {
       return NextResponse.json(
-        { error: 'Invalid location. Must be "sydney", "melbourne", or "byron-bay".' },
+        { error: 'Invalid location. Must be "sydney" or "melbourne".' },
         { status: 400 }
       )
     }

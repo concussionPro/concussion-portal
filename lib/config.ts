@@ -55,13 +55,6 @@ export const CONFIG = {
       dateObj: null as Date | null,
       status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
     },
-    BYRON_BAY: {
-      city: 'Byron Bay',
-      slug: 'byron-bay',
-      date: '',
-      dateObj: null as Date | null,
-      status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
-    },
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',

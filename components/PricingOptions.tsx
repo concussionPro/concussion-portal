@@ -23,7 +23,7 @@ const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
 // ─── City catalogue ──────────────────────────────────────────────────────────
 //
 // Cities offered on the Complete Course tile. Slugs must match what
-// /api/register-interest accepts (sydney | melbourne | byron-bay | adelaide |
+// /api/register-interest accepts (sydney | melbourne | adelaide |
 // wa). Melbourne status comes from CONFIG.LOCATIONS so admin date changes
 // flow through automatically. The other four are interest-capture only —
 // no live workshops, so clicking them swaps the Enrol button for the
@@ -31,14 +31,13 @@ const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
 const CITY_OPTIONS = [
   { slug: 'melbourne', label: 'Melbourne' },
   { slug: 'sydney', label: 'Sydney' },
-  { slug: 'byron-bay', label: 'Byron' },
   { slug: 'adelaide', label: 'Adelaide' },
   { slug: 'wa', label: 'Perth (WA)' },
 ] as const
 
 /**
  * True when the selected city has a confirmed workshop date. Currently only
- * Melbourne can hit this branch — Sydney/Byron/Adelaide/WA are all in
+ * Melbourne can hit this branch — Sydney/Adelaide/WA are all in
  * collecting status.
  */
 function isCityConfirmed(slug: string | null | undefined): boolean {
@@ -452,7 +451,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
                 'Full-day workshop (6 CPD hours)',
                 'Hands-on oculomotor + cranial nerve exam',
                 CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed'
-                  ? 'Sydney & Byron Bay added when demand hits'
+                  ? 'More AU cities added when demand hits'
                   : 'Choose your preferred AU location',
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">

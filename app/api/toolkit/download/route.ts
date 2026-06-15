@@ -12,49 +12,29 @@ import {
 import { isAdminRequest } from '@/lib/require-admin'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { isBookOwner } from '@/lib/users'
-import { sql } from '@/lib/db'
 
 type Kit = 'all' | 'clinical' | 'outreach' | 'admin'
-
-/**
- * Look up a prospect access key against prospect_clinics. Returns the
- * clinic short_name (filename-safe) on match, null otherwise. Wrapped in
- * try/catch → deny if the access_key column doesn't exist yet (backfill
- * in flight) or the DB is unreachable.
- */
-async function lookupProspectKey(key: string): Promise<string | null> {
-  try {
-    const { rows } = await sql<{ short_name: string }>`
-      SELECT short_name FROM prospect_clinics WHERE access_key = ${key} LIMIT 1
-    `
-    if (rows.length === 0) return null
-    const shortName = (rows[0].short_name || 'Prospect').trim()
-    return shortName.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'Prospect'
-  } catch {
-    return null
-  }
-}
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const kit = (url.searchParams.get('kit') ?? 'all') as Kit
-  const prospectKey = url.searchParams.get('k')
 
   if (!['all', 'clinical', 'outreach', 'admin'].includes(kit)) {
     return NextResponse.json({ error: 'Invalid kit' }, { status: 400 })
   }
 
-  // Auth — three paths:
+  // Auth — PAID ACCESS ONLY. Downloads ship the full, copyable template files,
+  // so they are never available to prospects. Two paths only:
   //  1. Admin session / header — full access.
   //  2. Paid user session cookie (same gating as /api/download): accessLevel
   //     online-only / full-course, or bundle (reference + toolkit) buyer
   //     flagged in the DB via reference_book_purchased_at.
-  //  3. Prospect access key (cold-pitch portals) — validated against
-  //     prospect_clinics.access_key, limited kits only.
+  // Prospect access keys (cold-pitch /p/<slug> portals) get NO download — the
+  // on-screen preview is title/structure-only and print/PDF is blocked. A `k`
+  // query param is ignored here on purpose; downloading requires a purchase.
   const isAdmin = isAdminRequest(req)
-  const prospectName = prospectKey && !isAdmin ? await lookupProspectKey(prospectKey) : null
 
-  if (!isAdmin && !prospectName) {
+  if (!isAdmin) {
     const sessionToken = req.cookies.get('session')?.value
     const sessionData = sessionToken ? verifySessionToken(sessionToken) : null
     if (!sessionData) {
@@ -69,20 +49,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Prospect portals only get partial access — admin is hidden, clinical is
-  // limited to the visible sample, outreach is limited to the visible sample.
-  if (prospectName && !isAdmin) {
-    if (kit === 'admin') {
-      return NextResponse.json({ error: 'Not available in preview' }, { status: 403 })
-    }
-  }
-
   const zip = new JSZip()
-  const rootName = prospectName ? `Hub-Program-Toolkit-Preview-${prospectName}` : 'Hub-Program-Toolkit'
+  const rootName = 'Hub-Program-Toolkit'
   const root = zip.folder(rootName)!
 
   // README
-  root.file('README.md', readme(kit, prospectName))
+  root.file('README.md', readme(kit, null))
 
   if (kit === 'all' || kit === 'clinical') {
     const folder = root.folder('01-Clinical-Toolkit')!
@@ -100,13 +72,10 @@ export async function GET(req: NextRequest) {
   }
 
   if (kit === 'all' || kit === 'admin') {
-    // Skip admin entirely for prospect portals (hidden content)
-    if (!prospectName || isAdmin) {
-      const folder = root.folder('03-Admin-Workflow')!
-      ADMIN_COURSE_MODULES.forEach((m) => {
-        folder.file(`${String(m.id).padStart(2, '0')}-${m.slug}.html`, renderAdminModuleHTML(m))
-      })
-    }
+    const folder = root.folder('03-Admin-Workflow')!
+    ADMIN_COURSE_MODULES.forEach((m) => {
+      folder.file(`${String(m.id).padStart(2, '0')}-${m.slug}.html`, renderAdminModuleHTML(m))
+    })
   }
 
   const buffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })

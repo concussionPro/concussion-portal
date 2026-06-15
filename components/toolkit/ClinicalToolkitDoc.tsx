@@ -36,13 +36,18 @@ export function ClinicalToolkitDoc({
 }) {
   const isPreviewMode = Array.isArray(previewedSlugs)
   const isVisible = (slug: string) => !isPreviewMode || previewedSlugs.includes(slug)
+  // Preview = title/structure only. In preview mode the "visible" templates are
+  // truncated to the structure-only lock (no copyable body, sign-off, or
+  // compliance text) so prospects can't lift a usable document before paying.
+  // Default to 0 sections in preview unless an explicit limit is given.
+  const effectiveSectionLimit = isPreviewMode ? (previewSectionLimit ?? 0) : previewSectionLimit
   return (
     <FillableDoc storageKey="clinical-toolkit" defaultValues={defaultValues} previewMode={isPreviewMode}>
       <Cover isPreviewMode={isPreviewMode} />
       <TableOfContents templates={templates} isVisible={isVisible} />
       {templates.map((t) =>
         isVisible(t.slug)
-          ? <TemplateBlock key={t.slug} template={t} sectionLimit={previewSectionLimit} unlockHref={unlockHref} />
+          ? <TemplateBlock key={t.slug} template={t} sectionLimit={effectiveSectionLimit} unlockHref={unlockHref} />
           : <LockedTemplateCard key={t.slug} template={t} unlockHref={unlockHref} />
       )}
       <PrinciplesBlock principles={principles} />
@@ -185,7 +190,10 @@ function TemplateBlock({
   unlockHref?: string
 }) {
   const totalSections = template.sections.length
-  const sectionsToRender = sectionLimit
+  // `!= null` (not truthy) so a limit of 0 truncates EVERYTHING — title +
+  // structure lock only, no body. A plain `sectionLimit ?` treated 0 as "no
+  // limit" and leaked the full template into the prospect preview.
+  const sectionsToRender = sectionLimit != null
     ? template.sections.slice(0, sectionLimit)
     : template.sections
   const hiddenSectionCount = totalSections - sectionsToRender.length

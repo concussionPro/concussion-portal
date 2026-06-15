@@ -4,11 +4,10 @@ import { useState } from 'react'
 import { Loader2, Check, Sparkles } from 'lucide-react'
 import { trackInterestRegistration } from '@/lib/analytics'
 
-type CitySlug = 'sydney' | 'byron-bay' | 'adelaide' | 'wa' | 'melbourne'
+type CitySlug = 'sydney' | 'adelaide' | 'wa' | 'melbourne'
 
 const CITIES: { slug: CitySlug; label: string }[] = [
   { slug: 'sydney', label: 'Sydney' },
-  { slug: 'byron-bay', label: 'Byron Bay' },
   { slug: 'adelaide', label: 'Adelaide' },
   { slug: 'wa', label: 'Perth / WA' },
   { slug: 'melbourne', label: 'Next Melbourne' },

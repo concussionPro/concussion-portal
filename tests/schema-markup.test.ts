@@ -349,7 +349,6 @@ describe('buildCourseSchema (homepage/pricing Course markup)', () => {
 describe('buildEventSchema (workshop EducationEvent markup)', () => {
   it('returns null for cities still collecting interest (no confirmed date)', () => {
     expect(buildEventSchema('SYDNEY')).toBeNull()
-    expect(buildEventSchema('BYRON_BAY')).toBeNull()
   })
 
   it('emits the real Melbourne venue with street address', () => {

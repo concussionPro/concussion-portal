@@ -73,7 +73,7 @@ export const COURSE_ACCESS_MAP: Record<string, 'online-only' | 'full-course'> = 
 /**
  * Valid workshop locations
  */
-export const VALID_LOCATIONS = ['sydney', 'melbourne', 'byron-bay'] as const
+export const VALID_LOCATIONS = ['sydney', 'melbourne'] as const
 export type WorkshopLocation = typeof VALID_LOCATIONS[number]
 
 /**

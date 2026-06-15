@@ -58,25 +58,6 @@ export function buildCourseSchema(): Record<string, unknown> {
     })
   }
 
-  if (CONFIG.LOCATIONS.BYRON_BAY.dateObj) {
-    courseInstances.push({
-      '@type': 'CourseInstance',
-      name: 'Byron Bay Session',
-      courseMode: 'blended',
-      location: {
-        '@type': 'Place',
-        name: 'Byron Bay, New South Wales',
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: 'Byron Bay',
-          addressRegion: 'NSW',
-          addressCountry: 'AU',
-        },
-      },
-      startDate: toAESTOffsetISO(CONFIG.LOCATIONS.BYRON_BAY.dateObj),
-    })
-  }
-
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Course',
@@ -117,7 +98,7 @@ export function CourseSchema() {
   )
 }
 
-type EventLocationKey = 'MELBOURNE' | 'SYDNEY' | 'BYRON_BAY'
+type EventLocationKey = 'MELBOURNE' | 'SYDNEY'
 
 /** Plain-object EducationEvent schema, or null when the city has no confirmed date. */
 export function buildEventSchema(location: EventLocationKey): Record<string, unknown> | null {

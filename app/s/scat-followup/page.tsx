@@ -19,7 +19,7 @@ const ANSWER_LABELS: Record<string, { short: string; followup: string }> = {
   },
   C: {
     short: 'Want the workshop',
-    followup: "Good signal — Sydney and Byron Bay are still in the collecting phase. I'll prioritise booking once we hit 8 commits in your city. Reply with your city and I'll add you to the early-notice list.",
+    followup: "Good signal — Sydney is still in the collecting phase. I'll prioritise booking once we hit 8 commits in your city. Reply with your city and I'll add you to the early-notice list.",
   },
   D: {
     short: 'Timing',

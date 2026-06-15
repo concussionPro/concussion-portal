@@ -100,7 +100,15 @@ export function FillableDoc({
   return (
     <FillableContext.Provider value={ctx}>
       {previewMode && <PreviewPrintBlock />}
-      <div data-preview-mode={previewMode ? 'true' : 'false'}>{children}</div>
+      {/* select-none in preview: prospects can SEE the branded teaser but the
+          on-screen text can't be selected/copied. Paid (non-preview) mode stays
+          fully selectable so buyers can copy content into their own letterhead. */}
+      <div
+        data-preview-mode={previewMode ? 'true' : 'false'}
+        className={previewMode ? 'select-none' : undefined}
+      >
+        {children}
+      </div>
       {!previewMode && <Toolbar />}
     </FillableContext.Provider>
   )

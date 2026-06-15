@@ -80,7 +80,7 @@ export default function InPersonTrainingPage() {
               priority
             />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-6 py-4">
-              <p className="text-white text-sm font-medium">Supervised clinical assessment practice — Byron Bay workshop, 2025</p>
+              <p className="text-white text-sm font-medium">Supervised clinical assessment practice — Concussion Education Australia workshop, 2025</p>
             </div>
           </div>
 
@@ -309,7 +309,6 @@ export default function InPersonTrainingPage() {
                     >
                       <option value="sydney">Sydney</option>
                       <option value="melbourne">Melbourne</option>
-                      <option value="byron-bay">Byron Bay</option>
                       <option value="adelaide">Adelaide</option>
                       <option value="wa">Perth / WA</option>
                     </select>
