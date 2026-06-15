@@ -468,24 +468,22 @@ export async function processScheduledSends(
         -- pitch, >=6 clinical) > medium clinics (Hub Pack, 2-5) > individuals.
         -- Clinical sum must stay in lockstep with clinicalCount() in
         -- lib/prospect/pricing.ts (7 clinical keys, excludes practiceManager/admin).
+        -- Category-balanced interleave (Zac 2026-06-16): every daily batch must
+        -- represent on-site, hub AND individual — never all of one tier. We rank
+        -- within each tier by conversion-stamped scheduled_send_at, then weight
+        -- the rank so on-site is densest (highest value) but hub/individual
+        -- always get slots. ~16 on-site / 9 hub / 5 individual per 30/day.
         ORDER BY
-          CASE
-            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
-                + COALESCE((pc.team->>'physiotherapists')::int, 0)
-                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
-                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
-                + COALESCE((pc.team->>'exercisePhys')::int, 0)
-                + COALESCE((pc.team->>'myotherapists')::int, 0)
-                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
-            WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
-                + COALESCE((pc.team->>'physiotherapists')::int, 0)
-                + COALESCE((pc.team->>'generalPractitioners')::int, 0)
-                + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
-                + COALESCE((pc.team->>'exercisePhys')::int, 0)
-                + COALESCE((pc.team->>'myotherapists')::int, 0)
-                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 2 THEN 1
-            ELSE 2
-          END ASC,
+          (ROW_NUMBER() OVER (
+             PARTITION BY CASE
+               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'physiotherapists')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 6 THEN 0
+               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'physiotherapists')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 2 THEN 1
+               ELSE 2 END
+             ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
+           ) * CASE
+               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'physiotherapists')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 6 THEN 1.0
+               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'physiotherapists')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 2 THEN 1.7
+               ELSE 2.6 END) ASC,
           pc.scheduled_send_at ASC, pc.priority_wave ASC
         LIMIT 50
       `
