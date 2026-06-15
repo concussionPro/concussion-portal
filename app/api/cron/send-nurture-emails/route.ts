@@ -19,6 +19,7 @@ import { SCAT_MASTERY_SEQUENCE, POST_PURCHASE_SEQUENCE, ABANDONED_CHECKOUT_SEQUE
 import { getEnrollmentCount } from '@/lib/users'
 import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 import { generateMagicLinkJWT } from '@/lib/magic-link-jwt'
+import { isWorkshopAlumnus } from '@/lib/workshop-alumni'
 import { sql } from '@/lib/db'
 import { CONFIG } from '@/lib/config'
 import { EmailScheduler } from '@/lib/email-scheduler'
@@ -97,7 +98,14 @@ export async function GET(request: Request) {
     // Ensure audit table exists (prevents silent failures if table was dropped/never created)
     await sql`CREATE TABLE IF NOT EXISTS email_audit_log (audit_key TEXT PRIMARY KEY, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`
 
-    const users = await loadUsers()
+    // Completed-workshop ALUMNI are excluded from ALL nurture/lifecycle outreach
+    // (Zac 2026-06-15): they've finished the workshop — no onboarding, momentum,
+    // or prep emails. They sit in the alumni cohort, no action, until a Level 2
+    // exists to offer them. Auto-applies to every workshop once its date passes.
+    const allUsers = await loadUsers()
+    const users = allUsers.filter(
+      (u) => !isWorkshopAlumnus({ accessLevel: u.accessLevel, workshopLocation: u.workshopLocation }),
+    )
     const now = new Date()
     let emailsSent = 0
     const errors: string[] = []
