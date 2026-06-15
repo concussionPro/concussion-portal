@@ -129,8 +129,10 @@ export default async function ProspectModuleOneTrial({
             <span>AHPRA-aligned</span>
           </div>
 
-          {/* Trial content */}
-          <div className="space-y-6">
+          {/* Trial content — readable on screen but NOT copyable (select-none)
+              and NOT printable (print CSS above). Prospects can experience the
+              teaser; they can't lift the paid module text until they enrol. */}
+          <div className="space-y-6 select-none">
             {trialSections.map((section, idx) => (
               <SectionBlock key={section.id} sectionNumber={idx + 1} title={section.title} content={section.content} />
             ))}
@@ -139,7 +141,7 @@ export default async function ProspectModuleOneTrial({
           {/* QUIZ CHECKPOINTS — multiple questions so the prospect can
               actually engage with the clinical reasoning, not just see one */}
           {m1.quiz?.length ? (
-            <div className="space-y-4 mt-8">
+            <div className="space-y-4 mt-8 select-none">
               <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent">
                 Knowledge checkpoints · {Math.min(TRIAL_QUIZ_COUNT, m1.quiz.length)} of {m1.quiz.length}
               </p>
