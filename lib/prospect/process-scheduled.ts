@@ -445,7 +445,7 @@ export async function processScheduledSends(
         WHERE pc.next_template_slug IS NOT NULL
           AND pc.status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
           AND pc.scheduled_send_at IS NOT NULL
-          AND pc.scheduled_send_at::date = CURRENT_DATE
+          AND (pc.scheduled_send_at AT TIME ZONE 'Australia/Sydney')::date <= (NOW() AT TIME ZONE 'Australia/Sydney')::date
           -- Intent gate removed (Zac 2026-06-11): it used scanner-polluted
           -- email opens/clicks and was zeroing the cold queue. Warm prospects
           -- are already excluded by status NOT IN (replied/engaged/won/...).
@@ -500,7 +500,7 @@ export async function processScheduledSends(
           -- later TODAY (future time, today's date) was wrongly excluded by the
           -- <= NOW() clause, zeroing same-day runs. scheduled_send_at is a
           -- send-on-or-after DAY marker; the stagger + window guard handle time.
-          AND pc.scheduled_send_at::date <= CURRENT_DATE
+          AND (pc.scheduled_send_at AT TIME ZONE 'Australia/Sydney')::date <= (NOW() AT TIME ZONE 'Australia/Sydney')::date
           -- Intent gate removed (Zac 2026-06-11): it used scanner-polluted
           -- email opens/clicks and was zeroing the cold queue. Warm prospects
           -- are already excluded by status NOT IN (replied/engaged/won/...).
