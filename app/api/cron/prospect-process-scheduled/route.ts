@@ -127,13 +127,13 @@ export async function GET(request: Request) {
     })
   }
 
-  // New-creative safety ceiling (Zac 2026-06-11): the portal-led templates are
-  // brand-new and unproven. Hold cold volume at 30/day regardless of the
-  // adaptive ramp until their bounce/complaint profile is validated, then
-  // raise COLD_SEND_DAILY_MAX to let the adaptive cap take over again. Sends
-  // are also staggered 7-10 min apart inside processScheduledSends so 30/day
-  // is delivered as a human cadence, never a burst.
-  const COLD_SEND_DAILY_MAX = parseInt(process.env.COLD_SEND_DAILY_MAX || '30', 10) || 30
+  // Daily ceiling (Zac 2026-06-16): raised 30 → 50. Domain health has headroom
+  // (complaint 0.22% vs 0.30% line, bounce 2.4% vs 5%), and 50 fits the send
+  // window (9am-5:30pm at 7-10min stagger ≈ 7h of the 8.5h window). 60 is the
+  // hard cadence ceiling before the window guard stops queueing — 50 leaves
+  // margin. The adaptive cap (currently 75) stays the backstop: complaints rise,
+  // it throttles. Still staggered 7-10min — a human cadence, never a burst.
+  const COLD_SEND_DAILY_MAX = parseInt(process.env.COLD_SEND_DAILY_MAX || '50', 10) || 50
   const effectiveCap = Math.min(capDecision.cap, COLD_SEND_DAILY_MAX)
   console.log(
     `[prospect cron] adaptive-cap=${capDecision.cap} · new-creative ceiling=${COLD_SEND_DAILY_MAX} · effective=${effectiveCap}`,
