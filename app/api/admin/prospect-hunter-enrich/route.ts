@@ -39,6 +39,12 @@ interface HunterEmail {
 interface HunterDomainSearchResponse {
   data?: {
     domain?: string
+    // Hunter returns the organisation's location per domain — we use it to
+    // backfill city/state for clinics we couldn't locate via website scrape.
+    city?: string | null
+    state?: string | null
+    country?: string | null
+    postal_code?: string | null
     emails?: HunterEmail[]
   }
 }
@@ -94,6 +100,12 @@ interface ClinicRow {
   contact_role: string | null
   notes: string | null
   status: string
+  city: string | null
+  state: string | null
+}
+
+function missingCity(c: { city: string | null }): boolean {
+  return !c.city || /unknown/i.test(c.city)
 }
 
 export async function POST(req: NextRequest) {
@@ -128,12 +140,15 @@ export async function POST(req: NextRequest) {
   //    if the route is run multiple times.
   const { rows: clinics } = await sql<ClinicRow>`
     SELECT id, slug, short_name, contact_email, contact_full_name, contact_first_name,
-           contact_role, notes, status
+           contact_role, notes, status, city, state
     FROM prospect_clinics
     WHERE status IN ('researching', 'approved')
       AND contact_email IS NOT NULL
       AND COALESCE(notes, '') NOT LIKE '%[hunter-enriched]%'
       AND COALESCE(notes, '') NOT LIKE '%[hunter-checked-empty]%'
+    -- No-city clinics first: one domain-search backfills BOTH a better contact
+    -- AND the location Hunter holds for the org, so they become regional-ranked.
+    ORDER BY (CASE WHEN city IS NULL OR city ILIKE '%unknown%' THEN 0 ELSE 1 END), id
   `
 
   const results: Array<{
@@ -166,7 +181,10 @@ export async function POST(req: NextRequest) {
   let hunterCallsMade = 0
 
   for (const c of clinics) {
-    if (!isGenericMailbox(c.contact_email)) {
+    // Process if EITHER the mailbox is generic (needs a better contact) OR the
+    // clinic has no city (needs location). One domain-search backfills both.
+    // Skip only when the contact is already named AND the city is known.
+    if (!isGenericMailbox(c.contact_email) && !missingCity(c)) {
       results.push({
         id: c.id, shortName: c.short_name, originalEmail: c.contact_email,
         domain: null, decision: 'skipped-not-generic',
@@ -219,6 +237,30 @@ export async function POST(req: NextRequest) {
         error: err instanceof Error ? err.message : String(err),
       })
       continue
+    }
+
+    // LOCATION backfill: Hunter holds the org's city/state per domain. If the
+    // clinic has no city, capture it so the regional-priority ranking can place
+    // it. Independent of the contact-email upgrade below — runs even if no
+    // usable email candidate is found (the domain-search credit is already spent).
+    if (missingCity(c) && response.data) {
+      const hCity = (response.data.city ?? '').trim()
+      const hState = (response.data.state ?? '').trim()
+      const hCountry = (response.data.country ?? '').trim().toUpperCase()
+      // Only accept Australian locations (the ICP) with a real city string.
+      if (hCity && (hCountry === 'AU' || hCountry === 'AUSTRALIA' || hCountry === '')) {
+        if (!dryRun) {
+          await sql`
+            UPDATE prospect_clinics
+            SET city = ${hCity},
+                state = COALESCE(NULLIF(${hState}, ''), state),
+                notes = COALESCE(notes, '') || ${`\n[hunter-location] ${new Date().toISOString()} city=${hCity} state=${hState || '?'}`},
+                updated_at = NOW()
+            WHERE id = ${c.id}
+          `
+        }
+        c.city = hCity // so later logic sees it as located
+      }
     }
 
     const candidates = response.data?.emails ?? []
