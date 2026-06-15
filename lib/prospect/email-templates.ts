@@ -312,7 +312,7 @@ export function mergeTemplate(
       : `For a team your size the Hub Pack trains everyone online plus your own clinic-branded toolkit — 14 CPD hours each, OA endorsed.`
   const t1Body = [
     `<p>${REGULATORY_LINE} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
-    `<p>I've put a working concussion kit on one page for ${safeShortName} — the fillable SCAT6/SCOAT6 forms and a return-to-play baseline tool (both free to use), the Module 1 trial, and the clinical toolkit (GP/NDIS/school letters, billing), admin pack and full reference docs.</p>`,
+    `<p>I've put a concussion kit on one page for ${safeShortName}: the fillable SCAT6/SCOAT6 forms and a return-to-play baseline tool, free to use. You can also preview what's inside the course — the clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library — which unlock when you enrol.</p>`,
     `<p>${tierLine} It's all here: ${FREE_LINK}</p>`,
   ].join('\n')
 
@@ -333,10 +333,10 @@ export function mergeTemplate(
       `<p>Hope Module 1 was a useful start — the full program builds from there into the hands-on protocol, 14 CPD hours each, OA endorsed. The SCAT6/SCOAT6 forms and baseline tool stay free to use either way.</p>`
   } else if (hint === 'toolkit') {
     t2SecondPara =
-      `<p>The clinical toolkit in there (GP/NDIS/school letters, billing) is yours to use — the full course adds the protocol training and 14 CPD hours. The SCAT6/SCOAT6 forms and baseline tool stay free either way.</p>`
+      `<p>The clinical toolkit you looked at (GP/NDIS/school letters, billing) unlocks with the full course — along with the protocol training and 14 CPD hours. The SCAT6/SCOAT6 forms and baseline tool stay free either way.</p>`
   } else {
     t2SecondPara =
-      `<p>The SCAT6/SCOAT6 forms and baseline tool are free to use either way, and the clinical toolkit (GP/NDIS/school letters, billing flow), admin pack and reference docs are in there too. ${tierLine}</p>`
+      `<p>The SCAT6/SCOAT6 forms and baseline tool are free to use either way. The clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library are previewable on the page — they unlock with the course. ${tierLine}</p>`
   }
   const t2Body = [
     `<p>Circling back — the concussion kit for ${safeShortName} is still here: ${FREE_LINK}</p>`,
