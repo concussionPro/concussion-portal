@@ -67,10 +67,11 @@ export const CONFIG = {
       slug: 'melbourne',
       date: 'Saturday 13 June 2026',
       dateObj: new Date('2026-06-13T08:00:00+10:00') as Date | null,
-      // 'closed' (2026-06-11): runs in 2 days — registration shut, no time for
-      // new participants. NOT 'completed' (workshop hasn't run; completion
-      // materials must NOT fire). Sales blocked; page reframes to the next round.
-      status: 'closed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+      // 'completed' (2026-06-15): workshop RAN on 13 June. 6 paid attendees are
+      // now alumni — full-course + workshop_location='melbourne' + past dateObj.
+      // They're the warm base for Level 2 / continuing-ed outreach (see the
+      // workshop-alumni segment). Sales blocked; page reframes to the next round.
+      status: 'completed' as 'collecting' | 'confirmed' | 'closed' | 'completed',
     },
   },
 
