@@ -46,6 +46,7 @@ export type PreflightFailureCode =
   | 'email_suppressed'
   // ICP fit
   | 'institutional_target'
+  | 'out_of_scope_discipline'
 
 export interface PreflightResult {
   ok: boolean
@@ -198,6 +199,26 @@ export async function preflightClinic(
     failures.push({ code: 'institutional_target', detail: clinic.shortName ?? emailLower })
   }
 
+  // (f) OUT-OF-SCOPE DISCIPLINE (Zac 2026-06-16): concussion training fits
+  // sports/general physio, osteo, chiro, rehab — clinics that see athletes and
+  // head injuries. A clinic whose ENTIRE focus is hands, pelvic floor, women's
+  // health, feet, skin or a gym will never want it (a hand-therapy clinic got a
+  // concussion pitch — never again).
+  const nameLower = (clinic.shortName ?? '').toLowerCase()
+  //   HARD out — single-specialty practices that don't treat concussion, even
+  //   with "physio" in the name (e.g. "Brisbane Pelvic Physiotherapy").
+  const hardOutOfScope =
+    /\b(hand therapy|hand (and|&) upper limb|pelvic|women'?s health|men'?s health|continence|incontinence|fertility|lymph(o?edema|atic)|cosmetic|skin (and|&) laser|laser clinic|dermatolog|\bdental\b|orthodont|optical|optometr|audiolog)\b/i
+  //   SOFT out — out only when there's NO general physio/osteo/chiro/sports/
+  //   rehab signal (a general practice that merely also offers podiatry stays in).
+  const generalSignal =
+    /\b(physio|physiotherap|osteo|chiro|sports?|rehab|musculo|spine|spinal|injury|exercise physio)\b/i
+  const specialtyOnly =
+    /\b(podiatr|chiropody|foot clinic|dietet|nutrition|speech (patholog|therap)|psycholog|counsell|fitness centre|\bgym\b|pilates studio)\b/i
+  if (hardOutOfScope.test(nameLower) || (specialtyOnly.test(nameLower) && !generalSignal.test(nameLower))) {
+    failures.push({ code: 'out_of_scope_discipline', detail: clinic.shortName ?? '' })
+  }
+
   // Team must have at least 1 clinical role; cohort math degrades otherwise
   const t = clinic.team
   const clinicalCount =
@@ -260,6 +281,7 @@ export async function preflightClinic(
     'team_clinical_zero',
     'email_format', 'email_disposable', 'email_mx_missing', 'email_suppressed',
     'institutional_target',
+    'out_of_scope_discipline',
   ])
   const ENRICH_CODES = new Set<PreflightFailureCode>([
     'email_role_only', 'email_dns_error',
