@@ -115,12 +115,16 @@ const BASE_CSS = `
   .badge-amber{background:#f59e0b;color:#fff}
   .purpose,.aud{font-size:12.5px;color:#475569;margin-bottom:5px}
   .purpose b,.aud b{color:#1a2332}
-  .field{display:inline-block;border-bottom:1px dotted #0a5a5e;background:#e6f3f4;padding:0 6px;color:#0a5a5e;font-weight:600;border-radius:2px 2px 0 0;min-width:140px}
+  .field{display:inline-block;border-bottom:1px dotted #0a5a5e;background:#e6f3f4;padding:0 6px;color:#0a5a5e;font-weight:600;border-radius:2px 2px 0 0;min-width:140px;cursor:text;outline:none}
+  .field:empty::before{content:attr(data-ph);color:#94a3b8;font-weight:400;font-style:italic}
+  .field:focus{background:#fff7ed;box-shadow:0 0 0 2px #f59e0b;border-bottom-color:#f59e0b}
+  .fillable-hint{background:#fffbeb;border:1px solid #fde68a;border-radius:5px;padding:9px 13px;font-size:11px;color:#92400e;margin-bottom:16px;line-height:1.5}
+  @media print{.field{background:#fff;box-shadow:none;color:#1a2332;border-bottom:1px solid #1a2332;min-width:160px}.field:empty::before{content:""}.fillable-hint{display:none}}
   .checklist{margin:16px 0;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:5px;padding:12px 16px}
   .checklist .ct{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;font-weight:700;color:#0a5a5e;margin-bottom:8px}
   .checklist ul{list-style:none}
   .checklist li{position:relative;padding:3px 0 3px 22px;font-size:11.5px}
-  .checklist li::before{content:"";position:absolute;left:0;top:4px;width:12px;height:12px;border:1.5px signedu solid #0d7377;border-radius:2px}
+  .checklist li::before{content:"";position:absolute;left:0;top:4px;width:12px;height:12px;border:1.5px solid #0d7377;border-radius:2px}
   .signoff{display:grid;grid-template-columns:1.2fr 1.4fr 0.8fr;gap:24px;margin-top:32px;page-break-inside:avoid}
   .signoff .line{border-bottom:1.5px solid #1a2332;height:30px}
   .signoff .lab{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-top:5px}
@@ -169,8 +173,20 @@ function letterhead(): string {
   return `<div class="mark"><div class="logo"></div><div><b>Concussion Education Australia</b><span>Concussion Clinical Mastery · Hub Program</span></div></div>`
 }
 
+// Shown at the top of any doc that contains fillable fields. Hidden on print.
+function fillableHint(): string {
+  return `<div class="fillable-hint"><b>✎ This is a fillable template.</b> Click any highlighted field to type your clinic's details, then <b>File → Print → Save as PDF</b>. You can also print it blank and complete by hand. Apply your clinic letterhead before issuing to patients.</div>`
+}
+
+// Render {field_name} placeholders as genuinely fillable inputs: each is a
+// contenteditable span the clinic clicks and types into directly in the
+// browser, then prints to PDF (or prints blank and completes by hand). The
+// field-name shows as a greyed prompt that disappears as soon as they type.
 function parseFields(text: string): string {
-  return escapeHtml(text).replace(/\{([a-z_]+)\}/g, (_, name) => `<span class="field">{${name}}</span>`)
+  return escapeHtml(text).replace(
+    /\{([a-z_]+)\}/g,
+    (_, name) => `<span class="field" contenteditable="true" spellcheck="false" data-ph="${name.replace(/_/g, ' ')}"></span>`,
+  )
 }
 
 function renderClinicalHTML(t: DischargeTemplate): string {
@@ -182,6 +198,7 @@ ${letterhead()}
   <span>${t.estimatedReadMinutes} min read</span>
 </div>
 <h1>${escapeHtml(t.title)}</h1>
+${fillableHint()}
 <p class="purpose"><b>When to use.</b> ${escapeHtml(t.purpose)}</p>
 <p class="aud"><b>Recipient:</b> ${escapeHtml(t.audience)}</p>
 <div class="checklist">
@@ -216,6 +233,7 @@ ${letterhead()}
   <span>${escapeHtml(t.channel.replace('-', ' '))}</span>
 </div>
 <h1>${escapeHtml(t.title)}</h1>
+${fillableHint()}
 <p class="purpose"><b>When to use.</b> ${escapeHtml(t.purpose)}</p>
 <p class="aud"><b>Recipient:</b> ${escapeHtml(t.audience)}</p>
 ${t.subject ? `<div class="subject"><div class="sl">Subject line</div><div>${parseFields(t.subject)}</div></div>` : ''}
@@ -288,7 +306,7 @@ ${scope}. Generated ${new Date().toISOString().split('T')[0]}.
 
 ## How to use
 
-Each HTML file is a standalone, print-ready document. Open in any browser, replace the {field_name} placeholders with patient/recipient-specific content, then File → Print → Save as PDF. Apply your clinic letterhead before issue.
+Each HTML file is a standalone, fillable, print-ready document. Open in any browser, then **click any highlighted field and type your clinic's / patient's details directly** — no editing required. When done, File → Print → Save as PDF. (You can also print blank and complete by hand.) Apply your clinic letterhead before issue.
 
 ## Compliance
 
