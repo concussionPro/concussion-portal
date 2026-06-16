@@ -132,7 +132,7 @@ export async function autoVerifyDueProspects(
       SELECT id, contact_email
       FROM prospect_clinics
       WHERE next_template_slug IS NOT NULL
-        AND status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
+        AND status NOT IN ('categorizing', 'archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
         AND scheduled_send_at IS NOT NULL
         AND scheduled_send_at <= NOW() + INTERVAL '3 days'
         AND verification_score IS NULL
@@ -180,7 +180,7 @@ async function countUnverifiedActive(): Promise<number> {
     const { rows } = await sql<{ n: number }>`
       SELECT COUNT(*)::int AS n FROM prospect_clinics
       WHERE verification_score IS NULL
-        AND status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
+        AND status NOT IN ('categorizing', 'archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
         AND contact_email LIKE '%@%'
     `
     return rows[0]?.n ?? 0
@@ -215,7 +215,7 @@ export async function verifyPendingApprovals(
       SELECT id, contact_email
       FROM prospect_clinics
       WHERE verification_score IS NULL
-        AND status NOT IN ('archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
+        AND status NOT IN ('categorizing', 'archived', 'lost', 'bounced', 'engaged', 'won', 'engaged-elsewhere', 'replied')
         AND contact_email LIKE '%@%'
         AND contact_email NOT LIKE 'info@%'
         AND contact_email NOT LIKE 'admin@%'

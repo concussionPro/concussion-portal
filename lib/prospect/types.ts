@@ -8,6 +8,11 @@
 export type State = 'NSW' | 'QLD' | 'VIC' | 'SA' | 'WA' | 'TAS' | 'NT' | 'ACT'
 
 export type ProspectStatus =
+  /** Imported from a bulk source (e.g. Apollo account) but NOT yet
+   *  website-categorized. Inert — no cron verifies, promotes or sends a
+   *  'categorizing' row. The website categorizer transitions it to
+   *  'researching' (in-scope, sized) or 'archived' (out-of-scope). */
+  | 'categorizing'
   | 'researching'
   | 'approved'
   | 'sent'
@@ -28,7 +33,7 @@ export type TravelBand =
   | 'flight-domestic'   // A$1,500
   | 'flight-far'        // A$2,500
 
-export type ResearchSource = 'manual' | 'llm-extracted' | 'imported'
+export type ResearchSource = 'manual' | 'llm-extracted' | 'imported' | 'apollo-import'
 
 export type CohortRecommendation = 'essential' | 'recommended' | 'full-team'
 
