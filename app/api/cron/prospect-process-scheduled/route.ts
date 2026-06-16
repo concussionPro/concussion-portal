@@ -23,6 +23,7 @@ import { sql } from '@/lib/db'
 import { processScheduledSends, computeGateBlockedBreakdown } from '@/lib/prospect/process-scheduled'
 import { computeAdaptiveCap } from '@/lib/prospect/adaptive-cap'
 import { autoVerifyDueProspects } from '@/lib/prospect/hunter-verify'
+import { repaceApprovedByConversion } from '@/lib/prospect/repace'
 
 export const maxDuration = 300
 
@@ -113,6 +114,17 @@ export async function GET(request: Request) {
   `
   console.log(`[prospect cron] auto-promoted ${promoted.rowCount ?? 0} hunter-clean researching prospects into the schedule`)
 
+  // Highest-value-first (Zac 2026-06-16): re-rank every approved clinic by
+  // conversion score and stamp scheduled_send_at on a ranked timeline (best =
+  // earliest). Runs AFTER auto-promote so freshly promoted clinics slot into
+  // the right rank, and BEFORE selection so today's send fires the best first.
+  try {
+    const repaced = await repaceApprovedByConversion()
+    console.log(`[prospect cron] conversion re-pace: ranked ${repaced} approved clinics best-first`)
+  } catch (err) {
+    console.error('[prospect cron] re-pace failed (non-fatal):', err)
+  }
+
   // Hunter HARD-GATE visibility: how many otherwise-due prospects are
   // currently stranded by the gate, and why. Read-only.
   const gateBlocked = await computeGateBlockedBreakdown()
@@ -127,13 +139,18 @@ export async function GET(request: Request) {
     })
   }
 
-  // Daily ceiling (Zac 2026-06-16): raised 30 → 50. Domain health has headroom
-  // (complaint 0.22% vs 0.30% line, bounce 2.4% vs 5%), and 50 fits the send
-  // window (9am-5:30pm at 7-10min stagger ≈ 7h of the 8.5h window). 60 is the
-  // hard cadence ceiling before the window guard stops queueing — 50 leaves
-  // margin. The adaptive cap (currently 75) stays the backstop: complaints rise,
-  // it throttles. Still staggered 7-10min — a human cadence, never a burst.
-  const COLD_SEND_DAILY_MAX = parseInt(process.env.COLD_SEND_DAILY_MAX || '50', 10) || 50
+  // Gradual ramp ceiling (Zac 2026-06-16): the Apollo import tripled the pool
+  // (~2,700), so volume needs to climb — but a clean domain warms up, it doesn't
+  // jump. Ramp +10 every 2 days from 50 to a 100 ceiling (~10 days), so daily
+  // volume rises gradually while reputation builds. The adaptive cap stays the
+  // deliverability backstop on top: any complaint/bounce spike throttles
+  // effective volume regardless of where the ramp sits. PROSPECT_CRON_CAP_OVERRIDE
+  // or COLD_SEND_DAILY_MAX env still hard-override if set.
+  const RAMP_START = Date.parse('2026-06-16T00:00:00+10:00')
+  const daysSince = Math.max(0, Math.floor((Date.now() - RAMP_START) / 86_400_000))
+  const rampedCeiling = Math.min(100, 50 + Math.floor(daysSince / 2) * 10)
+  const COLD_SEND_DAILY_MAX = parseInt(process.env.COLD_SEND_DAILY_MAX || String(rampedCeiling), 10) || rampedCeiling
+  console.log(`[prospect cron] ramp ceiling: day ${daysSince} → ${rampedCeiling}/day (env override: ${process.env.COLD_SEND_DAILY_MAX ?? 'none'})`)
   const effectiveCap = Math.min(capDecision.cap, COLD_SEND_DAILY_MAX)
   console.log(
     `[prospect cron] adaptive-cap=${capDecision.cap} · new-creative ceiling=${COLD_SEND_DAILY_MAX} · effective=${effectiveCap}`,
