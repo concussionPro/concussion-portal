@@ -24,6 +24,7 @@ import { processScheduledSends, computeGateBlockedBreakdown } from '@/lib/prospe
 import { computeAdaptiveCap } from '@/lib/prospect/adaptive-cap'
 import { autoVerifyDueProspects } from '@/lib/prospect/hunter-verify'
 import { repaceApprovedByConversion } from '@/lib/prospect/repace'
+import { todaysSentCount } from '@/lib/prospect/repo'
 
 export const maxDuration = 300
 
@@ -151,9 +152,16 @@ export async function GET(request: Request) {
   const rampedCeiling = Math.min(100, 50 + Math.floor(daysSince / 2) * 10)
   const COLD_SEND_DAILY_MAX = parseInt(process.env.COLD_SEND_DAILY_MAX || String(rampedCeiling), 10) || rampedCeiling
   console.log(`[prospect cron] ramp ceiling: day ${daysSince} → ${rampedCeiling}/day (env override: ${process.env.COLD_SEND_DAILY_MAX ?? 'none'})`)
-  const effectiveCap = Math.min(capDecision.cap, COLD_SEND_DAILY_MAX)
+  // TRUE daily cap (Zac 2026-06-17): subtract what already went out today so a
+  // backup/catch-up run on the SAME day only sends the remainder — never a
+  // double batch. Critical now that a second schedule exists to self-heal a
+  // missed cron (the Jun 16-17 stall: Vercel skipped the scheduled send-cron
+  // during heavy redeploys, leaving 356 due clinics unsent for 2 days while the
+  // verify cron kept running. Manual trigger always worked — the code was fine).
+  const alreadyToday = await todaysSentCount()
+  const effectiveCap = Math.max(0, Math.min(capDecision.cap, COLD_SEND_DAILY_MAX) - alreadyToday)
   console.log(
-    `[prospect cron] adaptive-cap=${capDecision.cap} · new-creative ceiling=${COLD_SEND_DAILY_MAX} · effective=${effectiveCap}`,
+    `[prospect cron] adaptive-cap=${capDecision.cap} · ceiling=${COLD_SEND_DAILY_MAX} · alreadySentToday=${alreadyToday} · effective=${effectiveCap}`,
   )
 
   // allowPatternGuess stays false: the SQL HARD GATE (Hunter score>=80,

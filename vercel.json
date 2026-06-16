@@ -29,6 +29,10 @@
       "schedule": "0 22 * * 5"
     },
     {
+      "path": "/api/cron/prospect-process-scheduled",
+      "schedule": "0 1 * * 1-6"
+    },
+    {
       "path": "/api/cron/ai-course-content-refresh",
       "schedule": "0 20 1 * *"
     },
