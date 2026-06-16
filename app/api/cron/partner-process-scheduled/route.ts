@@ -18,6 +18,7 @@ import crypto from 'crypto'
 import { Resend } from 'resend'
 import { sql } from '@/lib/db'
 import { computeAdaptiveCap } from '@/lib/prospect/adaptive-cap'
+import { verifyEmailAddress, HunterRateLimitError } from '@/lib/prospect/hunter-verify'
 
 export const maxDuration = 300
 
@@ -104,6 +105,42 @@ export async function GET(request: NextRequest) {
     // Space the API CALLS to stay under Resend's 2 req/sec limit (the stagger
     // above is delivery time; this delay is the call rate).
     await new Promise((r) => setTimeout(r, 700))
+
+    // HARD GATE (Zac 2026-06-16): school/academy contacts were pattern-guessed
+    // (smclean@terrace.qld.edu.au) and went out UNVERIFIED — three bounced onto
+    // the shared domain on the first batch. Verify every address against Hunter
+    // before sending, mirroring the clinic lane. Undeliverable/invalid/disposable
+    // → suppress permanently (status='bounced'); catch-all/unknown/low-score →
+    // hold as a lead (no send, no DB change) so it can be re-checked or replaced.
+    let verdict
+    try {
+      verdict = await verifyEmailAddress(inst.contact_email)
+    } catch (err) {
+      if (err instanceof HunterRateLimitError) {
+        results.push({ name: inst.name, outcome: 'skipped: hunter credits exhausted' })
+        break
+      }
+      results.push({ name: inst.name, outcome: `skipped: verify error` })
+      continue
+    }
+    if (verdict.bounce) {
+      // Undeliverable / invalid / disposable — a real bounce. Suppress forever.
+      await sql`UPDATE partner_institutions SET status='bounced' WHERE id=${inst.id}`
+      results.push({ name: inst.name, outcome: `suppressed: ${verdict.status}/${verdict.result}` })
+      continue
+    }
+    // Partnership rule (looser than the clinic lane on purpose): a catch-all
+    // edu/gov domain ACCEPTS mail, so it won't bounce — sending there is safe.
+    // Only genuine uncertainty (status/result 'unknown', not deliverable, not
+    // catch-all) is held. We deliberately DON'T suppress holds: the mailbox may
+    // be real, so it stays a 'lead' for a contact upgrade rather than burning it.
+    const sendable = verdict.result === 'deliverable' || verdict.status === 'accept_all'
+    if (!sendable) {
+      await sql`UPDATE partner_institutions SET status='needs_contact' WHERE id=${inst.id}`
+      results.push({ name: inst.name, outcome: `held: ${verdict.status}/${verdict.result} score=${verdict.score}` })
+      continue
+    }
+
     const firstName = (inst.contact_name && !/reception|office|general/i.test(inst.contact_name))
       ? inst.contact_name.split(' ')[0] : 'there'
     const { subject, text, html } = buildPitch(inst.name, inst.slug, firstName)

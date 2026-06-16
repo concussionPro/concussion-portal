@@ -62,6 +62,38 @@ async function verifyOne(email: string, key: string): Promise<HunterVerifierResp
   return json
 }
 
+/** Normalized single-email verdict for callers outside the prospect lane
+ *  (e.g. the partnership cron) that need the same deliverability gate without
+ *  the prospect_clinics-specific column plumbing. */
+export interface EmailVerdict {
+  /** Passes the same HARD GATE the clinic lane uses: deliverable, score>=80,
+   *  not disposable, not a catch-all (accept_all can't be trusted). Safe to send. */
+  ok: boolean
+  /** True only for status='invalid'/result='undeliverable'/disposable — a real
+   *  bounce risk that should be suppressed permanently, not retried. */
+  bounce: boolean
+  score: number
+  status: string
+  result: string
+}
+
+/** Verify a single address against Hunter, normalized to a send/skip/suppress
+ *  verdict. Throws HunterRateLimitError on credit exhaustion (caller stops the
+ *  batch). Throws plain Error if no API key. */
+export async function verifyEmailAddress(email: string, key = process.env.HUNTER_API_KEY): Promise<EmailVerdict> {
+  if (!key) throw new Error('HUNTER_API_KEY not set')
+  const json = await verifyOne(email, key)
+  const d = json.data ?? {}
+  const status = d.status ?? 'unknown'
+  const result = d.result ?? 'unknown'
+  const score = d.score ?? 0
+  const disposable = !!d.disposable || status === 'disposable'
+  const acceptAll = !!d.accept_all || status === 'accept_all'
+  const bounce = result === 'undeliverable' || status === 'invalid' || disposable
+  const ok = result === 'deliverable' && score >= 80 && !disposable && !acceptAll
+  return { ok, bounce, score, status, result }
+}
+
 export interface AutoVerifyResult {
   examined: number
   kept: number
