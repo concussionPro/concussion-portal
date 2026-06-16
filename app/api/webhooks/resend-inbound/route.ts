@@ -290,7 +290,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── 2. SQUARESPACE FORM NOTIFICATIONS (unchanged path) ──
+    // ── 2. SQUARESPACE FORM NOTIFICATIONS ──
+    // Guard (Zac 2026-06-16): reply capture works by FORWARDING zac@ replies to
+    // this endpoint (Gmail filter on "Re:" → inbound address). That means plenty
+    // of forwarded mail is neither a prospect reply nor a Squarespace form. Only
+    // run the form parser + "needs review" alert when the mail actually LOOKS
+    // like a Squarespace form notification — otherwise silently 200, so broad
+    // forwarding never spams Zac's inbox with review notices.
+    const looksLikeSquarespaceForm =
+      /squarespace/i.test(fromEmail ?? '') ||
+      /\bform submission\b/i.test(subject) ||
+      (/\bForm:/i.test(bodyText) && /\b(name|email)\b/i.test(bodyText))
+    if (!looksLikeSquarespaceForm) {
+      return NextResponse.json({ success: true, ignored: 'not a prospect reply or form notification' })
+    }
+
     const parsed = parseSquarespaceEmail({ subject, bodyText })
 
     if (!parsed.ok) {
