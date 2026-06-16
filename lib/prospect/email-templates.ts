@@ -118,7 +118,19 @@ const SOLO_PLURAL: Record<Discipline, string> = {
 
 // Verified regulatory hook — the single relevance sentence shared by all tiers.
 const REGULATORY_LINE =
-  'Community sport now carries a mandatory 21-day stand-down (2024 AIS/SMA guidelines), and physios and GPs are named clearance providers.'
+  'Community sport now carries a mandatory 21-day stand-down under the AIS/SMA concussion guidelines, and physios and GPs are named clearance providers.'
+
+// Season-aware opener prefix (Zac 2026-06-16, data-backed: timeliness lifts
+// cold reply rates — the first line is what gets read). AU contact-sport
+// (AFL/NRL/rugby/football) runs ~Apr-Sep, when concussion presentations peak;
+// Feb-Mar is pre-season ramp. Off-season we don't force a seasonal claim.
+// `now` injectable for tests. Returns '' or a short lead-in clause.
+function seasonalPrefix(now: Date = new Date()): string {
+  const m = now.getMonth() // 0=Jan
+  if (m >= 3 && m <= 8) return 'With winter sport season underway, ' // Apr-Sep
+  if (m === 1 || m === 2) return 'With footy season about to start, ' // Feb-Mar
+  return ''
+}
 
 // The pitch IS the custom portal (Zac 2026-06-10). Every prospect has a
 // pre-built, clinic-branded dashboard at /p/<slug> — their learning suite
@@ -306,14 +318,16 @@ export function mergeTemplate(
   // reference docs; then ONE tier-matched line — on-site for large (≥6),
   // Hub Pack for medium (2-5), self-paced course for solo (≤1) — + clean link.
   const tierLine = isOnSiteTarget
-    ? `For a team ${safeShortName}'s size the step up is an on-site practical day — your clinicians trained on your own cases, 14 CPD hours each, OA endorsed.`
+    ? `For a team ${safeShortName}'s size the natural step is an on-site practical day — your team trained on your own cases, ready to manage concussion in-house. 14 CPD hours each, Osteopathy Australia endorsed.`
     : isIndividualTarget
-      ? `The full course is self-paced online — 14 CPD hours, OA endorsed.`
-      : `For a team your size the Hub Pack trains everyone online plus your own clinic-branded toolkit — 14 CPD hours each, OA endorsed.`
+      ? `The full course is self-paced online — everything to manage concussion, 14 CPD hours, Osteopathy Australia endorsed.`
+      : `For a team your size the Hub Pack trains everyone online plus your own clinic-branded toolkit, ready to manage concussion in-house. 14 CPD hours each, Osteopathy Australia endorsed.`
+  const sp = seasonalPrefix()
+  const hook = sp ? sp + REGULATORY_LINE.charAt(0).toLowerCase() + REGULATORY_LINE.slice(1) : REGULATORY_LINE
   const t1Body = [
-    `<p>${REGULATORY_LINE} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
-    `<p>I've put a concussion kit together for ${safeShortName}: the fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial — yours to use. You can also preview the course — the clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library — which unlock when you enrol.</p>`,
-    `<p>${tierLine} It's all here: ${FREE_LINK}</p>`,
+    `<p>${hook} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
+    `<p>I've put a concussion kit together for ${safeShortName}: the fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial — yours to use. The clinical toolkit, admin pack and reference library preview too, and unlock with the course.</p>`,
+    `<p>${tierLine} I've set it up for ${safeShortName} here: ${FREE_LINK}</p>`,
   ].join('\n')
 
   // T2 — re-offer: free tools + the toolkit/docs value + the tier line, clean

@@ -85,10 +85,13 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     expect(html).not.toContain('1190')
   })
 
-  it('T1 stays tight (product-led, under 110 words)', () => {
+  it('T1 stays tight (product-led, under 120 words)', () => {
+    // 120 aligns with the hygiene test below + cold-email best practice (the
+    // sweet spot is ~50-125 words). The seasonal hook + capability/ROI framing
+    // (Zac 2026-06-16 conversion pass) sit inside this budget.
     const { html } = mergeTemplate(T1, clinic({ team: team(8) }), 'https://example.com', 'tok')
     const words = html.replace(/<[^>]+>/g, ' ').split('Zac Lewis')[0].split(/\s+/).filter((w) => /[a-z0-9]/i.test(w)).length
-    expect(words, `T1 = ${words} words`).toBeLessThan(110)
+    expect(words, `T1 = ${words} words`).toBeLessThan(120)
   })
 
   it('T2 re-offers the free tools + the toolkit/docs value', () => {
