@@ -23,7 +23,7 @@ import { config } from 'dotenv'
 config({ path: '.env.local' })
 const { sql } = await import('@vercel/postgres')
 
-const CONCURRENCY = 10
+const CONCURRENCY = 20
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36'
 
 const IN_SCOPE = /\b(physiotherap|physio\b|osteopath|chiropract|sports? (injur|medicin|physio|therap)|exercise physiolog|myotherap|rehabilitation|musculoskeletal|sports? rehab|movement|allied health)\b/i
@@ -43,9 +43,7 @@ async function fetchText(url, ms = 8000) {
 
 // Common team-page paths to GUESS directly — many clinic sites have these at
 // predictable URLs even when the homepage nav is JS-rendered and unlinkable.
-const TEAM_PATHS = ['/our-team', '/team', '/about-us', '/about', '/our-practitioners',
-  '/practitioners', '/our-staff', '/staff', '/meet-the-team', '/our-people', '/people',
-  '/clinicians', '/our-physiotherapists', '/physiotherapists', '/osteopaths']
+const TEAM_PATHS = ['/our-team', '/team', '/about-us', '/our-staff', '/meet-the-team']
 
 function teamLinks(html, base) {
   const links = new Set()
@@ -58,7 +56,7 @@ function teamLinks(html, base) {
     }
   }
   // Add guessed paths the homepage didn't link.
-  for (const p of TEAM_PATHS) { if (links.size >= 6) break; try { links.add(new URL(p, base).toString()) } catch { /* skip */ } }
+  for (const p of TEAM_PATHS) { if (links.size >= 4) break; try { links.add(new URL(p, base).toString()) } catch { /* skip */ } }
   return [...links]
 }
 
@@ -106,15 +104,16 @@ function classify(text) {
 
 async function categorizeOne(row) {
   const base = row.clinic_website_url
-  const home = await fetchText(base)
+  const home = await fetchText(base, 6000)
   let text = stripTags(home.html)
   let anyOk = home.ok
   // Fetch team/about pages — from homepage links AND guessed paths. Done even
   // when the homepage failed, so a JS-only homepage with a server-rendered
-  // /our-team still gets sized.
+  // /our-team still gets sized. Stop early once we have a strong size signal.
   const links = teamLinks(home.ok ? home.html : '', base)
   for (const link of links) {
-    const p = await fetchText(link, 5000)
+    if ((text.match(TITLES) || []).length >= 8) break // already clearly on-site
+    const p = await fetchText(link, 4000)
     if (p.ok && p.html.length > 300) { text += ' ' + stripTags(p.html); anyOk = true }
   }
 
