@@ -15,8 +15,9 @@ import { module4 } from './module-4'
 import { module5 } from './module-5'
 import { module6 } from './module-6'
 import { module7 } from './module-7'
+import { module8 } from './module-8'
 
-export const epModules: Module[] = [module1, module2, module3, module4, module5, module6, module7]
+export const epModules: Module[] = [module1, module2, module3, module4, module5, module6, module7, module8]
 
 export function getEpModuleById(id: number): Module | undefined {
   return epModules.find((m) => m.id === id)

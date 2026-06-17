@@ -1,9 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getEpModulesMeta as getModulesMeta } from '@/data/ep-modules'
 import { useProgress } from '@/contexts/ProgressContext'
-import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket, Library, Award } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -270,6 +271,22 @@ export function EpCourseNavigation({
             )
           })}
         </nav>
+
+        {/* Course resources — the rest of the suite */}
+        <div className="px-3 pb-4">
+          <p className="px-2 mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Resources</p>
+          <Link
+            href="/ep-course/references"
+            className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-50"
+          >
+            <Library className="h-4 w-4 text-slate-400" />
+            Reference Repository
+          </Link>
+          <div className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-slate-400">
+            <Award className="h-4 w-4 text-slate-300" />
+            Certificate <span className="ml-auto text-[10px]">on completion</span>
+          </div>
+        </div>
       </div>
 
       {/* Footer Stats */}
