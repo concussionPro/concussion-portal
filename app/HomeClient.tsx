@@ -126,6 +126,32 @@ export default function HomeClient() {
 
                 <div className="relative space-y-4">
 
+                  {/* Product showcase — the online learning suite. Always shown,
+                      so the hero never goes image-less when no workshop is
+                      'confirmed' (e.g. after Melbourne flipped to 'completed'). */}
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)]">
+                    <div className="relative aspect-[16/10] bg-slate-900 overflow-hidden">
+                      <Image
+                        src="/ccm-online-preview.png"
+                        alt="Concussion Clinical Mastery online learning suite — interactive modules with quizzes, checkpoints and clinical references"
+                        fill
+                        sizes="(min-width: 1024px) 460px, 100vw"
+                        className="object-cover object-top"
+                        priority
+                      />
+                      <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
+                        <BookOpen className="w-3 h-3 text-[var(--accent)]" aria-hidden="true" />
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]">The online course</span>
+                      </div>
+                    </div>
+                    <div className="p-4 md:p-5">
+                      <p className="text-sm font-bold text-slate-900">8 interactive online modules</p>
+                      <p className="mt-1 text-sm text-slate-600 leading-snug">
+                        SCAT6, VOMS &amp; BESS, return-to-play and phenotype rehab — with quizzes, checkpoints &amp; 140+ references.
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Next workshop — Melbourne (hero-scale card with large photo) */}
                   {CONFIG.LOCATIONS.MELBOURNE.status === 'confirmed' && (
                     <Link

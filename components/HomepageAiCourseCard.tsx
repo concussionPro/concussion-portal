@@ -18,6 +18,9 @@ export function HomepageAiCourseCard() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Flip waitlist → live on the launch date (AEST) so the card never goes stale.
+  const launched = Date.now() >= Date.parse('2026-06-17T00:00:00+10:00')
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -61,11 +64,11 @@ export function HomepageAiCourseCard() {
       <div className="relative flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200 flex items-center justify-center shrink-0">
-            <Lock className="w-5 h-5 text-amber-700" />
+            {launched ? <Sparkles className="w-5 h-5 text-amber-700" /> : <Lock className="w-5 h-5 text-amber-700" />}
           </div>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-amber-700">
-              Launches 17 June 2026
+              {launched ? 'Now available' : 'Launches 17 June 2026'}
             </p>
             <p className="text-[11px] text-slate-600 font-medium">New short course</p>
           </div>
@@ -98,8 +101,18 @@ export function HomepageAiCourseCard() {
         ))}
       </div>
 
-      {/* Email signup form OR confirmation */}
-      {submitted ? (
+      {/* Live CTA once launched; otherwise the waitlist form */}
+      {launched ? (
+        <div className="relative space-y-2">
+          <a
+            href="/courses/ai-in-clinical-practice"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0b6165]"
+          >
+            <Sparkles className="w-3.5 h-3.5" /> Start the course
+          </a>
+          <p className="text-[10px] text-slate-500 italic">Launch-week price — A$99 (50% off A$197).</p>
+        </div>
+      ) : submitted ? (
         <div className="relative rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
           <p className="text-xs font-semibold text-emerald-900 flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5" />
