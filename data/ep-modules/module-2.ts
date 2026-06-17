@@ -4,8 +4,8 @@ export const module2: Module = {
   id: 2,
   title: 'Recognition, Red Flags & Scope of Practice',
   subtitle: 'Knowing What You Can See, What to Escalate, and Where the EP Sits in the Care Team',
-  duration: '60 min',
-  points: 1,
+  duration: '45 min',
+  points: 0.75,
   description:
     'The accredited exercise physiologist (AEP) recognises concussion signs and red flags and escalates appropriately — they do not diagnose concussion or grant clearance. This module defines the recognise-don\'t-diagnose boundary, the red flags requiring urgent medical escalation, the EP\'s lane within the concussion pathway, when to refer out to other disciplines, and where the active-rehab specialist sits in the multidisciplinary team.',
   sections: [

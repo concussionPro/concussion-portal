@@ -289,4 +289,20 @@ export const module3: Module = {
     'Mucha, A., Collins, M. W., Elbin, R. J., et al. (2014). A brief vestibular/ocular motor screening (VOMS) assessment to evaluate concussions: preliminary findings. American Journal of Sports Medicine, 42(10), 2479-2486. https://doi.org/10.1177/0363546514543775',
     'Patricios, J. S., Schneider, K. J., Dvorak, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport–Amsterdam, October 2022. British Journal of Sports Medicine, 57(11), 695-711. https://doi.org/10.1136/bjsports-2023-106898',
   ],
+  parts: [
+    {
+      id: 'part-a',
+      title: 'Part A — Administering the Test',
+      subtitle: 'Screening, the Balke protocol and finding the symptom threshold',
+      sectionIds: ['learning-outcomes', 'assessment-is-treatment', 'pre-test-screening', 'baseline-and-protocol', 'termination-and-hrt'],
+      quizIds: ['q1', 'q2', 'q3'],
+    },
+    {
+      id: 'part-b',
+      title: 'Part B — From Threshold to Prescription',
+      subtitle: 'Turning HRt into the exercise dose, re-testing and outcome measures',
+      sectionIds: ['threshold-to-prescription', 'variants-and-retesting', 'adjunct-measures', 'worked-example'],
+      quizIds: ['q4', 'q5', 'q6'],
+    },
+  ],
 }

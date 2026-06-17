@@ -4,8 +4,8 @@ export const module4: Module = {
   id: 4,
   title: 'Sub-Symptom-Threshold Aerobic Rehabilitation',
   subtitle: 'Prescribing, Monitoring and Progressing Active Recovery',
-  duration: '90 min',
-  points: 1.5,
+  duration: '75 min',
+  points: 1.25,
   description:
     'The core exercise-physiology skill applied to concussion: turning a Buffalo Concussion Treadmill Test heart-rate threshold into a precise, individualised aerobic prescription. This module covers FITT programming for sub-symptom-threshold aerobic exercise, the symptom-monitoring rule that governs every session, the re-test-driven progression algorithm, interval and cross-training considerations, the autonomic-reconditioning rationale, and how to manage the deconditioned or anxious patient. It also sets the boundaries of AEP scope — you implement and progress the program; you do not diagnose concussion or grant medical clearance.',
   sections: [

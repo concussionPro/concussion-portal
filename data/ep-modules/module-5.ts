@@ -4,8 +4,8 @@ export const module5: Module = {
   id: 5,
   title: 'Phenotype-Specific Exercise Rehabilitation',
   subtitle: 'Vestibular, Cervical and Oculomotor Exercise Within EP Scope',
-  duration: '90 min',
-  points: 1.5,
+  duration: '75 min',
+  points: 1.25,
   description:
     'A practical exercise library for the AEP, organised by concussion phenotype. Where Module 4 covered the aerobic (physiological) pathway, this module covers the vestibular, cervical and oculomotor pathways — the gaze-stabilisation, habituation, dynamic-balance, deep-neck-flexor, proprioceptive and ocular drills you can prescribe, dose and progress. Every exercise is presented with sets, reps, frequency and a symptom-titrated dosing rule, alongside a clear boundary: you deliver the exercise-based rehabilitation, and you refer the refractory, complex or red-flag presentation to vestibular physiotherapy or behavioural optometry. You implement and progress the program; you do not diagnose concussion, and you do not perform the differential-diagnostic or repositioning procedures that sit outside AEP scope.',
   sections: [

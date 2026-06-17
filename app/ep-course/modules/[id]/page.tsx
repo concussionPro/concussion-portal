@@ -12,7 +12,7 @@ import { DynamicContentRenderer } from '@/components/course/DynamicContentRender
 import { DownloadableResources } from '@/components/course/DownloadableResources'
 import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
 import { ContentLockedBanner } from '@/components/course/ContentLockedBanner'
-import { SectionInteractiveElements } from '@/components/course/SectionInteractiveElements'
+import { EpInteractiveElements } from '@/components/ep-course/EpInteractiveElements'
 import { SectionStepper, type VirtualSection } from '@/components/course/SectionStepper'
 import { SectionNavButtons } from '@/components/course/SectionNavButtons'
 import { SectionTypeBadge, estimateReadingTime } from '@/components/course/SectionTypeBadge'
@@ -870,10 +870,9 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
 
                     {/* Content — full width, no flex constraint */}
                     <DynamicContentRenderer content={section.content} sectionIndex={currentSectionIndex} />
-                    <SectionInteractiveElements
+                    <EpInteractiveElements
                       moduleId={moduleId}
                       section={section}
-                      sectionIndex={currentSectionIndex}
                     />
                   </div>
 

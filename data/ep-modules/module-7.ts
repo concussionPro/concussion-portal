@@ -5,7 +5,7 @@ export const module7: Module = {
   title: 'Persistent Symptoms & the Complex Case',
   subtitle: 'When Recovery Stalls — Prolonged Exercise Intolerance, Comorbidity and Escalation',
   duration: '45 min',
-  points: 1,
+  points: 0.75,
   description:
     'The straightforward sub-symptom-threshold path resolves most concussions, but a minority do not follow the script. This module addresses the harder cases the exercise physiologist meets when recovery stalls: persistent post-concussion symptoms (PPCS), stubbornly low exercise tolerance and autonomic dysfunction, and the comorbid, deconditioned or anxious patient whose psychology slows the rehab. It sets out a clear decision framework for when the program plateaus — reassess the threshold, screen for cervical and vestibular drivers, re-refer for medical review, escalate red flags — and works through two complex cases. Throughout, the AEP\'s lane is held firm: you deliver and adapt active rehabilitation and you recognise when to route back. You do not diagnose PPCS and you do not grant clearance.',
   sections: [
