@@ -116,7 +116,7 @@ export const module8: Module = {
   ],
   quiz: [
     {
-      id: 'm7q1',
+      id: 'm8q1',
       question:
         'When an AEP writes up a Buffalo Concussion Treadmill Test result in the assessment record, how should the interpretation be framed?',
       options: [
@@ -130,7 +130,7 @@ export const module8: Module = {
         'The BCTT gives an exercise-tolerance finding, and the EP records and interprets it within scope ("findings consistent with", "suitable for"). It is not a diagnosis (that belongs to the diagnosing clinician) and it is certainly not contact clearance (a medical decision). The record should always be made — within scope.',
     },
     {
-      id: 'm7q2',
+      id: 'm8q2',
       question:
         'Which set of data points belongs on the session and progression tracking sheet?',
       options: [
@@ -144,7 +144,7 @@ export const module8: Module = {
         'The tracking sheet is a structured, contemporaneous record of each session: date, exercise and target, HR response, pre/post symptom score, RPE, duration completed versus prescribed, and adherence. The HR–symptom–duration trend over time is the most clinically informative pattern and feeds your referrer letters.',
     },
     {
-      id: 'm7q3',
+      id: 'm8q3',
       question:
         'In an EP-to-referrer letter, what is the correct way to handle return-to-contact clearance?',
       options: [
@@ -158,7 +158,7 @@ export const module8: Module = {
         'Clearance for return to contact is a medical decision. The EP letter signals progress, names the next decision, and explicitly returns that decision to the medical practitioner — for example, "I recommend medical review to consider clearance for return-to-contact, which sits outside my scope as an exercise physiologist." Recommend, don\'t clear.',
     },
     {
-      id: 'm7q4',
+      id: 'm8q4',
       question:
         'An AEP wants to use an AI clinical-scribe tool to draft session notes. Which statement reflects correct practice?',
       options: [
@@ -172,7 +172,7 @@ export const module8: Module = {
         'AI scribes are an efficiency aid, not a transfer of accountability. The clinician must review and approve every note (tools can mishear numbers or fabricate detail), the patient must consent to any recording, and because health information is sensitive information under the APPs, the EP must know where the data is sent and stored before adopting the tool.',
     },
     {
-      id: 'm7q5',
+      id: 'm8q5',
       question:
         'Under sound record-keeping and Australian Privacy Principles standards, how should an AEP handle an error discovered in an earlier clinical note?',
       options: [
