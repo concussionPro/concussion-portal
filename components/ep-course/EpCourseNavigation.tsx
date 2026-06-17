@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getEpModulesMeta as getModulesMeta } from '@/data/ep-modules'
 import { useProgress } from '@/contexts/ProgressContext'
-import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket, Library, Award } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket, Library, Award, Wrench } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -281,6 +281,13 @@ export function EpCourseNavigation({
           >
             <Library className="h-4 w-4 text-slate-400" />
             Reference Repository
+          </Link>
+          <Link
+            href="/ep-course/toolkit"
+            className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-50"
+          >
+            <Wrench className="h-4 w-4 text-slate-400" />
+            Clinical Toolkit
           </Link>
           <div className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-slate-400">
             <Award className="h-4 w-4 text-slate-300" />
