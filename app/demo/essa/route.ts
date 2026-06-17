@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  const dest = new URL('/courses/concussion-ep-rehab', request.url)
+  const dest = new URL('/ep-course/modules/1', request.url)
   const key = process.env.HEIDI_DEMO_KEY
   if (!key) return NextResponse.redirect(dest)
 
