@@ -17,13 +17,13 @@ Single source of truth for every distribution lever. **Drafts are for Zac to rev
 | **Guild Insurance** | allied-health insureds | in progress (via OA warm intro) | MED | Waiting to hear back. Member-discount distribution. |
 | **Chiropractors (ACA)** | ~6,000 | not started | MED | Near-peer to osteos — flagship course fits with little adaptation. Draft below. |
 | **OT Australia** | ~25,000 | not started | MED | Genuine but scope-specific (return-to-work/school, cognitive-fatigue). Needs an OT stream if they engage. Draft below. |
-| **OA (Osteopathy Australia)** | ~3,000 | running | LOW | **Low yield — 2 of 6 weekend attendees came from the OA ad.** Near its ceiling (small profession). |
+| **OA (Osteopathy Australia)** | ~3,000 | running | MED | Endorsed channel, running. One anecdote (2/6 weekend attendees via the OA ad) — too thin to judge; pool capped by profession size (~3k). |
 | **APA (physios)** | ~37,000 | **declined** | — | Said no. Reach physios via the cold engine + affiliates instead. |
 | **SMA (sports medicine)** | — | **declined** | — | Said no. |
 | **RACGP (GPs)** | — | **out** | — | Out. ACRRM (rural GPs) untested — separate college, real community-sport exposure. |
 | **Behavioural optometry (ACBO)** | hundreds | not started | LOW | Niche — the oculomotor/vision phenotype only. |
 
-**Read on the data:** OA's 2/6 + APA/SMA/RACGP rejections show **professional-body endorsement is a low-yield, capped lever** for us. Treat bodies (ESSA/chiro/OT) as cheap accreditation *listings* (small, consistent trickle) — the real volume is **affiliates** (engaged audiences) and **sporting-code licensing** (captive, mandated demand) and the **cold engine** (already the best-yielding channel — 4 of the 6 weekend attendees).
+**Read on the data — DON'T over-conclude.** We have almost no real channel-attribution data. The one anecdote (2 of 6 weekend attendees credited to the OA ad) is n=6 — statistically meaningless, and 2/6 from a single endorsement ad isn't even poor. The APA/SMA/RACGP "no"s are about *partnership appetite*, not yield. So **don't pre-rank or write off bodies.** Working hypothesis only (first-principles, unproven): a passive catalogue *listing* probably converts lower than an *engaged* affiliate audience or a *captive* sporting-code audience — so pursue all of them, but the real fix is **measuring channel attribution** (tag where each enrolment comes from) instead of guessing from one workshop.
 
 ---
 
@@ -97,4 +97,4 @@ You've gone via the OA warm intro (→ Christie Boucher, RiskHQ). Only nudge if 
 4. **Chiro (ACA) + OT** — cheap accreditation listings; OT needs a stream if they bite.
 5. Guild — follow up if quiet. Avant/ACRRM — only if the above stall.
 
-Bodies are a badge + small trickle. Affiliates + sporting codes are where the volume is.
+Run several in parallel and **measure attribution** — don't rank channels off one workshop. First-principles hunch is that engaged (affiliate) and captive (sporting-code) audiences out-convert passive catalogue listings, but that's a hypothesis to test, not a finding.
