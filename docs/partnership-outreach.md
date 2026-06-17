@@ -64,9 +64,29 @@ GPs *are* named clearance providers, so there's a real angle, but it's a doctor 
 
 ---
 
-## 4. ESSA endorsement — application, not outreach (only if you want EPs)
+## 4. ESSA — real demand (Zac 2026-06-17: multiple EPs have already asked if the course suits them)
 
-ESSA = the exercise-physiologist body (~10k members). This isn't an email — it's a **course-endorsement application** (forms-driven, ~2h). EPs do concussion *rehab*, so it's a fit, but it's a secondary audience. Flagged here for completeness; say the word and I'll draft the full application package (learning outcomes mapped to ESSA CPD criteria, hours, assessment summary).
+ESSA = exercise-physiologist body (~10k members). **Demand is proven** — EPs have reached out unprompted. Scope framing is critical: **EPs don't diagnose/clear concussion (physios + GPs do, under the 21-day stand-down) — they IMPLEMENT the rehab** (graded return-to-activity, sub-symptom-threshold exertion, reconditioning, return-to-performance load progression). Lead the pitch with the existing demand; respect the scope to earn credibility.
+
+**Email draft (to ESSA Education & Partnerships):**
+> Subject: Concussion rehab CPD — your members are already asking
+>
+> Hi [ESSA Education & Partnerships team],
+>
+> I'm Zac Lewis, an osteopath. I've built Concussion Clinical Mastery — a 14-CPD-hour concussion program, Osteopathy Australia endorsed.
+>
+> I'm reaching out because several of your members have already approached me directly, asking whether the course suits exercise physiologists. The demand is clearly there, and I'd like to make it properly accessible to ESSA members.
+>
+> The fit is specific to EP scope. EPs don't diagnose or clear concussion — that sits with physios and GPs under the AIS/SMA 21-day stand-down guidelines. But EPs own the part that gets the athlete back: the graded return-to-activity and sub-symptom-threshold exertion protocols, reconditioning and load progression through to return to performance. The course gives them a concussion-specific, guideline-aligned framework to deliver exactly that — confidently and within scope.
+>
+> Concussion rehab is an underserved CPD area for AEPs, and there's a clear safety and capability case. I'd love to explore ESSA endorsement, or a member CPD benefit — whatever best fits how you support members.
+>
+> Could we find 15 minutes this week or next?
+>
+> Zac Lewis, Osteopath
+> Concussion Education Australia
+
+If ESSA engages, the next step is their **course-endorsement application** (forms-driven, ~2h — learning outcomes mapped to ESSA CPD criteria). Say the word and I'll draft that package.
 
 ---
 
