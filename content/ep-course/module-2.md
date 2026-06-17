@@ -1,0 +1,278 @@
+# Recognition, Red Flags & Scope of Practice
+
+---
+
+> Knowing What You Can See, What to Escalate, and Where the EP Sits in the Care Team
+
+The accredited exercise physiologist (AEP) recognises concussion signs and red flags and escalates appropriately — they do not diagnose concussion or grant clearance. This module defines the recognise-don't-diagnose boundary, the red flags requiring urgent medical escalation, the EP's lane within the concussion pathway, when to refer out to other disciplines, and where the active-rehab specialist sits in the multidisciplinary team.
+
+## Learning Outcomes
+
+By the end of this module, the accredited exercise physiologist (AEP) will be able to:
+
+- Recognise the typical presentation of concussion and the observable signs and reported symptoms that should raise suspicion.
+
+- Apply escalation triggers — identify the red flags that mandate urgent medical or emergency referral and act on them without delay.
+
+- Articulate AEP scope boundaries in concussion: clearly state what an exercise physiologist can and cannot do, and why diagnosis and clearance sit outside EP practice.
+
+- Navigate referral-in and referral-out pathways — understand how a concussion case reaches the EP, and recognise when symptoms warrant referral to vestibular physiotherapy, a sports physician or GP, psychology, or neurology.
+
+- Position the EP role accurately within the multidisciplinary concussion team as the active-rehabilitation specialist.
+
+[KEYPOINT: This module is about boundaries as much as competence. The strongest concussion EP is not the one who tries to do everything — it is the one who recognises early, escalates fast, stays in lane, and communicates clearly with the team.]
+
+## The EP Scope Boundary: Recognise, Don't Diagnose
+
+This is the single most important concept in the entire course, and it underpins everything that follows. An accredited exercise physiologist (AEP) RECOGNISES concussion and ESCALATES. An AEP does NOT diagnose concussion, and does NOT provide medical clearance to return to contact sport, work, or driving.
+
+### Why the boundary exists
+
+Concussion is a clinical diagnosis made by a medical practitioner — a GP, sports and exercise medicine physician, emergency physician, or neurologist. Diagnosis requires ruling out structural injury (intracranial bleed, skull fracture, cervical spine injury), interpreting the mechanism and red flags, and exercising medical authority that allied health professionals do not hold. Under the ESSA AEP Scope of Practice, exercise physiologists are non-medical allied health professionals: they deliver clinical exercise interventions, not medical diagnosis.
+
+Equally, return-to-contact and medical clearance decisions carry medico-legal weight and require a medical practitioner. The Australian Concussion Guidelines for Youth and Community Sport (AIS / Concussion in Sport Australia) are explicit that an athlete with a suspected concussion must be reviewed by a medical doctor and that clearance to return to contact training and competition is a medical decision.
+
+### What "recognise, don't diagnose" looks like in practice
+
+- You suspect concussion in a client who reports a recent head knock and new symptoms → you do NOT label it "you have a concussion." You say the presentation is consistent with a possible concussion and that it needs medical review, and you facilitate that review.
+
+- A client asks "Am I right to go back to footy this weekend?" → you do NOT clear them. You explain clearance is a medical decision and direct them to their doctor or sports physician.
+
+- You are mid-rehab and the client deteriorates → you do NOT re-assess and re-diagnose. You escalate to the referring medical practitioner or, for red flags, to emergency care.
+
+### The EP CAN, within scope
+
+- Recognise observable signs and reported symptoms of concussion and form a clinical suspicion.
+
+- Screen for red flags and escalate urgently when present.
+
+- Receive a referral for concussion rehabilitation and implement graded, sub-symptom-threshold exercise within a medical management plan.
+
+- Monitor symptom response to exercise, track progress, and report findings back to the referrer.
+
+- Educate the client on the recovery process, pacing, and the importance of medical review and clearance.
+
+### The EP CANNOT, within scope
+
+- Diagnose concussion (or rule it out).
+
+- Order or interpret neuroimaging (CT / MRI).
+
+- Provide medical clearance for return to contact sport, driving, or work.
+
+- Prescribe or adjust medication.
+
+- Independently manage red flags — these are escalated, not treated.
+
+[KEYPOINT: "When in doubt, sit them out" applies to the EP just as it applies on the sideline. If you are uncertain whether a presentation is safe, the answer is always to stop activity and escalate to medical review — never to push on and never to reassure the client that they are fine.]
+
+## Recognising Concussion: Signs & Symptom Presentation
+
+Recognition is firmly within EP scope. You will frequently be the allied health professional who spends the most time with a client across a rehab block, which means you are well placed to notice a new or evolving concussion — whether the client arrives already referred, or sustains a knock during an unrelated rehab program.
+
+### Mechanism that should raise suspicion
+
+Concussion results from a direct blow to the head, face, or neck, OR an impulsive force transmitted to the head from a blow elsewhere on the body (for example, a heavy tackle or fall where the head whips). Loss of consciousness is NOT required — only 5–10% of concussions involve any loss of consciousness, and its absence does not rule concussion out.
+
+### Observable signs (what you may SEE)
+
+- Lying motionless, slow to get up, or unsteadiness / loss of balance on standing.
+
+- A blank or vacant look; appearing dazed, stunned, or "not quite right."
+
+- Disorientation or confusion; difficulty answering simple questions or following instructions.
+
+- Clutching the head; facial injury after head trauma.
+
+- Slowed or slurred speech; delayed responses.
+
+- In acute settings: any seizure, tonic posturing, or impact convulsion (these are red flags — see next section).
+
+### Reported symptoms (what the client may TELL you)
+
+- Headache or "pressure in the head."
+
+- Dizziness, nausea, or feeling off-balance.
+
+- Visual disturbance — blurred or double vision, difficulty focusing, sensitivity to light.
+
+- Sensitivity to noise.
+
+- Feeling slowed down, "in a fog," or "not feeling right."
+
+- Difficulty concentrating or remembering; feeling more emotional, irritable, or anxious than usual.
+
+- Fatigue, low energy, or disrupted sleep.
+
+### The phenotype lens (useful for EPs)
+
+Modern consensus (Amsterdam 2023) abandons the old Grade 1–2–3 severity labels and instead describes clinical profiles or phenotypes, because they direct what kind of rehabilitation helps. The EP does not assign a phenotype as a diagnosis, but recognising the dominant pattern helps you understand the management plan and monitor the right things:
+
+- Vestibular — dizziness, imbalance, motion sensitivity.
+
+- Ocular / oculomotor — visual strain, difficulty reading or tracking, trouble with screens.
+
+- Cognitive — brain fog, slowed processing, poor concentration.
+
+- Migraine / headache — post-traumatic headache, light and noise sensitivity.
+
+- Cervical — neck-origin headache and dizziness arising from the same forces that caused the concussion.
+
+- Mood / affective — anxiety, low mood, emotional dysregulation.
+
+- Autonomic / physiological — exercise intolerance, symptoms provoked by exertion (this is the profile the EP's graded aerobic work most directly addresses; covered in later modules).
+
+**Recognising a presentation that is "consistent with possible concussion" is enough to trigger the EP's action — facilitating medical review. You do not need diagnostic certainty to act. The next section covers the subset of signs that require not just review, but urgent escalation.**
+
+## Red Flags & Urgent Medical Escalation
+
+A small number of presentations indicate a potentially serious or evolving brain or cervical spine injury. These are red flags. When any red flag is present, the EP stops all activity and escalates to emergency care immediately — by ambulance (000) where appropriate. Red flags are never managed by the EP; they are escalated.
+
+[KEYPOINT: Red flags requiring IMMEDIATE emergency referral (call 000 / send to ED): deteriorating consciousness or increasing drowsiness; a seizure or convulsion; repeated vomiting; increasing, severe, or worsening headache; weakness, numbness, or tingling in the arms or legs; double vision; slurred speech or increasing confusion or agitation; neck pain or tenderness, especially with any neurological signs; loss of consciousness; or clear fluid from the ears or nose.]
+
+### The red flag list in detail
+
+- Deteriorating level of consciousness — increasing drowsiness, difficulty being roused, or a clearly declining ability to stay alert. A brain injury that is getting worse over minutes to hours is a neurosurgical emergency.
+
+- Seizure or convulsion — any seizure activity after a head impact.
+
+- Repeated vomiting — more than one episode, particularly if escalating.
+
+- Increasing or severe headache — a headache that is worsening rather than settling, or described as the worst ever.
+
+- Focal neurological signs — weakness, numbness, or pins and needles in one or more limbs; facial asymmetry; double vision; difficulty speaking or understanding speech.
+
+- Increasing confusion, agitation, or unusual behaviour change.
+
+- Neck pain or midline cervical tenderness, restricted or painful neck movement, or any neurological symptoms in the limbs — treat as a potential cervical spine injury: do not move the neck, immobilise, and call for emergency help.
+
+- Loss of consciousness, or a witnessed period of unresponsiveness.
+
+- Clear or blood-stained fluid from the nose or ears (possible CSF leak / skull fracture).
+
+### Higher-risk context that lowers your threshold
+
+Even without a hard red flag, escalate promptly to medical review on the same day where the client: is a child or adolescent; is on blood-thinning (anticoagulant) medication; has had a previous concussion, especially recently; or has had alcohol or other substances that make assessment unreliable.
+
+### The EP escalation algorithm
+
+- 1. STOP activity immediately. Do not continue or resume exercise.
+
+- 2. Do not leave the client alone; keep them still if a neck injury is possible.
+
+- 3. For any red flag → call 000 / arrange emergency transport to ED.
+
+- 4. For a suspected concussion WITHOUT red flags → arrange same-day or next-day medical review (GP or sports physician) and do not resume contact/sport activity.
+
+- 5. Document what you observed and what you did, and communicate it to the referrer and any treating medical practitioner.
+
+[KEYPOINT: The EP is not expected to perform a GCS, order imaging, or determine severity. The EP IS expected to recognise a red flag and escalate it without hesitation. Getting that escalation right is the highest-value safety skill in this module.]
+
+## The EP's Lane: Receiving the Referral, Implementing, Monitoring, Reporting
+
+Once a client has been medically assessed and a concussion diagnosis (or working diagnosis) has been made, the exercise physiologist becomes one of the most active and valuable members of the team. Active rehabilitation — particularly sub-symptom-threshold aerobic exercise — is now a core, evidence-based component of concussion management, and it sits squarely within AEP scope. This is the EP's lane.
+
+### Referral-in: how the case reaches the EP
+
+The EP typically receives the client AFTER medical assessment, on referral from a GP, sports and exercise medicine physician, physiotherapist, or concussion clinic. A good referral establishes: that medical assessment has occurred and red flags have been excluded; the working clinical profile (e.g. exercise-intolerant / autonomic, vestibular, cervical); any precautions; and the goal (e.g. graded return-to-activity, exercise tolerance testing, return-to-sport conditioning). If a client self-presents for "concussion rehab" without prior medical assessment, the EP's first action is to ensure that medical review happens — not to begin rehab on an undiagnosed head injury.
+
+### Implement: what the EP delivers
+
+- Establish exercise tolerance using a standardised, symptom-limited protocol (e.g. the Buffalo Concussion Treadmill or Bike Test), within the parameters set by the referrer.
+
+- Prescribe individualised, graded sub-symptom-threshold aerobic exercise — progressing intensity as tolerance improves.
+
+- Deliver complementary rehabilitation within EP scope: cardiovascular reconditioning, strength and conditioning, dual-task and return-to-activity progressions, and load management.
+
+- Stay sub-threshold: the EP works the client up to, but not provocatively beyond, their symptom threshold — using symptom response as the dose-limiting signal. (The exercise prescription detail is covered in later modules; here the point is that this is the EP's defined territory.)
+
+### Monitor: the EP as the recovery sensor
+
+Because the EP sees the client repeatedly and under physical load, the EP is uniquely positioned to detect trajectory. Monitor and document: symptom response to each session (provoked, unchanged, or improving), exercise tolerance trends, heart-rate / exertion thresholds, and any new or worsening symptoms. A plateau, a regression, or new symptoms are signals — not problems for the EP to solve alone, but information to feed back and, where indicated, triggers to escalate or refer.
+
+### Report: closing the loop
+
+The EP reports back to the referrer with concise, structured updates: current symptom profile and trajectory, exercise tolerance and thresholds, progress against goals, any concerns or barriers, and recommendations. Use a standard format so critical details (any red flags, regression, functional status) are never lost. The EP provides information and progress reporting — the EP does NOT issue medical clearance.
+
+### Escalate if worsening
+
+If a client deteriorates, develops red flags, fails to progress, or regresses on exertion, the EP escalates back to medical management. Worsening with minimal activity, new symptoms, or development of secondary issues (sleep, mood, persistent headache) are all reasons to pause progression and communicate with the team.
+
+**The EP's lane is active rehab — implement, monitor, report, escalate. The next section covers the other half of staying in lane: knowing when a symptom belongs to a different discipline and referring out.**
+
+## Referral Out: When to Escalate or Refer to Other Disciplines
+
+Staying in lane means recognising when a client's dominant problem sits outside what exercise therapy can address — and routing them to the right discipline, usually back through the referring medical practitioner who coordinates the team. No single provider has all the expertise concussion can demand; the EP's job includes knowing the limits of exercise-based rehab.
+
+### Refer to / escalate to the GP or sports & exercise medicine physician when
+
+- Any red flag emerges (this is emergency escalation, not routine referral).
+
+- The client is approaching return to contact sport — clearance is a medical decision and the EP cannot grant it.
+
+- Symptoms are not improving, or are worsening, despite appropriate graded rehab.
+
+- Medication review is needed, or there is diagnostic uncertainty about whether symptoms are concussion-related.
+
+### Refer to vestibular physiotherapy when
+
+- Dizziness, vertigo, gaze instability, motion sensitivity, or balance problems persist or dominate, and are not resolving with graded reconditioning.
+
+- There are signs pointing to a vestibulo-ocular or cervicogenic contribution that needs hands-on assessment and targeted vestibular or manual therapy — areas outside EP scope.
+
+### Refer to optometry / neuro-optometry when
+
+- There is persistent visual strain, difficulty reading or tracking, double vision, or convergence-type symptoms that limit screen and reading tolerance. Vision therapy is a distinct discipline.
+
+### Refer to psychology when
+
+- Mood symptoms, anxiety, low mood, fear-avoidance, catastrophic thinking about symptoms, or significant adjustment difficulty are present and limiting recovery.
+
+- Any disclosure of suicidal ideation is an urgent escalation, not a routine referral.
+
+### Refer to (via the doctor) neurology when
+
+- Headache or migraine is refractory to first-line management, or the picture is atypical or persistent beyond the expected window despite multidisciplinary care. The EP flags this to the coordinating doctor, who arranges specialist review.
+
+### The principle
+
+The EP does not need to personally arrange every onward referral — many will route through the coordinating medical practitioner. What the EP MUST do is recognise the trigger, stop attributing a non-exercise problem to deconditioning, and communicate it to the team so the right referral happens.
+
+[KEYPOINT: Early, appropriate specialist referral improves outcomes. Vestibular rehabilitation started at 2–4 weeks is associated with better recovery than the same care delayed to months — so flagging a persistent vestibular or visual profile early is a genuine clinical contribution, not an admission of failure.]
+
+## The Multidisciplinary Pathway: Where the EP Sits as Active-Rehab Specialist
+
+Concussion is heterogeneous, and the evidence consistently favours coordinated multidisciplinary care over single-provider management, especially when symptoms persist. The EP is one node in that network — and within it, the EP owns a specific, high-value role: the active-rehabilitation specialist who safely loads the recovering brain and body with graded exercise.
+
+### The team and who does what
+
+- GP / Sports & Exercise Medicine Physician — diagnoses, excludes structural injury, coordinates the team, and provides medical clearance for return to contact and work. The decision-maker and the hub.
+
+- Physiotherapist (including vestibular) — cervical assessment and treatment, vestibular and oculomotor rehabilitation, manual therapy.
+
+- Exercise Physiologist (AEP) — exercise tolerance assessment and graded, sub-symptom-threshold aerobic and conditioning rehabilitation; reconditioning for return to activity. The active-rehab specialist.
+
+- Optometry / neuro-optometry — assessment and therapy for convergence, accommodation, and oculomotor visual dysfunction.
+
+- Psychology / neuropsychology — mood, anxiety, coping, cognitive-behavioural therapy, and formal cognitive assessment where indicated.
+
+- Neurology — refractory headache/migraine, atypical or complex presentations, advanced investigation.
+
+### How the EP fits the pathway over time
+
+- Acute / early phase — the EP is usually NOT the first contact; medical assessment and red-flag exclusion come first. The EP's contribution begins once the client is medically assessed and ready for graded reintroduction of activity.
+
+- Sub-acute / reconditioning phase — the EP is central: establishing exercise tolerance, prescribing graded aerobic exercise, and progressing load as symptoms allow.
+
+- Return-to-activity phase — the EP delivers the conditioning that prepares a client for the demands of work, life, and sport, and reports readiness — but the medical practitioner provides the actual clearance.
+
+### Communicating within the team
+
+Use structured, concise correspondence. A useful EP-to-referrer update template: "Re: [client] — concussion rehab update. Assessed [date]. Current profile/trajectory: [brief]. Exercise tolerance / threshold: [findings]. Progress vs goals: [summary]. Concerns / red flags: [any]. Recommendations / next steps: [e.g. continue progression, suggest vestibular physio review]. Happy to discuss." Clear role definition and a single coordinating clinician prevent contradictory advice and gaps in care.
+
+### Cultural safety
+
+In Australian practice, culturally safe care — particularly for Aboriginal and Torres Strait Islander clients — materially affects engagement and outcomes. Allow time for relationship-building, involve family and Elders where appropriate, use plain language, and engage Aboriginal health workers or interpreters when needed. Culturally safe practice is a clinical competency, not an optional extra.
+
+[KEYPOINT: The EP's position in the team is easy to state and powerful in practice: recognise and escalate; receive the referral; implement graded active rehab; monitor and report; refer out when the problem isn't yours to solve; never diagnose, never clear. Owned well, the active-rehab lane is where the EP delivers some of the most evidence-backed value in the entire concussion pathway.]
+
