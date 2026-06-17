@@ -84,6 +84,17 @@ export async function GET(request: NextRequest) {
     id SERIAL PRIMARY KEY, institution_id INT NOT NULL, sent_at TIMESTAMPTZ DEFAULT NOW(),
     resend_email_id TEXT, UNIQUE(institution_id))`
 
+  // TRUE daily cap (Zac 2026-06-17): subtract today's partner sends so the
+  // 11:30am backup schedule only sends the remainder of a missed 9:30am run —
+  // never a second full batch (would be 12/day). Idempotency already prevents
+  // re-pitching the same institution; this keeps the daily VOLUME at 6.
+  const { rows: todayRows } = await sql<{ n: number }>`
+    SELECT COUNT(*)::int n FROM partner_outreach_log WHERE sent_at::date = CURRENT_DATE`
+  const remainingToday = Math.max(0, PARTNER_DAILY_MAX - (todayRows[0]?.n ?? 0))
+  if (remainingToday === 0) {
+    return NextResponse.json({ ok: true, sent: 0, reason: `daily cap ${PARTNER_DAILY_MAX} already met today` })
+  }
+
   // Eligible: lead status, has a contact email, not already sent.
   const { rows: due } = await sql`
     SELECT id, name, slug, contact_email, contact_name
@@ -92,7 +103,7 @@ export async function GET(request: NextRequest) {
       AND pi.contact_email IS NOT NULL AND pi.contact_email <> ''
       AND NOT EXISTS (SELECT 1 FROM partner_outreach_log ol WHERE ol.institution_id = pi.id)
     ORDER BY pi.tier ASC, pi.id ASC
-    LIMIT ${PARTNER_DAILY_MAX}`
+    LIMIT ${remainingToday}`
 
   const resend = new Resend(resendKey)
   const runStart = Date.now()
