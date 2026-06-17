@@ -54,7 +54,7 @@ const NO_OPENING_VARIANTS: Record<Discipline, string> = {
 }
 
 // Plain-text signature + compliance line. No logo, no links, no styling.
-const SIGNOFF_HTML = `<p>Zac Lewis, Osteopath<br>Concussion Education Australia — Byron Bay</p>`
+const SIGNOFF_HTML = `<p>Zac Lewis, Osteopath<br>Concussion Education Australia</p>`
 const STOP_LINE_HTML = `<p>If this isn't relevant, reply STOP and I won't email again.</p>`
 
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
