@@ -239,6 +239,34 @@ function AnalyticsTracker(): null {
     fireRemarketingEvent(pathname);
   }, [pathname, searchParams]);
 
+  // Exit beacon (Zac 2026-06-17): fire a `page_exit` event on tab-close / SPA
+  // route-change so single-pageview sessions get a REAL duration. Session
+  // duration is computed as lastEvent − firstEvent, so a one-pageview visit
+  // (the cold-outreach /p/<slug> pattern — read one page for 34s, then leave)
+  // measured 0s → the "Avg. Session 1s" mismatch vs the 34s dwell reads.
+  // Scanners don't run pagehide/visibilitychange JS, so they never emit this;
+  // their sessions stay ~0s, making Avg. Session scanner-resistant. page_exit
+  // is NOT a page_view, so pageview/bounce counts are unaffected.
+  useEffect(() => {
+    const enter = Date.now();
+    let fired = false;
+    const fireExit = () => {
+      if (fired) return;
+      const dwellMs = Date.now() - enter;
+      if (dwellMs < 1000) return; // ignore instant bounces / scanner pings
+      fired = true;
+      sendEvent('page_exit', { dwellMs }, pathname, null);
+    };
+    const onVis = () => { if (document.visibilityState === 'hidden') fireExit(); };
+    window.addEventListener('pagehide', fireExit);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('pagehide', fireExit);
+      document.removeEventListener('visibilitychange', onVis);
+      fireExit(); // SPA navigation away from this page counts as an exit
+    };
+  }, [pathname]);
+
   return null;
 }
 
