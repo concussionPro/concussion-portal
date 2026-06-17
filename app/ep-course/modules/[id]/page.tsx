@@ -233,13 +233,8 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
           })
         }
       })
-      // Add resources, apply-tomorrow at end
-      if (hasFullAccess) {
-        sections.push(
-          { type: 'resources', label: 'Downloadable Resources', index: sections.length },
-          { type: 'apply-tomorrow', label: 'Apply Tomorrow', index: sections.length + 1 },
-        )
-      }
+      // EP demo: no resources / apply-tomorrow (moduleId-keyed → would leak
+      // flagship content since EP shares ids 1-7).
       return sections
     }
 
@@ -250,10 +245,12 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
       index: i,
     }))
     if (hasFullAccess) {
+      // EP demo: no Downloadable Resources / Apply Tomorrow steps — those
+      // components are keyed by moduleId and the EP modules share ids 1-7 with
+      // the flagship, so they'd leak flagship content. Content sections + the
+      // Knowledge Check only.
       sections.push(
-        { type: 'resources', label: 'Downloadable Resources', index: sections.length },
-        { type: 'apply-tomorrow', label: 'Apply Tomorrow', index: sections.length + 1 },
-        { type: 'quiz', label: 'Knowledge Check', index: sections.length + 2 },
+        { type: 'quiz', label: 'Knowledge Check', index: sections.length },
       )
     } else if (isSCATModule) {
       // Free SCAT course users get the quiz (needed to complete modules and earn CPD)

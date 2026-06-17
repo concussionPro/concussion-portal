@@ -212,4 +212,20 @@ export const module1: Module = {
     'Schneider, K. J., Leddy, J. J., Guskiewicz, K. M., et al. (2017). Rest and treatment/rehabilitation following sport-related concussion: a systematic review. British Journal of Sports Medicine, 51(12), 930-934.',
     'Haider, M. N., Leddy, J. J., Pavlesen, S., et al. (2018). A systematic review of criteria used to define recovery from sport-related concussion in youth athletes. British Journal of Sports Medicine, 52(18), 1179-1190.',
   ],
+  parts: [
+    {
+      id: 'part-a',
+      title: 'Part A — The Injury',
+      subtitle: 'What a concussion is and why it disrupts exertion',
+      sectionIds: ['scope-note', 'learning-objectives', 'functional-not-structural', 'neurometabolic-cascade'],
+      quizIds: ['m1-q1', 'm1-q2'],
+    },
+    {
+      id: 'part-b',
+      title: 'Part B — Why Exercise Is First-Line',
+      subtitle: 'Autonomic intolerance, the paradigm shift, and the EP role',
+      sectionIds: ['autonomic-exercise-intolerance', 'paradigm-shift', 'ep-in-the-team'],
+      quizIds: ['m1-q3', 'm1-q4', 'm1-q5'],
+    },
+  ],
 }
