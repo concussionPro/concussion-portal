@@ -219,6 +219,23 @@ export async function preflightClinic(
     failures.push({ code: 'out_of_scope_discipline', detail: clinic.shortName ?? '' })
   }
 
+  // (g) ALREADY A CONCUSSION SPECIALIST (Zac 2026-06-18): a clinic whose brand
+  //     is concussion-led — or that's affiliated with a competitor network like
+  //     Complete Concussion Management / CCMI — is already expert and uses a
+  //     rival platform; entry-level CPD is a non-fit (scott@inbalancephysio
+  //     replied saying exactly this). NOTE: this only catches clinics BRANDED
+  //     around concussion (name or website domain). A general clinic that is
+  //     merely CCMI-trained (like "In Balance Physio") is invisible here — that
+  //     signal lives in website CONTENT, so it's a categoriser/reply-time catch,
+  //     not a preflight one. Kept tight to avoid excluding general clinics that
+  //     simply mention concussion as one service.
+  const siteLower = (clinic.clinicWebsiteUrl ?? '').toLowerCase()
+  const concussionBranded =
+    /\b(complete concussion|concussion (clinic|management|specialist|centre|center|institute|care))\b/i
+  if (concussionBranded.test(nameLower) || /complete-?concussion|concussion(clinic|management|care)/i.test(siteLower)) {
+    failures.push({ code: 'concussion_specialist', detail: clinic.shortName ?? '' })
+  }
+
   // Team must have at least 1 clinical role; cohort math degrades otherwise
   const t = clinic.team
   const clinicalCount =

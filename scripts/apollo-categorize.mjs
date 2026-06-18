@@ -76,6 +76,16 @@ function classify(text) {
   const t = text.toLowerCase()
   const inScope = IN_SCOPE.test(t)
   const outScope = OUT_SCOPE.test(t)
+  // Competitor-affiliated concussion specialist (Zac 2026-06-18): a clinic
+  // already trained through / running a rival concussion platform — Complete
+  // Concussion Management / CCMI, HeadCheck, etc. — is a non-fit EVEN WITH a
+  // general physio signal, because they're already expert on another product
+  // (scott@inbalancephysio replied saying exactly this). Archive unconditionally.
+  // Tight: explicit program/affiliation/credential phrases ONLY — never a
+  // generic "we treat concussion" service mention.
+  const competitorConcussion =
+    /\b(complete concussion management|completeconcussions?|\bccmi\b|concussion management clinician|certified concussion (clinician|provider|practitioner)|headcheck health)\b/i.test(t)
+  if (competitorConcussion) return { scope: 'out' }
   // Archive only when clearly out-of-scope AND no general allied-health signal.
   if (outScope && !inScope) return { scope: 'out' }
   // Practitioner size = max of (title mentions across all pages) and any
