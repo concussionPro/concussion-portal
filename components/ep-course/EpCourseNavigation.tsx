@@ -289,6 +289,13 @@ export function EpCourseNavigation({
             <Wrench className="h-4 w-4 text-slate-400" />
             Clinical Toolkit
           </Link>
+          <Link
+            href="/ep-course/admin-docs"
+            className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-50"
+          >
+            <FileText className="h-4 w-4 text-slate-400" />
+            Admin Documents
+          </Link>
           <div className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-slate-400">
             <Award className="h-4 w-4 text-slate-300" />
             Certificate <span className="ml-auto text-[10px]">on completion</span>

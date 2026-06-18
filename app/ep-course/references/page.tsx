@@ -9,6 +9,26 @@ export const metadata: Metadata = {
   robots: 'noindex, nofollow',
 }
 
+// Render any embedded URL (DOI link etc.) inside a reference string as a
+// clickable link — same behaviour as the flagship Reference Repository.
+function linkifyRef(ref: string) {
+  return ref.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all text-teal-700 underline hover:text-teal-900"
+      >
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  )
+}
+
 export default async function EpReferencesPage() {
   const access = await requireAiCourseAccess('/login')
   const total = epModules.reduce((s, m) => s + (m.clinicalReferences?.length ?? 0), 0)
@@ -42,7 +62,7 @@ export default async function EpReferencesPage() {
                 </div>
                 <ol className="list-decimal space-y-1.5 pl-5 text-sm text-slate-600">
                   {(m.clinicalReferences ?? []).map((r, i) => (
-                    <li key={i}>{r}</li>
+                    <li key={i}>{linkifyRef(r)}</li>
                   ))}
                 </ol>
               </section>
