@@ -624,19 +624,18 @@ async function fetchPage(url: string): Promise<string | null> {
   }
 }
 
-export async function POST(req: NextRequest) {
-  if (!isAdminRequest(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  let body: { dryRun?: boolean; limit?: number; reenrich?: boolean }
-  try {
-    body = await req.json().catch(() => ({}))
-  } catch {
-    body = {}
-  }
-  const dryRun = body.dryRun !== false
-  const limit = Math.max(1, Math.min(body.limit ?? 30, 100))
-  const reenrich = body.reenrich === true
+/**
+ * Core batch: crawl up to `limit` clinics' websites and (unless dryRun) write
+ * real per-discipline team counts + the [team-enriched] tag. Reused by the
+ * admin POST route AND the /api/cron/enrich-team queue drainer. Pure data —
+ * returns a summary + a sample of results, never an HTTP response.
+ */
+export async function runEnrichBatch(
+  opts: { dryRun?: boolean; limit?: number; reenrich?: boolean } = {},
+): Promise<Record<string, unknown>> {
+  const dryRun = opts.dryRun !== false
+  const limit = Math.max(1, Math.min(opts.limit ?? 30, 100))
+  const reenrich = opts.reenrich === true
 
   const { rows: targets } = await sql<{
     id: number
@@ -807,9 +806,18 @@ export async function POST(req: NextRequest) {
     ),
   }
 
-  return NextResponse.json({
-    summary,
-    results: results.slice(0, 60),
-    truncated: results.length > 60,
-  })
+  return { summary, results: results.slice(0, 60), truncated: results.length > 60 }
+}
+
+export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  let body: { dryRun?: boolean; limit?: number; reenrich?: boolean }
+  try {
+    body = await req.json().catch(() => ({}))
+  } catch {
+    body = {}
+  }
+  return NextResponse.json(await runEnrichBatch(body))
 }
