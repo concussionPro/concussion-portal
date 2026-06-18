@@ -300,7 +300,7 @@ export const ABANDONED_CHECKOUT_SEQUENCE = [
       <p>If cost is a factor: the <strong>online-only option at $${CONFIG.COURSE.PRICE_ONLINE}</strong> gives you the full 8-module course with 8 CPD hours. You can always add the workshop later.</p>
       <p>If you have specific questions, just reply — I'm happy to chat.</p>
       <center><a href="${recoveryUrl || utm('https://portal.concussion-education-australia.com/pricing', 'abandoned_72h', 'enrol_now')}" class="cta-btn">Enrol Now</a></center>
-      <p class="ps">P.S. If you decided this course isn't for you, no hard feelings. The free SCAT6 Mastery course and SCAT6 forms are yours to keep.</p>
+      <p class="ps">P.S. If you decided this course isn't for you, no hard feelings. The SCAT6 Mastery course and SCAT6 forms are yours to keep.</p>
       <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
     `),
   },
@@ -421,7 +421,7 @@ export const SCAT_MASTERY_SEQUENCE = [
       <p>What would you do? Clear him? Bench him? What documentation protects you if something goes wrong?</p>
       <p>This exact scenario comes up in the SCAT6 Mastery course &mdash; and the clinical reasoning behind the right decision is worth the 8 minutes it takes to work through.</p>
       <center><a href="${utm(loginLink, 'scat_mastery_day7', 'case_study')}" class="cta-btn">Work Through This Case</a></center>
-      <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">If you're finding the free course useful, the full Concussion Management course covers VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype &mdash; 8 modules, 8 CPD hours.</p>
+      <p style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">If you're finding the SCAT6 course useful, the full Concussion Management course covers VOMS, BESS, return-to-play protocols, and rehabilitation by phenotype &mdash; 8 modules, 8 CPD hours.</p>
       <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'scat_mastery_day7', 'see_course')}" class="cta-secondary">See Full Course &mdash; $${CONFIG.COURSE.PRICE_ONLINE}</a></center>
       <div class="sig">Zac</div>
     `),
@@ -456,7 +456,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     subject: '14 CPD hours — here\'s the full breakdown',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-      <p>The free SCAT6 Mastery course covers the essentials. If you want to go deeper, here's what the full Concussion Management course covers:</p>
+      <p>The SCAT6 Mastery course covers the essentials. If you want to go deeper, here's what the full Concussion Management course covers:</p>
       <p><strong>8 online modules (8 CPD hours):</strong></p>
       <ol>
         <li>Concussion pathophysiology &mdash; the neurometabolic cascade and mechanisms</li>
@@ -523,7 +523,7 @@ export const SCAT_MASTERY_SEQUENCE = [
     subject: 'Your concussion CPD options — final summary',
     template: (name: string, upgradeLink: string) => emailShell(`
       <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-      <p>This is the last email in this series. I hope the SCAT forms and free course have been useful in your practice.</p>
+      <p>This is the last email in this series. I hope the SCAT forms and course have been useful in your practice.</p>
       <p>If you're still considering the full course, here's the summary:</p>
       <ul>
         <li><strong>Online Course ($${CONFIG.COURSE.PRICE_ONLINE}):</strong> 8 modules, 8 CPD hours, lifetime access</li>
@@ -830,14 +830,14 @@ export const FREE_USER_REENGAGEMENT = {
   subject: 'The 20-min module on SCAT6 vs SCOAT6',
   template: (name: string, loginLink: string) => emailShell(`
     <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
-    <p>You signed up for the free SCAT6 Mastery course a week ago but haven't started yet.</p>
+    <p>You signed up for the SCAT6 Mastery course a week ago but haven't started yet.</p>
     <p>No pressure — Module 1 takes about 20 minutes and you can pick up where you left off any time.</p>
     <div class="callout">
       <strong>What's waiting for you:</strong><br><br>
       &#8226; 3 modules covering SCAT6 and SCOAT6 essentials<br>
       &#8226; Clinical case studies and scenario-based quiz<br>
       &#8226; Digital SCAT6 and SCOAT6 forms with PDF export<br><br>
-      Self-paced &middot; ~1 hour total &middot; Free
+      Self-paced &middot; ~1 hour total
     </div>
     <center><a href="${utm(loginLink, 'free_reengagement_day7', 'start_now')}" class="cta-btn">Start Module 1 — It Takes 20 Minutes</a></center>
     <div class="sig">Zac</div>
@@ -880,9 +880,9 @@ export const SCAT_COMPLETER_PERSONAL_FOLLOWUP = {
   subject: 'Quick one — what stopped you?',
   template: (name: string, userId: string, baseUrl: string) => emailShell(`
     <p style="font-size: 15px; margin: 0 0 14px;">Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p style="font-size: 15px; margin: 0 0 14px;">You finished the free SCAT6 Mastery course recently &mdash; thanks for working through it.</p>
+    <p style="font-size: 15px; margin: 0 0 14px;">You finished the SCAT6 Mastery course recently &mdash; thanks for working through it.</p>
     <p style="font-size: 15px; margin: 0 0 14px;">I wanted to ask you one thing directly, because the answer helps me make the rest of the course actually useful for clinicians like you.</p>
-    <p style="font-size: 15px; margin: 0 0 18px;"><strong>You finished the free part. What stopped you taking the next step?</strong></p>
+    <p style="font-size: 15px; margin: 0 0 18px;"><strong>You finished the first part. What stopped you taking the next step?</strong></p>
     <p style="font-size: 14px; color: #475569; margin: 0 0 10px;">Tap the closest one &mdash; one click, no form to fill in:</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; margin: 0 0 18px;">
       ${surveyButton(userId, baseUrl, 'A', 'Price', 'Course is more than I want to spend right now')}
