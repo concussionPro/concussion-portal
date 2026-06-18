@@ -65,22 +65,21 @@ const TEAM_PAGE_CANDIDATES = [
 
 // Clinician role keywords — used to attribute name-matches to actual clinical
 // staff (vs receptionists, practice managers, etc) and to infer the dominant
-// discipline. Disciplines without a dedicated bucket in the team JSONB
-// (chiro, podiatry, dietetics, psychology) fold into the physiotherapists
-// bucket — the bucket only labels the dominant discipline; the count is what
-// drives tiering.
+// discipline. Each entry maps to a real per-discipline bucket in the team
+// JSONB (ClinicTeam). Disciplines that are NOT concussion-rehab clinicians
+// (podiatry, dietetics, psychology) are intentionally absent: they must not be
+// attributed to any clinical bucket NOR trip CLINICAL_RE on their own, so they
+// can't inflate the headcount that drives the pitch tier. (A "Dr"/"doctor"/
+// "clinical director" marker still flags genuine clinicians — see CLINICAL_RE.)
 const ROLE_KEYWORDS: Array<{ pattern: RegExp; role: string }> = [
   { pattern: /\bphysiotherapists?\b|\bphysios?\b|\bphysiotherapy\b/i, role: 'physiotherapists' },
   { pattern: /\bosteopaths?\b|\bosteopathy\b/i, role: 'osteopaths' },
   { pattern: /\bsports?\s*(?:physician|doctor|medicine)\b/i, role: 'sportsMedicineDoctors' },
   { pattern: /\bexercise\s*physiolog|\baccredited\s*exercise|\bEP\b/i, role: 'exercisePhys' },
-  { pattern: /\bchiropractors?\b|\bchiros?\b|\bchiropractic\b/i, role: 'physiotherapists' },
+  { pattern: /\bchiropractors?\b|\bchiros?\b|\bchiropractic\b/i, role: 'chiropractors' },
   { pattern: /\bmyotherapists?\b|\bmyotherapy\b/i, role: 'myotherapists' },
   { pattern: /\bremedial\s*massage\b|\bmassage\s*therapists?\b/i, role: 'remedialMassage' },
   { pattern: /\bgeneral\s*practitioners?\b|\bGP\b/, role: 'generalPractitioners' },
-  { pattern: /\bpodiatrists?\b|\bpodiatry\b/i, role: 'physiotherapists' },
-  { pattern: /\bdietitians?\b|\bdieticians?\b/i, role: 'physiotherapists' },
-  { pattern: /\bpsychologists?\b/i, role: 'physiotherapists' },
 ]
 
 // Any clinical-title signal — union of the bucket patterns plus generic
@@ -750,6 +749,7 @@ export async function POST(req: NextRequest) {
     const newTeam: Record<string, number> = {
       osteopaths: 0,
       physiotherapists: 0,
+      chiropractors: 0,
       generalPractitioners: 0,
       sportsMedicineDoctors: 0,
       exercisePhys: 0,
