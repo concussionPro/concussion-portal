@@ -189,6 +189,7 @@ function team(clinical: number): ClinicTeam {
   return {
     osteopaths: 0,
     physiotherapists: clinical,
+    chiropractors: 0,
     generalPractitioners: 0,
     sportsMedicineDoctors: 0,
     exercisePhys: 0,

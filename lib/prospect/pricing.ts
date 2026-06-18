@@ -85,6 +85,7 @@ export function hubPackPriceFor(team: ClinicTeam): HubPackPricing {
 const SEAT_PRICE: Record<Discipline, number> = {
   osteopaths: 397,
   physiotherapists: 397,
+  chiropractors: 397,
   generalPractitioners: 397,
   sportsMedicineDoctors: 397,
   exercisePhys: 347,
@@ -173,14 +174,17 @@ export function teamTotal(team: ClinicTeam): number {
  * Clinical-only headcount (excludes practice manager + admin).
  */
 export function clinicalCount(team: ClinicTeam): number {
+  // Defensive ?? 0 reads: older JSONB rows predate the chiropractors field, so
+  // a raw team.chiropractors would be undefined → NaN and poison every tier.
   return (
-    team.osteopaths +
-    team.physiotherapists +
-    team.generalPractitioners +
-    team.sportsMedicineDoctors +
-    team.exercisePhys +
-    team.myotherapists +
-    team.remedialMassage
+    (team.osteopaths ?? 0) +
+    (team.physiotherapists ?? 0) +
+    (team.chiropractors ?? 0) +
+    (team.generalPractitioners ?? 0) +
+    (team.sportsMedicineDoctors ?? 0) +
+    (team.exercisePhys ?? 0) +
+    (team.myotherapists ?? 0) +
+    (team.remedialMassage ?? 0)
   )
 }
 

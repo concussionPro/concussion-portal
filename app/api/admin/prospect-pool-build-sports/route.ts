@@ -428,7 +428,7 @@ export async function POST(req: NextRequest) {
     const team: ClinicTeam = {
       osteopaths: 0,
       physiotherapists: 0,
-      generalPractitioners: 0,
+      chiropractors: 0,      generalPractitioners: 0,
       sportsMedicineDoctors: 0,
       exercisePhys: 0,
       myotherapists: 0,

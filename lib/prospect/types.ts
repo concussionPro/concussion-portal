@@ -45,6 +45,7 @@ export type CohortRecommendation = 'essential' | 'recommended' | 'full-team'
 export interface ClinicTeam {
   osteopaths: number
   physiotherapists: number
+  chiropractors: number
   generalPractitioners: number
   sportsMedicineDoctors: number
   exercisePhys: number

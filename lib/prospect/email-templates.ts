@@ -44,6 +44,7 @@ import { CONFIG } from '@/lib/config'
 const NO_OPENING_VARIANTS: Record<Discipline, string> = {
   osteopaths: '',
   physiotherapists: '',
+  chiropractors: '',
   generalPractitioners: '',
   sportsMedicineDoctors: '',
   exercisePhys: '',
@@ -107,6 +108,7 @@ ${SIGNOFF_HTML}`,
 const SOLO_PLURAL: Record<Discipline, string> = {
   osteopaths: 'osteos',
   physiotherapists: 'physios',
+  chiropractors: 'chiros',
   generalPractitioners: 'GPs',
   sportsMedicineDoctors: 'sports medicine doctors',
   exercisePhys: 'exercise physiologists',

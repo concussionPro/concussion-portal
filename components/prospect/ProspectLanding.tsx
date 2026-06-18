@@ -360,6 +360,7 @@ function TeamSnapshot({ clinic, clinicalCount, totalCount }: { clinic: ProspectC
         {[
           t.osteopaths && `${t.osteopaths} osteo`,
           t.physiotherapists && `${t.physiotherapists} physio`,
+          t.chiropractors && `${t.chiropractors} chiro`,
           t.generalPractitioners && `${t.generalPractitioners} GP`,
           t.sportsMedicineDoctors && `${t.sportsMedicineDoctors} sports med`,
           t.exercisePhys && `${t.exercisePhys} EP`,

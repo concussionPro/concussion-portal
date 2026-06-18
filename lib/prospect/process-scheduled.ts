@@ -476,13 +476,13 @@ export async function processScheduledSends(
         ORDER BY
           (ROW_NUMBER() OVER (
              PARTITION BY CASE
-               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'physiotherapists')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 8 THEN 0
-               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'physiotherapists')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 2 THEN 1
+               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+&+COALESCE((pc.team->>'chiropractors')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 8 THEN 0
+               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+&+COALESCE((pc.team->>'chiropractors')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 2 THEN 1
                ELSE 2 END
              ORDER BY pc.scheduled_send_at ASC, pc.priority_wave ASC
            ) * CASE
-               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'physiotherapists')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 8 THEN 1.0
-               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'physiotherapists')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 2 THEN 1.7
+               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+&+COALESCE((pc.team->>'chiropractors')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 8 THEN 1.0
+               WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+&+COALESCE((pc.team->>'chiropractors')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 2 THEN 1.7
                ELSE 2.6 END) ASC,
           pc.scheduled_send_at ASC, pc.priority_wave ASC
         LIMIT 50
@@ -522,14 +522,14 @@ export async function processScheduledSends(
         ORDER BY
           CASE
             WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
-                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + & + COALESCE((pc.team->>'chiropractors')::int, 0)
                 + COALESCE((pc.team->>'generalPractitioners')::int, 0)
                 + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
                 + COALESCE((pc.team->>'exercisePhys')::int, 0)
                 + COALESCE((pc.team->>'myotherapists')::int, 0)
                 + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 8 THEN 0
             WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
-                + COALESCE((pc.team->>'physiotherapists')::int, 0)
+                + & + COALESCE((pc.team->>'chiropractors')::int, 0)
                 + COALESCE((pc.team->>'generalPractitioners')::int, 0)
                 + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
                 + COALESCE((pc.team->>'exercisePhys')::int, 0)

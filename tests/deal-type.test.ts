@@ -3,8 +3,8 @@
  * and the prospect-approve bulk-action body validator.
  *
  * The tier boundaries are the canonical send-priority split:
- *   on-site    : clinical >= 6
- *   hub-pack   : clinical 2-5
+ *   on-site    : clinical >= 8   (min 8 to run an on-site day — Zac 2026-06-18)
+ *   hub-pack   : clinical 2-7
  *   individual : clinical <= 1
  * Keep in lockstep with the SQL CASE in lib/prospect/process-scheduled.ts.
  */
@@ -17,7 +17,7 @@ function team(overrides: Partial<ClinicTeam> = {}): ClinicTeam {
   return {
     osteopaths: 0,
     physiotherapists: 0,
-    generalPractitioners: 0,
+    chiropractors: 0,    generalPractitioners: 0,
     sportsMedicineDoctors: 0,
     exercisePhys: 0,
     myotherapists: 0,
@@ -38,12 +38,14 @@ describe('dealTypeForClinicalCount — boundary values', () => {
     expect(dealTypeForClinicalCount(2)).toBe('hub-pack')
   })
 
-  it('classifies 5 clinical as hub-pack (upper boundary)', () => {
+  it('classifies 6 and 7 clinical as hub-pack (upper boundary — on-site needs 8)', () => {
     expect(dealTypeForClinicalCount(5)).toBe('hub-pack')
+    expect(dealTypeForClinicalCount(6)).toBe('hub-pack')
+    expect(dealTypeForClinicalCount(7)).toBe('hub-pack')
   })
 
-  it('classifies 6 clinical as on-site (lower boundary)', () => {
-    expect(dealTypeForClinicalCount(6)).toBe('on-site')
+  it('classifies 8 clinical as on-site (lower boundary)', () => {
+    expect(dealTypeForClinicalCount(8)).toBe('on-site')
   })
 
   it('classifies 21 clinical as on-site (enterprise stays on-site)', () => {
@@ -66,9 +68,15 @@ describe('dealTypeFor — derives from clinicalCount over the 7 clinical keys', 
     expect(dealTypeFor(t)).toBe('hub-pack')
   })
 
-  it('6 across all 7 clinical keys → on-site (boundary 6)', () => {
-    const t = team({ sportsMedicineDoctors: 1, myotherapists: 2, physiotherapists: 3 })
-    expect(clinicalCount(t)).toBe(6)
+  it('7 across clinical keys → hub-pack (on-site needs 8)', () => {
+    const t = team({ sportsMedicineDoctors: 1, myotherapists: 2, physiotherapists: 3, chiropractors: 1 })
+    expect(clinicalCount(t)).toBe(7)
+    expect(dealTypeFor(t)).toBe('hub-pack')
+  })
+
+  it('8 across clinical keys (incl. chiro) → on-site (boundary 8)', () => {
+    const t = team({ sportsMedicineDoctors: 1, myotherapists: 2, physiotherapists: 3, chiropractors: 2 })
+    expect(clinicalCount(t)).toBe(8)
     expect(dealTypeFor(t)).toBe('on-site')
   })
 

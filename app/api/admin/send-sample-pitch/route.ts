@@ -48,6 +48,21 @@ const SAMPLE_TEAMS: Record<Discipline, { team: ProspectClinic['team']; contactDi
     team: {
       osteopaths: 0,
       physiotherapists: 12,
+      chiropractors: 0,      generalPractitioners: 0,
+      sportsMedicineDoctors: 0,
+      exercisePhys: 2,
+      myotherapists: 0,
+      remedialMassage: 0,
+      practiceManager: 1,
+      admin: 2,
+    },
+  },
+  chiropractors: {
+    contactDiscipline: 'chiropractors',
+    team: {
+      osteopaths: 0,
+      physiotherapists: 0,
+      chiropractors: 9,
       generalPractitioners: 0,
       sportsMedicineDoctors: 0,
       exercisePhys: 2,
@@ -62,7 +77,7 @@ const SAMPLE_TEAMS: Record<Discipline, { team: ProspectClinic['team']; contactDi
     team: {
       osteopaths: 9,
       physiotherapists: 0,
-      generalPractitioners: 0,
+      chiropractors: 0,      generalPractitioners: 0,
       sportsMedicineDoctors: 0,
       exercisePhys: 3,
       myotherapists: 2,
@@ -76,7 +91,7 @@ const SAMPLE_TEAMS: Record<Discipline, { team: ProspectClinic['team']; contactDi
     team: {
       osteopaths: 0,
       physiotherapists: 3,
-      generalPractitioners: 6,
+      chiropractors: 0,      generalPractitioners: 6,
       sportsMedicineDoctors: 0,
       exercisePhys: 1,
       myotherapists: 0,
@@ -90,7 +105,7 @@ const SAMPLE_TEAMS: Record<Discipline, { team: ProspectClinic['team']; contactDi
     team: {
       osteopaths: 1,
       physiotherapists: 4,
-      generalPractitioners: 0,
+      chiropractors: 0,      generalPractitioners: 0,
       sportsMedicineDoctors: 3,
       exercisePhys: 2,
       myotherapists: 0,
@@ -104,7 +119,7 @@ const SAMPLE_TEAMS: Record<Discipline, { team: ProspectClinic['team']; contactDi
     team: {
       osteopaths: 0,
       physiotherapists: 2,
-      generalPractitioners: 0,
+      chiropractors: 0,      generalPractitioners: 0,
       sportsMedicineDoctors: 0,
       exercisePhys: 8,
       myotherapists: 0,
@@ -116,28 +131,28 @@ const SAMPLE_TEAMS: Record<Discipline, { team: ProspectClinic['team']; contactDi
   myotherapists: {
     contactDiscipline: 'myotherapists',
     team: {
-      osteopaths: 2, physiotherapists: 2, generalPractitioners: 0, sportsMedicineDoctors: 0,
+      osteopaths: 2, physiotherapists: 2, chiropractors: 0, generalPractitioners: 0, sportsMedicineDoctors: 0,
       exercisePhys: 1, myotherapists: 4, remedialMassage: 2, practiceManager: 1, admin: 1,
     },
   },
   remedialMassage: {
     contactDiscipline: 'remedialMassage',
     team: {
-      osteopaths: 2, physiotherapists: 2, generalPractitioners: 0, sportsMedicineDoctors: 0,
+      osteopaths: 2, physiotherapists: 2, chiropractors: 0, generalPractitioners: 0, sportsMedicineDoctors: 0,
       exercisePhys: 1, myotherapists: 2, remedialMassage: 4, practiceManager: 1, admin: 1,
     },
   },
   practiceManager: {
     contactDiscipline: 'practiceManager',
     team: {
-      osteopaths: 0, physiotherapists: 8, generalPractitioners: 0, sportsMedicineDoctors: 0,
+      osteopaths: 0, physiotherapists: 8, chiropractors: 0, generalPractitioners: 0, sportsMedicineDoctors: 0,
       exercisePhys: 2, myotherapists: 0, remedialMassage: 0, practiceManager: 1, admin: 2,
     },
   },
   admin: {
     contactDiscipline: 'admin',
     team: {
-      osteopaths: 0, physiotherapists: 8, generalPractitioners: 0, sportsMedicineDoctors: 0,
+      osteopaths: 0, physiotherapists: 8, chiropractors: 0, generalPractitioners: 0, sportsMedicineDoctors: 0,
       exercisePhys: 2, myotherapists: 0, remedialMassage: 0, practiceManager: 1, admin: 2,
     },
   },
