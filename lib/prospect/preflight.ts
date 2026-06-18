@@ -47,6 +47,7 @@ export type PreflightFailureCode =
   // ICP fit
   | 'institutional_target'
   | 'out_of_scope_discipline'
+  | 'concussion_specialist'
 
 export interface PreflightResult {
   ok: boolean
@@ -299,6 +300,7 @@ export async function preflightClinic(
     'email_format', 'email_disposable', 'email_mx_missing', 'email_suppressed',
     'institutional_target',
     'out_of_scope_discipline',
+    'concussion_specialist',
   ])
   const ENRICH_CODES = new Set<PreflightFailureCode>([
     'email_role_only', 'email_dns_error',
