@@ -59,12 +59,13 @@ export function hubPackPriceFor(team: ClinicTeam): HubPackPricing {
   const extraSeats = Math.max(0, c - seatsIncluded)
   const basePrice = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
   const extraSeatsPrice = extraSeats * CONFIG.COURSE.PRICE_CLINIC_HUB_EXTRA_SEAT
-  // Per Zac 2026-06-05: only 'small' (≤5 clinical) gets the Hub Pack pitch.
-  // Anything above (inviting/large/enterprise) gets on-site cohort. The
-  // extra-online-seat math stays available for sales calls but isn't the
-  // cold-pitch path anymore.
+  // Per Zac 2026-06-18: on-site requires a MINIMUM of 8 clinicians. Only
+  // 'large' (8–20) and 'enterprise' (21+) get the on-site-cohort cold pitch.
+  // 'small' (≤5) AND 'inviting' (6–7) get the Hub Pack — a 6–7 clinic can be
+  // invited to top up to 8 on a sales call, but the COLD pitch is never on-site
+  // below 8 (it can't run, and quoting it is the over-pitch we're killing).
   const recommendedOffer: 'hub-pack' | 'on-site-cohort' =
-    bucket === 'small' ? 'hub-pack' : 'on-site-cohort'
+    bucket === 'large' || bucket === 'enterprise' ? 'on-site-cohort' : 'hub-pack'
   return {
     bucket,
     clinicalCount: c,
@@ -189,14 +190,14 @@ export function clinicalCount(team: ClinicTeam): number {
  * expression in the lib/prospect/process-scheduled.ts ORDER BY (and the
  * prospect-fire-now candidate query) — keep all three in lockstep.
  *
- *   on-site    : clinical >= 6  — on-site training pitch (the priority tier)
- *   hub-pack   : clinical 2-5   — Hub Pack pitch
+ *   on-site    : clinical >= 8  — on-site training pitch (min 8 to run; Zac 2026-06-18)
+ *   hub-pack   : clinical 2-7   — Hub Pack pitch
  *   individual : clinical <= 1  — individual course pitch
  */
 export type DealType = 'on-site' | 'hub-pack' | 'individual'
 
 export function dealTypeForClinicalCount(clinical: number): DealType {
-  if (clinical >= 6) return 'on-site'
+  if (clinical >= 8) return 'on-site'   // Zac 2026-06-18: on-site needs a min of 8
   if (clinical >= 2) return 'hub-pack'
   return 'individual'
 }

@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
             + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
             + COALESCE((pc.team->>'exercisePhys')::int, 0)
             + COALESCE((pc.team->>'myotherapists')::int, 0)
-            + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
+            + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 8 THEN 0
         WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
             + COALESCE((pc.team->>'physiotherapists')::int, 0)
             + COALESCE((pc.team->>'generalPractitioners')::int, 0)
