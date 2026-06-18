@@ -35,6 +35,9 @@ function clinic(overrides: Partial<ProspectClinic>): ProspectClinic {
     team: team(3),
     travelBand: 'within-2hr',
     clinicWebsiteUrl: 'https://testclinic.com.au',
+    // Tier-mapping tests assume a VERIFIED team (real website read). The
+    // generic-fallback path for unverified teams is covered separately below.
+    notes: '[team-enriched=test/2026-06-18]',
     ...overrides,
   } as ProspectClinic
 }
@@ -64,6 +67,22 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
       expect(html).not.toMatch(/free (CPD )?module/i)
       expect(html).not.toMatch(/I built/i)
     }
+  })
+
+  it('UNVERIFIED team → generic Hub Pack pitch regardless of size (no fabricated headcount/tier)', () => {
+    // notes:'' ⇒ team JSONB is the import placeholder. Even a "large" (8) or
+    // "solo" (1) fake team must NOT trigger the on-site or individual pitch —
+    // both commit to a specific size we haven't verified. Falls to Hub Pack.
+    for (const n of [1, 8, 20]) {
+      const html = mergeTemplate(T1, clinic({ team: team(n), notes: '' }), 'x', 'tok').html
+      expect(html).toMatch(/Hub Pack/i)
+      expect(html).not.toMatch(/on-site practical day/i)
+      expect(html).not.toMatch(/self-paced online/i)
+    }
+    // And T3 quotes the FIXED hub price, never a team-derived on-site total.
+    const t3 = mergeTemplate(T3, clinic({ team: team(12), notes: '' }), 'x', 'tok').html
+    expect(t3).toMatch(/Hub Pack/i)
+    expect(t3).not.toMatch(/on-site team training day starts at/i)
   })
 
   it('T1 is tailored per tier — on-site (large) / Hub Pack (medium) / self-paced (solo)', () => {

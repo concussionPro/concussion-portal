@@ -26,7 +26,7 @@ import {
   Mail,
 } from 'lucide-react'
 import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
-import { computePricing, teamTotal, clinicalCount } from '@/lib/prospect/pricing'
+import { computePricing, teamTotal, clinicalCount, isTeamVerified } from '@/lib/prospect/pricing'
 import { IndividualInterestCard } from './IndividualInterestCard'
 import { ProspectTracker } from './ProspectTracker'
 import { ProspectSidebar } from './ProspectSidebar'
@@ -35,6 +35,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   const pricing = computePricing(clinic.team, clinic.travelBand)
   const total = teamTotal(clinic.team)
   const clinical = clinicalCount(clinic.team)
+  const teamVerified = isTeamVerified(clinic.notes)
 
   // Location fallback — when city or region is missing/unknown, drop the
   // geographic frame entirely and pitch as the local concussion hub.
@@ -182,7 +183,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
 
           {/* Team snapshot bento */}
           <div data-track-section="team-snapshot">
-            <TeamSnapshot clinic={clinic} clinicalCount={clinical} totalCount={total} />
+            <TeamSnapshot clinic={clinic} clinicalCount={clinical} totalCount={total} verified={teamVerified} />
           </div>
 
           {/* Multidisciplinary integration value frame */}
@@ -345,8 +346,24 @@ function ZacCredibility() {
   )
 }
 
-function TeamSnapshot({ clinic, clinicalCount, totalCount }: { clinic: ProspectClinic; clinicalCount: number; totalCount: number }) {
+function TeamSnapshot({ clinic, clinicalCount, totalCount, verified }: { clinic: ProspectClinic; clinicalCount: number; totalCount: number; verified: boolean }) {
   const t = clinic.team
+  // Only show a specific headcount/discipline breakdown when the team was
+  // actually verified (website read / human correction). Otherwise the numbers
+  // are the Apollo import placeholder — quoting them ("Your team: 6") to a
+  // clinic that size isn't is the thing we're killing (Zac 2026-06-18). Show a
+  // generic "your team" frame instead; the size gets confirmed on the call.
+  if (!verified) {
+    return (
+      <section className="glass-premium rounded-2xl p-5 sm:p-6 mb-6">
+        <p className="stat-label">Your team</p>
+        <p className="text-lg font-semibold text-foreground mt-1">Trained together, in-house</p>
+        <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+          The program trains your whole clinical team on one concussion protocol — so the case stays in-house from assessment to discharge. We&apos;ll tailor the cohort to your team&apos;s size and mix on a quick call.
+        </p>
+      </section>
+    )
+  }
   return (
     <section className="glass-premium rounded-2xl p-5 sm:p-6 mb-6">
       <p className="stat-label">Your team</p>

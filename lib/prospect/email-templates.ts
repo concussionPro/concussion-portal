@@ -1,5 +1,5 @@
 import type { EmailTemplate, EmailTemplateSlug, Discipline, ProspectClinic } from './types'
-import { dominantDiscipline, clinicalCount, hubPackPriceFor, computePricing } from './pricing'
+import { dominantDiscipline, clinicalCount, hubPackPriceFor, computePricing, isTeamVerified } from './pricing'
 import { CONFIG } from '@/lib/config'
 
 /**
@@ -282,13 +282,19 @@ export function mergeTemplate(
   } = {},
 ): { subject: string; html: string; text: string; subjectKey: string } {
   // ── Tier selection — the size tier decides the pitch ──────────────────
-  // on-site (≥6 clinical): whole team trained in one day, on-site.
-  // hub (2-5 clinical): team trained online + clinic-branded doc pack.
+  // on-site (≥8 clinical): whole team trained in one day, on-site.
+  // hub (2-7 clinical): team trained online + clinic-branded doc pack.
   // individual (≤1 clinical): the clinician's own protocol/CPD, self-paced.
+  // GATE (Zac 2026-06-18): on-site + individual tiers commit to a SPECIFIC
+  // team size, so they fire ONLY when the team is verified (real website read /
+  // human correction). Unverified ⇒ the team JSONB is the import placeholder,
+  // so both flags are false and we fall through to the generic Hub Pack pitch
+  // (fixed price, "for a team your size" — never a fabricated headcount/tier).
+  const teamVerified = isTeamVerified(clinic.notes)
   const hubPricing = hubPackPriceFor(clinic.team)
   const cohortPricing = computePricing(clinic.team, clinic.travelBand)
-  const isOnSiteTarget = hubPricing.recommendedOffer === 'on-site-cohort'
-  const isIndividualTarget = !isOnSiteTarget && clinicalCount(clinic.team) <= 1
+  const isOnSiteTarget = teamVerified && hubPricing.recommendedOffer === 'on-site-cohort'
+  const isIndividualTarget = teamVerified && !isOnSiteTarget && clinicalCount(clinic.team) <= 1
 
   // ── Unknown-data guards — never ship "Unknown" in copy ────────────────
   const hasUnknownCity = !clinic.city || /unknown/i.test(clinic.city)

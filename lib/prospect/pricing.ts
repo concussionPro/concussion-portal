@@ -211,6 +211,18 @@ export function dealTypeFor(team: ClinicTeam): DealType {
 }
 
 /**
+ * A clinic's team is "verified" only when the website enricher actually read a
+ * team page (notes tag [team-enriched=...]) or a human corrected it
+ * ([team-corrected=...]). Unverified ⇒ the team JSONB is the Apollo import
+ * placeholder, so we must NOT quote a specific headcount, discipline, tier or
+ * team-derived price off it — fall back to the generic Hub Pack pitch.
+ * (Zac 2026-06-18: "don't quote clinicians targets do not have.")
+ */
+export function isTeamVerified(notes?: string | null): boolean {
+  return /\bteam-(enriched|corrected)\b/.test(notes ?? '')
+}
+
+/**
  * Returns the team's discipline "centre of gravity" — used to decide which
  * cold-email opening-line variant to use. Returns the discipline with the
  * highest count; ties broken by the order: osteo > physio > GP > sports med
