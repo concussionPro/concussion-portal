@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getEpModulesMeta } from '@/data/ep-modules'
+import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — PUBLIC sales/landing page (EP-scoped course).
@@ -106,7 +107,10 @@ function totals(meta: ReturnType<typeof getEpModulesMeta>) {
   return { count: meta.length, points }
 }
 
-export default function ConcussionRehabMasteryPage() {
+export default async function ConcussionRehabMasteryPage() {
+  // GATED PRE-LAUNCH (Zac 2026-06): admin / demo-key / enrolled only — must NOT
+  // be publicly reachable until launch. Remove this line to go live.
+  await requireAiCourseAccess('/login')
   const modules = getEpModulesMeta()
   const { count } = totals(modules)
 
