@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { FileText, Activity, ClipboardList, Dumbbell, TrendingUp, Mail, CheckSquare, Download, LineChart, ArrowRight, Wrench } from 'lucide-react'
+import { FileText, Activity, ClipboardList, Dumbbell, TrendingUp, Mail, CheckSquare, Download, LineChart, ArrowRight } from 'lucide-react'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
 
@@ -137,20 +137,32 @@ export default async function EpToolkitPage() {
             })}
           </div>
 
-          {/* Next tool in development */}
-          <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white/60 p-5">
-            <div className="flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-slate-400" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">In development</span>
+          {/* BCTT Calculator — live tool */}
+          <Link
+            href="/ep-course/tools/bctt"
+            className="group mt-6 block rounded-xl border border-teal-200 bg-gradient-to-br from-teal-50 via-white to-blue-50 p-5 transition-shadow hover:shadow-md"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-600 text-white">
+                  <Activity className="h-5 w-5" />
+                </span>
+                <div>
+                  <span className="rounded-full bg-teal-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">Live tool</span>
+                  <h2 className="mt-1 font-semibold text-slate-900">BCTT Calculator &amp; HRt → Prescription Engine</h2>
+                </div>
+              </div>
+              <ArrowRight className="mt-1 h-5 w-5 text-teal-600 transition-transform group-hover:translate-x-1" />
             </div>
-            <h2 className="mt-2 font-semibold text-slate-900">BCTT Calculator &amp; HRt → Prescription Engine</h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-3 text-sm text-slate-600">
               The digital companion to the Buffalo test: enter the per-minute test data, the tool flags the heart-rate
-              threshold, auto-calculates the 80–90% sub-symptom-threshold training band, and tracks HRt across re-tests so
-              you can watch the threshold rise as the athlete recovers. The clinical loop — assess, prescribe, progress —
-              in one place.
+              threshold, auto-calculates the 80–90% sub-symptom-threshold training band, and generates the
+              sub-symptom-threshold aerobic prescription. The clinical loop — assess, prescribe, progress — in one place.
             </p>
-          </div>
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700">
+              Launch the calculator <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
         </div>
       </main>
     </div>
