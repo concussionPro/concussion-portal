@@ -89,6 +89,7 @@ export const module4: Module = {
       title: 'The Progression Algorithm: Re-Testing and Stepping the Ceiling',
       content: [
         'Sub-symptom-threshold exercise is a moving target by design. As autonomic regulation and cardiovascular fitness recover, the symptom threshold rises — the patient can tolerate higher heart rates without provocation. Your job is to track that recovery and progressively expand the training ceiling so the stimulus stays effective. Progress too slowly and the patient plateaus and deconditions; progress too fast and you provoke symptoms and lose adherence.',
+        '[VIDEO: 0gnbcu9EQNM | Graduated Return to Play After Concussion (CDC HEADS UP)]',
         '### The standard progression',
         '   - Re-evaluate every 1–2 weeks. If the patient has completed the prescribed sessions for that period with NO symptom exacerbation (no 2-or-more-point flares, no delayed/next-day flares), step the HR ceiling up by 5–10 bpm.',
         '   - Progress duration first if not yet at 20–30 minutes, then progress intensity (the HR ceiling). Do not advance both simultaneously.',

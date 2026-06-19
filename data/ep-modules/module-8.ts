@@ -76,6 +76,7 @@ export const module8: Module = {
       title: 'The EP-to-Referrer Communication Letter',
       content: [
         'This is the document that closes the loop. The referring clinician sent the patient to you for reconditioning; they need to know what you found, what you are doing, how the patient is tolerating it, and — crucially — when they should re-enter the picture for the decisions that are theirs to make. Send an initial letter after assessment, and update letters at meaningful milestones or when something changes.',
+        '[VIDEO: n1TeXdMl3_I | Teach-Back Method: Ensuring Patient Understanding in Clinical Communication (AHRQ)]',
         '### Structure of an effective referrer letter',
         '   - Salutation and reference: patient name, date of injury, your assessment date, and the referrer\'s stated reason for referral.',
         '   - What you assessed and found, objectively: the test result and threshold, the baseline symptom load.',
@@ -86,6 +87,7 @@ export const module8: Module = {
         '"Thank you for referring [patient] following their concussion of 12 June. On treadmill testing the patient reached a symptom threshold at 148 bpm (symptoms rose from 2/10 to 5/10), consistent with an exercise-intolerance presentation. I have commenced sub-symptom-threshold aerobic reconditioning, prescribing steady-state aerobic work at approximately 125 bpm (around 85% of threshold) to drive autonomic recovery without provoking symptoms. The patient is now tolerating Stage 2–3 reconditioning with good adherence and a falling symptom score (12/22 at baseline, 5/22 this week). I will continue to progress the heart-rate ceiling as tolerance improves and update you at the next milestone. As the patient approaches return to full training, I recommend medical review to consider clearance for return-to-contact, which sits outside my scope as an exercise physiologist."',
         '[CALLOUT: scope | Read the last sentence of that letter again. It does three things: it signals the patient is improving, it names the next decision, and it explicitly returns that decision to the medical practitioner. A good referrer letter always tells the doctor where your scope ends and theirs begins.]',
         'Keep the tone collegial and the content objective. Avoid speculating about causation, prognosis beyond your evidence, or anything that reads as a diagnosis. Obtain and record the patient\'s consent before sending the letter, and send it only to the named recipient(s) the patient has agreed to.',
+        '[VIDEO: zpZ8JgE8DZc | SHARE Approach: Shared Decision-Making in Clinical Practice (AHRQ)]',
       ],
     },
     {

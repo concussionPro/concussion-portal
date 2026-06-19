@@ -87,6 +87,7 @@ export const module6: Module = {
         '   - Step 6 — Sport-specific running drills: integrate sport-shaped running — shuttle patterns, position-specific movement, reactive cues, ball/implement work — at training intensity. Goal: full non-contact running capacity, ready to feed into team training.',
         '[CALLOUT: key | Progress one variable at a time. Increase duration before pace, pace before intensity, and linear load before multidirectional load. Stacking volume, intensity and change-of-direction in the same step is the fastest way to provoke symptoms and lose the thread on what caused them.]',
         'Change-of-direction and reactive running are where covert vestibular-ocular intolerance often surfaces — an athlete who is fine running in a straight line can become symptomatic when rapid head turns and gaze shifts are added. Treat the appearance of symptoms at step 5 as useful diagnostic information to feed back to the referrer, not simply a programming failure.',
+        '[VIDEO: fA392PbM3-A | Sports Concussion Exam: Balance Error Scoring System — BESS (Duke Neurology)]',
       ],
     },
     {

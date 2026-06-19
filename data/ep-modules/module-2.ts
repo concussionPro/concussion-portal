@@ -89,6 +89,7 @@ export const module2: Module = {
       content: [
         'A small number of presentations indicate a potentially serious or evolving brain or cervical spine injury. These are red flags. When any red flag is present, the EP stops all activity and escalates to emergency care immediately — by ambulance (000) where appropriate. Red flags are never managed by the EP; they are escalated.',
         '[CALLOUT: warning | Red flags requiring IMMEDIATE emergency referral (call 000 / send to ED): deteriorating consciousness or increasing drowsiness; a seizure or convulsion; repeated vomiting; increasing, severe, or worsening headache; weakness, numbness, or tingling in the arms or legs; double vision; slurred speech or increasing confusion or agitation; neck pain or tenderness, especially with any neurological signs; loss of consciousness; or clear fluid from the ears or nose.]',
+        '[VIDEO: rYWIy-Td2Q4 | Concussion Danger Signs — When to Seek Emergency Care (CDC)]',
         '### The red flag list in detail',
         '   - Deteriorating level of consciousness — increasing drowsiness, difficulty being roused, or a clearly declining ability to stay alert. A brain injury that is getting worse over minutes to hours is a neurosurgical emergency.',
         '   - Seizure or convulsion — any seizure activity after a head impact.',

@@ -38,6 +38,7 @@ export const module1: Module = {
       content: [
         '### What "Functional" Actually Means',
         'A concussion is a complex pathophysiological process affecting the brain, induced by biomechanical forces. The defining feature for clinical practice is that it is a FUNCTIONAL disturbance of brain physiology rather than a STRUCTURAL lesion. The hardware is intact; the way it processes energy and signals is temporarily deranged.',
+        '[VIDEO: ny38BOMC1kE | Coup-Contrecoup Injury — Medical Animation]',
         'This is why standard CT and MRI scans are typically normal in concussion. As an EP you will not be ordering imaging, and you do not need to interpret it — but you do need to understand its implications, because patients routinely misread a normal scan as proof that they are fine.',
         '[CALLOUT: key | "My scan was clear" does NOT mean "I have recovered." Routine CT and MRI image structure, not function. They are ordered to rule OUT a bleed or fracture (a structural emergency), not to rule IN or OUT a concussion. A patient can have a completely normal scan and a profoundly dysfunctional brain.]',
         'Concussion is classified as a mild traumatic brain injury (mTBI). The word "mild" describes the absence of structural damage and the initial presentation — it does NOT describe the symptom burden, the functional limitation, or the recovery trajectory, all of which can be significant.',
@@ -53,6 +54,7 @@ export const module1: Module = {
       title: 'The Neurometabolic Cascade: The Brain\'s Energy Crisis',
       content: [
         'At the cellular level, the biomechanical force of a concussion triggers a cascade of ionic, metabolic and neurochemical changes known as the neurometabolic cascade (Giza & Hovda, 2014). For the EP, the most useful single framing of this cascade is that it produces an ENERGY CRISIS: a brain that suddenly needs far more fuel while simultaneously losing the ability to deliver it.',
+        '[VIDEO: gLwtJcKh4gQ | 2-Minute Neuroscience: Concussions]',
         '### How the Energy Crisis Develops',
         'The sequence runs as follows. Each step is worth understanding because it maps directly onto the symptoms your patients describe during exertion.',
         '   - MECHANICAL DISRUPTION (immediate): biomechanical force stretches neuronal membranes, opening mechanosensitive ion channels and disrupting the axonal cytoskeleton.',

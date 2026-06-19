@@ -27,6 +27,7 @@ export const module7: Module = {
       title: 'Persistent Post-Concussion Symptoms: Definition and Who Is at Risk',
       content: [
         'Most concussions resolve within the expected window — roughly 2 weeks in adults and up to 4 weeks in children and adolescents (Amsterdam consensus, 2023). When symptoms persist beyond that window, the patient is described as having persistent post-concussion symptoms (PPCS). The terminology matters: current consensus and the leading researchers (Silverberg and colleagues) favour "persistent symptoms after concussion" or PPCS over the older "post-concussion syndrome", because the symptoms are real and treatable rather than a fixed syndrome, and because most are NOT specific to brain injury.',
+        '[VIDEO: gcU4QhOsjCg | Post-Concussive Syndrome: Clinical Management and Recovery Pathways (BrainLine / PBS)]',
         '### What PPCS is — and is not',
         '   - PPCS is a description of a recovery that has not followed the expected trajectory, defined by symptom duration beyond the typical window (commonly operationalised as symptoms persisting beyond ~4 weeks). It is a clinical descriptor, not a single diagnosis with a single cause.',
         '   - The persisting symptoms are frequently non-specific. Headache, fatigue, poor sleep, dizziness, difficulty concentrating, irritability and low mood occur in healthy people, in neck injury, in migraine, in anxiety and depression, and after orthopaedic trauma without any head impact. This is why PPCS is best understood as a final common pathway of several distinct, often overlapping drivers.',
@@ -36,6 +37,7 @@ export const module7: Module = {
         'A consistent set of factors predicts a longer recovery and a higher likelihood of PPCS. Knowing them lets you set realistic expectations and watch the at-risk patient more closely.',
         '   - A high initial symptom burden — the single most consistent predictor. The more severe and numerous the early symptoms (especially headache, dizziness and a large total symptom score), the longer the expected recovery.',
         '   - A prior history of concussion, particularly multiple or recent concussions, or a concussion sustained before full recovery from the previous one.',
+        '[VIDEO: Ai5AXF7XKw8 | Second Impact Syndrome (BrainLine / PBS)]',
         '   - A personal or family history of migraine, and early post-injury headache with migrainous features.',
         '   - Pre-existing or current mood and anxiety disorders, or a history of them. Psychological factors are among the strongest modifiable contributors to persistence.',
         '   - Adolescent age, female sex, and a learning disorder or ADHD history are associated with longer recovery in parts of the literature.',
