@@ -101,6 +101,7 @@ export const module4: Module = {
         '   - Plateau for more than ~2 weeks with no progression despite good adherence: escalate. A genuine physiological plateau warrants re-referral and multidisciplinary review (the symptom driver may not be aerobic).',
         '### The clearance endpoint',
         '[CALLOUT: key | The aerobic-recovery endpoint is the ability to exercise to approximately 90% of age-predicted maximum heart rate (or to volitional exhaustion) on a graded test WITHOUT symptom provocation — i.e. a normal, symptom-free maximal exertion test. At that point the physiological/autonomic phenotype has resolved. Note: a normal exertion test is a marker of recovered exercise tolerance. It is NOT the same as medical clearance for return to contact sport — that decision sits with the diagnosing medical clinician, not the AEP.]',
+        'A practical note on tracking: clients do most of these sessions between appointments, so where it suits, many AEPs have them use the at-home patient app — it holds the client in their target band, logs each session, and surfaces the recovery curve, so your review becomes a glance rather than a reconstruction. A paper session log (in your toolkit) does the same job manually; the choice is purely about convenience, not clinical necessity.',
       ],
     },
     {

@@ -113,6 +113,7 @@ export const module8: Module = {
         '   - Make entries contemporaneously, keep them legible and attributable, and correct errors transparently (single dated, initialled amendment — never delete or overwrite).',
         '   - Retain records for the period required for adult and paediatric patients under your jurisdiction\'s health-records legislation.',
         'Across all four documents — assessment record, tracking sheet, referrer letter and progress note — the through-line is the same. Be objective, be contemporaneous, protect the patient\'s privacy, and keep your scope visible: you recommend and report; you do not diagnose and you do not clear for contact.',
+        'A practical efficiency note: if you use the at-home tool described in your toolkit, its clinic dashboard can pre-fill these four documents from the logged session data for you to review, correct and sign — the same accountability principle as any AI-assisted note applies (the record remains yours). It removes the transcription, not the clinical authorship, and every document here can be completed manually from the templates.',
       ],
     },
   ],

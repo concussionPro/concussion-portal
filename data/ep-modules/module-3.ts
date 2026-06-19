@@ -128,6 +128,7 @@ export const module3: Module = {
         '   - MODE: a sustainable, low-risk aerobic mode the client can hold steady — walking, stationary cycling, or treadmill. No contact, no high-impact, no head-position-challenging activity at this stage.',
         '   - RULE OF THUMB: exercising into a mild symptom bump that settles within an hour is acceptable; symptoms that worsen and persist mean the dose was too high — reduce the target HR by 5–10 bpm.',
         'The prescription is individualised by construction: two clients of the same age and fitness can have very different HRt values, and therefore very different target zones. The test is the personalisation.',
+        'A practical note: this conversion can be done by hand — the prescription template in your toolkit walks it through — or the Clinic App’s BCTT calculator does it for you, flagging the HRt from the test data and returning the 80–90% band ready to share with the client. The clinical reasoning is identical either way; the tool simply removes the arithmetic and the transcription.',
       ],
     },
     {
