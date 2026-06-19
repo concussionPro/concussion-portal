@@ -4,6 +4,7 @@ import { jsPDF } from 'jspdf'
 import { sendEmailWithAttachment } from '@/lib/resend-client'
 import { CONFIG } from '@/lib/config'
 import { sql } from '@/lib/db'
+import { generateComparisonPdf, type ComparisonTest } from '@/lib/preseason/comparison-pdf'
 
 function escapeHtml(str: string): string {
   return str
@@ -634,10 +635,45 @@ async function ensureBaselinesTable() {
         cognitive_score INTEGER NOT NULL DEFAULT 0
       )
     `
+    // Added later for the serial-comparison report. payload stores the full
+    // submission so per-domain comparison is possible for tests submitted from
+    // here on (legacy rows keep only the summary scalars). Idempotent.
+    await sql`ALTER TABLE preseason_baselines ADD COLUMN IF NOT EXISTS cognitive_max INTEGER`
+    await sql`ALTER TABLE preseason_baselines ADD COLUMN IF NOT EXISTS test_number INTEGER`
+    await sql`ALTER TABLE preseason_baselines ADD COLUMN IF NOT EXISTS payload JSONB`
   } catch {
     // Table already exists or permissions differ — safe to continue
   }
   baselinesTableReady = true
+}
+
+// Map a stored baseline row to the comparison shape. Per-domain fields come
+// from the JSONB payload when present; legacy rows fall back to summary scalars.
+function rowToComparisonTest(r: Record<string, unknown>, index: number): ComparisonTest {
+  const t: ComparisonTest = {
+    testNumber: (r.test_number as number) ?? index,
+    date: r.submitted_at instanceof Date ? r.submitted_at.toISOString() : String(r.submitted_at),
+    symptomCount: Number(r.symptom_count ?? 0),
+    symptomSeverity: Number(r.symptom_severity ?? 0),
+    cognitiveScore: Number(r.cognitive_score ?? 0),
+    cognitiveMax: Number(r.cognitive_max ?? 30),
+  }
+  const p = r.payload as SubmitPayload | null
+  if (p && p.cognitive) {
+    const imm = p.cognitive.immediateMemory
+    t.orientation = p.cognitive.orientation?.score
+    t.immediateMemory = imm?.total ?? imm?.score
+    t.delayedRecall = p.cognitive.delayedRecall?.score
+    t.concentration = p.cognitive.concentration?.total
+    if (p.oculomotor) {
+      const keys: (keyof OculomotorData)[] = ['horizontalSaccades', 'verticalSaccades', 'horizontalPursuit', 'verticalPursuit']
+      t.oculomotorProvoked = keys.filter((k) => {
+        const ex = p.oculomotor![k]
+        return ex && ex.symptoms.length > 0 && !ex.symptoms.includes('None')
+      }).length
+    }
+  }
+  return t
 }
 
 export async function POST(request: Request) {
@@ -769,15 +805,47 @@ export async function POST(request: Request) {
     `
 
     // Persist baseline submission to Postgres for admin dashboard (skip demo)
+    let comparisonBuffer: Buffer | null = null
     if (!isDemo) {
       try {
         await ensureBaselinesTable()
         await sql`
-          INSERT INTO preseason_baselines (clinic_code, clinic_name, athlete_name, dob, submitted_at, symptom_count, symptom_severity, cognitive_score)
-          VALUES (${body.clinicCode.toUpperCase()}, ${clinic.clinicName}, ${body.athlete.name || 'Unknown'}, ${body.athlete.dob || null}, NOW(), ${symptomCount}, ${symptomTotal}, ${totalCognitive})
+          INSERT INTO preseason_baselines (clinic_code, clinic_name, athlete_name, dob, submitted_at, symptom_count, symptom_severity, cognitive_score, cognitive_max, test_number, payload)
+          VALUES (${body.clinicCode.toUpperCase()}, ${clinic.clinicName}, ${body.athlete.name || 'Unknown'}, ${body.athlete.dob || null}, NOW(), ${symptomCount}, ${symptomTotal}, ${totalCognitive}, ${totalCognitiveMax}, ${body.testNumber ?? 1}, ${JSON.stringify(body)}::jsonb)
         `
       } catch (err) {
         console.error('Failed to persist baseline submission to Postgres:', err)
+      }
+
+      // Serial comparison — once this athlete has 2+ baselines, build a
+      // side-by-side comparison report so the clinician sees improvement/stall
+      // at a glance. Non-fatal: a failure here must never block the email.
+      try {
+        const normName = (body.athlete.name || 'Unknown').trim().toLowerCase()
+        const normCode = body.clinicCode.toUpperCase()
+        const { rows: priorRows } = body.athlete.dob
+          ? await sql`
+              SELECT submitted_at, symptom_count, symptom_severity, cognitive_score, cognitive_max, test_number, payload
+              FROM preseason_baselines
+              WHERE clinic_code = ${normCode} AND LOWER(TRIM(athlete_name)) = ${normName}
+                AND (dob IS NULL OR dob = ${body.athlete.dob})
+              ORDER BY submitted_at ASC`
+          : await sql`
+              SELECT submitted_at, symptom_count, symptom_severity, cognitive_score, cognitive_max, test_number, payload
+              FROM preseason_baselines
+              WHERE clinic_code = ${normCode} AND LOWER(TRIM(athlete_name)) = ${normName}
+              ORDER BY submitted_at ASC`
+        if (priorRows.length >= 2) {
+          const tests = priorRows.map((r, i) => rowToComparisonTest(r, i + 1))
+          comparisonBuffer = generateComparisonPdf({
+            clinicName: clinic.clinicName,
+            athleteName: body.athlete.name || 'Unknown Athlete',
+            athleteMeta: { sport: body.athlete.sport, team: body.athlete.team, dob: body.athlete.dob, sex: body.athlete.sex },
+            tests,
+          })
+        }
+      } catch (err) {
+        console.error('Serial comparison generation failed (non-fatal):', err)
       }
     }
 
@@ -786,16 +854,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true })
     }
 
-    // Send via Resend SDK with attachment
+    // Send via Resend SDK with attachment(s). When a serial comparison was
+    // built (2+ tests), attach it alongside this test's individual report.
     const emailSent = await sendEmailWithAttachment({
       to: clinic.email,
-      subject: `SCAT6 Baseline Report — ${athleteName}${body.testNumber && body.testNumber > 1 ? ` (Test #${body.testNumber})` : ''} (${date})`,
+      subject: `SCAT6 Baseline Report — ${athleteName}${body.testNumber && body.testNumber > 1 ? ` (Test #${body.testNumber})` : ''} (${date})${comparisonBuffer ? ' + Serial Comparison' : ''}`,
       html: emailHtml,
       attachments: [
         {
           filename: `SCAT6-Baseline-${athleteName.replace(/\s+/g, '-')}-${date.replace(/\//g, '-')}.pdf`,
           content: pdfBuffer,
         },
+        ...(comparisonBuffer
+          ? [{
+              filename: `SCAT6-Serial-Comparison-${athleteName.replace(/\s+/g, '-')}-${date.replace(/\//g, '-')}.pdf`,
+              content: comparisonBuffer,
+            }]
+          : []),
       ],
     })
 
