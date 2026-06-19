@@ -431,10 +431,10 @@ export default async function ConcussionRehabMasteryPage() {
 
           <div className="mx-auto mt-10 max-w-md rounded-3xl border border-[var(--border-strong)] bg-[var(--card-solid)] p-8 shadow-[var(--shadow-lg)] sm:p-10">
             <div className="text-5xl font-extrabold tracking-[-0.03em] text-[var(--foreground)]">
-              [price TBC]
+              A$497
             </div>
             <p className="mt-2 text-sm font-medium text-[var(--muted-foreground)]">
-              One-time payment · lifetime access
+              One-time payment · lifetime access · includes a free trial of the Clinic App while you train
             </p>
 
             <ul className="mt-8 space-y-3 text-left">
