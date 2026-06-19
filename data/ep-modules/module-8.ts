@@ -187,12 +187,12 @@ export const module8: Module = {
     },
   ],
   clinicalReferences: [
-    'Patricios JS, Schneider KJ, Dvorak J, et al. Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport, Amsterdam, October 2022. British Journal of Sports Medicine. 2023;57(11):695-711.',
+    'Patricios JS, Schneider KJ, Dvorak J, et al. Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport, Amsterdam, October 2022. British Journal of Sports Medicine. 2023;57(11):695-711. https://doi.org/10.1136/bjsports-2023-106898',
     'Exercise & Sports Science Australia (ESSA). Accredited Exercise Physiologist Professional Standards and Code of Professional Conduct and Ethical Practice — record-keeping, scope of practice and communication with referring practitioners.',
     'Australian Health Practitioner Regulation Agency (AHPRA) and National Boards. Guidelines and Code of Conduct — clinical records: requirements for accurate, contemporaneous, legible and securely stored records (benchmark for registered allied health practice under the Health Practitioner Regulation National Law).',
     'Office of the Australian Information Commissioner (OAIC). Australian Privacy Principles (APPs), Privacy Act 1988 (Cth) — handling of health information as sensitive information, including collection, use, disclosure, data security (APP 11) and cross-border disclosure (APP 8).',
-    'Leddy JJ, Haider MN, Ellis MJ, et al. Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. JAMA Pediatrics. 2019;173(4):319-325. (Source of the sub-symptom-threshold prescription and re-test progression that the assessment and tracking documents record.)',
-    'Leddy JJ, Willer B. Use of graded exercise testing in concussion and return-to-activity management. Current Sports Medicine Reports. 2013;12(6):370-376. (Buffalo Concussion Treadmill Test protocol and heart-rate-threshold interpretation underpinning the assessment record.)',
+    'Leddy JJ, Haider MN, Ellis MJ, et al. Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. JAMA Pediatrics. 2019;173(4):319-325. (Source of the sub-symptom-threshold prescription and re-test progression that the assessment and tracking documents record.) https://doi.org/10.1001/jamapediatrics.2018.4397',
+    'Leddy JJ, Willer B. Use of graded exercise testing in concussion and return-to-activity management. Current Sports Medicine Reports. 2013;12(6):370-376. (Buffalo Concussion Treadmill Test protocol and heart-rate-threshold interpretation underpinning the assessment record.) https://doi.org/10.1249/JSR.0000000000000008',
     'Australian Institute of Sport (AIS) and Australian Medical Association. Concussion and Brain Health Position Statement 2024 — shared-care pathways and the requirement for medical clearance prior to return to contact/collision activity.',
   ],
 }

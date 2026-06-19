@@ -235,10 +235,10 @@ export const module6: Module = {
     },
   ],
   clinicalReferences: [
-    'Patricios JS, Schneider KJ, Dvorak J, et al. Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport, Amsterdam, October 2022. British Journal of Sports Medicine. 2023;57(11):695-711.',
+    'Patricios JS, Schneider KJ, Dvorak J, et al. Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport, Amsterdam, October 2022. British Journal of Sports Medicine. 2023;57(11):695-711. https://doi.org/10.1136/bjsports-2023-106898',
     'Australian Institute of Sport & Sports Medicine Australia. Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
-    'Leddy JJ, Haider MN, Ellis MJ, et al. Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. JAMA Pediatrics. 2019;173(4):319-325.',
-    'Leddy JJ, Burma JS, Toomey CM, et al. Rest and exercise early after sport-related concussion: a systematic review and meta-analysis. British Journal of Sports Medicine. 2023;57(12):762-770.',
+    'Leddy JJ, Haider MN, Ellis MJ, et al. Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. JAMA Pediatrics. 2019;173(4):319-325. https://doi.org/10.1001/jamapediatrics.2018.4397',
+    'Leddy JJ, Burma JS, Toomey CM, et al. Rest and exercise early after sport-related concussion: a systematic review and meta-analysis. British Journal of Sports Medicine. 2023;57(12):762-770. https://doi.org/10.1136/bjsports-2022-106676',
     'Schneider KJ, Patricios JS, Echemendia RJ, et al. Concussion in sport: the consensus process continues. British Journal of Sports Medicine. 2023;57(11):617-618.',
     'Gabbett TJ. The training-injury prevention paradox: should athletes be training smarter and harder? British Journal of Sports Medicine. 2016;50(5):273-280.',
     'Haider MN, Leddy JJ, Pavlesen S, et al. A systematic review of criteria used to define recovery from sport-related concussion in youth athletes. British Journal of Sports Medicine. 2018;52(18):1179-1190.',
