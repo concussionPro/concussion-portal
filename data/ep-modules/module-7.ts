@@ -228,7 +228,7 @@ export const module7: Module = {
   ],
   clinicalReferences: [
     'Leddy, J. J., Haider, M. N., Ellis, M. J., et al. (2019). Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. JAMA Pediatrics, 173(4), 319-325. https://doi.org/10.1001/jamapediatrics.2018.4397',
-    'Leddy, J. J., Burma, J. S., Toomey, C. M., et al. (2021). Rest and exercise early after sport-related concussion: a systematic review and meta-analysis. British Journal of Sports Medicine, 55(12), 658-665. https://doi.org/10.1136/bjsports-2020-103676',
+    'Leddy, J. J., Burma, J. S., Toomey, C. M., et al. (2023). Rest and exercise early after sport-related concussion: a systematic review and meta-analysis. British Journal of Sports Medicine, 57(12), 762-770. https://doi.org/10.1136/bjsports-2022-106676',
     'Leddy, J. J., Baker, J. G., & Willer, B. (2016). Active rehabilitation of concussion and post-concussion syndrome. Physical Medicine and Rehabilitation Clinics of North America, 27(2), 437-454. https://doi.org/10.1016/j.pmr.2015.12.003',
     'Ellis, M. J., Leddy, J. J., & Willer, B. (2015). Physiological, vestibulo-ocular and cervicogenic post-concussion disorders: an evidence-based classification system with directions for treatment. Brain Injury, 29(2), 238-248. https://doi.org/10.1080/02699052.2014.965207',
     'Silverberg, N. D., Iverson, G. L., & ACRM Brain Injury Special Interest Group Mild TBI Task Force (2020). Expert panel survey to update the American Congress of Rehabilitation Medicine definition of mild traumatic brain injury / persistent symptoms after concussion. Archives of Physical Medicine and Rehabilitation, 101(1), 76-86. https://doi.org/10.1016/j.apmr.2019.10.179',
