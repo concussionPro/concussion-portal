@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const allowedFiles = [
       'SCAT6_Fillable.pdf',
       'SCOAT6_Fillable.pdf',
+      'Child_SCAT6_Flat.pdf',
       'Concussion Clinical Cheat Sheet.pdf',
       'Concussion Myth-Buster Sheet.pdf',
       'Post-Concussion Syndrome (PCS) Clinical Flowchart.pdf',

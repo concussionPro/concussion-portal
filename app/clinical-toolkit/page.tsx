@@ -38,6 +38,15 @@ const toolkitResources: ToolkitResource[] = [
     fileName: 'SCOAT6_Fillable.pdf'
   },
   {
+    id: 'child-scat6',
+    title: 'Child SCAT6',
+    description: 'Child Sport Concussion Assessment Tool (6th Edition), ages 5–12 - print to complete; send home for the symptom/history sections ahead of the appointment',
+    fileSize: '2.0 MB',
+    category: 'assessment',
+    isFree: false,
+    fileName: 'Child_SCAT6_Flat.pdf'
+  },
+  {
     id: 'cheat-sheet',
     title: 'Concussion Clinical Cheat Sheet',
     description: 'Quick reference guide for acute concussion management and red flags',
