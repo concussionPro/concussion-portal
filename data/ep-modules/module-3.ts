@@ -294,7 +294,7 @@ export const module3: Module = {
       id: 'part-a',
       title: 'Part A — Administering the Test',
       subtitle: 'Screening, the Balke protocol and finding the symptom threshold',
-      sectionIds: ['learning-outcomes', 'assessment-is-treatment', 'pre-test-screening', 'baseline-and-protocol', 'termination-and-hrt'],
+      sectionIds: ['learning-outcomes', 'learning-objectives', 'assessment-is-treatment', 'pre-test-screening', 'baseline-and-protocol', 'termination-and-hrt'],
       quizIds: ['q1', 'q2', 'q3'],
     },
     {
