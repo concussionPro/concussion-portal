@@ -364,7 +364,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     if (module && moduleProgress) {
       const canComplete = canMarkModuleComplete(moduleId)
       const alreadyComplete = isModuleComplete(moduleId)
-      // AUTO-COMPLETE on quiz pass (75%+) — was requiring a manual button click
+      // AUTO-COMPLETE on quiz pass (80%+) — was requiring a manual button click
       // which most users miss. Result: paid users who finished content showed
       // as 'barely finished' in admin, and upgrade pitches gated on completion
       // count never fired (SCAT-free → paid upsell, almost-done nurture etc).
@@ -542,7 +542,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
       moduleId,
       score: correctCount,
       totalQuestions: module.quiz.length,
-      passed: correctCount / module.quiz.length >= 0.75,
+      passed: correctCount / module.quiz.length >= 0.8,
     })
 
     // Mark all parts (or standard quiz key 0) as submitted
@@ -1191,7 +1191,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">Knowledge Check</h2>
                 <p className="text-[15px] text-slate-600 leading-relaxed">
-                  Test your understanding of the clinical content. You need at least {Math.ceil(module.quiz.length * 0.75)} out of {module.quiz.length} questions correct to pass and earn your CPD hours.
+                  Test your understanding of the clinical content. You need at least {Math.ceil(module.quiz.length * 0.8)} out of {module.quiz.length} questions correct to pass and earn your CPD hours.
                 </p>
               </div>
             </div>
@@ -1390,7 +1390,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                     {moduleProgress.quizCompleted &&
                      moduleProgress.quizScore !== null &&
                      moduleProgress.quizTotalQuestions !== null &&
-                     (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.75 ? (
+                     (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.8 ? (
                       <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center">
                         <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={2.5} />
                       </div>
@@ -1403,11 +1403,11 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                       Pass Final Knowledge Check
                     </p>
                     <p className="text-sm text-slate-600">
-                      Score at least 75% to demonstrate mastery
+                      Score at least 80% to demonstrate mastery
                       {moduleProgress.quizCompleted &&
                        moduleProgress.quizScore !== null &&
                        moduleProgress.quizTotalQuestions !== null &&
-                       (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.75 && ' — Completed'}
+                       (moduleProgress.quizScore / moduleProgress.quizTotalQuestions) >= 0.8 && ' — Completed'}
                     </p>
                   </div>
                 </div>

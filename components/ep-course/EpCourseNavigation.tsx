@@ -253,13 +253,13 @@ export function EpCourseNavigation({
                           {progress.quizCompleted &&
                            progress.quizScore !== null &&
                            progress.quizTotalQuestions !== null &&
-                           (progress.quizScore / progress.quizTotalQuestions) >= 0.75 && (
+                           (progress.quizScore / progress.quizTotalQuestions) >= 0.8 && (
                             <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 ml-auto" />
                           )}
                           {(!progress.quizCompleted ||
                             progress.quizScore === null ||
                             progress.quizTotalQuestions === null ||
-                            (progress.quizScore / progress.quizTotalQuestions) < 0.75) && (
+                            (progress.quizScore / progress.quizTotalQuestions) < 0.8) && (
                             <div className="w-3.5 h-3.5 border-2 border-slate-300 rounded-full ml-auto" />
                           )}
                         </button>
