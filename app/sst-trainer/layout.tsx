@@ -1,4 +1,20 @@
 import { Metadata } from 'next'
+import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
+
+// Hanken Grotesk = the design's UI typeface; Space Grotesk = the instrument /
+// numeric face used for HR, scores and clocks (tabular figures).
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-hanken',
+  display: 'swap',
+})
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-space',
+  display: 'swap',
+})
 
 // NOTE: this app is pre-launch and patient-facing. It must NOT be indexed and
 // must NOT be linked from any public nav. Metadata can't live in the page
@@ -15,5 +31,7 @@ export const metadata: Metadata = {
 }
 
 export default function SstTrainerLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <div className={`${hanken.variable} ${spaceGrotesk.variable}`}>{children}</div>
+  )
 }

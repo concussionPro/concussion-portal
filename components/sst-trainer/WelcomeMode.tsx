@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Condition } from '@/lib/sst-trainer/protocol'
+import { PrimaryButton } from './shell'
 
 export type TrainerMode = 'self-guided' | 'clinic-code'
 
@@ -11,11 +12,12 @@ export interface WelcomeSelection {
   condition: Condition
 }
 
-const CONDITIONS: { value: Condition; label: string }[] = [
-  { value: 'concussion', label: 'Concussion' },
-  { value: 'mtbi', label: 'Mild TBI (mTBI)' },
-  { value: 'tbi', label: 'Moderate–severe TBI' },
-  { value: 'neuro-other', label: 'Other neuro condition' },
+/** The four care pathways from the design, mapped to engine Conditions. */
+const PATHWAYS: { value: Condition; label: string; sub: string }[] = [
+  { value: 'concussion', label: 'Concussion', sub: 'Concussion · mTBI' },
+  { value: 'cancer', label: 'Cancer', sub: 'prehab & rehab' },
+  { value: 'long-covid', label: 'Long COVID', sub: 'POTS · dysautonomia' },
+  { value: 'cardiac', label: 'Cardiac', sub: '& pulmonary rehab' },
 ]
 
 export default function WelcomeMode({
@@ -32,89 +34,112 @@ export default function WelcomeMode({
   const codeRequiredButMissing = mode === 'clinic-code' && clinicCode.trim().length === 0
 
   return (
-    // DESIGN: hero / cover screen — calm, reassuring first impression, brand teal #5b9aa6, generous whitespace, instrument-grade product mark
-    <section className="flex flex-col gap-6 p-4">
-      <header className="flex flex-col gap-1">
-        {/* DESIGN: product wordmark / logo lockup */}
-        <h1 className="text-2xl font-semibold">Sub-Symptom-Threshold Trainer</h1>
-        <p className="text-sm text-gray-600">
-          Home-based, paced exercise that stays under your symptom limit — set up and overseen by your clinician.
+    <section className="flex flex-col gap-4 pt-1.5">
+      {/* product lockup */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-2.5">
+          <span className="relative h-[34px] w-[34px] flex-none rounded-full border-[2.5px] border-[#5b9aa6]">
+            <span className="absolute left-1/2 top-1/2 h-[11px] w-[11px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5b9aa6]" />
+          </span>
+          <h1 className="m-0 text-[21px] font-extrabold leading-[1.05] tracking-[-0.02em]">
+            Sub-Symptom
+            <br />
+            Threshold Trainer
+          </h1>
+        </div>
+        <p className="m-0 text-[13px] leading-snug text-[#5d7174]">
+          Prescribed, threshold-paced exercise rehab — one platform, your pathway, overseen by your
+          clinician.
         </p>
-      </header>
+      </div>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-sm font-medium">How are you using this?</legend>
+      {/* mode segmented control */}
+      <div className="flex flex-col gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
+          How are you using this?
+        </span>
+        <div className="flex gap-1 rounded-[14px] bg-[#e7eeee] p-1">
+          {(
+            [
+              ['self-guided', 'Self-guided'],
+              ['clinic-code', 'Clinic code'],
+            ] as const
+          ).map(([m, label]) => {
+            const on = mode === m
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={`flex-1 rounded-[10px] p-2.5 text-[13px] font-semibold transition ${
+                  on
+                    ? 'bg-white text-[#16282b] shadow-[0_1px_2px_rgba(20,40,42,0.14)]'
+                    : 'bg-transparent text-[#7d9092]'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-        {/* DESIGN: large selectable mode cards (one-handed tappable) */}
-        <button
-          type="button"
-          onClick={() => setMode('self-guided')}
-          className={`rounded-lg border p-4 text-left ${
-            mode === 'self-guided' ? 'border-[#5b9aa6] bg-[#5b9aa6]/10' : 'border-gray-300'
-          }`}
-        >
-          <span className="block font-medium">Self-guided</span>
-          <span className="block text-sm text-gray-600">Run it on your own, following the protocol.</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setMode('clinic-code')}
-          className={`rounded-lg border p-4 text-left ${
-            mode === 'clinic-code' ? 'border-[#5b9aa6] bg-[#5b9aa6]/10' : 'border-gray-300'
-          }`}
-        >
-          <span className="block font-medium">I have a clinic code</span>
-          <span className="block text-sm text-gray-600">Pair with your clinician so they can review your results.</span>
-        </button>
-      </fieldset>
-
+      {/* TODO: real clinic pairing backend (validate code → link patient to clinician dashboard). For now we just capture the string. */}
       {mode === 'clinic-code' && (
-        <div className="flex flex-col gap-1">
-          <label htmlFor="clinic-code" className="text-sm font-medium">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="clinic-code" className="text-xs font-semibold text-[#3b4f52]">
             Clinic code
           </label>
-          {/* DESIGN+TODO: real pairing backend (validate code → link patient to clinician dashboard). For now we just capture the string. */}
           <input
             id="clinic-code"
             type="text"
             value={clinicCode}
             onChange={(e) => setClinicCode(e.target.value.toUpperCase())}
             placeholder="e.g. CEA-4827"
-            className="rounded-md border border-gray-300 p-3 text-base"
             autoCapitalize="characters"
+            className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base tracking-[0.06em] text-[#16282b] outline-none font-[family-name:var(--font-space)] focus:border-[#5b9aa6]"
           />
         </div>
       )}
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">What are you training for?</legend>
-        {/* DESIGN: segmented control / condition picker */}
+      {/* care pathway picker */}
+      <div className="flex flex-col gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
+          Care pathway
+        </span>
         <div className="grid grid-cols-2 gap-2">
-          {CONDITIONS.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              onClick={() => setCondition(c.value)}
-              className={`rounded-md border p-3 text-sm ${
-                condition === c.value ? 'border-[#5b9aa6] bg-[#5b9aa6]/10' : 'border-gray-300'
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
+          {PATHWAYS.map((p) => {
+            const on = condition === p.value
+            return (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setCondition(p.value)}
+                aria-pressed={on}
+                className={`flex flex-col gap-0.5 rounded-[14px] border-[1.5px] px-3 py-2.5 text-left transition ${
+                  on ? 'border-[#5b9aa6] bg-[#e7f2f3]' : 'border-[#d4e0e1] bg-white'
+                }`}
+              >
+                <span className="text-[13px] font-bold leading-tight text-[#16282b]">{p.label}</span>
+                <span className="text-[10px] leading-tight text-[#7d9092]">{p.sub}</span>
+              </button>
+            )
+          })}
         </div>
-      </fieldset>
+      </div>
 
-      {/* DESIGN: primary CTA — large, fixed-to-bottom on mobile, high contrast */}
-      <button
-        type="button"
+      <PrimaryButton
         disabled={codeRequiredButMissing}
-        onClick={() => onContinue({ mode, clinicCode: mode === 'clinic-code' ? clinicCode.trim() : null, condition })}
-        className="rounded-lg bg-[#5b9aa6] p-4 text-base font-medium text-white disabled:opacity-40"
+        onClick={() =>
+          onContinue({
+            mode,
+            clinicCode: mode === 'clinic-code' ? clinicCode.trim() : null,
+            condition,
+          })
+        }
       >
         Continue
-      </button>
+      </PrimaryButton>
     </section>
   )
 }

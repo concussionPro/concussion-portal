@@ -8,20 +8,23 @@ import type {
   TestInput,
   ThresholdResult,
 } from '@/lib/sst-trainer/protocol'
+import { AppShell, type Step } from '@/components/sst-trainer/shell'
 import WelcomeMode, { type WelcomeSelection } from '@/components/sst-trainer/WelcomeMode'
 import SymptomSelect from '@/components/sst-trainer/SymptomSelect'
 import Readiness, { type ReadinessResult } from '@/components/sst-trainer/Readiness'
 import GuidedTest from '@/components/sst-trainer/GuidedTest'
 import ResultPrescription from '@/components/sst-trainer/ResultPrescription'
+import HomeHub from '@/components/sst-trainer/HomeHub'
 import TrainingSession from '@/components/sst-trainer/TrainingSession'
 import ProgressDashboard from '@/components/sst-trainer/ProgressDashboard'
-
-type Step = 'welcome' | 'symptoms' | 'readiness' | 'test' | 'result' | 'training' | 'progress'
 
 /**
  * Flow orchestrator for the Sub-Symptom-Threshold Trainer (client-only state
  * machine). Holds all app state and steps through the screens. Persistence /
  * pairing backend is out of scope for this scaffold — state lives in memory.
+ *
+ * Flow (matches the design's startStep enum):
+ *   welcome → symptoms → readiness → test → result → home → training → progress
  *
  * Engine wiring (all in lib/sst-trainer/protocol.ts):
  *  - GuidedTest          → detectThreshold()
@@ -43,10 +46,7 @@ export default function SstTrainerPage() {
   const condition: Condition = welcome?.condition ?? 'concussion'
 
   return (
-    // DESIGN: app shell — mobile-first PWA frame, single column, safe-area padding, optional top progress indicator
-    <main className="mx-auto flex min-h-screen max-w-md flex-col bg-white text-gray-900">
-      {/* DESIGN: step/progress chrome (e.g. "Step 2 of 5") could live here */}
-
+    <AppShell step={step}>
       {step === 'welcome' && (
         <WelcomeMode
           initial={welcome ?? undefined}
@@ -96,10 +96,23 @@ export default function SstTrainerPage() {
         <ResultPrescription
           result={thresholdResult}
           condition={condition}
-          onStartTraining={(rx) => {
+          onContinue={(rx) => {
             setPrescription(rx)
-            setStep('training')
+            setStep('home')
           }}
+          onRetest={() => setStep('readiness')}
+        />
+      )}
+
+      {step === 'home' && prescription && welcome && (
+        <HomeHub
+          rx={prescription}
+          condition={condition}
+          mode={welcome.mode}
+          clinicCode={welcome.clinicCode}
+          sessionsThisWeek={sessions.length}
+          onStartSession={() => setStep('training')}
+          onProgress={() => setStep('progress')}
           onRetest={() => setStep('readiness')}
         />
       )}
@@ -111,7 +124,7 @@ export default function SstTrainerPage() {
             setSessions((prev) => [...prev, log])
             setStep('progress')
           }}
-          onCancel={() => setStep(sessions.length > 0 ? 'progress' : 'result')}
+          onCancel={() => setStep(prescription ? 'home' : 'result')}
         />
       )}
 
@@ -119,10 +132,10 @@ export default function SstTrainerPage() {
         <ProgressDashboard
           rx={prescription}
           sessions={sessions}
+          onHome={() => setStep('home')}
           onNewSession={() => setStep('training')}
-          onRetest={() => setStep('readiness')}
         />
       )}
-    </main>
+    </AppShell>
   )
 }

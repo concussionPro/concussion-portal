@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { RED_FLAGS } from '@/lib/sst-trainer/symptoms'
+import { PrimaryButton, ScreenHeading, SecondaryButton, SegmentBars, numFont } from './shell'
 
 export interface ReadinessResult {
   restingSymptomScore: number
@@ -32,113 +33,108 @@ export default function Readiness({
   }
 
   return (
-    // DESIGN: safety / readiness screen — serious but not alarming; red-flag block state must be unmistakable
-    <section className="flex flex-col gap-6 p-4">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold">Before you start</h1>
-        <p className="text-sm text-gray-600">A quick safety check.</p>
-      </header>
+    <section className="flex flex-col gap-[15px] pt-1.5">
+      <ScreenHeading title="Before you start" sub="A quick safety check." />
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">
-          Are you experiencing any of these right now?
-        </legend>
-        {/* DESIGN: red-flag checklist — visually distinct (warning treatment), large tap targets */}
-        <ul className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
+        <span className="text-[11px] font-semibold uppercase leading-tight tracking-[0.04em] text-[#b06a52]">
+          Any of these right now?
+        </span>
+        <div className="flex flex-col gap-[7px]">
           {RED_FLAGS.map((f) => {
-            const isOn = redFlags.has(f.id)
+            const on = redFlags.has(f.id)
             return (
-              <li key={f.id}>
-                <button
-                  type="button"
-                  onClick={() => toggleFlag(f.id)}
-                  aria-pressed={isOn}
-                  className={`flex w-full items-center gap-3 rounded-md border p-3 text-left text-base ${
-                    isOn ? 'border-red-500 bg-red-50' : 'border-gray-300'
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => toggleFlag(f.id)}
+                aria-pressed={on}
+                className={`flex w-full items-center gap-3 rounded-[14px] border-[1.5px] px-3 py-3 text-left transition ${
+                  on ? 'border-[#d2463a] bg-[#fbeae8]' : 'border-[#d4e0e1] bg-white'
+                }`}
+              >
+                <span
+                  className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[7px] border-[1.5px] text-xs font-bold text-white ${
+                    on ? 'border-[#d2463a] bg-[#d2463a]' : 'border-[#b9c9ca] bg-white'
                   }`}
                 >
-                  <span
-                    className={`flex h-5 w-5 items-center justify-center rounded border ${
-                      isOn ? 'border-red-500 bg-red-500 text-white' : 'border-gray-400'
-                    }`}
-                  >
-                    {isOn ? '✓' : ''}
-                  </span>
-                  {f.label}
-                </button>
-              </li>
+                  {on ? '✓' : ''}
+                </span>
+                <span className="text-[13.5px] leading-snug text-[#16282b]">{f.label}</span>
+              </button>
             )
           })}
-        </ul>
-      </fieldset>
+        </div>
+      </div>
 
       {blocked && (
-        // DESIGN: hard-stop emergency message — prominent, unambiguous
-        <div className="rounded-lg border border-red-500 bg-red-50 p-4 text-sm text-red-800">
-          <p className="font-semibold">Stop — do not start the test.</p>
-          <p className="mt-1">
-            One or more of these can be a warning sign. Please seek medical review now (your treating
-            clinician, or emergency care if symptoms are severe) before any exertion.
+        <div className="rounded-[16px] border-[1.5px] border-[#d2463a] bg-[#fbeae8] p-3.5">
+          <p className="m-0 text-sm font-bold text-[#b1392e]">Stop — do not start the test.</p>
+          <p className="mt-1.5 text-[12.5px] leading-snug text-[#8a4036]">
+            One of these can be a warning sign. Seek medical review now — your clinician, or emergency
+            care if severe — before any exertion.
           </p>
         </div>
       )}
 
       {!blocked && (
-        <>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="resting-score" className="text-sm font-medium">
-              How are your symptoms right now, at rest? ({restingScore}/10)
-            </label>
-            {/* DESIGN: instrument-grade 0–10 slider — big thumb, clear scale labels, one-handed */}
-            <input
-              id="resting-score"
-              type="range"
-              min={0}
-              max={10}
-              step={1}
+        <div className="flex flex-col gap-[18px]">
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[12.5px] font-semibold leading-tight text-[#3b4f52]">
+                Symptoms at rest, right now
+              </span>
+              <span className={`text-[18px] text-[#5b9aa6] ${numFont}`}>
+                {restingScore}
+                <span className="text-xs text-[#9bafb0]">/10</span>
+              </span>
+            </div>
+            <SegmentBars
               value={restingScore}
-              onChange={(e) => setRestingScore(Number(e.target.value))}
-              className="w-full accent-[#5b9aa6]"
+              onChange={setRestingScore}
+              variant="ramp"
+              ariaLabel="Resting symptom score, 0 to 10"
             />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>0 — none</span>
-              <span>10 — severe</span>
+            <div className="flex justify-between text-[10px] font-medium text-[#9bafb0]">
+              <span>0 · none</span>
+              <span>10 · severe</span>
             </div>
           </div>
 
-          {/* DESIGN: consent / scope acknowledgement card */}
-          <label className="flex items-start gap-3 rounded-md border border-gray-300 p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={consented}
-              onChange={(e) => setConsented(e.target.checked)}
-              className="mt-1 accent-[#5b9aa6]"
-            />
-            <span>
-              I understand this tool is not a diagnosis and not a return-to-play clearance. It should
-              be set up and overseen by my clinician. I will stop if I feel unwell.
+          <button
+            type="button"
+            onClick={() => setConsented((c) => !c)}
+            aria-pressed={consented}
+            className={`flex w-full items-start gap-3 rounded-[16px] border-[1.5px] p-3 text-left transition ${
+              consented ? 'border-[#5b9aa6] bg-[#e7f2f3]' : 'border-[#d4e0e1] bg-white'
+            }`}
+          >
+            <span
+              className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[7px] border-[1.5px] text-xs font-bold text-white ${
+                consented ? 'border-[#5b9aa6] bg-[#5b9aa6]' : 'border-[#b9c9ca] bg-white'
+              }`}
+            >
+              {consented ? '✓' : ''}
             </span>
-          </label>
-        </>
+            <span className="text-xs leading-relaxed text-[#3b4f52]">
+              I understand this isn&apos;t a diagnosis or return-to-play clearance, should be overseen
+              by my clinician, and I&apos;ll stop if I feel unwell.
+            </span>
+          </button>
+        </div>
       )}
 
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex-1 rounded-lg border border-gray-300 p-4 text-base font-medium"
-        >
+      <div className="flex gap-2.5 pt-0.5">
+        <SecondaryButton onClick={onBack} className="flex-1">
           Back
-        </button>
-        {/* DESIGN: primary CTA — disabled until consent + no red flags */}
-        <button
-          type="button"
+        </SecondaryButton>
+        <PrimaryButton
           disabled={blocked || !consented}
           onClick={() => onContinue({ restingSymptomScore: restingScore })}
-          className="flex-1 rounded-lg bg-[#5b9aa6] p-4 text-base font-medium text-white disabled:opacity-40"
+          className="flex-[1.4]"
         >
           Start test
-        </button>
+        </PrimaryButton>
       </div>
     </section>
   )

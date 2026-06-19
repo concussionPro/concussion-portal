@@ -25,7 +25,16 @@
  * defaults and copy — the safety logic is shared.
  */
 
-export type Condition = 'concussion' | 'mtbi' | 'tbi' | 'neuro-other'
+export type Condition =
+  | 'concussion'
+  | 'mtbi'
+  | 'tbi'
+  | 'neuro-other'
+  // Platform-expansion pathways (each a protocol module sharing the same safety
+  // logic; only the band/dose defaults below differ).
+  | 'cancer'
+  | 'long-covid'
+  | 'cardiac'
 
 /** A single minute/stage of the guided graded (threshold-finding) test. */
 export interface TestStage {
@@ -67,6 +76,24 @@ const CONDITION_DEFAULTS: Record<Condition, { lowerPct: number; upperPct: number
   // Moderate-severe TBI / neuro: start more conservative (wider safety margin, shorter).
   tbi:           { lowerPct: 0.7, upperPct: 0.8, sessionMinutes: 15, daysPerWeek: 5 },
   'neuro-other': { lowerPct: 0.7, upperPct: 0.85, sessionMinutes: 15, daysPerWeek: 5 },
+  // ── Platform-expansion pathways ──────────────────────────────────────────
+  // These deliberately mirror the tbi/neuro-other conservatism: a lower, narrower
+  // band well under the symptom ceiling and shorter, fewer sessions. The same
+  // HRt-anchored, symptom-limited safety logic applies — only the dose is gentler.
+  // Cancer (pre-/rehab): exercise oncology guidance favours moderate, well-
+  // tolerated aerobic dosing (~65-80% of an individualised ceiling) to manage
+  // fatigue/deconditioning without overload (ACSM/COSA exercise-oncology
+  // guidelines; Campbell et al. 2019 MSSE roundtable).
+  cancer:        { lowerPct: 0.65, upperPct: 0.8, sessionMinutes: 20, daysPerWeek: 5 },
+  // Long COVID / post-viral dysautonomia (POTS): pacing-first to avoid post-
+  // exertional symptom exacerbation — narrow band (~70-80%), shorter sessions,
+  // advance only on clean runs (NICE/CDC post-COVID pacing; Levine POTS exercise
+  // protocol adapted to a symptom-limited ceiling).
+  'long-covid':  { lowerPct: 0.7, upperPct: 0.8, sessionMinutes: 15, daysPerWeek: 5 },
+  // Cardiac / pulmonary rehab: lowest, most conservative band (~60-75%) reflecting
+  // standard phase-II rehab intensity targets and a hard do-not-exceed ceiling
+  // (AACVPR / ESC cardiac-rehabilitation prescriptions).
+  cardiac:       { lowerPct: 0.6, upperPct: 0.75, sessionMinutes: 20, daysPerWeek: 5 },
 }
 
 /** The validated symptom-provocation threshold: a rise of >=3 points from rest. */

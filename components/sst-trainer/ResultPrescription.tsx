@@ -6,17 +6,18 @@ import {
   type Prescription,
   type ThresholdResult,
 } from '@/lib/sst-trainer/protocol'
+import { BandBar, PrimaryButton, ScreenHeading, SecondaryButton, numFont } from './shell'
 
 export default function ResultPrescription({
   result,
   condition,
-  onStartTraining,
+  onContinue,
   onRetest,
 }: {
   result: ThresholdResult
   condition: Condition
-  /** only meaningful in the physiologic branch — receives the computed prescription */
-  onStartTraining: (rx: Prescription) => void
+  /** physiologic branch only — receives the computed prescription, routes to home */
+  onContinue: (rx: Prescription) => void
   onRetest: () => void
 }) {
   // physiologic = HRt found → derive the training band from the engine
@@ -26,93 +27,106 @@ export default function ResultPrescription({
       : null
 
   return (
-    // DESIGN: results screen — the payoff moment; instrument-grade clarity on the band, reassuring tone
-    <section className="flex flex-col gap-6 p-4">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold">Your result</h1>
-      </header>
+    <section className="flex flex-col gap-3.5 pt-1.5">
+      <ScreenHeading title="Your result" />
 
       {result.interpretation === 'red-flag' && (
-        // DESIGN: emergency state — unmistakable stop treatment, no prescription
-        <div className="rounded-lg border border-red-500 bg-red-50 p-4 text-sm text-red-800">
-          <p className="font-semibold">Stop and seek review</p>
-          <p className="mt-1">{result.message}</p>
+        <div className="rounded-[16px] border-[1.5px] border-[#d2463a] bg-[#fbeae8] p-3.5">
+          <p className="m-0 text-[15px] font-bold leading-snug text-[#b1392e]">Stop and seek review</p>
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8a4036]">{result.message}</p>
         </div>
       )}
 
       {result.interpretation === 'no-intolerance' && (
-        // DESIGN: "no exercise intolerance" state — neutral, points back to clinician
-        <div className="rounded-lg border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
-          <p className="font-semibold">No exercise-driven symptom threshold found</p>
-          <p className="mt-1">{result.message}</p>
+        <div className="rounded-[16px] border-[1.5px] border-[#cdd9da] bg-[#eef4f4] p-3.5">
+          <p className="m-0 text-[15px] font-bold leading-snug text-[#3b4f52]">
+            No exercise-driven threshold found
+          </p>
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#5d7174]">{result.message}</p>
         </div>
       )}
 
       {result.interpretation === 'invalid' && (
-        <div className="rounded-lg border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
-          <p className="font-semibold">Test incomplete</p>
-          <p className="mt-1">{result.message}</p>
+        <div className="rounded-[16px] border-[1.5px] border-[#cdd9da] bg-[#eef4f4] p-3.5">
+          <p className="m-0 text-[15px] font-bold leading-snug text-[#3b4f52]">Test incomplete</p>
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#5d7174]">{result.message}</p>
         </div>
       )}
 
       {rx && (
-        <>
-          <div className="rounded-lg border border-gray-300 p-4">
-            <p className="text-sm text-gray-600">Heart-rate threshold (HRt)</p>
-            {/* DESIGN: big HRt readout */}
-            <p className="text-3xl font-semibold">{rx.hrt} bpm</p>
-            <p className="mt-1 text-xs text-gray-500">Reached at minute {result.thresholdStage}.</p>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between rounded-[16px] bg-[#eef4f4] px-4 py-3">
+            <div className="flex flex-col">
+              <span className="text-[10.5px] font-semibold uppercase leading-tight tracking-[0.06em] text-[#849c9c]">
+                Heart-rate threshold
+              </span>
+              <span className="text-[11px] leading-tight text-[#9bafb0]">
+                reached at minute {result.thresholdStage}
+              </span>
+            </div>
+            <span className="flex items-baseline gap-1">
+              <span className={`text-[30px] text-[#16282b] ${numFont}`}>{rx.hrt}</span>
+              <span className="text-[11px] font-semibold text-[#9bafb0]">BPM</span>
+            </span>
           </div>
 
-          {/* DESIGN: the hero "training band" — the single most important number-pair in the app; gauge/dial treatment */}
-          <div className="rounded-lg border-2 border-[#5b9aa6] bg-[#5b9aa6]/10 p-4">
-            <p className="text-sm font-medium text-[#5b9aa6]">Your training band</p>
-            <p className="text-3xl font-semibold">
-              {rx.lowerBpm}–{rx.upperBpm} bpm
-            </p>
-            <p className="mt-1 text-sm font-medium text-gray-700">
+          {/* hero band instrument */}
+          <div
+            className="rounded-[20px] border-2 border-[#5b9aa6] px-4 pb-3 pt-4"
+            style={{ background: 'linear-gradient(180deg,#eef6f6,#e3f0f1)' }}
+          >
+            <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#3c7681]">
+              Your training band
+            </span>
+            <div className="mb-3 mt-1.5 flex items-baseline gap-1.5">
+              <span className={`text-[38px] text-[#16282b] ${numFont}`}>
+                {rx.lowerBpm}–{rx.upperBpm}
+              </span>
+              <span className="text-[13px] font-semibold text-[#5d7174]">bpm</span>
+            </div>
+            <BandBar hrt={rx.hrt} lower={rx.lowerBpm} upper={rx.upperBpm} />
+            <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold leading-snug text-[#b1392e]">
+              <span className="flex h-[13px] w-[13px] items-center justify-center rounded-full border-2 border-[#d2463a] text-[9px] text-[#d2463a]">
+                !
+              </span>
               Do not exceed {rx.upperBpm} bpm.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-md border border-gray-200 p-3">
-              <p className="text-gray-500">Session length</p>
-              <p className="text-lg font-medium">{rx.sessionMinutes} min</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3.5 py-3">
+              <span className="text-[11px] font-medium text-[#849c9c]">Session length</span>
+              <div className={`mt-1 text-[18px] text-[#16282b] ${numFont}`}>
+                {rx.sessionMinutes}
+                <span className="text-[11px] text-[#9bafb0]"> min</span>
+              </div>
             </div>
-            <div className="rounded-md border border-gray-200 p-3">
-              <p className="text-gray-500">Frequency</p>
-              <p className="text-lg font-medium">{rx.daysPerWeek} days/week</p>
+            <div className="rounded-[14px] border border-[#dde7e7] bg-white px-3.5 py-3">
+              <span className="text-[11px] font-medium text-[#849c9c]">Frequency</span>
+              <div className={`mt-1 text-[18px] text-[#16282b] ${numFont}`}>
+                {rx.daysPerWeek}
+                <span className="text-[11px] text-[#9bafb0]"> days/wk</span>
+              </div>
             </div>
           </div>
 
-          {/* DESIGN: plain-language summary card */}
-          <p className="rounded-md bg-gray-50 p-3 text-sm text-gray-700">{rx.summary}</p>
-
-          {/* DESIGN: scope reminder — quiet but always present */}
-          <p className="text-xs text-gray-500">
-            This is not a diagnosis or a return-to-play clearance. Share this with your clinician and
-            follow their guidance.
+          <p className="m-0 rounded-[14px] bg-[#eef4f4] px-3.5 py-3 text-xs leading-relaxed text-[#3b4f52]">
+            {rx.summary}
+          </p>
+          <p className="m-0 text-[10.5px] leading-snug text-[#9bafb0]">
+            Not a diagnosis or return-to-play clearance. Share with your clinician and follow their
+            guidance.
           </p>
 
-          {/* DESIGN: primary CTA */}
-          <button
-            type="button"
-            onClick={() => onStartTraining(rx)}
-            className="rounded-lg bg-[#5b9aa6] p-4 text-base font-medium text-white"
-          >
-            Start a training session
-          </button>
-        </>
+          <PrimaryButton onClick={() => onContinue(rx)} className="rounded-[18px]">
+            Continue to your home
+          </PrimaryButton>
+        </div>
       )}
 
-      <button
-        type="button"
-        onClick={onRetest}
-        className="rounded-lg border border-gray-300 p-4 text-base font-medium"
-      >
+      <SecondaryButton onClick={onRetest} className="rounded-[16px] p-3.5">
         Re-test threshold
-      </button>
+      </SecondaryButton>
     </section>
   )
 }
