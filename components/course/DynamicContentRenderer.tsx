@@ -327,15 +327,20 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
   }
 
   // Handle callout boxes [CALLOUT: type | content]
-  const calloutMatch = text.match(/^\[CALLOUT:\s*(warning|evidence|clinical|key)\s*\|\s*(.+)\]$/)
+  const calloutMatch = text.match(/^\[CALLOUT:\s*(warning|evidence|clinical|key|scope|tip|example)\s*\|\s*(.+)\]$/)
   if (calloutMatch) {
-    const calloutType = calloutMatch[1] as 'warning' | 'evidence' | 'clinical' | 'key'
+    const calloutType = calloutMatch[1] as 'warning' | 'evidence' | 'clinical' | 'key' | 'scope' | 'tip' | 'example'
     const calloutContent = calloutMatch[2]
     const calloutConfig = {
       warning: { icon: AlertTriangle, bg: 'bg-amber-50', border: 'border-amber-500', label: 'text-amber-900', iconColor: 'text-amber-600', title: 'Warning' },
       evidence: { icon: BookOpen, bg: 'bg-blue-50', border: 'border-blue-500', label: 'text-blue-900', iconColor: 'text-blue-600', title: 'Evidence' },
       clinical: { icon: Lightbulb, bg: 'bg-purple-50', border: 'border-purple-500', label: 'text-purple-900', iconColor: 'text-purple-600', title: 'Clinical Pearl' },
       key: { icon: Target, bg: 'bg-teal-50', border: 'border-teal-500', label: 'text-teal-900', iconColor: 'text-teal-600', title: 'Key Point' },
+      // Used throughout the EP-course modules (Modules 4–8) — must be handled or
+      // they render as raw "[CALLOUT: scope | …]" text.
+      scope: { icon: Shield, bg: 'bg-rose-50', border: 'border-rose-400', label: 'text-rose-900', iconColor: 'text-rose-600', title: 'Scope of Practice' },
+      tip: { icon: Info, bg: 'bg-sky-50', border: 'border-sky-400', label: 'text-sky-900', iconColor: 'text-sky-600', title: 'Tip' },
+      example: { icon: BookOpen, bg: 'bg-indigo-50', border: 'border-indigo-400', label: 'text-indigo-900', iconColor: 'text-indigo-600', title: 'Example' },
     }
     const cfg = calloutConfig[calloutType]
     const CalloutIcon = cfg.icon

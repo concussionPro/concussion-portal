@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getEpModulesMeta } from '@/data/ep-modules'
 import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
+import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — PUBLIC sales/landing page (EP-scoped course).
@@ -94,7 +95,7 @@ const FAQ = [
   },
   {
     q: 'Do I need the in-person workshop?',
-    a: 'No. Concussion Rehab Mastery is a fully online, standalone course. There is nothing further to attend — you complete it at your own pace and sit the assessment online.',
+    a: 'No — the online course is complete and standalone. You finish it at your own pace and sit the assessment entirely online; nothing further is required to certify. An optional hands-on workshop is also available as a practical extension, where you practise the assessment and exertion-testing skills in person. It typically runs as a mixed-discipline cohort — exercise physiologists alongside osteopaths and physiotherapists — with an EP-specific cohort scheduled once enough EPs register. There is no fixed date yet; register your interest in the workshop section above to be placed in the next suitable one.',
   },
   {
     q: 'Is concussion rehab within my scope?',
@@ -160,6 +161,12 @@ export default async function ConcussionRehabMasteryPage() {
               className="inline-flex items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--card-solid)] px-8 py-4 text-base font-semibold text-[var(--foreground)] transition-colors hover:border-accent hover:text-accent"
             >
               See the curriculum
+            </a>
+            <a
+              href="/ep-course/modules/1"
+              className="inline-flex items-center justify-center px-2 py-4 text-base font-semibold text-accent transition-colors hover:text-[var(--accent-light)]"
+            >
+              Preview the modules →
             </a>
           </div>
 
@@ -323,6 +330,190 @@ export default async function ConcussionRehabMasteryPage() {
               8 hours · 8 CPD points · 80% assessment pass mark
             </span>
           </div>
+
+          <div className="mt-6 flex justify-center">
+            <a
+              href="/ep-course/modules/1"
+              className="inline-flex items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--card-solid)] px-7 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[var(--shadow-sm)] transition-colors hover:border-accent hover:text-accent"
+            >
+              Preview the modules — go to the course →
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Course bento ─────────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+          Inside the course
+        </p>
+        <h2 className="mt-3 max-w-2xl text-3xl font-bold tracking-[-0.025em] sm:text-4xl">
+          Not a slide deck. A working clinical system.
+        </h2>
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--muted-foreground)]">
+          Every module is paired with the instrument or template you&rsquo;ll use the
+          next time a concussion patient lands in your care.
+        </p>
+
+        <div className="bento-premium mt-12">
+          {/* Hero tile */}
+          <div className="bento-large relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-[var(--card-solid)] p-8 shadow-[var(--shadow-md)] sm:p-10">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-70"
+              style={{
+                background:
+                  'radial-gradient(80% 70% at 100% 0%, rgba(13,115,119,0.10), transparent 60%)',
+              }}
+            />
+            <div className="relative">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--accent-subtle)] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                The complete course
+              </span>
+              <p className="mt-7 text-5xl font-extrabold leading-[1.05] tracking-[-0.03em] text-[var(--foreground)] sm:text-6xl">
+                8 modules
+              </p>
+              <p className="mt-3 max-w-md text-base leading-relaxed text-[var(--muted-foreground)]">
+                A complete, scope-bounded path from the neurometabolic cascade to
+                documentation and referral — built for the exercise-physiology scope,
+                not adapted from a physio or GP syllabus.
+              </p>
+            </div>
+            <dl className="relative mt-8 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-6">
+              {[
+                { v: '8', l: 'CPD hours' },
+                { v: '8', l: 'ESSA points' },
+                { v: '80%', l: 'Pass mark' },
+              ].map((s) => (
+                <div key={s.l}>
+                  <dt className="text-2xl font-extrabold tracking-[-0.02em] text-accent">
+                    {s.v}
+                  </dt>
+                  <dd className="mt-1 text-[0.7rem] font-medium uppercase tracking-[0.08em] text-[var(--muted-foreground)]">
+                    {s.l}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {/* Live Baseline & Serial Testing tool */}
+          <div className="bento-tall flex flex-col justify-between rounded-3xl border border-[var(--border-strong)] bg-[var(--accent-subtle)] p-7 shadow-[var(--shadow-sm)]">
+            <div>
+              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                Working instrument
+              </span>
+              <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                Live Baseline &amp; Serial Testing tool
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                A real assessment instrument for capturing baseline and serial exertion
+                data over a rehab episode — not a static PDF you print and lose.
+              </p>
+            </div>
+            <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--card-solid)] p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted-foreground)]">
+                Captures
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                HR ceiling · RPE · symptom score · session-over-session trend
+              </p>
+            </div>
+          </div>
+
+          {/* BCTT calculator */}
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)]">
+            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+              Built-in calculator
+            </span>
+            <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+              BCTT calculator
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
+              Buffalo treadmill test workload and symptom-threshold heart-rate maths,
+              done for you — so you prescribe to an objective ceiling, not a guess.
+            </p>
+          </div>
+
+          {/* Phenotype exercise library — wide */}
+          <div className="bento-span-2 flex flex-col justify-between rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center sm:gap-8">
+            <div>
+              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                Chairside reference
+              </span>
+              <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                Phenotype-specific exercise library
+              </h3>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-[var(--muted-foreground)]">
+                Reconditioning prescriptions mapped to the presentation in front of you —
+                with progression and stop-criteria references for each.
+              </p>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2 sm:mt-0 sm:max-w-[14rem] sm:justify-end">
+              {['Autonomic', 'Vestibular', 'Cervicogenic', 'Ocular', 'Cognitive/fatigue'].map(
+                (tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-[var(--accent-muted)] px-3 py-1 text-xs font-semibold text-accent"
+                  >
+                    {tag}
+                  </span>
+                ),
+              )}
+            </div>
+          </div>
+
+          {/* Certificate */}
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)]">
+            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+              On passing
+            </span>
+            <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+              Certificate of completion
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
+              Issued at the 80% pass mark, evidencing 8 CPD hours for your ESSA
+              Further-Education record.
+            </p>
+          </div>
+
+          {/* Lifetime access */}
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)]">
+            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+              One-time payment
+            </span>
+            <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+              Lifetime access
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
+              Revisit every module, tool and template whenever the next concussion
+              patient lands in your care.
+            </p>
+          </div>
+
+          {/* Scope-accurate design — wide */}
+          <div className="bento-span-2 flex flex-col justify-between rounded-3xl border border-[var(--border-strong)] bg-[var(--accent-subtle)] p-7 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center sm:gap-8">
+            <div>
+              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                Scope-accurate by design
+              </span>
+              <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                Everything stays inside EP scope
+              </h3>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--muted-foreground)]">
+                You implement and progress the rehabilitation. Diagnosis, red-flag
+                triage and return-to-sport clearance stay with the medical team — every
+                module holds that boundary, plus NDIS / WorkCover / GP report templates
+                to close the loop.
+              </p>
+            </div>
+            <a
+              href="/ep-course/modules/1"
+              className="mt-5 inline-flex flex-none items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--accent-light)] sm:mt-0"
+            >
+              Go to the course →
+            </a>
+          </div>
         </div>
       </section>
 
@@ -388,6 +579,97 @@ export default async function ConcussionRehabMasteryPage() {
                 physiological literacy to run robust baselines and condition
                 athletes safely around the medical team.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── In-person workshop (optional hands-on extension) ─────────────── */}
+      <section id="workshop" className="mx-auto max-w-6xl px-6 py-20">
+        <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+          {/* Left — mixed-cohort messaging */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+              Optional hands-on extension
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.025em] sm:text-4xl">
+              Want the skills in your hands? Add the workshop.
+            </h2>
+
+            <div className="mt-6 rounded-2xl border border-[var(--border-strong)] bg-[var(--accent-subtle)] p-6">
+              <p className="text-sm font-semibold text-accent">
+                The online course is complete on its own.
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                You can finish all eight modules and sit the assessment entirely
+                online — nothing further is required to certify. The workshop is an
+                <strong className="text-[var(--foreground)]"> optional</strong> hands-on
+                extension, not a prerequisite.
+              </p>
+            </div>
+
+            <ul className="mt-8 space-y-5">
+              <li className="flex gap-4">
+                <span aria-hidden className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-[var(--accent-muted)] text-sm font-bold text-accent">
+                  1
+                </span>
+                <div>
+                  <h3 className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                    A mixed-discipline cohort
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                    The hands-on day typically runs as a mixed cohort — exercise
+                    physiologists alongside osteopaths and physiotherapists —
+                    practising the hands-on assessment and exertion-testing skills
+                    together. You learn the EP-scoped workflow in the room where the
+                    rest of the care team works.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <span aria-hidden className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-[var(--accent-muted)] text-sm font-bold text-accent">
+                  2
+                </span>
+                <div>
+                  <h3 className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                    An EP-specific cohort when demand supports it
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                    When enough exercise physiologists register (target ~12), we run an
+                    EP-specific cohort — every drill and case scoped to AEP practice,
+                    no cross-discipline translation needed.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <span aria-hidden className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-[var(--accent-muted)] text-sm font-bold text-accent">
+                  3
+                </span>
+                <div>
+                  <h3 className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                    No fixed date yet
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                    There&rsquo;s no scheduled EP workshop date. Registering your interest
+                    places you in the next suitable workshop, or notifies you the moment
+                    an EP-specific cohort forms in your region.
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Right — interest form */}
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-md)] sm:p-9">
+            <h3 className="text-xl font-bold tracking-[-0.02em] text-[var(--foreground)]">
+              Register your workshop interest
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+              Tell us where you are and we&rsquo;ll place you in the next suitable
+              cohort — or start an EP-specific one near you.
+            </p>
+            <div className="mt-7">
+              <CrmWorkshopInterest />
             </div>
           </div>
         </div>
