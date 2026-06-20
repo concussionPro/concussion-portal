@@ -718,7 +718,7 @@ export default async function ConcussionRehabMasteryPage() {
               A$497
             </div>
             <p className="mt-2 text-sm font-medium text-[var(--muted-foreground)]">
-              One-time payment · lifetime access · includes a free trial of the Clinic App while you train
+              One-time payment · lifetime access · includes the live Baseline &amp; Serial Testing tool, BCTT calculator and full Clinical Toolkit
             </p>
 
             <ul className="mt-8 space-y-3 text-left">

@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { FileText, Activity, ClipboardList, Dumbbell, TrendingUp, Mail, CheckSquare, Download, LineChart, ArrowRight } from 'lucide-react'
+import { Activity, ClipboardList, Dumbbell, TrendingUp, CheckSquare, LineChart, ArrowRight } from 'lucide-react'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
 
@@ -12,48 +12,42 @@ export const metadata: Metadata = {
 // Every item here is specific to the Accredited Exercise Physiologist's
 // concussion-rehab workflow — assessment of exercise tolerance, exercise
 // prescription, progression, scope-appropriate documentation. Nothing generic.
+// Each links to a real, gated, printable document at /ep-course/documents/[slug].
 const TOOLS = [
   {
     icon: Activity,
-    title: 'Buffalo Concussion Treadmill Test — Record & Protocol Sheet',
+    slug: 'bctt-testing-sheet',
+    title: 'Buffalo Concussion Treadmill Test — Recording Sheet',
     kind: 'Assessment',
     desc: 'The full BCTT (and cycle-equivalent BCBT) administration sheet: pre-test contraindication and red-flag screen, the Balke-based incline/speed protocol, a per-minute heart-rate / RPE / symptom-score log, and the structured identification of the heart-rate threshold (HRt) — symptom-limited vs exhaustion-limited termination. The single most important number you carry into prescription, captured cleanly and defensibly.',
   },
   {
     icon: ClipboardList,
+    slug: 'sstae-prescription',
     title: 'Sub-Symptom-Threshold Aerobic Prescription Template',
     kind: 'Template',
     desc: 'Converts the HRt into an individualised aerobic program: the 80–90% HRt training band with the worked calculation, full FITT prescription, the within-session symptom-exacerbation stop rule, RPE cross-check, warm-up/cool-down, and the re-test-driven progression schedule. Printable for the patient with a clear daily heart-rate ceiling.',
   },
   {
     icon: TrendingUp,
+    slug: 'session-tracking-sheet',
     title: 'Session & Progression Tracking Sheet',
     kind: 'Template',
-    desc: 'Per-session log — date, modality, HR response against the band, pre/post symptom score, RPE, duration and adherence — plus the re-test schedule and progress/regress/refer decision prompts. The audit trail behind every prescription change.',
+    desc: 'Per-session log — date, modality, HR response against the band, pre/post symptom score, RPE, duration and adherence — so the HR↔symptom↔duration trend is visible at a glance. The audit trail behind every prescription change.',
   },
   {
     icon: Dumbbell,
+    slug: 'phenotype-exercise-library',
     title: 'Phenotype Exercise Library (EP scope)',
     kind: 'Reference',
     desc: 'Dosed, progressable exercise sets for the phenotypes an AEP treats: vestibular (gaze stabilisation / VOR×1, habituation, dynamic balance), cervical (deep neck flexor endurance, proprioception / joint-position-error retraining) and oculomotor (convergence, saccades, smooth pursuit), each with starting dose, progression criteria and the clear refer-out boundaries (BPPV, manipulation, prism).',
   },
   {
     icon: CheckSquare,
-    title: 'Graded Return-to-Activity & Sport Progression Ladder',
+    slug: 'progression-stop-criteria',
+    title: 'Progression & Stop-Criteria Quick Reference',
     kind: 'Reference',
-    desc: 'The six-stage return-to-sport strategy mapped to objective load markers (sRPE, HR, ACWR) and symptom data, with sport-specific reconditioning examples, the 24-hour symptom rule for advancing/regressing, and the AIS/SMA community-sport stand-down checkpoints (≥21-day minimum, ≥14-day symptom-free) — and where medical clearance sits relative to your role.',
-  },
-  {
-    icon: Mail,
-    title: 'EP → Referrer Communication Letter',
-    kind: 'Template',
-    desc: 'Report assessment findings, the prescription rationale and progress back to the referring GP / sports physician — framed as recommendation, never clearance. Includes a fully worked example and the language that keeps you cleanly within AEP scope.',
-  },
-  {
-    icon: FileText,
-    title: 'Return-to-Activity Progress Note (EP scope)',
-    kind: 'Template',
-    desc: 'Scope-appropriate clinical note documenting exercise tolerance, the graded reconditioning delivered, objective response and the recommendation — written to ESSA Code of Professional Conduct record-keeping standards and ready for NDIS / WorkCover / DVA reporting.',
+    desc: 'The one-page decision aid: the within-session ≥2-point stop rule, the between-session next-day-flare rule, the every-1–2-week progress/hold/regress/escalate review algorithm, the red-flag list that means stop and refer, and where medical clearance sits relative to your role.',
   },
 ]
 
@@ -79,8 +73,8 @@ export default async function EpToolkitPage() {
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">Clinical Toolkit</h1>
           <p className="mt-2 text-slate-600">
             Scope-appropriate, fillable resources an Accredited Exercise Physiologist uses to assess exercise tolerance,
-            prescribe and progress active recovery, and document it defensibly. The downloadable templates unlock with
-            enrolment; the baseline testing tool below is live now.
+            prescribe and progress active recovery, and document it defensibly. Every template below opens as a real,
+            printable document — view, fill in, and save as PDF for your clinic.
           </p>
 
           {/* LIVE TOOL — Baseline & serial testing, wired to the working tool */}
@@ -112,13 +106,17 @@ export default async function EpToolkitPage() {
             </span>
           </Link>
 
-          {/* Downloadable templates */}
+          {/* Templates & references — each links to a real, printable, gated document */}
           <h3 className="mt-10 text-sm font-bold uppercase tracking-[0.12em] text-slate-500">Templates &amp; references</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {TOOLS.map((t) => {
               const Icon = t.icon
               return (
-                <div key={t.title} className="flex flex-col rounded-xl border border-slate-200 bg-white p-5">
+                <Link
+                  key={t.slug}
+                  href={`/ep-course/documents/${t.slug}`}
+                  className="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:border-teal-300 hover:shadow-md"
+                >
                   <div className="mb-3 flex items-center justify-between">
                     <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
                       <Icon className="h-5 w-5 text-slate-600" />
@@ -127,12 +125,12 @@ export default async function EpToolkitPage() {
                       {t.kind}
                     </span>
                   </div>
-                  <h2 className="font-semibold text-slate-900">{t.title}</h2>
+                  <h2 className="font-semibold text-slate-900 group-hover:text-teal-700">{t.title}</h2>
                   <p className="mt-1 flex-1 text-sm text-slate-600">{t.desc}</p>
-                  <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-400">
-                    <Download className="h-3.5 w-3.5" /> Unlocks on enrolment
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700">
+                    Open &amp; print <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </span>
-                </div>
+                </Link>
               )
             })}
           </div>
