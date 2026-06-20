@@ -158,7 +158,9 @@ export const COURSES: CourseCatalogueEntry[] = [
     id: 'ai-in-clinical-practice',
     title: 'AI in Clinical Practice',
     providerId: 'cea',
-    cpdHours: 3,
+    // Honest learning-hours figure (module reading times sum to ~2.3 hr → 2 CPD
+    // points for ESSA, which allocates 1 point/hour). Was 3; corrected 2026-06.
+    cpdHours: 2,
     cpdRecognition: ['AHPRA-aligned', 'By Osteopathy Australia–endorsed provider'],
     description: 'AHPRA-aligned compliance training for AI use by Australian clinicians. Covers Privacy Act, APP 6/8/11, TGA boundaries, AHPRA documentation, indemnity carrier positions.',
     route: '/courses/ai-in-clinical-practice',

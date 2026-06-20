@@ -9,7 +9,7 @@
 
 ---
 
-> **Important — this module is education, not legal advice.** It summarises the publicly available regulatory position on AI use by Australian registered health practitioners as of 2026. It does not replace case-specific guidance from your indemnity carrier, professional association, or solicitor. Where a question turns on the specifics of your patient, practice, or jurisdiction, contact your medical defence organisation (MDO) before acting. If in doubt, the safer interpretation is the one this module recommends.
+> **Important — this module is education, not legal advice.** It summarises the publicly available regulatory position on AI use by Australian registered health practitioners **and ESSA-accredited exercise & sports science professionals** as of 2026. It does not replace case-specific guidance from your indemnity carrier, professional association, or solicitor. Where a question turns on the specifics of your patient, practice, or jurisdiction, contact your medical defence organisation (MDO) before acting. If in doubt, the safer interpretation is the one this module recommends.
 
 The use of large language models (LLMs), AI scribes, and AI-assisted decision-support tools in Australian healthcare has moved from novelty to baseline expectation in the space of roughly twenty-four months. Patients now reasonably assume that clinicians have access to these tools; medical defence organisations have published position statements; and the Australian Health Practitioner Regulation Agency (AHPRA) has issued formal guidance for registered practitioners.
 
@@ -49,6 +49,21 @@ AHPRA does not certify, accredit, or endorse individual AI products. Any vendor 
 The accurate phrasing is *"aligned with AHPRA's 2025 AI guidance"* or *"designed to support compliance with AHPRA's AI guidance"*. If a vendor pitches their tool to you as AHPRA-approved, treat that as a red flag about the vendor's general claims-handling.
 
 [KEYPOINT: AHPRA's guidance does not prohibit AI use. It requires you to understand the tool, verify outputs, retain clinical responsibility, protect privacy, be transparent with patients, and document AI use in the record.]
+
+### For ESSA-accredited professionals (AEPs, exercise scientists, sports scientists)
+
+Accredited Exercise Physiologists (AEPs), Accredited Exercise Scientists (AESs) and Accredited Sports Scientists are **not registered by AHPRA** — exercise and sports science is a self-regulated profession, accredited and governed by **Exercise & Sports Science Australia (ESSA)** under the **National Alliance of Self-Regulating Health Professions (NASRHP)**. AHPRA's 2024 AI guidance therefore does not bind them *directly*.
+
+It binds them *in substance anyway* — every obligation in this module reaches ESSA professionals through a parallel instrument:
+
+- **Professional conduct.** The **ESSA Code of Professional Conduct and Ethical Practice** imposes the same core duties AHPRA's guidance assumes: practise within competence, take responsibility for your professional decisions, keep accurate and honest records, and protect client confidentiality. An AEP who signs an AI-drafted report without verifying it breaches the ESSA Code exactly as a physiotherapist would breach their Board's Code.
+- **Privacy.** The *Privacy Act 1988* (Cth) and the Australian Privacy Principles (Section 2) apply to an exercise-physiology practice **identically** — the small-business exemption does not apply to any organisation that provides a health service and holds health information (s 6D(4)(b)), regardless of AHPRA registration.
+- **NDIS.** Exercise physiologists are major NDIS providers. AI-assisted progress notes, reports and letters delivered under the NDIS must meet the **NDIS Code of Conduct** and the **NDIS Practice Standards** record-keeping and audit requirements — a documentation standard at least as demanding as AHPRA's.
+- **TGA, de-identification, notifiable breaches, indemnity.** The TGA Advertising Code (Section 3), the OAIC de-identification standard (Section 4), the Notifiable Data Breaches scheme (Section 5) and the duty to confirm your indemnity carrier's position (Section 6) are not AHPRA instruments — they apply to ESSA professionals on exactly the same terms. (AEPs typically carry professional indemnity through insurers such as Guild, BMS or Fenton; the "ask your carrier" rule in Section 6 applies unchanged.)
+
+[KEYPOINT: If you are an ESSA-accredited professional, read every "AHPRA" obligation in this module as "the ESSA Code of Professional Conduct + NASRHP standards." The regulator differs; the duty — verify outputs, own the decision, protect privacy, document AI use — is identical.]
+
+The rest of this module is written in AHPRA's language because AHPRA has published the most detailed standalone AI guidance in Australian health. Wherever it says "registered practitioner," an ESSA professional substitutes "accredited professional" and the analysis holds.
 
 ### Self-check
 

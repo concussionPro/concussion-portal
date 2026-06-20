@@ -40,12 +40,12 @@ On passing the final quiz, you'll be issued a **Certificate of Completion — AI
 A few things to know:
 
 - **Validity: 12 months.** AI regulation in Australia is moving — what is compliant today may be re-scoped by AHPRA or the OAIC inside a year. A short validity window keeps the credential meaningful.
-- **Renewal is automatic** with an active Hub subscription. As long as you're subscribed, the Hub tracks your continued exposure to monthly updates, and your certificate refreshes annually without you sitting a new exam.
+- **Renewal.** Re-sit the short assessment each year to refresh the certificate. (An optional Hub subscription, if you choose to use one, can track your ongoing exposure to the monthly regulatory updates — but it is **not required** to earn, hold, or renew the certificate.)
 - **Each certificate carries a unique verifiable URL.** Employers, insurers, and professional indemnity providers can click that URL and confirm the certificate is current — useful when an insurer asks "can you demonstrate AI competency training?"
 
-The certificate is not an AHPRA-issued credential. It's a continuing-education record. Treat it that way in your CPD log.
+The certificate is not an AHPRA- or ESSA-issued credential — it is a continuing-education record. Log it that way in your CPD record: AHPRA-registered practitioners record it under their Board's CPD; ESSA-accredited professionals (AEP/AES/ASpS) record it as a CPD activity in their ESSA log.
 
-[KEYPOINT: The certificate is a CPD record, not an AHPRA credential. Log it that way and check the verifiable URL still resolves before any audit or insurer request.]
+[KEYPOINT: The certificate is a CPD record, not a regulator credential. Log it under your AHPRA or ESSA CPD as applicable, and check the verifiable URL still resolves before any audit or insurer request.]
 
 **Next step:** Once issued, save the verifiable URL to your CPD folder.
 
@@ -143,8 +143,9 @@ On passing, the certificate is issued automatically and emailed to the address o
 
 You've finished the AI course. A few directions from here:
 
-- **Stay in the Hub.** This is where the value compounds. The monthly updates and quarterly tool matrix refresh mean your knowledge doesn't decay.
+- **Keep your knowledge current.** AI tooling and regulation shift fast, so whatever you use to stay current — the optional Hub update feed, the regulators' own newsletters (AHPRA/OAIC/TGA), your indemnity carrier's bulletins — put a recurring slot in the calendar to revisit it.
 - **Run a 30-day pilot.** Pick one workflow — scribe notes, or patient education, or referrals — and run it with AI assistance for 30 days. Log time saved and any clinical issues that came up. Bring those notes to your next CPD review.
+- **Optional tools you may find useful.** Beyond this course, CEA builds practical clinical tools — for example the **Sub-Symptom-Threshold Trainer** (a heart-rate-guided graded-exercise tool for concussion and neuro reconditioning) and the **AI Practice Hub** prompt library and tool-comparison matrix. These are optional resources, available if you want them; they are not required for the course and are not endorsed by AHPRA, ESSA, or any regulator.
 - **Consider Concussion Clinical Mastery** — our flagship 14-CPD-hour course (Osteopathy Australia endorsed) on concussion assessment and management. AI workflows accelerate documentation; clinical mastery accelerates outcomes. The two stack. Many clinicians who finish this course go straight into Concussion Clinical Mastery as the next step.
 
 Thanks for working through the course. The work doesn't end at the certificate — it ends every time a patient gets better care because your documentation, communication, and reasoning are sharper. That's the whole point.
