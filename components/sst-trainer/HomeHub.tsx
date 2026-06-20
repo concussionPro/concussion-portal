@@ -120,6 +120,26 @@ export default function HomeHub({
           Re-test
         </SecondaryButton>
       </div>
+
+      {/* Quiet link across to the SCAT6 baseline & serial-testing instrument. */}
+      <a
+        href="/preseason"
+        className="group -mt-0.5 flex items-center justify-center gap-1.5 px-1 py-1 text-[12px] font-semibold text-[#5d7174] no-underline transition hover:text-[#3c7681]"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          className="h-[15px] w-[15px]"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M3 12h4l2 6 4-14 2 8h6" />
+        </svg>
+        Baseline &amp; serial testing
+      </a>
     </section>
   )
 }

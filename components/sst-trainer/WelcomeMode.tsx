@@ -167,6 +167,50 @@ export default function WelcomeMode({
       >
         Continue
       </PrimaryButton>
+
+      {/* Secondary entry to the SCAT6 baseline & serial-testing instrument. The
+          primary flow above (find your training threshold) stays the main path;
+          this is a quiet, separate-tool affordance. */}
+      <a
+        href="/preseason"
+        className="group mt-0.5 flex items-center gap-3 rounded-[16px] border-[1.5px] border-[#d4e0e1] bg-white px-4 py-3 text-left no-underline transition active:scale-[0.99] hover:border-[#5b9aa6]"
+      >
+        <span className="relative h-9 w-9 flex-none rounded-[11px] bg-[#e7f2f3]">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="absolute left-1/2 top-1/2 h-[18px] w-[18px] -translate-x-1/2 -translate-y-1/2"
+            stroke="#3c7681"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 12h4l2 6 4-14 2 8h6" />
+          </svg>
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-[13px] font-bold leading-tight text-[#16282b]">
+            Baseline &amp; serial testing
+          </span>
+          <span className="text-[10.5px] leading-tight text-[#7d9092]">
+            Capture or review a SCAT6 baseline and track recovery over time
+          </span>
+        </span>
+        <span className="flex-none text-[#a7c0c2] transition group-hover:text-[#5b9aa6]" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="h-4 w-4"
+            stroke="currentColor"
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </span>
+      </a>
     </section>
   )
 }

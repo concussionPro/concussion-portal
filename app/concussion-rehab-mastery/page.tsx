@@ -95,7 +95,7 @@ const FAQ = [
   },
   {
     q: 'Do I need the in-person workshop?',
-    a: 'No — the online course is complete and standalone. You finish it at your own pace and sit the assessment entirely online; nothing further is required to certify. An optional hands-on workshop is also available as a practical extension, where you practise the assessment and exertion-testing skills in person. It typically runs as a mixed-discipline cohort — exercise physiologists alongside osteopaths and physiotherapists — with an EP-specific cohort scheduled once enough EPs register. There is no fixed date yet; register your interest in the workshop section above to be placed in the next suitable one.',
+    a: 'No — the online course is complete and standalone. You finish it at your own pace and sit the assessment entirely online; nothing further is required to certify. If you also want the hands-on skills, you can add the same full-day practical workshop every clinician takes (SCAT6, VOMS, BESS and cervicogenic assessment) — the standard optional upgrade, exactly like osteopaths and physiotherapists. There is no fixed workshop date yet; register your interest in the workshop section above and we’ll place you in the next one in your region.',
   },
   {
     q: 'Is concussion rehab within my scope?',
@@ -598,13 +598,14 @@ export default async function ConcussionRehabMasteryPage() {
 
             <div className="mt-6 rounded-2xl border border-[var(--border-strong)] bg-[var(--accent-subtle)] p-6">
               <p className="text-sm font-semibold text-accent">
-                The online course is complete on its own.
+                The online course is the EP-custom part. The workshop is shared.
               </p>
               <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
                 You can finish all eight modules and sit the assessment entirely
-                online — nothing further is required to certify. The workshop is an
-                <strong className="text-[var(--foreground)]"> optional</strong> hands-on
-                extension, not a prerequisite.
+                online — nothing further is required to certify. If you want the
+                hands-on skills too, you add the
+                <strong className="text-[var(--foreground)]"> same full-day practical workshop every clinician takes</strong> —
+                the standard optional upgrade, exactly like osteopaths and physiotherapists.
               </p>
             </div>
 
@@ -615,14 +616,13 @@ export default async function ConcussionRehabMasteryPage() {
                 </span>
                 <div>
                   <h3 className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-                    A mixed-discipline cohort
+                    The same hands-on day everyone attends
                   </h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
-                    The hands-on day typically runs as a mixed cohort — exercise
-                    physiologists alongside osteopaths and physiotherapists —
-                    practising the hands-on assessment and exertion-testing skills
-                    together. You learn the EP-scoped workflow in the room where the
-                    rest of the care team works.
+                    One supervised full day of SCAT6, VOMS, BESS and cervicogenic
+                    assessment practice with expert feedback — the practical
+                    assessment skills that sit alongside your rehab workflow. You
+                    attend in the same room as osteopaths, physiotherapists and GPs.
                   </p>
                 </div>
               </li>
@@ -632,12 +632,13 @@ export default async function ConcussionRehabMasteryPage() {
                 </span>
                 <div>
                   <h3 className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-                    An EP-specific cohort when demand supports it
+                    Online is EP-scoped; the workshop is universal
                   </h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
-                    When enough exercise physiologists register (target ~12), we run an
-                    EP-specific cohort — every drill and case scoped to AEP practice,
-                    no cross-discipline translation needed.
+                    Your eight online modules are written for the exercise-physiology
+                    scope of practice. The hands-on day is the same for every
+                    discipline — the assessment competence every clinician needs,
+                    learned in the room where the rest of the care team works.
                   </p>
                 </div>
               </li>
@@ -647,12 +648,13 @@ export default async function ConcussionRehabMasteryPage() {
                 </span>
                 <div>
                   <h3 className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-                    No fixed date yet
+                    Add it as an upgrade — or stay fully online
                   </h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
-                    There&rsquo;s no scheduled EP workshop date. Registering your interest
-                    places you in the next suitable workshop, or notifies you the moment
-                    an EP-specific cohort forms in your region.
+                    The workshop is an optional add-on at the standard upgrade price
+                    (the same one every clinician pays). There&rsquo;s no fixed date
+                    yet — register your interest and we&rsquo;ll place you in the next
+                    workshop in your region.
                   </p>
                 </div>
               </li>
@@ -665,8 +667,8 @@ export default async function ConcussionRehabMasteryPage() {
               Register your workshop interest
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
-              Tell us where you are and we&rsquo;ll place you in the next suitable
-              cohort — or start an EP-specific one near you.
+              Tell us where you are and we&rsquo;ll place you in the next workshop
+              near you.
             </p>
             <div className="mt-7">
               <CrmWorkshopInterest />
