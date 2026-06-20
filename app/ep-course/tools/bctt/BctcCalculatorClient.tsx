@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import {
   Activity,
   Plus,
@@ -12,6 +12,11 @@ import {
   Info,
   ShieldCheck,
 } from 'lucide-react'
+import {
+  computePrescription,
+  PROVOCATION_RISE,
+  type Prescription,
+} from '@/lib/sst-trainer/protocol'
 
 type Termination = 'symptom' | 'exhaustion'
 
@@ -31,20 +36,90 @@ function makeStage(): Stage {
 // The clinical core: HRt = HR at the FIRST stage where the symptom score
 // rose >= 3 points above the resting baseline (Buffalo symptom-provocation
 // threshold). The 80–90% HRt band is the sub-symptom-threshold training zone.
-const SYMPTOM_RISE_THRESHOLD = 3
+// Source the rise threshold from the engine so the tool stays in lockstep.
+const SYMPTOM_RISE_THRESHOLD = PROVOCATION_RISE
 
-interface Computed {
-  hrt: number
-  triggerStageNumber: number
-  triggerSymptom: number
-  bandLow: number // 80%
-  bandHigh: number // 90%
-}
+// Sane input bounds. Out-of-range values are rejected with a clear message
+// rather than silently producing a "valid" HRt.
+const SYMPTOM_MIN = 0
+const SYMPTOM_MAX = 10
+const RPE_MIN = 6
+const RPE_MAX = 20
+const HR_MIN = 30
+const HR_MAX = 250
+
+type ComputeResult =
+  | { kind: 'need-baseline' }
+  | { kind: 'range-error'; message: string }
+  | { kind: 'hr-missing'; stageNumber: number }
+  | { kind: 'no-complete-stage' }
+  | { kind: 'no-threshold' }
+  | {
+      kind: 'ok'
+      hrt: number
+      triggerStageNumber: number
+      triggerSymptom: number
+      rx: Prescription
+    }
 
 function num(v: string): number | null {
   if (v.trim() === '') return null
   const n = Number(v)
   return Number.isFinite(n) ? n : null
+}
+
+function computeResult(stages: Stage[], baseline: string): ComputeResult {
+  const baselineNum = num(baseline)
+  if (baselineNum === null) return { kind: 'need-baseline' }
+  if (baselineNum < SYMPTOM_MIN || baselineNum > SYMPTOM_MAX) {
+    return {
+      kind: 'range-error',
+      message: `Resting baseline symptom score must be between ${SYMPTOM_MIN} and ${SYMPTOM_MAX}.`,
+    }
+  }
+
+  // Reject out-of-range stage inputs before computing anything.
+  for (let i = 0; i < stages.length; i++) {
+    const s = stages[i]
+    const hr = num(s.hr)
+    const rpe = num(s.rpe)
+    const sym = num(s.symptom)
+    if (hr !== null && (hr < HR_MIN || hr > HR_MAX)) {
+      return { kind: 'range-error', message: `Stage ${i + 1}: heart rate must be between ${HR_MIN} and ${HR_MAX} bpm.` }
+    }
+    if (rpe !== null && (rpe < RPE_MIN || rpe > RPE_MAX)) {
+      return { kind: 'range-error', message: `Stage ${i + 1}: RPE must be between ${RPE_MIN} and ${RPE_MAX}.` }
+    }
+    if (sym !== null && (sym < SYMPTOM_MIN || sym > SYMPTOM_MAX)) {
+      return { kind: 'range-error', message: `Stage ${i + 1}: symptom score must be between ${SYMPTOM_MIN} and ${SYMPTOM_MAX}.` }
+    }
+  }
+
+  // Select the threshold on the FIRST stage whose symptom score rose >= 3
+  // above baseline — regardless of whether HR was entered (matches the engine
+  // contract: HRt = HR at that minute). If that crossing stage has no HR,
+  // surface a validation error rather than skipping to a later (higher) HR.
+  let completeStageCount = 0
+  for (let i = 0; i < stages.length; i++) {
+    const s = stages[i]
+    const sym = num(s.symptom)
+    const hr = num(s.hr)
+    if (sym !== null && hr !== null) completeStageCount++
+    if (sym === null) continue
+    if (sym - baselineNum >= SYMPTOM_RISE_THRESHOLD) {
+      if (hr === null) return { kind: 'hr-missing', stageNumber: i + 1 }
+      return {
+        kind: 'ok',
+        hrt: hr,
+        triggerStageNumber: i + 1,
+        triggerSymptom: sym,
+        rx: computePrescription(hr),
+      }
+    }
+  }
+
+  if (completeStageCount === 0) return { kind: 'no-complete-stage' }
+  return { kind: 'no-threshold' }
 }
 
 export default function BctcCalculatorClient() {
@@ -71,32 +146,20 @@ export default function BctcCalculatorClient() {
 
   const baselineNum = num(baseline)
 
-  // Find the first stage where symptom score rose >= 3 above baseline.
-  const result = useMemo<Computed | null>(() => {
-    if (baselineNum === null) return null
-    for (let i = 0; i < stages.length; i++) {
-      const s = stages[i]
-      const sym = num(s.symptom)
-      const hr = num(s.hr)
-      if (sym === null || hr === null) continue
-      if (sym - baselineNum >= SYMPTOM_RISE_THRESHOLD) {
-        return {
-          hrt: hr,
-          triggerStageNumber: i + 1,
-          triggerSymptom: sym,
-          bandLow: Math.round(hr * 0.8),
-          bandHigh: Math.round(hr * 0.9),
-        }
-      }
-    }
-    return null
-  }, [stages, baselineNum])
+  // Computed directly during render — the React Compiler memoizes this for us
+  // (a manual useMemo here trips "Existing memoization could not be preserved").
+  const result = computeResult(stages, baseline)
 
-  // No threshold + exhaustion-limited => did NOT demonstrate exercise
-  // intolerance (likely not the physiological phenotype).
-  const noIntolerance = submitted && baselineNum !== null && result === null && termination === 'exhaustion'
-  const inconclusive = submitted && baselineNum !== null && result === null && termination === 'symptom'
-  const needBaseline = submitted && baselineNum === null
+  const ok = submitted && result.kind === 'ok' ? result : null
+  const needBaseline = submitted && result.kind === 'need-baseline'
+  const rangeError = submitted && result.kind === 'range-error' ? result.message : null
+  const hrMissingStage = submitted && result.kind === 'hr-missing' ? result.stageNumber : null
+  const needStages = submitted && result.kind === 'no-complete-stage'
+
+  // No threshold but >=1 complete stage. Exhaustion-limited => did NOT
+  // demonstrate exercise intolerance; symptom-limited => inconclusive data.
+  const noIntolerance = submitted && result.kind === 'no-threshold' && termination === 'exhaustion'
+  const inconclusive = submitted && result.kind === 'no-threshold' && termination === 'symptom'
 
   const displayName = name.trim() || 'this patient'
 
@@ -178,7 +241,7 @@ export default function BctcCalculatorClient() {
             </thead>
             <tbody>
               {stages.map((s, i) => {
-                const isTrigger = result?.triggerStageNumber === i + 1 && submitted
+                const isTrigger = ok?.triggerStageNumber === i + 1
                 return (
                   <tr key={s.id} className={`border-b border-slate-100 ${isTrigger ? 'bg-[#5b9aa6]/10' : ''}`}>
                     <td className="py-2 pr-3 font-semibold text-slate-700">{i + 1}</td>
@@ -243,7 +306,7 @@ export default function BctcCalculatorClient() {
         {/* Mobile stacked cards */}
         <div className="mt-4 space-y-4 sm:hidden">
           {stages.map((s, i) => {
-            const isTrigger = result?.triggerStageNumber === i + 1 && submitted
+            const isTrigger = ok?.triggerStageNumber === i + 1
             return (
               <div
                 key={s.id}
@@ -361,6 +424,31 @@ export default function BctcCalculatorClient() {
         </div>
       )}
 
+      {rangeError && (
+        <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+          <p>{rangeError} Correct the value to calculate a valid heart-rate threshold.</p>
+        </div>
+      )}
+
+      {hrMissingStage !== null && (
+        <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+          <p>
+            Stage {hrMissingStage} reached the symptom threshold (a rise of ≥{SYMPTOM_RISE_THRESHOLD} points above the
+            baseline) but has no heart rate — enter the HR at that minute to get a valid HRt. The threshold is anchored to
+            the HR at the moment symptoms were provoked, so no prescription is generated until it is recorded.
+          </p>
+        </div>
+      )}
+
+      {needStages && (
+        <div className="flex items-start gap-3 rounded-2xl border border-slate-300 bg-slate-50 p-5 text-sm text-slate-700">
+          <Info className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" />
+          <p>Enter your test stages — at least one stage needs both a heart rate and a symptom score before a result can be calculated.</p>
+        </div>
+      )}
+
       {noIntolerance && (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-6">
           <h2 className="flex items-center gap-2 text-lg font-bold text-amber-900">
@@ -391,19 +479,19 @@ export default function BctcCalculatorClient() {
         </div>
       )}
 
-      {submitted && result && (
+      {ok && (
         <div className="overflow-hidden rounded-2xl border border-[#5b9aa6]/40 bg-white shadow-sm">
           <div className="bg-gradient-to-br from-[#5b9aa6] to-[#4d8893] p-6 text-white">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-white/80">
               <HeartPulse className="h-4 w-4" /> Heart-rate threshold
             </div>
             <div className="mt-2 flex items-end gap-3">
-              <span className="text-5xl font-bold leading-none">{result.hrt}</span>
+              <span className="text-5xl font-bold leading-none">{ok.hrt}</span>
               <span className="pb-1 text-lg font-semibold">bpm</span>
             </div>
             <p className="mt-2 text-sm text-white/90">
-              Triggered at <strong>stage {result.triggerStageNumber}</strong> — symptom score rose to{' '}
-              {result.triggerSymptom} (≥{SYMPTOM_RISE_THRESHOLD} above the baseline of {baselineNum}).
+              Triggered at <strong>stage {ok.triggerStageNumber}</strong> — symptom score rose to{' '}
+              {ok.triggerSymptom} (≥{SYMPTOM_RISE_THRESHOLD} above the baseline of {baselineNum}).
             </p>
           </div>
 
@@ -414,10 +502,10 @@ export default function BctcCalculatorClient() {
                 Sub-symptom-threshold training band · 80–90% HRt
               </span>
               <div className="mt-2 text-4xl font-bold text-slate-900">
-                {result.bandLow}–{result.bandHigh} <span className="text-xl font-semibold text-slate-500">bpm</span>
+                {ok.rx.lowerBpm}–{ok.rx.upperBpm} <span className="text-xl font-semibold text-slate-500">bpm</span>
               </div>
               <p className="mt-2 text-sm font-semibold text-rose-600">
-                Do not exceed {result.bandHigh} bpm during training.
+                Do not exceed {ok.rx.upperBpm} bpm during training.
               </p>
             </div>
 
@@ -427,11 +515,13 @@ export default function BctcCalculatorClient() {
                 <ClipboardCheck className="h-4 w-4" /> Prescription summary
               </h3>
               <p className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
-                Stationary cycle or treadmill, <strong>20 minutes continuous</strong>, <strong>6 days/week</strong>, at a
-                heart-rate target of <strong>{result.bandLow}–{result.bandHigh} bpm</strong> (80–90% of an HRt of{' '}
-                {result.hrt} bpm), RPE roughly <strong>11–13</strong>. Stop the session if symptoms rise{' '}
-                <strong>≥2 points</strong> above the pre-session baseline. Re-test on the Buffalo protocol in{' '}
-                <strong>~1–2 weeks</strong> to re-establish HRt and progress the training band as tolerance improves.
+                Stationary cycle or treadmill, <strong>{ok.rx.sessionMinutes} minutes continuous</strong>,{' '}
+                <strong>{ok.rx.daysPerWeek} days/week</strong>, at a heart-rate target of{' '}
+                <strong>{ok.rx.lowerBpm}–{ok.rx.upperBpm} bpm</strong> (80–90% of an HRt of {ok.hrt} bpm), RPE roughly{' '}
+                <strong>11–13</strong>. Stop the session if symptoms rise{' '}
+                <strong>≥{ok.rx.stopRisePoints} points</strong> above the pre-session baseline. Re-test on the Buffalo
+                protocol in <strong>~1–2 weeks</strong> to re-establish HRt and progress the training band as tolerance
+                improves.
               </p>
             </div>
 

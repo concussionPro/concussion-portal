@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 /**
  * Self-contained visual showcase of the athlete pre-season baseline flow.
@@ -126,14 +126,57 @@ function CognitiveTabs({ active }: { active: 'Memory' | 'Orientation' | 'Digits'
 
 export function PreseasonBaselineDemo() {
   const [t, setT] = useState(0)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // Reduced-motion preference, read without an effect (no hydration mismatch).
+  const prefersReduced = useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia('(prefers-reduced-motion: reduce)')
+      m.addEventListener('change', cb)
+      return () => m.removeEventListener('change', cb)
+    },
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () => false,
+  )
 
   useEffect(() => {
-    const iv = setInterval(() => setT((s) => s + 90), 90)
-    return () => clearInterval(iv)
-  }, [])
+    // Respect reduced-motion: don't animate — the frozen frame is derived below.
+    if (prefersReduced) return
+
+    let iv: ReturnType<typeof setInterval> | null = null
+    const start = () => {
+      if (iv == null) iv = setInterval(() => setT((s) => s + 90), 90)
+    }
+    const stop = () => {
+      if (iv != null) {
+        clearInterval(iv)
+        iv = null
+      }
+    }
+
+    // Only tick while the demo is on-screen — pauses the timer when scrolled
+    // out of view, resumes when it scrolls back in.
+    const el = rootRef.current
+    let io: IntersectionObserver | null = null
+    if (el && typeof IntersectionObserver !== 'undefined') {
+      io = new IntersectionObserver(
+        ([entry]) => (entry.isIntersecting ? start() : stop()),
+        { threshold: 0.01 },
+      )
+      io.observe(el)
+    } else {
+      start()
+    }
+
+    return () => {
+      stop()
+      io?.disconnect()
+    }
+  }, [prefersReduced])
 
   const total = PER * N
-  const tt = t % total
+  // Reduced-motion: freeze on a single fully-faded-in representative frame.
+  const tt = (prefersReduced ? 2 * PER + 1500 : t) % total
   const fi = Math.floor(tt / PER)
   const tif = tt % PER
   const prev = (fi - 1 + N) % N
@@ -156,7 +199,7 @@ export function PreseasonBaselineDemo() {
   })
 
   return (
-    <div className="w-full max-w-[640px]">
+    <div ref={rootRef} className="w-full max-w-[640px]">
       <style>{`
         @keyframes pb-loomcursor{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(.82);opacity:1}}
         @keyframes pb-loomring{0%{transform:scale(.7);opacity:.7}100%{transform:scale(2.1);opacity:0}}

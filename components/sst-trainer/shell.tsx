@@ -43,7 +43,8 @@ function StatusClock() {
       const d = new Date()
       let hh = d.getHours() % 12
       if (hh === 0) hh = 12
-      setLabel(`${hh}:${String(d.getMinutes()).padStart(2, '0')}`)
+      const ap = d.getHours() < 12 ? 'am' : 'pm'
+      setLabel(`${hh}:${String(d.getMinutes()).padStart(2, '0')} ${ap}`)
     }
     tick()
     const iv = setInterval(tick, 10_000)
@@ -74,12 +75,6 @@ export function AppShell({ step, children }: { step: Step; children: ReactNode }
             SST
           </div>
           <StatusClock />
-          <div className="flex items-center gap-1">
-            <span className={`text-[10px] text-[#6c7e81] ${numFont}`}>86</span>
-            <span className="relative inline-block h-[10px] w-[19px] rounded-[2px] border-[1.5px] border-[#97a7a9]">
-              <span className="absolute inset-[1.5px] right-[5px] rounded-[1px] bg-[#5b9aa6]" />
-            </span>
-          </div>
         </div>
 
         {/* content */}
@@ -100,7 +95,7 @@ export function AppShell({ step, children }: { step: Step; children: ReactNode }
             />
           ))}
         </div>
-        <p className="m-0 text-xs font-medium tracking-[0.02em] text-[#7d9092]">
+        <p className="m-0 text-xs font-medium tracking-[0.02em] text-[#5d7174]">
           {STEP_CAPTION[step]}
         </p>
       </div>
@@ -219,11 +214,8 @@ export function SegmentBars({
   const col = danger ? '#d79a3a' : '#5b9aa6'
   return (
     <div
-      role="slider"
+      role="radiogroup"
       aria-label={ariaLabel}
-      aria-valuemin={0}
-      aria-valuemax={10}
-      aria-valuenow={value}
       className={`flex w-full gap-1 ${variant === 'ramp' ? 'items-end' : 'items-center'}`}
       style={{ height: variant === 'ramp' ? 48 : 18 }}
     >
@@ -231,9 +223,11 @@ export function SegmentBars({
         <button
           key={i}
           type="button"
+          role="radio"
+          aria-checked={i === value}
           aria-label={`${i}`}
           onClick={() => onChange(i)}
-          className="flex-1 cursor-pointer rounded-[4px] border-none p-0 transition-[height,background] duration-100"
+          className="flex-1 cursor-pointer rounded-[4px] border-none p-0 transition-[height,background] duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16282b] focus-visible:ring-offset-1"
           style={{
             height: variant === 'ramp' ? 13 + i * 2.6 : 18,
             background: i <= value ? col : '#d8e4e4',

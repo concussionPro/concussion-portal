@@ -102,11 +102,18 @@ export default function TrainingSession({
     setReadings((prev) => [...prev, hrValue as number])
   }
 
+  // need at least one HR figure (a logged reading or the live input) or the
+  // session is unscored garbage ("avg 0 · peak 0") that pollutes progression.
+  const hasHrData = readings.length > 0 || hrValid
+
   const completeSession = () => {
+    if (!hasHrData) return
     const all = readings.length ? readings : hrValid ? [hrValue as number] : []
     const avgHeartRate = all.length ? Math.round(all.reduce((a, b) => a + b, 0) / all.length) : 0
     const peakHeartRate = all.length ? Math.max(...all) : 0
-    const completedMinutes = elapsed >= 60 ? Math.round(elapsed / 60) : rx.sessionMinutes
+    // record actual time on the screen — never substitute the prescribed target,
+    // which would fabricate adherence for a session cut short.
+    const completedMinutes = Math.round(elapsed / 60)
     onComplete({
       date: new Date().toLocaleDateString('en-AU', { month: 'short', day: 'numeric' }),
       avgHeartRate,
@@ -215,11 +222,21 @@ export default function TrainingSession({
         </div>
       )}
 
+      {!hasHrData && (
+        <p className="m-0 text-center text-[11px] leading-snug text-[#9bafb0]">
+          Enter or log at least one heart-rate reading to save this session.
+        </p>
+      )}
+
       <div className="flex gap-2.5">
         <SecondaryButton onClick={onCancel} className="flex-1 p-3.5">
           Cancel
         </SecondaryButton>
-        <PrimaryButton onClick={completeSession} className="flex-[1.4] rounded-[16px]">
+        <PrimaryButton
+          onClick={completeSession}
+          disabled={!hasHrData}
+          className="flex-[1.4] rounded-[16px]"
+        >
           Complete
         </PrimaryButton>
       </div>

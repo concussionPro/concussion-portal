@@ -1,9 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import type { Condition, Prescription } from '@/lib/sst-trainer/protocol'
 import { BandBar, PrimaryButton, SecondaryButton, numFont } from './shell'
 import type { TrainerMode } from './WelcomeMode'
+
+function greetingForHour(h: number) {
+  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
+}
 
 const PATHWAY_LABEL: Record<Condition, string> = {
   concussion: 'Concussion',
@@ -38,11 +42,15 @@ export default function HomeHub({
   onProgress: () => void
   onRetest: () => void
 }) {
-  const [greeting, setGreeting] = useState('Welcome back')
-  useEffect(() => {
-    const h = new Date().getHours()
-    setGreeting(h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening')
-  }, [])
+  // Client-only greeting without an effect: useSyncExternalStore returns the
+  // server snapshot ('Welcome back') during SSR/hydration, then the client
+  // snapshot once mounted — no hydration mismatch, no set-state-in-effect.
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  )
+  const greeting = isClient ? greetingForHour(new Date().getHours()) : 'Welcome back'
 
   const badge = `${PATHWAY_LABEL[condition]} · ${
     mode === 'clinic-code' ? `Linked ${clinicCode || 'clinic'}` : 'Self-guided'
@@ -85,9 +93,9 @@ export default function HomeHub({
 
       <div className="flex items-center justify-between rounded-[16px] border border-[#dde7e7] bg-white px-4 py-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[12.5px] font-bold text-[#16282b]">This week</span>
+          <span className="text-[12.5px] font-bold text-[#16282b]">Sessions logged</span>
           <span className="text-[11px] text-[#849c9c]">
-            {done} of {target} days
+            {done} of {target} toward your weekly goal
           </span>
         </div>
         <div className="flex gap-1.5">

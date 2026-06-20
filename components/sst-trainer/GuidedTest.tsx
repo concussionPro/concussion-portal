@@ -49,12 +49,15 @@ export default function GuidedTest({
   restingSymptomScore,
   selectedSymptomIds,
   onComplete,
+  onAbort,
 }: {
   condition: Condition
   restingSymptomScore: number
   selectedSymptomIds: string[]
   /** receives the engine result + the raw input that produced it */
   onComplete: (result: ThresholdResult, input: TestInput) => void
+  /** leave the test without recording a result (back to readiness, or home if a band exists) */
+  onAbort: () => void
 }) {
   // only the symptoms the user told us they get
   const userSymptoms = CONCUSSION_SYMPTOMS.filter((s) => selectedSymptomIds.includes(s.id))
@@ -102,7 +105,10 @@ export default function GuidedTest({
     if (minute >= MAX_STAGES) return finish('exhaustion-limited', stages)
     setRecordedStages(stages)
     setMinute((m) => m + 1)
+    // fresh entry for every stage — no HR / symptom carry-over from the last minute
     setTappedSymptoms(new Set())
+    setHeartRate('')
+    setSymptomScore(restingSymptomScore)
   }
 
   /** Early termination (exhaustion / red-flag). */
@@ -118,6 +124,15 @@ export default function GuidedTest({
 
   return (
     <section className="flex flex-col gap-3 pt-1">
+      {/* abort / back — never a dead end */}
+      <button
+        type="button"
+        onClick={onAbort}
+        className="-ml-1 -mt-0.5 self-start rounded-[10px] px-1 py-0.5 text-[12px] font-semibold text-[#7d9092] transition active:scale-[0.98]"
+      >
+        ← Back
+      </button>
+
       {/* hero: minute ring + live/entered HR */}
       <div className="flex items-center gap-3.5">
         <div className="relative h-[114px] w-[114px] flex-none">

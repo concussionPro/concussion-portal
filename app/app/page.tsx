@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
-import { Play, Globe, ArrowRight, Plus, Apple, Smartphone } from 'lucide-react'
+import { Play, Globe, ArrowRight, Plus, Apple } from 'lucide-react'
 
 const hanken = Hanken_Grotesk({
   subsets: ['latin'],

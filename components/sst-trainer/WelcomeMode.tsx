@@ -12,12 +12,20 @@ export interface WelcomeSelection {
   condition: Condition
 }
 
-/** The four care pathways from the design, mapped to engine Conditions. */
-const PATHWAYS: { value: Condition; label: string; sub: string }[] = [
+/**
+ * The care pathways from the design, mapped to engine Conditions.
+ *
+ * Only the neuro family is selectable: the symptom inventory (SCAT/PCSS) and the
+ * readiness red-flags rendered downstream are concussion-specific, so serving
+ * them to a cancer / cardiac / long-COVID patient would be clinically wrong.
+ * The expansion pathways stay visible as "Coming soon" (disabled) until they get
+ * their own symptom + red-flag vocabularies.
+ */
+const PATHWAYS: { value: Condition; label: string; sub: string; comingSoon?: boolean }[] = [
   { value: 'concussion', label: 'Concussion', sub: 'Concussion · mTBI' },
-  { value: 'cancer', label: 'Cancer', sub: 'prehab & rehab' },
-  { value: 'long-covid', label: 'Long COVID', sub: 'POTS · dysautonomia' },
-  { value: 'cardiac', label: 'Cardiac', sub: '& pulmonary rehab' },
+  { value: 'cancer', label: 'Cancer', sub: 'prehab & rehab', comingSoon: true },
+  { value: 'long-covid', label: 'Long COVID', sub: 'POTS · dysautonomia', comingSoon: true },
+  { value: 'cardiac', label: 'Cardiac', sub: '& pulmonary rehab', comingSoon: true },
 ]
 
 export default function WelcomeMode({
@@ -110,6 +118,25 @@ export default function WelcomeMode({
         <div className="grid grid-cols-2 gap-2">
           {PATHWAYS.map((p) => {
             const on = condition === p.value
+            if (p.comingSoon) {
+              return (
+                <div
+                  key={p.value}
+                  aria-disabled="true"
+                  className="flex cursor-not-allowed flex-col gap-0.5 rounded-[14px] border-[1.5px] border-dashed border-[#d4e0e1] bg-[#f4f8f8] px-3 py-2.5 text-left opacity-70"
+                >
+                  <div className="flex items-center justify-between gap-1.5">
+                    <span className="text-[13px] font-bold leading-tight text-[#7d9092]">
+                      {p.label}
+                    </span>
+                    <span className="rounded-full bg-[#e7eeee] px-1.5 py-0.5 text-[8.5px] font-bold uppercase tracking-[0.04em] text-[#849c9c]">
+                      Soon
+                    </span>
+                  </div>
+                  <span className="text-[10px] leading-tight text-[#9bafb0]">Coming soon</span>
+                </div>
+              )
+            }
             return (
               <button
                 key={p.value}

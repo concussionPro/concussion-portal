@@ -16,6 +16,9 @@ const DECISION_META: Record<
   advance: { label: 'Advance', icon: '↑', color: '#3c7681', border: '#5b9aa6', bg: '#e7f2f3' },
   hold: { label: 'Hold steady', icon: '→', color: '#3b4f52', border: '#cdd9da', bg: '#eef4f4' },
   regress: { label: 'Ease back', icon: '↓', color: '#a06a1c', border: '#d79a3a', bg: '#fbf2e1' },
+  // NOTE: progressionDecision() only ever returns advance/hold/regress today —
+  // it never emits `refer`. This entry is a harmless fallback kept in case the
+  // engine adds a referral decision later; it currently never renders.
   refer: {
     label: 'Check in with your clinician',
     icon: '!',
@@ -80,11 +83,21 @@ export default function ProgressDashboard({
   sessions,
   onHome,
   onNewSession,
+  onApplyCeiling,
+  canApply = true,
 }: {
   rx: Prescription
   sessions: SessionLog[]
   onHome: () => void
   onNewSession: () => void
+  /** apply an advance/regress decision — shifts the live band to the new ceiling */
+  onApplyCeiling?: (newCeilingBpm: number) => void
+  /**
+   * Whether a band change may be applied right now. Gated to NEW clean sessions
+   * since the last apply so the ceiling can't be ratcheted by repeated clicks
+   * against the same data (a band change must be earned by fresh sessions).
+   */
+  canApply?: boolean
 }) {
   // engine decides advance / hold / regress / refer from recent sessions
   const decision = progressionDecision(rx, sessions)
@@ -113,6 +126,22 @@ export default function ProgressDashboard({
         {decision.newCeilingBpm !== undefined && (
           <p className="mt-2.5 text-[12.5px] font-semibold leading-snug" style={{ color: dm.color }}>
             Suggested new ceiling: {decision.newCeilingBpm} bpm
+          </p>
+        )}
+        {/* advance / regress only — hold + refer never shift the band */}
+        {decision.newCeilingBpm !== undefined && onApplyCeiling && canApply && (
+          <button
+            type="button"
+            onClick={() => onApplyCeiling(decision.newCeilingBpm as number)}
+            className="mt-3 w-full rounded-[14px] p-3 text-[13.5px] font-bold text-white transition active:scale-[0.98]"
+            style={{ background: dm.color }}
+          >
+            Apply new ceiling — {decision.newCeilingBpm} bpm
+          </button>
+        )}
+        {decision.newCeilingBpm !== undefined && onApplyCeiling && !canApply && (
+          <p className="mt-3 text-[12px] font-medium leading-snug text-[#5d7174]">
+            Log a new session before adjusting your ceiling again.
           </p>
         )}
       </div>

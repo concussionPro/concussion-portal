@@ -42,6 +42,9 @@ export default function SstTrainerPage() {
   const [thresholdResult, setThresholdResult] = useState<ThresholdResult | null>(null)
   const [prescription, setPrescription] = useState<Prescription | null>(null)
   const [sessions, setSessions] = useState<SessionLog[]>([])
+  // session count at the last applied band change — a further apply requires
+  // new sessions beyond this (see ProgressDashboard canApply)
+  const [progressionCheckpoint, setProgressionCheckpoint] = useState(0)
 
   const condition: Condition = welcome?.condition ?? 'concussion'
 
@@ -89,6 +92,8 @@ export default function SstTrainerPage() {
             setTestInput(input)
             setStep('result')
           }}
+          // abort the test → readiness, or straight home if a band already exists
+          onAbort={() => setStep(prescription ? 'home' : 'readiness')}
         />
       )}
 
@@ -96,11 +101,16 @@ export default function SstTrainerPage() {
         <ResultPrescription
           result={thresholdResult}
           condition={condition}
+          hasPrescription={prescription !== null}
           onContinue={(rx) => {
             setPrescription(rx)
             setStep('home')
           }}
           onRetest={() => setStep('readiness')}
+          // red-flag exit: a saved band means go to the safe hub; otherwise welcome
+          onExit={() => setStep(prescription ? 'home' : 'welcome')}
+          // keep the existing band after a non-physiologic re-test result
+          onKeepBand={() => setStep('home')}
         />
       )}
 
@@ -134,6 +144,26 @@ export default function SstTrainerPage() {
           sessions={sessions}
           onHome={() => setStep('home')}
           onNewSession={() => setStep('training')}
+          // a band change must be earned by NEW sessions since the last apply —
+          // prevents ratcheting the ceiling by re-clicking against the same data
+          canApply={sessions.length > progressionCheckpoint}
+          // apply an advance/regress decision: shift the whole band by the delta,
+          // refresh the summary copy, checkpoint the session count, return home
+          onApplyCeiling={(newCeilingBpm) => {
+            setPrescription((prev) => {
+              if (!prev) return prev
+              const upperBpm = newCeilingBpm
+              const lowerBpm = prev.lowerBpm + (newCeilingBpm - prev.upperBpm)
+              return {
+                ...prev,
+                upperBpm,
+                lowerBpm,
+                summary: `Train at ${lowerBpm}–${upperBpm} bpm. Aim for ${prev.sessionMinutes} minutes, ${prev.daysPerWeek} days a week. Keep your heart rate under ${upperBpm} bpm. Stop the session if your symptoms rise ${prev.stopRisePoints} or more points above how you felt before you started.`,
+              }
+            })
+            setProgressionCheckpoint(sessions.length)
+            setStep('home')
+          }}
         />
       )}
     </AppShell>

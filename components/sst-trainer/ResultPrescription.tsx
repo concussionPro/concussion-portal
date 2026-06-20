@@ -11,20 +11,35 @@ import { BandBar, PrimaryButton, ScreenHeading, SecondaryButton, numFont } from 
 export default function ResultPrescription({
   result,
   condition,
+  hasPrescription,
   onContinue,
   onRetest,
+  onExit,
+  onKeepBand,
 }: {
   result: ThresholdResult
   condition: Condition
+  /** true if the user already has a saved prescription (i.e. this is a re-test) */
+  hasPrescription: boolean
   /** physiologic branch only — receives the computed prescription, routes to home */
   onContinue: (rx: Prescription) => void
+  /** re-run the threshold test — only offered on no-intolerance / invalid results */
   onRetest: () => void
+  /** red-flag: leave the provoking flow for the safe hub (home if a band exists, else welcome) */
+  onExit: () => void
+  /** non-physiologic re-test with an existing band: keep it and return home */
+  onKeepBand: () => void
 }) {
   // physiologic = HRt found → derive the training band from the engine
   const rx =
     result.interpretation === 'physiologic' && result.hrt !== null
       ? computePrescription(result.hrt, condition)
       : null
+
+  // re-test is only a safe forward action when no exercise-driven threshold was
+  // found (or the data was invalid) — NEVER after a red flag.
+  const showRetestActions =
+    result.interpretation === 'no-intolerance' || result.interpretation === 'invalid'
 
   return (
     <section className="flex flex-col gap-3.5 pt-1.5">
@@ -34,6 +49,9 @@ export default function ResultPrescription({
         <div className="rounded-[16px] border-[1.5px] border-[#d2463a] bg-[#fbeae8] p-3.5">
           <p className="m-0 text-[15px] font-bold leading-snug text-[#b1392e]">Stop and seek review</p>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8a4036]">{result.message}</p>
+          <p className="mt-2 text-[12.5px] font-semibold leading-relaxed text-[#8a4036]">
+            Do not re-test or exercise again until a clinician has reviewed you.
+          </p>
         </div>
       )}
 
@@ -124,9 +142,26 @@ export default function ResultPrescription({
         </div>
       )}
 
-      <SecondaryButton onClick={onRetest} className="rounded-[16px] p-3.5">
-        Re-test threshold
-      </SecondaryButton>
+      {/* red flag: the ONLY action is a non-provoking exit — never a re-test */}
+      {result.interpretation === 'red-flag' && (
+        <PrimaryButton onClick={onExit} className="rounded-[18px]">
+          {hasPrescription ? 'Back to safety' : 'Exit'}
+        </PrimaryButton>
+      )}
+
+      {/* no-intolerance / invalid: keep an existing band if there is one, then re-test */}
+      {showRetestActions && (
+        <div className="flex flex-col gap-2.5">
+          {hasPrescription && (
+            <SecondaryButton onClick={onKeepBand} className="rounded-[16px] p-3.5">
+              Keep my current band — back to home
+            </SecondaryButton>
+          )}
+          <SecondaryButton onClick={onRetest} className="rounded-[16px] p-3.5">
+            Re-test threshold
+          </SecondaryButton>
+        </div>
+      )}
     </section>
   )
 }
