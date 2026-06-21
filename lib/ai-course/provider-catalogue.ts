@@ -47,7 +47,12 @@ export interface CourseCatalogueEntry {
    * the buyer and fulfil nothing.
    */
   purchasableViaCheckout: boolean
-  status: 'live' | 'coming-soon' | 'pilot'
+  /**
+   * 'preview' = built but pre-launch: gated + noindex, surfaced on /courses
+   * ONLY for admin/demo viewers (and the ESSA reviewer via the /demo/essa
+   * cookie). Invisible to the public until flipped to 'coming-soon'/'live'.
+   */
+  status: 'live' | 'coming-soon' | 'pilot' | 'preview'
   tags: string[]
   /** Early-access discount percentage applied at launch for waitlist signups */
   earlyBirdDiscountPct?: number
@@ -80,7 +85,7 @@ export interface CourseCatalogueEntry {
  *   - Otherwise: return course.status
  */
 export function getEffectiveStatus(course: CourseCatalogueEntry): CourseCatalogueEntry['status'] {
-  if (course.status === 'live' || course.status === 'pilot') return course.status
+  if (course.status === 'live' || course.status === 'pilot' || course.status === 'preview') return course.status
   if (course.launchAt && new Date() >= new Date(course.launchAt)) return 'live'
   return course.status
 }
@@ -123,7 +128,7 @@ export const PROVIDERS: ProviderProfile[] = [
     url: 'https://concussion-education-australia.com',
     verified: true,
     brandColor: 'teal',
-    courseCount: 2,
+    courseCount: 3,
     firstParty: true,
   },
   // Placeholder slots for the marketplace expansion. Renders as "vetting
@@ -213,6 +218,22 @@ export const COURSES: CourseCatalogueEntry[] = [
     purchasableViaCheckout: false,
     status: 'live',
     tags: ['concussion', 'sport-medicine', 'physio', 'osteo', 'gp'],
+  },
+  {
+    id: 'concussion-rehab-mastery',
+    title: 'Concussion Rehab Mastery',
+    providerId: 'cea',
+    // Online tier = 8 CPD hours; complete (with the shared practical day) = 14.
+    cpdHours: 8,
+    cpdRecognition: ['Designed to ESSA CPD standards', 'ESSA accreditation pending'],
+    description: 'The EP-scoped concussion-rehab stream for Accredited Exercise Physiologists & Exercise Scientists — BCTT/HRt, sub-symptom-threshold prescription, graded return-to-activity, plus the live clinical tools. 8 online modules · 8 CPD (14 with the shared practical day).',
+    route: '/concussion-rehab-mastery',
+    priceAUD: 497,
+    // Display/landing only — no EP Stripe flow yet; landing captures interest.
+    purchasableViaCheckout: false,
+    // PREVIEW: gated + noindex, shown on /courses to admin/demo only until launch.
+    status: 'preview',
+    tags: ['concussion', 'rehab', 'exercise-physiology', 'essa', 'aep'],
   },
   // Placeholder partner cards removed — they were demo-shells with
   // route: '#' that dead-linked. Real partner courses will be added

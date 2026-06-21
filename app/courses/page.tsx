@@ -30,6 +30,11 @@ export default async function CoursesIndexPage() {
   const earlyAccessCourses = COURSES.filter(
     (c) => getEffectiveStatus(c) === 'coming-soon' && c.earlyBirdDiscountPct
   )
+  // Pre-launch streams (e.g. CRM/EP) — hidden from the public, surfaced only
+  // to admin/demo viewers and the ESSA reviewer (via the /demo/essa cookie).
+  const previewCourses = access.ok
+    ? COURSES.filter((c) => getEffectiveStatus(c) === 'preview')
+    : []
   const earlyAccessCounts = await getAllEarlyAccessCounts().catch(() => ({}))
 
   return (
@@ -186,6 +191,61 @@ export default async function CoursesIndexPage() {
             })}
           </div>
         </section>
+
+        {/* Preview (hidden) — pre-launch streams, admin/demo + ESSA-reviewer only */}
+        {previewCourses.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-baseline justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground">In preview</h2>
+                <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  Hidden · not public
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">{previewCourses.length} {previewCourses.length === 1 ? 'stream' : 'streams'}</p>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Built and gated ahead of launch. Only you (admin/demo) and the ESSA reviewer can see these.
+            </p>
+            <div className="grid md:grid-cols-2 gap-4">
+              {previewCourses.map((c) => {
+                const provider = findProvider(c.providerId)
+                return (
+                  <Link
+                    key={c.id}
+                    href={c.route}
+                    className="card rounded-xl p-5 hover:border-accent/40 hover:shadow-sm transition-all flex flex-col border-dashed"
+                  >
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-accent">
+                        {provider?.shortName || c.providerId}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                        Preview
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground mb-1 leading-tight">{c.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed flex-1">{c.description}</p>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground tabular-nums">
+                        <strong className="text-foreground">{c.cpdHours} CPD hours</strong>
+                        {c.priceAUD !== null && <> · from A${c.priceAUD.toLocaleString('en-AU')}</>}
+                      </span>
+                      <span className="text-accent font-semibold">Open preview →</span>
+                    </div>
+                    {c.cpdRecognition.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-x-2 gap-y-0.5">
+                        {c.cpdRecognition.map((r) => (
+                          <span key={r} className="text-[10px] text-muted-foreground">· {r}</span>
+                        ))}
+                      </div>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         <ComingSoonSection courses={earlyAccessCourses} initialCounts={earlyAccessCounts} />
 
