@@ -90,6 +90,9 @@ export default function ModulePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
+  // Demo / ESSA-review viewers share an ephemeral synthetic session — their quiz
+  // answers must never persist or restore, so the review always sees blank quizzes.
+  const [isDemoViewer, setIsDemoViewer] = useState(false)
 
   if (!isValidModuleId) {
     return (
@@ -159,10 +162,10 @@ export default function ModulePage() {
   }
 
   // Authenticated - render module content
-  return <ModulePageContent moduleId={moduleId} router={router} userEmail={userEmail} />
+  return <ModulePageContent moduleId={moduleId} router={router} userEmail={userEmail} isDemoViewer={isDemoViewer} />
 }
 
-function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; router: AppRouterInstance; userEmail: string }) {
+function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { moduleId: number; router: AppRouterInstance; userEmail: string; isDemoViewer: boolean }) {
   // Fetch module content from secure API
   const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade, allSectionTitles } = useEpModuleData(moduleId)
   const {
@@ -183,9 +186,6 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     const saved = getModuleProgress(moduleId).quizAnswers
     return saved || {}
   })
-  // Demo / ESSA-review viewers share an ephemeral synthetic session — their quiz
-  // answers must never persist or restore, so the review always sees blank quizzes.
-  const [isDemoViewer, setIsDemoViewer] = useState(false)
   const [quizSubmitted, setQuizSubmitted] = useState<Record<number, boolean>>({})
   const [quizValidationError, setQuizValidationError] = useState<string | null>(null)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
