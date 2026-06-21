@@ -118,6 +118,7 @@ export default function ModulePage() {
             }
             setIsAuthenticated(true)
             if (data.user.email) setUserEmail(data.user.email)
+            setIsDemoViewer(!!data.user.isDemo)
             setCheckingAuth(false)
             return
           }
@@ -182,6 +183,9 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     const saved = getModuleProgress(moduleId).quizAnswers
     return saved || {}
   })
+  // Demo / ESSA-review viewers share an ephemeral synthetic session — their quiz
+  // answers must never persist or restore, so the review always sees blank quizzes.
+  const [isDemoViewer, setIsDemoViewer] = useState(false)
   const [quizSubmitted, setQuizSubmitted] = useState<Record<number, boolean>>({})
   const [quizValidationError, setQuizValidationError] = useState<string | null>(null)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
@@ -282,10 +286,18 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     }
   }, [moduleProgress.quizCompleted, isRetaking, module])
 
-  // Sync in-progress quiz answers to server via ProgressContext
+  // Sync in-progress quiz answers via ProgressContext — but NEVER for demo/review
+  // viewers (ephemeral shared session): their answers must not persist or restore.
   useEffect(() => {
+    if (isDemoViewer) return
     saveQuizAnswers(moduleId, quizAnswers)
-  }, [quizAnswers, moduleId])
+  }, [quizAnswers, moduleId, isDemoViewer])
+
+  // Once we know it's a demo/review session, clear any answers restored from this
+  // browser's localStorage so every review starts with blank quizzes.
+  useEffect(() => {
+    if (isDemoViewer) setQuizAnswers({})
+  }, [isDemoViewer])
 
   // Save current section to localStorage as checkpoint
   useEffect(() => {
