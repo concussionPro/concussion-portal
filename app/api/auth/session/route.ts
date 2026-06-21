@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, createJWTSession } from '@/lib/jwt-session'
 import { findUserById, isBookOwner } from '@/lib/users'
+import { DEMO_KEY } from '@/lib/demo-key'
 
 /**
  * Synthetic "demo viewer" user — returned when the partner-preview
@@ -20,7 +21,7 @@ import { findUserById, isBookOwner } from '@/lib/users'
 function getDemoViewerResponse(request: NextRequest): NextResponse | null {
   const demoKey = request.cookies.get('demo_key')?.value
   const demoOrg = request.cookies.get('demo_org')?.value
-  if (demoKey && process.env.HEIDI_DEMO_KEY && demoKey === process.env.HEIDI_DEMO_KEY) {
+  if (demoKey && demoKey === DEMO_KEY) {
     return NextResponse.json({
       success: true,
       user: {

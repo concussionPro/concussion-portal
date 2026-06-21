@@ -17,6 +17,7 @@ import { NextRequest } from 'next/server'
 import { isAdminRequest } from '@/lib/require-admin'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { sql } from '@/lib/db'
+import { DEMO_KEY } from '@/lib/demo-key'
 
 export type AccessResult =
   | { ok: true; reason: 'admin' | 'enrolled' | 'public-launch' | 'demo-key'; userId?: string; email?: string }
@@ -44,12 +45,15 @@ export async function checkAiCourseAccess(request: NextRequest): Promise<AccessR
   // grants AI course access to anyone supplying that exact key via the
   // x-demo-key header OR the ?demo= query string. NOT a full admin key —
   // does not unlock /api/admin/* routes elsewhere in the portal.
-  const demoKey = process.env.HEIDI_DEMO_KEY
-  if (demoKey) {
-    const supplied = request.headers.get('x-demo-key') || new URL(request.url).searchParams.get('demo')
-    if (supplied && supplied === demoKey) {
-      return { ok: true, reason: 'demo-key' }
-    }
+  // private-review access — x-demo-key header, ?demo= query, OR the demo_key
+  // cookie (set by /demo/essa). DEMO_KEY falls back to a committed constant when
+  // HEIDI_DEMO_KEY is unset, so the reviewer links work without a Vercel env var.
+  const supplied =
+    request.headers.get('x-demo-key') ||
+    new URL(request.url).searchParams.get('demo') ||
+    request.cookies.get('demo_key')?.value
+  if (supplied && supplied === DEMO_KEY) {
+    return { ok: true, reason: 'demo-key' }
   }
 
   // Enrolled (purchased) users always pass — AI_COURSE_PUBLIC only gates

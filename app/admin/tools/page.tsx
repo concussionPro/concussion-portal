@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { LineChart, Activity, HeartPulse, LayoutDashboard, ArrowRight } from 'lucide-react'
+import { LineChart, Activity, HeartPulse, LayoutDashboard, ArrowRight, GraduationCap, BookOpen } from 'lucide-react'
 
 export const metadata = { title: 'Tools — CEA', robots: 'noindex, nofollow' }
 
@@ -27,6 +27,20 @@ const TOOLS = [
     status: 'Preview',
     href: '/sst-trainer',
     desc: 'The home-based guided trainer: self-guided or clinician-set threshold, per-minute symptom prompts, in-band HR guidance and progression. Mobile-first; scaffold in for the design pass.',
+  },
+  {
+    icon: GraduationCap,
+    title: 'Concussion Rehab Mastery — Landing (EP course)',
+    status: 'Preview',
+    href: '/concussion-rehab-mastery',
+    desc: 'The EP-scoped course landing/sales page (gated pre-launch — admin/demo only). Preview the bento, curriculum, the in-person workshop section and pricing. Hidden from the public; visible to you via admin.',
+  },
+  {
+    icon: BookOpen,
+    title: 'EP Course — Modules (review copy)',
+    status: 'Preview',
+    href: '/ep-course/modules/1',
+    desc: 'The gated EP course delivery — the same content the ESSA reviewer sees via /demo/essa. 8 modules with quizzes, plus the live Clinical Toolkit + admin-doc downloads.',
   },
   {
     icon: LayoutDashboard,

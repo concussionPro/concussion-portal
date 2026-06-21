@@ -7,16 +7,15 @@
  * the only way in.
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { DEMO_KEY } from '@/lib/demo-key'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   const dest = new URL('/courses/ai-in-clinical-practice/module-1-compliance', request.url)
-  const key = process.env.HEIDI_DEMO_KEY
-  if (!key) return NextResponse.redirect(dest)
 
   const res = NextResponse.redirect(dest)
-  res.cookies.set('demo_key', key, {
+  res.cookies.set('demo_key', DEMO_KEY, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',

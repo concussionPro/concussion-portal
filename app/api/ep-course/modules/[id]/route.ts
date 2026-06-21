@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEpModuleById } from '@/data/ep-modules'
 import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
+import { DEMO_KEY } from '@/lib/demo-key'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -25,9 +26,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const isAdmin = !!adminCookie && !!verifyAdminSessionToken(adminCookie)
   const adminHeader = request.headers.get('x-admin-key')
   const isAdminHeader = !!adminHeader && !!process.env.ADMIN_API_KEY && adminHeader === process.env.ADMIN_API_KEY
-  const demoKey = process.env.HEIDI_DEMO_KEY
   const demoCookie = request.cookies.get('demo_key')?.value
-  const isDemo = !!demoKey && demoCookie === demoKey
+  const isDemo = demoCookie === DEMO_KEY
   const authorized = isAdmin || isAdminHeader || isDemo
 
   const module = getEpModuleById(moduleId)
