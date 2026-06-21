@@ -1,7 +1,13 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import { getEpModulesMeta } from '@/data/ep-modules'
 import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
+import { NeurometabolicCascade } from '@/components/course/ep-infographics/NeurometabolicCascade'
+import { BcttProtocol } from '@/components/course/ep-infographics/BcttProtocol'
+import { HrtToPrescription } from '@/components/course/ep-infographics/HrtToPrescription'
+import { GradedReturnToSport } from '@/components/course/ep-infographics/GradedReturnToSport'
+import { PhenotypeMap } from '@/components/course/ep-infographics/PhenotypeMap'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Concussion Rehab Mastery — PUBLIC sales/landing page (EP-scoped course).
@@ -121,74 +127,126 @@ export default async function ConcussionRehabMasteryPage() {
       <section className="relative overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-70"
+          className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'radial-gradient(60% 50% at 15% 0%, rgba(13,115,119,0.10), transparent 60%), radial-gradient(50% 45% at 95% 10%, rgba(16,145,138,0.08), transparent 55%)',
+              'radial-gradient(55% 50% at 12% 0%, rgba(13,115,119,0.12), transparent 60%), radial-gradient(50% 55% at 100% 8%, rgba(91,154,166,0.12), transparent 58%)',
+          }}
+        />
+        {/* faint instrument grid for depth */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              'linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px)',
+            backgroundSize: '54px 54px',
+            maskImage: 'radial-gradient(70% 60% at 70% 10%, black, transparent 75%)',
+            WebkitMaskImage: 'radial-gradient(70% 60% at 70% 10%, black, transparent 75%)',
           }}
         />
         <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-16 sm:pt-28 sm:pb-24">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--card-solid)] px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-accent shadow-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            For Accredited Exercise Physiologists &amp; Exercise Scientists
-          </div>
-
-          <h1 className="mt-7 max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-6xl">
-            Concussion Rehab Mastery
-            <span className="mt-3 block text-2xl font-semibold tracking-[-0.02em] text-accent sm:text-3xl">
-              Built for Exercise Physiologists.
-            </span>
-          </h1>
-
-          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-[var(--muted-foreground)] sm:text-xl">
-            Concussion care has moved from rest to <strong className="text-[var(--foreground)]">active rehabilitation</strong>.
-            The Buffalo treadmill test, then a sub-symptom-threshold aerobic
-            prescription, progressed against an objective heart-rate ceiling —
-            that is <em>exercise prescription</em>. It is the AEP’s core skill,
-            applied to a condition you were never trained for. This course
-            closes that gap.
-          </p>
-
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a
-              href={INTEREST_HREF}
-              className="inline-flex items-center justify-center rounded-full bg-accent px-8 py-4 text-base font-semibold text-white shadow-[var(--shadow-md)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--accent-light)]"
-            >
-              Register your interest
-            </a>
-            <a
-              href="#curriculum"
-              className="inline-flex items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--card-solid)] px-8 py-4 text-base font-semibold text-[var(--foreground)] transition-colors hover:border-accent hover:text-accent"
-            >
-              See the curriculum
-            </a>
-            <a
-              href="/ep-course/modules/1"
-              className="inline-flex items-center justify-center px-2 py-4 text-base font-semibold text-accent transition-colors hover:text-[var(--accent-light)]"
-            >
-              Preview the modules →
-            </a>
-          </div>
-
-          <dl className="mt-14 grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] shadow-[var(--shadow-sm)] sm:grid-cols-4">
-            {[
-              { v: String(count), l: 'Online modules' },
-              { v: '8', l: 'CPD hours' },
-              { v: '8', l: 'ESSA CPD points' },
-              { v: '100%', l: 'Online · self-paced' },
-            ].map((s) => (
-              <div key={s.l} className="bg-[var(--card-solid)] px-5 py-5">
-                <dt className="text-2xl font-extrabold tracking-[-0.02em] text-accent">{s.v}</dt>
-                <dd className="mt-1 text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted-foreground)]">
-                  {s.l}
-                </dd>
+          <div className="grid items-center gap-12 lg:grid-cols-[1.04fr_0.96fr]">
+            {/* Left — copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--card-solid)] px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-accent shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                For Accredited Exercise Physiologists &amp; Exercise Scientists
               </div>
-            ))}
-          </dl>
 
-          <p className="mt-5 text-sm text-[var(--muted-foreground)]">
-            ESSA CPD accreditation pending — designed to ESSA CPD standards.
-          </p>
+              <h1 className="mt-7 max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-6xl">
+                Concussion Rehab Mastery
+                <span className="mt-3 block text-2xl font-semibold tracking-[-0.02em] text-accent sm:text-3xl">
+                  Built for Exercise Physiologists.
+                </span>
+              </h1>
+
+              <p className="mt-7 max-w-xl text-lg leading-relaxed text-[var(--muted-foreground)]">
+                Concussion care has moved from rest to <strong className="text-[var(--foreground)]">active rehabilitation</strong>.
+                The Buffalo treadmill test, then a sub-symptom-threshold aerobic
+                prescription, progressed against an objective heart-rate ceiling —
+                that is <em>exercise prescription</em>. It is the AEP’s core skill,
+                applied to a condition you were never trained for. This course
+                closes that gap.
+              </p>
+
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a
+                  href={INTEREST_HREF}
+                  className="inline-flex items-center justify-center rounded-full bg-accent px-8 py-4 text-base font-semibold text-white shadow-[var(--shadow-md)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--accent-light)]"
+                >
+                  Register your interest
+                </a>
+                <a
+                  href="#curriculum"
+                  className="inline-flex items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--card-solid)] px-8 py-4 text-base font-semibold text-[var(--foreground)] transition-colors hover:border-accent hover:text-accent"
+                >
+                  See the curriculum
+                </a>
+                <a
+                  href="/ep-course/modules/1"
+                  className="inline-flex items-center justify-center px-2 py-4 text-base font-semibold text-accent transition-colors hover:text-[var(--accent-light)]"
+                >
+                  Preview the modules →
+                </a>
+              </div>
+
+              <dl className="mt-12 grid max-w-xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] shadow-[var(--shadow-sm)] sm:grid-cols-4">
+                {[
+                  { v: String(count), l: 'Online modules' },
+                  { v: '8', l: 'CPD hours' },
+                  { v: '8', l: 'ESSA CPD points' },
+                  { v: '100%', l: 'Online · self-paced' },
+                ].map((s) => (
+                  <div key={s.l} className="bg-[var(--card-solid)] px-5 py-5">
+                    <dt className="text-2xl font-extrabold tracking-[-0.02em] text-accent">{s.v}</dt>
+                    <dd className="mt-1 text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted-foreground)]">
+                      {s.l}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <p className="mt-5 text-sm text-[var(--muted-foreground)]">
+                ESSA CPD accreditation pending — designed to ESSA CPD standards.
+              </p>
+            </div>
+
+            {/* Right — featured instrument (the signature HRt → dose mechanic) */}
+            <div className="relative">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-6 rounded-[2.25rem] opacity-80 blur-2xl"
+                style={{
+                  background:
+                    'radial-gradient(60% 60% at 50% 35%, rgba(13,115,119,0.24), transparent 72%)',
+                }}
+              />
+              <div className="relative rounded-[1.9rem] border border-[var(--border-strong)] bg-[var(--card-solid)] p-3 shadow-[var(--shadow-lg)] sm:p-4">
+                <div className="mb-2 flex items-center justify-between px-2 pt-1">
+                  <span className="inline-flex items-center gap-2 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-accent">
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    From inside the course
+                  </span>
+                  <span className="text-[0.62rem] font-medium uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                    Module 3–4
+                  </span>
+                </div>
+                <div className="[&>figure]:my-0">
+                  <HrtToPrescription />
+                </div>
+              </div>
+              {/* floating instrument chip */}
+              <div className="absolute -bottom-5 -left-3 hidden rounded-2xl border border-[var(--border-strong)] bg-[var(--card-solid)] px-4 py-3 shadow-[var(--shadow-md)] sm:block">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-accent">
+                  Live in the course
+                </p>
+                <p className="text-sm font-semibold text-[var(--foreground)]">
+                  BCTT + HRt calculators
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -276,7 +334,7 @@ export default async function ConcussionRehabMasteryPage() {
       {/* ── Curriculum ───────────────────────────────────────────────────── */}
       <section id="curriculum" className="border-y border-[var(--border)] bg-[var(--surface-warm)]">
         <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="grid gap-10 lg:grid-cols-[1fr_0.82fr] lg:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
                 The curriculum
@@ -284,14 +342,37 @@ export default async function ConcussionRehabMasteryPage() {
               <h2 className="mt-3 text-3xl font-bold tracking-[-0.025em] sm:text-4xl">
                 Eight modules. Eight CPD hours. Eight points.
               </h2>
+              <p className="mt-5 max-w-md text-sm leading-relaxed text-[var(--muted-foreground)]">
+                From the neurometabolic cascade to documentation and referral —
+                a complete, scope-bounded path through concussion exercise rehab,
+                delivered in a clean, self-paced online platform.
+              </p>
             </div>
-            <p className="max-w-sm text-sm leading-relaxed text-[var(--muted-foreground)]">
-              From the neurometabolic cascade to documentation and referral —
-              a complete, scope-bounded path through concussion exercise rehab.
-            </p>
+
+            {/* product preview — show the platform, don't just describe it */}
+            <div className="relative">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-5 rounded-[2rem] opacity-70 blur-2xl"
+                style={{
+                  background:
+                    'radial-gradient(60% 60% at 60% 40%, rgba(13,115,119,0.20), transparent 72%)',
+                }}
+              />
+              <div className="relative overflow-hidden rounded-[1.4rem] border border-[var(--border-strong)] bg-[var(--card-solid)] p-2 shadow-[var(--shadow-lg)]">
+                <Image
+                  src="/ccm-online-preview.png"
+                  alt="The Concussion Rehab Mastery online course interface"
+                  width={1280}
+                  height={800}
+                  className="w-full rounded-[1.1rem]"
+                  sizes="(max-width: 1024px) 100vw, 520px"
+                />
+              </div>
+            </div>
           </div>
 
-          <ol className="mt-12 space-y-4">
+          <ol className="mt-14 space-y-4">
             {modules.map((m) => (
               <li
                 key={m.id}
@@ -342,7 +423,7 @@ export default async function ConcussionRehabMasteryPage() {
         </div>
       </section>
 
-      {/* ── Course bento ─────────────────────────────────────────────────── */}
+      {/* ── Course bento — a visual showcase of what you'll master ────────── */}
       <section className="mx-auto max-w-6xl px-6 py-20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
           Inside the course
@@ -351,45 +432,59 @@ export default async function ConcussionRehabMasteryPage() {
           Not a slide deck. A working clinical system.
         </h2>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--muted-foreground)]">
-          Every module is paired with the instrument or template you&rsquo;ll use the
-          next time a concussion patient lands in your care.
+          Every module is built around the instrument, diagram or template you&rsquo;ll
+          reach for the next time a concussion patient lands in your care. This is
+          what you&rsquo;ll master.
         </p>
 
         <div className="bento-premium mt-12">
-          {/* Hero tile */}
-          <div className="bento-large relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-[var(--card-solid)] p-8 shadow-[var(--shadow-md)] sm:p-10">
+          {/* FEATURE — BCTT: the assessment that is the treatment (wide) */}
+          <figure className="bento-span-2 group relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-gradient-to-br from-[var(--card-solid)] to-[var(--accent-subtle)] p-5 shadow-[var(--shadow-md)] transition-transform duration-300 hover:-translate-y-1 sm:p-7">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-70"
-              style={{
-                background:
-                  'radial-gradient(80% 70% at 100% 0%, rgba(13,115,119,0.10), transparent 60%)',
-              }}
+              className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-60 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(13,115,119,0.20), transparent 70%)' }}
             />
+            <div className="relative mb-5 flex items-start gap-3">
+              <span className="mt-1 h-7 w-1 flex-none rounded-full bg-accent" />
+              <div>
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                  The assessment that is the treatment
+                </p>
+                <p className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                  One graded test gives you the entire prescription.
+                </p>
+              </div>
+            </div>
+            <div className="relative [&>figure]:my-0">
+              <BcttProtocol />
+            </div>
+          </figure>
+
+          {/* Slim — the complete course summary */}
+          <div className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-md)] transition-transform duration-300 hover:-translate-y-1">
             <div className="relative">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--accent-subtle)] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--accent-subtle)] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-accent">
                 The complete course
               </span>
-              <p className="mt-7 text-5xl font-extrabold leading-[1.05] tracking-[-0.03em] text-[var(--foreground)] sm:text-6xl">
+              <p className="mt-7 text-5xl font-extrabold leading-[1.02] tracking-[-0.03em] text-[var(--foreground)]">
                 8 modules
               </p>
-              <p className="mt-3 max-w-md text-base leading-relaxed text-[var(--muted-foreground)]">
-                A complete, scope-bounded path from the neurometabolic cascade to
-                documentation and referral — built for the exercise-physiology scope,
-                not adapted from a physio or GP syllabus.
+              <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                A scope-bounded path from the neurometabolic cascade to documentation
+                and referral — written for the exercise-physiology scope, not adapted
+                from a physio or GP syllabus.
               </p>
             </div>
-            <dl className="relative mt-8 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-6">
+            <dl className="mt-8 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-6">
               {[
                 { v: '8', l: 'CPD hours' },
                 { v: '8', l: 'ESSA points' },
                 { v: '80%', l: 'Pass mark' },
               ].map((s) => (
                 <div key={s.l}>
-                  <dt className="text-2xl font-extrabold tracking-[-0.02em] text-accent">
-                    {s.v}
-                  </dt>
-                  <dd className="mt-1 text-[0.7rem] font-medium uppercase tracking-[0.08em] text-[var(--muted-foreground)]">
+                  <dt className="text-2xl font-extrabold tracking-[-0.02em] text-accent">{s.v}</dt>
+                  <dd className="mt-1 text-[0.68rem] font-medium uppercase tracking-[0.08em] text-[var(--muted-foreground)]">
                     {s.l}
                   </dd>
                 </div>
@@ -397,10 +492,33 @@ export default async function ConcussionRehabMasteryPage() {
             </dl>
           </div>
 
-          {/* Live Baseline & Serial Testing tool */}
-          <div className="bento-tall flex flex-col justify-between rounded-3xl border border-[var(--border-strong)] bg-[var(--accent-subtle)] p-7 shadow-[var(--shadow-sm)]">
+          {/* FEATURE — HRt → the training band (wide) */}
+          <figure className="bento-span-2 group relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-gradient-to-br from-[var(--card-solid)] to-[var(--accent-subtle)] p-5 shadow-[var(--shadow-md)] transition-transform duration-300 hover:-translate-y-1 sm:p-7">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full opacity-60 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(91,154,166,0.22), transparent 70%)' }}
+            />
+            <div className="relative mb-5 flex items-start gap-3">
+              <span className="mt-1 h-7 w-1 flex-none rounded-full bg-accent" />
+              <div>
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                  HRt → your 80–90% band
+                </p>
+                <p className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                  The test result becomes the personalised dose.
+                </p>
+              </div>
+            </div>
+            <div className="relative [&>figure]:my-0">
+              <HrtToPrescription />
+            </div>
+          </figure>
+
+          {/* Slim — Live Baseline & Serial Testing tool */}
+          <div className="group flex flex-col justify-between rounded-3xl border border-[var(--border-strong)] bg-[var(--accent-subtle)] p-7 shadow-[var(--shadow-sm)] transition-transform duration-300 hover:-translate-y-1">
             <div>
-              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+              <span className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-accent">
                 Working instrument
               </span>
               <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
@@ -421,99 +539,124 @@ export default async function ConcussionRehabMasteryPage() {
             </div>
           </div>
 
-          {/* BCTT calculator */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)]">
-            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
-              Built-in calculator
-            </span>
-            <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-              BCTT calculator
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
-              Buffalo treadmill test workload and symptom-threshold heart-rate maths,
-              done for you — so you prescribe to an objective ceiling, not a guess.
-            </p>
-          </div>
+          {/* FEATURE — graded return-to-sport ladder (wide) */}
+          <figure className="bento-span-2 group relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-gradient-to-br from-[var(--card-solid)] to-[var(--accent-subtle)] p-5 shadow-[var(--shadow-md)] transition-transform duration-300 hover:-translate-y-1 sm:p-7">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-20 -bottom-20 h-56 w-56 rounded-full opacity-60 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(13,115,119,0.18), transparent 70%)' }}
+            />
+            <div className="relative mb-5 flex items-start gap-3">
+              <span className="mt-1 h-7 w-1 flex-none rounded-full bg-accent" />
+              <div>
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                  The return ladder
+                </p>
+                <p className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                  You own stages 1–4, and bring them to the gate in peak condition.
+                </p>
+              </div>
+            </div>
+            <div className="relative [&>figure]:my-0">
+              <GradedReturnToSport />
+            </div>
+          </figure>
 
-          {/* Phenotype exercise library — wide */}
-          <div className="bento-span-2 flex flex-col justify-between rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center sm:gap-8">
+          {/* Slim — Clinical Toolkit + calculator */}
+          <div className="group flex flex-col justify-between rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)] transition-transform duration-300 hover:-translate-y-1">
             <div>
-              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+              <span className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-accent">
                 Chairside reference
               </span>
               <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-                Phenotype-specific exercise library
+                The Clinical Toolkit + BCTT calculator
               </h3>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-[var(--muted-foreground)]">
-                Reconditioning prescriptions mapped to the presentation in front of you —
-                with progression and stop-criteria references for each.
+              <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                Buffalo treadmill workload and symptom-threshold maths done for you,
+                plus the prescription templates and progression / stop-criteria
+                references for the workflow.
               </p>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2 sm:mt-0 sm:max-w-[14rem] sm:justify-end">
-              {['Autonomic', 'Vestibular', 'Cervicogenic', 'Ocular', 'Cognitive/fatigue'].map(
-                (tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-[var(--accent-muted)] px-3 py-1 text-xs font-semibold text-accent"
-                  >
-                    {tag}
-                  </span>
-                ),
-              )}
+            <div className="mt-6 flex flex-wrap gap-2">
+              {['BCTT sheet', 'SSTAE templates', 'Stop-criteria', 'Progressions'].map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-[var(--accent-muted)] px-3 py-1 text-xs font-semibold text-accent"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Certificate */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)]">
-            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
-              On passing
-            </span>
-            <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-              Certificate of completion
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
-              Issued at the 80% pass mark, evidencing 8 CPD hours for your ESSA
-              Further-Education record.
-            </p>
-          </div>
+          {/* FEATURE — neurometabolic cascade (wide) */}
+          <figure className="bento-span-2 group relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-gradient-to-br from-[var(--card-solid)] to-[var(--accent-subtle)] p-5 shadow-[var(--shadow-md)] transition-transform duration-300 hover:-translate-y-1 sm:p-7">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full opacity-60 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(13,115,119,0.20), transparent 70%)' }}
+            />
+            <div className="relative mb-5 flex items-start gap-3">
+              <span className="mt-1 h-7 w-1 flex-none rounded-full bg-accent" />
+              <div>
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                  Why it&rsquo;s an exercise problem
+                </p>
+                <p className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                  An energy crisis you train inside — the mechanism, made visible.
+                </p>
+              </div>
+            </div>
+            <div className="relative [&>figure]:my-0">
+              <NeurometabolicCascade />
+            </div>
+          </figure>
 
-          {/* Lifetime access */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)]">
-            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
-              One-time payment
-            </span>
-            <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-              Lifetime access
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
-              Revisit every module, tool and template whenever the next concussion
-              patient lands in your care.
-            </p>
-          </div>
-
-          {/* Scope-accurate design — wide */}
-          <div className="bento-span-2 flex flex-col justify-between rounded-3xl border border-[var(--border-strong)] bg-[var(--accent-subtle)] p-7 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center sm:gap-8">
+          {/* Slim — certificate + lifetime access + CTA */}
+          <div className="group flex flex-col justify-between rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-7 shadow-[var(--shadow-sm)] transition-transform duration-300 hover:-translate-y-1">
             <div>
-              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
-                Scope-accurate by design
+              <span className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                On completion
               </span>
               <h3 className="mt-4 text-lg font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-                Everything stays inside EP scope
+                Certificate + lifetime access
               </h3>
-              <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--muted-foreground)]">
-                You implement and progress the rehabilitation. Diagnosis, red-flag
-                triage and return-to-sport clearance stay with the medical team — every
-                module holds that boundary, plus NDIS / WorkCover / GP report templates
-                to close the loop.
+              <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
+                Issued at the 80% pass mark, evidencing 8 CPD hours for your ESSA
+                Further-Education record. Revisit every module, tool and template
+                whenever the next concussion patient arrives.
               </p>
             </div>
             <a
               href="/ep-course/modules/1"
-              className="mt-5 inline-flex flex-none items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--accent-light)] sm:mt-0"
+              className="mt-6 inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--accent-light)]"
             >
               Go to the course →
             </a>
           </div>
+
+          {/* FULL WIDTH — phenotype map */}
+          <figure className="group relative col-span-full overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-gradient-to-b from-[var(--card-solid)] to-[var(--accent-subtle)] p-5 shadow-[var(--shadow-md)] transition-transform duration-300 hover:-translate-y-1 sm:p-7">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-24 top-0 h-64 w-64 rounded-full opacity-50 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(91,154,166,0.22), transparent 70%)' }}
+            />
+            <div className="relative mb-5 flex items-start gap-3">
+              <span className="mt-1 h-7 w-1 flex-none rounded-full bg-accent" />
+              <div>
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                  Five phenotypes, one lane
+                </p>
+                <p className="text-base font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                  Know exactly what you treat with exercise — and what you refer.
+                </p>
+              </div>
+            </div>
+            <div className="relative [&>figure]:my-0">
+              <PhenotypeMap />
+            </div>
+          </figure>
         </div>
       </section>
 
@@ -586,6 +729,37 @@ export default async function ConcussionRehabMasteryPage() {
 
       {/* ── In-person workshop (optional hands-on extension) ─────────────── */}
       <section id="workshop" className="mx-auto max-w-6xl px-6 py-20">
+        {/* premium photographic banner — the hands-on day, made real */}
+        <div className="relative mb-14 overflow-hidden rounded-[1.75rem] border border-[var(--border-strong)] shadow-[var(--shadow-lg)]">
+          <div className="relative aspect-[16/8] sm:aspect-[16/6]">
+            <Image
+              src="/workshop-training.jpg"
+              alt="Clinicians practising hands-on concussion assessment at a CEA workshop"
+              fill
+              className="object-cover"
+              sizes="(max-width: 1152px) 100vw, 1152px"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(90deg, rgba(8,30,32,0.78) 0%, rgba(8,30,32,0.45) 42%, rgba(8,30,32,0.05) 75%)',
+              }}
+            />
+          </div>
+          <div className="absolute inset-y-0 left-0 flex max-w-md flex-col justify-end p-6 sm:p-9">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-light)]" />
+              The hands-on day
+            </span>
+            <p className="mt-3 text-xl font-bold leading-snug tracking-[-0.01em] text-white sm:text-2xl">
+              SCAT6 · VOMS · BESS · cervicogenic assessment — practised under
+              supervision, in the same room as the rest of the care team.
+            </p>
+          </div>
+        </div>
+
         <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           {/* Left — mixed-cohort messaging */}
           <div>
@@ -679,26 +853,53 @@ export default async function ConcussionRehabMasteryPage() {
 
       {/* ── Credibility ──────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-8 shadow-[var(--shadow-md)] sm:p-12">
+        <div className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card-solid)] p-8 shadow-[var(--shadow-md)] sm:p-12">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
             Who built it
           </p>
-          <blockquote className="mt-5 text-xl font-medium leading-relaxed tracking-[-0.01em] text-[var(--foreground)] sm:text-2xl">
-            “Concussion rehab is an exercise-physiology problem. A functional,
-            energy-starved, autonomically-dysregulated injury that responds to
-            precisely-dosed exertion is, by its nature, your discipline.”
-          </blockquote>
-          <div className="mt-8 border-t border-[var(--border)] pt-6">
-            <p className="text-base font-semibold text-[var(--foreground)]">
-              Zac Lewis — Osteopath (AQF-7), PhD (Neuroscience) candidate
-            </p>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)]">
-              10+ years in concussion and neurological rehabilitation. The
-              course is grounded in the Leddy / Buffalo evidence base and the
-              Amsterdam 2023 international consensus on concussion in sport —
-              translated specifically for the exercise-physiology scope of
-              practice.
-            </p>
+          <div className="mt-7 grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-center">
+            {/* photo */}
+            <div className="relative mx-auto w-full max-w-[15rem]">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-4 rounded-[2rem] opacity-70 blur-2xl"
+                style={{
+                  background:
+                    'radial-gradient(60% 60% at 50% 40%, rgba(13,115,119,0.22), transparent 72%)',
+                }}
+              />
+              <div className="relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-[var(--card-solid)] p-2 shadow-[var(--shadow-lg)]">
+                <Image
+                  src="/zac-lewis-headshot.jpg"
+                  alt="Zac Lewis, Osteopath and founder of Concussion Education Australia"
+                  width={400}
+                  height={400}
+                  className="aspect-square w-full rounded-2xl object-cover"
+                  sizes="(max-width: 1024px) 240px, 240px"
+                />
+              </div>
+            </div>
+
+            {/* quote + bio */}
+            <div>
+              <blockquote className="text-xl font-medium leading-relaxed tracking-[-0.01em] text-[var(--foreground)] sm:text-2xl">
+                “Concussion rehab is an exercise-physiology problem. A functional,
+                energy-starved, autonomically-dysregulated injury that responds to
+                precisely-dosed exertion is, by its nature, your discipline.”
+              </blockquote>
+              <div className="mt-8 border-t border-[var(--border)] pt-6">
+                <p className="text-base font-semibold text-[var(--foreground)]">
+                  Zac Lewis — Osteopath (AQF-7), PhD (Neuroscience) candidate
+                </p>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)]">
+                  10+ years in concussion and neurological rehabilitation. The
+                  course is grounded in the Leddy / Buffalo evidence base and the
+                  Amsterdam 2023 international consensus on concussion in sport —
+                  translated specifically for the exercise-physiology scope of
+                  practice.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
