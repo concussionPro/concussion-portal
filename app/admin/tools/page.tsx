@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { LineChart, Activity, HeartPulse, LayoutDashboard, ArrowRight, GraduationCap, BookOpen } from 'lucide-react'
+import { LineChart, Activity, HeartPulse, LayoutDashboard, ArrowRight, GraduationCap, BookOpen, Route, ClipboardCheck } from 'lucide-react'
 
 export const metadata = { title: 'Tools — CEA', robots: 'noindex, nofollow' }
 
@@ -41,6 +41,20 @@ const TOOLS = [
     status: 'Preview',
     href: '/ep-course/modules/1',
     desc: 'The gated EP course delivery — the same content the ESSA reviewer sees via /demo/essa. 8 modules with quizzes, plus the live Clinical Toolkit + admin-doc downloads.',
+  },
+  {
+    icon: Route,
+    title: 'RTP / RTL Pathway Tracker (athlete surface)',
+    status: 'Preview',
+    href: '/rtp',
+    desc: 'The Return-to-Sport / Return-to-Learn pathway for athletes & parents (gated pre-launch — admin/demo only, noindex). Consent gate, daily 22-item symptom check-in, the live GRTS + RTL timeline with projected return dates, guideline-gated stage advancement, and the clearance-ready summary. Runs entirely on the shared engine (lib/rtp/protocol.ts).',
+  },
+  {
+    icon: ClipboardCheck,
+    title: 'RTP Tracker — Admin Roster',
+    status: 'Preview',
+    href: '/admin/rtp',
+    desc: 'Orgs + athletes with each one’s live engine-computed pathway state: GRTS/RTL stage, earliest contact date, red-flag / awaiting-clearance / ready-to-advance flags. Read-only Phase 1 view.',
   },
   {
     icon: LayoutDashboard,
