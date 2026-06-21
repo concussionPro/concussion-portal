@@ -1,5 +1,5 @@
 /**
- * EP course module aggregator. The 7 modules are authored as the same `Module`
+ * EP course module aggregator. The 8 modules are authored as the same `Module`
  * shape as the flagship data/modules.ts, so they render through the IDENTICAL
  * flagship learning-suite UI (CourseNavigation + SectionStepper +
  * DynamicContentRenderer) — see app/ep-course/modules/[id].

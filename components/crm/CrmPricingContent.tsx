@@ -36,7 +36,7 @@ import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
 
 // Interest capture — no live checkout. A mailto keeps this self-contained.
 const INTEREST_HREF =
-  'mailto:hello@concussion-education-australia.com?subject=Concussion%20Rehab%20Mastery%20%E2%80%94%20Register%20my%20interest&body=Hi%20Zac%2C%20I%27d%20like%20to%20register%20my%20interest%20in%20Concussion%20Rehab%20Mastery.%0A%0AName%3A%0AProfession%20(AEP%20%2F%20AES)%3A%0AESSA%20number%20(optional)%3A%0APreferred%20option%20(Online%20%2F%20Complete)%3A%0A'
+  'mailto:zac@concussion-education-australia.com?subject=Concussion%20Rehab%20Mastery%20%E2%80%94%20Register%20my%20interest&body=Hi%20Zac%2C%20I%27d%20like%20to%20register%20my%20interest%20in%20Concussion%20Rehab%20Mastery.%0A%0AName%3A%0AProfession%20(AEP%20%2F%20AES)%3A%0AESSA%20number%20(optional)%3A%0APreferred%20option%20(Online%20%2F%20Complete)%3A%0A'
 
 interface FaqItem {
   q: string

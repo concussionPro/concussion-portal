@@ -8,6 +8,7 @@ import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { isUserEnrolled } from '@/lib/ai-course/access'
+import { DEMO_KEY } from '@/lib/demo-key'
 
 export interface GateResult {
   ok: boolean
@@ -37,13 +38,16 @@ export async function checkServerAccess(): Promise<GateResult> {
     return { ok: true, reason: 'admin-header' }
   }
 
-  // Demo-key path — partner-pitch access without sharing the main admin key.
-  // Set HEIDI_DEMO_KEY in Vercel env and share via x-demo-key header or
-  // ?demo= query string. Course pages only — does not unlock /api/admin/*.
-  const demoKey = process.env.HEIDI_DEMO_KEY
+  // Demo-key path — partner-pitch / ESSA-reviewer access without sharing the
+  // main admin key. Uses the shared DEMO_KEY constant (lib/demo-key) so it
+  // honours the same committed fallback the /demo/* reviewer links and the
+  // gated module API use — otherwise the Toolkit / References / Admin-Docs /
+  // Documents pages would 302 to /login whenever HEIDI_DEMO_KEY is unset,
+  // while the module pages (which use DEMO_KEY) stayed open. Course pages
+  // only — does not unlock /api/admin/*.
   const demoHeader = headerList.get('x-demo-key')
   const demoCookie = cookieStore.get('demo_key')?.value
-  if (demoKey && ((demoHeader && demoHeader === demoKey) || (demoCookie && demoCookie === demoKey))) {
+  if ((demoHeader && demoHeader === DEMO_KEY) || (demoCookie && demoCookie === DEMO_KEY)) {
     return { ok: true, reason: 'demo-key' }
   }
 

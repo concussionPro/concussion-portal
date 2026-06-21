@@ -238,7 +238,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
         }
       })
       // EP demo: no resources / apply-tomorrow (moduleId-keyed → would leak
-      // flagship content since EP shares ids 1-7).
+      // flagship content since EP shares ids 1-8).
       return sections
     }
 
@@ -250,7 +250,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
     }))
     if (hasFullAccess) {
       // EP demo: no Downloadable Resources / Apply Tomorrow steps — those
-      // components are keyed by moduleId and the EP modules share ids 1-7 with
+      // components are keyed by moduleId and the EP modules share ids 1-8 with
       // the flagship, so they'd leak flagship content. Content sections + the
       // Knowledge Check only.
       sections.push(
@@ -607,7 +607,12 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
     // Use saved total questions if available, otherwise use current module quiz length
     const totalQuestions = moduleProgress.quizTotalQuestions || module.quiz.length
     const percentage = (moduleProgress.quizScore / totalQuestions) * 100
-    const passed = percentage >= 75
+    // EP course pass mark is 80% — matches the on-screen copy ("Score at least
+    // 80%"), the quiz intro (Math.ceil(quiz.length * 0.8)), the completion-
+    // requirements check and the QUIZ_SUBMIT analytics flag. (For the 5- and
+    // 6-question EP quizzes no achievable score falls in [75,80), so this also
+    // stays in lockstep with canMarkModuleComplete's 0.75 gate.)
+    const passed = percentage >= 80
     return { percentage, passed, score: moduleProgress.quizScore }
   }
 
