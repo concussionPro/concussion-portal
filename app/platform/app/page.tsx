@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type {
   Condition,
   Prescription,
@@ -11,6 +11,7 @@ import type {
 import { STEP_ORDER, type Step } from '@/components/sst-trainer/shell'
 import type { WelcomeSelection } from '@/components/sst-trainer/WelcomeMode'
 import { DEFAULT_HR_SOURCE, useLiveHr, type HrSource } from '@/components/sst-trainer/hr-source'
+import type { LiveHrConnection } from '@/lib/sst-trainer/hr-live'
 import SymptomSelect from '@/components/sst-trainer/SymptomSelect'
 import Readiness, { type ReadinessResult } from '@/components/sst-trainer/Readiness'
 import GuidedTest from '@/components/sst-trainer/GuidedTest'
@@ -31,9 +32,11 @@ import SstOnboarding, { type OnboardingResult } from '@/components/platform/SstO
 // engine used by /sst-trainer (detectThreshold → computePrescription →
 // progressionDecision), rendered inside the watch frame.
 //
-// HR sourcing: the device paired in onboarding drives a live feed (useLiveHr)
-// into the threshold test and training screens — live for wearables + the phone-
-// camera PPG fallback, manual entry for the sync-only source (Fitbit).
+// HR sourcing: the device paired in onboarding opens a REAL connection
+// (Web Bluetooth heart-rate profile, or camera PPG — see lib/sst-trainer/
+// hr-live.ts). That connection's live bpm flows through useLiveHr into the
+// threshold test and training screens. Apple Watch / Fitbit have no live web
+// feed, so they stay on manual entry. No bpm is ever fabricated.
 // Gated + noindex by app/platform/layout.tsx; do not re-gate here.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -53,6 +56,8 @@ export default function PlatformAppPage() {
 
   // onboarding selections (the new design) → flow into the existing machine
   const [device, setDevice] = useState<HrSource>(DEFAULT_HR_SOURCE)
+  // the REAL paired heart-rate connection (null = manual entry).
+  const [connection, setConnection] = useState<LiveHrConnection | null>(null)
   const [welcome, setWelcome] = useState<WelcomeSelection | null>(null)
   const [goalLabel, setGoalLabel] = useState<string | null>(null)
 
@@ -67,26 +72,32 @@ export default function PlatformAppPage() {
 
   const condition: Condition = welcome?.condition ?? 'concussion'
 
-  // Live HR feed from the paired device. Ramps during the threshold test, holds
-  // around the band mid during training; sync-only sources report 'manual'.
-  const trainingMid = useMemo(
-    () => (prescription ? Math.round((prescription.lowerBpm + prescription.upperBpm) / 2) : 120),
-    [prescription],
-  )
-  const feedActive = step === 'test' || step === 'training'
-  const feed = useLiveHr(device, feedActive, step === 'training' ? 'hold' : 'ramp', {
-    baseline: 92,
-    climbPerTick: 0.9,
-    target: trainingMid,
-    wander: 4,
-  })
+  // Live HR feed from the REAL paired connection (same value drives the
+  // threshold-test ramp and the training gauge). Null connection → 'manual'.
+  const feed = useLiveHr(connection)
+
+  // Release the hardware when the app unmounts (GATT disconnect / camera stop).
+  useEffect(() => {
+    return () => {
+      connection?.stop()
+    }
+  }, [connection])
+
+  // Pair a source: stop any previous connection, then adopt the new one.
+  const handlePair = (d: HrSource, conn: LiveHrConnection | null) => {
+    setConnection((prev) => {
+      if (prev && prev !== conn) prev.stop()
+      return conn
+    })
+    setDevice(d)
+  }
 
   const stepIndex = STEP_ORDER.indexOf(step)
 
   return (
     <SstAppShell
       deviceName={device.name}
-      connected={device.live}
+      connected={connection !== null}
       stepIndex={stepIndex}
       totalSteps={STEP_ORDER.length}
       caption={STEP_CAPTION[step]}
@@ -94,7 +105,7 @@ export default function PlatformAppPage() {
       {step === 'welcome' && (
         <SstOnboarding
           device={device}
-          onDeviceChange={setDevice}
+          onPair={handlePair}
           onStart={(r: OnboardingResult) => {
             setWelcome(r.welcome)
             setGoalLabel(r.goalLabel)

@@ -166,7 +166,8 @@ export default function GuidedTest({
           >
             Heart rate
           </label>
-          {/* TODO: replace with HealthKit / Web Bluetooth live HR feed. Manual entry for now. */}
+          {/* Live bpm from the paired connection (Web Bluetooth / camera PPG) auto-
+              fills this field via the liveHr effect above; manual entry overrides. */}
           <div className="flex items-baseline gap-1.5">
             <input
               id="hr"

@@ -7,13 +7,14 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
-  Star,
   Building2,
   ShieldCheck,
   BookOpen,
   Award,
   Activity,
   ClipboardList,
+  LineChart,
+  HeartPulse,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import CrmWorkshopInterest from '@/components/CrmWorkshopInterest'
@@ -69,51 +70,6 @@ const FAQS: FaqItem[] = [
     a: 'Yes — most practices and employers cover CPD training costs. You receive a tax invoice and CPD certificate on completion that your employer can use for reimbursement. Many practitioners pay nothing out of pocket.',
   },
 ]
-
-const TESTIMONIALS = [
-  {
-    quote: 'An outstanding blend of evidence-based knowledge and practical skills. Directly applicable to concussion diagnosis and management in real-world settings.',
-    name: 'Dean',
-    role: 'University Clinical Educator, QLD',
-    initials: 'D',
-  },
-  {
-    quote: 'Incredibly thorough and well structured. The hands-on component was invaluable — I left feeling genuinely confident in my concussion assessments.',
-    name: 'Amelia',
-    role: 'Physiotherapist',
-    initials: 'A',
-  },
-  {
-    quote: 'Well organised — content explained in a way that was relevant and memorable. Changed how I approach concussion in clinic.',
-    name: 'Alex',
-    role: 'Osteopath, Melbourne',
-    initials: 'A',
-  },
-]
-
-function TestimonialCard({ t }: { t: typeof TESTIMONIALS[number] }) {
-  return (
-    <div className="glass rounded-xl p-5">
-      <div className="flex gap-0.5 mb-3">
-        {[...Array(5)].map((_, i) => (
-          <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-        ))}
-      </div>
-      <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">
-        &ldquo;{t.quote}&rdquo;
-      </p>
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#0b6165] flex items-center justify-center text-xs font-semibold text-white shadow-sm">
-          {t.initials}
-        </div>
-        <div>
-          <div className="text-sm font-semibold text-foreground">{t.name}</div>
-          <div className="text-xs text-muted-foreground">{t.role}</div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function CrmPricingContent() {
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
@@ -255,8 +211,9 @@ export default function CrmPricingContent() {
           </h2>
           <p className="text-base text-muted-foreground">
             You don&rsquo;t just learn the protocol. Every enrolment includes the working clinical
-            instruments — the live Baseline &amp; Serial Testing tool, the BCTT calculator and the
-            full Clinical Toolkit — all built around the exercise-physiology scope of practice.
+            platform — the Preseason Baseline &amp; Serial Testing tool, the Sub-Symptom-Threshold
+            (SST) Trainer app, the BCTT calculator and the full Clinical Toolkit — all built around
+            the exercise-physiology scope of practice.
           </p>
         </div>
 
@@ -425,11 +382,31 @@ export default function CrmPricingContent() {
           </div>
         </div>
 
-        {/* Social proof */}
-        <div className="max-w-4xl mx-auto mt-8 mb-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {TESTIMONIALS.map((t) => (
-              <TestimonialCard key={`crm-${t.name}`} t={t} />
+        {/* Tools included — the real differentiator: EPs get the working instruments, not just lessons */}
+        <div className="max-w-4xl mx-auto mt-10 mb-2">
+          <div className="text-center mb-6">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent mb-2">Included with every enrolment</p>
+            <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">The clinical platform, not just the lessons</h3>
+            <p className="text-sm text-muted-foreground mt-2 max-w-xl mx-auto">
+              You leave with the working tools CEA&rsquo;s clinics run on — ready to use with patients from day one.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[
+              { icon: LineChart, title: 'Preseason Baseline & Serial Testing', desc: 'Capture the patient’s healthy baseline (symptoms, cognition, oculomotor), then auto-build the serial-comparison report — recovery measured against their own normal, not a generic zero.' },
+              { icon: HeartPulse, title: 'Sub-Symptom-Threshold (SST) Trainer', desc: 'The patient app: threshold test → in-band heart-rate training on the wearable they already own → guided progression. Clinician-set and overseen by you.' },
+              { icon: Activity, title: 'BCTT Calculator → Prescription', desc: 'Enter the Buffalo test stages; get the heart-rate threshold (HRt) and the 80–90% training band with the plain-language prescription.' },
+              { icon: ClipboardList, title: 'Clinical Toolkit + Document Pack', desc: 'SSTAE templates, the phenotype library, and NDIS / WorkCover / GP report templates — the paperwork done.' },
+            ].map((tool) => (
+              <div key={tool.title} className="glass rounded-2xl p-5 flex gap-4">
+                <div className="icon-container w-11 h-11 flex-shrink-0">
+                  <tool.icon className="w-5 h-5 text-accent" strokeWidth={1.75} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground mb-1">{tool.title}</h4>
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">{tool.desc}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>

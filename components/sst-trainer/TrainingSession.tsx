@@ -188,7 +188,7 @@ export default function TrainingSession({
         </div>
       </div>
 
-      {/* manual HR entry (TODO: HealthKit / Web Bluetooth live HR feed) */}
+      {/* live bpm (Web Bluetooth / camera PPG) auto-fills this; manual overrides */}
       <div className="flex items-center gap-2.5">
         <input
           type="number"

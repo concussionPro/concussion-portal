@@ -1,9 +1,16 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Condition } from '@/lib/sst-trainer/protocol'
 import type { WelcomeSelection, TrainerMode } from '@/components/sst-trainer/WelcomeMode'
 import { HR_SOURCES, type HrSource } from '@/components/sst-trainer/hr-source'
+import {
+  bluetoothSupported,
+  cameraSupported,
+  connectBluetoothHr,
+  connectCameraPpg,
+  type LiveHrConnection,
+} from '@/lib/sst-trainer/hr-live'
 import { PrimaryButton } from '@/components/sst-trainer/shell'
 
 /**
@@ -15,8 +22,9 @@ import { PrimaryButton } from '@/components/sst-trainer/shell'
  * platform app needs before handing into the engine-backed flow: a clinic-code
  * field (clinic mode) and heart-rate-source pairing.
  *
- * Emits { welcome, goal, goalLabel } on Continue; lifts the paired device up
- * live via onDeviceChange so the watch status bar reflects it immediately.
+ * Emits { welcome, goal, goalLabel } on Continue; lifts the paired device AND
+ * its real heart-rate connection up via onPair (Web Bluetooth / camera PPG,
+ * established from the tap so the permission gesture is preserved).
  */
 
 const GOALS: { id: string; label: string }[] = [
@@ -34,7 +42,7 @@ export interface OnboardingResult {
   goalLabel: string | null
 }
 
-type PairStatus = 'connecting' | 'connected'
+type PairStatus = 'idle' | 'connecting' | 'connected' | 'error' | 'unavailable'
 
 function TargetIcon() {
   return (
@@ -46,11 +54,12 @@ function TargetIcon() {
 
 export default function SstOnboarding({
   device,
-  onDeviceChange,
+  onPair,
   onStart,
 }: {
   device: HrSource
-  onDeviceChange: (d: HrSource) => void
+  /** lifts the chosen source + the REAL connection (or null for manual) up to the page */
+  onPair: (d: HrSource, connection: LiveHrConnection | null) => void
   onStart: (result: OnboardingResult) => void
 }) {
   const [mode, setMode] = useState<TrainerMode>('self-guided')
@@ -58,21 +67,71 @@ export default function SstOnboarding({
   const [goal, setGoal] = useState<string | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
-  const pairTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [pairError, setPairError] = useState<string | null>(null)
+  // capability detection runs on the client only (navigator isn't on the server).
+  const [caps, setCaps] = useState({ bt: false, cam: false })
 
-  useEffect(() => () => { if (pairTimer.current) clearTimeout(pairTimer.current) }, [])
+  useEffect(() => {
+    setCaps({ bt: bluetoothSupported(), cam: cameraSupported() })
+  }, [])
 
-  const pair = (d: HrSource) => {
-    onDeviceChange(d)
+  /**
+   * Pair a heart-rate source. Triggered from the tap (a user gesture), which is
+   * REQUIRED for Web Bluetooth + camera permission. On rejection / failure we
+   * fall back to manual entry — never a fabricated reading.
+   */
+  const pair = async (d: HrSource) => {
     setPickerOpen(false)
-    if (pairTimer.current) clearTimeout(pairTimer.current)
-    if (!d.live) {
-      setPairStatus('connected') // sync-only: nothing to stream, treat as ready
+    setPairError(null)
+
+    if (d.connect === 'manual') {
+      onPair(d, null)
+      setPairStatus('connected') // manual entry is "ready" — there is just nothing to stream
+      return
+    }
+
+    if (d.connect === 'bluetooth') {
+      if (!caps.bt) {
+        onPair(d, null)
+        setPairStatus('unavailable')
+        setPairError('Bluetooth pairing needs Chrome / Edge / Android — use the phone camera or enter your heart rate manually.')
+        return
+      }
+      setPairStatus('connecting')
+      try {
+        // connectBluetoothHr() calls requestDevice() first, preserving the gesture.
+        const conn = await connectBluetoothHr()
+        onPair(d, conn)
+        setPairStatus('connected')
+      } catch {
+        onPair(d, null) // user cancelled the chooser or pairing failed → manual
+        setPairStatus('error')
+        setPairError('Couldn’t connect that sensor — you can try again or enter your heart rate manually.')
+      }
+      return
+    }
+
+    // camera PPG
+    if (!caps.cam) {
+      onPair(d, null)
+      setPairStatus('unavailable')
+      setPairError('Camera HR needs a secure (HTTPS) browser with camera access — enter your heart rate manually instead.')
       return
     }
     setPairStatus('connecting')
-    pairTimer.current = setTimeout(() => setPairStatus('connected'), d.camera ? 2400 : 900)
+    try {
+      const conn = await connectCameraPpg()
+      onPair(d, conn)
+      setPairStatus('connected')
+    } catch {
+      onPair(d, null)
+      setPairStatus('error')
+      setPairError('Couldn’t start the camera — check the permission, or enter your heart rate manually.')
+    }
   }
+
+  const sourceDisabled = (s: HrSource) =>
+    (s.connect === 'bluetooth' && !caps.bt) || (s.connect === 'camera' && !caps.cam)
 
   const codeMissing = mode === 'clinic-code' && clinicCode.trim().length === 0
   const blocked = codeMissing || goal === null
@@ -199,17 +258,21 @@ export default function SstOnboarding({
           {device.live ? (
             pairStatus === 'connecting' ? (
               <span className="flex-none text-[10px] font-bold uppercase tracking-[0.04em] text-[#9bafb0]">
-                Pairing…
+                Connecting…
               </span>
-            ) : (
+            ) : pairStatus === 'connected' ? (
               <span className="flex flex-none items-center gap-1 text-[10px] font-bold uppercase tracking-[0.04em] text-[#3c7a1f]">
                 <span className="inline-block h-[6px] w-[6px] rounded-full bg-[#3c7a1f]" />
                 Live
               </span>
+            ) : (
+              <span className="flex-none text-[10px] font-bold uppercase tracking-[0.04em] text-[#d2463a]">
+                Manual
+              </span>
             )
           ) : (
             <span className="flex-none text-[10px] font-bold uppercase tracking-[0.04em] text-[#b58a32]">
-              Sync
+              Manual
             </span>
           )}
           <span className="flex-none text-[#a7c0c2]" aria-hidden="true">
@@ -221,12 +284,15 @@ export default function SstOnboarding({
           <div className="flex flex-col gap-1.5 rounded-[14px] border border-[#e2ecec] bg-white p-1.5">
             {HR_SOURCES.map((s) => {
               const on = s.id === device.id
+              const disabled = sourceDisabled(s)
+              const tag = disabled ? 'Unavailable' : s.tag
               return (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => pair(s)}
-                  className={`flex items-center gap-2.5 rounded-[11px] px-2.5 py-2 text-left transition ${
+                  disabled={disabled}
+                  className={`flex items-center gap-2.5 rounded-[11px] px-2.5 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${
                     on ? 'bg-[#e7f2f3]' : 'bg-transparent hover:bg-[#f1f6f6]'
                   }`}
                 >
@@ -238,26 +304,43 @@ export default function SstOnboarding({
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="text-[12.5px] font-semibold leading-tight text-[#16243f]">{s.name}</span>
-                    <span className="text-[10px] leading-tight text-[#7d9092]">{s.method}</span>
+                    <span className="text-[10px] leading-tight text-[#7d9092]">
+                      {disabled && s.connect === 'bluetooth'
+                        ? 'Needs Chrome / Edge / Android'
+                        : disabled && s.connect === 'camera'
+                          ? 'Needs camera access (HTTPS)'
+                          : s.method}
+                    </span>
                   </span>
                   <span
                     className="flex-none text-[9px] font-bold uppercase tracking-[0.04em]"
-                    style={{ color: s.live ? '#3c7a1f' : '#b58a32' }}
+                    style={{ color: disabled ? '#9bafb0' : s.live ? '#3c7a1f' : '#b58a32' }}
                   >
-                    {s.tag}
+                    {tag}
                   </span>
                 </button>
               )
             })}
           </div>
         )}
-        <span className="text-[10.5px] leading-snug text-[#9bafb0]">
-          {device.camera
-            ? 'No wearable needed — your phone camera reads your pulse during the test.'
-            : device.live
-              ? 'Live heart rate streams into every session. A chest strap is the most accurate.'
-              : 'Fitbit syncs after each session — enter your heart rate during the test.'}
-        </span>
+        {pairError ? (
+          <span className="text-[10.5px] leading-snug text-[#b5462f]">{pairError}</span>
+        ) : (
+          <span className="text-[10.5px] leading-snug text-[#9bafb0]">
+            {device.connect === 'camera'
+              ? 'No wearable needed — your phone camera reads your pulse during the test (cover the rear lens with a fingertip).'
+              : device.connect === 'bluetooth'
+                ? 'Your strap streams live heart rate into every session. The browser will ask you to pick your sensor.'
+                : device.id === 'apple-watch'
+                  ? 'Apple Watch can’t feed live heart rate to a web app yet — pair a Bluetooth strap or use the camera for live HR, or enter it manually.'
+                  : 'Fitbit syncs after each session — enter your heart rate during the test.'}
+          </span>
+        )}
+        {!caps.bt && (
+          <span className="text-[10px] leading-snug text-[#9bafb0]">
+            Bluetooth pairing needs Chrome / Edge / Android. On iPhone/Safari, use the phone camera or enter HR manually.
+          </span>
+        )}
       </div>
 
       <PrimaryButton
