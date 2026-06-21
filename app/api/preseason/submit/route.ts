@@ -81,13 +81,38 @@ interface OculomotorData {
   verticalPursuit: OculomotorExerciseResult
 }
 
+interface ConsentData {
+  agreed: boolean
+  atISO?: string
+  version?: string
+  guardian?: { name: string; agreed: boolean }
+}
+
 interface SubmitPayload {
   clinicCode: string
   testNumber?: number
+  consent?: ConsentData
   athlete: AthleteBackground
   symptoms: SymptomData
   cognitive: CognitiveData
   oculomotor?: OculomotorData
+}
+
+// Age (in years) below which a parent/guardian must also consent. NOTE: 16 is a
+// working threshold — the exact age of capacity for health-data consent should
+// be confirmed with legal advice (varies by state and information type).
+const MINOR_CONSENT_AGE = 16
+
+// Years between a DOB string and now. Returns null if DOB is missing/invalid.
+function ageFromDob(dob?: string): number | null {
+  if (!dob) return null
+  const d = new Date(dob)
+  if (isNaN(d.getTime())) return null
+  const now = new Date()
+  let age = now.getFullYear() - d.getFullYear()
+  const m = now.getMonth() - d.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--
+  return age
 }
 
 const SYMPTOMS = [
@@ -688,6 +713,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Consent is mandatory before any health information may be stored or sent
+    // (APP 3.3 / APP 5). Reject anything without explicit consent.
+    if (body.consent?.agreed !== true) {
+      return NextResponse.json({ error: 'Consent is required to submit this baseline.' }, { status: 400 })
+    }
+
+    // Under-16s additionally require a parent/guardian consent (FIX 2).
+    const athleteAge = ageFromDob(body.athlete.dob)
+    if (athleteAge !== null && athleteAge < MINOR_CONSENT_AGE && body.consent.guardian?.agreed !== true) {
+      return NextResponse.json(
+        { error: 'A parent/guardian must consent for athletes under 16.' },
+        { status: 400 }
+      )
+    }
+
     // Demo mode — clinicians trying the test themselves
     const isDemo = body.clinicCode.toUpperCase() === 'DEMO00'
 
@@ -813,8 +853,10 @@ export async function POST(request: Request) {
           INSERT INTO preseason_baselines (clinic_code, clinic_name, athlete_name, dob, submitted_at, symptom_count, symptom_severity, cognitive_score, cognitive_max, test_number, payload)
           VALUES (${body.clinicCode.toUpperCase()}, ${clinic.clinicName}, ${body.athlete.name || 'Unknown'}, ${body.athlete.dob || null}, NOW(), ${symptomCount}, ${symptomTotal}, ${totalCognitive}, ${totalCognitiveMax}, ${body.testNumber ?? 1}, ${JSON.stringify(body)}::jsonb)
         `
-      } catch (err) {
-        console.error('Failed to persist baseline submission to Postgres:', err)
+      } catch {
+        // Log a generic message + clinic code only — never the error object,
+        // which can carry the health payload (SQL params).
+        console.error('Failed to persist baseline submission to Postgres for clinic', body.clinicCode.toUpperCase())
       }
 
       // Serial comparison — once this athlete has 2+ baselines, build a
@@ -844,8 +886,9 @@ export async function POST(request: Request) {
             tests,
           })
         }
-      } catch (err) {
-        console.error('Serial comparison generation failed (non-fatal):', err)
+      } catch {
+        // Generic message + clinic code only — avoid logging the payload.
+        console.error('Serial comparison generation failed (non-fatal) for clinic', body.clinicCode.toUpperCase())
       }
     }
 
@@ -875,14 +918,17 @@ export async function POST(request: Request) {
     })
 
     if (!emailSent) {
-      // Data is already saved to blob storage — don't return 500 or user will retry and create duplicates
-      console.error(`Baseline email failed for ${clinic.email} — data saved, email not delivered`)
+      // Data is already saved — don't return 500 or user will retry and create duplicates.
+      // Log the clinic CODE, never the email address.
+      console.error(`Baseline email failed for clinic ${body.clinicCode.toUpperCase()} — data saved, email not delivered`)
       return NextResponse.json({ success: true, emailFailed: true })
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Preseason submit error:', error)
+  } catch {
+    // Generic message only — the error object can include the request body
+    // (health payload), so we don't log it.
+    console.error('Preseason submit error (see request for context)')
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

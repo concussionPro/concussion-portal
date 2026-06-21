@@ -59,7 +59,7 @@ export function SiteFooter() {
               </li>
               <li><Link href="/login" className="hover:text-white transition-colors">Student Login</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms & Refund Policy</Link></li>
-              <li><Link href="/terms#privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>

@@ -21,6 +21,7 @@ const PUBLIC_ROUTES = [
   '/courses',
   '/course',
   '/checkout',
+  '/privacy',
 ]
 
 export function FooterWrapper() {

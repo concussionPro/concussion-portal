@@ -7,6 +7,15 @@ import { WORD_LISTS, type WordListKey } from '@/app/scat-forms/shared/constants/
 import { DIGIT_LISTS, type DigitListKey } from '@/app/scat-forms/shared/constants/digitLists'
 import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
 
+// Age (in years) below which a parent/guardian must also consent before any
+// health information is collected. NOTE: 16 is a working threshold — the exact
+// age of capacity for health-data consent should be confirmed with legal advice
+// (it can vary by state and by the nature of the information).
+const MINOR_CONSENT_AGE = 16
+// Version stamp stored with each consent record so we can tell which wording
+// the person agreed to if the consent copy changes later.
+const CONSENT_VERSION = 'v1'
+
 const SYMPTOMS = [
   'Headache', 'Pressure in head', 'Neck pain', 'Nausea or vomiting', 'Dizziness',
   'Blurred vision', 'Balance problems', 'Sensitivity to light', 'Sensitivity to noise',
@@ -258,6 +267,20 @@ export default function AthleteBaselineForm() {
   const [testNumber, setTestNumber] = useState<number>(1) // 1 = first test
   const [lookingUpHistory, setLookingUpHistory] = useState(false)
   const historyLookedUpRef = useRef(false)
+
+  // Consent gate (shown before any health data is entered — APP 3.3 / APP 5)
+  const [consentGiven, setConsentGiven] = useState(false)
+  const [consentAgreed, setConsentAgreed] = useState(false)
+  const [guardianName, setGuardianName] = useState('')
+  const [guardianAgreed, setGuardianAgreed] = useState(false)
+  // The recorded consent object, built when the gate is passed and sent + stored
+  // with the submission.
+  const [consentRecord, setConsentRecord] = useState<{
+    agreed: boolean
+    atISO: string
+    version: string
+    guardian?: { name: string; agreed: boolean }
+  } | null>(null)
 
   // Form step
   const [step, setStep] = useState(1)
@@ -526,11 +549,36 @@ export default function AthleteBaselineForm() {
     return Object.entries(delayedRecallSelections).filter(([word, selected]) => selected && targetWords.has(word)).length
   })()
 
-  const totalCognitiveScore = orientationScore + immediateMemoryScore + concentrationScore + delayedRecallScore
+  // Athlete age + minor status, computed client-side from the entered DOB so the
+  // consent gate can require guardian consent for under-16s (FIX 2).
+  const athleteAge = useMemo(() => {
+    if (!dob) return null
+    const d = new Date(dob)
+    if (isNaN(d.getTime())) return null
+    const now = new Date()
+    let age = now.getFullYear() - d.getFullYear()
+    const m = now.getMonth() - d.getMonth()
+    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--
+    return age
+  }, [dob])
+  const isMinor = athleteAge !== null && athleteAge < MINOR_CONSENT_AGE
 
   // Submit handler
   const handleSubmit = async () => {
     if (submittingRef.current) return
+
+    // Consent must have been captured before any data entry. If the DOB was
+    // later changed to a minor's, a guardian consent is required — block here
+    // (mirrored by a server-side 400).
+    if (!consentRecord?.agreed) {
+      setSubmitError('Consent is required before this baseline can be submitted.')
+      return
+    }
+    if (isMinor && !consentRecord.guardian?.agreed) {
+      setSubmitError('This athlete is under 16. A parent/guardian must provide consent before submitting.')
+      return
+    }
+
     submittingRef.current = true
     setSubmitting(true)
     setSubmitError('')
@@ -546,6 +594,7 @@ export default function AthleteBaselineForm() {
         body: JSON.stringify({
           clinicCode: code,
           testNumber,
+          consent: consentRecord,
           athlete: {
             name, dob, idNumber, sex, dominantHand, sport, team, position,
             yearsOfEducation, primaryLanguage, previousConcussions,
@@ -593,11 +642,11 @@ export default function AthleteBaselineForm() {
 
       if (response.ok) {
         setSubmitted(true)
+        // Non-clinical "submitted" signal only — no health scores in analytics.
         trackEvent(ANALYTICS_EVENTS.PRESEASON_BASELINE_SUBMIT, {
           clinicCode: code,
           clinicName,
           isDemo: code.toUpperCase() === 'DEMO00',
-          cognitiveScore: totalCognitiveScore,
         })
       } else {
         const data = await response.json()
@@ -741,6 +790,135 @@ export default function AthleteBaselineForm() {
           <p className="text-xs text-muted-foreground">
             Your detailed results have been included in the report sent to your clinician. This baseline covers a subset of the full SCAT6 assessment.
           </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Consent gate — shown before ANY health information is collected.
+  // Records explicit consent (and guardian consent for under-16s) before the
+  // athlete can reach step 1. (APP 3.3 — consent to collect sensitive info /
+  // APP 5 — notice at the point of collection.)
+  if (!consentGiven) {
+    const canProceed = !!dob && consentAgreed && (!isMinor || (guardianName.trim().length > 0 && guardianAgreed))
+    return (
+      <div className="min-h-screen bg-background relative">
+        <div className="mesh-gradient" aria-hidden="true" />
+        <div className="noise-overlay" aria-hidden="true" />
+        <div className="relative z-10 max-w-xl mx-auto px-4 py-8 md:py-12">
+          <div className="text-center mb-6">
+            <p className="text-xs text-accent font-semibold uppercase tracking-wider mb-1">
+              Pre-Season Baseline
+            </p>
+            <p className="text-sm text-muted-foreground">
+              for <strong className="text-foreground">{clinicName}</strong>
+            </p>
+          </div>
+
+          <div className="glass rounded-2xl p-6 animate-fade-in">
+            <h1 className="text-xl font-bold mb-2">Before you start — consent</h1>
+            <p className="text-sm text-muted-foreground mb-4">
+              This tool collects <strong>personal and health information</strong> (including your name,
+              date of birth, sex, concussion and medical history, medications, and your symptom,
+              cognitive and eye-movement results). It is collected so your clinic can establish a
+              concussion baseline and support the management of any future suspected concussion.
+              Your results are shared with <strong>{clinicName}</strong> and stored to allow comparison
+              with future tests.
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Please read how we handle this information in our{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent font-semibold underline">
+                Privacy Policy
+              </a>{' '}before continuing.
+            </p>
+
+            {/* DOB up front so we can determine whether guardian consent is needed */}
+            <div className="mb-4">
+              <label className="block text-xs font-semibold mb-1">Athlete Date of Birth *</label>
+              <input
+                type="date"
+                value={dob}
+                onChange={e => setDob(e.target.value)}
+                className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
+              />
+              {athleteAge !== null && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Age: {athleteAge} years{isMinor ? ' — a parent/guardian must also consent below.' : ''}
+                </p>
+              )}
+            </div>
+
+            <label className="flex items-start gap-2 cursor-pointer mb-4">
+              <input
+                type="checkbox"
+                checked={consentAgreed}
+                onChange={e => setConsentAgreed(e.target.checked)}
+                className="w-4 h-4 mt-0.5 rounded border-slate-300 text-accent focus:ring-accent flex-shrink-0"
+              />
+              <span className="text-sm">
+                I consent to the collection and handling of this personal and health information for
+                concussion baseline and management purposes, as described above and in the Privacy Policy.
+              </span>
+            </label>
+
+            {/* Guardian consent — required for under-16s */}
+            {isMinor && (
+              <div className="glass rounded-xl p-4 mb-4 border border-amber-200 bg-amber-50/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <p className="text-sm font-semibold text-amber-800">Parent / guardian consent required</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Because the athlete is under {MINOR_CONSENT_AGE}, a parent or guardian must consent
+                  on their behalf.
+                </p>
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold mb-1">Parent / Guardian Full Name *</label>
+                  <input
+                    type="text"
+                    value={guardianName}
+                    onChange={e => setGuardianName(e.target.value)}
+                    className="w-full glass px-3 py-2.5 rounded-lg text-sm border border-transparent focus:ring-2 focus:ring-accent/50 focus:outline-none"
+                    placeholder="Parent or guardian name"
+                  />
+                </div>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={guardianAgreed}
+                    onChange={e => setGuardianAgreed(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 rounded border-slate-300 text-accent focus:ring-accent flex-shrink-0"
+                  />
+                  <span className="text-sm">
+                    I am the parent/guardian of this athlete and I consent to the collection and handling
+                    of their personal and health information as described above and in the Privacy Policy.
+                  </span>
+                </label>
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                const record: {
+                  agreed: boolean
+                  atISO: string
+                  version: string
+                  guardian?: { name: string; agreed: boolean }
+                } = { agreed: true, atISO: new Date().toISOString(), version: CONSENT_VERSION }
+                if (isMinor) record.guardian = { name: guardianName.trim(), agreed: true }
+                setConsentRecord(record)
+                setConsentGiven(true)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+              disabled={!canProceed}
+              className="w-full btn-primary py-3 rounded-xl text-base font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            >
+              I Consent — Continue <ArrowRight className="w-5 h-5" />
+            </button>
+            <p className="text-[11px] text-muted-foreground text-center mt-3">
+              You can stop at any time. Required fields are marked *.
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -1770,10 +1948,12 @@ export default function AthleteBaselineForm() {
                     })
                       .then(res => res.json())
                       .then(data => {
-                        const prev = data.previousTests || 0
-                        setTestNumber(prev + 1)
+                        // Endpoint now returns only the next test number (no
+                        // enumerable date list). Derive list rotation from it.
+                        const tn = data.testNumber || 1
+                        setTestNumber(tn)
                         // Rotate word list based on athlete's actual test count: 1st→A, 2nd→B, 3rd→C, 4th→A...
-                        setListIndex(prev % 3)
+                        setListIndex((tn - 1) % 3)
                       })
                       .catch(() => {
                         // On error, default to test #1 / list A
