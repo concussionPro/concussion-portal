@@ -32,6 +32,8 @@ export default function HomeHub({
   onStartSession,
   onProgress,
   onRetest,
+  goalLabel,
+  deviceName,
 }: {
   rx: Prescription
   condition: Condition
@@ -41,6 +43,10 @@ export default function HomeHub({
   onStartSession: () => void
   onProgress: () => void
   onRetest: () => void
+  /** what the patient is working back to, from onboarding (e.g. "Sport") */
+  goalLabel?: string
+  /** paired heart-rate source name, from onboarding (e.g. "Apple Watch") */
+  deviceName?: string
 }) {
   // Client-only greeting without an effect: useSyncExternalStore returns the
   // server snapshot ('Welcome back') during SSR/hydration, then the client
@@ -54,7 +60,7 @@ export default function HomeHub({
 
   const badge = `${PATHWAY_LABEL[condition]} · ${
     mode === 'clinic-code' ? `Linked ${clinicCode || 'clinic'}` : 'Self-guided'
-  }`
+  }${deviceName ? ` · ${deviceName}` : ''}`
 
   const target = rx.daysPerWeek
   const done = Math.min(sessionsThisWeek, target)
@@ -68,7 +74,9 @@ export default function HomeHub({
         <h1 className="m-0 text-[25px] font-extrabold leading-[1.05] tracking-[-0.025em] text-[#16282b]">
           {greeting}
         </h1>
-        <p className="m-0 text-[13.5px] leading-snug text-[#5d7174]">Ready when you are — no rush.</p>
+        <p className="m-0 text-[13.5px] leading-snug text-[#5d7174]">
+          {goalLabel ? `Working back to ${goalLabel.toLowerCase()} — no rush.` : 'Ready when you are — no rush.'}
+        </p>
       </div>
 
       <div

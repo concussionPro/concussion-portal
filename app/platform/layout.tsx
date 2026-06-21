@@ -1,0 +1,48 @@
+import type { Metadata } from 'next'
+import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
+import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SST Trainer platform site (/platform/*) — the clinic-facing funnel.
+//
+// GATED PRE-LAUNCH: admin / demo-key / enrolled only (Zac: "hidden behind my
+// api key"). The whole route group sits behind requireAiCourseAccess + noindex
+// until launch. Reach it via the admin cookie, x-admin-key, or the demo key.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-hanken',
+  display: 'swap',
+})
+// Space Grotesk = the "instrument" / numeric face the device-framed app
+// (/platform/app) uses for HR, scores and clocks (tabular figures), matching the
+// /sst-trainer flow. Exposed here as --font-space for the whole platform group.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-space',
+  display: 'swap',
+})
+
+export const metadata: Metadata = {
+  title: 'SST Trainer — Concussion Education Australia',
+  description:
+    'Prescribed exercise-rehab platform. Reads the patient’s heart-rate threshold, prescribes a safe sub-symptom training band, and steps it up as they recover — clinician-set and overseen.',
+  robots: 'noindex, nofollow',
+}
+
+export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
+  // Gate the entire platform site behind admin/demo/enrolled.
+  await requireAiCourseAccess('/login')
+
+  return (
+    <div
+      className={`${hanken.variable} ${spaceGrotesk.variable}`}
+      style={{ fontFamily: 'var(--font-hanken), ui-sans-serif, system-ui, -apple-system, sans-serif' }}
+    >
+      {children}
+    </div>
+  )
+}

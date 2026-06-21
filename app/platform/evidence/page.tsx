@@ -1,0 +1,246 @@
+import Link from 'next/link'
+import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/PlatformChrome'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// /platform/evidence — credibility page for the SST Trainer platform site.
+// Buffalo Concussion Treadmill Test / sub-symptom-threshold aerobic exercise
+// literature (Leddy et al. 2010–2023). Claims framed as "associated with",
+// never guarantees. Tool language: training/monitoring for clinician-supervised
+// graded return — never "treats/diagnoses concussion".
+// Gated + noindex by app/platform/layout.tsx — no gating/robots added here.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STATS = [
+  {
+    figure: '~48%',
+    body: 'lower risk of persistent symptoms when sub-symptom aerobic exercise is started within ~10 days of injury, vs a stretching placebo (Leddy et al.).',
+  },
+  {
+    figure: '13 vs 17',
+    body: 'median days to recovery — aerobic-exercise group vs stretching group in adolescents with sport-related concussion.',
+  },
+  {
+    figure: '<135 bpm',
+    body: 'an example heart-rate threshold — a value this low on the test is associated with a higher risk of prolonged recovery, so the dose is also prognostic.',
+  },
+]
+
+const STEPS = [
+  {
+    n: 1,
+    title: 'Find the threshold (the Buffalo test)',
+    body: 'The Buffalo Concussion Treadmill/Bike Test adapts a cardiac stress test to stress the brain instead of the heart. Effort is raised by the minute while heart rate and symptoms are tracked; the heart rate at which symptoms first intensify is the Heart-Rate threshold (HRt) — the only validated measure of exercise tolerance after concussion.',
+    callout: 'a guided per-minute ramp captures your HRt automatically, and stops the test at the +3-point symptom rise.',
+  },
+  {
+    n: 2,
+    title: 'Prescribe a sub-symptom band',
+    body: 'Trials prescribe aerobic exercise at roughly 80–90% of the HRt — hard enough to stimulate recovery, low enough to stay under the symptom threshold. The dose is about 20 minutes a day, most days of the week, individualised to each patient.',
+    callout: 'your band is computed at 80–90% of your HRt, with an adjustable 4–7 day/week schedule and a hard ceiling you should not cross.',
+  },
+  {
+    n: 3,
+    title: 'Structure each session',
+    body: 'A session is built as a 5–10 minute warm-up, ~20 minutes of steady aerobic work held under the threshold, then a 5–10 minute cool-down — using any mode the patient prefers (walking, stationary bike, light jog).',
+    callout: 'sessions run warm-up → main set → cool-down with a live heart-rate gauge that keeps you in-band and warns the moment you cross the ceiling.',
+  },
+  {
+    n: 4,
+    title: 'Re-test and progress',
+    body: 'Because the brain heals, the threshold rises. Protocols re-test every 1–2 weeks and lift the prescription accordingly, stopping when exercise tolerance normalises. Symptoms rising 2+ points in a session is the signal to stop and rest.',
+    callout: 'progress tracking nudges a re-test, advances your ceiling after clean sessions, and tells you to rest when a session provokes symptoms.',
+  },
+]
+
+const REFERENCES = [
+  'Leddy JJ, Willer B, et al. Early Subthreshold Aerobic Exercise for Sport-Related Concussion: a randomized clinical trial. JAMA Pediatrics, 2019.',
+  'Leddy JJ, et al. Early targeted heart-rate aerobic exercise vs placebo stretching for sport-related concussion in adolescents: a randomised controlled trial. The Lancet Child & Adolescent Health, 2021.',
+  'Haider MN, Leddy JJ, Willer BS, et al. Exercise for Sport-Related Concussion and Persistent Postconcussive Symptoms (review). Sports Health, 2021.',
+  'Janssen A, Pope R, Rando N. Clinical application of the Buffalo Concussion Treadmill Test and Bike Test: a systematic review, 2022.',
+  'Leddy JJ, et al. A preliminary study of sub-symptom threshold exercise training for refractory post-concussion syndrome. Clinical Journal of Sport Medicine, 2010.',
+]
+
+export default function EvidencePage() {
+  return (
+    <div className="min-h-screen bg-[#eef2f7] text-slate-700" style={{ color: PLATFORM.slate }}>
+      <PlatformNav active="/platform/evidence" />
+
+      {/* Hero */}
+      <header
+        className="px-6 pt-10 pb-14"
+        style={{ background: 'linear-gradient(180deg, #eaf4e6 0%, #f1f6f3 38%, #eef2f7 100%)' }}
+      >
+        <div className="mx-auto max-w-[820px] text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#3c7a1f]/25 bg-white/70 px-3.5 py-1.5 text-[12px] font-bold tracking-[0.02em] text-[#3c7a1f]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#3c7a1f]" />
+            Built on the Buffalo protocol
+          </span>
+          <h1 className="mt-6 text-balance text-[44px] font-extrabold leading-[1.04] tracking-[-0.02em] text-[#16243f] sm:text-[54px]">
+            The evidence behind
+            <br className="hidden sm:block" /> the threshold.
+          </h1>
+          <p className="mx-auto mt-6 max-w-[640px] text-[16px] leading-relaxed text-slate-600">
+            For two decades, prescribed sub-symptom-threshold aerobic exercise has moved from
+            &ldquo;rest in a dark room&rdquo; to a tested, individualised treatment. Here&rsquo;s what the
+            research actually shows — and how this app helps it.
+          </p>
+        </div>
+      </header>
+
+      {/* Stat cards */}
+      <section className="px-6 -mt-6">
+        <div className="mx-auto grid max-w-[1080px] gap-5 sm:grid-cols-3">
+          {STATS.map((s) => (
+            <div
+              key={s.figure}
+              className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+            >
+              <p className="text-[34px] font-extrabold tracking-[-0.02em] text-[#16243f]">{s.figure}</p>
+              <p className="mt-3 text-[14px] leading-relaxed text-slate-600">{s.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Numbered steps */}
+      <section className="px-6 py-16">
+        <div className="mx-auto flex max-w-[860px] flex-col gap-6">
+          {STEPS.map((step) => (
+            <div
+              key={step.n}
+              className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+            >
+              <div className="flex items-center gap-4">
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[15px] font-bold text-white"
+                  style={{ backgroundColor: PLATFORM.navy }}
+                >
+                  {step.n}
+                </span>
+                <h2 className="text-[20px] font-bold tracking-[-0.01em] text-[#16243f]">{step.title}</h2>
+              </div>
+              <p className="mt-4 text-[15px] leading-relaxed text-slate-600">{step.body}</p>
+              <div
+                className="mt-5 rounded-xl border border-[#3c7a1f]/20 px-4 py-3.5 text-[14px] leading-relaxed text-slate-700"
+                style={{ backgroundColor: '#eef5e8' }}
+              >
+                <span className="inline-flex items-start gap-2.5">
+                  <svg
+                    viewBox="0 0 20 20"
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                    fill={PLATFORM.green}
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.7-9.3a1 1 0 00-1.4-1.4L9 10.6 7.7 9.3a1 1 0 00-1.4 1.4l2 2a1 1 0 001.4 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>
+                    <span className="font-bold text-[#16243f]">In the app:</span> {step.callout}
+                  </span>
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Progressive, not protective */}
+      <section className="px-6 pb-16">
+        <div
+          className="mx-auto max-w-[960px] rounded-3xl p-9 text-white sm:p-11"
+          style={{ background: 'linear-gradient(160deg, #16243f 0%, #1b2c4d 100%)' }}
+        >
+          <h2 className="text-[24px] font-bold tracking-[-0.01em]">Progressive, not protective</h2>
+          <p className="mt-3 max-w-[560px] text-[15px] leading-relaxed text-slate-300">
+            This is graded exposure that lifts a ceiling as you heal — the opposite of pacing apps that
+            help you avoid exertion. Different mechanism, different goal.
+          </p>
+          <div className="mt-7 grid gap-5 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-[12px] font-bold tracking-[0.06em]" style={{ color: PLATFORM.greenBright }}>
+                THIS APP · PROGRESSION
+              </p>
+              <p className="mt-3 text-[15px] leading-relaxed text-slate-200">
+                Train just under your symptom threshold; the band steps up as you recover. Drives the
+                recovery forward.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-[12px] font-bold tracking-[0.06em] text-slate-400">RECALL APPS · PROTECTION</p>
+              <p className="mt-3 text-[15px] leading-relaxed text-slate-200">
+                Stay inside an energy envelope to avoid crashes. Tells you when to stop, not how to progress.
+              </p>
+            </div>
+          </div>
+          <p className="mt-7 text-[12.5px] leading-relaxed text-slate-400">
+            Scope: progressive sub-symptom exercise is evidence-based for concussion / mTBI and
+            exercise-intolerant recovery, under clinician oversight. It is not appropriate for every
+            condition — graded exertion is contraindicated in some (e.g. ME/CFS, where pacing is
+            indicated). Always follow your clinician.
+          </p>
+        </div>
+      </section>
+
+      {/* Key references */}
+      <section className="px-6 pb-16">
+        <div className="mx-auto max-w-[960px]">
+          <h2 className="text-[22px] font-bold tracking-[-0.01em] text-[#16243f]">Key references</h2>
+          <div className="mt-6 flex flex-col gap-4">
+            {REFERENCES.map((ref) => (
+              <div
+                key={ref}
+                className="flex gap-4 rounded-xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
+              >
+                <span
+                  className="mt-0.5 h-5 w-1 shrink-0 rounded-full"
+                  style={{ backgroundColor: PLATFORM.green }}
+                />
+                <p className="text-[14px] leading-relaxed text-slate-600">{ref}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-[12.5px] leading-relaxed text-slate-400">
+            Summaries are educational and not a substitute for clinical judgement. This app is a
+            clinician-directed coaching and tracking tool — not a diagnosis or a return-to-play clearance.
+          </p>
+        </div>
+      </section>
+
+      {/* CTA band */}
+      <section className="px-6 pb-20">
+        <div
+          className="mx-auto max-w-[1080px] rounded-3xl border border-[#3c7a1f]/20 px-8 py-14 text-center"
+          style={{ background: 'linear-gradient(135deg, #eef6e7 0%, #f3f8f1 100%)' }}
+        >
+          <h2 className="text-[30px] font-extrabold tracking-[-0.02em] text-[#16243f] sm:text-[34px]">
+            Put the evidence on the wrist.
+          </h2>
+          <p className="mx-auto mt-4 max-w-[460px] text-[16px] leading-relaxed text-slate-600">
+            The protocol your clinic already trusts, delivered to the wearable your patient already owns.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/platform/clinicians"
+              className="rounded-full px-6 py-3 text-[15px] font-bold text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: PLATFORM.navy }}
+            >
+              For clinicians
+            </Link>
+            <Link
+              href="/platform/pricing"
+              className="rounded-full px-6 py-3 text-[15px] font-bold text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: PLATFORM.green }}
+            >
+              See pricing
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <PlatformFooter />
+    </div>
+  )
+}

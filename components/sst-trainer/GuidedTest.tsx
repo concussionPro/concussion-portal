@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   detectThreshold,
   PROVOCATION_RISE,
@@ -50,6 +50,9 @@ export default function GuidedTest({
   selectedSymptomIds,
   onComplete,
   onAbort,
+  liveHr = null,
+  hrSourceLabel,
+  hrStatus = 'manual',
 }: {
   condition: Condition
   restingSymptomScore: number
@@ -58,6 +61,12 @@ export default function GuidedTest({
   onComplete: (result: ThresholdResult, input: TestInput) => void
   /** leave the test without recording a result (back to readiness, or home if a band exists) */
   onAbort: () => void
+  /** live bpm from a paired wearable / camera (null = manual entry) */
+  liveHr?: number | null
+  /** paired source name, e.g. "Apple Watch" */
+  hrSourceLabel?: string
+  /** feed state for the live/connecting/manual chip */
+  hrStatus?: 'idle' | 'connecting' | 'streaming' | 'manual'
 }) {
   // only the symptoms the user told us they get
   const userSymptoms = CONCUSSION_SYMPTOMS.filter((s) => selectedSymptomIds.includes(s.id))
@@ -69,6 +78,14 @@ export default function GuidedTest({
   const [heartRate, setHeartRate] = useState('')
   const [symptomScore, setSymptomScore] = useState(restingSymptomScore)
   const [tappedSymptoms, setTappedSymptoms] = useState<Set<string>>(new Set())
+
+  // When a live source is streaming, the paired device drives the HR field — the
+  // patient just logs the minute (manual entry stays available as override).
+  useEffect(() => {
+    if (typeof liveHr === 'number' && Number.isFinite(liveHr)) {
+      setHeartRate(String(liveHr))
+    }
+  }, [liveHr])
 
   const hrValue = heartRate.trim() === '' ? null : Number(heartRate)
   const hrValid = hrValue !== null && Number.isFinite(hrValue) && hrValue > 0
@@ -162,9 +179,20 @@ export default function GuidedTest({
             />
             <span className="text-[11px] font-semibold text-[#9bafb0]">BPM</span>
           </div>
-          <span className="text-[11px] leading-tight text-[#9bafb0]">
-            rested {restingSymptomScore}/10 · enter from your monitor
-          </span>
+          {hrStatus === 'streaming' ? (
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold leading-tight text-[#3c7a1f]">
+              <span className="inline-block h-[7px] w-[7px] animate-pulse rounded-full bg-[#3c7a1f]" />
+              {hrSourceLabel ?? 'Wearable'} · live
+            </span>
+          ) : hrStatus === 'connecting' ? (
+            <span className="text-[11px] leading-tight text-[#9bafb0]">
+              Connecting {hrSourceLabel ?? 'device'}…
+            </span>
+          ) : (
+            <span className="text-[11px] leading-tight text-[#9bafb0]">
+              rested {restingSymptomScore}/10 · enter from your monitor
+            </span>
+          )}
         </div>
       </div>
 
