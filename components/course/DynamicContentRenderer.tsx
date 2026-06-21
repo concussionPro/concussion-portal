@@ -30,6 +30,7 @@ import {
   Hash,
   Info,
 } from 'lucide-react'
+import { getEpInfographic } from './ep-infographics'
 
 // Map content-marker emoji to lucide icons for professional rendering
 const EMOJI_ICON_MAP: Record<string, { icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; color: string }> = {
@@ -324,6 +325,15 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
   const videoMatch = text.match(/^\[VIDEO:\s*([^\]|]+?)\s*\|\s*([^\]]+?)\s*\]$/)
   if (videoMatch) {
     return renderVideoEmbed(videoMatch[1], videoMatch[2], key)
+  }
+
+  // Handle infographic blocks [INFOGRAPHIC: id] — render the matching premium SVG
+  // component from the ep-infographics registry. Unknown ids render nothing, so a
+  // stray/typo marker never leaks raw "[INFOGRAPHIC: …]" text to the page.
+  const infographicMatch = text.match(/^\[INFOGRAPHIC:\s*([a-z0-9-]+)\s*\]$/)
+  if (infographicMatch) {
+    const Infographic = getEpInfographic(infographicMatch[1])
+    return Infographic ? <Infographic key={key} /> : null
   }
 
   // Handle callout boxes [CALLOUT: type | content]

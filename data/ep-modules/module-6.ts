@@ -27,7 +27,8 @@ export const module6: Module = {
       title: 'The AEP\'s Role: Reconditioning Specialist, Not Gatekeeper',
       content: [
         'Concussion return-to-sport is a relay, not a solo event. The diagnosing and clearing roles are medical. The reconditioning role — the substantial, skilled, day-to-day work of rebuilding an athlete\'s capacity to run, change direction, accelerate, decelerate, absorb load and execute sport skills without symptom provocation — is exercise-physiology territory. This module is about owning that role precisely.',
-        'Think of the graded return-to-sport strategy as a ladder. The AEP delivers the rungs. There is one rung near the top — the transition into full-contact training and competitive contact — that has a locked gate, and only a medical practitioner holds the key. The AEP\'s craft is to bring the athlete all the way up to that gate in the best possible condition, with documented evidence that they tolerate full sport-specific, non-contact load, so the clearing clinician is making a decision about a prepared athlete rather than a deconditioned one.',
+        'Think of the graded return-to-sport strategy as a ladder. The AEP delivers the rungs. There is one rung near the top — the transition into full-contact training and competitive contact — that has a locked gate, and only a medical practitioner holds the key.',
+        'The AEP\'s craft is to bring the athlete all the way up to that gate in the best possible condition, with documented evidence that they tolerate full sport-specific, non-contact load — so the clearing clinician is making a decision about a prepared athlete rather than a deconditioned one.',
         '### What the AEP owns',
         '   - Designing and progressing the symptom-limited aerobic, strength and sport-specific reconditioning program.',
         '   - Monitoring symptom response within and between sessions and adjusting load accordingly.',
@@ -53,6 +54,7 @@ export const module6: Module = {
         '   - Stage 4 — Non-contact training drills: harder training drills (e.g. passing drills), progressive resistance training, more complex movement and cognitive load. The athlete may resume the full non-contact training menu. (AEP-delivered.)',
         '   - Stage 5 — Full-contact practice: following medical clearance, normal training activities including body contact. Restores confidence and lets coaching staff assess functional skills. (Requires medical clearance first; AEP may support conditioning.)',
         '   - Stage 6 — Return to sport: normal competitive game play.',
+        '[INFOGRAPHIC: graded-return-to-sport]',
         'The early stages (1–3) are typically progressed at minimum 24-hour intervals, but the calendar minimums in the Australian guidelines (next section) override any temptation to rush — particularly in youth and community sport, where the stand-down is a hard floor regardless of how quickly symptoms settle.',
         '[HIGHLIGHT: The six stages tell you the SEQUENCE. The Australian guidelines tell you the MINIMUM TIME. The next section reconciles the two.]',
       ],

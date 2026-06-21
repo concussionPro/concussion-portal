@@ -27,6 +27,7 @@ export const module5: Module = {
       title: 'The Boundary: What You Deliver vs What You Refer',
       content: [
         'The single most important judgement in this module is not which exercise to choose — it is knowing when the presentation in front of you is within the reach of a graded exercise program and when it needs a specialist. Get this boundary right and you become an indispensable part of the recovery team. Get it wrong and you either withhold rehab a patient could safely have, or you load a system that needed a different intervention first.',
+        '[INFOGRAPHIC: phenotype-map]',
         '### What sits clearly within AEP scope to deliver',
         '   - Gaze-stabilisation (VOR x1, progressing to VOR x2), habituation drills for motion sensitivity, and graded dynamic-balance training — once a diagnosing clinician has identified the vestibular-ocular phenotype and excluded the conditions below.',
         '   - Cervical exercise: deep neck flexor activation and endurance, scapular and postural endurance work, cervical joint-position-error (proprioceptive) retraining, and graded cervical strengthening.',
@@ -115,7 +116,8 @@ export const module5: Module = {
       id: 'oculomotor-exercise',
       title: 'Oculomotor Exercise: Convergence, Saccades, Pursuit and Accommodation',
       content: [
-        'Oculomotor dysfunction affects 40–90% of concussions and is a leading cause of reading difficulty, screen intolerance, headache and dizziness. Convergence insufficiency — the inability to hold binocular alignment on a near target — is the most common single finding. These exercises build the endurance and accuracy of the eye-movement system. They support, and do not replace, optometric assessment: a behavioural optometrist diagnoses, may prescribe prism, and may run in-office therapy; you deliver the home/clinic exercise program alongside that.',
+        'Oculomotor dysfunction affects 40–90% of concussions and is a leading cause of reading difficulty, screen intolerance, headache and dizziness. Convergence insufficiency — the inability to hold binocular alignment on a near target — is the most common single finding. These exercises build the endurance and accuracy of the eye-movement system.',
+        'They support, and do not replace, optometric assessment: a behavioural optometrist diagnoses, may prescribe prism, and may run in-office therapy; you deliver the home/clinic exercise program alongside that.',
         '### Convergence training',
         '   - Near-point / pencil push-ups: hold a pencil (or a card with a small letter) at arm\'s length on the midline, focus on a single letter, and slowly bring it toward the nose, keeping it single. Stop the instant it doubles or one eye drifts out, then move it back out until single again. Repeat. Dose: ~15 repetitions, 2 times per day. Goal: improve near-point of convergence from >6 cm toward ≤5 cm.',
         '   - Brock string: a 1.5 m string with three coloured beads at different distances, one end held to the nose. The patient fixates each bead in turn (near → mid → far → back), reporting the "X" crossing pattern that confirms both eyes are aligned on the target bead. This trains convergence/divergence and gives the patient instant feedback on alignment. Dose: 5 minutes, 1–2 times per day.',

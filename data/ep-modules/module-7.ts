@@ -26,7 +26,8 @@ export const module7: Module = {
       id: 'ppcs-definition',
       title: 'Persistent Post-Concussion Symptoms: Definition and Who Is at Risk',
       content: [
-        'Most concussions resolve within the expected window — roughly 2 weeks in adults and up to 4 weeks in children and adolescents (Amsterdam consensus, 2023). When symptoms persist beyond that window, the patient is described as having persistent post-concussion symptoms (PPCS). The terminology matters: current consensus and the leading researchers (Silverberg and colleagues) favour "persistent symptoms after concussion" or PPCS over the older "post-concussion syndrome", because the symptoms are real and treatable rather than a fixed syndrome, and because most are NOT specific to brain injury.',
+        'Most concussions resolve within the expected window — roughly 2 weeks in adults and up to 4 weeks in children and adolescents (Amsterdam consensus, 2023). When symptoms persist beyond that window, the patient is described as having persistent post-concussion symptoms (PPCS).',
+        'The terminology matters. Current consensus and the leading researchers (Silverberg and colleagues) favour "persistent symptoms after concussion" or PPCS over the older "post-concussion syndrome" — because the symptoms are real and treatable rather than a fixed syndrome, and because most are NOT specific to brain injury.',
         '[VIDEO: gcU4QhOsjCg | Post-Concussive Syndrome: Clinical Management and Recovery Pathways (BrainLine / PBS)]',
         '### What PPCS is — and is not',
         '   - PPCS is a description of a recovery that has not followed the expected trajectory, defined by symptom duration beyond the typical window (commonly operationalised as symptoms persisting beyond ~4 weeks). It is a clinical descriptor, not a single diagnosis with a single cause.',

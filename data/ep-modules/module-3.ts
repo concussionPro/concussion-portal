@@ -88,6 +88,7 @@ export const module3: Module = {
         '   - RPE on the Borg 6–20 scale — the client’s rating of perceived exertion.',
         '   - Symptom score (0–10) — the client’s CURRENT overall symptom intensity, and which symptom changed (headache, dizziness, fogginess, nausea, visual strain).',
         'Plot or tabulate these as you go. The relationship between rising heart rate and the symptom score is the entire output of the test.',
+        '[INFOGRAPHIC: bctt-protocol]',
       ],
     },
     {
@@ -104,7 +105,8 @@ export const module3: Module = {
         '   - HRt — the heart rate at the moment the ≥ 3-point symptom increase was reported. THIS IS THE KEY NUMBER.',
         '   - The RPE at threshold, the dominant provoked symptom, the test duration (time to threshold), and the HRt as a percentage of age-predicted maximum heart rate.',
         '### Interpreting the result — without diagnosing',
-        'A symptom threshold that occurs early, at a low heart rate, and at a low percentage of age-predicted maximum is consistent with a physiological (exercise-intolerant) presentation that responds well to graded aerobic training. A client who reaches voluntary exhaustion at ≥ 90% of age-predicted maximum heart rate with NO symptom exacerbation has a normal physiological exercise tolerance — which directs attention toward cervical, vestibular, ocular or mood drivers of their residual symptoms (to be communicated back to the referrer, not labelled by the EP).',
+        'A symptom threshold that occurs early — at a low heart rate and a low percentage of age-predicted maximum — is consistent with a physiological (exercise-intolerant) presentation that responds well to graded aerobic training.',
+        'A client who instead reaches voluntary exhaustion at ≥ 90% of age-predicted maximum heart rate with NO symptom exacerbation has normal physiological exercise tolerance. That finding directs attention toward cervical, vestibular, ocular or mood drivers of their residual symptoms — to be communicated back to the referrer, not labelled by the EP.',
         'You are not diagnosing the cause. You are quantifying exercise tolerance and feeding that objective finding back into the care team while you get to work on the part you own.',
       ],
     },
@@ -136,7 +138,8 @@ export const module3: Module = {
       title: 'Variants and Re-Testing to Progress the Ceiling',
       content: [
         '### The Buffalo Concussion Bike Test (BCBT)',
-        'A validated cycle-ergometer alternative for clients who cannot safely run a treadmill protocol — lower-limb injury, significant balance impairment, marked vestibular provocation from walking, large body mass, or simply equipment availability. It follows the same logic: a graded RPE-driven ramp, continuous HR/RPE/symptom monitoring, and the same ≥ 3-point symptom-threshold endpoint to establish HRt. The bike removes the balance and visual-flow demands of the treadmill, so it can be the better first choice for vestibular-dominant presentations. The prescription conversion (80–90% of HRt) is identical.',
+        'A validated cycle-ergometer alternative for clients who cannot safely run a treadmill protocol — lower-limb injury, significant balance impairment, marked vestibular provocation from walking, large body mass, or simply equipment availability.',
+        'It follows the same logic: a graded RPE-driven ramp, continuous HR/RPE/symptom monitoring, and the same ≥ 3-point symptom-threshold endpoint to establish HRt. The prescription conversion (80–90% of HRt) is identical. Because the bike removes the balance and visual-flow demands of the treadmill, it can be the better first choice for vestibular-dominant presentations.',
         'Choose the mode that lets you measure exercise tolerance cleanly: if walking itself provokes dizziness independent of exertion, the bike gives a truer cardiovascular threshold.',
         '### Re-testing to progress the ceiling',
         'The first BCTT sets the starting prescription. Rehabilitation works by repeatedly re-establishing a higher threshold:',
