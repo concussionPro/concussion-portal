@@ -21,22 +21,28 @@ import TrainingSession from '@/components/sst-trainer/TrainingSession'
 import ProgressDashboard from '@/components/sst-trainer/ProgressDashboard'
 import { SstAppShell } from '@/components/platform/SstAppShell'
 import SstOnboarding, { type OnboardingResult } from '@/components/platform/SstOnboarding'
+import SstPwaRegister from '@/components/platform/SstPwaRegister'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// /platform/app — the device-framed "Get the app" experience.
+// /platform/app — the REAL, installable SST Trainer app (not a product tour).
 //
-// The screenshot's 8 pagination dots map 1:1 to the engine flow's 8 steps
-// (welcome → … → progress). This page wraps the redesigned welcome/onboarding
-// (Self-guided vs Clinic-code, goal, HR-source pairing) and then hands the
-// collected { mode, goal, device } into the SAME working state machine and real
-// engine used by /sst-trainer (detectThreshold → computePrescription →
-// progressionDecision), rendered inside the watch frame.
+// Rendered full-screen in SstAppShell: a slim app header (wordmark + glanceable
+// live-HR pill + step progress) over the working flow — no device bezel, no
+// chapter/pagination "tour" dots. It's an app you USE. Installable as a PWA
+// (public/sst.webmanifest + public/sw.js, registered via <SstPwaRegister/>),
+// and reachable via the single share link /demo/sst.
 //
-// HR sourcing: the device paired in onboarding opens a REAL connection
-// (Web Bluetooth heart-rate profile, or camera PPG — see lib/sst-trainer/
-// hr-live.ts). That connection's live bpm flows through useLiveHr into the
-// threshold test and training screens. Apple Watch / Fitbit have no live web
-// feed, so they stay on manual entry. No bpm is ever fabricated.
+// The flow's 8 steps run the SAME state machine and real engine as /sst-trainer
+// (detectThreshold → computePrescription → progressionDecision).
+//
+// HR sourcing — three first-class paths chosen in onboarding:
+//   • any Bluetooth heart-rate wearable (Web Bluetooth HR profile: Polar / Wahoo
+//     / WHOOP / Garmin-broadcast / any BLE strap),
+//   • the phone camera (PPG), or
+//   • manual entry for the clinician when no wearable is available.
+// The first two open a REAL connection (see lib/sst-trainer/hr-live.ts) whose
+// live bpm flows through useLiveHr into the threshold test + training screens.
+// Manual feeds the same engine by hand. No bpm is ever fabricated.
 // Gated + noindex by app/platform/layout.tsx; do not re-gate here.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -101,7 +107,12 @@ export default function PlatformAppPage() {
       stepIndex={stepIndex}
       totalSteps={STEP_ORDER.length}
       caption={STEP_CAPTION[step]}
+      bpm={feed.bpm}
+      hrStatus={feed.status}
     >
+      {/* Register the no-op service worker so the app is installable to a home
+          screen (PWA). Renders nothing. */}
+      <SstPwaRegister />
       {step === 'welcome' && (
         <SstOnboarding
           device={device}

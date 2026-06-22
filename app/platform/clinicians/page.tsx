@@ -110,7 +110,7 @@ export default function CliniciansPage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/platform/pricing"
+              href="/platform/founding"
               className="rounded-[13px] px-[22px] py-[15px] text-[15px] font-bold text-white transition-opacity hover:opacity-90"
               style={{ background: PLATFORM.navy }}
             >
@@ -251,11 +251,11 @@ export default function CliniciansPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-[11px]">
             <Link
-              href="/platform/pricing"
+              href="/platform/founding"
               className="rounded-[12px] px-[22px] py-[14px] text-[14px] font-bold text-white transition-opacity hover:opacity-90"
               style={{ background: PLATFORM.navy }}
             >
-              See pricing
+              Become a founding clinic
             </Link>
             <Link
               href="/platform/evidence"

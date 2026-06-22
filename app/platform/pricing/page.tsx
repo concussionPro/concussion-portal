@@ -5,12 +5,12 @@ import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/Pla
 // SST Trainer — Pricing.  "Pricing built for clinics, not patients."
 // Primary action: the FREE founding-clinic tier (real users = AU concussion /
 // vestibular / POTS clinics). Hooks: patients never pay + first 50 founding
-// clinics. Founding application → mailto hello@concussion-education-australia.com.
+// clinics. Founding application → /platform/founding signup form (captures the
+// lead in Postgres + notifies Zac; replaced the flaky mailto).
 // Faithful to the CEA-Site build (navy #16243f, green #3c7a1f, Hanken Grotesk).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const FOUNDING_MAILTO =
-  'mailto:hello@concussion-education-australia.com?subject=SST%20founding%20clinic'
+const FOUNDING_HREF = '/platform/founding'
 
 type Tier = {
   name: string
@@ -69,7 +69,7 @@ const TIERS: Tier[] = [
     price: 'Free',
     unit: 'for our first 50 clinics',
     cta: 'Start a founding clinic',
-    href: FOUNDING_MAILTO,
+    href: FOUNDING_HREF,
     popular: true,
     cardBg: '#fff',
     border: '2px solid #57a82e',
@@ -98,7 +98,7 @@ const TIERS: Tier[] = [
     price: 'From A$900',
     unit: '/ year',
     cta: 'Talk to us',
-    href: FOUNDING_MAILTO,
+    href: FOUNDING_HREF,
     popular: false,
     cardBg: '#16243f',
     border: '1.5px solid #16243f',
@@ -177,7 +177,7 @@ function Tick({ bg, fg }: { bg: string; fg: string }) {
 
 function Cta({ tier }: { tier: Tier }) {
   const cls =
-    'rounded-[13px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90'
+    'block w-full cursor-pointer rounded-[13px] py-[13px] text-center text-[14px] font-bold transition-opacity hover:opacity-90'
   const style = {
     color: tier.ctaFg,
     background: tier.ctaBg,
@@ -441,13 +441,13 @@ export default function PlatformPricingPage() {
             Free while we build the evidence together — your feedback shapes the
             product, and your founding rate is locked for good.
           </p>
-          <a
-            href={FOUNDING_MAILTO}
-            className="rounded-[13px] px-[26px] py-[15px] text-[15px] font-bold text-white transition-opacity hover:opacity-90"
+          <Link
+            href={FOUNDING_HREF}
+            className="inline-block rounded-[13px] px-[26px] py-[15px] text-[15px] font-bold text-white transition-opacity hover:opacity-90"
             style={{ background: PLATFORM.navy }}
           >
             Apply to the founding program
-          </a>
+          </Link>
         </div>
       </section>
 

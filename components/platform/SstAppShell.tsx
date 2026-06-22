@@ -1,47 +1,88 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
+import type { HrStatus } from '@/components/sst-trainer/hr-source'
 
 /**
- * Device-framed shell for /platform/app — the only marketing route that is a
- * full-screen app experience (no PlatformNav / PlatformFooter).
+ * Real full-screen app shell for /platform/app.
  *
- * Faithful to /tmp/sst_app.png: an Apple-Watch-Ultra-style titanium bezel with a
- * digital crown + side button, a watch status bar (paired HR source · clock ·
- * battery), and below the device the 8 flow dots + the chapter caption.
+ * This is NOT a product tour — there is no device bezel and no chapter/pagination
+ * "tour" affordance. It is the chrome of an app you USE: a slim sticky header
+ * with the SST wordmark, a glanceable live-HR / source status pill, and a thin
+ * step-progress bar. The body fills the viewport and is one-handed, big-tap
+ * friendly per components/sst-trainer/README.md.
  *
- * Palette: navy #16243f frame/text, green #3c7a1f connected indicator, teal
- * #5b9aa6 interactive accent (matching the in-app SST design language).
+ * Palette: navy #16243f text/brand, teal #5b9aa6 accent, green #3c7a1f live
+ * indicator, warm #f7fafa surface (matches the in-app SST design language and
+ * the PWA theme/background colours).
  */
 
 const numFont = 'font-[family-name:var(--font-space)] [font-variant-numeric:tabular-nums]'
 
-/** Watch wall-clock (client-only to avoid hydration drift) — H:MM, 12-hour. */
-function WatchClock() {
+/** Wall clock for the header (client-only to avoid hydration drift) — H:MM am/pm. */
+function HeaderClock() {
   const [label, setLabel] = useState('')
   useEffect(() => {
     const tick = () => {
       const d = new Date()
       let hh = d.getHours() % 12
       if (hh === 0) hh = 12
-      setLabel(`${hh}:${String(d.getMinutes()).padStart(2, '0')}`)
+      const ap = d.getHours() < 12 ? 'am' : 'pm'
+      setLabel(`${hh}:${String(d.getMinutes()).padStart(2, '0')} ${ap}`)
     }
     tick()
     const iv = setInterval(tick, 10_000)
     return () => clearInterval(iv)
   }, [])
-  return <span className={`text-[15px] font-semibold text-[#16243f] ${numFont}`}>{label || ' '}</span>
+  return <span className={`text-[12px] font-semibold text-[#7d9092] ${numFont}`}>{label || ' '}</span>
 }
 
-function BatteryGlyph({ pct = 86 }: { pct?: number }) {
+/** The SST target lockup mark. */
+function BrandMark() {
   return (
-    <span className="flex items-center gap-1">
-      <span className={`text-[12px] font-semibold text-[#16243f] ${numFont}`}>{pct}</span>
-      <svg width="22" height="12" viewBox="0 0 22 12" fill="none" aria-hidden="true">
-        <rect x="0.5" y="0.5" width="18" height="11" rx="3" stroke="#16243f" strokeOpacity="0.45" />
-        <rect x="2" y="2" width={Math.max(2, (pct / 100) * 15)} height="8" rx="1.5" fill="#16243f" />
-        <rect x="20" y="3.5" width="2" height="5" rx="1" fill="#16243f" fillOpacity="0.45" />
-      </svg>
+    <span className="relative inline-block h-[22px] w-[22px] flex-none rounded-full border-[2.5px] border-[#5b9aa6]">
+      <span className="absolute left-1/2 top-1/2 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5b9aa6]" />
+    </span>
+  )
+}
+
+/**
+ * Glanceable HR-source pill in the header — live bpm when a real source is
+ * streaming, otherwise the paired source + its connection state. Never fabricates
+ * a reading: when manual, it just names the source.
+ */
+function HrPill({
+  deviceName,
+  connected,
+  bpm,
+  hrStatus,
+}: {
+  deviceName: string
+  connected: boolean
+  bpm: number | null
+  hrStatus: HrStatus
+}) {
+  const streaming = hrStatus === 'streaming' && typeof bpm === 'number' && Number.isFinite(bpm)
+  const connecting = hrStatus === 'connecting' || (connected && hrStatus !== 'streaming')
+
+  const dot = streaming ? '#3c7a1f' : connecting ? '#b58a32' : '#aebcbc'
+
+  return (
+    <span className="flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 shadow-[0_1px_2px_rgba(20,36,63,0.08)]">
+      <span
+        className={`inline-block h-[7px] w-[7px] flex-none rounded-full ${streaming ? 'animate-pulse' : ''}`}
+        style={{ background: dot }}
+      />
+      {streaming ? (
+        <span className="flex items-baseline gap-1">
+          <span className={`text-[13px] font-bold leading-none text-[#16243f] ${numFont}`}>{bpm}</span>
+          <span className="text-[9px] font-semibold leading-none text-[#9bafb0]">BPM</span>
+        </span>
+      ) : (
+        <span className="max-w-[110px] truncate text-[11px] font-semibold leading-none text-[#5d7174]">
+          {connecting ? 'Connecting…' : deviceName}
+        </span>
+      )}
     </span>
   )
 }
@@ -52,74 +93,71 @@ export function SstAppShell({
   stepIndex,
   totalSteps,
   caption,
+  bpm = null,
+  hrStatus = 'manual',
   children,
 }: {
-  /** paired HR source shown top-left in the status bar */
+  /** paired HR source shown in the header status pill */
   deviceName: string
-  /** green = a live source is paired; grey otherwise */
+  /** true = a live source is paired */
   connected: boolean
   /** 0-based index of the active flow step */
   stepIndex: number
-  /** total flow steps (pagination dot count) */
+  /** total flow steps */
   totalSteps: number
-  /** chapter caption under the device */
+  /** short label for the current step (shown in the progress header) */
   caption: string
+  /** live bpm from the paired connection (shown glanceably when streaming) */
+  bpm?: number | null
+  /** feed state driving the live/connecting/manual indicator */
+  hrStatus?: HrStatus
   children: ReactNode
 }) {
+  const pct = totalSteps > 1 ? (stepIndex / (totalSteps - 1)) * 100 : 0
   return (
     <main
-      className="flex min-h-screen w-full flex-col items-center justify-center gap-6 px-4 py-8 font-[family-name:var(--font-hanken)] text-[#16243f]"
-      style={{
-        background: 'radial-gradient(130% 100% at 50% -8%, #f1f6f6 0%, #e6eeee 55%, #d8e3e3 100%)',
-      }}
+      className="flex min-h-[100dvh] w-full flex-col font-[family-name:var(--font-hanken)] text-[#16243f]"
+      style={{ background: '#f7fafa' }}
     >
-      {/* device */}
-      <div className="relative">
-        {/* digital crown + side button on the right edge */}
-        <span className="absolute right-[-5px] top-[34%] h-12 w-[6px] rounded-full bg-[#0e1622] shadow-[inset_0_0_2px_rgba(255,255,255,0.18)]" />
-        <span className="absolute right-[-4px] top-[52%] h-9 w-[5px] rounded-full bg-[#1a2533]" />
-
-        {/* titanium bezel */}
-        <div
-          className="rounded-[46px] p-[14px] shadow-[0_40px_70px_-26px_rgba(15,22,34,0.55),0_8px_22px_rgba(15,22,34,0.18)]"
-          style={{ background: 'linear-gradient(160deg,#2b3645 0%,#161f2b 48%,#0d141d 100%)' }}
-        >
-          {/* screen */}
-          <div className="flex h-[560px] w-full max-w-[348px] flex-col overflow-hidden rounded-[34px] bg-[#f7fafa] sm:w-[348px]">
-            {/* status bar */}
-            <div className="sticky top-0 z-30 flex items-center justify-between bg-gradient-to-b from-[#f7fafa] to-[#f7fafa]/0 px-5 pb-2 pt-3">
-              <span className="flex items-center gap-1.5 text-[11px] font-semibold leading-none text-[#5d7174]">
-                <span
-                  className="inline-block h-[8px] w-[8px] rounded-full"
-                  style={{ background: connected ? '#3c7a1f' : '#aebcbc' }}
-                />
-                {deviceName}
+      {/* app header */}
+      <header className="sticky top-0 z-30 border-b border-[#e2ecec] bg-[#f7fafa]/95 backdrop-blur supports-[backdrop-filter]:bg-[#f7fafa]/80">
+        <div className="mx-auto flex w-full max-w-[480px] flex-col gap-2.5 px-5 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <BrandMark />
+              <span className="text-[14px] font-extrabold tracking-[-0.01em] text-[#16243f]">
+                SST Trainer
               </span>
-              <WatchClock />
-              <BatteryGlyph />
-            </div>
+            </span>
+            <span className="flex items-center gap-2.5">
+              <HeaderClock />
+              <HrPill deviceName={deviceName} connected={connected} bpm={bpm} hrStatus={hrStatus} />
+            </span>
+          </div>
 
-            {/* content */}
-            <div className="flex-1 overflow-y-auto px-5 pb-7 pt-0.5">{children}</div>
+          {/* slim step-progress header (not a tour) */}
+          <div className="flex flex-col gap-1.5">
+            <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#dfeaea]">
+              <div
+                className="h-full rounded-full bg-[#5b9aa6] transition-[width] duration-300"
+                style={{ width: `${Math.max(6, pct)}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold tracking-[0.01em] text-[#5d7174]">
+                {caption}
+              </span>
+              <span className={`text-[10px] font-semibold text-[#9bafb0] ${numFont}`}>
+                Step {stepIndex + 1} / {totalSteps}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* flow dots + caption */}
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-[7px]">
-          {Array.from({ length: totalSteps }, (_, i) => (
-            <span
-              key={i}
-              className="h-1.5 rounded-full transition-all duration-200"
-              style={{
-                width: i === stepIndex ? 18 : 6,
-                background: i === stepIndex ? '#5b9aa6' : i < stepIndex ? '#a7c7cc' : '#c4d2d2',
-              }}
-            />
-          ))}
-        </div>
-        <p className="m-0 text-xs font-medium tracking-[0.02em] text-[#5d7174]">{caption}</p>
+      {/* app body */}
+      <div className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-[max(28px,env(safe-area-inset-bottom))] pt-3">
+        {children}
       </div>
     </main>
   )

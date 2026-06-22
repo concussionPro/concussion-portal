@@ -36,22 +36,27 @@ export interface HrSource {
 }
 
 /**
- * Pairing targets, in priority order. Capability-honest:
- *  - Polar/Wahoo, WHOOP, Garmin all stream over the SAME Web Bluetooth heart-
- *    rate profile (the browser chooser shows every HR sensor; the user picks
- *    theirs — we can't brand-filter).
- *  - Phone camera streams via camera PPG.
- *  - Apple Watch / Fitbit can't feed a web page live, so they're manual entry.
+ * The three first-class heart-rate paths. Every wearable on the market reaches
+ * the app through one of these — we don't brand-gate, because we can't and
+ * don't need to:
+ *  - 'bluetooth' covers ANY BLE heart-rate wearable. Polar, Wahoo, WHOOP, Garmin
+ *    (HR broadcast), and every chest strap advertise the SAME standard Web
+ *    Bluetooth heart-rate service; the browser chooser lists them all and the
+ *    user picks theirs.
+ *  - 'camera' streams live pulse via phone-camera PPG — no wearable needed.
+ *  - 'manual' is the clinician fallback: when no wearable is available, HR is
+ *    entered by hand (this is also the path for Apple Watch / Fitbit, which
+ *    can't feed a live web page). It is a first-class choice, not a last resort.
  */
 export const HR_SOURCES: HrSource[] = [
-  { id: 'polar-wahoo', name: 'Bluetooth HR strap', method: 'Polar · Wahoo · any BLE strap', tag: 'Live HR', connect: 'bluetooth', live: true, glyph: '◍', tint: '#d2463a' },
-  { id: 'phone-camera', name: 'Phone camera', method: 'Camera PPG · no wearable', tag: 'Live HR', connect: 'camera', live: true, camera: true, glyph: '◎', tint: '#5d7174' },
-  { id: 'whoop', name: 'WHOOP', method: 'Bluetooth HR broadcast', tag: 'Live HR', connect: 'bluetooth', live: true, glyph: '▬', tint: '#0f172a' },
-  { id: 'garmin', name: 'Garmin', method: 'Bluetooth HR broadcast', tag: 'Live HR', connect: 'bluetooth', live: true, glyph: '⌚', tint: '#0b7fab' },
-  { id: 'apple-watch', name: 'Apple Watch', method: 'Pair a strap or use the camera', tag: 'Manual', connect: 'manual', live: false, glyph: '⌚', tint: '#1d2325' },
-  { id: 'fitbit', name: 'Fitbit', method: 'Syncs after · enter HR', tag: 'Manual', connect: 'manual', live: false, glyph: '◆', tint: '#3c7681' },
+  { id: 'bluetooth-hr', name: 'Bluetooth HR monitor', method: 'Any BLE wearable — Polar, Wahoo, WHOOP, Garmin or chest strap', tag: 'Live HR', connect: 'bluetooth', live: true, glyph: '◍', tint: '#d2463a' },
+  { id: 'phone-camera', name: 'Phone camera', method: 'Live pulse from the camera (PPG) — no wearable needed', tag: 'Live HR', connect: 'camera', live: true, camera: true, glyph: '◎', tint: '#5d7174' },
+  { id: 'manual', name: 'Enter HR manually', method: 'Clinician enters it — also for Apple Watch / Fitbit', tag: 'Clinician', connect: 'manual', live: false, glyph: '✎', tint: '#3c7681' },
 ]
 
+// Default to the manual clinician path: it always works with no hardware, so the
+// app is usable end-to-end even when no wearable is present. The patient/clinician
+// can switch to a live source in onboarding.
 export const DEFAULT_HR_SOURCE = HR_SOURCES.find((s) => s.connect === 'manual') ?? HR_SOURCES[0]
 
 export function hrSourceById(id: string | null | undefined): HrSource | null {

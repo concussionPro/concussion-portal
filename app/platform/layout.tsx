@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
 import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
 
@@ -31,6 +31,23 @@ export const metadata: Metadata = {
   description:
     'Prescribed exercise-rehab platform. Reads the patient’s heart-rate threshold, prescribes a safe sub-symptom training band, and steps it up as they recover — clinician-set and overseen.',
   robots: 'noindex, nofollow',
+  // Installable PWA (see public/sst.webmanifest + public/sw.js). start_url is
+  // /demo/sst so an install lands authenticated. Gating stays in place.
+  manifest: '/sst.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'SST Trainer',
+    statusBarStyle: 'default',
+  },
+  icons: {
+    apple: [{ url: '/sst-apple-touch-180.png', sizes: '180x180', type: 'image/png' }],
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#16243f',
 }
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
