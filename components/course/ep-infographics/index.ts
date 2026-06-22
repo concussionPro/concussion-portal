@@ -4,6 +4,10 @@ import { BcttProtocol } from './BcttProtocol'
 import { HrtToPrescription } from './HrtToPrescription'
 import { GradedReturnToSport } from './GradedReturnToSport'
 import { PhenotypeMap } from './PhenotypeMap'
+import { BrainRegions } from './BrainRegions'
+import { ConcussionSymptomClusters } from './ConcussionSymptomClusters'
+import { CbfAutoregulation } from './CbfAutoregulation'
+import { AutonomicDysfunction } from './AutonomicDysfunction'
 
 /**
  * Registry of EP-course infographics keyed by the id used in the
@@ -17,6 +21,10 @@ export const EP_INFOGRAPHICS: Record<string, ComponentType> = {
   'hrt-to-prescription': HrtToPrescription,
   'graded-return-to-sport': GradedReturnToSport,
   'phenotype-map': PhenotypeMap,
+  'brain-regions': BrainRegions,
+  'concussion-symptom-clusters': ConcussionSymptomClusters,
+  'cbf-autoregulation': CbfAutoregulation,
+  'autonomic-dysfunction': AutonomicDysfunction,
 }
 
 export function getEpInfographic(id: string): ComponentType | undefined {
