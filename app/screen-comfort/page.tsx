@@ -1,4 +1,4 @@
-// HIDDEN / INTERNAL PREVIEW — Screen Comfort section (working title; consumer brand TBD).
+// HIDDEN / INTERNAL PREVIEW — MellowVision (screen-comfort tool).
 // Kept hidden deliberately: robots noindex+nofollow, NOT in SiteNav, NOT in sitemap.ts.
 // Sits alongside the Preseason Baseline tool as a future clinic tool + research/literature hub.
 // Compliance: wellness/comfort framing only — NO diagnosis/treatment claims (TGA/AHPRA).
@@ -8,8 +8,8 @@ import { Eye, FileText, FlaskConical, ArrowRight, ShieldCheck } from 'lucide-rea
 import { SiteNav } from '@/components/SiteNav'
 
 export const metadata = {
-  title: 'Screen Comfort — research preview',
-  description: 'A measured, personalized screen-comfort tool and its research base. Internal preview.',
+  title: 'MellowVision — research preview',
+  description: 'MellowVision: a measured, personalized screen-comfort tool and its research base. Internal preview.',
   robots: { index: false, follow: false },
 }
 
@@ -24,7 +24,7 @@ export default function ScreenComfortPage() {
         </div>
 
         <h1 className="mt-5 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Screen Comfort
+          MellowVision
           <span className="block text-lg font-medium text-slate-500">measured colour &amp; contrast for light-sensitive eyes</span>
         </h1>
 
@@ -92,7 +92,7 @@ export default function ScreenComfortPage() {
             href="/tools/screen-comfort/index.html"
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-4 py-2 text-[14px] font-semibold text-slate-900 transition hover:bg-teal-400"
           >
-            Launch Screen Comfort <ArrowRight size={15} />
+            Launch MellowVision <ArrowRight size={15} />
           </a>
           <p className="mt-3 text-[12px] text-slate-400">
             Internal preview · wellness / accessibility support — not a clinical assessment.
