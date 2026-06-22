@@ -8,6 +8,7 @@
 <meta name="description" content="A real-time, 100% on-device ocular instrument: follow the light, and your eyes drive an adaptive staircase that boldly tunes contrast, brightness, tone & saturation to the setting with the least eye strain. MediaPipe FaceLandmarker in your browser — nothing uploaded." />
 <meta property="og:title" content="MellowVision — your eyes tune the screen" />
 <meta property="og:description" content="Every blue-light filter is one generic setting for millions. MellowVision is the only screen tint measured to your own eyes — it reads your squint while it tunes the light. On-device, nothing uploaded." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='19' fill='%23121620'/%3E%3Cellipse cx='20' cy='20' rx='15' ry='8' fill='none' stroke='%2343e0c4' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='4.5' fill='%2343e0c4'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,ital,wght@6..72,0,400;6..72,0,500;6..72,1,500&display=swap" rel="stylesheet" />
@@ -997,6 +998,7 @@
     let gaze={x:0.5,y:0.5}, gazeRaw={x:0.5,y:0.5};
     let aperture=0.27, blinks=0, ambient=null;
     const obs={}; order.forEach(c=>obs[c.id]={apSum:0,apN:0,blk:0,errSum:0,errN:0,ms:0});  // per-condition real measurements
+    const comfortVote={}; order.forEach(c=>comfortVote[c.id]=0);   // explicit comfortable(+1)/too-harsh(-1) per condition
     const faceFresh=()=> isCamera && (performance.now()-lastFaceT<900);
     const lumCv=document.createElement('canvas'); lumCv.width=32; lumCv.height=24;
     const lumCtx=lumCv.getContext('2d',{willReadFrequently:true});
@@ -1015,7 +1017,7 @@
 
     function start(useCam){
       running=true; trialN=0; idx=Math.floor(N/2); step=2; lastDir=0; reversals=0;
-      order.forEach(c=>{ev[c.id]=0.5;seen[c.id]=0;obs[c.id]={apSum:0,apN:0,blk:0,errSum:0,errN:0,ms:0};}); byId('eviList').innerHTML='';
+      order.forEach(c=>{ev[c.id]=0.5;seen[c.id]=0;comfortVote[c.id]=0;obs[c.id]={apSum:0,apN:0,blk:0,errSum:0,errN:0,ms:0};}); byId('eviList').innerHTML='';
       byId('inst').classList.toggle('show',true);
       byId('statuswrap').classList.add('show');
       isCamera=!!useCam;
@@ -1094,7 +1096,7 @@
       const pushed = userDir==null ? 0 : 0.18;     // a tap = this isn't the resting point
       ev[c.id]=clamp(ev[c.id]*0.55 + q*0.45 - pushed, 0, 1);
       trialN++;
-      if(userDir!=null) sciCallout(userDir);
+      if(userDir!=null){ sciCallout(userDir); comfortVote[c.id] += (userDir<0?1:-1); }  // comfortable=-1 dir → +1 ; too-harsh=+1 dir → −1
       const dir = userDir!=null ? userDir : (q>0.55?+1:-1);
       stepStaircase(dir, userDir!=null);          // moves idx → new setting
       MV.renderInstrument({ evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/6,0,1) });
@@ -1132,10 +1134,19 @@
 
     function finish(){
       running=false;
-      let best=order[0]; order.forEach(c=>{ if(ev[c.id]>ev[best.id]) best=c; });
       const before=order[N-1];
       const meanAp = c=> obs[c.id].apN? obs[c.id].apSum/obs[c.id].apN : null;
       const measured = order.filter(c=>obs[c.id].apN>=4);          // conditions with enough real EAR samples
+      const hasObjective = measured.length>=2;
+      let best;
+      if(hasObjective){
+        best=order[0]; order.forEach(c=>{ if(ev[c.id]>ev[best.id]) best=c; });   // squint-anchored evidence
+      } else {
+        // No real eye signal this session → trust the user's explicit comfort votes + where the staircase
+        // settled, NOT the objective-evidence blend (just noise without a face — it could pick a harsh setting).
+        best=order[idx]; let bestScore=-1e9;
+        order.forEach((c,i)=>{ const score=comfortVote[c.id]*100 - Math.abs(i-idx); if(score>bestScore){ bestScore=score; best=c; } });
+      }
       const observations=[]; let squintAtLabel = isCamera? '—' : 'camera off';
       // 1) squint / palpebral aperture — Gowrisankaran 2007 ; Kaiser 2021
       if(measured.length>=2){
@@ -1168,13 +1179,17 @@
       const agree = measured.length>=2 && squintAtLabel===best.label;
       MV.renderResult({
         after:best, before,
-        lede:'Across the session this is the light your eyes met with the least squinting — your easiest setting.',
+        lede: hasObjective
+          ? 'Across the session this is the light your eyes met with the least squinting — your easiest setting.'
+          : 'This is the setting you kept choosing as comfortable — your easiest of the ones you tried.',
         stats:{ setting:best.label, axisWord:(best.toneK<-0.25?'Warm':best.toneK>0.25?'Cool':'Neutral'), toneK:best.toneK,
                 flips:reversals, flipsMax:6, roomPct:(ambient!=null?Math.round(ambient*100):null), blinks:totalBlk, squintAt:squintAtLabel },
         observations,
         takeaway:'Your eyes were <b>most at ease on '+best.label+'</b> — '+(best.toneK<-0.25?'warmer, dimmer':best.toneK>0.25?'cooler, crisper':'balanced')+' light asked the least of them.',
-        corroboration: agree ? 'Your squint agreed with your choice: your widest aperture fell on the very setting you settled on.'
-                             : 'Your comfort choice and your widest-aperture reading pointed to nearby settings — we weighted your stated comfort.'
+        corroboration: !hasObjective
+          ? 'No eye-tracking signal this session, so this is from your comfort taps alone — turn the camera on to corroborate it against your squint.'
+          : (agree ? 'Your squint agreed with your choice: your widest aperture fell on the very setting you settled on.'
+                   : 'Your comfort choice and your widest-aperture reading pointed to nearby settings — we weighted your stated comfort.')
       });
     }
 
@@ -1256,7 +1271,9 @@
     try{
       const v=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/vision_bundle.mjs');
       const fs=await v.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm');
-      landmarker=await v.FaceLandmarker.createFromOptions(fs,{ baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', delegate:'GPU' }, runningMode:'VIDEO', numFaces:1 });
+      const mk=delegate=>v.FaceLandmarker.createFromOptions(fs,{ baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', delegate }, runningMode:'VIDEO', numFaces:1 });
+      try{ landmarker=await mk('GPU'); }
+      catch(eg){ landmarker=await mk('CPU'); }     // fall back to CPU where WebGL/GPU is unavailable (older laptops, GL disabled)
       byId('statusPill').dataset.state='live'; byId('statusTxt').textContent='live · on-device';
     }catch(e){ /* model unavailable — instrument shows an honest no-signal state; no fabricated EAR */ }
   }
