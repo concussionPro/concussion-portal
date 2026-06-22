@@ -196,6 +196,7 @@ export const modules: Module[] = [
           'Understanding which brain regions are affected by concussion mechanisms explains the diverse symptom presentation. Different injury mechanisms preferentially affect specific anatomical structures.',
           'VULNERABILITY FACTORS: Brain regions are differentially vulnerable based on: (1) anatomical location, (2) structural composition (grey vs white matter), (3) vascular supply, (4) mechanical properties, and (5) functional connectivity patterns.',
           'CLINICAL CORRELATION: Specific symptom clusters correlate with regional dysfunction. Recognizing these patterns aids diagnosis, prognosis, and targeted rehabilitation.',
+          '[INFOGRAPHIC: brain-regions]',
           'Brain Region | Primary Functions | Concussion Symptoms',
           '──────────────────────────────────────────────────────────────────',
           'Frontal Lobe (Prefrontal Cortex) | Executive function, working memory, attention, decision-making, emotional regulation | Difficulty concentrating, impaired judgment, personality changes, irritability, reduced processing speed',
@@ -284,6 +285,7 @@ export const modules: Module[] = [
         title: 'How Physiology Drives Symptom Presentation',
         content: [
           'The neurometabolic cascade does not produce symptoms in isolation — each phase disrupts specific neurotransmitter systems, vascular mechanisms, and neural circuits. This section connects the cellular events you just learned to the symptoms clinicians actually observe and patients report.',
+          '[INFOGRAPHIC: concussion-symptom-clusters]',
           '### Cognitive Dysfunction',
           'Cognitive symptoms (brain fog, slowed processing, memory gaps) arise from multiple converging mechanisms:',
           '   • Glutamate excitotoxicity impairs synaptic signaling in hippocampal and prefrontal circuits — the same circuits that drive working memory and executive function',
