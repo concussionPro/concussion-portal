@@ -1119,7 +1119,9 @@
     MV.on('apply', ()=>{ const r=MV.lastResult||MV._result; if(r&&r.after){ MV._applied=true; applyScreen(r.after);
       MV.toast('Applied — this browser tab stays tuned until you reset'); } else MV.toast('Finish a tune first'); });
     MV.on('download', ()=>{ const r=MV.lastResult||MV._result; if(!r||!r.after){ MV.toast('Finish a tune first'); return; }
-      const a=r.after; const css=`brightness(${a.brightness}) contrast(${a.contrast}) saturate(${a.saturate})`;
+      const a=r.after; const tk=(typeof a.toneK==='number')?a.toneK:0;
+      const tone = tk<0 ? ` sepia(${Math.min(70,Math.round(Math.abs(tk)*62))}%)` : (tk>0? ` hue-rotate(6deg)` : '');
+      const css=`brightness(${a.brightness}) contrast(${a.contrast}) saturate(${a.saturate})${tone}`;  // sepia carries the warm blue-cut to other sites (in-app uses an overlay)
       const bm=`javascript:(function(){document.documentElement.style.filter=${JSON.stringify(css)};})();`;
       const recipe={ tool:'mellowvision', version:'web', generated:new Date().toISOString(),
         setting:a.label, id:a.id, brightness:a.brightness, contrast:a.contrast, saturate:a.saturate, tone:a.tone,
