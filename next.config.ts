@@ -47,7 +47,42 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/:path*',
+        // Tools suite (hidden, pre-launch): screen-comfort + future on-device eye tools.
+        // These need the camera + the MediaPipe CDN, which the strict global policy below forbids.
+        // Scoped narrowly to /tools/* so the rest of the site keeps the locked-down headers.
+        source: '/tools/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          // allow the camera on this origin only (global policy is camera=())
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              // MediaPipe tasks-vision loads as an ES module + WASM (SIMD) from jsDelivr
+              "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval' https://cdn.jsdelivr.net",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https:",
+              // wasm binary from jsDelivr, face_landmarker .task model from Google storage
+              "connect-src 'self' blob: data: https://cdn.jsdelivr.net https://storage.googleapis.com",
+              "worker-src 'self' blob:",
+              "child-src 'self' blob:",
+              "media-src 'self' blob:",
+              "frame-ancestors 'self'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "upgrade-insecure-requests"
+            ].join('; ')
+          }
+        ],
+      },
+      {
+        // everything EXCEPT /tools/* gets the strict, locked-down headers
+        source: '/((?!tools/).*)',
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',

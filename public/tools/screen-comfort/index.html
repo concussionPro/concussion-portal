@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Screen Comfort — measured screen tint (research preview)</title>
+<meta name="description" content="A real-time, 100% on-device ocular instrument: follow the light, and your eyes drive an adaptive staircase that boldly tunes contrast, brightness, tone & saturation to the setting with the least eye strain. MediaPipe FaceLandmarker in your browser — nothing uploaded." />
+<meta property="og:title" content="MellowVision — your eyes tune the screen" />
+<meta property="og:description" content="Every blue-light filter is one generic setting for millions. MellowVision is the only screen tint measured to your own eyes — it reads your squint while it tunes the light. On-device, nothing uploaded." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,ital,wght@6..72,0,400;6..72,0,500;6..72,1,500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#070608;
+    --panel:rgba(18,16,22,.62);
+    --panel-solid:#13111a;
+    --line:rgba(255,255,255,.10);
+    --line-2:rgba(255,255,255,.055);
+    --ink:#f0edf4;
+    --muted:#a59fb0;
+    --muted-2:#6f6878;
+    --faint:#433d4e;
+    --live:#43e0c4;        /* measured / live signal — instrument only */
+    --live-dim:#1c7a6c;
+    --brand:#f0ab6c;       /* comfort · least strain · warmth */
+    --brand-dim:#7a5230;
+    --cool:#86a6e0;        /* crisper · cooler · more strain */
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --ui:"Space Grotesk",system-ui,sans-serif;
+    --read:"Newsreader",Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--ui);-webkit-font-smoothing:antialiased;
+    overflow:hidden;position:fixed;inset:0;touch-action:none}
+  button{font-family:inherit;cursor:pointer;color:inherit;border:none;background:none}
+  .mono{font-family:var(--mono)}
+  .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  #app{position:fixed;inset:0;transition:filter .5s cubic-bezier(.4,0,.2,1)}
+  /* full-screen tune layer — the real, applied colour cast over EVERYTHING (not just the field) */
+  #screenTint{position:fixed;inset:0;z-index:57;pointer-events:none;background:rgba(0,0,0,0);
+    transition:background .5s cubic-bezier(.4,0,.2,1)}
+
+  /* ================= THE TUNABLE FIELD (engine drives via MV.renderCondition) ================= */
+  #stage{position:absolute;inset:0;overflow:hidden}
+  /* the surface that gets boldly retuned: brightness/contrast/saturation as filter, gradient as bg */
+  #mv-surface{position:absolute;inset:0;
+    background:radial-gradient(120% 90% at 30% 18%,#3a2c44,transparent 60%),
+               radial-gradient(120% 100% at 80% 90%,#243a4a,transparent 60%),
+               linear-gradient(160deg,#140f1c 0%,#0a1622 100%);
+    filter:brightness(1) contrast(1) saturate(1);
+    transition:filter .55s cubic-bezier(.4,0,.2,1),background .7s cubic-bezier(.4,0,.2,1)}
+  .blob{position:absolute;border-radius:50%;filter:blur(46px);opacity:.5;will-change:transform;mix-blend-mode:screen}
+  #bA{width:46vmax;height:46vmax;background:radial-gradient(circle,#ffb27a,transparent 65%);left:-6%;top:-10%}
+  #bB{width:40vmax;height:40vmax;background:radial-gradient(circle,#ff6f91,transparent 65%);right:-4%;top:8%}
+  #bC{width:44vmax;height:44vmax;background:radial-gradient(circle,#7c6bff,transparent 65%);left:18%;bottom:-16%}
+  #bD{width:38vmax;height:38vmax;background:radial-gradient(circle,#43e0c4,transparent 65%);right:10%;bottom:-8%}
+  /* warm/cool tone wash on top of the field */
+  #toneWash{position:absolute;inset:0;background:rgba(0,0,0,0);mix-blend-mode:soft-light;
+    transition:background .55s cubic-bezier(.4,0,.2,1);pointer-events:none}
+  #grain{position:absolute;inset:0;opacity:.05;pointer-events:none;mix-blend-mode:overlay;
+    background-image:radial-gradient(circle at 50% 50%,#fff 0.5px,transparent 0.6px);background-size:3px 3px}
+  /* the engine draws pursuit dot / saccade targets here */
+  #mv-track{position:absolute;inset:0;width:100%;height:100%;z-index:3}
+  #vign{position:absolute;inset:0;pointer-events:none;z-index:2;
+    background:radial-gradient(120% 95% at 50% 42%,transparent 52%,rgba(4,3,6,.6) 100%)}
+
+  /* ================= HUNTING INDICATOR (top center) ================= */
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .hunt{position:absolute;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:14;
+    display:none;align-items:center;gap:16px;padding:11px 16px;border-radius:14px;
+    background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(16px);
+    box-shadow:0 14px 50px rgba(0,0,0,.5);pointer-events:none;max-width:94vw}
+  .hunt.show{display:flex;animation:fadeIn .45s ease both}
+  .hunt .lead{display:flex;flex-direction:column;gap:3px;white-space:nowrap}
+  .hunt .lead .t{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);
+    display:flex;align-items:center;gap:7px}
+  .hunt .lead .t .pls{width:6px;height:6px;border-radius:50%;background:var(--live);box-shadow:0 0 9px var(--live);animation:pls 1.3s infinite}
+  @keyframes pls{50%{opacity:.3}}
+  .hunt .lead .nm{font-size:14px;font-weight:600;letter-spacing:.01em}
+  .hunt .meters{display:flex;gap:13px}
+  .meter{display:flex;flex-direction:column;gap:5px;width:62px}
+  .meter .mh{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);display:flex;justify-content:space-between}
+  .meter .mh b{color:var(--ink);font-weight:500}
+  .meter .bar{height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+  .meter .bar i{display:block;height:100%;width:50%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+  .meter.contrast .bar i{background:linear-gradient(90deg,#5b6470,#eef1f7)}
+  .meter.luma .bar i{background:linear-gradient(90deg,#3a3320,var(--brand))}
+  .meter.tone .bar i{background:linear-gradient(90deg,var(--brand),var(--cool))}
+  .meter.sat .bar i{background:linear-gradient(90deg,#444,#ff6f91)}
+  @media(max-width:720px){.hunt .meters{display:none}}
+
+  /* ================= INSTRUMENT HUD ================= */
+  /* camera + readouts: floating glass card, top-right */
+  .inst{position:absolute;right:max(14px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));z-index:13;
+    width:212px;border-radius:14px;overflow:hidden;background:var(--panel);border:1px solid var(--line);
+    backdrop-filter:blur(16px);box-shadow:0 18px 50px rgba(0,0,0,.55);display:none;pointer-events:none}
+  .inst.show{display:block;animation:fadeIn .45s ease both}
+  .cam-shell{position:relative;aspect-ratio:4/3;background:#05070b;overflow:hidden}
+  #mv-cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  #mv-camoverlay{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);z-index:2}
+  .cam-grid{position:absolute;inset:0;z-index:1;opacity:.4;pointer-events:none;
+    background-image:linear-gradient(rgba(67,224,196,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(67,224,196,.07) 1px,transparent 1px);
+    background-size:22px 22px}
+  .cam-empty{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:9px;text-align:center;padding:14px;color:var(--muted-2)}
+  .cam-empty svg{width:26px;height:26px;opacity:.55}
+  .cam-empty .t{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;line-height:1.5}
+  .inst .scope-shell{position:relative;height:42px;background:#05070b;border-top:1px solid var(--line-2)}
+  #mv-scope{position:absolute;inset:0;width:100%;height:100%}
+  .scope-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted-2)}
+  .scope-tag{position:absolute;left:8px;top:5px;font-family:var(--mono);font-size:8px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted-2);z-index:2}
+  .readout{padding:9px 12px;display:flex;flex-direction:column;gap:0}
+  .readrow{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--line-2)}
+  .readrow:first-child{border-top:none}
+  .readrow .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--muted)}
+  .readrow .v{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+  /* evidence + lock: floating glass card, bottom-right */
+  .evibox{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:13;
+    width:236px;border-radius:14px;padding:14px 15px;background:var(--panel);border:1px solid var(--line);
+    backdrop-filter:blur(16px);box-shadow:0 18px 50px rgba(0,0,0,.55);display:none;pointer-events:none}
+  .evibox.show{display:block;animation:fadeIn .45s ease both}
+  .evibox .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+  .evibox .head .tag{font-family:var(--mono);font-size:8px;letter-spacing:.1em;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted-2)}
+  .evibox .head .tag.live{color:var(--live);border-color:var(--live-dim)}
+  .evi{display:flex;flex-direction:column;gap:6px}
+  .evrow{display:grid;grid-template-columns:88px 1fr 24px;gap:8px;align-items:center}
+  .evrow .en{font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .evrow .et{height:6px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;position:relative}
+  .evrow .et i{position:absolute;inset:0 auto 0 0;width:0%;border-radius:6px;background:linear-gradient(90deg,var(--live-dim),var(--live));transition:width .5s cubic-bezier(.2,.7,.2,1)}
+  .evrow.lead .et i{background:linear-gradient(90deg,var(--brand),#ffd0a0)}
+  .evrow .es{font-family:var(--mono);font-size:9.5px;color:var(--muted-2);text-align:right;font-variant-numeric:tabular-nums}
+  .evrow.lead .es{color:var(--brand)}
+  .lockwrap{display:flex;align-items:center;gap:13px;margin-top:13px;padding-top:13px;border-top:1px solid var(--line-2)}
+  .lockring{width:48px;height:48px;flex:0 0 auto}
+  .lockmeta .v{font-family:var(--mono);font-size:18px;color:var(--ink);line-height:1}
+  .lockmeta .k{font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted-2);margin-top:4px}
+
+  /* status pill, top-left */
+  .statuswrap{position:absolute;left:max(14px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));z-index:14;
+    display:none;gap:9px;align-items:center;pointer-events:none}
+  .statuswrap.show{display:flex;animation:fadeIn .45s ease both}
+  .brandmini{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:10px;background:var(--panel);
+    border:1px solid var(--line);backdrop-filter:blur(14px)}
+  .brandmini .glyph{width:20px;height:20px}
+  .brandmini .nm{font-size:13px;font-weight:600;letter-spacing:.03em}
+  .brandmini .nm b{color:var(--live)}
+  .status{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;
+    text-transform:uppercase;padding:8px 11px;border-radius:10px;border:1px solid var(--line);color:var(--muted);
+    background:var(--panel);backdrop-filter:blur(14px);white-space:nowrap}
+  .status .dot{width:6px;height:6px;border-radius:50%;background:var(--faint)}
+  .status[data-state="live"]{color:var(--live);border-color:var(--live-dim)}
+  .status[data-state="live"] .dot{background:var(--live);box-shadow:0 0 9px var(--live);animation:pls 1.5s infinite}
+  .status[data-state="off"]{color:var(--brand)}
+  .status[data-state="off"] .dot{background:var(--brand)}
+
+  /* ================= CONTROLS (bottom center) ================= */
+  .controls{position:absolute;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:14;
+    display:none;align-items:center;gap:13px;pointer-events:none}
+  .controls.show{display:flex;animation:fadeIn .45s ease both;pointer-events:auto}
+  .feedbtn{display:flex;align-items:center;gap:12px;padding:14px 20px;border-radius:13px;border:1px solid var(--line);
+    background:var(--panel);backdrop-filter:blur(16px);transition:.16s;box-shadow:0 10px 34px rgba(0,0,0,.42)}
+  .feedbtn:hover{transform:translateY(-2px)}
+  .feedbtn:active{transform:translateY(0) scale(.985)}
+  .feedbtn .ic{width:30px;height:30px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:9px}
+  .feedbtn .t{text-align:left}
+  .feedbtn .t .big{font-size:15px;font-weight:600}
+  .feedbtn .t .sm{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--muted-2);text-transform:uppercase;margin-top:2px}
+  .feedbtn.easier .ic{background:rgba(240,171,108,.15);color:var(--brand)}
+  .feedbtn.easier:hover{box-shadow:0 0 0 1px var(--brand-dim) inset,0 10px 34px rgba(0,0,0,.42)}
+  .feedbtn.harder .ic{background:rgba(134,166,224,.15);color:var(--cool)}
+  .feedbtn.harder:hover{box-shadow:0 0 0 1px #2c3a52 inset,0 10px 34px rgba(0,0,0,.42)}
+  .stopbtn{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:13px 15px;border-radius:11px;
+    border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(16px);color:var(--muted);transition:.15s}
+  .stopbtn:hover{color:var(--ink);border-color:var(--line)}
+  .progress{position:absolute;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom)) + 86px);transform:translateX(-50%);
+    z-index:14;text-align:center;display:none;pointer-events:none;width:300px;max-width:80vw}
+  .progress.show{display:block;animation:fadeIn .45s ease both}
+  .progress .ptxt{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2)}
+  .progress .pbar{height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
+  .progress .pbar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--live-dim),var(--live));transition:width .45s}
+
+  /* live science callout */
+  .callout{position:absolute;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom)) + 118px);transform:translateX(-50%) translateY(8px);
+    z-index:14;padding:9px 15px;border-radius:11px;background:rgba(12,11,16,.9);border:1px solid var(--line);
+    backdrop-filter:blur(14px);font-size:13px;opacity:0;transition:.35s;pointer-events:none;white-space:nowrap;max-width:90vw}
+  .callout.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .callout .ar{font-family:var(--mono);font-weight:600;margin-right:8px}
+  .callout .ar.up{color:var(--brand)} .callout .ar.dn{color:var(--cool)}
+  .callout .ref{font-family:var(--mono);font-size:10px;color:var(--muted-2);margin-left:9px}
+
+  /* hidden helpers the engine references (kept for contract; visually folded into HUD) */
+  #ambBar{display:none}
+  #condCount{display:none}
+
+  /* ================= PHASES (intro / calibrate / walkthrough / result) ================= */
+  .phase{position:absolute;inset:0;z-index:40;display:none;overflow-y:auto}
+  .phase.show{display:block}
+  .center{min-height:100%;display:flex;align-items:center;justify-content:center;padding:6vh 24px}
+
+  /* intro */
+  .intro-card{width:100%;max-width:1020px}
+  .introgrid{display:grid;grid-template-columns:1fr 1.06fr;gap:48px;align-items:center}
+  @media(max-width:900px){.introgrid{grid-template-columns:1fr;gap:30px}.introright{order:-1}}
+  .intro-top{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  .intro-top .glyph{width:40px;height:40px}
+  .intro-top .nm{font-size:18px;font-weight:600;letter-spacing:.03em}
+  .intro-top .nm b{color:var(--live)}
+  .intro-top .nm .s{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-top:3px;font-weight:400}
+  .intro-card h1{font-weight:600;font-size:clamp(30px,4.4vw,46px);line-height:1.06;letter-spacing:-.022em;margin-bottom:18px}
+  .intro-card h1 .hi{color:var(--brand)}
+  .intro-card h1 .hi2{font-family:var(--read);font-style:italic;font-weight:500;color:var(--live)}
+  .hook{font-size:clamp(15px,2vw,17px);line-height:1.55;color:var(--muted);max-width:560px;margin-bottom:8px}
+  .hook b{color:var(--ink);font-weight:500}
+  .subhook{font-size:15px;line-height:1.55;color:var(--muted);max-width:560px;margin-bottom:14px}
+  .subhook b{color:var(--ink);font-weight:500}
+  .credline{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--muted-2);margin-bottom:22px}
+  .methodline{font-family:var(--mono);font-size:11px;letter-spacing:.02em;color:var(--muted-2);line-height:1.85;margin:22px 0}
+  .methodline b{color:var(--muted);font-weight:500}
+  details.science{border:1px solid var(--line);border-radius:10px;margin:8px 0 22px;background:rgba(18,16,22,.5)}
+  details.science summary{list-style:none;padding:14px 17px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;user-select:none}
+  details.science summary::-webkit-details-marker{display:none}
+  details.science summary .pl{margin-left:auto;font-family:var(--mono);color:var(--muted-2);transition:.2s}
+  details.science[open] summary .pl{transform:rotate(45deg)}
+  details.science .body{padding:0 17px 17px;border-top:1px solid var(--line-2)}
+  details.science .body p{font-size:13px;line-height:1.6;color:var(--muted);margin:13px 0 0}
+  details.science .body p b{color:var(--ink);font-weight:500}
+  details.science .refs{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-top:13px;line-height:1.7}
+  .papers{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-2)}
+  .papers-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--live);margin-bottom:10px}
+  .papers-h ~ .papers-h{margin-top:18px}
+  .papersnote{font-size:11.5px;line-height:1.55;color:var(--muted-2);margin-top:14px}
+  .paper{display:grid;grid-template-columns:1fr auto;grid-auto-rows:auto;gap:1px 10px;align-items:baseline;
+    text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:8px;margin-bottom:7px;transition:.15s;background:rgba(255,255,255,.012)}
+  .paper:hover{border-color:var(--live-dim);background:rgba(67,224,196,.05)}
+  .paper .pt{font-size:13px;color:var(--ink);font-weight:500}
+  .paper .pc{grid-column:1;font-family:var(--mono);font-size:10.5px;color:var(--muted-2)}
+  .paper .parr{grid-column:2;grid-row:1/3;align-self:center;color:var(--muted-2);font-size:13px}
+  .paper:hover .parr{color:var(--live)}
+  .consent{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;
+    background:rgba(18,16,22,.5);margin-bottom:18px;cursor:pointer}
+  .consent input{width:20px;height:20px;margin-top:1px;accent-color:var(--live);flex:0 0 auto;cursor:pointer}
+  .consent .t{font-size:13px;line-height:1.5;color:var(--muted)}
+  .consent .t b{color:var(--ink);font-weight:500}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn{appearance:none;font-weight:600;font-size:15px;border-radius:11px;padding:16px 26px;display:inline-flex;align-items:center;gap:11px;transition:.18s}
+  .btn--primary{background:var(--live);color:#04130f}
+  .btn--primary:hover{box-shadow:0 12px 34px rgba(67,224,196,.3);transform:translateY(-1px)}
+  .btn--primary:disabled{background:var(--faint);color:var(--muted-2);cursor:not-allowed;box-shadow:none;transform:none}
+  .btn--ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+  .btn--ghost:hover{box-shadow:inset 0 0 0 1px var(--muted-2)}
+  .privacy{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-top:18px;letter-spacing:.03em;display:flex;align-items:center;gap:8px}
+  .privacy .lk{width:13px;height:13px}
+  .camnote{font-family:var(--mono);font-size:11px;letter-spacing:.02em;color:var(--muted-2);max-width:230px;line-height:1.45}
+
+  /* intro instrument preview — the field, alive, being tuned */
+  .pvi{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:4/3;border:1px solid var(--line);
+    box-shadow:0 36px 90px rgba(0,0,0,.6);background:#0a0812}
+  .pvi .sky{position:absolute;inset:0;animation:huntsky 8s ease-in-out infinite}
+  .pvi .orb{position:absolute;width:34px;height:34px;border-radius:50%;left:50%;top:50%;
+    background:radial-gradient(circle,#fff,rgba(255,220,180,0) 70%);box-shadow:0 0 40px 8px rgba(255,225,190,.7);
+    animation:orbit 7s ease-in-out infinite}
+  .pvi .ring{position:absolute;width:62px;height:62px;border-radius:50%;border:1.5px solid rgba(67,224,196,.7);
+    left:50%;top:50%;animation:orbit 7s ease-in-out infinite,ringpulse 1.4s ease-in-out infinite}
+  .pvi .tk{position:absolute;width:13px;height:13px;z-index:3;opacity:.6}
+  .pvi .tk.tl{top:11px;left:11px;border-top:1.5px solid var(--live);border-left:1.5px solid var(--live)}
+  .pvi .tk.br{bottom:11px;right:11px;border-bottom:1.5px solid var(--live);border-right:1.5px solid var(--live)}
+  .pvi .pcorner{position:absolute;top:12px;right:14px;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;color:rgba(255,255,255,.55);z-index:3}
+  .pvi .pscope{position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(180deg,transparent,rgba(5,7,11,.85));z-index:3}
+  .pvi .pscope svg{position:absolute;inset:auto 0 6px 0;width:200%;height:26px;animation:drift 7s linear infinite}
+  .pvi .pscope .lb{position:absolute;left:12px;bottom:7px;font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2)}
+  .pvi .pscope .lb .lv{color:var(--live)}
+  @keyframes huntsky{
+    0%,100%{background:radial-gradient(120% 90% at 30% 20%,#5a3c2a,transparent 60%),linear-gradient(160deg,#1a1012,#0c1620);filter:brightness(.7) contrast(.9) saturate(.85)}
+    38%{background:radial-gradient(120% 90% at 50% 20%,#3a3a44,transparent 60%),linear-gradient(160deg,#16151c,#0c1418);filter:brightness(.92) contrast(1) saturate(.95)}
+    66%{background:radial-gradient(120% 90% at 70% 20%,#2a4a64,transparent 60%),linear-gradient(160deg,#101826,#0a1420);filter:brightness(1.12) contrast(1.2) saturate(1.12)}
+  }
+  @keyframes orbit{0%{transform:translate(-50%,-50%)}25%{transform:translate(40px,-30px)}50%{transform:translate(20px,34px)}75%{transform:translate(-44px,10px)}100%{transform:translate(-50%,-50%)}}
+  @keyframes ringpulse{50%{transform-origin:center;box-shadow:0 0 0 3px rgba(67,224,196,.12)}}
+  @keyframes drift{to{transform:translateX(-50%)}}
+
+  /* calibrate */
+  .calib{text-align:center;max-width:440px}
+  .calib h2{font-size:clamp(22px,3vw,30px);font-weight:600;letter-spacing:-.01em;margin-bottom:12px}
+  .calib p{color:var(--muted);font-size:15px;line-height:1.5;margin-bottom:32px}
+  .calring{width:150px;height:150px;margin:0 auto 24px}
+  .calreadout{display:inline-flex;gap:22px;font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em}
+  .calreadout b{color:var(--live);font-weight:500}
+
+  /* walkthrough coach-marks */
+  #walkthrough{background:transparent;pointer-events:none}
+  #walkthrough.show{pointer-events:auto}
+  .spotlight{position:absolute;border-radius:14px;pointer-events:none;z-index:41;
+    box-shadow:0 0 0 2px var(--live),0 0 0 9999px rgba(5,4,7,.74);
+    transition:left .35s cubic-bezier(.4,0,.2,1),top .35s cubic-bezier(.4,0,.2,1),width .35s,height .35s}
+  .spotpulse{position:absolute;border-radius:16px;pointer-events:none;z-index:41;border:1.5px solid var(--live);
+    animation:spotpulse 1.6s ease-out infinite}
+  @keyframes spotpulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.12);opacity:0}}
+  .coach{position:absolute;max-width:290px;background:var(--panel-solid);border:1px solid var(--live-dim);border-radius:12px;
+    padding:16px 17px;box-shadow:0 20px 50px rgba(0,0,0,.55);z-index:43;pointer-events:auto;
+    transition:left .35s cubic-bezier(.4,0,.2,1),top .35s cubic-bezier(.4,0,.2,1)}
+  .coach::after{content:"";position:absolute;width:11px;height:11px;background:var(--panel-solid);
+    border:1px solid var(--live-dim);border-right:none;border-bottom:none;}
+  .coach[data-ar="down"]::after{left:calc(50% - 6px);bottom:-6px;transform:rotate(225deg)}
+  .coach[data-ar="up"]::after{left:calc(50% - 6px);top:-6px;transform:rotate(45deg)}
+  .coach[data-ar="right"]::after{right:-6px;top:24px;transform:rotate(135deg)}
+  .coach[data-ar="left"]::after{left:-6px;top:24px;transform:rotate(-45deg)}
+  .coach[data-ar="none"]::after{display:none}
+  .coach .step{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--live);margin-bottom:8px}
+  .coach h3{font-size:15px;font-weight:600;margin-bottom:7px}
+  .coach p{font-size:13px;line-height:1.5;color:var(--muted)}
+  .coach .nav{display:flex;justify-content:space-between;align-items:center;margin-top:15px}
+  .coach .nav .dots{display:flex;gap:6px}
+  .coach .nav .dots i{width:6px;height:6px;border-radius:50%;background:var(--faint)}
+  .coach .nav .dots i.on{background:var(--live)}
+  .coach .nav button{font-family:var(--mono);font-size:12px;color:var(--live)}
+  .coach .skip{font-family:var(--mono);font-size:11px;color:var(--muted-2);background:none}
+  .coach .skip:hover{color:var(--muted)}
+
+  /* hold-or-tap hint during a held setting */
+  .holdhint{position:absolute;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom)) + 150px);transform:translateX(-50%) translateY(8px);
+    z-index:13;font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted-2);
+    display:none;align-items:center;gap:8px;white-space:nowrap}
+  .holdhint.show{display:flex;animation:fadeIn .4s ease both}
+  .holdhint b{color:var(--brand);font-weight:500}
+
+  /* result */
+  #result .center{align-items:flex-start;padding-top:5vh;padding-bottom:6vh}
+  .report{width:100%;max-width:940px}
+  .report .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--live);margin-bottom:14px;display:flex;align-items:center;gap:9px}
+  .report .eyebrow .x{width:7px;height:7px;border-radius:50%;background:var(--live);display:inline-block}
+  .report h2{font-weight:600;font-size:clamp(26px,4vw,42px);line-height:1.1;letter-spacing:-.02em;margin-bottom:10px}
+  .report h2 .hl{color:var(--brand)}
+  .report .lede{color:var(--muted);font-size:16px;line-height:1.5;max-width:640px;margin-bottom:28px}
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px}
+  @media(max-width:680px){.ba{grid-template-columns:1fr}}
+  .ba .cell .cap{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+  .ba .cell .cap .t{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2)}
+  .ba .cell .cap .t.after{color:var(--brand)}
+  .ba .cell .cap .v{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .ba .surf{aspect-ratio:16/10;border-radius:10px;overflow:hidden;position:relative;border:1px solid var(--line)}
+  .ba .surf .mini{position:absolute;inset:0;padding:20px 22px;transition:.45s cubic-bezier(.4,0,.2,1)}
+  .ba .surf .mini .h{font-family:var(--read);font-weight:600;font-size:18px;margin-bottom:11px;letter-spacing:-.01em}
+  .ba .surf .mini .bodytxt{font-family:var(--read);font-size:13.5px;line-height:1.62}
+  .ba .surf .minitint{position:absolute;inset:0;pointer-events:none;z-index:2;background:rgba(0,0,0,0);transition:.45s}
+  .ba .cell.after .surf{box-shadow:0 0 0 1px var(--brand-dim),0 16px 40px rgba(240,171,108,.16)}
+  /* aura-card dashboard (rondesignlab-style: squircle + deep radial bloom + big number) */
+  .auragrid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:16px}
+  @media(max-width:620px){.auragrid{grid-template-columns:1fr}}
+  .acard{position:relative;border-radius:28px;padding:20px 22px;min-height:152px;overflow:hidden;color:#fff;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),0 22px 50px rgba(0,0,0,.42);
+    display:flex;flex-direction:column;justify-content:space-between}
+  .acard.hero{grid-column:1/-1;min-height:172px}
+  .acard .alabel{font-size:14px;font-weight:500;color:rgba(255,255,255,.82);position:relative;z-index:2}
+  .acard .abig{font-family:var(--ui);font-weight:600;font-size:42px;line-height:1;letter-spacing:-.025em;position:relative;z-index:2}
+  .acard .abig.lbl{font-size:28px;margin-bottom:2px}
+  .acard .hcol{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .acard .abig .au{font-size:17px;font-weight:500;color:rgba(255,255,255,.6);margin-left:5px;letter-spacing:0}
+  .acard .aunit{font-size:12.5px;color:rgba(255,255,255,.58);position:relative;z-index:2;margin-top:5px}
+  .acard .arow{display:flex;align-items:center;justify-content:space-between;gap:14px;position:relative;z-index:2}
+  /* radial-bloom fills */
+  .acard.hero{background:radial-gradient(120% 150% at 12% 120%,rgba(255,205,180,.55),transparent 52%),linear-gradient(145deg,#b98c97,#79667f)}
+  .acard.green{background:radial-gradient(65% 75% at 50% 58%,#0a2620,transparent 72%),linear-gradient(155deg,#7d9a8c,#3f574d)}
+  .acard.pink{background:radial-gradient(58% 62% at 50% 48%,#1c0512,transparent 70%),radial-gradient(130% 130% at 50% 50%,#ff5aa6,#aa2c6c)}
+  .acard.blue{background:radial-gradient(58% 64% at 50% 54%,#1f3bff,transparent 60%),linear-gradient(160deg,#15224c,#0a1130)}
+  .acard.orange{background:radial-gradient(48% 54% at 72% 70%,#3550ff,transparent 56%),linear-gradient(150deg,#d9743a,#9a4824)}
+  /* dotted ring gauge */
+  .acard .ring{position:relative;width:88px;height:88px;flex:0 0 auto}
+  .acard .ring svg{width:100%;height:100%}
+  .acard .ring .rdash{fill:none;stroke:rgba(255,255,255,.55);stroke-width:2.4;stroke-dasharray:1.5 6.5;stroke-linecap:round}
+  .acard .ring .rcenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .acard .ring .rnum{font-family:var(--mono);font-size:22px;letter-spacing:.04em;color:#fff}
+  .acard .ring .rlbl{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:2px}
+  /* gradient slider + triangle marker */
+  .acard .slider{position:relative;height:8px;border-radius:6px;margin:6px 0 4px;
+    background:linear-gradient(90deg,#f0ab6c,#e9e3da 50%,#86a6e0)}
+  .acard .slider .marker{position:absolute;top:-7px;width:0;height:0;transform:translateX(-50%);
+    border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #eafff7;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+  /* dot row */
+  .acard .dots{display:flex;gap:7px;align-items:center;position:relative;z-index:2;margin:4px 0}
+  .acard .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}
+  .acard .dots i.on{background:#fff;box-shadow:0 0 8px rgba(255,255,255,.7)}
+  .takeaway{border:1px solid var(--line);border-radius:11px;padding:18px 20px;background:rgba(18,16,22,.5);margin-bottom:14px}
+  .takeaway .row{display:flex;gap:13px;align-items:flex-start}
+  .takeaway .row + .row{margin-top:14px;padding-top:14px;border-top:1px solid var(--line-2)}
+  .takeaway .ic{width:22px;height:22px;flex:0 0 auto;color:var(--live);margin-top:1px}
+  .takeaway .ic.cor{color:var(--brand)}
+  .takeaway .tx{font-size:14.5px;line-height:1.55;color:var(--muted)}
+  .takeaway .tx .em{color:var(--ink);font-weight:500}
+  .ractions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+  .ractions .btn{font-size:14px;padding:14px 20px}
+  .resnote{font-size:12px;line-height:1.55;color:var(--muted-2);margin-top:16px;max-width:620px}
+  .obsblock,.install{border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:16px;background:rgba(18,16,22,.5)}
+  .obs-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--live);margin-bottom:14px}
+  .obsrow{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line-2)}
+  .obsrow:first-of-type{border-top:none;padding-top:0}
+  .obsrow .oic{width:20px;height:20px;flex:0 0 auto;color:var(--brand);margin-top:2px}
+  .obsrow .otx{font-size:14px;line-height:1.5;color:var(--ink)}
+  .obsrow .otx .cite{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-top:4px;letter-spacing:.02em}
+  .obs-foot{font-size:11.5px;line-height:1.55;color:var(--muted-2);margin-top:13px}
+  .install .steps{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:12px}
+  .install .steps li{counter-increment:s;position:relative;padding-left:34px;font-size:14px;line-height:1.5;color:var(--muted)}
+  .install .steps li b{color:var(--ink);font-weight:600}
+  .install .steps li em{font-style:normal;color:var(--brand);font-weight:500}
+  .install .steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:23px;height:23px;border-radius:7px;
+    background:rgba(67,224,196,.12);color:var(--live);font-family:var(--mono);font-size:12px;display:flex;align-items:center;justify-content:center}
+  .install .mono2{font-family:var(--mono);font-size:12.5px;color:var(--ink);background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px}
+
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(16px);z-index:60;
+    background:var(--panel-solid);border:1px solid var(--line);border-radius:10px;padding:12px 20px;font-size:13px;
+    opacity:0;transition:.3s;pointer-events:none;box-shadow:0 14px 40px rgba(0,0,0,.5);font-family:var(--mono);letter-spacing:.02em}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (prefers-reduced-motion: reduce){
+    .blob,.pvi .sky,.pvi .orb,.pvi .ring,.pvi .pscope svg{animation:none!important}
+    *{transition-duration:.12s!important}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== THE TUNABLE FIELD ===== -->
+  <div id="stage">
+    <div id="mv-surface">
+      <div class="blob" id="bA"></div><div class="blob" id="bB"></div>
+      <div class="blob" id="bC"></div><div class="blob" id="bD"></div>
+    </div>
+    <div id="toneWash"></div>
+    <div id="grain"></div>
+    <div id="vign"></div>
+    <canvas id="mv-track"></canvas>
+  </div>
+
+  <!-- status / brand (top-left) -->
+  <div class="statuswrap" id="statuswrap">
+    <div class="brandmini">
+      <svg class="glyph" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/><ellipse cx="20" cy="20" rx="17" ry="9" stroke="#43e0c4" stroke-width="1.5"/><circle cx="20" cy="20" r="5.5" fill="#43e0c4"/><circle cx="20" cy="20" r="2.3" fill="#04130f"/></svg>
+      <div class="nm">mellow<b>vision</b></div>
+    </div>
+    <div class="status" id="statusPill" data-state="idle"><span class="dot"></span><span id="statusTxt">standby · on-device</span></div>
+  </div>
+
+  <!-- hunting indicator (top-center) -->
+  <div class="hunt" id="hunt">
+    <div class="lead">
+      <div class="t"><span class="pls"></span> Finding your easiest light</div>
+      <div class="nm" id="surfTag">—</div>
+    </div>
+    <div class="meters">
+      <div class="meter contrast"><div class="mh"><span>Contrast</span><b id="mC">—</b></div><div class="bar"><i id="mCb"></i></div></div>
+      <div class="meter luma"><div class="mh"><span>Bright</span><b id="mL">—</b></div><div class="bar"><i id="mLb"></i></div></div>
+      <div class="meter tone"><div class="mh"><span>Warmth</span><b id="mT">—</b></div><div class="bar"><i id="mTb"></i></div></div>
+      <div class="meter sat"><div class="mh"><span>Colour</span><b id="mS">—</b></div><div class="bar"><i id="mSb"></i></div></div>
+    </div>
+  </div>
+  <span id="condCount">—</span>
+
+  <!-- instrument: camera + scope + readouts (top-right) -->
+  <div class="inst" id="inst">
+    <div class="cam-shell">
+      <video id="mv-cam" autoplay muted playsinline></video>
+      <canvas id="mv-camoverlay"></canvas>
+      <div class="cam-grid"></div>
+      <div class="cam-empty" id="camEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <div class="t">your eyes appear here</div>
+      </div>
+    </div>
+    <div class="scope-shell">
+      <canvas id="mv-scope"></canvas>
+      <span class="scope-tag" title="eye-aspect ratio (EAR) · palpebral aperture">squint · live</span>
+      <div class="scope-empty" id="scopeEmpty">awaiting signal</div>
+    </div>
+    <div class="readout">
+      <div class="readrow" title="eye-aspect ratio (EAR) — lower = more squint"><span class="k">squint</span><span class="v num" id="rEar">—</span></div>
+      <div class="readrow"><span class="k">gaze</span><span class="v num" id="rGaze">—</span></div>
+      <div class="readrow"><span class="k">blinks</span><span class="v num" id="rBlink">—</span></div>
+      <div class="readrow" title="room light measured from your webcam"><span class="k">room light</span><span class="v num" id="rAmbient">—</span></div>
+    </div>
+  </div>
+  <i id="ambBar"></i>
+
+  <!-- evidence + lock (bottom-right) -->
+  <div class="evibox" id="evibox">
+    <div class="head"><span class="lbl">Adaptive evidence</span><span class="tag" id="eviTag">idle</span></div>
+    <div class="evi" id="eviList"></div>
+    <div class="lockwrap">
+      <svg class="lockring" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="4.5"/>
+        <circle id="lockArc" cx="24" cy="24" r="20" fill="none" stroke="#f0ab6c" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6" transform="rotate(-90 24 24)"/></svg>
+      <div class="lockmeta"><div class="v num" id="lockPct">0/6</div><div class="k">reversals</div></div>
+    </div>
+  </div>
+  <span id="camTag" style="display:none"></span><span id="scopeTag" style="display:none"></span><span id="ambTag" style="display:none"></span>
+
+  <!-- live science callout -->
+  <div class="callout" id="callout"></div>
+
+  <!-- progress + controls (bottom-center) -->
+  <div class="progress" id="progress"><div class="ptxt" id="progTxt">—</div><div class="pbar"><i id="progBar"></i></div></div>
+  <div class="holdhint" id="holdHint">follow the light — tap <b>Uncomfortable</b> the moment it strains (it eases at once), or <b>Comfortable</b> to edge a little crisper. Hold and your squint decides.</div>
+  <div class="controls" id="controls">
+    <button class="feedbtn easier" id="easierBtn">
+      <span class="ic"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7 7 7-7"/></svg></span>
+      <span class="t"><span class="big">Uncomfortable</span><span class="sm">ease it · dimmer · warmer · softer</span></span>
+    </button>
+    <button class="stopbtn" id="stopBtn">■ rest</button>
+    <button class="feedbtn harder" id="harderBtn">
+      <span class="ic"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
+      <span class="t"><span class="big">Comfortable</span><span class="sm">feels easy · edge a little crisper</span></span>
+    </button>
+  </div>
+
+  <!-- ===== INTRO ===== -->
+  <div class="phase show" id="intro">
+    <div class="center"><div class="intro-card"><div class="introgrid">
+      <div class="introleft">
+        <div class="intro-top">
+          <svg class="glyph" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/><ellipse cx="20" cy="20" rx="17" ry="9" stroke="#43e0c4" stroke-width="1.5"/><circle cx="20" cy="20" r="5.5" fill="#43e0c4"/><circle cx="20" cy="20" r="2.3" fill="#04130f"/></svg>
+          <div class="nm">mellow<b>vision</b><span class="s">ocular-comfort instrument</span></div>
+        </div>
+        <h1>Follow the light. Your eyes tune the screen to <span class="hi">least strain</span> — <span class="hi2">live</span>.</h1>
+        <p class="hook">Every blue-light filter and night-mode ships one generic setting to millions — MellowVision is the only screen tint <b>measured to your own eyes</b>.</p>
+        <p class="subhook">It watches your eyes relax or tighten as the light shifts, then keeps the one that’s easiest for you. Your camera never leaves your device.</p>
+        <p class="credline">on-device face-mesh · squint + blink · adaptive staircase · contrast + colour</p>
+        <details class="science">
+          <summary>The science, in full <span class="pl mono">+</span></summary>
+          <div class="body">
+            <p><b>Why colour isn’t arbitrary.</b> Photophobia tracks a specific retinal pathway: melanopsin-expressing ipRGCs (peak ≈479&nbsp;nm) plus cone contributions converge on thalamic trigeminovascular neurons. So a comfort-aware filter has a principled spectral target — not a generic “blue-light block.”</p>
+            <p><b>What a webcam can honestly measure.</b> Reflexive squint (palpebral-aperture ratio) and blink are validated, camera-readable correlates of light discomfort. We read them from face landmarks (EAR). They’re <em>comfort proxies, not diagnostics</em> — bidirectional and confounded by load, dryness and fatigue — so fine fixation/saccade metrics below the webcam noise floor are deliberately excluded.</p>
+            <p><b>Contrast is the stronger axis.</b> Contrast sensitivity is a validated construct (Pelli-Robson, quick&nbsp;CSF) causally tied to oculomotor performance — higher contrast shortens saccade latency and raises smooth-pursuit gain. The follow-the-light tasks use exactly those effects to probe your response while it tunes contrast and colour.</p>
+            <p><b>How it converges.</b> One honest question — comfortable or not? “Uncomfortable” eases the light; “comfortable” edges it crisper. That runs a transformed up-down adaptive staircase (Cornsweet 1962; Levitt 1971) — the family behind Békésy audiometry and quick&nbsp;CSF — anchored by the objective squint/blink signal, which fixes the poor repeatability of subjective-only tint selection. It settles where comfortable and uncomfortable meet: your most comfortable usable setting.</p>
+            <p><b>Honest scope.</b> Generic blue-light filters “probably make no difference” (Cochrane 2023); “precision-tint” reading claims are placebo-equivalent. MellowVision personalizes the <em>environment</em> to your stated &amp; observed comfort — it does not diagnose, treat, or prescribe. Wellness/accessibility-grade only.</p>
+
+            <div class="papers">
+              <div class="papers-h">Mechanism — why colour isn’t arbitrary</div>
+              <a class="paper" href="https://doi.org/10.1098/rspb.2012.2987" target="_blank" rel="noopener">
+                <span class="pt">Human melanopsin maximally sensitive at ≈479&nbsp;nm</span><span class="pc">Bailes &amp; Lucas, 2013 · Proc R Soc B</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://pubmed.ncbi.nlm.nih.gov/20062053/" target="_blank" rel="noopener">
+                <span class="pt">A neural mechanism for exacerbation of headache by light</span><span class="pc">Noseda et al., 2010 · Nature Neuroscience</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://pubmed.ncbi.nlm.nih.gov/27190022/" target="_blank" rel="noopener">
+                <span class="pt">Migraine photophobia originating in cone-driven pathways</span><span class="pc">Noseda et al., 2016 · Brain</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://pubmed.ncbi.nlm.nih.gov/33040593/" target="_blank" rel="noopener">
+                <span class="pt">Melanopsin hypersensitivity dominates interictal photophobia</span><span class="pc">Zele, Dey, Adhikari &amp; Feigl, 2021 · Cephalalgia</span><span class="parr">↗</span></a>
+
+              <div class="papers-h">The webcam-measurable correlate — squint &amp; blink</div>
+              <a class="paper" href="https://pubmed.ncbi.nlm.nih.gov/17632310/" target="_blank" rel="noopener">
+                <span class="pt">Eyelid squint response to asthenopia-inducing conditions</span><span class="pc">Gowrisankaran, Sheedy &amp; Hayes, 2007 · Optom Vis Sci</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://doi.org/10.1212/WNL.0000000000012734" target="_blank" rel="noopener">
+                <span class="pt">Reflexive eye closure as an objective measure of light sensitivity</span><span class="pc">Kaiser et al., 2021 · Neurology</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://pubmed.ncbi.nlm.nih.gov/19410958/" target="_blank" rel="noopener">
+                <span class="pt">FL-41 tint improves blink frequency &amp; light sensitivity</span><span class="pc">Blackburn et al., 2009 · Ophthalmology</span><span class="parr">↗</span></a>
+
+              <div class="papers-h">Contrast — the validated, tuned axis</div>
+              <a class="paper" href="https://pubmed.ncbi.nlm.nih.gov/16097876/" target="_blank" rel="noopener">
+                <span class="pt">Effects of contrast on smooth-pursuit eye movements</span><span class="pc">Spering, Kerzel, Braun, Hawken &amp; Gegenfurtner, 2005 · J Vis</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://pubmed.ncbi.nlm.nih.gov/15358075/" target="_blank" rel="noopener">
+                <span class="pt">Influence of spatial frequency &amp; contrast on saccade latency</span><span class="pc">Ludwig, Gilchrist &amp; McSorley, 2004 · Vision Research</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://doi.org/10.1167/10.3.17" target="_blank" rel="noopener">
+                <span class="pt">Bayesian adaptive estimation of the CSF (quick&nbsp;CSF)</span><span class="pc">Lesmes, Lu, Baek &amp; Albright, 2010 · J Vis</span><span class="parr">↗</span></a>
+
+              <div class="papers-h">Method &amp; honest boundaries</div>
+              <a class="paper" href="https://doi.org/10.1121/1.1912375" target="_blank" rel="noopener">
+                <span class="pt">Transformed up-down (staircase) methods</span><span class="pc">Levitt, 1971 · J Acoust Soc Am</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://doi.org/10.1002/14651858.CD013244.pub2" target="_blank" rel="noopener">
+                <span class="pt">Blue-light-filtering lenses “probably make no difference”</span><span class="pc">Singh &amp; Downie et al., 2023 · Cochrane Review</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://doi.org/10.1111/opo.12388" target="_blank" rel="noopener">
+                <span class="pt">Coloured overlays / precision tints: poor repeatability</span><span class="pc">Suttle, Lawrenson &amp; Conway, 2017 · Ophthalmic Physiol Opt</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://pubmed.ncbi.nlm.nih.gov/37648844/" target="_blank" rel="noopener">
+                <span class="pt">Validation of online webcam-based eye-tracking (attenuated)</span><span class="pc">Prystauka, Altmann &amp; Rothman, 2024 · Behav Res Methods</span><span class="parr">↗</span></a>
+              <a class="paper" href="https://doi.org/10.1097/WNO.0000000000001556" target="_blank" rel="noopener">
+                <span class="pt">The unmet challenge of diagnosing &amp; treating photophobia</span><span class="pc">Buchanan, Digre, Warner &amp; Katz, 2022 · J Neuroophthalmol</span><span class="parr">↗</span></a>
+            </div>
+            <p class="papersnote">Full verified reference list, mechanism &amp; validation roadmap in the MellowVision white-paper (Lewis, 2026). All citations checked against primary sources.</p>
+          </div>
+        </details>
+        <label class="consent" id="consentBox">
+          <input type="checkbox" id="consentChk" />
+          <span class="t"><b>Use my webcam for this session, on this device only.</b> Frames are processed in the browser to read squint &amp; gaze. Nothing is recorded or uploaded.</span>
+        </label>
+        <div class="cta-row">
+          <button class="btn btn--primary" id="beginBtn" disabled>Begin — follow the light</button>
+          <span class="camnote" id="camNote">Needs your camera — this is eye tracking, not a mouse demo.</span>
+        </div>
+        <button type="button" id="noCamBtn" style="background:none;border:none;padding:6px 0 0;margin:0;color:var(--muted-2);font:inherit;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Explore without a camera (taps only — no eye measurement)</button>
+        <div class="privacy"><svg class="lk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> Runs entirely in your browser — no frames leave this device · no GPU needed.</div>
+      </div>
+
+      <div class="introright">
+        <div class="pvi">
+          <div class="sky"></div>
+          <span class="tk tl"></span><span class="tk br"></span>
+          <div class="ring"></div>
+          <div class="orb"></div>
+          <span class="pcorner" id="pviTag">TUNING…</span>
+          <div class="pscope">
+            <svg viewBox="0 0 640 26" preserveAspectRatio="none" fill="none"><path d="M0 13 H120 q8 0 12 9 q4 -9 12 -9 H300 q8 0 12 9 q4 -9 12 -9 H440 q8 0 12 9 q4 -9 12 -9 H640" stroke="#43e0c4" stroke-width="1.4" stroke-linejoin="round" opacity=".9"/></svg>
+            <span class="lb">palpebral aperture <span class="lv">● live · on-device</span></span>
+          </div>
+        </div>
+      </div>
+    </div></div></div>
+  </div>
+
+  <!-- ===== CALIBRATE ===== -->
+  <div class="phase" id="calibrate">
+    <div class="center"><div class="calib">
+      <svg class="calring" viewBox="0 0 150 150" fill="none">
+        <circle cx="75" cy="75" r="64" stroke="rgba(255,255,255,.1)" stroke-width="6"/>
+        <circle id="calArc" cx="75" cy="75" r="64" stroke="#43e0c4" stroke-width="6" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402" transform="rotate(-90 75 75)"/>
+        <circle cx="75" cy="75" r="3" fill="#43e0c4"/>
+        <path d="M75 30v18M75 102v18M30 75h18M102 75h18" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/>
+      </svg>
+      <h2>Reading your room light</h2>
+      <p>Sit comfortably, facing the screen as you normally would. A few seconds — then keep your eyes on the glowing point.</p>
+      <div class="calreadout"><span>ambient <b id="calLux">—</b></span><span>calibration <b id="calPct">0%</b></span></div>
+    </div></div>
+  </div>
+
+  <!-- ===== WALKTHROUGH ===== -->
+  <div class="phase" id="walkthrough"></div>
+
+  <!-- ===== RESULT ===== -->
+  <div class="phase" id="result">
+    <div class="center"><div class="report">
+      <div class="eyebrow"><span class="x"></span> Assessment complete</div>
+      <h2>Least eye strain at <span class="hl" id="resLabel">—</span></h2>
+      <p class="lede" id="resLede">Your eyes settled most easily here — and stayed there as the instrument tried to push past it.</p>
+      <div class="auragrid">
+        <div class="acard hero">
+          <div class="alabel">Your easiest light</div>
+          <div class="arow">
+            <div class="hcol"><div class="abig lbl" id="acSetting">—</div><div class="aunit" id="acAxis">tuned to your eyes</div></div>
+            <div class="ring"><svg viewBox="0 0 88 88"><circle class="rdash" cx="44" cy="44" r="37"/></svg>
+              <div class="rcenter"><div class="rnum" id="acRing">—</div><div class="rlbl" id="acRingLbl">room light</div></div></div>
+          </div>
+        </div>
+        <div class="acard green">
+          <div class="alabel">Where you landed</div>
+          <div class="slider"><div class="marker" id="acMarker" style="left:50%"></div></div>
+          <div class="abig lbl" id="acAxisBig">—</div>
+        </div>
+        <div class="acard pink">
+          <div class="alabel">Comfort flips</div>
+          <div class="dots" id="acDots"></div>
+          <div class="abig" id="acFlips">—</div>
+        </div>
+        <div class="acard blue">
+          <div class="alabel">Your room light</div>
+          <div class="abig" id="acRoom">—</div>
+          <div class="aunit">measured on-device</div>
+        </div>
+        <div class="acard orange">
+          <div class="alabel">Blinks</div>
+          <div class="abig" id="acBlinks">—</div>
+          <div class="aunit">this session</div>
+        </div>
+      </div>
+      <div class="ba">
+        <div class="cell before">
+          <div class="cap"><span class="t">Before — the default screen</span><span class="v" id="beforeV">—</span></div>
+          <div class="surf"><div class="mini" id="beforeSurf"><div class="h">Reading, after dark</div><p class="bodytxt">This is the same paragraph on both screens. One is the light every display ships with by default. The other is the setting your eyes held with the least strain — so you can read for longer before they start to ache.</p></div></div>
+        </div>
+        <div class="cell after">
+          <div class="cap"><span class="t after">After — tuned to your eyes</span><span class="v" id="afterV">—</span></div>
+          <div class="surf"><div class="mini" id="afterSurf"><div class="h">Reading, after dark</div><p class="bodytxt">This is the same paragraph on both screens. One is the light every display ships with by default. The other is the setting your eyes held with the least strain — so you can read for longer before they start to ache.</p></div></div>
+        </div>
+      </div>
+      <div class="takeaway">
+        <div class="row"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.2 1 2.5h6c0-1.3.3-1.8 1-2.5A6 6 0 0 0 12 3Z"/><path d="M9 20h6M10 22h4"/></svg></span><div class="tx" id="takeawayTx">—</div></div>
+        <div class="row"><span class="ic cor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12l5 5L21 4"/></svg></span><div class="tx" id="corrobTx">—</div></div>
+      </div>
+
+      <div class="obsblock" id="obsBlock">
+        <div class="obs-h">What your eyes actually did</div>
+        <div id="obsList"></div>
+        <p class="obs-foot">Observations are drawn from your on-device squint, blink and tracking during the session, each grounded in the cited study. Webcam signals are gross comfort proxies, not a clinical measurement.</p>
+      </div>
+      <div class="ractions">
+        <button class="btn btn--primary" id="applyBtn">Apply to this tab</button>
+        <button class="btn btn--ghost" id="downloadBtn">Download recipe (.json)</button>
+        <button class="btn btn--ghost" id="saveBtn">Save image</button>
+        <button class="btn btn--ghost" id="replayBtn">Re-tune</button>
+      </div>
+      <p class="resnote" id="resNote">Measured on-device from your squint &amp; blink — a comfort signal, not a clinical eye exam. “Apply” tints this browser tab now; the download includes a bookmarklet to carry it to other sites.</p>
+
+      <div class="install">
+        <div class="obs-h">Get this on your screen</div>
+        <ol class="steps">
+          <li><b>This tab, now</b> — tap <em>Apply to this tab</em>. Your chosen contrast, brightness and tint cast over the whole page immediately, and stay until you reset.</li>
+          <li><b>Any site</b> — tap <em>Download recipe (.json)</em>. It holds your exact CSS filter + tint values <em>and a bookmarklet</em>: drag it to your bookmarks bar, click it on any page to apply your tint.</li>
+          <li><b>System-wide (roadmap)</b> — a colour/gamma profile that tunes every app, not just the browser, is the planned desktop step. Not available yet — today’s tool is a browser overlay.</li>
+        </ol>
+        <p class="obs-foot">Today this tunes a browser tab (and any site via the bookmarklet). A system-wide desktop path is on the roadmap, not shipped. Nothing is uploaded — your recipe stays on your device unless you choose to share it.</p>
+      </div>
+    </div></div>
+  </div>
+
+</div><!-- /app -->
+
+<div id="screenTint"></div>
+
+<div class="toast" id="toast"></div>
+<canvas id="cardCanvas" width="1080" height="1080" style="display:none"></canvas>
+
+<script>
+/* ============================================================================
+   MELLOWVISION — FRONT-END (design + playable experience)
+   Owns DOM + visuals + the animated pursuit/saccade flow, and exposes the
+   integration contract on window.MV. A built-in driver runs the whole loop
+   with mouse OR on-device MediaPipe gaze so it is fully playable standalone.
+   The moment a real engine (engine.js) calls any render hook, the built-in
+   driver yields and the engine drives the instrument with real measurements.
+
+   STUB HOOKS the engine overrides / feeds:
+     MV.onGaze(x,y)        normalized gaze 0..1   (built-in: camera iris or mouse)
+     MV.onAperture(ear)    eye-aspect ratio        (built-in: real camera EAR only — never synthesized)
+     MV.onBlink()          one per blink
+   ============================================================================ */
+(function(){
+  const byId = id => document.getElementById(id);
+  const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+  const lerp = (a,b,k)=> a+(b-a)*k;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MV = window.MV = window.MV || {};
+
+  /* ---------- (1) CONDITIONS — gentle (least strain) → harsh. Every dimension moves. ---------- */
+  MV.conditions = MV.conditions || [
+    { id:'dimwarm',   label:'Warm · dim · soft',     brightness:0.46, contrast:0.66, saturate:0.62, tone:'warm',    toneK:-1.0,
+      sky:['#5e3a24','#1c0f0a','#0c1620'], surfaceBg:'#e9dcc4', surfaceFg:'#5b5040' },
+    { id:'warmsoft',  label:'Warm · soft',           brightness:0.62, contrast:0.80, saturate:0.76, tone:'warm',    toneK:-0.62,
+      sky:['#5a4030','#19131a','#0c1420'], surfaceBg:'#f0e7d6', surfaceFg:'#473d2d' },
+    { id:'neutsoft',  label:'Neutral · soft',        brightness:0.80, contrast:0.93, saturate:0.90, tone:'neutral', toneK:-0.1,
+      sky:['#40384a','#16151c','#0c1418'], surfaceBg:'#ece9e3', surfaceFg:'#4a4944' },
+    { id:'coolsoft',  label:'Cool · soft',           brightness:0.96, contrast:1.08, saturate:1.04, tone:'cool',    toneK:0.42,
+      sky:['#2e455c','#121822','#0a1420'], surfaceBg:'#e7edf1', surfaceFg:'#434a50' },
+    { id:'neutbright',label:'Neutral · bright',      brightness:1.12, contrast:1.22, saturate:1.12, tone:'neutral', toneK:0.1,
+      sky:['#444a52','#15161a','#0c1014'], surfaceBg:'#f5f3ef', surfaceFg:'#2c2b27' },
+    { id:'coolbright',label:'Cool · bright · crisp', brightness:1.26, contrast:1.36, saturate:1.20, tone:'cool',    toneK:0.72,
+      sky:['#2a4a64','#101826','#0a1420'], surfaceBg:'#eef4f9', surfaceFg:'#20272e' },
+    { id:'standard',  label:'Standard · bright',     brightness:1.42, contrast:1.52, saturate:1.30, tone:'cool',    toneK:1.0,
+      sky:['#244a6a','#0e1a2a','#08121e'], surfaceBg:'#ffffff', surfaceFg:'#0f1217' },
+  ];
+  // Engine detect: when the real science engine (engine.js) is wired in, the built-in
+  // playable driver fully stands down so the two never collide. Standalone (no tag) → built-in runs.
+  let _eng=null; const enginePresent=()=>{ if(_eng===null) _eng = !!document.querySelector('script[src*="engine.js"]') || window.MV_USE_ENGINE===true; return _eng; };
+
+  /* ---------- tiny pub/sub ---------- */
+  MV._handlers = {};
+  MV.on = (ev,cb)=>{ (MV._handlers[ev]||(MV._handlers[ev]=[])).push(cb); return MV; };
+  MV.emit = function(ev){ const a=[].slice.call(arguments,1);
+    (MV._handlers[ev]||[]).forEach(cb=>{ try{cb.apply(null,a);}catch(e){console.warn('[MV]',ev,e);} }); };
+  MV.getConsent = ()=> !!byId('consentChk').checked;
+
+  /* ---------- (2) RENDER HOOKS the engine CALLS ---------- */
+  MV.renderCondition = function(c){
+    if(!c) return;
+    const s = byId('mv-surface');
+    s.style.filter = `brightness(${c.brightness??1}) contrast(${c.contrast??1}) saturate(${c.saturate??1})`;
+    if(c.sky){ s.style.background =
+      `radial-gradient(120% 90% at 30% 18%,${c.sky[0]},transparent 60%),`+
+      `radial-gradient(120% 100% at 80% 90%,${shade(c.sky[0],-30)},transparent 60%),`+
+      `linear-gradient(160deg,${c.sky[1]} 0%,${c.sky[2]} 100%)`; }
+    // warm/cool tone wash (toneK = numeric axis; tone = string for engine/result text)
+    const tone = (typeof c.toneK==='number') ? c.toneK : (c.tone==='warm'?-0.7:c.tone==='cool'?0.7:0);
+    byId('toneWash').style.background = tone<0
+      ? `rgba(255,${Math.round(150+tone*-12)},85,${Math.abs(tone)*0.58})`
+      : `rgba(86,148,255,${tone*0.5})`;
+    byId('surfTag').textContent = c.label||c.id||'';
+    byId('pviTag') && (byId('pviTag').textContent = (c.label||'').toUpperCase());
+    // bold hunting meters
+    setMeter('mC','mCb', c.contrast, 0.66,1.52);
+    setMeter('mL','mLb', c.brightness, 0.46,1.42);
+    toneMeter(tone);
+    setMeter('mS','mSb', c.saturate, 0.62,1.30);
+    MV._lastCond = c;
+    if(MV._phase==='assess' || MV._applied) applyScreen(c);   // tune the WHOLE screen during testing / after apply
+  };
+  // apply the chosen contrast/brightness/saturation + tint to the ENTIRE screen (real, visible change)
+  function applyScreen(c){
+    const b=c.brightness??1, ct=c.contrast??1, sa=c.saturate??1;
+    byId('app').style.filter=`brightness(${b}) contrast(${ct}) saturate(${sa})`;
+    const tk=(typeof c.toneK==='number')?c.toneK:(c.tone==='warm'?-0.7:c.tone==='cool'?0.7:0);
+    byId('screenTint').style.background = tk<0
+      ? `rgba(255,138,52,${(Math.abs(tk)*0.30).toFixed(3)})`
+      : `rgba(64,138,255,${(tk*0.26).toFixed(3)})`;
+  }
+  function clearScreen(){ if(MV._applied) return; byId('app').style.filter='none'; byId('screenTint').style.background='rgba(0,0,0,0)'; }
+  function setMeter(tId,bId,val,lo,hi){ const p=clamp((val-lo)/(hi-lo),0,1);
+    byId(bId).style.width=(p*100).toFixed(0)+'%'; byId(tId).textContent=(val).toFixed(2); }
+  function toneMeter(t){ const p=clamp((t+1)/2,0,1); byId('mTb').style.width=(p*100).toFixed(0)+'%';
+    byId('mT').textContent = t<-0.25?'warm':t>0.25?'cool':'neutral'; }
+  MV.renderProgress = function(p,label){ p=clamp(p||0,0,1);
+    byId('progBar').style.width=(p*100).toFixed(0)+'%'; if(label) byId('progTxt').textContent=label;
+    const m=/([0-9]+)\s*of\s*([0-9]+)/i.exec(label||''); if(m) byId('condCount').textContent=m[1]+' / '+m[2]; };
+
+  MV.renderInstrument = function(st){ st=st||{};
+    if(st.aperture!=null){ byId('rEar').textContent=Number(st.aperture).toFixed(3); pushScope(st.aperture); }
+    if(st.blinks!=null) byId('rBlink').textContent=st.blinks;
+    if(st.gaze) byId('rGaze').textContent=st.gaze.x.toFixed(2)+', '+st.gaze.y.toFixed(2);
+    if(st.ambient!=null){ byId('rAmbient').textContent=Math.round(st.ambient*100)+'%'; byId('ambBar').style.width=Math.round(st.ambient*100)+'%'; MV._ambient=st.ambient; }
+    if(st.evidence){ renderEvidence(st.evidence); MV._bestEv=Math.max.apply(null,st.evidence.map(e=>e.score||0)); }
+    if(st.lock!=null){ renderLock(st.lock); MV._lock=st.lock; }
+    if(st.aperture!=null) MV._lastAp=st.aperture;
+  };
+
+  const PHASES=['intro','calibrate','walkthrough','assess','result'];
+  MV.gotoPhase = function(name){
+    PHASES.forEach(p=>{ if(p==='assess') return; const el=byId(p); if(el) el.classList.toggle('show', p===name); });
+    const showHud = (name==='assess'||name==='walkthrough');   // tour points at the REAL, visible HUD
+    ['hunt','inst','evibox','statuswrap'].forEach(id=> byId(id).classList.toggle('show', showHud));
+    byId('controls').classList.toggle('show', showHud);
+    byId('progress').classList.toggle('show', name==='assess');
+    if(name==='walkthrough') buildCoach();
+    if(name!=='assess') clearScreen();
+    MV._phase=name;
+  };
+  MV.setCalibration = function(p,lux){ p=clamp(p||0,0,1); byId('calArc').style.strokeDashoffset=(402*(1-p)).toFixed(1);
+    byId('calPct').textContent=Math.round(p*100)+'%'; if(lux!=null) byId('calLux').textContent=lux; };
+
+  MV.renderResult = function(r){ r=r||{};
+    const after=r.after||MV.conditions.find(c=>c.id===r.bestId)||MV.conditions[0];
+    const before=r.before||MV.conditions.find(c=>c.id==='standard')||MV.conditions[MV.conditions.length-1];
+    byId('resLabel').textContent=after.label||after.id||'—';
+    byId('beforeV').textContent=before.label||'standard';
+    byId('afterV').textContent=after.label||'';
+    paintMini(byId('beforeSurf'),before); paintMini(byId('afterSurf'),after);
+    if(r.lede) byId('resLede').textContent=r.lede;
+    // populate the aura-card dashboard from grounded values
+    const st = r.stats||{};
+    const set=(id,v)=>{ const e=byId(id); if(e) e.textContent=v; };
+    set('acSetting', st.setting||after.label||'—');
+    set('acAxis', st.axisWord? (st.axisWord+' · easiest on your eyes') : 'tuned to your eyes');
+    set('acAxisBig', st.axisWord||'—');
+    const roomTxt = st.roomPct!=null? st.roomPct : (MV._ambient!=null?Math.round(MV._ambient*100):null);
+    byId('acRoom').innerHTML = (roomTxt!=null? roomTxt : '—')+'<span class="au">%</span>';
+    set('acRing', roomTxt!=null? roomTxt : (st.flips!=null?st.flips:'—'));
+    if(roomTxt==null) set('acRingLbl','reversals');
+    const flips = st.flips!=null? st.flips : (MV._lock!=null? Math.round(MV._lock*6):null);
+    byId('acFlips').innerHTML = (flips!=null? flips : '—')+'<span class="au">/ '+(st.flipsMax||6)+'</span>';
+    set('acBlinks', st.blinks!=null? st.blinks : '—');
+    const mk=byId('acMarker'); if(mk){ const tk=(typeof st.toneK==='number')?st.toneK:0; mk.style.left=(((tk+1)/2)*100).toFixed(0)+'%'; }
+    const dots=byId('acDots'); if(dots){ dots.innerHTML=''; const lit=flips||0; for(let i=0;i<8;i++){ const d=document.createElement('i'); if(i<lit) d.className='on'; dots.appendChild(d);} }
+    byId('takeawayTx').innerHTML=r.takeaway||'—'; byId('corrobTx').innerHTML=r.corroboration||'—';
+    renderObservations(r.observations);
+    MV._result=MV.lastResult={after,before,recipe:r.recipe};
+    MV.gotoPhase('result');
+  };
+  function renderObservations(list){ const host=byId('obsList'), block=byId('obsBlock'); if(!host) return; host.innerHTML='';
+    if(!list||!list.length){ if(block) block.style.display='none'; return; }
+    if(block) block.style.display='';
+    const ic='<svg class="oic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+    list.forEach(o=>{ const row=document.createElement('div'); row.className='obsrow';
+      row.innerHTML=ic+'<div class="otx">'+o.text+(o.cite?'<span class="cite">'+o.cite+'</span>':'')+'</div>'; host.appendChild(row); }); }
+  MV.toast = function(m){ const t=byId('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(MV._tt); MV._tt=setTimeout(()=>t.classList.remove('show'),2600); };
+
+  function renderEvidence(ev){ const host=byId('eviList');
+    if(!host.childElementCount){ MV.conditions.forEach(c=>{ const r=document.createElement('div'); r.className='evrow'; r.dataset.id=c.id;
+      r.innerHTML='<span class="en">'+c.label+'</span><span class="et"><i></i></span><span class="es">·</span>'; host.appendChild(r); }); }
+    let best=-1,bid=null; ev.forEach(e=>{ if(e.score>best){best=e.score;bid=e.id;} });
+    ev.forEach(e=>{ const r=host.querySelector('.evrow[data-id="'+e.id+'"]'); if(!r) return;
+      r.querySelector('i').style.width=Math.round((e.score||0)*100)+'%'; r.querySelector('.es').textContent=Math.round((e.score||0)*100); r.classList.toggle('lead',e.id===bid); });
+  }
+  function renderLock(l){ l=clamp(l,0,1); byId('lockArc').style.strokeDashoffset=(125.6*(1-l)).toFixed(1); byId('lockPct').textContent=Math.round(l*6)+'/6'; }
+  function paintMini(el,c){ el.style.background=c.surfaceBg; el.style.color=c.surfaceFg;
+    el.style.filter='brightness('+(c.brightness??1)+') contrast('+(c.contrast??1)+') saturate('+(c.saturate??1)+')';
+    el.querySelector('.h').style.color=c.surfaceFg; const p=el.querySelector('.bodytxt'); if(p) p.style.color=c.surfaceFg;
+    const tk=(typeof c.toneK==='number')?c.toneK:(c.tone==='warm'?-0.7:c.tone==='cool'?0.7:0);
+    let tint=el.parentElement.querySelector('.minitint'); if(!tint){ tint=document.createElement('div'); tint.className='minitint'; el.parentElement.appendChild(tint); }
+    tint.style.background = tk<0?`rgba(255,138,52,${(Math.abs(tk)*0.20).toFixed(3)})`:`rgba(64,138,255,${(tk*0.18).toFixed(3)})`; }
+  function shade(hex,d){ const n=parseInt(hex.slice(1),16); let r=(n>>16)+d,g=((n>>8)&255)+d,b=(n&255)+d;
+    r=clamp(r,0,255);g=clamp(g,0,255);b=clamp(b,0,255); return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
+
+  /* ---------- engine attach ---------- */
+  let engineLive=false;
+  function markLive(){ if(engineLive) return; engineLive=true; MV.engineConnected=true;
+    byId('statusPill').dataset.state='live'; byId('statusTxt').textContent='live · on-device';
+    byId('eviTag').textContent='live'; byId('eviTag').classList.add('live');
+    byId('camEmpty').style.display='none'; byId('scopeEmpty').style.display='none';
+    if(MV.__driver && !MV.__driver.isCamera) MV.__driver.stopVisualsOnly && MV.__driver.stopVisualsOnly(); }
+  Object.defineProperty(MV,'connected',{ set(v){ if(v) markLive(); }, get(){ return engineLive; } });
+
+  /* ---------- UI → events ---------- */
+  byId('consentChk').addEventListener('change', function(){ byId('beginBtn').disabled=!this.checked; });
+  byId('beginBtn').addEventListener('click', ()=> MV.emit('start', true));
+  byId('noCamBtn') && byId('noCamBtn').addEventListener('click', ()=> MV.emit('start', false));
+  byId('easierBtn').addEventListener('click', ()=> MV.emit('feedback', +1));
+  byId('harderBtn').addEventListener('click', ()=> MV.emit('feedback', -1));
+  byId('stopBtn').addEventListener('click', ()=> MV.emit('stop'));
+  byId('applyBtn').addEventListener('click', ()=> MV.emit('apply'));
+  byId('downloadBtn').addEventListener('click', ()=> MV.emit('download'));
+  byId('saveBtn').addEventListener('click', ()=> MV.emit('save'));
+  byId('replayBtn').addEventListener('click', ()=> MV.emit('replay'));
+  addEventListener('keydown', e=>{ if(MV._phase!=='assess') return;
+    if(e.key==='ArrowDown'){e.preventDefault();byId('easierBtn').click();}
+    if(e.key==='ArrowUp'){e.preventDefault();byId('harderBtn').click();}
+    if(e.key==='Escape') byId('stopBtn').click(); });
+
+  /* ---------- coach-marks (spotlight the REAL, live HUD) ---------- */
+  const COACH=[
+    {sel:null, rectCenter:[150,150], title:'Follow the glowing light',
+     body:'Keep your eyes on it as it drifts and darts across the screen. Your tracking IS the measurement — no clicking needed here.'},
+    {sel:'#controls', title:'Comfortable, or not?',
+     body:'The one honest question: does this feel comfortable? Tap “Uncomfortable” and the screen eases at once — dimmer, warmer, softer. Tap “Comfortable” and it edges a touch crisper to find where comfort ends.'},
+    {sel:'#hunt', title:'Watch it hunt your setting',
+     body:'Contrast, brightness, tone and saturation retune every step as the instrument closes in on your least-strain point.'},
+    {sel:'#inst', title:'The instrument is watching too',
+     body:'Your squint (EAR), gaze and blinks read out live and on-device, corroborating every choice. Nothing is uploaded.'},
+  ];
+  let ci=0, spot=null, spotPulse=null;
+  function buildCoach(){ ci=0; setTimeout(showCoach,80); }   // let HUD lay out first
+  function clearCoach(){ const wt=byId('walkthrough'); wt.innerHTML=''; spot=null; spotPulse=null; }
+  function targetRect(c){
+    if(c.sel){ const t=document.querySelector(c.sel); if(t){ const r=t.getBoundingClientRect(); if(r.width) return {x:r.left-8,y:r.top-8,w:r.width+16,h:r.height+16}; } }
+    const w=c.rectCenter?c.rectCenter[0]:160, h=c.rectCenter?c.rectCenter[1]:160;
+    return {x:innerWidth/2-w/2, y:innerHeight*0.46-h/2, w, h};
+  }
+  function showCoach(){
+    clearCoach(); const wt=byId('walkthrough'); const c=COACH[ci]; const r=targetRect(c);
+    // spotlight cut-out over the real element
+    spot=document.createElement('div'); spot.className='spotlight';
+    spot.style.left=r.x+'px'; spot.style.top=r.y+'px'; spot.style.width=r.w+'px'; spot.style.height=r.h+'px';
+    wt.appendChild(spot);
+    spotPulse=document.createElement('div'); spotPulse.className='spotpulse';
+    spotPulse.style.left=r.x+'px'; spotPulse.style.top=r.y+'px'; spotPulse.style.width=r.w+'px'; spotPulse.style.height=r.h+'px';
+    wt.appendChild(spotPulse);
+    // card
+    const box=document.createElement('div'); box.className='coach';
+    box.innerHTML='<div class="step">STEP '+(ci+1)+' / '+COACH.length+'</div><h3>'+c.title+'</h3><p>'+c.body+'</p>'+
+      '<div class="nav"><div class="dots">'+COACH.map((_,i)=>'<i class="'+(i===ci?'on':'')+'"></i>').join('')+'</div>'+
+      '<div style="display:flex;gap:14px;align-items:center">'+(ci<COACH.length-1?'<button class="skip" data-skip>Skip</button>':'')+
+      '<button data-next>'+(ci<COACH.length-1?'Next →':'Start →')+'</button></div></div>';
+    wt.appendChild(box);
+    // place card on the side of the target with the most room
+    const bw=Math.min(290, innerWidth-32), bh=box.offsetHeight||160, gap=16; let x,y,ar;
+    const below=innerHeight-(r.y+r.h), above=r.y, right=innerWidth-(r.x+r.w), left=r.x;
+    if(below>=bh+gap){ ar='up'; y=r.y+r.h+gap; x=clamp(r.x+r.w/2-bw/2,16,innerWidth-bw-16); }
+    else if(above>=bh+gap){ ar='down'; y=r.y-bh-gap; x=clamp(r.x+r.w/2-bw/2,16,innerWidth-bw-16); }
+    else if(left>=bw+gap){ ar='right'; x=r.x-bw-gap; y=clamp(r.y,16,innerHeight-bh-16); }
+    else if(right>=bw+gap){ ar='left'; x=r.x+r.w+gap; y=clamp(r.y,16,innerHeight-bh-16); }
+    else { ar='none'; x=innerWidth/2-bw/2; y=innerHeight-bh-24; }
+    box.dataset.ar=ar; box.style.left=x+'px'; box.style.top=y+'px';
+    box.querySelector('[data-next]').addEventListener('click',()=>{ ci++; if(ci>=COACH.length){ clearCoach(); MV.emit('walkthroughDone'); } else showCoach(); });
+    const sk=box.querySelector('[data-skip]'); if(sk) sk.addEventListener('click',()=>{ clearCoach(); MV.emit('walkthroughDone'); });
+  }
+
+  /* ---------- canvases ---------- */
+  const DPR=Math.min(window.devicePixelRatio||1,1.5); MV.dpr=DPR;
+  const track=byId('mv-track'), tctx=track.getContext('2d');
+  const scope=byId('mv-scope'), pctx=scope.getContext('2d');
+  const camov=byId('mv-camoverlay'), octx=camov.getContext('2d');
+  function sizeC(cv){ if(!cv) return; const r=cv.getBoundingClientRect(); if(!r.width) return;
+    cv.width=Math.round(r.width*DPR); cv.height=Math.round(r.height*DPR); }
+  let TW=0,TH=0;
+  function sizeAll(){ ['mv-track','mv-scope','mv-camoverlay'].forEach(id=>sizeC(byId(id)));
+    TW=track.clientWidth; TH=track.clientHeight; }
+  MV.sizeCanvases=sizeAll; addEventListener('resize',sizeAll); setTimeout(sizeAll,60);
+
+  /* EAR scope */
+  const earBuf=new Array(120).fill(0.5);
+  function pushScope(ear){ earBuf.push(clamp((ear-0.08)/0.26,0,1)); earBuf.shift();
+    byId('scopeEmpty').style.display='none'; }
+  function drawScope(){ const w=scope.clientWidth,h=scope.clientHeight; if(!w) return;
+    pctx.setTransform(DPR,0,0,DPR,0,0); pctx.clearRect(0,0,w,h);
+    pctx.strokeStyle='rgba(255,255,255,.05)'; pctx.beginPath(); pctx.moveTo(0,h/2); pctx.lineTo(w,h/2); pctx.stroke();
+    pctx.strokeStyle='#43e0c4'; pctx.lineWidth=1.4; pctx.beginPath();
+    for(let i=0;i<earBuf.length;i++){ const x=i/(earBuf.length-1)*w, y=h-4-earBuf[i]*(h-8); i?pctx.lineTo(x,y):pctx.moveTo(x,y); }
+    pctx.stroke(); const ly=h-4-earBuf[earBuf.length-1]*(h-8); pctx.fillStyle='#fff'; pctx.beginPath(); pctx.arc(w-2,ly,1.8,0,7); pctx.fill(); }
+
+  /* ====================================================================
+     BUILT-IN DRIVER  — the playable pursuit/saccade staircase.
+     Uses on-device MediaPipe gaze+EAR when the camera is on; with no camera it runs on
+     mouse + your comfort taps only — it NEVER synthesizes an EAR signal.
+     Yields to a real engine the instant it calls a render hook.
+     ==================================================================== */
+  const Driver = MV.__driver = (function(){
+    const order = MV.conditions;          // gentle→harsh
+    const N = order.length;
+    let running=false, isCamera=false;
+    let idx=Math.floor(N/2);              // current step on the staircase
+    let step=2;                            // staircase step size: bold early moves, fine near the threshold
+    let lastDir=0, reversals=0;
+    const ev={}; order.forEach(c=>ev[c.id]=0.5);     // evidence per condition (EMA)
+    const seen={}; order.forEach(c=>seen[c.id]=0);
+    let trialT=0, trialDur=4200, trialN=0, totalTrials=14;
+    let mode='pursuit';                    // alternates pursuit / saccade
+    let target={x:0.5,y:0.5}, prevTarget={x:0.5,y:0.5};
+    let sacAt=0, sacIndex=0;
+    let errAcc=0, errN=0, apAcc=0, apN=0;
+    let gaze={x:0.5,y:0.5}, gazeRaw={x:0.5,y:0.5};
+    let aperture=0.27, blinks=0, ambient=null;
+    const obs={}; order.forEach(c=>obs[c.id]={apSum:0,apN:0,blk:0,errSum:0,errN:0,ms:0});  // per-condition real measurements
+    const faceFresh=()=> isCamera && (performance.now()-lastFaceT<900);
+    const lumCv=document.createElement('canvas'); lumCv.width=32; lumCv.height=24;
+    const lumCtx=lumCv.getContext('2d',{willReadFrequently:true});
+    function frameLum(){ try{ const cam=byId('mv-cam'); if(!cam||cam.readyState<2) return null; lumCtx.drawImage(cam,0,0,32,24);
+      const d=lumCtx.getImageData(0,0,32,24).data; let s=0; for(let i=0;i<d.length;i+=4) s+=0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2]; return s/(d.length/4)/255; }catch(e){ return null; } }
+    const SAC=[{x:0.16,y:0.5},{x:0.84,y:0.5},{x:0.5,y:0.2},{x:0.5,y:0.8},{x:0.2,y:0.28},{x:0.8,y:0.72}];
+
+    /* ---- gaze/aperture inputs (stub-overridable) ---- */
+    MV.onGaze = function(x,y){ gazeRaw.x=x; gazeRaw.y=y; };
+    MV.onAperture = function(ear){ aperture=ear; };
+    MV.onBlink = function(){ blinks++; if(running && obs[order[idx]]) obs[order[idx]].blk++; };
+
+    // mouse fallback
+    addEventListener('mousemove',e=>{ if(!isCamera) MV.onGaze(e.clientX/innerWidth, e.clientY/innerHeight); });
+    addEventListener('touchmove',e=>{ if(!isCamera&&e.touches[0]) MV.onGaze(e.touches[0].clientX/innerWidth, e.touches[0].clientY/innerHeight); },{passive:true});
+
+    function start(useCam){
+      running=true; trialN=0; idx=Math.floor(N/2); step=2; lastDir=0; reversals=0;
+      order.forEach(c=>{ev[c.id]=0.5;seen[c.id]=0;obs[c.id]={apSum:0,apN:0,blk:0,errSum:0,errN:0,ms:0};}); byId('eviList').innerHTML='';
+      byId('inst').classList.toggle('show',true);
+      byId('statuswrap').classList.add('show');
+      isCamera=!!useCam;
+      if(!isCamera){   // honest taps-only state — no eye signal claimed
+        const ce=byId('camEmpty'); if(ce){ ce.style.display='flex'; const t=ce.querySelector('.t'); if(t) t.textContent='camera off · taps only'; }
+        const se=byId('scopeEmpty'); if(se){ se.style.display='flex'; se.textContent='camera off — no eye signal'; }
+        byId('statusPill').dataset.state='off'; byId('statusTxt').textContent='camera off · taps only';
+        byId('rEar').textContent='—'; byId('rGaze').textContent='off';
+      }
+      MV.gotoPhase('calibrate');
+      // calibrate: read REAL room-light (webcam mean luminance) — not a fake ramp
+      let p=0, lum=[]; const iv=setInterval(()=>{ if(!running){clearInterval(iv);return;}
+        p+=0.05; const L=frameLum(); if(L!=null) lum.push(L);
+        MV.setCalibration(Math.min(1,p), lum.length? ('ambient ~'+Math.round(lum[lum.length-1]*100)+'%') : (isCamera?'reading room light…':'no camera — using defaults'));
+        if(p>=1){ clearInterval(iv); ambient = lum.length? lum.reduce((a,b)=>a+b,0)/lum.length : null; MV.gotoPhase('walkthrough'); }
+      },110);
+      if(useCam) initCamera();
+    }
+    MV.cameraDenied = function(){
+      running=false;
+      MV.gotoPhase('intro');
+      const note=byId('camNote');
+      if(note){ note.innerHTML='Camera blocked. This is an eye-tracking instrument — enable the camera in your browser’s address bar, then press Begin again.'; note.style.color='var(--brand)'; }
+      byId('statusPill').dataset.state='off'; byId('statusTxt').textContent='camera needed';
+      MV.toast('Camera access is required for eye tracking');
+    };
+    MV.on('walkthroughDone', ()=>{ if(!running) return; MV.gotoPhase('assess'); beginTrial(); });
+
+    let awaiting=false, holdT=0;
+    function beginTrial(){
+      if(trialN>=totalTrials || reversals>=6){ finish(); return; }
+      const c=order[idx]; seen[c.id]++; MV.renderCondition(c);
+      MV.renderProgress(Math.min(1, Math.max(trialN/totalTrials, reversals/6)), 'Setting '+(idx+1)+' of '+N+' · reversals '+reversals+'/6');
+      mode = (trialN%2===0)?'pursuit':'saccade';
+      trialT=0; errAcc=0; errN=0; apAcc=0; apN=0; sacIndex=0; sacAt=0; awaiting=true; holdT=0;
+      if(mode==='saccade'){ target={...SAC[0]}; }
+      setHint(true);
+    }
+
+    function pursuitPath(t){ // smooth lissajous in 0.12..0.88
+      const x=0.5+0.36*Math.sin(t*1.1)*Math.cos(t*0.6);
+      const y=0.46+0.30*Math.sin(t*1.7+0.7);
+      return {x,y};
+    }
+
+    function tick(dt){
+      // smooth gaze
+      gaze.x=lerp(gaze.x,gazeRaw.x,0.25); gaze.y=lerp(gaze.y,gazeRaw.y,0.25);
+      if(MV._phase==='walkthrough'){ drawPreview(); return; }
+      if(MV._phase!=='assess'){ drawIdle(); return; }
+      trialT+=dt; if(awaiting) holdT+=dt;
+      const tt=trialT/1000;
+      // move target
+      if(mode==='pursuit'){ target=pursuitPath(tt*1.0); }
+      else { if(trialT - sacAt > 900){ sacAt=trialT; sacIndex=(sacIndex+1)%SAC.length; prevTarget={...target}; target={...SAC[sacIndex]}; } }
+      // measure tracking error (gaze vs target)
+      const ex=gaze.x-target.x, ey=gaze.y-target.y; const err=Math.hypot(ex,ey);
+      errAcc+=err; errN++; apAcc+=aperture; apN++;
+      // accumulate REAL per-condition measurements for the findings report
+      const A=obs[order[idx]]; if(A){ A.ms+=dt; A.errSum+=err; A.errN++; if(faceFresh()){ A.apSum+=aperture; A.apN++; } }
+      MV.renderInstrument({ aperture, blinks, gaze, ambient,
+        evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/6,0,1) });
+      drawField(tt);
+      // auto-commit only if the user hasn't answered after a long hold
+      if(awaiting && holdT>=trialDur){ commitTrial(null); }
+    }
+
+    // a tap (or timeout) commits the current setting, adapts, and advances to a visibly new one
+    function commitTrial(userDir){
+      if(!awaiting) return; awaiting=false; setHint(false);
+      const c=order[idx];
+      const meanErr=errN?errAcc/errN:0.3, meanAp=apN?apAcc/apN:0.26;
+      const trackQ=clamp(1-meanErr/0.22,0,1), apQ=clamp((meanAp-0.16)/0.14,0,1);
+      const q=0.6*trackQ+0.4*apQ;                 // objective comfort proxy
+      // evidence favors settings the user does NOT push away from, corroborated by tracking
+      const pushed = userDir==null ? 0 : 0.18;     // a tap = this isn't the resting point
+      ev[c.id]=clamp(ev[c.id]*0.55 + q*0.45 - pushed, 0, 1);
+      trialN++;
+      if(userDir!=null) sciCallout(userDir);
+      const dir = userDir!=null ? userDir : (q>0.55?+1:-1);
+      stepStaircase(dir, userDir!=null);          // moves idx → new setting
+      MV.renderInstrument({ evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/6,0,1) });
+      setTimeout(()=>{ if(running) beginTrial(); }, 200);  // brief beat so the retune reads
+    }
+
+    function setHint(on){ const el=byId('holdHint'); if(el) el.classList.toggle('show', !!on); }
+
+    function stepStaircase(dir, fromClick){
+      // dir: +1 → gentler (lower idx), -1 → harsher (higher idx)
+      if(lastDir!==0 && dir!==lastDir){ reversals++; step=Math.max(1, step-1); }
+      lastDir=dir;
+      idx=clamp(idx - dir*step, 0, N-1);
+      MV.renderInstrument({ evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/6,0,1) });
+    }
+
+    MV.on('feedback', dir=>{ if(!running||enginePresent()) return; commitTrial(dir); });
+    MV.on('stop', ()=>{ if(enginePresent()) return; running=false; MV.gotoPhase('intro'); });
+    MV.on('replay', ()=>{ if(enginePresent()) return; MV._applied=false; clearScreen(); byId('eviList').innerHTML=''; running=false; MV.gotoPhase('intro'); });
+    MV.on('apply', ()=>{ const r=MV.lastResult||MV._result; if(r&&r.after){ MV._applied=true; applyScreen(r.after);
+      MV.toast('Applied — this browser tab stays tuned until you reset'); } else MV.toast('Finish a tune first'); });
+    MV.on('download', ()=>{ const r=MV.lastResult||MV._result; if(!r||!r.after){ MV.toast('Finish a tune first'); return; }
+      const a=r.after; const css=`brightness(${a.brightness}) contrast(${a.contrast}) saturate(${a.saturate})`;
+      const bm=`javascript:(function(){document.documentElement.style.filter=${JSON.stringify(css)};})();`;
+      const recipe={ tool:'mellowvision', version:'web', generated:new Date().toISOString(),
+        setting:a.label, id:a.id, brightness:a.brightness, contrast:a.contrast, saturate:a.saturate, tone:a.tone,
+        css_filter:css,
+        screen_tint: (typeof a.toneK==='number'&&a.toneK<0)?`rgba(255,138,52,${(Math.abs(a.toneK)*0.30).toFixed(3)})`:`rgba(64,138,255,${((a.toneK||0)*0.26).toFixed(3)})`,
+        bookmarklet:bm,
+        note:'Browser overlay (a CSS filter), not an OS-level change. Drag the bookmarklet into your bookmarks bar and click it on any site to apply this tint.' };
+      const blob=new Blob([JSON.stringify(recipe,null,2)],{type:'application/json'});
+      const u=URL.createObjectURL(blob), el=document.createElement('a'); el.href=u; el.download='mellowvision-recipe.json'; el.click(); URL.revokeObjectURL(u);
+      MV.toast('Saved recipe + bookmarklet — a browser overlay, not an OS change'); });
+    MV.on('save', ()=> saveCard());
+
+    function finish(){
+      running=false;
+      let best=order[0]; order.forEach(c=>{ if(ev[c.id]>ev[best.id]) best=c; });
+      const before=order[N-1];
+      const meanAp = c=> obs[c.id].apN? obs[c.id].apSum/obs[c.id].apN : null;
+      const measured = order.filter(c=>obs[c.id].apN>=4);          // conditions with enough real EAR samples
+      const observations=[]; let squintAtLabel = isCamera? '—' : 'camera off';
+      // 1) squint / palpebral aperture — Gowrisankaran 2007 ; Kaiser 2021
+      if(measured.length>=2){
+        let widest=measured[0], narrow=measured[0];
+        measured.forEach(c=>{ if(meanAp(c)>meanAp(widest)) widest=c; if(meanAp(c)<meanAp(narrow)) narrow=c; });
+        squintAtLabel=widest.label;
+        observations.push({ text:'Your eyes <b>relaxed most</b> — the least squinting — under <b>'+widest.label+'</b>, and tightened most under <b>'+narrow.label+'</b>.', cite:'squint tracks light discomfort · Gowrisankaran 2007 · Kaiser 2021' });
+      }
+      // 2) blink — responds to spectral filtering / glare — Blackburn 2009
+      const totalBlinks = order.reduce((s,c)=>s+obs[c.id].blk,0);
+      if(isCamera && totalBlinks>=4){
+        const grp=pred=>{ let blk=0,ms=0; order.forEach(c=>{ if(pred(c)){ blk+=obs[c.id].blk; ms+=obs[c.id].ms; } }); return ms>0? blk/(ms/1000):null; };
+        const br=grp(c=>c.brightness>1), dm=grp(c=>c.brightness<1);
+        if(br!=null && dm!=null){
+          if(br>dm*1.2) observations.push({ text:'You <b>blinked more often</b> under brighter, cooler light — your eyes working a little harder.', cite:'blink responds to spectral filtering · Blackburn 2009' });
+          else if(dm>br*1.2) observations.push({ text:'You blinked <b>more as the screen dimmed</b>, and settled under brighter light this session.', cite:'blink responds to spectral filtering · Blackburn 2009' });
+          else observations.push({ text:'Your blink rate stayed fairly <b>steady</b> across brightness levels.', cite:'Blackburn 2009' });
+        }
+      }
+      // 3) tracking — contrast shapes pursuit & saccades — Spering 2005 ; Ludwig 2004 (camera only)
+      if(isCamera){
+        const tracked = order.filter(c=>obs[c.id].errN>=10);
+        if(tracked.length>=2){ let steady=tracked[0]; tracked.forEach(c=>{ if((obs[c.id].errSum/obs[c.id].errN) < (obs[steady.id].errSum/obs[steady.id].errN)) steady=c; });
+          observations.push({ text:'Your eyes <b>followed the moving light most smoothly</b> under <b>'+steady.label+'</b>.', cite:'contrast shapes pursuit & saccades · Spering 2005 · Ludwig 2004' }); }
+      }
+      if(!observations.length){ observations.push({ text:'The camera signal was limited this session, so these results lean on your comfort taps. Enable the camera for eye-measured findings.', cite:'' }); }
+
+      const ambLabel = (ambient!=null)? Math.round(ambient*100)+'%' : 'camera off';
+      const totalBlk = order.reduce((s,c)=>s+obs[c.id].blk,0);
+      const agree = measured.length>=2 && squintAtLabel===best.label;
+      MV.renderResult({
+        after:best, before,
+        lede:'Across the session this is the light your eyes met with the least squinting — your easiest setting.',
+        stats:{ setting:best.label, axisWord:(best.toneK<-0.25?'Warm':best.toneK>0.25?'Cool':'Neutral'), toneK:best.toneK,
+                flips:reversals, flipsMax:6, roomPct:(ambient!=null?Math.round(ambient*100):null), blinks:totalBlk, squintAt:squintAtLabel },
+        observations,
+        takeaway:'Your eyes were <b>most at ease on '+best.label+'</b> — '+(best.toneK<-0.25?'warmer, dimmer':best.toneK>0.25?'cooler, crisper':'balanced')+' light asked the least of them.',
+        corroboration: agree ? 'Your squint agreed with your choice: your widest aperture fell on the very setting you settled on.'
+                             : 'Your comfort choice and your widest-aperture reading pointed to nearby settings — we weighted your stated comfort.'
+      });
+    }
+
+    /* ---- field render (pursuit orb / saccade targets + gaze ring) ---- */
+    function drawField(tt){
+      tctx.setTransform(DPR,0,0,DPR,0,0); tctx.clearRect(0,0,TW,TH);
+      const gx=gaze.x*TW, gy=gaze.y*TH, txp=target.x*TW, typ=target.y*TH;
+      const err=Math.hypot(gaze.x-target.x,gaze.y-target.y); const good=err<0.08;
+      // gaze ring
+      tctx.strokeStyle=good?'rgba(67,224,196,.7)':'rgba(255,255,255,.22)'; tctx.lineWidth=good?2:1.4;
+      tctx.beginPath(); tctx.arc(gx,gy, good?20:26, 0, 7); tctx.stroke();
+      if(mode==='saccade'){
+        // faded previous + active bloom
+        SAC.forEach((s,i)=>{ if(i===sacIndex) return; tctx.fillStyle='rgba(255,255,255,.07)'; tctx.beginPath(); tctx.arc(s.x*TW,s.y*TH,6,0,7); tctx.fill(); });
+        const bloom=clamp((trialT-sacAt)/240,0,1); const R=14+18*(1-Math.pow(1-bloom,3));
+        glow(txp,typ,R,'rgba(124,107,255,.55)');
+      } else {
+        // pursuit comet trail
+        for(let k=10;k>=1;k--){ const p=pursuitPath((tt - k*0.05)*1.0); tctx.globalAlpha=(1-k/11)*0.4;
+          tctx.fillStyle='rgba(255,210,170,1)'; tctx.beginPath(); tctx.arc(p.x*TW,p.y*TH, 3+(11-k)*0.7, 0,7); tctx.fill(); }
+        tctx.globalAlpha=1;
+      }
+      // the light
+      glow(txp,typ,18,'rgba(255,225,190,.95)');
+      tctx.fillStyle='#fff'; tctx.beginPath(); tctx.arc(txp,typ,6,0,7); tctx.fill();
+    }
+    function drawIdle(){ tctx.setTransform(DPR,0,0,DPR,0,0); tctx.clearRect(0,0,TW,TH); }
+    // walkthrough preview: a calm orb orbiting near center with the gaze ring, so step 1 has a live thing to point at
+    function drawPreview(){
+      tctx.setTransform(DPR,0,0,DPR,0,0); tctx.clearRect(0,0,TW,TH);
+      const t=performance.now()/1000;
+      const ox=0.5+0.10*Math.cos(t*0.9), oy=0.46+0.07*Math.sin(t*1.3);
+      const x=ox*TW, y=oy*TH;
+      for(let k=8;k>=1;k--){ const a=(1-k/9)*0.35; tctx.globalAlpha=a; tctx.fillStyle='rgba(255,210,170,1)';
+        const px=(0.5+0.10*Math.cos((t-k*0.06)*0.9))*TW, py=(0.46+0.07*Math.sin((t-k*0.06)*1.3))*TH;
+        tctx.beginPath(); tctx.arc(px,py,2+(9-k)*0.6,0,7); tctx.fill(); }
+      tctx.globalAlpha=1;
+      tctx.strokeStyle='rgba(67,224,196,.7)'; tctx.lineWidth=2; tctx.beginPath(); tctx.arc(x,y,22+2*Math.sin(t*4),0,7); tctx.stroke();
+      glow(x,y,18,'rgba(255,225,190,.95)'); tctx.fillStyle='#fff'; tctx.beginPath(); tctx.arc(x,y,6,0,7); tctx.fill();
+    }
+    function glow(x,y,r,col){ const g=tctx.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,'#fff'); g.addColorStop(.35,col); g.addColorStop(1,'rgba(255,255,255,0)');
+      tctx.fillStyle=g; tctx.beginPath(); tctx.arc(x,y,r,0,7); tctx.fill(); }
+
+    /* ---- live science callout ---- */
+    const COPY_UP=[['↓ contrast','pursuit steadied','Spering 2005'],['↓ luminance','squint eased','Kaiser 2021'],['warmer','aperture widened','Gowrisankaran 2007']];
+    const COPY_DN=[['↑ contrast','sharper — watch for glare','Ludwig 2004'],['↑ luminance','alertness up, squint up','Kaiser 2021'],['cooler','crisper edges','']];
+    function sciCallout(dir){ const set=dir>0?COPY_UP:COPY_DN; const c=set[Math.floor(Math.random()*set.length)];
+      const el=byId('callout'); el.innerHTML='<span class="ar '+(dir>0?'up':'dn')+'">'+c[0]+'</span>'+c[1]+(c[2]?'<span class="ref">'+c[2]+'</span>':'');
+      el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2400); }
+
+    /* ---- (no synthetic signals: when there's no face, the instrument shows "no signal" and the staircase relies on your taps) ---- */
+
+    /* ---- main raf ---- */
+    let last=0;
+    function loop(t){ const dt=Math.min(50,t-(last||t)); last=t; if(!enginePresent()){ if(running) tick(dt); drawScope(); } requestAnimationFrame(loop); }
+    requestAnimationFrame(loop);
+
+    /* ---- aura blob drift ---- */
+    if(!reduce){ const blobs=[...document.querySelectorAll('.blob')]; let at=0;
+      (function drift(){ at+=0.0014; blobs.forEach((b,i)=>{ const px=Math.sin(at*(1+i*0.3)+i)*3, py=Math.cos(at*(0.8+i*0.25)+i)*3; b.style.transform=`translate(${px}%,${py}%)`; }); requestAnimationFrame(drift); })(); }
+
+    return { start, get isCamera(){return isCamera;}, stopVisualsOnly(){ running=false; } };
+  })();
+
+  /* ---------- on-device MediaPipe (camera path) ---------- */
+  let landmarker=null, camRunning=false, lastBlink=false, blinkCool=0, lastFaceT=0, lastDetect=0;
+  const L_EAR=[33,160,158,133,153,144], R_EAR=[263,387,385,362,380,373];
+  const L_RING=[33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246];
+  const R_RING=[263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466];
+  async function initCamera(){
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({video:{width:320,height:240,facingMode:'user'},audio:false});
+      const cam=byId('mv-cam'); cam.srcObject=stream; await cam.play();
+      camov.width=cam.videoWidth||320; camov.height=cam.videoHeight||240;
+      byId('camEmpty').style.display='none'; camRunning=true; loadLandmarker(); requestAnimationFrame(camLoop);
+    }catch(e){ MV.cameraDenied(); }
+  }
+  async function loadLandmarker(){
+    try{
+      const v=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/vision_bundle.mjs');
+      const fs=await v.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm');
+      landmarker=await v.FaceLandmarker.createFromOptions(fs,{ baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', delegate:'GPU' }, runningMode:'VIDEO', numFaces:1 });
+      byId('statusPill').dataset.state='live'; byId('statusTxt').textContent='live · on-device';
+    }catch(e){ /* model unavailable — instrument shows an honest no-signal state; no fabricated EAR */ }
+  }
+  function dist(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
+  function earOf(lm,idx){ const p=idx.map(i=>lm[i]); return (dist(p[1],p[5])+dist(p[2],p[4]))/(2*dist(p[0],p[3])+1e-6); }
+  function camLoop(){ if(!camRunning) return; const cam=byId('mv-cam'); const now=performance.now();
+    if(landmarker && cam.readyState>=2 && now-lastDetect>=45){ lastDetect=now;   // throttle inference to ~22fps (big CPU saving on older laptops)
+      octx.setTransform(1,0,0,1,0,0); octx.clearRect(0,0,camov.width,camov.height);
+      let res; try{ res=landmarker.detectForVideo(cam,now); }catch(e){}
+      if(res&&res.faceLandmarks&&res.faceLandmarks[0]){ const lm=res.faceLandmarks[0],w=camov.width,h=camov.height; lastFaceT=now;
+        byId('scopeEmpty').style.display='none';
+        drawRing(lm,L_RING,w,h); drawRing(lm,R_RING,w,h);
+        const ear=(earOf(lm,L_EAR)+earOf(lm,R_EAR))/2; MV.onAperture(ear);
+        const closed=ear<0.16; if(closed&&!lastBlink&&blinkCool<=0){ MV.onBlink(); blinkCool=12; } lastBlink=closed; if(blinkCool>0)blinkCool--;
+        // coarse gaze from iris vs eye corners (468 = left iris, 473 = right iris)
+        const lx=( (lm[468]?lm[468].x:(lm[33].x+lm[133].x)/2) ), gx=irisRatioX(lm), gy=irisRatioY(lm);
+        MV.onGaze(clamp(gx,0,1), clamp(gy,0,1));
+      } else if(performance.now()-lastFaceT>900){
+        // HONEST no-signal state — never fabricate. Show it, and hold the last gaze.
+        byId('rEar').textContent='—'; byId('rGaze').textContent='no face';
+        const se=byId('scopeEmpty'); if(se){ se.style.display='flex'; se.textContent='no face — center your eyes'; }
+      }
+    }
+    requestAnimationFrame(camLoop);
+  }
+  function irisRatioX(lm){ // average both eyes; mirror to screen
+    const le=(lm[468]?lm[468].x:(lm[33].x+lm[133].x)/2), lo=lm[33].x, li=lm[133].x;
+    const re=(lm[473]?lm[473].x:(lm[362].x+lm[263].x)/2), ri=lm[362].x, ro=lm[263].x;
+    const a=clamp((le-Math.min(lo,li))/(Math.abs(lo-li)+1e-6),0,1);
+    const b=clamp((re-Math.min(ri,ro))/(Math.abs(ri-ro)+1e-6),0,1);
+    return 1-((a+b)/2); // mirror
+  }
+  function irisRatioY(lm){ const ly=(lm[468]?lm[468].y:lm[159].y), lt=lm[159].y, lb=lm[145].y;
+    return clamp((ly-Math.min(lt,lb))/(Math.abs(lt-lb)+1e-6),0,1); }
+  function drawRing(lm,idx,w,h){ octx.beginPath(); idx.forEach((i,k)=>{ const p=lm[i],X=p.x*w,Y=p.y*h; k?octx.lineTo(X,Y):octx.moveTo(X,Y); }); octx.closePath();
+    const g=octx.createLinearGradient(0,0,w,0); g.addColorStop(0,'#43e0c4'); g.addColorStop(1,'#7c6bff'); octx.strokeStyle=g; octx.lineWidth=1.4; octx.stroke();
+    octx.fillStyle='rgba(255,255,255,.8)'; idx.forEach(i=>{ const p=lm[i]; octx.beginPath(); octx.arc(p.x*w,p.y*h,1,0,7); octx.fill(); }); }
+  /* (no fabricated signals: when the face is lost the instrument shows "no face" and the staircase relies on your taps — see camLoop) */
+
+  /* ---------- flow entry ---------- */
+  MV.on('start', useCam=> { if(enginePresent()) return; Driver.start(useCam); });
+
+  /* ---------- 1080² share card ---------- */
+  function saveCard(){ const r=MV.lastResult||MV._result; if(!r){ MV.toast('Finish a tune first'); return; }
+    const c=byId('cardCanvas'), x=c.getContext('2d');
+    const a=r.after; const sky=a.sky||['#3a2c44','#140f1c','#0a1622'];
+    const g=x.createLinearGradient(0,0,0,1080); g.addColorStop(0,sky[1]); g.addColorStop(1,sky[2]); x.fillStyle=g; x.fillRect(0,0,1080,1080);
+    const rg=x.createRadialGradient(320,260,0,320,260,520); rg.addColorStop(0,sky[0]); rg.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=rg; x.fillRect(0,0,1080,1080);
+    x.fillStyle='#43e0c4'; x.font='600 26px "IBM Plex Mono",monospace'; x.fillText('MELLOWVISION · OCULAR-COMFORT INSTRUMENT',70,100);
+    x.fillStyle='#a59fb0'; x.font='400 22px "IBM Plex Mono",monospace'; x.fillText('least eye strain at',70,170);
+    x.fillStyle='#f0edf4'; x.font='600 60px "Space Grotesk",sans-serif'; x.fillText(a.label,70,240);
+    function surf(px,py,cond,tag,tc){ x.save(); x.beginPath(); x.rect(px,py,420,300); x.clip();
+      x.fillStyle=cond.surfaceBg; x.fillRect(px,py,420,300); x.globalAlpha=Math.min(1,cond.brightness); x.fillStyle=cond.surfaceFg;
+      x.font='600 30px "Newsreader",serif'; x.fillText('The light a',px+30,py+70); x.fillText('screen throws',px+30,py+108);
+      x.globalAlpha=Math.min(1,cond.brightness)*0.5; for(let i=0;i<4;i++) x.fillRect(px+30,py+140+i*26,360-i*40,9); x.restore();
+      x.globalAlpha=1; x.strokeStyle=tc; x.lineWidth=2; x.strokeRect(px,py,420,300); x.fillStyle=tc; x.font='500 18px "IBM Plex Mono",monospace'; x.fillText(tag,px,py-16); }
+    surf(70,360,r.before,'BEFORE · STANDARD','#86a6e0'); surf(590,360,a,'AFTER · TUNED FOR YOU','#f0ab6c');
+    x.fillStyle='#a59fb0'; x.font='400 24px "Space Grotesk",sans-serif'; wrap(x, byId('takeawayTx').textContent,70,760,940,34);
+    x.fillStyle='#6f6878'; x.font='400 18px "IBM Plex Mono",monospace'; x.fillText('on-device · MediaPipe FaceLandmarker · adaptive staircase · wellness tool, not a medical device',70,1010);
+    c.toBlob(b=>{ const u=URL.createObjectURL(b),a2=document.createElement('a'); a2.href=u; a2.download='mellowvision-result.png'; a2.click(); URL.revokeObjectURL(u); MV.toast('Saved 1080² card'); });
+  }
+  function wrap(x,text,px,py,maxw,lh){ const words=(text||'').replace(/<[^>]+>/g,'').split(' '); let line='',yy=py;
+    for(const w of words){ const t=line+w+' '; if(x.measureText(t).width>maxw&&line){ x.fillText(line,px,yy); line=w+' '; yy+=lh; } else line=t; } x.fillText(line,px,yy); }
+
+  /* ---------- boot ---------- */
+  MV.gotoPhase('intro');
+  MV.__contract=['conditions','on','emit','getConsent','renderCondition','renderProgress','renderInstrument','gotoPhase','setCalibration','renderResult','toast','onGaze','onAperture','onBlink'];
+})();
+</script>
+</body>
+</html>

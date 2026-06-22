@@ -81,15 +81,22 @@ export default function ScreenComfortPage() {
           </p>
         </section>
 
-        {/* Try it (gated until launch) */}
+        {/* Try it — internal preview build (hidden, not yet public) */}
         <section className="mt-6 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-sm">
-          <h2 className="text-lg font-semibold">Try the test</h2>
+          <h2 className="text-lg font-semibold">Try the tool</h2>
           <p className="mt-2 text-[14.5px] leading-relaxed text-slate-300">
-            The 90-second eye test launches with the public release. It runs entirely in the browser — nothing is uploaded.
+            The eye-comfort instrument runs entirely in your browser — it asks for your camera to read squint &amp; gaze
+            on-device, and nothing is uploaded. You can also explore it without a camera (taps only). Preview build.
           </p>
-          <span className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-[14px] font-medium text-white/70">
-            Coming soon <ArrowRight size={15} />
-          </span>
+          <a
+            href="/tools/screen-comfort/index.html"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-4 py-2 text-[14px] font-semibold text-slate-900 transition hover:bg-teal-400"
+          >
+            Launch Screen Comfort <ArrowRight size={15} />
+          </a>
+          <p className="mt-3 text-[12px] text-slate-400">
+            Internal preview · wellness / accessibility support — not a clinical assessment.
+          </p>
         </section>
 
         <p className="mt-8 text-center text-[12px] text-slate-400">

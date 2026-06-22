@@ -23,6 +23,9 @@ Disallow: /partners/
 # Pre-launch gated app surfaces (SST Trainer platform + demo entry links)
 Disallow: /platform
 Disallow: /demo/
+# Pre-launch hidden tools suite (Screen Comfort + future on-device eye tools)
+Disallow: /tools/
+Disallow: /screen-comfort
 
 # AI Crawlers — explicitly allowed
 User-agent: GPTBot
