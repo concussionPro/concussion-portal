@@ -1138,14 +1138,28 @@
       const meanAp = c=> obs[c.id].apN? obs[c.id].apSum/obs[c.id].apN : null;
       const measured = order.filter(c=>obs[c.id].apN>=4);          // conditions with enough real EAR samples
       const hasObjective = measured.length>=2;
+      // ---- SELECTION (Monte-Carlo-validated; see academic/backtest/staircase_sim.mjs) ----
+      // 1) Vote changepoint = robust estimate of the comfort boundary (this is the no-camera answer).
+      let E=0, run=0, bestRun=-1e9;
+      for(let i=0;i<N;i++){ run+=comfortVote[order[i].id]; if(run>=bestRun){ bestRun=run; E=i; } }
       let best;
       if(hasObjective){
-        best=order[0]; order.forEach(c=>{ if(ev[c.id]>ev[best.id]) best=c; });   // squint-anchored evidence
+        // 2) Squint REFINES within ±1 of the vote estimate, and only if it actually discriminates (SNR gate):
+        //    bounded harm when the webcam EAR is noisy, real gain when it's clean. (orig argmax-evidence
+        //    was MAE 3.3 / 22% catastrophic in backtest; this is MAE 0.60 / 0.1%.)
+        const lo=Math.max(0,E-1), hi=Math.min(N-1,E+1), win=[];
+        for(let i=lo;i<=hi;i++){ if(comfortVote[order[i].id]>=-1 && meanAp(order[i])!=null) win.push(i); }
+        let bi;
+        if(win.length<=1){ bi = win.length?win[0]:E; }
+        else {
+          let mx=win[0], mn=win[0];
+          for(const i of win){ if(meanAp(order[i])>meanAp(order[mx])) mx=i; if(meanAp(order[i])<meanAp(order[mn])) mn=i; }
+          if(meanAp(order[mx])-meanAp(order[mn]) < 0.013){ bi=E; }              // squint flat → trust votes
+          else { const apMax=meanAp(order[mx]); bi=mx; for(const i of win) if(i>bi && meanAp(order[i])>=apMax-0.009) bi=i; }
+        }
+        best=order[bi];
       } else {
-        // No real eye signal this session → trust the user's explicit comfort votes + where the staircase
-        // settled, NOT the objective-evidence blend (just noise without a face — it could pick a harsh setting).
-        best=order[idx]; let bestScore=-1e9;
-        order.forEach((c,i)=>{ const score=comfortVote[c.id]*100 - Math.abs(i-idx); if(score>bestScore){ bestScore=score; best=c; } });
+        best=order[E];   // no eye signal → the vote-changepoint estimate
       }
       const observations=[]; let squintAtLabel = isCamera? '—' : 'camera off';
       // 1) squint / palpebral aperture — Gowrisankaran 2007 ; Kaiser 2021
