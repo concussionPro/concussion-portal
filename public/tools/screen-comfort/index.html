@@ -685,7 +685,8 @@
         <p class="obs-foot">Observations are drawn from your on-device squint, blink and tracking during the session, each grounded in the cited study. Webcam signals are gross comfort proxies, not a clinical measurement.</p>
       </div>
       <div class="ractions">
-        <button class="btn btn--primary" id="applyBtn">Apply to this tab</button>
+        <button class="btn btn--primary" id="liveBtn">Keep tuning live ▶</button>
+        <button class="btn btn--ghost" id="applyBtn">Apply to this tab</button>
         <button class="btn btn--ghost" id="downloadBtn">Download recipe (.json)</button>
         <button class="btn btn--ghost" id="saveBtn">Save image</button>
         <button class="btn btn--ghost" id="replayBtn">Re-tune</button>
@@ -1007,9 +1008,9 @@
     const SAC=[{x:0.16,y:0.5},{x:0.84,y:0.5},{x:0.5,y:0.2},{x:0.5,y:0.8},{x:0.2,y:0.28},{x:0.8,y:0.72}];
 
     /* ---- gaze/aperture inputs (stub-overridable) ---- */
-    MV.onGaze = function(x,y){ gazeRaw.x=x; gazeRaw.y=y; };
-    MV.onAperture = function(ear){ aperture=ear; };
-    MV.onBlink = function(){ blinks++; if(running && obs[order[idx]]) obs[order[idx]].blk++; };
+    MV.onGaze = function(x,y){ gazeRaw.x=x; gazeRaw.y=y; MV._gx=x; MV._gy=y; };
+    MV.onAperture = function(ear){ aperture=ear; MV._ear=ear; };
+    MV.onBlink = function(){ blinks++; MV._blinks=blinks; if(running && obs[order[idx]]) obs[order[idx]].blk++; };
 
     // mouse fallback
     addEventListener('mousemove',e=>{ if(!isCamera) MV.onGaze(e.clientX/innerWidth, e.clientY/innerHeight); });
@@ -1353,6 +1354,88 @@
   }
   function wrap(x,text,px,py,maxw,lh){ const words=(text||'').replace(/<[^>]+>/g,'').split(' '); let line='',yy=py;
     for(const w of words){ const t=line+w+' '; if(x.measureText(t).width>maxw&&line){ x.fillText(line,px,yy); line=w+' '; yy+=lh; } else line=t; } x.fillText(line,px,yy); }
+
+  /* ====================================================================
+     LIVE MODE — continuous evidence-routed closed-loop tuner.
+     Validated: academic/backtest/live_controller_sim.mjs (all criteria pass).
+     Source module: engine-pkg/live-controller.js (inlined here for the single-file build).
+     contrast←pursuit/saccade · brightness←squint/pupil/blink · tint←blink+taps
+     ==================================================================== */
+  function makeLiveController(){
+    const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+    class Norm{ constructor(d,hl){this.d=d;this.k=1-Math.pow(0.5,1/(hl||600));this.m=null;this.v=1e-3;}
+      push(x){ if(x==null||!isFinite(x))return null; if(this.m==null){this.m=x;return 0.5;}
+        const e=x-this.m; this.m+=this.k*e; this.v=(1-this.k)*(this.v+this.k*e*e);
+        return cl(0.5+this.d*(e/(Math.sqrt(this.v)+1e-6))*0.18,0,1);} }
+    const C={ win:45,dither:0.03,kGrad:0.030,deadband:0.12,rate:0.020,tapHarsh:0.10,
+      rel:{squint:1.0,blink:0.8,pursuit:0.55,saccade:0.5,pupil:0.3},
+      route:{contrast:['pursuit','saccade'],brightness:['squint','pupil','blink'],tint:['blink']},
+      ranges:{brightness:[0.55,1.15],contrast:[0.78,1.30],saturate:[0.70,1.20],tintWarm:[0.55,0.0]} };
+    const AX=['contrast','brightness','tint'], x={contrast:0.5,brightness:0.5,tint:0.5};
+    const norm={squint:new Norm(-1),blink:new Norm(1),pursuit:new Norm(1),saccade:new Norm(1),pupil:new Norm(1)};
+    let ai=0,phase='plus',acc=0,cnt=0,zPlus=0,lastBlink=null;
+    const fuse=(b,keys)=>{let n=0,d=0;for(const k of keys){if(b[k]!=null){n+=C.rel[k]*b[k];d+=C.rel[k];}}return d?n/d:null;};
+    const dith=()=>phase==='plus'?+C.dither:-C.dither;
+    const map=(a,v)=>{const[lo,hi]=C.ranges[a];return lo+v*(hi-lo);};
+    function command(){ const active=AX[ai],disp=Object.assign({},x); disp[active]=cl(x[active]+dith(),0,1);
+      const warm=C.ranges.tintWarm[0]+disp.tint*(C.ranges.tintWarm[1]-C.ranges.tintWarm[0]);
+      return {brightness:+map('brightness',disp.brightness).toFixed(3),contrast:+map('contrast',disp.contrast).toFixed(3),
+        saturate:+map('saturate',disp.contrast).toFixed(3),tintWarm:+cl(warm,0,0.7).toFixed(3),_active:active}; }
+    function observe(sig){ sig=sig||{}; const active=AX[ai],bad={};
+      if(sig.squint!=null)bad.squint=norm.squint.push(sig.squint);
+      if(sig.pursuit!=null)bad.pursuit=norm.pursuit.push(sig.pursuit);
+      if(sig.saccade!=null)bad.saccade=norm.saccade.push(sig.saccade);
+      if(sig.pupil!=null)bad.pupil=norm.pupil.push(sig.pupil);
+      if(sig.blinks!=null){const r=lastBlink==null?0:Math.max(0,sig.blinks-lastBlink);lastBlink=sig.blinks;bad.blink=norm.blink.push(r);}
+      const z=fuse(bad,C.route[active]); acc+=(z!=null?z:0.5); cnt++;
+      if(cnt>=C.win){ if(phase==='plus'){zPlus=acc/cnt;phase='minus';acc=0;cnt=0;}
+        else{ const g=(zPlus-acc/cnt)/(2*C.dither); let dx=-C.kGrad*g; if(Math.abs(g)<C.deadband)dx=0;
+          dx=cl(dx,-C.rate,C.rate); x[active]=cl(x[active]+dx,0,1); phase='plus';acc=0;cnt=0;ai=(ai+1)%3; } }
+      return command(); }
+    function tap(dir){ if(dir<0){x.brightness=cl(x.brightness-C.tapHarsh,0,1);x.tint=cl(x.tint-C.tapHarsh,0,1);}
+      else if(dir>0){x.brightness=cl(x.brightness+C.tapHarsh*0.3,0,1);} return command(); }
+    function seed(s){ if(s)for(const k of AX)if(s[k]!=null)x[k]=cl(s[k],0,1); }
+    return {command,observe,tap,seed,axes:x};
+  }
+  function seedFromCond(a){ if(!a)return null; const inv=(v,lo,hi)=>clamp((v-lo)/(hi-lo),0,1);
+    const tk=(typeof a.toneK==='number')?a.toneK:0;
+    return { brightness:inv(a.brightness,0.55,1.15), contrast:inv(a.contrast,0.78,1.30), tint:clamp((tk+1)/2,0,1) }; }
+  const LiveMode={ active:false, ctrl:null, raf:null, t0:0,
+    start(seedAxes){ if(this.active)return; this.active=true; this.ctrl=makeLiveController(); if(seedAxes)this.ctrl.seed(seedAxes);
+      MV._applied=true;
+      ['intro','calibrate','walkthrough','result'].forEach(p=>{const e=byId(p);if(e)e.classList.remove('show');});
+      ['hunt','inst','evibox','statuswrap','controls','progress'].forEach(id=>{const e=byId(id);if(e)e.classList.add('show');});
+      const sp=byId('statusPill'); if(sp)sp.dataset.state='live'; const stx=byId('statusTxt'); if(stx)stx.textContent='live tuning · on-device';
+      const pt=byId('progTxt'); if(pt)pt.textContent='Live — adjusting to your eyes continuously';
+      this.t0=0; this.raf=requestAnimationFrame(this.loop.bind(this)); MV.toast&&MV.toast('Live tuning on — it keeps adjusting to your eyes. Tap “too harsh” any time.'); },
+    stop(){ this.active=false; if(this.raf)cancelAnimationFrame(this.raf); this.raf=null; try{ window.eyeComfort&&window.eyeComfort.applyLive&&window.eyeComfort.applyLive(null); }catch(e){} },
+    tap(webDir){ if(this.ctrl) this.apply(this.ctrl.tap(webDir>0?-1:+1)); },   // web +1=too-harsh → controller -1
+    apply(cmd){ if(!cmd)return;
+      byId('app').style.filter=`brightness(${cmd.brightness}) contrast(${cmd.contrast}) saturate(${cmd.saturate}) sepia(${Math.round(cmd.tintWarm*100)}%)`;
+      byId('screenTint').style.background=`rgba(255,138,52,${(cmd.tintWarm*0.30).toFixed(3)})`;
+      try{ window.eyeComfort&&window.eyeComfort.applyLive&&window.eyeComfort.applyLive(cmd); }catch(e){} },
+    loop(t){ if(!this.active)return; if(!this.t0)this.t0=t; const p=(t-this.t0)/1000;
+      const trk=byId('mv-track'); let err=null;
+      if(trk){ const c=trk.getContext('2d'),w=trk.clientWidth,h=trk.clientHeight;
+        if(w){ trk.width=w;trk.height=h; c.clearRect(0,0,w,h);
+          const tx=0.5+0.34*Math.sin(p*0.7), ty=0.5+0.18*Math.sin(p*1.1+0.6);
+          const g=c.createRadialGradient(tx*w,ty*h,0,tx*w,ty*h,16); g.addColorStop(0,'rgba(255,225,190,.9)');g.addColorStop(1,'rgba(255,225,190,0)');
+          c.fillStyle=g;c.beginPath();c.arc(tx*w,ty*h,16,0,7);c.fill(); c.fillStyle='#fff';c.beginPath();c.arc(tx*w,ty*h,5,0,7);c.fill();
+          if(MV._gx!=null) err=Math.hypot(MV._gx-tx,MV._gy-ty); } }
+      const realFace = camRunning && (performance.now()-lastFaceT<900);
+      const sig={}; if(realFace){ if(MV._ear!=null)sig.squint=MV._ear; if(MV._blinks!=null)sig.blinks=MV._blinks; if(err!=null)sig.pursuit=err; }
+      const cmd=this.ctrl.observe(sig); this.apply(cmd);
+      const stag=byId('surfTag'); if(stag) stag.textContent='live · tuning '+cmd._active;
+      this.raf=requestAnimationFrame(this.loop.bind(this)); }
+  };
+  MV.startLive=(s)=>LiveMode.start(s); MV.stopLive=()=>LiveMode.stop(); MV.liveActive=()=>LiveMode.active;
+  byId('liveBtn') && byId('liveBtn').addEventListener('click', ()=> LiveMode.start(seedFromCond(MV._result&&MV._result.after)));
+  MV.on('feedback', d=>{ if(LiveMode.active) LiveMode.tap(d); });
+  MV.on('stop', ()=>{ if(LiveMode.active) LiveMode.stop(); });
+  try{ window.eyeComfort && window.eyeComfort.onTap && window.eyeComfort.onTap(d=>{ if(LiveMode.active) LiveMode.tap(d); }); }catch(e){}  // desktop hotkey taps
+  // desktop / deep-link: ?live=1 → after the camera is up, go straight to live tuning
+  try{ if(new URLSearchParams(location.search).get('live')){
+    const b=byId('beginBtn'); if(b) b.addEventListener('click',()=>{ const iv=setInterval(()=>{ if(camRunning){ clearInterval(iv); setTimeout(()=>LiveMode.start(),1800);} },300); }); } }catch(e){}
 
   /* ---------- boot ---------- */
   MV.gotoPhase('intro');
