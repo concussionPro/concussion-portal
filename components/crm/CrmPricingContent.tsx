@@ -306,6 +306,7 @@ export default function CrmPricingContent() {
                 {[
                   'Everything in Online — course + all tools',
                   'Full-day hands-on practical workshop',
+                  'Train alongside osteo / physio / GP — the team handover',
                   'Supervised SCAT6 / VOMS / BESS / cervical',
                   'Expert real-time feedback as you go',
                   'OSCE-assessed hands-on competency',
@@ -430,10 +431,14 @@ export default function CrmPricingContent() {
         <div className="max-w-2xl mx-auto mb-8">
           <div className="glass rounded-2xl p-6 md:p-8">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">Be first to the next practical day</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">Train with the whole care team</h3>
               <p className="text-sm text-muted-foreground">
-                There&rsquo;s no fixed EP date yet — the practical is the same shared workshop every clinician
-                attends. Register your interest and we&rsquo;ll place you in the next one in your region.
+                The hands-on day is the same multidisciplinary workshop osteopaths, physiotherapists and GPs
+                attend — and that&rsquo;s the advantage. You practise the assessments alongside the very
+                disciplines you refer to and receive from, learn exactly where the EP&rsquo;s lane starts and
+                stops, and build the referral relationships that make concussion care actually work — leaving
+                with a feel for how the whole team manages a case, not just your part of it. There&rsquo;s no
+                fixed EP date yet; register your interest and we&rsquo;ll place you in the next workshop in your region.
               </p>
             </div>
             <CrmWorkshopInterest />
