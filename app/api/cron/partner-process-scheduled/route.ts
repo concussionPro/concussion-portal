@@ -36,7 +36,7 @@ function buildPitch(name: string, slug: string, firstName: string) {
     ``,
     `I run Concussion Education Australia — we train Australia's clinicians in concussion management (Osteopathy Australia endorsed).`,
     ``,
-    `I've set ${name} up with a free concussion resource for your athletes — at no cost:`,
+    `I've set ${name} up with a concussion resource for your athletes:`,
     ` • Season-long baseline cognitive testing`,
     ` • The fillable SCAT6/SCOAT6 assessment forms`,
     ` • A short concussion refresher for your trainers`,
@@ -51,7 +51,7 @@ function buildPitch(name: string, slug: string, firstName: string) {
   const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.5;color:#0f172a">`
     + text.split('\n').map((l) => (l === '' ? '<br>' : `<div>${l.replace(/ • /, '&nbsp;&bull; ')}</div>`)).join('')
     + `</div>`
-  return { subject: `Free concussion resource for ${name}'s athletes`, text, html }
+  return { subject: `Concussion resource for ${name}'s athletes`, text, html }
 }
 
 export async function GET(request: NextRequest) {

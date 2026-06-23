@@ -30,13 +30,13 @@ export async function POST(req: NextRequest) {
   // Partner T1 — value-first (free athlete resource), institution-free, the
   // telehealth backup framed last as a safety net, ONE clean link. Matches the
   // partner page structure. Plain text, no tracking.
-  const subject = `Free concussion resource for ${name}'s athletes`
+  const subject = `Concussion resource for ${name}'s athletes`
   const text = [
     `Hi ${firstName},`,
     ``,
     `I run Concussion Education Australia — we train Australia's clinicians in concussion management (Osteopathy Australia endorsed).`,
     ``,
-    `I've set ${name} up with a free concussion resource for your athletes — at no cost to the academy:`,
+    `I've set ${name} up with a concussion resource for your athletes:`,
     ` • Season-long baseline cognitive testing`,
     ` • The fillable SCAT6/SCOAT6 assessment forms`,
     ` • A short concussion refresher for your trainers`,

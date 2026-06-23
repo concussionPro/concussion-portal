@@ -5326,9 +5326,9 @@ export default function AnalyticsDashboard() {
                             // in lib/prospect/email-templates.ts (rewritten 2026-06-08
                             // to drop tracking-acknowledgment subjects).
                             const t2Variants = [
-                              `Two free tools for ${sp.shortName} - SCAT refresher + baseline testing`,
-                              `Test ${sp.shortName}'s athletes free + free SCAT mini-course`,
-                              `Free baseline testing tool for ${sp.shortName} (no setup)`,
+                              `Two tools for ${sp.shortName} - SCAT refresher + baseline testing`,
+                              `Baseline testing + SCAT mini-course for ${sp.shortName}'s athletes`,
+                              `Baseline testing tool for ${sp.shortName} (no setup)`,
                             ]
                             const t2Idx = sp.slug.split('').reduce((a, ch) => a + ch.charCodeAt(0), 0) % t2Variants.length
                             const predictedT2Subject = t2Variants[t2Idx]
