@@ -127,11 +127,13 @@ export const module2: Module = {
       content: [
         'Red flags indicate a potentially life-threatening or permanently disabling condition. They are NOT managed by the EP. They are ESCALATED — by calling 000 or arranging immediate emergency transport. The EP does not monitor, observe for an hour, or administer a clinical test to evaluate a red flag. The EP stops all activity and escalates.',
         '[CALLOUT: warning | RED FLAGS requiring IMMEDIATE emergency escalation (call 000): deteriorating or reduced level of consciousness / increasing drowsiness; repeated or projectile vomiting; seizure or convulsion; increasing, severe or worsening headache; focal neurological signs — weakness, numbness or tingling in any limb, facial asymmetry, double vision; unequal, dilated or non-reactive pupils; slurred speech, increasing confusion or agitation; midline cervical tenderness or restricted neck movement, especially with neurological signs; any loss of consciousness; clear or blood-stained fluid from the nose or ears.]',
+        '[INFOGRAPHIC: red-flag-decision]',
         'Knowing what to do with a red flag is non-negotiable. Understanding WHY each mandates escalation — the pathological mechanism that makes each dangerous — ensures you never rationalise away a red flag under clinical pressure.',
         '### 1. Intracranial Haemorrhage',
         'The brain occupies a rigid, non-distensible skull. Any additional volume inside that skull — blood from a haemorrhage — must displace existing contents. The Monro-Kellie doctrine: the sum of intracranial volumes (brain + blood + CSF) is constant; as blood accumulates, CSF and venous blood are displaced. Once this compensatory capacity is exhausted, intracranial pressure (ICP) rises exponentially.',
         'Rising ICP reduces cerebral perfusion pressure (CPP = mean arterial pressure − ICP). As CPP falls, cerebral ischaemia develops. If ICP continues to rise, the medial temporal lobe (uncus) herniates through the tentorium cerebelli, compressing the brainstem and the ipsilateral oculomotor nerve (CN III). The result: a fixed, dilated, non-reactive ipsilateral pupil — then progressive loss of consciousness — then, without neurosurgical decompression, death.',
         '[INFOGRAPHIC: brain-regions]',
+        '[INFOGRAPHIC: intracranial-bleeds]',
         '**Epidural Haematoma (EDH):**',
         '   - Location: Between skull and dura mater.',
         '   - Source: Almost always the MIDDLE MENINGEAL ARTERY — a branch of the external carotid running in a groove in the temporal bone, lacerated by a temporal skull fracture. ARTERIAL bleeding at ~100 mmHg mean pressure.',
@@ -188,6 +190,7 @@ export const module2: Module = {
       title: 'SCAT6, SCOAT6 and Child SCAT6: What These Tools Are and the EP\'s Relationship to Them',
       content: [
         'You will encounter the SCAT6 family of tools regularly — in referral letters, in team communication and directly in rehabilitation sessions. Understanding what these tools measure, what they cannot tell you, and what is appropriate for an EP to use them for is essential clinical knowledge.',
+        '[INFOGRAPHIC: scat6-family]',
         '### What the SCAT6 Family Assesses',
         'SCAT6 (Sport Concussion Assessment Tool, 6th Edition) is a comprehensive, validated sideline and clinical assessment tool for adolescents and adults (≥13 years), developed through the international consensus process (Echemendia et al., 2023, BJSM). It contains:',
         '   - Immediate and on-field assessment: red flag checklist, observable signs checklist, Maddocks questions (short-term event memory: "What venue is this?", "What period is it?", "Who scored last?").',
@@ -224,6 +227,7 @@ export const module2: Module = {
       content: [
         '### The Boundary',
         'The central scope principle for the AEP in concussion care is: RECOGNISE and ESCALATE. The AEP does NOT diagnose concussion, does NOT clear clients for return to contact, and does NOT order or interpret neuroimaging. This boundary is not arbitrary and it is not merely conservative. It has specific clinical and medico-legal foundations that are worth understanding — because understanding them is what prevents boundary erosion in real clinical situations.',
+        '[INFOGRAPHIC: ep-scope-boundary]',
         '### Why Diagnosis Requires Medical Authority',
         'Concussion is a clinical diagnosis requiring a medical practitioner — GP, sports and exercise medicine physician, emergency physician or neurologist. The diagnostic process involves:',
         '   - EXCLUDING STRUCTURAL PATHOLOGY: the first task of any concussion assessment is to exclude life-threatening structural injury (intracranial haemorrhage, skull fracture, cervical spine injury). This requires clinical reasoning and — where indicated — the ability to order emergency imaging (CT head, cervical spine). Ordering imaging requires a medical provider number. An AEP cannot do this.',

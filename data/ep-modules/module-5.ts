@@ -58,6 +58,7 @@ export const module5: Module = {
         '[INFOGRAPHIC: concussion-symptom-clusters]',
         '### The Dominant Driver Principle',
         'Multiple phenotypes co-present in the majority of patients with prolonged post-concussion symptoms. The clinical task is not to identify all phenotypes and treat them simultaneously — that approach produces confounded symptom responses and is counterproductive. The task is to identify the DOMINANT DRIVER: the phenotype that is (1) most functionally limiting and (2) most responsive to the available EP intervention. Treat the dominant phenotype to sufficient tolerance, THEN layer in the secondary phenotype. This principle governs both session structure and overall program sequencing.',
+        '[INFOGRAPHIC: phenotype-rehab-progressions]',
         '[CALLOUT: key | You recognise the phenotype pattern; the referring clinician diagnoses it. An AEP identifying a vestibular-dominant presentation does not write "vestibular phenotype diagnosis" in the notes — they document the exercise tolerance test results, symptom responses, and the planned exercise approach, and communicate that to the referring clinician. The diagnostic label is theirs.]',
       ],
     },

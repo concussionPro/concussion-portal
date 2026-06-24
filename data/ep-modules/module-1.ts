@@ -71,6 +71,7 @@ export const module1: Module = {
       title: 'Injury Biomechanics: The Forces That Trigger the Cascade',
       content: [
         'To understand why the neurometabolic cascade unfolds the way it does — and why some injuries are more severe or prolonged than others — you need to understand the biomechanical forces that set it in motion.',
+        '[INFOGRAPHIC: injury-biomechanics]',
         '### 1. Rotational (Angular) Acceleration',
         'Rotational acceleration is the most clinically significant concussion mechanism. When the head rotates around its centre of mass, it generates angular momentum and shearing stresses throughout brain tissue. The critical point is differential density: grey matter (neuronal cell bodies) and white matter (myelinated axons) have different mechanical properties and respond to shearing forces at different rates. The grey-white matter junction — where cortical axons transition into white matter tracts — is the zone of maximum mechanical strain.',
         '   - Rotational accelerations above approximately 4,500–6,000 rad/s² can produce concussion, though individual thresholds vary considerably.',
@@ -143,6 +144,7 @@ export const module1: Module = {
         '   - CRITICAL: symptoms typically resolve BEFORE complete metabolic recovery. The neurometabolic cascade can persist for weeks after a patient reports feeling symptom-free. "Symptom resolution ≠ brain recovered" is one of the most important concepts in concussion management.',
         '   - SECOND-IMPACT SYNDROME: if a second concussion occurs during the metabolic depression phase, the pre-existing ionic and metabolic vulnerability means the second injury triggers a far larger and more dangerous dysregulation — the physiological basis for strict return-to-activity protocols.',
         '[CALLOUT: key | Most uncomplicated concussions resolve within 7–28 days. A meaningful minority (10–30%) have prolonged recovery. The timeline is determined by injury severity, age (adolescent brains are more metabolically vulnerable), prior concussion history, comorbidities, and — critically — whether the metabolic crisis was respected or pushed through prematurely.]',
+        '[INFOGRAPHIC: recovery-timeline]',
         '[HIGHLIGHT: The neurometabolic cascade is only half the picture. The other half is the brain\'s impaired ability to regulate blood flow during and after the cascade — the subject of the next section.]',
       ],
     },

@@ -60,6 +60,7 @@ export const module4: Module = {
         '   - NEUROTROPHIC/NEUROPLASTICITY DEFICIT: the neurometabolic cascade disrupts synaptic function, axonal transport and myelination; BDNF (brain-derived neurotrophic factor) is the primary restorative signalling molecule, and its upregulation requires an exercise stimulus.',
         '   - NEUROINFLAMMATION: activated M1-phenotype microglia produce pro-inflammatory cytokines (IL-1β, IL-6, TNF-α) that impair glutamate clearance, sustain excitotoxicity and slow metabolic recovery.',
         '[CALLOUT: key | SSTAE targets all five simultaneously. It does this by providing a graded, repeated autonomic and cardiovascular stimulus that is challenging enough to drive adaptation in each impaired system, but calibrated below the threshold that would provoke further symptom exacerbation. The HRt is the measurable expression of that threshold — the workload at which the sum of all five impairments causes the physiological regulatory systems to fail. Training below it drives recovery; training above it aggravates the underlying pathophysiology.]',
+        '[INFOGRAPHIC: sstae-mechanism]',
         'The five mechanisms are described in detail in the sections that follow. Understanding each one lets you explain the treatment at a biochemical level — to the patient, the referrer, the coach, and yourself.',
         '[HIGHLIGHT: The neurometabolic cascade of concussion (Module 1) is the injury mechanism. What follows in this module is the biochemistry of its reversal through precisely dosed aerobic exercise.]',
       ],
@@ -185,6 +186,7 @@ export const module4: Module = {
       title: 'The FITT Prescription for Sub-Symptom-Threshold Aerobic Exercise',
       content: [
         'Concussion changes the constraints on your prescription, not the framework. Here is FITT applied to SSTAE, with the mechanistic rationale for each element.',
+        '[INFOGRAPHIC: fitt-framework]',
         '### Frequency',
         '   - Daily, or 5–6 sessions per week. The autonomic and cerebrovascular remodelling effects described in the preceding sections require repeated, near-daily sub-threshold cardiovascular loading. Unlike standard aerobic conditioning — where alternating days and the associated recovery windows suffice — the baroreflex retraining and endothelial adaptation that drive concussion recovery benefit from higher-frequency, lower-load stimulation. Daily dosing also provides a daily symptom data point that is clinically useful for tracking the recovery trajectory.',
         '   - One rest day per week is reasonable, particularly for the deconditioned patient reporting cumulative fatigue. Avoid clustered rest — do not let the patient do nothing for three days then attempt three sessions in a row. Consistent exposure is more important than any single session.',

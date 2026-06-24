@@ -117,6 +117,7 @@ export const module7: Module = {
       title: 'Prognostic and Risk Factors: Who Is Most Likely to Develop PPCS',
       content: [
         'A consistent set of clinical and demographic factors predicts who is most likely to develop PPCS and follow a slower recovery trajectory. Recognising them early allows realistic timeline-setting, proactive management and appropriate referral before the spiral deepens.',
+        '[INFOGRAPHIC: ppcs-risk-factors]',
         '### Injury-Related Factors',
         '   - HIGH INITIAL SYMPTOM BURDEN: The most consistently replicated predictor. A high total symptom score — especially headache, dizziness and fatigue severity at 24–48 hours — predicts slower recovery. Patients presenting with five or more moderate-to-severe symptoms in the first 48 hours are at significantly higher risk (Iverson et al., 2017; Haider et al., 2018).',
         '   - PRIOR CONCUSSION HISTORY: Previous concussions — particularly inadequately managed ones, or a new injury before full recovery from the last — lower the threshold for persistent symptoms. The cumulative effect of prior neurometabolic disruptions appears to reduce the brain\'s resilience margin.',
@@ -163,6 +164,7 @@ export const module7: Module = {
       title: 'When Rehab Stalls: The Four-Step Decision Framework',
       content: [
         'A rehabilitation program that has stopped progressing is not a failure — it is a signal demanding a structured clinical response. Work through this framework systematically rather than pushing the ceiling harder or quietly giving up. The aim is to identify what is now rate-limiting recovery and route it correctly.',
+        '[INFOGRAPHIC: stalled-rehab-framework]',
         '### Defining the Stall',
         'A genuine stall is a clear plateau — no upward movement in the BCTT heart-rate ceiling, symptom threshold, or tolerated session duration — over approximately two weeks or more, despite documented good adherence. Before invoking the framework, rule out the common mimics:',
         '   - Poor adherence: check the session log — if sessions are not being completed at the prescribed frequency, the dose is simply insufficient.',

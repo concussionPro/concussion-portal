@@ -60,6 +60,7 @@ export const module8: Module = {
       title: 'The Record-Within-Scope Principle',
       content: [
         'For the concussion AEP, one principle governs every document you write: record within scope. This is not just about word choice — it is about what you are authorised to conclude from the work you do.',
+        '[INFOGRAPHIC: documentation-standards]',
         '### What You Record',
         '   - Exercise-tolerance findings from graded exertion testing: the HRt, the symptom response at each protocol stage, the modality used.',
         '   - Session data: HR achieved, symptom score before and after, RPE, duration and adherence.',
@@ -129,6 +130,7 @@ export const module8: Module = {
       title: 'Document 3 — The EP-to-Referrer Communication Letter',
       content: [
         'This document closes the shared-care loop. The referring clinician sent the patient to you for reconditioning; they need to know what you found, what you are doing, how the patient is tolerating it, and — critically — when they should re-enter the picture for the decisions that are theirs to make. Send an initial letter after assessment, and milestone or change-in-status letters at each meaningful point. The full printable template is in your Administrative Document Pack ("GP / Referrer Letter").',
+        '[INFOGRAPHIC: referral-pathway]',
         '[CALLOUT: example | Document 3 of 4 — EP-to-Referrer Communication Letter. Its structure is always: FINDINGS → PRESCRIPTION AND RATIONALE → PROGRESS → RECOMMENDATION AND HAND-BACK → SIGN-OFF. The final sentence must name the next medical decision and return it to the referring practitioner. A worked initial-assessment letter is shown below.]',
         '### EP-to-Referrer Communication Letter — Worked Example',
         'TO: Dr Sarah Mitchell — SportsMed Clinic, 45 Mary Street, Brisbane QLD 4000',
