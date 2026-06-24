@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.concussion_education_australia.portal.twa",
+      "sha256_cert_fingerprints": [
+        "9C:E7:5D:30:6F:52:28:E9:10:68:D4:78:11:8F:09:2F:F5:02:2E:B0:0C:CF:F6:2D:76:C3:6D:7C:ED:14:C5:C1"
+      ]
+    }
+  }
+]
