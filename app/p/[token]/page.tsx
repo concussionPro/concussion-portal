@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { ProspectLanding } from '@/components/prospect/ProspectLanding'
+import { TotumLanding } from '@/components/prospect/TotumLanding'
 import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 import { accessKeyMatches } from '@/lib/prospect/access-key'
 
@@ -13,6 +14,14 @@ interface PageProps {
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { token } = await params
   const { k } = await searchParams
+  // Bespoke hand-built prospect page — not a DB-driven clinic row.
+  if (token === 'totum-life-science') {
+    return {
+      title: 'Concussion Hub Program — Totum Life Science',
+      description: 'Private proposal portal.',
+      robots: 'noindex, nofollow',
+    }
+  }
   const clinic = await getClinicBySlug(token)
   // Don't leak clinic name/city to visitors without the access key — the
   // slug alone is guessable, metadata must stay generic behind the wall.
@@ -36,6 +45,12 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 export default async function ProspectPage({ params, searchParams }: PageProps) {
   const { token } = await params
   const { utm_source, utm_campaign, utm_term } = await searchParams
+
+  // Bespoke hand-built prospect page — checked BEFORE the DB lookup so it
+  // renders regardless of whether a clinic row exists. Canada-specific pitch.
+  if (token === 'totum-life-science') {
+    return <TotumLanding />
+  }
 
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
