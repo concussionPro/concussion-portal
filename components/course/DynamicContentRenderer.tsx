@@ -473,7 +473,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
 
           return (
             <div key={i} className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
+              <span className="mt-[9px] h-1.5 w-1.5 rounded-full bg-teal-500/60 flex-shrink-0" aria-hidden />
               <span className="text-[15px] text-slate-700 leading-relaxed">{parseBoldText(cleanItem)}</span>
             </div>
           )
@@ -482,14 +482,16 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     )
   }
 
-  // Handle regular bullet points
+  // Handle regular bullet points — clean editorial markers, NOT checkmarks.
+  // (Checkmarks are reserved for the explicit ✓ takeaway handler so lists don't
+  // all read as identical green-tick walls.)
   if (text.trim().startsWith('•') || text.trim().startsWith('-') || text.trim().startsWith('* ') || text.trim() === '*') {
     const items = text.split(/\n/).filter(line => line.trim())
     return (
-      <ul key={key} className="space-y-2">
+      <ul key={key} className="space-y-1.5 pl-1">
         {items.map((item, i) => (
           <li key={i} className="flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
+            <span className="mt-[9px] h-1.5 w-1.5 rounded-full bg-teal-500/60 flex-shrink-0" aria-hidden />
             <span className="text-[15px] text-slate-700 leading-relaxed">
               {parseBoldText(item.replace(/^[•\-\*]\s*/, ''))}
             </span>
