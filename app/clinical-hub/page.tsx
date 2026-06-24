@@ -214,11 +214,36 @@ function BaselinePanel({ base }: { base: Baseline }) {
   )
 }
 
+// A clinic code identifies the CLINIC; each patient also needs a patient-level
+// key so sessions attach to the right card. We mint <CLINIC>-<id> per patient.
+function mintPatientCode(clinic: string, seq: number) {
+  return `${clinic}-${String(seq).padStart(2, '0')}`
+}
+
 export default function ClinicalHubPage() {
+  const [roster, setRoster] = useState<Patient[]>(PATIENTS)
   const [selectedId, setSelectedId] = useState('p1')
   const [query, setQuery] = useState('')
-  const patients = PATIENTS.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
-  const p = PATIENTS.find((x) => x.id === selectedId)!
+  const [addOpen, setAddOpen] = useState(false)
+  const patients = roster.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
+  const p = roster.find((x) => x.id === selectedId) ?? roster[0]
+
+  function addPatient(form: { name: string; age: string; sport: string; injuryDate: string }) {
+    const seq = roster.length + 1
+    const id = `p${seq}-${form.name.replace(/\s+/g, '').toLowerCase()}`
+    const next: Patient = {
+      id, name: form.name.trim() || 'New patient', age: Number(form.age) || 0,
+      sport: form.sport.trim() || '—', code: mintPatientCode('CEA-CLN', seq),
+      injuryDate: form.injuryDate || 'Today', daysPost: 0,
+      stage: { n: 1, label: 'Intake — threshold test pending' },
+      hrt: null, bandLow: 0, bandHigh: 0, restSymptoms: 0, baseline: 'none',
+      trend: [], sessions: [],
+      flag: 'New patient — capture a baseline and run the graded threshold test to begin.',
+    }
+    setRoster((r) => [next, ...r])
+    setSelectedId(id)
+    setAddOpen(false)
+  }
 
   return (
     <div className="min-h-screen dashboard-bg">
@@ -236,10 +261,10 @@ export default function ClinicalHubPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground tracking-tight leading-none">Clinical Hub</h1>
-              <p className="text-xs text-muted-foreground mt-1">Carter Sports &amp; Spinal · 4 active patients</p>
+              <p className="text-xs text-muted-foreground mt-1">Carter Sports &amp; Spinal · {roster.length} active patient{roster.length === 1 ? '' : 's'}</p>
             </div>
           </div>
-          <button className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition">
+          <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition">
             <Plus className="w-4 h-4" /> Add patient
           </button>
         </div>
@@ -377,8 +402,42 @@ export default function ClinicalHubPage() {
             </div>
 
             {/* Baseline & serial testing — the SCAT6/SCOAT6 tool */}
-            <BaselinePanel base={BASELINES[p.id]} />
+            <BaselinePanel base={BASELINES[p.id] ?? { tool: 'SCAT6', status: 'none', domains: [] }} />
           </section>
+        </div>
+      </div>
+
+      {addOpen && <AddPatientModal onClose={() => setAddOpen(false)} onAdd={addPatient} />}
+    </div>
+  )
+}
+
+function AddPatientModal({ onClose, onAdd }: { onClose: () => void; onAdd: (f: { name: string; age: string; sport: string; injuryDate: string }) => void }) {
+  const [form, setForm] = useState({ name: '', age: '', sport: '', injuryDate: '' })
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [k]: e.target.value }))
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-md glass-premium rounded-2xl p-6" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-base font-bold text-foreground mb-1">Add patient</h3>
+        <p className="text-xs text-muted-foreground mb-5">
+          Each patient gets a unique code under your clinic. Share it with them for the SST app so their sessions flow back to this card.
+        </p>
+        <div className="space-y-3">
+          {([['name', 'Full name', 'text'], ['age', 'Age', 'number'], ['sport', 'Sport', 'text'], ['injuryDate', 'Date of injury', 'text']] as const).map(([k, label, type]) => (
+            <div key={k}>
+              <label className="text-xs font-semibold text-foreground">{label}</label>
+              <input type={type} value={form[k]} onChange={set(k)}
+                placeholder={k === 'injuryDate' ? 'e.g. 24 Jun 2026' : ''}
+                className="mt-1 w-full px-3 py-2 rounded-xl glass-premium text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30" />
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <button onClick={onClose} className="text-sm font-semibold px-4 py-2 rounded-lg text-muted-foreground hover:bg-black/[0.03] transition">Cancel</button>
+          <button onClick={() => onAdd(form)} disabled={!form.name.trim()}
+            className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition disabled:opacity-50">
+            <Plus className="w-4 h-4" /> Add to roster
+          </button>
         </div>
       </div>
     </div>
