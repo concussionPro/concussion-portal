@@ -2,9 +2,10 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { FileText, Download, Lock, CheckCircle2, Star, ClipboardCheck, Heart, FileEdit, BookOpen, GitBranch, Archive } from 'lucide-react'
+import { FileText, Download, Lock, CheckCircle2, Star, ClipboardCheck, Heart, FileEdit, BookOpen, GitBranch, Archive, Activity, Gauge, ArrowRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 import { trackDownload, trackShopClick, trackEvent } from '@/lib/analytics'
 
@@ -347,6 +348,146 @@ export default function ClinicalToolkitPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Interactive clinical tools (flagship) */}
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#4a8a96]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#5b9aa6]" />
+                  Interactive clinical tools
+                </span>
+              </div>
+              <p className="text-sm text-slate-600 mb-5">
+                Live, browser-based instruments — not downloads. {accessLevel ? 'Included with your access.' : 'Unlock with the course.'}
+              </p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {[
+                  {
+                    href: '/sst-trainer',
+                    Icon: Activity,
+                    title: 'Sub-Symptom-Threshold Trainer',
+                    blurb: 'Heart-rate-guided sub-symptom-threshold exertion rehab — keep patients training inside the safe Buffalo-protocol band.',
+                    chips: ['Live HR (Bluetooth + camera)', 'Buffalo protocol band', 'Session & symptom tracking'],
+                    cta: 'Open trainer',
+                    from: 'from-rose-500',
+                    to: 'to-[#5b9aa6]',
+                    accent: 'group-hover:border-rose-300',
+                  },
+                  {
+                    href: '/preseason',
+                    Icon: Gauge,
+                    title: 'Preseason Baseline Testing',
+                    blurb: 'SCAT6 baseline cognitive & symptom testing for athletes and teams — establish individual baselines for accurate post-injury comparison.',
+                    chips: ['SCAT6 baseline', 'Team / squad testing', 'Pre-injury comparison'],
+                    cta: 'Start baseline testing',
+                    from: 'from-[#5b9aa6]',
+                    to: 'to-blue-600',
+                    accent: 'group-hover:border-blue-300',
+                  },
+                ].map((tool) => {
+                  const isLocked = !accessLevel
+                  const { Icon } = tool
+
+                  const inner = (
+                    <>
+                      {/* Gradient accent bar */}
+                      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${tool.from} ${tool.to} ${isLocked ? 'opacity-40' : ''}`} />
+
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${
+                          isLocked ? 'bg-slate-100' : `bg-gradient-to-br ${tool.from} ${tool.to}`
+                        }`}>
+                          {isLocked ? (
+                            <Lock className="w-7 h-7 text-slate-400" strokeWidth={2} />
+                          ) : (
+                            <Icon className="w-7 h-7 text-white" strokeWidth={2} />
+                          )}
+                        </div>
+                        {isLocked ? (
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            LOCKED
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-teal-50 text-[#4a8a96] border border-teal-200">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            INCLUDED
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className={`text-xl font-bold mb-2 tracking-tight ${isLocked ? 'text-slate-500' : 'text-slate-900'}`}>
+                        {tool.title}
+                      </h3>
+                      <p className={`text-sm leading-relaxed mb-4 ${isLocked ? 'text-slate-400' : 'text-slate-600'}`}>
+                        {tool.blurb}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mb-5">
+                        {tool.chips.map((chip) => (
+                          <span
+                            key={chip}
+                            className={`text-xs font-medium px-2.5 py-1 rounded-full border ${
+                              isLocked
+                                ? 'bg-slate-50 text-slate-400 border-slate-200'
+                                : 'bg-slate-50 text-slate-700 border-slate-200'
+                            }`}
+                          >
+                            {chip}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-100">
+                        {isLocked ? (
+                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-400">
+                            <Lock className="w-4 h-4" />
+                            Locked
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r ${tool.from} ${tool.to} shadow-sm group-hover:shadow-md transition-shadow`}>
+                            {tool.cta}
+                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )
+
+                  const baseClasses = `group relative overflow-hidden bg-white rounded-2xl border-2 p-6 transition-all ${
+                    isLocked
+                      ? 'border-slate-200 opacity-70'
+                      : `border-slate-200 hover:shadow-xl ${tool.accent}`
+                  }`
+
+                  if (isLocked) {
+                    return (
+                      <button
+                        key={tool.href}
+                        onClick={() => {
+                          trackShopClick('toolkit-locked-tool', { tool: tool.href })
+                          router.push('/pricing')
+                        }}
+                        className={`${baseClasses} text-left`}
+                      >
+                        {inner}
+                      </button>
+                    )
+                  }
+
+                  return (
+                    <Link
+                      key={tool.href}
+                      href={tool.href}
+                      onClick={() => trackEvent('open_interactive_tool', { tool: tool.href, accessLevel })}
+                      className={baseClasses}
+                    >
+                      {inner}
+                    </Link>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Category Filter */}
