@@ -18,6 +18,11 @@ export const courseTypeSchema = z.enum([
   // no location needed). Online + lifetime; the right offer for small clinics
   // where on-site isn't economic. Stripe price already wired in lib/stripe.ts.
   'clinic-hub-pack',
+  // Hub Pack add-ons — keep the schema aligned with VALID_COURSE_TYPES so they
+  // can never be silently 400-blocked the way clinic-hub-pack was. (No self-serve
+  // UI yet — provisioned manually post-purchase; see HubPackBuyCard for the base.)
+  'clinic-hub-extra-seat',
+  'clinic-workshop-upgrade',
 ])
 
 // UTM payload — accept loose string map, cap size
