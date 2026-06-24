@@ -32,6 +32,7 @@ import {
   Target,
   CheckCircle2,
   Calendar,
+  Scale,
 } from 'lucide-react'
 
 const CAL_URL = 'https://cal.com/zac-lewis-so8zjs'
@@ -39,6 +40,7 @@ const EMAIL = 'zac@concussion-education-australia.com'
 
 const NAV = [
   { id: 'opportunity', label: 'Opportunity' },
+  { id: 'rowans-law', label: "Rowan's Law" },
   { id: 'why-totum', label: 'Why Totum' },
   { id: 'format', label: 'Format' },
   { id: 'curriculum', label: 'Curriculum' },
@@ -55,6 +57,7 @@ export function TotumLanding() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 pt-16 md:pt-8 pb-10 sm:pb-14">
           <Hero />
           <Opportunity />
+          <RowansLaw />
           <WhyTotum />
           <Format />
           <Curriculum />
@@ -209,9 +212,9 @@ function Hero() {
       <div className="rounded-xl glass-premium px-4 py-3 flex items-start gap-3 max-w-3xl">
         <MapPin className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={2} />
         <p className="text-[12px] text-muted-foreground leading-relaxed">
-          Prepared for <strong className="text-foreground">Totum Life Science</strong> · Toronto &amp; Muskoka, ON ·
-          7 locations · Physiotherapy · Kinesiology (R.Kin) · Chiropractic · Massage Therapy · June 2026 ·
-          Zac Lewis, Concussion Education Australia.
+          Prepared for <strong className="text-foreground">Totum Life Science</strong> · King West flagship,
+          downtown Toronto &amp; Muskoka · 7 locations · Physiotherapy · Kinesiology (R.Kin) · Chiropractic ·
+          Massage Therapy · June 2026 · Zac Lewis, Concussion Education Australia.
         </p>
       </div>
     </section>
@@ -267,6 +270,66 @@ function Opportunity() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ROWAN'S LAW — Ontario's #1 concussion demand driver
+// ─────────────────────────────────────────────────────────────────────────────
+
+function RowansLaw() {
+  return (
+    <section id="rowans-law" className="scroll-mt-8 mb-10">
+      <div className="rounded-2xl bg-gradient-to-br from-accent/10 via-white to-accent/5 border border-accent/20 p-6 sm:p-8">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+            <Scale className="w-[15px] h-[15px] text-accent" strokeWidth={2.5} />
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent">Ontario law · Rowan&apos;s Law</p>
+        </div>
+        <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-4 leading-tight">
+          Ontario law created the demand. Most clinics refer it out.
+        </h3>
+        <p className="text-sm sm:text-base text-foreground/85 leading-relaxed max-w-3xl mb-5">
+          Ontario&apos;s <strong className="text-foreground">Rowan&apos;s Law (Concussion Safety), 2018</strong> legally
+          requires every sport organisation to maintain a Removal-from-Sport and Return-to-Sport protocol and a
+          Concussion Code of Conduct — in force since 2019, with the removal and return-to-sport rules mandatory
+          since January 2022. The law is named for Rowan Stringer, a 17-year-old Ottawa rugby player who died of
+          Second Impact Syndrome in 2013.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          <div className="glass-premium rounded-xl p-5">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-accent mb-2">What the law locks down</p>
+            <p className="text-[13.5px] text-foreground/85 leading-relaxed">
+              Only a physician or nurse practitioner can medically clear an athlete to return to competition. That
+              final sign-off is the one step the law reserves.
+            </p>
+          </div>
+          <div className="glass-premium rounded-xl p-5">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-accent mb-2">What it leaves open</p>
+            <p className="text-[13.5px] text-foreground/85 leading-relaxed">
+              Every step <em>between</em> removal and that clearance — recognise, assess, rehabilitate, stage the
+              graded return — is unregulated clinical work that&apos;s usually referred out. This program trains
+              Totum&apos;s team to own that entire middle of the pathway, handing a clean, clearance-ready file to the
+              physician.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,#fbbf24,transparent_60%)]" />
+          <p className="relative text-base sm:text-lg font-bold leading-snug">
+            Ontario law created the demand. Most clinics refer it out.{' '}
+            <span className="text-amber-300">Totum can be the clinic that runs it.</span>
+          </p>
+        </div>
+
+        <p className="text-[11px] text-muted-foreground italic mt-4">
+          Source: Government of Ontario — Rowan&apos;s Law (Concussion Safety), 2018.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // WHY TOTUM — three columns
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -287,7 +350,7 @@ function WhyTotum() {
       title: 'What your front desk gets',
       items: [
         'A concussion intake & triage short course',
-        'Funded-claim forms — health, auto & WSIB',
+        'Funded-claim forms — extended health, auto/SABS & WSIB',
         'Ready-to-use file checklists & templates',
       ],
     },
@@ -298,16 +361,23 @@ function WhyTotum() {
         'The local concussion hub at every site',
         'The full episode kept in-house',
         'A service no nearby clinic offers',
-        'One standard across all 7 sites',
+        'One standard across all 7 sites — King West to Muskoka',
       ],
     },
   ]
   return (
     <section id="why-totum" className="scroll-mt-8 mb-10">
       <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">Why Totum</p>
-      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-5 leading-tight">
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-4 leading-tight">
         One program. Three sides of the business.
       </h3>
+      <p className="text-sm sm:text-base text-foreground/80 leading-relaxed max-w-3xl mb-5">
+        Totum already runs a Personalized Circle of Care — and, as Official Health &amp; Performance Partner of
+        AFC Toronto, already manages athletes to a professional standard. Concussion is the one episode that circle
+        still refers out, yet structured graded-exertion rehab sits squarely in the scope of your R.Kins (Registered
+        Kinesiologists, regulated by the College of Kinesiologists of Ontario). This program completes Totum&apos;s
+        concussion circle of care.
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {columns.map((col) => {
           const Icon = col.icon
@@ -487,7 +557,7 @@ function FrontDesk() {
     {
       icon: ClipboardList,
       title: 'Funded-claim form pack',
-      body: 'Extended health, auto-insurance & WSIB.',
+      body: 'Three funded streams: extended health, auto-insurance (SABS) & WSIB.',
     },
     {
       icon: CheckCircle2,
