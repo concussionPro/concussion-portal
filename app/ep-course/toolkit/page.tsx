@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { Activity, ClipboardList, Dumbbell, TrendingUp, CheckSquare, LineChart, ArrowRight } from 'lucide-react'
+import { Activity, ClipboardList, Dumbbell, TrendingUp, CheckSquare, LineChart, ArrowRight, Gauge, CheckCircle2 } from 'lucide-react'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
 
@@ -57,6 +57,34 @@ const KIND_COLOR: Record<string, string> = {
   Reference: 'bg-amber-50 text-amber-700 border-amber-200',
 }
 
+// Flagship live, browser-based instruments (not downloads) — mirrors the
+// "Interactive clinical tools" bento on /clinical-toolkit. Enrolled EP-course
+// users have access, so these are live navigations with an "Included" badge.
+const FLAGSHIP_TOOLS = [
+  {
+    href: '/sst-trainer',
+    icon: Activity,
+    title: 'Sub-Symptom-Threshold Trainer',
+    blurb: 'Heart-rate-guided sub-symptom-threshold exertion rehab — keep patients training inside the safe Buffalo-protocol band.',
+    chips: ['Live HR (Bluetooth + camera)', 'Buffalo protocol band', 'Session & symptom tracking'],
+    cta: 'Open trainer',
+    from: 'from-rose-500',
+    to: 'to-teal-600',
+    accent: 'hover:border-rose-300',
+  },
+  {
+    href: '/preseason',
+    icon: Gauge,
+    title: 'Preseason Baseline Testing',
+    blurb: 'SCAT6 baseline cognitive & symptom testing for athletes and teams — establish individual baselines for accurate post-injury comparison.',
+    chips: ['SCAT6 baseline', 'Team / squad testing', 'Pre-injury comparison'],
+    cta: 'Start baseline testing',
+    from: 'from-teal-600',
+    to: 'to-blue-600',
+    accent: 'hover:border-blue-300',
+  },
+]
+
 export default async function EpToolkitPage() {
   const access = await requireAiCourseAccess('/login')
 
@@ -76,6 +104,60 @@ export default async function EpToolkitPage() {
             prescribe and progress active recovery, and document it defensibly. Every template below opens as a real,
             printable document — view, fill in, and save as PDF for your clinic.
           </p>
+
+          {/* Interactive clinical tools (flagship) — mirrors /clinical-toolkit */}
+          <div className="mt-8">
+            <div className="mb-1 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-teal-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
+                Interactive clinical tools
+              </span>
+            </div>
+            <p className="mb-5 text-sm text-slate-600">
+              Live, browser-based instruments — not downloads. Included with your access.
+            </p>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {FLAGSHIP_TOOLS.map((tool) => {
+                const Icon = tool.icon
+                return (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    className={`group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-6 transition-all hover:shadow-xl ${tool.accent}`}
+                  >
+                    <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${tool.from} ${tool.to}`} />
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-sm ${tool.from} ${tool.to}`}>
+                        <Icon className="h-7 w-7 text-white" strokeWidth={2} />
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-bold text-teal-700">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        INCLUDED
+                      </span>
+                    </div>
+                    <h3 className="mb-2 text-xl font-bold tracking-tight text-slate-900">{tool.title}</h3>
+                    <p className="mb-4 text-sm leading-relaxed text-slate-600">{tool.blurb}</p>
+                    <div className="mb-5 flex flex-wrap gap-2">
+                      {tool.chips.map((chip) => (
+                        <span
+                          key={chip}
+                          className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700"
+                        >
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="border-t border-slate-100 pt-4">
+                      <span className={`inline-flex items-center gap-2 rounded-lg bg-gradient-to-r px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-shadow group-hover:shadow-md ${tool.from} ${tool.to}`}>
+                        {tool.cta}
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
 
           {/* LIVE TOOL — Baseline & serial testing, wired to the working tool */}
           <Link

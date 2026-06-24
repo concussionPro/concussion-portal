@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Activity, Gauge, Lock } from 'lucide-react'
 import { ToolkitSidebar } from '../_sidebar'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
@@ -13,6 +13,31 @@ interface PageProps {
   params: Promise<{ token: string }>
   searchParams: Promise<{ k?: string }>
 }
+
+// Flagship live, browser-based instruments included with the program — mirrors
+// the "Interactive clinical tools" bento on /clinical-toolkit. Prospects are not
+// paid, so these are framed as preview / what-you-get and route to the unlock
+// CTA (pricing), NOT a deep-link into the live tool.
+const FLAGSHIP_TOOLS = [
+  {
+    icon: Activity,
+    track: 'sst-trainer',
+    title: 'Sub-Symptom-Threshold Trainer',
+    blurb: 'Heart-rate-guided sub-symptom-threshold exertion rehab — keep patients training inside the safe Buffalo-protocol band.',
+    chips: ['Live HR (Bluetooth + camera)', 'Buffalo protocol band', 'Session & symptom tracking'],
+    from: 'from-rose-500',
+    to: 'to-teal-600',
+  },
+  {
+    icon: Gauge,
+    track: 'preseason',
+    title: 'Preseason Baseline Testing',
+    blurb: 'SCAT6 baseline cognitive & symptom testing for athletes and teams — establish individual baselines for accurate post-injury comparison.',
+    chips: ['SCAT6 baseline', 'Team / squad testing', 'Pre-injury comparison'],
+    from: 'from-teal-600',
+    to: 'to-blue-600',
+  },
+]
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { token } = await params
@@ -52,6 +77,61 @@ export default async function ClinicalToolkitPage({ params, searchParams }: Page
             <ArrowLeft className="w-3 h-3" />
             Back to toolkit
           </Link>
+
+          {/* Interactive clinical tools — included with the program (preview, no deep-link) */}
+          <div data-track-section="toolkit-interactive-tools" className="print:hidden mb-8">
+            <div className="mb-1 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-accent">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                Interactive clinical tools
+              </span>
+            </div>
+            <p className="mb-5 text-sm text-muted-foreground">
+              Live, browser-based instruments your clinic unlocks with the program — not downloads.
+            </p>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {FLAGSHIP_TOOLS.map((tool) => {
+                const Icon = tool.icon
+                return (
+                  <Link
+                    key={tool.track}
+                    href={`${baseHref}?k=${accessKey}#pricing`}
+                    data-track-cta={`toolkit-tool-${tool.track}`}
+                    className="group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-6 transition-all hover:border-teal-300 hover:shadow-xl"
+                  >
+                    <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${tool.from} ${tool.to}`} />
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-sm ${tool.from} ${tool.to}`}>
+                        <Icon className="h-7 w-7 text-white" strokeWidth={2} />
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-bold text-teal-700">
+                        <Lock className="h-3.5 w-3.5" />
+                        WITH PROGRAM
+                      </span>
+                    </div>
+                    <h3 className="mb-2 text-xl font-bold tracking-tight text-slate-900">{tool.title}</h3>
+                    <p className="mb-4 text-sm leading-relaxed text-slate-600">{tool.blurb}</p>
+                    <div className="mb-5 flex flex-wrap gap-2">
+                      {tool.chips.map((chip) => (
+                        <span
+                          key={chip}
+                          className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700"
+                        >
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="border-t border-slate-100 pt-4">
+                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700">
+                        Included with your cohort
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
 
           <div data-track-section="toolkit-clinical">
             {/* Preview policy (title/structure-only — no copyable content):
