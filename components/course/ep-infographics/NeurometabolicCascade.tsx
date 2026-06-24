@@ -67,7 +67,6 @@ export function NeurometabolicCascade() {
         <path d="M512 318 L512 338 L360 338" fill="none" stroke={TEAL} strokeWidth="2" markerEnd="url(#nm-arrow)" />
 
         {/* mismatch card */}
-        <rect x="150" y="354" width="420" height="58" rx="14" fill="#dcebd0" opacity="0" />
         <rect x="150" y="354" width="420" height="58" rx="14" fill="#fff" stroke="#c2772e" strokeWidth="1.5" />
         <text x="360" y="380" textAnchor="middle" fontSize="14" fontWeight="800" fill="#a8631f">SUPPLY–DEMAND MISMATCH</text>
         <text x="360" y="399" textAnchor="middle" fontSize="12" fill={SUB}>Peak demand meets reduced delivery · lactate rises</text>
