@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
-  AlertTriangle, Check, ChevronRight, Stethoscope, ArrowUpRight, Clock,
+  AlertTriangle, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock, NotebookPen,
 } from 'lucide-react'
 
 /* ───────────────────────────────────────────────────────────────────
@@ -34,6 +34,7 @@ type Patient = {
   trend: number[]          // symptom score over weeks (lower = better)
   sessions: Session[]
   flag?: string
+  notes?: string
 }
 
 const PATIENTS: Patient[] = [
@@ -129,6 +130,19 @@ const BASELINES: Record<string, Baseline> = {
     ],
   },
 }
+
+/* Return-to-activity ladder — the clinician advances/holds the patient along it.
+   Mirrors a sub-symptom graded-exertion progression; final clearance is the
+   treating doctor's call, not the app's. */
+const STAGES: { n: number; label: string }[] = [
+  { n: 1, label: 'Intake — symptom-limited' },
+  { n: 2, label: 'Threshold test' },
+  { n: 3, label: 'Sub-symptom aerobic (light)' },
+  { n: 4, label: 'Sub-symptom aerobic (moderate)' },
+  { n: 5, label: 'Sport-specific / non-contact' },
+  { n: 6, label: 'Return-to-sport progression' },
+  { n: 7, label: 'Cleared — refer to MD' },
+]
 
 /** Recovery status of a domain vs its own baseline. */
 function domainState(d: Domain): 'recovered' | 'off' | 'pending' | 'nobaseline' {
@@ -245,6 +259,14 @@ export default function ClinicalHubPage() {
     setAddOpen(false)
   }
 
+  function updatePatient(id: string, partial: Partial<Patient>) {
+    setRoster((r) => r.map((pt) => (pt.id === id ? { ...pt, ...partial } : pt)))
+  }
+  const setStage = (n: number) => {
+    const s = STAGES.find((x) => x.n === n)
+    if (s) updatePatient(p.id, { stage: s, daysPost: p.daysPost })
+  }
+
   return (
     <div className="min-h-screen dashboard-bg">
       {/* Preview banner */}
@@ -340,6 +362,42 @@ export default function ClinicalHubPage() {
               )}
             </div>
 
+            {/* Return-to-activity stage management */}
+            <div className="glass-premium rounded-2xl p-5 sm:p-6">
+              <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
+                  <h3 className="text-sm font-bold text-foreground">Return-to-activity stage</h3>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setStage(Math.max(1, p.stage.n - 1))} disabled={p.stage.n <= 1}
+                    className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-black/10 text-muted-foreground hover:bg-black/[0.03] transition disabled:opacity-40">
+                    <ChevronLeft className="w-3.5 h-3.5" /> Step back
+                  </button>
+                  <button onClick={() => setStage(Math.min(7, p.stage.n + 1))} disabled={p.stage.n >= 7}
+                    className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition disabled:opacity-40">
+                    Advance <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              {/* clickable ladder */}
+              <div className="flex items-center gap-1.5">
+                {STAGES.map((s) => {
+                  const done = s.n < p.stage.n, current = s.n === p.stage.n
+                  return (
+                    <button key={s.n} onClick={() => setStage(s.n)} title={s.label}
+                      className={`flex-1 h-2 rounded-full transition ${current ? 'bg-[var(--accent)]' : done ? 'bg-[var(--accent)]/35' : 'bg-black/[0.06] hover:bg-black/10'}`} />
+                  )
+                })}
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <p className="text-xs font-semibold text-foreground">Stage {p.stage.n} · {p.stage.label}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {p.stage.n < 7 ? `Next: ${STAGES.find((s) => s.n === p.stage.n + 1)?.label}` : 'Refer to treating doctor for clearance'}
+                </p>
+              </div>
+            </div>
+
             {/* Stat tiles */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="glass-premium rounded-2xl p-5">
@@ -403,6 +461,21 @@ export default function ClinicalHubPage() {
 
             {/* Baseline & serial testing — the SCAT6/SCOAT6 tool */}
             <BaselinePanel base={BASELINES[p.id] ?? { tool: 'SCAT6', status: 'none', domains: [] }} />
+
+            {/* Clinical notes */}
+            <div className="glass-premium rounded-2xl p-5 sm:p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <NotebookPen className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
+                <h3 className="text-sm font-bold text-foreground">Clinical notes</h3>
+              </div>
+              <textarea
+                value={p.notes ?? ''}
+                onChange={(e) => updatePatient(p.id, { notes: e.target.value })}
+                placeholder="Session observations, symptom triggers, RTP decisions, referrals…"
+                rows={3}
+                className="w-full px-3 py-2.5 rounded-xl glass-premium text-sm text-foreground placeholder:text-muted-foreground/50 leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+              />
+            </div>
           </section>
         </div>
       </div>
