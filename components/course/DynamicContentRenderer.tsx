@@ -522,7 +522,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     return (
       <div key={key} className="space-y-3">
         {items.map((item, i) => {
-          const cleanItem = item.replace(/^[•\-\*]\s*/, '')
+          const cleanItem = item.replace(/^\s*[•\-\*]\s*/, '')
           const match = cleanItem.match(/^([^(]+)\(([^)]+)\):\s*(.+)/)
 
           if (match) {
@@ -558,7 +558,7 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
           <li key={i} className="flex items-start gap-3">
             <span className="mt-[9px] h-1.5 w-1.5 rounded-full bg-teal-500/60 flex-shrink-0" aria-hidden />
             <span className="text-[15px] text-slate-700 leading-relaxed">
-              {parseBoldText(item.replace(/^[•\-\*]\s*/, ''))}
+              {parseBoldText(item.replace(/^\s*[•\-\*]\s*/, ''))}
             </span>
           </li>
         ))}
