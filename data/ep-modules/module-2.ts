@@ -5,8 +5,8 @@ export const module2: Module = {
   title: 'Recognition, Red Flags & Scope of Practice',
   subtitle:
     'Neurophysiology of Observable Signs, Red-Flag Pathophysiology and the Medico-Legal Scope Boundary',
-  duration: '45 min',
-  points: 0.75,
+  duration: '30 min',
+  points: 0.5,
   description:
     'A science-degree-level treatment of concussion recognition and triage for the Accredited Exercise Physiologist. Covers the neurophysiological mechanisms underlying each symptom cluster, the pathophysiology of life-threatening red flags (intracranial haemorrhage, second-impact syndrome, cervical spine injury) and why each mandates immediate escalation, the structure and limits of SCAT6/SCOAT6 in EP hands, and the precise medico-legal rationale for the AEP\'s recognise-don\'t-diagnose boundary.',
   sections: [
@@ -72,6 +72,7 @@ export const module2: Module = {
         '[CALLOUT: key | Cognitive fog is NOT psychological weakness. It is ATP depletion, neuromodulator disruption, axonal damage and cerebrovascular uncoupling occurring simultaneously. Instructing a client to "try harder" at cognitive tasks during the energy crisis worsens the supply-demand mismatch and reliably backfires.]',
         '### Nausea and Vomiting',
         'The area postrema ("vomiting centre" in the dorsal medulla) and nucleus tractus solitarius receive convergent input from vestibular nuclei, vagal afferents and autonomic pathways. Vestibular disruption, autonomic dysregulation and direct brainstem neurometabolic cascade involvement activate these medullary centres, producing nausea and occasional vomiting. One to two episodes early after injury is common and not itself alarming. REPEATED or PROGRESSIVELY WORSENING vomiting — especially in the hours after injury — is a red flag: it may reflect rising intracranial pressure (ICP) directly stimulating the area postrema.',
+        '[INFOGRAPHIC: autonomic-dysfunction]',
         '### Light and Noise Sensitivity',
         'Photophobia arises from trigeminovascular sensitisation — the same pathway as the migrainous headache mechanism. Retinal photoreceptor activation drives excessive nociceptive signalling via trigeminal afferents sensitised by CSD and neuroinflammation. Phonophobia reflects auditory cortex hyperexcitability during the acute ionic disruption phase, amplifying normal auditory input to an aversive level. Both symptoms are reliable markers of the acute neurometabolic cascade and typically resolve as the energy crisis subsides.',
         '### Emotional Lability and Mood Symptoms',
@@ -130,6 +131,7 @@ export const module2: Module = {
         '### 1. Intracranial Haemorrhage',
         'The brain occupies a rigid, non-distensible skull. Any additional volume inside that skull — blood from a haemorrhage — must displace existing contents. The Monro-Kellie doctrine: the sum of intracranial volumes (brain + blood + CSF) is constant; as blood accumulates, CSF and venous blood are displaced. Once this compensatory capacity is exhausted, intracranial pressure (ICP) rises exponentially.',
         'Rising ICP reduces cerebral perfusion pressure (CPP = mean arterial pressure − ICP). As CPP falls, cerebral ischaemia develops. If ICP continues to rise, the medial temporal lobe (uncus) herniates through the tentorium cerebelli, compressing the brainstem and the ipsilateral oculomotor nerve (CN III). The result: a fixed, dilated, non-reactive ipsilateral pupil — then progressive loss of consciousness — then, without neurosurgical decompression, death.',
+        '[INFOGRAPHIC: brain-regions]',
         '**Epidural Haematoma (EDH):**',
         '   - Location: Between skull and dura mater.',
         '   - Source: Almost always the MIDDLE MENINGEAL ARTERY — a branch of the external carotid running in a groove in the temporal bone, lacerated by a temporal skull fracture. ARTERIAL bleeding at ~100 mmHg mean pressure.',

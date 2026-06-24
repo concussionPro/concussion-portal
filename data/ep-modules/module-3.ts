@@ -220,6 +220,7 @@ export const module3: Module = {
       title: 'From HRt to Prescription: The 80–90% Rule',
       content: [
         'This is the moment the assessment becomes treatment. The HRt you have just recorded converts directly and immediately into the client\'s daily aerobic exercise prescription — no separate assessment session, no waiting period.',
+        '[INFOGRAPHIC: hrt-to-prescription]',
         '### The Conversion',
         '   - Calculate the TARGET HEART RATE ZONE as 80–90% of HRt.',
         '   - Example: HRt = 150 bpm → target zone = 120–135 bpm.',

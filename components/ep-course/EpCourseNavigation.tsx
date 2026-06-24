@@ -25,10 +25,16 @@ export function EpCourseNavigation({
 }: CourseNavigationProps = {}) {
   const router = useRouter()
   const params = useParams()
-  const currentModuleId = parseInt(params.id as string)
+  // On the dashboard there is no [id] route param, so params.id is undefined and
+  // currentModuleId is NaN. That's fine: NaN never === a real module id, so no
+  // module gets the active highlight and nothing pre-expands. Guard the initial
+  // expanded state so we never seed [NaN].
+  const currentModuleId = params.id ? parseInt(params.id as string) : NaN
   const modules = getModulesMeta()
   const { isModuleComplete, getModuleProgress } = useProgress()
-  const [expandedModules, setExpandedModules] = useState<number[]>([currentModuleId])
+  const [expandedModules, setExpandedModules] = useState<number[]>(
+    Number.isNaN(currentModuleId) ? [] : [currentModuleId]
+  )
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [accessLevel, setAccessLevel] = useState<'preview' | 'online-only' | 'full-course' | null>(null)
 
