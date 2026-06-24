@@ -85,10 +85,73 @@ function mapRow(row: DbClinicRow): ProspectClinic {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SYNTHETIC CLINIC — Totum Life Science (Toronto & Muskoka, ON)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Totum is a bespoke, hand-built Canadian prospect (see TotumLanding.tsx). It
+// must NOT exist as a real `prospect_clinics` row: the cold-outreach engine
+// selects + emails clinics with raw SQL against that table, and Totum is a
+// founder-led, hand-managed relationship — never a cold target. Inserting it
+// would risk an automated email going out.
+//
+// Instead this synthetic ProspectClinic is returned directly from
+// getClinicBySlug() — checked BEFORE the SQL query — so all of Totum's
+// sub-routes (/learning, /learning/module-1, /toolkit/clinical, /toolkit/admin,
+// /references) resolve and render their generic content, while NO database row
+// is ever created or read. Because the cold-send engine only ever touches the
+// table via raw SQL (never getClinicBySlug), it can never see this record, so
+// Totum is structurally un-sendable. `contactEmail` is a placeholder only — it
+// is never read by any send path because this record is never in the queue.
+const TOTUM_SYNTHETIC: ProspectClinic = {
+  id: -1,
+  slug: 'totum-life-science',
+  accessKey: 'totum-2026',
+  name: 'Totum Life Science',
+  shortName: 'Totum',
+  city: 'Toronto',
+  state: 'ON' as State, // Ontario — display only; State union is AU-centric
+  region: 'Toronto & Muskoka, ON',
+  contactFirstName: 'Totum',
+  contactFullName: 'Totum Life Science',
+  contactEmail: 'info@totum.ca', // placeholder — never emailed (not in DB/queue)
+  contactRole: undefined,
+  contactDiscipline: 'physiotherapists',
+  clinicWebsiteUrl: 'https://totum.ca',
+  team: {
+    osteopaths: 0,
+    physiotherapists: 10,
+    chiropractors: 6,
+    generalPractitioners: 0,
+    sportsMedicineDoctors: 0,
+    exercisePhys: 8, // R.Kin / Registered Kinesiologists
+    myotherapists: 0,
+    remedialMassage: 10,
+    practiceManager: 0,
+    admin: 4,
+  },
+  localTargets: [],
+  travelBand: 'flight-far',
+  travelSurcharge: travelSurchargeFor('flight-far'),
+  cohortRecommendation: 'full-team',
+  status: 'researching',
+  researchSource: 'manual',
+  validUntil: new Date('2027-12-31T00:00:00.000Z'),
+  notes: undefined,
+  createdAt: new Date('2026-06-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-06-01T00:00:00.000Z'),
+  priorityWave: undefined,
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CRUD
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function getClinicBySlug(slug: string): Promise<ProspectClinic | null> {
+  // Totum is a synthetic, hand-built prospect — return it WITHOUT touching the
+  // DB so no row exists for the cold-send engine to pick up. Every other slug
+  // falls through to the normal SQL lookup below.
+  if (slug === 'totum-life-science') return TOTUM_SYNTHETIC
+
   const { rows } = await sql<DbClinicRow>`
     SELECT * FROM prospect_clinics WHERE slug = ${slug} LIMIT 1
   `

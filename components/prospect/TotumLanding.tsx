@@ -14,6 +14,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import {
   Brain,
   ArrowUpRight,
@@ -23,7 +24,6 @@ import {
   Menu,
   X,
   TrendingUp,
-  Users,
   ClipboardList,
   Building2,
   Stethoscope,
@@ -33,7 +33,11 @@ import {
   CheckCircle2,
   Calendar,
   Scale,
+  BookOpen,
+  FileText,
 } from 'lucide-react'
+
+const SLUG = 'totum-life-science'
 
 const CAL_URL = 'https://cal.com/zac-lewis-so8zjs'
 const EMAIL = 'zac@concussion-education-australia.com'
@@ -44,9 +48,10 @@ const NAV = [
   { id: 'why-totum', label: 'Why Totum' },
   { id: 'format', label: 'Format' },
   { id: 'curriculum', label: 'Curriculum' },
+  { id: 'preview', label: 'Preview the course' },
   { id: 'practical-day', label: 'Practical Day' },
-  { id: 'front-desk', label: 'Front Desk' },
-  { id: 'investment', label: 'Investment' },
+  { id: 'toolkit', label: 'Clinical tools' },
+  { id: 'pricing', label: 'Pricing' },
 ]
 
 export function TotumLanding() {
@@ -61,9 +66,10 @@ export function TotumLanding() {
           <WhyTotum />
           <Format />
           <Curriculum />
+          <CoursePreview />
           <PracticalDay />
-          <FrontDesk />
-          <Investment />
+          <Toolkit />
+          <Pricing />
           <Footer />
         </div>
       </main>
@@ -544,44 +550,112 @@ function PracticalDay() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FRONT-DESK & ADMIN TRACK
+// COURSE PREVIEW · MODULE 1 TRIAL
+// Same accent-gradient course card as ProspectLanding's "Start here" trial CTA,
+// linking into the live learning suite so Totum behaves like a normal demo.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FrontDesk() {
-  const items = [
+function CoursePreview() {
+  return (
+    <section id="preview" className="scroll-mt-8 mb-10">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">Preview the course</p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-5 leading-tight">
+        Open Module 1 and try it yourself.
+      </h3>
+
+      <Link
+        href={`/p/${SLUG}/learning/module-1`}
+        className="block rounded-2xl mb-3 relative overflow-hidden bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg group hover:shadow-xl transition-shadow"
+      >
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_60%)]" />
+        <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
+                <BookOpen className="w-4 h-4" strokeWidth={2} />
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/90">Module 1 · open trial</p>
+            </div>
+            <h4 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">
+              Module 1 — preview the course
+            </h4>
+            <p className="text-sm text-white/85 leading-relaxed">
+              First sections + an interactive quiz checkpoint, exactly as your team will see it. ~15 CPD hrs total across all 8 modules.
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
+            Open Module 1
+            <ArrowUpRight className="w-4 h-4" />
+          </div>
+        </div>
+      </Link>
+
+      <Link
+        href={`/p/${SLUG}/learning`}
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:gap-2.5 transition-all"
+      >
+        See all 8 modules
+        <ArrowUpRight className="w-4 h-4" />
+      </Link>
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLINICAL TOOLS & DOCUMENTS · TOOLKIT
+// Two cards linking into the live toolkit — clinical templates and the
+// admin / funded-claim (WSIB / SABS) document pack. Replaces the old static
+// front-desk prose; the real pages carry the content now.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function Toolkit() {
+  const cards = [
     {
-      icon: Users,
-      title: 'Concussion intake & triage short course',
-      body: 'Reception trained to recognise, prioritise & book correctly.',
+      href: `/p/${SLUG}/toolkit/clinical`,
+      icon: Stethoscope,
+      eyebrow: 'Clinical templates',
+      title: 'Assessment, rehab & discharge templates',
+      body: 'Fillable concussion templates — SCAT6/SCOAT6 capture, graded-exertion tracking, return-to-sport staging and clearance-ready discharge letters.',
     },
     {
+      href: `/p/${SLUG}/toolkit/admin`,
       icon: ClipboardList,
-      title: 'Funded-claim form pack',
-      body: 'Three funded streams: extended health, auto-insurance (SABS) & WSIB.',
-    },
-    {
-      icon: CheckCircle2,
-      title: 'File checklists & templates',
-      body: 'Ready to use from day one.',
+      eyebrow: 'Admin & funded-claim docs',
+      title: 'Front-desk pack & funded-claim forms',
+      body: 'Intake & triage workflow plus the funded-claim form pack across all three streams — extended health, auto-insurance (SABS) and WSIB.',
     },
   ]
   return (
-    <section id="front-desk" className="scroll-mt-8 mb-10">
-      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">Front-desk &amp; admin track</p>
+    <section id="toolkit" className="scroll-mt-8 mb-10">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">Clinical tools &amp; documents</p>
       <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-5 leading-tight">
-        Your reception desk, ready on day one.
+        The toolkit your team and front desk use from day one.
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {items.map((item) => {
-          const Icon = item.icon
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {cards.map((card) => {
+          const Icon = card.icon
           return (
-            <div key={item.title} className="rounded-2xl bg-gradient-to-br from-amber-50/70 to-orange-50/40 border border-amber-200 p-5">
-              <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center mb-3">
-                <Icon className="w-[18px] h-[18px] text-amber-700" strokeWidth={2} />
+            <Link
+              key={card.href}
+              href={card.href}
+              className="block rounded-2xl relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-accent/5 border border-amber-200 shadow-sm hover:shadow-md transition-shadow group"
+            >
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <Icon className="w-3.5 h-3.5 text-amber-700" strokeWidth={2} />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-700">{card.eyebrow}</p>
+                </div>
+                <h4 className="text-lg sm:text-xl font-bold text-foreground mb-1 leading-tight">{card.title}</h4>
+                <p className="text-[13px] text-muted-foreground leading-relaxed mb-4">{card.body}</p>
+                <div className="inline-flex items-center gap-1.5 text-sm font-bold bg-accent text-white px-4 py-2.5 rounded-lg shadow-sm group-hover:translate-x-0.5 transition-transform">
+                  <FileText className="w-4 h-4" strokeWidth={2} />
+                  Open documents
+                  <ArrowUpRight className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-[14px] font-bold text-foreground leading-tight mb-1">{item.title}</p>
-              <p className="text-[12.5px] text-muted-foreground leading-snug">{item.body}</p>
-            </div>
+            </Link>
           )
         })}
       </div>
@@ -590,19 +664,84 @@ function FrontDesk() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INVESTMENT
+// PRICING · IN-HOUSE TEAM-TRAINING MODEL (CAD)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Investment() {
+function Pricing() {
+  const tiers = [
+    {
+      name: 'Per clinician',
+      badge: 'In-house team rate',
+      price: 'CAD $600',
+      unit: '/ clinician',
+      body: 'The in-house rate when your team trains together — well below the public per-seat price.',
+      recommended: false,
+    },
+    {
+      name: 'A team of ~22',
+      badge: 'Most clinics',
+      price: 'CAD $13,000',
+      unit: 'one team',
+      body: 'Your full clinical team — physiotherapists, R.Kins, chiropractors and RMTs — trained on one protocol.',
+      recommended: true,
+    },
+    {
+      name: 'Whole network',
+      badge: 'All 7 sites',
+      price: 'CAD $25,000',
+      unit: 'all locations',
+      body: 'Every Totum location, King West to Muskoka, on a single concussion standard.',
+      recommended: false,
+    },
+  ]
   return (
-    <section id="investment" className="scroll-mt-8 mb-10">
+    <section id="pricing" className="scroll-mt-8 mb-10">
+      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">Pricing</p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2 leading-tight">
+        Priced for the whole team, not the seat.
+      </h3>
+      <p className="text-sm sm:text-base text-foreground/85 leading-relaxed max-w-2xl mb-6">
+        Includes the 8 online modules, the on-site practical day, the toolkit and certification. Final scope
+        is tailored on a 20-minute call.
+      </p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {tiers.map((tier) => (
+          <div
+            key={tier.name}
+            className={`rounded-2xl p-5 sm:p-6 relative overflow-hidden ${
+              tier.recommended
+                ? 'bg-gradient-to-br from-accent/8 via-accent/3 to-white border border-accent/40 ring-1 ring-accent/30 shadow-md'
+                : 'glass-premium border border-accent/10'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10px] uppercase tracking-wider font-bold text-accent">{tier.name}</p>
+              <span
+                className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                  tier.recommended ? 'bg-accent text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                }`}
+              >
+                {tier.badge}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1.5 mb-3">
+              <span className={`text-3xl font-bold leading-none ${tier.recommended ? 'text-accent' : 'text-foreground'}`}>
+                {tier.price}
+              </span>
+              <span className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">{tier.unit}</span>
+            </div>
+            <p className="text-[13px] text-foreground/85 leading-relaxed">{tier.body}</p>
+          </div>
+        ))}
+      </div>
+
       <div className="rounded-2xl bg-gradient-to-br from-accent/8 via-white to-white border border-accent/15 p-6 sm:p-8">
-        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-2">Investment</p>
-        <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3 leading-tight">
-          Scoped to your team.
-        </h3>
-        <p className="text-sm sm:text-base text-foreground/85 leading-relaxed max-w-2xl mb-6">
-          Tailored to your team and the number of clinicians across your sites — walked through on a short call.
+        <h4 className="text-lg sm:text-xl font-bold text-foreground tracking-tight mb-2 leading-tight">
+          Let&apos;s scope it to Totum.
+        </h4>
+        <p className="text-sm text-foreground/85 leading-relaxed max-w-2xl mb-5">
+          A 20-minute call to confirm the cohort size across your sites and lock the final number — no contract, no slides.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <a
