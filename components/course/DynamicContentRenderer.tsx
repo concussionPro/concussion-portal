@@ -31,6 +31,7 @@ import {
   Info,
 } from 'lucide-react'
 import { getEpInfographic } from './ep-infographics'
+import { InlineReveal, InlinePoll } from './InlineInteractive'
 
 // Map content-marker emoji to lucide icons for professional rendering
 const EMOJI_ICON_MAP: Record<string, { icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; color: string }> = {
@@ -109,6 +110,25 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
     // Check if this is a pathway section (A., B., C. followed by content with Mechanism:, Target:, etc.)
     const isPathwayHeader = /^[A-C]\.\s+THE\s+/.test(line)
 
+    // VISUAL VARIETY: a short "Label:" line (ends with a colon, < ~60 chars)
+    // immediately followed by a bullet list is grouped into a titled sub-card
+    // (__SUBCARD__) instead of a loose heading + bare list.
+    const trimmedLine = line.trim()
+    const isBulletLine = (l: string) => {
+      const t = l.trim()
+      return t.startsWith('•') || t.startsWith('* ') || (t.startsWith('- ') && !/^-{3,}$/.test(t))
+    }
+    const isShortLabelLine =
+      trimmedLine.endsWith(':') &&
+      !trimmedLine.endsWith(':**') &&
+      !line.includes('|') &&
+      trimmedLine.length > 3 &&
+      trimmedLine.length < 60 &&
+      !isPathwayHeader &&
+      !startsWithTargetEmoji &&
+      !/^[A-C]\.\s/.test(trimmedLine)
+    const nextLineIsBullet = i + 1 < content.length && isBulletLine(content[i + 1])
+
     if (isPathwayHeader) {
       const pathwayLines = [line]
       i++
@@ -180,6 +200,14 @@ export function DynamicContentRenderer({ content, sectionIndex }: DynamicContent
       }
 
       processed.push(tableLines.join('\n'))
+    } else if (isShortLabelLine && nextLineIsBullet) {
+      const subcardLines = [line]
+      i++
+      while (i < content.length && isBulletLine(content[i])) {
+        subcardLines.push(content[i])
+        i++
+      }
+      processed.push('__SUBCARD__\n' + subcardLines.join('\n'))
     } else {
       processed.push(line)
       i++
@@ -321,6 +349,38 @@ function parseBoldText(text: string): React.ReactNode[] {
 
 function renderParagraph(text: string, key: string, definitionColorIndex: number = 0) {
 
+  // Inline interactive: [REVEAL: prompt | answer] — think-first tap-to-reveal card
+  const revealMatch = text.match(/^\[REVEAL:\s*([^|]+?)\s*\|\s*([\s\S]+?)\s*\]$/)
+  if (revealMatch) {
+    return <InlineReveal key={key} prompt={revealMatch[1]} answer={revealMatch[2]} />
+  }
+
+  // Inline interactive: [POLL: question | optA | optB | optC || correctIndex | explanation]
+  // — single inline knowledge-check rendered via the shared QuickCheck component.
+  const pollMatch = text.match(/^\[POLL:\s*([\s\S]+?)\s*\|\|\s*(\d+)\s*\|\s*([\s\S]+?)\s*\]$/)
+  if (pollMatch) {
+    const optionParts = pollMatch[1].split('|').map(s => s.trim()).filter(Boolean)
+    const question = optionParts[0]
+    const options = optionParts.slice(1)
+    const correctIndex = parseInt(pollMatch[2], 10)
+    if (question && options.length >= 2 && correctIndex >= 0 && correctIndex < options.length) {
+      return (
+        <InlinePoll
+          key={key}
+          question={question}
+          options={options}
+          correctAnswer={correctIndex}
+          explanation={pollMatch[3]}
+        />
+      )
+    }
+    return null
+  }
+
+  // Any other REVEAL/POLL-shaped marker is garbled — render nothing so a stray
+  // or typo'd marker never leaks raw "[REVEAL: …]" / "[POLL: …]" text to the page.
+  if (/^\[(?:REVEAL|POLL):/.test(text)) return null
+
   // Handle video embeds [VIDEO: youtube_id | Title]
   const videoMatch = text.match(/^\[VIDEO:\s*([^\]|]+?)\s*\|\s*([^\]]+?)\s*\]$/)
   if (videoMatch) {
@@ -412,6 +472,11 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
   // Handle pathway sections (grouped A/B/C sections with Mechanism, Target, etc.)
   if (text.startsWith('__PATHWAY__\n')) {
     return renderPathwaySection(text.replace('__PATHWAY__\n', ''), key)
+  }
+
+  // Handle grouped "Label: + bullet list" sub-cards (visual variety)
+  if (text.startsWith('__SUBCARD__\n')) {
+    return renderSubCard(text.replace('__SUBCARD__\n', ''), key)
   }
 
   // Handle tables - check for pipes and separator
@@ -642,6 +707,36 @@ function renderParagraph(text: string, key: string, definitionColorIndex: number
     <p key={key} className="text-[15px] text-slate-700 leading-relaxed">
       {parseBoldText(text)}
     </p>
+  )
+}
+
+// Render a short "Label:" line + its following bullet list as a bordered,
+// titled sub-card (title bar + list). Tasteful editorial slate/teal palette —
+// breaks up the monotony of plain heading + loose list.
+function renderSubCard(text: string, key: string) {
+  const lines = text.split('\n').filter(l => l.trim())
+  if (lines.length === 0) return null
+
+  const title = lines[0].trim().replace(/:\s*$/, '')
+  const bullets = lines.slice(1)
+
+  return (
+    <div key={key} className="my-4 rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+      <div className="flex items-center gap-2.5 bg-slate-50 border-b border-slate-200 px-5 py-2.5">
+        <span className="h-4 w-1 rounded-full bg-teal-500 flex-shrink-0" aria-hidden />
+        <h4 className="text-sm font-bold text-slate-800 tracking-wide">{parseBoldText(title)}</h4>
+      </div>
+      <ul className="space-y-2 px-5 py-4">
+        {bullets.map((item, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <span className="mt-[9px] h-1.5 w-1.5 rounded-full bg-teal-500/60 flex-shrink-0" aria-hidden />
+            <span className="text-[15px] text-slate-700 leading-relaxed">
+              {parseBoldText(item.replace(/^\s*[•\-*]\s*/, ''))}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

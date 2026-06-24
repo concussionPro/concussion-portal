@@ -12,7 +12,7 @@ import { DEMO_KEY } from '@/lib/demo-key'
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  const dest = new URL('/ep-course/modules/1', request.url)
+  const dest = new URL('/ep-course/dashboard', request.url)
 
   const res = NextResponse.redirect(dest)
   res.cookies.set('demo_key', DEMO_KEY, {
