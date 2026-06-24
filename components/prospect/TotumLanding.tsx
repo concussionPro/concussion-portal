@@ -126,14 +126,17 @@ function SidebarBody({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <>
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-md shadow-accent/15">
+        <Link href="/dashboard" onClick={onLinkClick} className="flex items-center gap-3 mb-1 group" aria-label="Back to portal dashboard">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-md shadow-accent/15 transition-transform group-hover:scale-105">
             <Brain className="w-5 h-5 text-white" strokeWidth={2} />
           </div>
           <h1 className="text-base font-bold text-foreground tracking-tight leading-tight">
             Concussion Education<br /><span className="text-accent">Australia</span>
           </h1>
-        </div>
+        </Link>
+        <Link href="/dashboard" onClick={onLinkClick} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-accent transition-colors">
+          <span aria-hidden>←</span> Back to portal dashboard
+        </Link>
       </div>
 
       <div className="glass-premium rounded-xl p-3 mb-6">
@@ -672,26 +675,22 @@ function Pricing() {
     {
       name: 'Team training',
       badge: '12+ clinicians',
+      regular: 'CAD $1,400',
       price: 'CAD $900',
       unit: '/ clinician',
+      save: 'Save CAD $500 / clinician',
       body: 'When 12 or more of your team train together — the full program per clinician: 8 online modules, the on-site practical day, toolkit and certification.',
       recommended: false,
     },
     {
-      name: 'Your clinical team',
-      badge: 'Most clinics',
-      price: '≈ CAD $16k',
-      unit: '~18 clinicians',
-      body: 'Your full clinical team — physiotherapists, R.Kins, chiropractors and RMTs — trained on one protocol at the team rate.',
-      recommended: true,
-    },
-    {
       name: 'The Total Package',
-      badge: 'Every site a hub',
+      badge: 'Full team · every site',
+      regular: '',
       price: 'Tailored',
-      unit: 'top tier',
-      body: 'The flagship: every clinician across all 7 sites, the front-desk intake, triage & funded-claim track, the complete toolkit and certification — every Totum location a certified concussion hub on one standard.',
-      recommended: false,
+      unit: 'for the full team',
+      save: '',
+      body: 'The flagship: every clinician across all 7 sites, the front-desk intake, triage & funded-claim track, the complete toolkit and certification — every Totum location a certified concussion hub on one standard. Scoped to your numbers on the call.',
+      recommended: true,
     },
   ]
   return (
@@ -701,11 +700,12 @@ function Pricing() {
         Priced for the whole team, not the seat.
       </h3>
       <p className="text-sm sm:text-base text-foreground/85 leading-relaxed max-w-2xl mb-6">
-        Includes the 8 online modules, the on-site practical day, the toolkit and certification. Final scope
-        is tailored on a 20-minute call.
+        The program is <strong>CAD&nbsp;$1,400</strong> per clinician at the standard rate. Train your team together
+        (12+) and it&apos;s <strong>CAD&nbsp;$900 each — CAD&nbsp;$500 less per clinician</strong>. Every tier includes the 8 online
+        modules, the on-site practical day, the toolkit and certification; final scope is tailored on a 20-minute call.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {tiers.map((tier) => (
           <div
             key={tier.name}
@@ -725,12 +725,18 @@ function Pricing() {
                 {tier.badge}
               </span>
             </div>
-            <div className="flex items-baseline gap-1.5 mb-3">
+            <div className="mb-1 flex items-baseline gap-1.5">
+              {tier.regular ? (
+                <span className="text-base font-semibold text-muted-foreground/60 line-through">{tier.regular}</span>
+              ) : null}
               <span className={`text-3xl font-bold leading-none ${tier.recommended ? 'text-accent' : 'text-foreground'}`}>
                 {tier.price}
               </span>
               <span className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">{tier.unit}</span>
             </div>
+            {tier.save ? (
+              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-emerald-600">{tier.save}</p>
+            ) : null}
             <p className="text-[13px] text-foreground/85 leading-relaxed">{tier.body}</p>
           </div>
         ))}
