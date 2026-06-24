@@ -1,5 +1,6 @@
-import { Metadata } from 'next'
+import { Metadata, Viewport } from 'next'
 import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
+import SstPwaRegister from '@/components/platform/SstPwaRegister'
 
 // Hanken Grotesk = the design's UI typeface; Space Grotesk = the instrument /
 // numeric face used for HR, scores and clocks (tabular figures).
@@ -22,6 +23,12 @@ const spaceGrotesk = Space_Grotesk({
 // directive lives here in the sibling server layout.
 export const metadata: Metadata = {
   title: 'Sub-Symptom-Threshold Trainer',
+  // Installable PWA — this PUBLIC route is the app-store entry (free with clinic
+  // code), so it links the manifest + apple-touch icon and registers the SW.
+  manifest: '/sst.webmanifest',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'SST Trainer' },
+  icons: { apple: '/sst-apple-touch-180.png', icon: '/sst-icon-192.png' },
+  // Pre-launch & patient-facing: not indexed, not in public nav.
   robots: {
     index: false,
     follow: false,
@@ -30,8 +37,15 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: '#16243f',
+}
+
 export default function SstTrainerLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`${hanken.variable} ${spaceGrotesk.variable}`}>{children}</div>
+    <div className={`${hanken.variable} ${spaceGrotesk.variable}`}>
+      <SstPwaRegister />
+      {children}
+    </div>
   )
 }
