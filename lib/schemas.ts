@@ -14,6 +14,10 @@ export const courseTypeSchema = z.enum([
   'full-course',
   'workshop-upgrade',
   'international-online',
+  // Clinic Hub Pack — self-serve team purchase (5 online seats, no workshop, so
+  // no location needed). Online + lifetime; the right offer for small clinics
+  // where on-site isn't economic. Stripe price already wired in lib/stripe.ts.
+  'clinic-hub-pack',
 ])
 
 // UTM payload — accept loose string map, cap size

@@ -28,6 +28,7 @@ import {
 import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
 import { computePricing, teamTotal, clinicalCount, isTeamVerified } from '@/lib/prospect/pricing'
 import { IndividualInterestCard } from './IndividualInterestCard'
+import { HubPackBuyCard } from './HubPackBuyCard'
 import { ProspectTracker } from './ProspectTracker'
 import { ProspectSidebar } from './ProspectSidebar'
 
@@ -191,9 +192,15 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             <MultidisciplinaryIntegration clinic={clinic} />
           </div>
 
-          {/* Pricing */}
+          {/* Pricing — small clinics (2–5 clinical) get the self-serve Hub Pack
+              (online, no travel, can check out); ≥6 get the on-site cohort
+              (book-a-call, since no-one cold-checks-out a $5–10k team day). */}
           <div data-track-section="pricing">
-            <PricingTiers clinic={clinic} pricing={pricing} />
+            {clinical >= 2 && clinical <= 5 ? (
+              <HubPackBuyCard clinical={clinical} slug={clinic.slug} />
+            ) : (
+              <PricingTiers clinic={clinic} pricing={pricing} />
+            )}
           </div>
 
           {/* Risk reversal */}
