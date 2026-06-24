@@ -15,6 +15,7 @@ import {
   MapPin,
   Check,
   Loader2,
+  HeartPulse,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -118,6 +119,29 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
 
   const accessLevel = user?.accessLevel || accessLevelProp || ''
   const isPreview = accessLevel === 'preview'
+
+  // SST Trainer subscription — HIDDEN until launch. Flip
+  // NEXT_PUBLIC_SST_SUBSCRIPTIONS_LIVE=true AND set the Stripe price IDs to
+  // reveal this card. The /api/sst/subscribe route is independently guarded on
+  // the real price IDs, so current paid users never see or hit it pre-launch.
+  const sstLive = process.env.NEXT_PUBLIC_SST_SUBSCRIPTIONS_LIVE === 'true'
+  const [sstLoading, setSstLoading] = useState<null | 'monthly' | 'annual'>(null)
+  const startSstCheckout = async (plan: 'monthly' | 'annual') => {
+    setSstLoading(plan)
+    try {
+      const res = await fetch('/api/sst/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (data?.url) window.location.href = data.url
+      else setSstLoading(null)
+    } catch {
+      setSstLoading(null)
+    }
+  }
+
   const completedModules = getTotalCompletedModules()
   const cpdPoints = getTotalCPDPoints()
   const studyTime = getTotalStudyTime()
@@ -255,6 +279,46 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
           Assessment templates, return-to-play protocols, and clinical decision aids.
         </p>
       </Card>
+
+      {/* ── SST Trainer subscription (HIDDEN until launch) ── */}
+      {sstLive && (
+        <Card span2 className="border border-accent/20">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center flex-shrink-0">
+              <HeartPulse className="w-[20px] h-[20px] text-accent" strokeWidth={1.8} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm text-foreground font-semibold">SST Trainer</p>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20 uppercase tracking-wider">
+                  Subscription
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                Prescribe heart-rate-paced, sub-symptom-threshold exercise rehab and track your patients&apos; recovery. Manage sessions right here in your dashboard.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => startSstCheckout('monthly')}
+                  disabled={sstLoading !== null}
+                  className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg bg-accent text-white hover:opacity-90 transition disabled:opacity-60"
+                >
+                  {sstLoading === 'monthly' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Subscribe monthly
+                </button>
+                <button
+                  onClick={() => startSstCheckout('annual')}
+                  disabled={sstLoading !== null}
+                  className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg border border-accent/30 text-accent hover:bg-accent/5 transition disabled:opacity-60"
+                >
+                  {sstLoading === 'annual' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Annual — save 2 months
+                </button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* ── 6. SCAT Forms ───────────────────────────── */}
       <Card href="/scat-forms">

@@ -394,6 +394,61 @@ function formatLocation(slug: string): string {
   return map[slug] || slug || 'TBD'
 }
 
+/**
+ * SST Trainer subscription plans → Stripe price IDs (recurring).
+ *
+ * These are RECURRING prices created in the Stripe Dashboard (manual step).
+ * Set the IDs in env. If either is missing the subscribe route reports the
+ * tier as unavailable, so this stays inert until you launch it.
+ */
+export const SST_SUBSCRIPTION_PRICES: Record<'monthly' | 'annual', string | undefined> = {
+  monthly: process.env.STRIPE_SST_MONTHLY_PRICE_ID,
+  annual: process.env.STRIPE_SST_ANNUAL_PRICE_ID,
+}
+
+export function sstSubscriptionsConfigured(): boolean {
+  return Boolean(SST_SUBSCRIPTION_PRICES.monthly && SST_SUBSCRIPTION_PRICES.annual)
+}
+
+/**
+ * Create a Stripe Checkout Session for an SST Trainer subscription.
+ * mode: 'subscription' — isolated from the one-time course checkout above.
+ */
+export async function createSstSubscriptionCheckoutSession({
+  plan,
+  customerEmail,
+  successUrl,
+  cancelUrl,
+}: {
+  plan: 'monthly' | 'annual'
+  customerEmail?: string
+  successUrl: string
+  cancelUrl: string
+}): Promise<Stripe.Checkout.Session> {
+  const price = SST_SUBSCRIPTION_PRICES[plan]
+  if (!price) {
+    throw new CheckoutUnavailableError('SST subscriptions are not available yet.')
+  }
+  return getStripe().checkout.sessions.create({
+    mode: 'subscription',
+    line_items: [{ price, quantity: 1 }],
+    customer_email: customerEmail || undefined,
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    allow_promotion_codes: true,
+    billing_address_collection: 'auto',
+    metadata: {
+      product: 'sst-trainer',
+      plan,
+      source: 'portal-dashboard',
+      timestamp: new Date().toISOString(),
+    },
+    subscription_data: {
+      metadata: { product: 'sst-trainer', plan, email: customerEmail || '' },
+    },
+  })
+}
+
 export async function createPortalSession({
   customerId,
   returnUrl,
