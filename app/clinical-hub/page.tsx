@@ -80,6 +80,64 @@ const PATIENTS: Patient[] = [
   },
 ]
 
+/* Baseline & serial testing — SCAT6/SCOAT6 domain scores: the athlete's
+   pre-season baseline vs their latest post-injury test. `better` says which
+   direction is recovery. baseline === null → no pre-season test on file. */
+type Domain = { name: string; unit?: string; baseline: number | null; latest: number | null; better: 'higher' | 'lower' }
+type Baseline = { tool: 'SCAT6' | 'SCOAT6'; status: 'captured' | 'due' | 'none'; capturedDate?: string; lastTest?: string; domains: Domain[] }
+
+const BASELINES: Record<string, Baseline> = {
+  p1: {
+    tool: 'SCAT6', status: 'captured', capturedDate: '14 Mar 2026', lastTest: 'Today',
+    domains: [
+      { name: 'Symptom severity', unit: '/132', baseline: 4, latest: 7, better: 'lower' },
+      { name: 'Immediate memory', unit: '/30', baseline: 28, latest: 27, better: 'higher' },
+      { name: 'Concentration', unit: '/5', baseline: 4, latest: 4, better: 'higher' },
+      { name: 'Delayed recall', unit: '/10', baseline: 9, latest: 8, better: 'higher' },
+      { name: 'mBESS errors', unit: '/30', baseline: 3, latest: 5, better: 'lower' },
+      { name: 'VOMS provocation', unit: 'pts', baseline: 0, latest: 2, better: 'lower' },
+    ],
+  },
+  p2: {
+    tool: 'SCAT6', status: 'due', capturedDate: '—', lastTest: 'Pending',
+    domains: [
+      { name: 'Symptom severity', unit: '/132', baseline: 6, latest: null, better: 'lower' },
+      { name: 'Immediate memory', unit: '/30', baseline: 27, latest: null, better: 'higher' },
+      { name: 'Concentration', unit: '/5', baseline: 4, latest: null, better: 'higher' },
+      { name: 'mBESS errors', unit: '/30', baseline: 4, latest: null, better: 'lower' },
+    ],
+  },
+  p3: {
+    tool: 'SCAT6', status: 'captured', capturedDate: '2 Feb 2026', lastTest: 'Today',
+    domains: [
+      { name: 'Symptom severity', unit: '/132', baseline: 2, latest: 0, better: 'lower' },
+      { name: 'Immediate memory', unit: '/30', baseline: 29, latest: 30, better: 'higher' },
+      { name: 'Concentration', unit: '/5', baseline: 5, latest: 5, better: 'higher' },
+      { name: 'Delayed recall', unit: '/10', baseline: 9, latest: 10, better: 'higher' },
+      { name: 'mBESS errors', unit: '/30', baseline: 2, latest: 1, better: 'lower' },
+      { name: 'VOMS provocation', unit: 'pts', baseline: 0, latest: 0, better: 'lower' },
+    ],
+  },
+  p4: {
+    tool: 'SCOAT6', status: 'none', lastTest: 'Today',
+    domains: [
+      { name: 'Symptom severity', unit: '/132', baseline: null, latest: 18, better: 'lower' },
+      { name: 'Immediate memory', unit: '/30', baseline: null, latest: 25, better: 'higher' },
+      { name: 'Concentration', unit: '/5', baseline: null, latest: 3, better: 'higher' },
+      { name: 'mBESS errors', unit: '/30', baseline: null, latest: 8, better: 'lower' },
+      { name: 'VOMS provocation', unit: 'pts', baseline: null, latest: 4, better: 'lower' },
+    ],
+  },
+}
+
+/** Recovery status of a domain vs its own baseline. */
+function domainState(d: Domain): 'recovered' | 'off' | 'pending' | 'nobaseline' {
+  if (d.latest === null) return 'pending'
+  if (d.baseline === null) return 'nobaseline'
+  const recovered = d.better === 'higher' ? d.latest >= d.baseline : d.latest <= d.baseline
+  return recovered ? 'recovered' : 'off'
+}
+
 function initials(name: string) {
   return name.split(' ').map((n) => n[0]).slice(0, 2).join('')
 }
@@ -92,6 +150,66 @@ function Trend({ data }: { data: number[] }) {
         <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-[var(--accent)] to-[var(--accent-light)]"
           style={{ height: `${Math.max(6, (v / max) * 100)}%`, opacity: 0.35 + (i / data.length) * 0.65 }} />
       ))}
+    </div>
+  )
+}
+
+function BaselinePanel({ base }: { base: Baseline }) {
+  const hasBaseline = base.status !== 'none'
+  return (
+    <div className="glass-premium rounded-2xl p-5 sm:p-6">
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <ClipboardList className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
+          <h3 className="text-sm font-bold text-foreground">Baseline &amp; serial testing</h3>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/[0.04] text-muted-foreground border border-black/5">
+            {base.tool}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {base.status === 'captured' && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--accent)]">
+              <Check className="w-3.5 h-3.5" /> Baseline {base.capturedDate}
+            </span>
+          )}
+          {base.status === 'due' && <span className="text-[11px] font-semibold text-amber-600">Serial re-test due</span>}
+          {base.status === 'none' && <span className="text-[11px] font-semibold text-muted-foreground">No pre-season baseline</span>}
+          <button className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/5 transition">
+            {hasBaseline ? 'Run serial test' : 'Capture baseline'} <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Column headers */}
+      <div className="grid grid-cols-[1.4fr_repeat(3,0.8fr)] gap-2 px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+        <span>Domain</span><span className="text-right">Baseline</span><span className="text-right">Latest</span><span className="text-right">Status</span>
+      </div>
+      <div className="space-y-1">
+        {base.domains.map((d, i) => {
+          const st = domainState(d)
+          const delta = d.baseline !== null && d.latest !== null ? d.latest - d.baseline : null
+          const sign = delta === null ? '' : delta > 0 ? `+${delta}` : `${delta}`
+          return (
+            <div key={i} className="grid grid-cols-[1.4fr_repeat(3,0.8fr)] gap-2 items-center rounded-xl px-3 py-2.5 bg-black/[0.015]">
+              <span className="text-xs font-medium text-foreground">{d.name} <span className="text-muted-foreground/50 font-normal">{d.unit}</span></span>
+              <span className="text-xs text-right font-mono text-muted-foreground">{d.baseline ?? '—'}</span>
+              <span className="text-xs text-right font-mono font-semibold text-foreground">{d.latest ?? '—'}</span>
+              <span className="text-right">
+                {st === 'recovered' && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--accent)]"><Check className="w-3 h-3" />at base</span>}
+                {st === 'off' && <span className="text-[11px] font-semibold text-amber-600">{sign} off base</span>}
+                {st === 'pending' && <span className="text-[11px] text-muted-foreground/60">pending</span>}
+                {st === 'nobaseline' && <span className="text-[11px] text-muted-foreground/60">no base</span>}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      {base.status === 'none' && (
+        <p className="text-[11px] text-muted-foreground leading-relaxed mt-3">
+          No pre-season baseline on file — scores are read against normative ranges only. Capturing a baseline (ideally pre-season) makes every future test a same-athlete comparison.
+        </p>
+      )}
     </div>
   )
 }
@@ -245,35 +363,21 @@ export default function ClinicalHubPage() {
                 )}
               </div>
 
-              {/* Baseline + trajectory */}
-              <div className="space-y-5">
-                <div className="glass-premium rounded-2xl p-5 sm:p-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <ClipboardList className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
-                    <h3 className="text-sm font-bold text-foreground">SCAT6 baseline</h3>
+              {/* Recovery trajectory */}
+              <div className="glass-premium rounded-2xl p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
+                    <h3 className="text-sm font-bold text-foreground">Recovery trajectory</h3>
                   </div>
-                  {p.baseline === 'captured' && (
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[var(--accent)]" />
-                      <p className="text-xs text-muted-foreground">Baseline on file — captured {p.baselineDate}. Serial comparison available.</p>
-                    </div>
-                  )}
-                  {p.baseline === 'due' && <p className="text-xs text-amber-700">Serial re-test due — compare against pre-season baseline.</p>}
-                  {p.baseline === 'none' && <p className="text-xs text-muted-foreground">No pre-season baseline. Symptom-based tracking only.</p>}
+                  <span className="text-[11px] text-muted-foreground">symptom score / week</span>
                 </div>
-
-                <div className="glass-premium rounded-2xl p-5 sm:p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <TrendingDown className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
-                      <h3 className="text-sm font-bold text-foreground">Recovery trajectory</h3>
-                    </div>
-                    <span className="text-[11px] text-muted-foreground">symptom score / week</span>
-                  </div>
-                  <Trend data={p.trend} />
-                </div>
+                <Trend data={p.trend} />
               </div>
             </div>
+
+            {/* Baseline & serial testing — the SCAT6/SCOAT6 tool */}
+            <BaselinePanel base={BASELINES[p.id]} />
           </section>
         </div>
       </div>

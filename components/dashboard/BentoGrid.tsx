@@ -16,6 +16,7 @@ import {
   Check,
   Loader2,
   HeartPulse,
+  Stethoscope,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
@@ -125,6 +126,11 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
   // reveal this card. The /api/sst/subscribe route is independently guarded on
   // the real price IDs, so current paid users never see or hit it pre-launch.
   const sstLive = process.env.NEXT_PUBLIC_SST_SUBSCRIPTIONS_LIVE === 'true'
+  // Clinical Hub launch flag — when on, the "Clinical Toolkit" bento becomes the
+  // Clinical Hub entry (/clinical-hub) and the printable docs fold in as a tab.
+  // Off (default) → paid users keep seeing the static docs Toolkit.
+  const clinicalHubLive = process.env.NEXT_PUBLIC_CLINICAL_HUB_LIVE === 'true'
+  const hubForPaid = clinicalHubLive && !isPreview
   const [sstLoading, setSstLoading] = useState<null | 'monthly' | 'annual'>(null)
   const startSstCheckout = async (plan: 'monthly' | 'annual') => {
     setSstLoading(plan)
@@ -253,8 +259,8 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
         </p>
       </Card>
 
-      {/* ── 5. Clinical Toolkit ─────────────────────── */}
-      <Card href="/clinical-toolkit">
+      {/* ── 5. Clinical Toolkit → becomes Clinical Hub when launched ── */}
+      <Card href={hubForPaid ? '/clinical-hub' : '/clinical-toolkit'}>
         <div className="flex items-center gap-3 mb-3">
           <div className={cn(
             'w-9 h-9 rounded-xl flex items-center justify-center',
@@ -264,19 +270,25 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
           )}>
             {isPreview
               ? <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
-              : <FileText className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
+              : hubForPaid
+                ? <Stethoscope className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
+                : <FileText className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
             }
           </div>
-          <p className="stat-label mb-0">Clinical Toolkit</p>
+          <p className="stat-label mb-0">{hubForPaid ? 'Clinical Hub' : 'Clinical Toolkit'}</p>
           {isPreview && (
             <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">
               Paid
             </span>
           )}
         </div>
-        <p className="text-sm text-foreground font-semibold mb-1">Printable Resources</p>
+        <p className="text-sm text-foreground font-semibold mb-1">
+          {hubForPaid ? 'Manage your patients' : 'Printable Resources'}
+        </p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Assessment templates, return-to-play protocols, and clinical decision aids.
+          {hubForPaid
+            ? 'SST programs, SCAT6 baselines and recovery tracking — plus your printable resources.'
+            : 'Assessment templates, return-to-play protocols, and clinical decision aids.'}
         </p>
       </Card>
 
