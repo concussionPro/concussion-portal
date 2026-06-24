@@ -188,6 +188,7 @@ export function ImageInfographic({ id }: { id: string }) {
 
   if (!config) return null
 
+  const [zoomed, setZoomed] = useState(false)
   const { eyebrow, title, caption } = config
   const src = stage === 0 ? `/infographics/${id}.png` : `/infographics/${id}.svg`
 
@@ -199,14 +200,53 @@ export function ImageInfographic({ id }: { id: string }) {
       caption={caption}
     >
       {stage < 2 ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt={title}
-          loading="lazy"
-          onError={() => setStage((s) => (s === 0 ? 1 : 2))}
-          className="mx-auto block w-full max-w-[640px] rounded-xl border border-[#e2ebec]"
-        />
+        <>
+          <button
+            type="button"
+            onClick={() => setZoomed(true)}
+            aria-label={`Enlarge: ${title}`}
+            className="group relative mx-auto block w-full max-w-[640px] cursor-zoom-in"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt={title}
+              loading="lazy"
+              onError={() => setStage((s) => (s === 0 ? 1 : 2))}
+              className="block w-full rounded-xl border border-[#e2ebec] transition group-hover:border-[#9cc3c6]"
+            />
+            <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-slate-900/75 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white opacity-0 transition-opacity group-hover:opacity-100">
+              Click to enlarge
+            </span>
+          </button>
+          {zoomed && (
+            <div
+              onClick={() => setZoomed(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-label={title}
+              className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-slate-950/85 p-4 sm:p-8"
+            >
+              <button
+                type="button"
+                onClick={() => setZoomed(false)}
+                aria-label="Close"
+                className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt={title}
+                onClick={(e) => e.stopPropagation()}
+                className="max-h-[92vh] max-w-[95vw] cursor-default rounded-lg object-contain shadow-2xl"
+              />
+            </div>
+          )}
+        </>
       ) : (
         <div className="mx-auto flex w-full max-w-[640px] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#bcd2d4] bg-[#f3f8f8] px-6 py-12 text-center">
           <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7c9598]">
