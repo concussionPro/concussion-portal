@@ -16,7 +16,6 @@ import {
   Zap,
   BookOpen,
   ChevronRight,
-  Users,
 } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { trackLeadConversion } from '@/lib/analytics'
@@ -33,17 +32,28 @@ export default function SCAT6DownloadPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  // Which forms they want — both on by default (SCAT6 = sideline, SCOAT6 = office).
+  const [wantScat6, setWantScat6] = useState(true)
+  const [wantScoat6, setWantScoat6] = useState(true)
 
   const validateEmail = (val: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
 
   const triggerDownload = () => {
-    const a = document.createElement('a')
-    a.href = '/docs/SCAT6_Fillable.pdf'
-    a.download = 'SCAT6_Fillable.pdf'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    const files: { href: string; name: string }[] = []
+    if (wantScat6) files.push({ href: '/docs/SCAT6_Fillable.pdf', name: 'SCAT6_Fillable.pdf' })
+    if (wantScoat6) files.push({ href: '/docs/SCOAT6_Fillable.pdf', name: 'SCOAT6_Fillable.pdf' })
+    // Stagger so the browser doesn't block the second download.
+    files.forEach((f, i) => {
+      setTimeout(() => {
+        const a = document.createElement('a')
+        a.href = f.href
+        a.download = f.name
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      }, i * 500)
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,6 +66,10 @@ export default function SCAT6DownloadPage() {
     }
     if (!validateEmail(email)) {
       setError('Please enter a valid email address.')
+      return
+    }
+    if (!wantScat6 && !wantScoat6) {
+      setError('Select at least one form to download.')
       return
     }
 
@@ -120,14 +134,14 @@ export default function SCAT6DownloadPage() {
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-4 leading-tight">
-              Free SCAT6 Form —{' '}
+              Free SCAT6 &amp; SCOAT6 Forms —{' '}
               <span className="bg-gradient-to-r from-[#5b9aa6] to-[#6b9da8] bg-clip-text text-transparent">
                 Fillable PDF Download
               </span>
             </h1>
 
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              The official SCAT6 assessment tool, ready to use in your clinic. Enter your details for instant download.
+              The official SCAT6 (sideline) and SCOAT6 (office) assessment tools, ready to use in your clinic. Choose the forms you want for instant download.
             </p>
 
             {/* Feature list */}
@@ -149,7 +163,6 @@ export default function SCAT6DownloadPage() {
             {/* Trust signals row */}
             <div className="flex flex-wrap gap-3 mb-10">
               {[
-                { icon: Users, label: 'For Australian clinicians' },
                 { icon: FileText, label: 'Fillable PDF' },
                 { icon: Check, label: 'Auto-scoring' },
                 { icon: Shield, label: 'Free' },
@@ -194,7 +207,7 @@ export default function SCAT6DownloadPage() {
                     Downloading now
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Your SCAT6 form is downloading. We've also created a free account for you — check your email for access.
+                    Your form{wantScat6 && wantScoat6 ? 's are' : ' is'} downloading. We've also created a free account for you — check your email for access.
                   </p>
                 </div>
 
@@ -269,6 +282,33 @@ export default function SCAT6DownloadPage() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      Which forms?
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { on: wantScat6, set: setWantScat6, label: 'SCAT6', sub: 'Sideline / acute' },
+                        { on: wantScoat6, set: setWantScoat6, label: 'SCOAT6', sub: 'Office / sub-acute' },
+                      ].map((f) => (
+                        <button
+                          key={f.label}
+                          type="button"
+                          onClick={() => f.set(!f.on)}
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition ${f.on ? 'border-[#5b9aa6] bg-[#5b9aa6]/5' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                        >
+                          <span className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border ${f.on ? 'bg-[#5b9aa6] border-[#5b9aa6]' : 'border-slate-300'}`}>
+                            {f.on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                          </span>
+                          <span>
+                            <span className="block text-sm font-semibold text-slate-800">{f.label}</span>
+                            <span className="block text-[10px] text-slate-500">{f.sub}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div>
                     <label htmlFor="dl-name" className="block text-sm font-semibold text-slate-700 mb-1.5">
                       First name
