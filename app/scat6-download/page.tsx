@@ -61,11 +61,22 @@ export default function SCAT6DownloadPage() {
 
     setIsLoading(true)
 
+    // Attribution: when the Squarespace SCAT6 form points here (…?utm_source=
+    // squarespace&utm_campaign=scat6-form), tag the lead so off-site capture is
+    // segmentable in the dashboard. Direct portal traffic → no source → defaults
+    // to 'free-course' server-side.
+    const utmSource = new URLSearchParams(window.location.search).get('utm_source')
+    const source = utmSource ? `${utmSource}-scat6`.toLowerCase().replace(/[^a-z0-9-]/g, '') : undefined
+
     try {
       const res = await fetch('/api/signup-free', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          ...(source ? { source } : {}),
+        }),
       })
 
       const data = await res.json()
