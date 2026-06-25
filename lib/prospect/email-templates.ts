@@ -386,7 +386,11 @@ export function mergeTemplate(
       `<p>The SCAT6/SCOAT6 forms and baseline tool are yours to use either way. The clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library are previewable on the page — they unlock with the course. ${tierLine}</p>`
   }
   const t2Body = [
-    `<p>Circling back — the concussion kit for ${safeShortName} is still here: ${FREE_LINK}</p>`,
+    // A hot lead has already been through the kit — don't re-pitch it. Open at
+    // the decision; everyone else gets the "kit still here" reminder.
+    category === 'hot'
+      ? `<p>Following up on getting ${safeShortName}'s team set up for concussion — wanted to make the next step easy.</p>`
+      : `<p>Circling back — the concussion kit for ${safeShortName} is still here: ${FREE_LINK}</p>`,
     t2SecondPara,
   ].join('\n')
 

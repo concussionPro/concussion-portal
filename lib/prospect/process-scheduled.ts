@@ -828,6 +828,7 @@ export async function processScheduledSends(
       resendEmailId: null,
       auditKey,
       subjectKey,
+      followupCategory: templateSlug !== 'initial' ? followupCategory : null,
     })
     if (!claimed) {
       results.push({

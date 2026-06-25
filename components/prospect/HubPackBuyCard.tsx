@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { CONFIG } from '@/lib/config'
+import { trackEvent } from '@/lib/analytics'
 import { Users, Check, Loader2, ArrowRight, Plane } from 'lucide-react'
 
 /**
@@ -15,9 +16,15 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
   const [loading, setLoading] = useState(false)
   const price = CONFIG.COURSE.PRICE_CLINIC_HUB_PACK
   const seats = CONFIG.COURSE.CLINIC_HUB_SEATS_INCLUDED
+  // Value-math hook: the team pack is cheaper than buying everyone a single
+  // online seat (true once clinical ≥ 4). Flips the decision from "is it worth
+  // it" to "this is the cheaper way to train the team".
+  const individualCost = clinical * CONFIG.COURSE.PRICE_ONLINE
+  const cheaperThanIndividual = individualCost > price
 
   async function buy() {
     setLoading(true)
+    trackEvent('checkout_start', { courseType: 'clinic-hub-pack', source: 'prospect_portal', slug })
     try {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
@@ -80,6 +87,12 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
             </li>
           ))}
         </ul>
+
+        {cheaperThanIndividual && (
+          <p className="text-xs font-semibold text-emerald-700 mb-4 -mt-1">
+            That&apos;s less than {clinical} individual seats (A${individualCost.toLocaleString()}) — and the branded toolkit&apos;s included.
+          </p>
+        )}
 
         <button
           onClick={buy}

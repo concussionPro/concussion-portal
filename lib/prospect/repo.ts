@@ -361,13 +361,17 @@ export async function logOutreach(input: {
   auditKey: string
   /** Stable, clinic-agnostic subject-variant key — feeds the optimizer. */
   subjectKey?: string | null
+  /** Intent category the follow-up copy was chosen for (hot/warm/cool) — lets us
+   *  later measure which intent tier actually converts. Null for T1. */
+  followupCategory?: 'hot' | 'warm' | 'cool' | null
 }): Promise<boolean> {
-  // Lazy column (mirrors recordPortalView's inline-ALTER pattern) so any
-  // caller path works on a DB that predates the self-optimizing engine.
+  // Lazy columns (mirrors recordPortalView's inline-ALTER pattern) so any
+  // caller path works on a DB that predates these engine features.
   await sql`ALTER TABLE prospect_outreach_log ADD COLUMN IF NOT EXISTS subject_key TEXT`
+  await sql`ALTER TABLE prospect_outreach_log ADD COLUMN IF NOT EXISTS followup_category TEXT`
   const { rowCount } = await sql`
-    INSERT INTO prospect_outreach_log (clinic_id, template_slug, email_subject, email_body, resend_email_id, audit_key, subject_key)
-    VALUES (${input.clinicId}, ${input.templateSlug}, ${input.emailSubject}, ${input.emailBody}, ${input.resendEmailId}, ${input.auditKey}, ${input.subjectKey ?? null})
+    INSERT INTO prospect_outreach_log (clinic_id, template_slug, email_subject, email_body, resend_email_id, audit_key, subject_key, followup_category)
+    VALUES (${input.clinicId}, ${input.templateSlug}, ${input.emailSubject}, ${input.emailBody}, ${input.resendEmailId}, ${input.auditKey}, ${input.subjectKey ?? null}, ${input.followupCategory ?? null})
     ON CONFLICT (audit_key) DO NOTHING
   `
   return (rowCount ?? 0) > 0
