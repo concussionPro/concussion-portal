@@ -43,6 +43,7 @@ import {
 } from '@/lib/prospect/repo'
 import { EMAIL_TEMPLATES, mergeTemplate, eligibleSubjectKeys } from '@/lib/prospect/email-templates'
 import { chooseSubjectKey, type VariantStat } from '@/lib/prospect/subject-optimizer'
+import { decideOutreach } from '@/lib/prospect/outreach-decision'
 import { preflightClinic, failureSummary } from '@/lib/prospect/preflight'
 import { legacyAccessKey } from '@/lib/prospect/access-key'
 import { generateUnsubscribeToken } from '@/lib/prospect/unsubscribe-token'
@@ -354,39 +355,72 @@ const TOOLKIT_SECTIONS = [
   'reference-library',
 ]
 
+export type FollowupCategory = 'hot' | 'warm' | 'cool'
+
 /**
- * Intent-aware follow-up hint (Zac 2026-06-14). Reads what this clinic
- * actually VIEWED on their portal (prospect_portal_views section beacons) and
- * derives the single strongest signal so the T2/T3 copy can speak to it:
- *   pricing  > trial (Module 1 opened) > toolkit/learning > null (generic).
- * Unlike email open/click (scanner noise — ignored), section beacons are
- * human: scanners don't run the page JS that fires them. Bot UAs are still
- * filtered defensively. Read-only, never throws — degrades to null so a lookup
- * hiccup just yields the generic follow-up, never kills the send run.
+ * Intent-CATEGORISED follow-up (Zac 2026-06-25). Supersedes the old single-hint
+ * derivation: reads the prospect's REAL, scanner-proof portal behaviour
+ * (sections viewed + dwell + return visits) and runs the shared decideOutreach()
+ * engine to categorise the follow-up so the copy matches the actual intent:
+ *   • hot  — genuine buying intent (returned, hit next-step, opened trial +
+ *            pricing, or studied pricing) → the most direct deal-type close
+ *   • warm — engaged a buying section once → value-framed nudge for it
+ *   • cool — skimmed / no real intent → standard soft re-offer
+ * Plus the single strongest hint (pricing > trial > toolkit) for the warm copy.
+ * Email open/click is scanner noise (ignored); section beacons + the exit dwell
+ * beacon are human (scanners don't run the page JS). Read-only, never throws —
+ * degrades to {cool,null} so a lookup hiccup just yields the generic follow-up.
  */
-async function deriveEngagementHint(
+async function classifyFollowup(
   clinicId: number,
-): Promise<'pricing' | 'trial' | 'toolkit' | null> {
+): Promise<{ category: FollowupCategory; hint: 'pricing' | 'trial' | 'toolkit' | null }> {
   try {
-    const { rows } = await sql<{ section_visited: string | null }>`
-      SELECT DISTINCT LOWER(section_visited) AS section_visited
+    const { rows } = await sql<{
+      section_visited: string | null
+      interaction_type: string | null
+      dwell_ms: number | null
+    }>`
+      SELECT LOWER(section_visited) AS section_visited, interaction_type, dwell_ms
       FROM prospect_portal_views
       WHERE clinic_id = ${clinicId}
-        AND section_visited IS NOT NULL
-        AND interaction_type IN ('view', 'section_view', 'cta_click')
         AND COALESCE(user_agent, '') !~* ${BOT_UA_REGEX}
     `
-    const sections = new Set(rows.map((r) => r.section_visited ?? ''))
-    if (sections.has('pricing')) return 'pricing'
-    if (sections.has('module-1-trial')) return 'trial'
-    if (TOOLKIT_SECTIONS.some((s) => sections.has(s))) return 'toolkit'
-    return null
+    const sectionFunnel: Record<string, number> = {}
+    let maxDwellMs = 0
+    let sessions = 0
+    for (const r of rows) {
+      const t = r.interaction_type ?? ''
+      const s = r.section_visited
+      if (s && (t === 'view' || t === 'section_view' || t === 'cta_click')) {
+        sectionFunnel[s] = (sectionFunnel[s] ?? 0) + 1
+      }
+      if (t === 'exit') {
+        const d = r.dwell_ms ?? 0
+        if (d >= 10_000) sessions += 1
+        if (d > maxDwellMs) maxDwellMs = d
+      }
+    }
+    const decision = decideOutreach({ sectionFunnel, maxDwellMs, sessions: Math.max(sessions, 1) })
+    const sec = new Set(Object.keys(sectionFunnel))
+    const hint: 'pricing' | 'trial' | 'toolkit' | null = sec.has('pricing')
+      ? 'pricing'
+      : sec.has('module-1-trial')
+        ? 'trial'
+        : TOOLKIT_SECTIONS.some((s) => sec.has(s))
+          ? 'toolkit'
+          : null
+    // hot = decideOutreach earned a personal close; warm = real interest in a
+    // buying section (or a solid score); else cool. Timing never changes (Zac's
+    // standing rule) — only the copy.
+    const category: FollowupCategory =
+      decision.action === 'direct' ? 'hot' : hint || decision.score >= 25 ? 'warm' : 'cool'
+    return { category, hint }
   } catch (err) {
     console.error(
-      `[process-scheduled] engagement-hint lookup failed for clinic ${clinicId} — degrading to generic:`,
+      `[process-scheduled] follow-up classify failed for clinic ${clinicId} — degrading to generic:`,
       err,
     )
-    return null
+    return { category: 'cool', hint: null }
   }
 }
 
@@ -766,14 +800,18 @@ export async function processScheduledSends(
     // no prior engagement, so we only look it up for followup/final touches.
     // Read-only + degrades to null → generic copy; never blocks the send.
     let engagementHint: 'pricing' | 'trial' | 'toolkit' | null = null
+    let followupCategory: FollowupCategory = 'cool'
     if (templateSlug !== 'initial') {
-      engagementHint = await deriveEngagementHint(clinic.id)
+      const c = await classifyFollowup(clinic.id)
+      engagementHint = c.hint
+      followupCategory = c.category
     }
 
     const { subject, html, text, subjectKey } = mergeTemplate(template, clinic, BASE_URL, unsubToken, {
       priorEngagement,
       forceSubjectKey,
       engagementHint,
+      followupCategory,
     })
     // Deterministic key — concurrent runs (cron + manual fire-now, or two
     // overlapping cron invocations) collide on the UNIQUE audit_key instead

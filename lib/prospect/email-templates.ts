@@ -270,6 +270,20 @@ export function mergeTemplate(
      */
     engagementHint?: 'pricing' | 'trial' | 'toolkit' | null
     /**
+     * Intent CATEGORY (Zac 2026-06-25). Derived from the same scanner-proof
+     * portal behaviour via decideOutreach() — it grades INTENSITY, which the
+     * single hint can't: a prospect who returned 7× and hit pricing + next-step
+     * is 'hot' and gets the most direct, deal-type-specific close; a one-glance
+     * pricing viewer is 'warm' and gets the value-framed hint; a skim is 'cool'
+     * and gets the generic re-offer. Timing NEVER changes — only the copy.
+     *   - 'hot'  → direct deal-type close + portal link (where the buy/booking
+     *              now lives) + reply CTA
+     *   - 'warm' → the engagementHint sentence (unchanged)
+     *   - 'cool'/omitted → the generic follow-up copy
+     * No-op for T1. Stays pure — process-scheduled supplies the category.
+     */
+    followupCategory?: 'hot' | 'warm' | 'cool'
+    /**
      * Self-optimizing engine hook. When set, render the subject variant with
      * this stable `key` IF it survives the unknown-data guards + ≤50-char
      * filter for this clinic; otherwise fall back to the deterministic
@@ -346,8 +360,19 @@ export function mergeTemplate(
   // tier-line (the tailored sentence already carries the upsell) to stay tight.
   // null/omitted → the generic re-offer below, unchanged.
   const hint = options.engagementHint ?? null
+  const category = options.followupCategory ?? 'cool'
   let t2SecondPara: string
-  if (hint === 'pricing') {
+  if (category === 'hot') {
+    // Genuine buying intent (returned, next-step, deep trial, studied pricing).
+    // The most direct, deal-type-specific close — drives to the portal (where
+    // the buy button / booking now lives) and offers a reply. Value-framed, not
+    // surveillance: never references their behaviour.
+    t2SecondPara = isOnSiteTarget
+      ? `<p>If you're weighing it up for ${safeShortName}, the most direct next step is to lock in a date for the on-site day — your whole team trained on your own cases, 14 CPD hours each. Reply and I'll sort the details, or it's all set up on your page: ${FREE_LINK}</p>`
+      : isIndividualTarget
+        ? `<p>If you'd like to get started, the course is ready whenever you are — reply and I'll point you to the quickest way in, or jump in here: ${FREE_LINK}</p>`
+        : `<p>If you'd like the whole clinic trained, the Hub Pack does it online — no travel, everyone in, 14 CPD hours each. You can set ${safeShortName} up straight from your page: ${FREE_LINK} — or reply and I'll get it sorted.</p>`
+  } else if (hint === 'pricing') {
     t2SecondPara =
       `<p>If the pricing was the question, I'm happy to walk through what it'd look like for ${safeShortName} — just reply. The SCAT6/SCOAT6 forms and baseline tool are yours to use either way. ${tierLine}</p>`
   } else if (hint === 'trial') {
@@ -380,9 +405,11 @@ export function mergeTemplate(
   // Every other hint (and null) keeps the standard breakup price line. Both
   // keep the identical "reply 'later' / STOP" close.
   const t3SecondPara =
-    hint === 'pricing'
-      ? `<p>And if cost was the sticking point — ${priceLine}, and I'm happy to talk through the options for ${safeShortName} if it helps; just reply. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
-      : `<p>And if you ever want the full course, ${priceLine}. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+    category === 'hot'
+      ? `<p>If you're ready to move on it — ${priceLine}, and it's all set up for ${safeShortName} at ${FREE_LINK}, or just reply and I'll sort it directly. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+      : hint === 'pricing'
+        ? `<p>And if cost was the sticking point — ${priceLine}, and I'm happy to talk through the options for ${safeShortName} if it helps; just reply. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+        : `<p>And if you ever want the full course, ${priceLine}. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
   const t3Body = [
     `<p>Last one from me. The SCAT6/SCOAT6 forms, baseline tool and CPD module are at ${FREE_LINK} whenever you want them.</p>`,
     t3SecondPara,
