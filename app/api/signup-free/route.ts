@@ -75,17 +75,16 @@ export async function POST(request: NextRequest) {
       const sanitizedProspectSlug = typeof prospectSlug === 'string'
         ? prospectSlug.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80) || undefined
         : undefined
-      // Attribution source (e.g. 'squarespace-scat6' when the Squarespace SCAT6
-      // form points here) so off-site lead capture is segmentable. Defaults to
-      // 'free-course' for direct portal signups.
-      const sanitizedSource = typeof source === 'string'
-        ? source.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40) || undefined
-        : undefined
+      // Attribution: when the Squarespace SCAT6 form points here (source carries
+      // 'squarespace'), tag signupSource='squarespace' (an existing enum value)
+      // so off-site capture is segmentable. signupSource is a strict enum —
+      // anything else defaults to 'free-course' for direct portal signups.
+      const fromSquarespace = typeof source === 'string' && source.toLowerCase().includes('squarespace')
       userId = await createUser({
         email,
         name: userName,
         accessLevel: 'preview',
-        signupSource: sanitizedSource || 'free-course',
+        signupSource: fromSquarespace ? 'squarespace' : 'free-course',
         sourceProspectSlug: sanitizedProspectSlug,
       })
       console.log(`New user created for free course: ${email.slice(0, 3)}***`)
