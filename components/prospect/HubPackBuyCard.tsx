@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { CONFIG } from '@/lib/config'
 import { trackEvent } from '@/lib/analytics'
-import { Users, Check, Loader2, ArrowRight, Plane } from 'lucide-react'
+import { Users, Check, Loader2, ArrowRight, Plane, ShieldCheck } from 'lucide-react'
 
 /**
  * Self-serve Hub Pack purchase for SMALL clinics (≤5 clinical) on the prospect
@@ -108,6 +108,9 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
           {clinical > seats
             ? `You have ${clinical} clinicians — the base covers ${seats}; add extra seats at checkout or on the call.`
             : 'Secure checkout · instant access · GST invoice emailed.'}
+        </p>
+        <p className="text-[11px] text-emerald-700 font-medium mt-2 inline-flex items-center gap-1">
+          <ShieldCheck className="w-3.5 h-3.5" /> 7-day money-back guarantee — full refund before 2 modules are completed.
         </p>
       </div>
     </section>

@@ -83,7 +83,10 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
           </div>
 
           <p className="text-sm text-accent font-semibold mb-1">
-            7-day satisfaction guarantee &middot; Afterpay / Klarna available
+            7-day money-back guarantee &middot; Afterpay / Klarna available
+          </p>
+          <p className="text-[11px] text-muted-foreground mb-1">
+            Full refund within 7 days if you&apos;ve completed fewer than 2 modules.
           </p>
           <p className="text-sm text-muted-foreground mb-5">
             Endorsed by Osteopathy Australia &middot; AHPRA Aligned
