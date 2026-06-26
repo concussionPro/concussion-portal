@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
   AlertTriangle, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock, NotebookPen,
@@ -234,11 +234,79 @@ function mintPatientCode(clinic: string, seq: number) {
   return `${clinic}-${String(seq).padStart(2, '0')}`
 }
 
+/* Real data from /api/sst/clinic-sessions → the Hub's display shape. Real SST
+   intake captures fewer fields than the demo (no age/sport/injury date yet), so
+   those show as placeholders; the clinical signal — HRt, band, sessions, the
+   clearance flag — is real. */
+type ApiPatient = {
+  name?: string
+  condition?: string | null
+  hrt?: number | null
+  bandLow?: number | null
+  bandHigh?: number | null
+  hrtTrajectory?: { hrt?: number | null }[]
+  sessions?: { date?: string; avgHr?: number; peakHr?: number; minutes?: number; mins?: number; symptomDelta?: number }[]
+  clearanceReady?: boolean
+}
+
+function mapRealPatient(p: ApiPatient, clinicCode: string, i: number): Patient {
+  const stage: Stage = p.clearanceReady
+    ? { n: 7, label: 'Cleared — refer to MD' }
+    : p.hrt
+      ? { n: 4, label: 'Sub-symptom aerobic' }
+      : { n: 2, label: 'Threshold test pending' }
+  const sessions: Session[] = (p.sessions ?? []).map((s) => ({
+    date: s.date ? new Date(s.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '—',
+    avgHr: Number(s.avgHr) || 0,
+    peakHr: Number(s.peakHr) || 0,
+    mins: Number(s.minutes ?? s.mins) || 0,
+    symptomDelta: Number(s.symptomDelta) || 0,
+    status: Number(s.symptomDelta) >= 2 ? 'flag' : 'clean',
+  }))
+  return {
+    id: `real-${i}`,
+    name: p.name || 'Unidentified',
+    age: 0,
+    sport: p.condition || '—',
+    code: clinicCode,
+    injuryDate: '—',
+    daysPost: 0,
+    stage,
+    hrt: p.hrt ?? null,
+    bandLow: p.bandLow ?? 0,
+    bandHigh: p.bandHigh ?? 0,
+    restSymptoms: 0,
+    baseline: 'none',
+    trend: (p.hrtTrajectory ?? []).map((t) => Number(t.hrt) || 0).filter(Boolean), // serial HRt = recovery curve
+    sessions,
+    flag: p.clearanceReady
+      ? 'Recovered — no-intolerance on re-test. Ready for your clearance review.'
+      : undefined,
+  }
+}
+
 export default function ClinicalHubPage() {
   const [roster, setRoster] = useState<Patient[]>(PATIENTS)
   const [selectedId, setSelectedId] = useState('p1')
   const [query, setQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+
+  // Real data: ?clinic=<code> loads that clinic's actual SST sessions from
+  // /api/sst/clinic-sessions (additive — without the param the Hub shows the
+  // demo roster). window.location avoids a Suspense boundary for useSearchParams.
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('clinic')
+    if (!code) return
+    fetch(`/api/sst/clinic-sessions?code=${encodeURIComponent(code)}`)
+      .then((r) => r.json())
+      .then((data: { patients?: ApiPatient[] }) => {
+        if (data?.patients && data.patients.length) {
+          setRoster(data.patients.map((pp, i) => mapRealPatient(pp, code.toUpperCase(), i)))
+          setSelectedId('real-0')
+        }
+      })
+      .catch(() => {})
+  }, [])
   const patients = roster.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
   const p = roster.find((x) => x.id === selectedId) ?? roster[0]
 
