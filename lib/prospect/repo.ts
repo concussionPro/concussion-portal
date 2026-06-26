@@ -142,6 +142,50 @@ const TOTUM_SYNTHETIC: ProspectClinic = {
   priorityWave: undefined,
 }
 
+// Purpose Healthcare (Illawarra) — synthetic prospect. ~18 clinicians across 4
+// clinics, BOTH physiotherapists and exercise physiologists. Renders the normal
+// prospect dash; ProspectLanding shows the dual EP+Allied stream section for
+// this slug. Never in the DB → never in the cold-send queue.
+const PURPOSE_SYNTHETIC: ProspectClinic = {
+  id: -2,
+  slug: 'purpose-healthcare',
+  accessKey: 'purpose-2026',
+  name: 'Purpose Healthcare',
+  shortName: 'Purpose Healthcare',
+  city: 'Wollongong',
+  state: 'NSW' as State,
+  region: 'the Illawarra',
+  contactFirstName: 'Purpose',
+  contactFullName: 'Purpose Healthcare',
+  contactEmail: 'info@purposehealthcare.com.au', // placeholder — never emailed
+  contactRole: undefined,
+  contactDiscipline: 'physiotherapists',
+  clinicWebsiteUrl: 'https://purposehealthcare.com.au',
+  team: {
+    osteopaths: 0,
+    physiotherapists: 11,
+    chiropractors: 0,
+    generalPractitioners: 0,
+    sportsMedicineDoctors: 0,
+    exercisePhys: 6,
+    myotherapists: 0,
+    remedialMassage: 0,
+    practiceManager: 0,
+    admin: 2,
+  },
+  localTargets: [],
+  travelBand: 'within-2hr',
+  travelSurcharge: travelSurchargeFor('within-2hr'),
+  cohortRecommendation: 'full-team',
+  status: 'researching',
+  researchSource: 'manual',
+  validUntil: new Date('2027-12-31T00:00:00.000Z'),
+  notes: '[team-enriched=manual]',
+  createdAt: new Date('2026-06-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-06-01T00:00:00.000Z'),
+  priorityWave: undefined,
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CRUD
 // ─────────────────────────────────────────────────────────────────────────────
@@ -151,6 +195,7 @@ export async function getClinicBySlug(slug: string): Promise<ProspectClinic | nu
   // DB so no row exists for the cold-send engine to pick up. Every other slug
   // falls through to the normal SQL lookup below.
   if (slug === 'totum-life-science') return TOTUM_SYNTHETIC
+  if (slug === 'purpose-healthcare') return PURPOSE_SYNTHETIC
 
   const { rows } = await sql<DbClinicRow>`
     SELECT * FROM prospect_clinics WHERE slug = ${slug} LIMIT 1
