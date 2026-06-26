@@ -352,7 +352,7 @@ function ZacCredibility() {
             B.Clin.Sci., M.Ost.Med. · AHPRA-registered · Course Director, Concussion Education Australia
           </p>
           <p className="text-[12.5px] text-foreground leading-relaxed">
-            Over a decade specialising in concussion — work with national + professional ice-hockey leagues across New Zealand and Canada, and quietly upskilling allied health teams across Australia on diagnosis, structured management, and return-to-play clearance.
+            A decade in concussion — professional ice-hockey leagues across NZ and Canada, and allied-health teams across Australia, on diagnosis, management and return-to-play clearance.
           </p>
         </div>
       </div>
@@ -413,10 +413,10 @@ function MultidisciplinaryIntegration({ clinic }: { clinic: ProspectClinic }) {
         Multidisciplinary integration
       </p>
       <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mb-2 leading-tight">
-        Your whole team activated for the best concussion outcomes.
+        Your whole team, one protocol.
       </h3>
       <p className="text-sm text-muted-foreground leading-relaxed mb-4 max-w-2xl">
-        Concussion isn&apos;t a single-discipline problem. Acute assessment, vestibular, cervical, sub-symptom-threshold aerobic, return-to-play clearance, and discharge documentation each sit with a different clinician on the {clinic.shortName} floor. The Hub Program trains the protocol across the team so the case stays in-house from diagnosis to discharge.
+        Each step of concussion care sits with a different clinician — the Hub Program trains them all on the same pathway, so the case stays in-house from diagnosis to discharge.
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
