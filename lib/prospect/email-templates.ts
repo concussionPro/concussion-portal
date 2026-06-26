@@ -3,6 +3,25 @@ import { dominantDiscipline, clinicalCount, hubPackPriceFor, computePricing, isT
 import { CONFIG } from '@/lib/config'
 
 /**
+ * Apollo imports store clinic names in ALL CAPS ("KALAMUNDA PHYSIOTHERAPY
+ * CENTRE"), which reads like a broken mail-merge when dropped into a sentence.
+ * Title-case it for display — but ONLY when it's actually all-caps, so names
+ * that already carry proper casing (or deliberate acronyms) are left alone.
+ */
+function displayClinicName(name: string): string {
+  const letters = name.replace(/[^A-Za-z]/g, '')
+  const isAllCaps = letters.length > 0 && letters === letters.toUpperCase()
+  if (!isAllCaps) return name.trim()
+  const small = new Set(['and', 'of', 'the', 'for', 'at', 'on', 'to', 'a', 'an'])
+  return name
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w, i) => (i > 0 && small.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(' ')
+    .trim()
+}
+
+/**
  * Cold-outreach templates — rewritten 2026-06-10.
  *
  * WHY THE REWRITE: the designed-HTML emails (bento stat tables, hero image,
@@ -314,7 +333,7 @@ export function mergeTemplate(
   const hasUnknownCity = !clinic.city || /unknown/i.test(clinic.city)
   const hasUnknownShortName = !clinic.shortName || /unknown/i.test(clinic.shortName)
   const hasUnknownRegion = !clinic.region || /unknown/i.test(clinic.region)
-  const safeShortName = hasUnknownShortName ? 'your clinic' : clinic.shortName
+  const safeShortName = hasUnknownShortName ? 'your clinic' : displayClinicName(clinic.shortName)
   const safeRegion = hasUnknownRegion ? 'your region' : clinic.region
   // City reference is appended when known, skipped gracefully when not.
   const cityPhrase = hasUnknownCity ? '' : ` in ${clinic.city}`
@@ -340,16 +359,20 @@ export function mergeTemplate(
   // reference docs; then ONE tier-matched line — on-site for large (≥6),
   // Hub Pack for medium (2-5), self-paced course for solo (≤1) — + clean link.
   const tierLine = isOnSiteTarget
-    ? `For a team ${safeShortName}'s size the natural step is an on-site practical day — your team trained on your own cases, ready to manage concussion in-house. 14 CPD hours each, Osteopathy Australia endorsed.`
+    ? `For a team your size, the natural step is an on-site practical day — your clinicians trained on your own cases, ready to manage concussion in-house. 14 CPD hours each, Osteopathy Australia endorsed.`
     : isIndividualTarget
-      ? `The course is self-paced online — everything to manage concussion, 8 CPD hours, Osteopathy Australia endorsed.`
-      : `For a team your size the Hub Pack trains everyone online plus your own clinic-branded toolkit, ready to manage concussion in-house. 8 CPD hours each, Osteopathy Australia endorsed.`
+      ? `The course is self-paced online — everything you need to manage concussion, 8 CPD hours, Osteopathy Australia endorsed.`
+      : `For a team your size, the Hub Pack trains everyone online and gives you your own clinic-branded toolkit. 8 CPD hours each, Osteopathy Australia endorsed.`
   const sp = seasonalPrefix()
   const hook = sp ? sp + REGULATORY_LINE.charAt(0).toLowerCase() + REGULATORY_LINE.slice(1) : REGULATORY_LINE
+  // Structured as four short, distinct beats — regulatory hook, the kit I made
+  // for them (name used ONCE), the tier-matched next step, then the link on its
+  // own line. Cutting the name from 3x→1x is what stops it reading as a merge.
   const t1Body = [
     `<p>${hook} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
-    `<p>I've put a concussion kit together for ${safeShortName}: the fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial — yours to use. The clinical toolkit, admin pack and reference library preview too, and unlock with the course.</p>`,
-    `<p>${tierLine} I've set it up for ${safeShortName} here: ${FREE_LINK}</p>`,
+    `<p>I've put a concussion kit together for ${safeShortName} — the fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial, all yours to use. The clinical toolkit, admin pack and reference library are previewed there too.</p>`,
+    `<p>${tierLine}</p>`,
+    `<p>It's all set up on your page here: ${FREE_LINK}</p>`,
   ].join('\n')
 
   // T2 — re-offer: free tools + the toolkit/docs value + the tier line, clean

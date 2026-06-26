@@ -26,7 +26,7 @@ import {
   Mail,
 } from 'lucide-react'
 import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
-import { computePricing, teamTotal, clinicalCount, isTeamVerified } from '@/lib/prospect/pricing'
+import { computePricing, clinicalCount, isTeamVerified } from '@/lib/prospect/pricing'
 import { IndividualInterestCard } from './IndividualInterestCard'
 import { HubPackBuyCard } from './HubPackBuyCard'
 import { DualStreamTabs } from './DualStreamTabs'
@@ -35,7 +35,6 @@ import { ProspectSidebar } from './ProspectSidebar'
 
 export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   const pricing = computePricing(clinic.team, clinic.travelBand)
-  const total = teamTotal(clinic.team)
   const clinical = clinicalCount(clinic.team)
   const teamVerified = isTeamVerified(clinic.notes)
 
@@ -111,7 +110,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                   Module 1 Trial · What is a Concussion?
                 </h3>
                 <p className="text-sm text-white/85 leading-relaxed">
-                  First sections + interactive quiz checkpoint. 14 CPD hrs total across 8 modules.
+                  First sections + interactive quiz checkpoint. 8 CPD hrs online across 8 modules (14 with the in-person day).
                 </p>
               </div>
               <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-white text-accent px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
@@ -190,7 +189,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
 
           {/* Team snapshot bento */}
           <div data-track-section="team-snapshot">
-            <TeamSnapshot clinic={clinic} clinicalCount={clinical} totalCount={total} verified={teamVerified} />
+            <TeamSnapshot clinic={clinic} verified={teamVerified} />
           </div>
 
           {/* Multidisciplinary integration value frame */}
@@ -359,13 +358,13 @@ function ZacCredibility() {
   )
 }
 
-function TeamSnapshot({ clinic, clinicalCount, totalCount, verified }: { clinic: ProspectClinic; clinicalCount: number; totalCount: number; verified: boolean }) {
+function TeamSnapshot({ clinic, verified }: { clinic: ProspectClinic; verified: boolean }) {
   const t = clinic.team
-  // Only show a specific headcount/discipline breakdown when the team was
-  // actually verified (website read / human correction). Otherwise the numbers
-  // are the Apollo import placeholder — quoting them ("Your team: 6") to a
-  // clinic that size isn't is the thing we're killing (Zac 2026-06-18). Show a
-  // generic "your team" frame instead; the size gets confirmed on the call.
+  // NEVER show a headcount in the dash. The Apollo-imported numbers are almost
+  // always wrong, and quoting "17 clinical · 2 admin" to a clinic that the
+  // numbers don't match is the exact thing we're killing (Zac 2026-06-26). We
+  // keep the counts internally for tiering/category, but the dash only ever
+  // NAMES the disciplines present — the actual size gets confirmed on the call.
   if (!verified) {
     return (
       <section className="glass-premium rounded-2xl p-5 sm:p-6 mb-6">
@@ -377,26 +376,29 @@ function TeamSnapshot({ clinic, clinicalCount, totalCount, verified }: { clinic:
       </section>
     )
   }
+  // Professions only — no counts (Zac: "just ID the professions for the pitch").
+  const disciplines = [
+    t.osteopaths && 'Osteo',
+    t.physiotherapists && 'Physio',
+    t.chiropractors && 'Chiro',
+    t.generalPractitioners && 'GP',
+    t.sportsMedicineDoctors && 'Sports med',
+    t.exercisePhys && 'EP',
+    (t.myotherapists + t.remedialMassage) && 'Myo/RMT',
+    (t.practiceManager + t.admin) && 'Admin',
+  ].filter(Boolean) as string[]
   return (
     <section className="glass-premium rounded-2xl p-5 sm:p-6 mb-6">
       <p className="stat-label">Your team</p>
-      <p className="stat-value">
-        {clinicalCount}
-        <span className="text-base font-medium text-muted-foreground"> clinical · </span>
-        {totalCount - clinicalCount}
-        <span className="text-base font-medium text-muted-foreground"> admin</span>
-      </p>
-      <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-        {[
-          t.osteopaths && `${t.osteopaths} osteo`,
-          t.physiotherapists && `${t.physiotherapists} physio`,
-          t.chiropractors && `${t.chiropractors} chiro`,
-          t.generalPractitioners && `${t.generalPractitioners} GP`,
-          t.sportsMedicineDoctors && `${t.sportsMedicineDoctors} sports med`,
-          t.exercisePhys && `${t.exercisePhys} EP`,
-          (t.myotherapists + t.remedialMassage) && `${t.myotherapists + t.remedialMassage} myo/RMT`,
-          (t.practiceManager + t.admin) && `${t.practiceManager + t.admin} admin`,
-        ].filter(Boolean).join(' · ')}
+      <div className="flex flex-wrap gap-2 mt-2">
+        {disciplines.map((d) => (
+          <span key={d} className="text-[13px] font-semibold text-foreground bg-accent/8 border border-accent/15 rounded-lg px-3 py-1.5">
+            {d}
+          </span>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+        The program trains every discipline on your floor on one concussion protocol — so the case stays in-house from assessment to discharge. We&apos;ll size the cohort with you on a quick call.
       </p>
     </section>
   )

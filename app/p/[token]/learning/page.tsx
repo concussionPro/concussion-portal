@@ -7,6 +7,7 @@ import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { getModulesMeta } from '@/data/module-meta'
+import { getEpModulesMeta } from '@/data/ep-modules'
 import { DualStreamTabs } from '@/components/prospect/DualStreamTabs'
 
 interface PageProps {
@@ -33,6 +34,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
   const modules = getModulesMeta()
   const m1 = modules.find((m) => m.id === 1)!
   const locked = modules.filter((m) => m.id !== 1)
+  const isPurpose = clinic.slug === 'purpose-healthcare'
 
   return (
     <div className="flex min-h-screen dashboard-bg">
@@ -56,67 +58,81 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
           </Link>
 
           <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
-            Concussion Clinical Mastery · {clinic.shortName} preview
+            {isPurpose ? 'Two course streams' : 'Concussion Clinical Mastery'} · {clinic.shortName} preview
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-2">
             Learning Suite
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            8 modules · 8 CPD hrs online (+6 in-person = 14 total) · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.
+            {isPurpose
+              ? 'Two streams — CCM (allied health) and CRM (exercise physiology), 8 modules each. 8 CPD hrs online per stream (+6 in-person = 14 total). Pick a stream below to see its modules.'
+              : '8 modules · 8 CPD hrs online (+6 in-person = 14 total) · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.'}
           </p>
 
-          {/* Purpose (dual-discipline): both course streams (CCM + CRM) up top.
-              Gated by slug — every other prospect sees the standard CCM suite. */}
-          {clinic.slug === 'purpose-healthcare' && <DualStreamTabs />}
-
-          <Link
-            href={`/p/${clinic.slug}/learning/module-1?k=${clinic.accessKey}`}
-            className="block glass-premium rounded-2xl p-5 sm:p-6 mb-4 border-l-2 border-l-accent hover:shadow-md transition-shadow group"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center shrink-0">
-                <span className="text-base font-bold text-accent">M1</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <p className="text-sm font-bold text-foreground">{m1.title}</p>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-                    Trial open
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mb-2">{m1.subtitle}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-2">{m1.description}</p>
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{m1.duration}</span>
-                  <span>·</span>
-                  <span>{m1.points} CPD hr</span>
-                </div>
-              </div>
-            </div>
-          </Link>
-
-          <div className="space-y-2.5">
-            {locked.map((m) => (
-              <div key={m.id} className="glass-premium rounded-2xl p-5 opacity-75 relative">
+          {isPurpose ? (
+            /* Purpose (dual-discipline): ONE tab-driven suite. The CCM/CRM tabs
+               drive the clickable module list below — CCM module 1 is the live
+               trial, CRM is preview-only until ESSA approval. No duplicate list. */
+            <DualStreamTabs
+              detailed={{
+                slug: clinic.slug,
+                accessKey: clinic.accessKey ?? '',
+                ccm: modules,
+                crm: getEpModulesMeta(),
+              }}
+            />
+          ) : (
+            <>
+              <Link
+                href={`/p/${clinic.slug}/learning/module-1?k=${clinic.accessKey}`}
+                className="block glass-premium rounded-2xl p-5 sm:p-6 mb-4 border-l-2 border-l-accent hover:shadow-md transition-shadow group"
+              >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center shrink-0">
-                    <Lock className="w-5 h-5 text-slate-400" strokeWidth={1.8} />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center shrink-0">
+                    <span className="text-base font-bold text-accent">M1</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground">M{m.id}. {m.title}</p>
-                    <p className="text-xs text-muted-foreground mb-1">{m.subtitle}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{m.description}</p>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <p className="text-sm font-bold text-foreground">{m1.title}</p>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+                        Trial open
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">{m1.subtitle}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-2">{m1.description}</p>
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{m1.duration}</span>
+                      <span>·</span>
+                      <span>{m1.points} CPD hr</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              </Link>
 
-          <div className="glass-premium rounded-2xl p-4 mt-6 text-center">
-            <p className="text-xs text-muted-foreground">
-              Modules 2-8 unlock for every {clinic.shortName} clinician with the Hub Program · 14 CPD hrs each.
-            </p>
-          </div>
+              <div className="space-y-2.5">
+                {locked.map((m) => (
+                  <div key={m.id} className="glass-premium rounded-2xl p-5 opacity-75 relative">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center shrink-0">
+                        <Lock className="w-5 h-5 text-slate-400" strokeWidth={1.8} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">M{m.id}. {m.title}</p>
+                        <p className="text-xs text-muted-foreground mb-1">{m.subtitle}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{m.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="glass-premium rounded-2xl p-4 mt-6 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Modules 2-8 unlock for every {clinic.shortName} clinician with the Hub Program · 8 CPD hrs online each (14 with the in-person day).
+                </p>
+              </div>
+            </>
+          )}
           <div className="h-20" />
         </div>
       </main>

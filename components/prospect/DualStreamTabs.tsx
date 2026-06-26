@@ -1,7 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { GraduationCap, HeartPulse, Activity, ClipboardList, Stethoscope, Check, Lock } from 'lucide-react'
+import Link from 'next/link'
+import { GraduationCap, HeartPulse, Activity, ClipboardList, Stethoscope, Check, Lock, Clock } from 'lucide-react'
+
+/** Metadata-only module shape (mirrors data/module-meta ModuleMeta). */
+export type StreamModule = { id: number; title: string; subtitle: string; duration: string; points: number; description: string }
+/** When provided, the active tab drives a rich, clickable module list below. */
+export type DetailedStreams = { slug: string; accessKey: string; ccm: StreamModule[]; crm: StreamModule[] }
 
 /**
  * PITCH-ONLY preview of the post-ESSA dual-stream clinic portal, embedded in the
@@ -68,9 +74,10 @@ const DOCS = [
   'Return-to-Play Tracking Sheets', 'Billing & Item-Number Guide',
 ]
 
-export function DualStreamTabs() {
+export function DualStreamTabs({ detailed }: { detailed?: DetailedStreams }) {
   const [stream, setStream] = useState<StreamId>('ccm')
   const active = STREAMS[stream]
+  const activeModules = detailed ? detailed[stream] : null
 
   return (
     <section className="mb-10" data-track-section="streams">
@@ -115,7 +122,10 @@ export function DualStreamTabs() {
         })}
       </div>
 
-      {/* Selected stream's REAL modules */}
+      {/* Selected stream's modules. When `detailed` is supplied (learning suite),
+          the SAME tab drives a rich, clickable module list — CCM module 1 is the
+          live trial, the rest are locked; CRM modules are preview-only until ESSA
+          approval lands. Without `detailed` (home dash) we show the compact list. */}
       <div className="glass-premium rounded-2xl p-6 sm:p-7">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
           <div className="flex items-center gap-2.5">
@@ -124,14 +134,63 @@ export function DualStreamTabs() {
           </div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-accent">{active.cpd} · {active.accredBody}</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {active.modules.map((m, i) => (
-            <div key={m} className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3 transition hover:bg-accent/[0.04]">
-              <span className="w-7 h-7 rounded-lg bg-accent/10 text-accent text-[13px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-              <span className="text-sm text-foreground/90 font-medium leading-snug">{m}</span>
-            </div>
-          ))}
-        </div>
+
+        {activeModules ? (
+          <div className="space-y-2.5">
+            {activeModules.map((m, i) => {
+              const isLiveTrial = stream === 'ccm' && m.id === 1
+              const inner = (
+                <div className="flex items-start gap-4">
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isLiveTrial ? 'bg-gradient-to-br from-accent/20 to-accent/5' : 'bg-black/[0.03]'}`}>
+                    {isLiveTrial
+                      ? <span className="text-sm font-bold text-accent">M1</span>
+                      : <span className="text-[13px] font-bold text-muted-foreground/70">{i + 1}</span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <p className="text-sm font-bold text-foreground">{m.title}</p>
+                      {isLiveTrial ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">Trial open</span>
+                      ) : stream === 'crm' ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">Preview</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider"><Lock className="w-2.5 h-2.5" /> Locked</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-1">{m.subtitle}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{m.description}</p>
+                    {isLiveTrial && (
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1.5">
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{m.duration}</span>
+                        <span>·</span><span>{m.points} CPD hr</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+              return isLiveTrial && detailed ? (
+                <Link
+                  key={m.id}
+                  href={`/p/${detailed.slug}/learning/module-1?k=${detailed.accessKey}`}
+                  className="block rounded-2xl p-4 sm:p-5 border-l-2 border-l-accent bg-black/[0.02] hover:bg-accent/[0.04] transition-colors"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <div key={m.id} className="rounded-2xl p-4 sm:p-5 bg-black/[0.02] opacity-90">{inner}</div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {active.modules.map((m, i) => (
+              <div key={m} className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3 transition hover:bg-accent/[0.04]">
+                <span className="w-7 h-7 rounded-lg bg-accent/10 text-accent text-[13px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                <span className="text-sm text-foreground/90 font-medium leading-snug">{m}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Shared layer */}
