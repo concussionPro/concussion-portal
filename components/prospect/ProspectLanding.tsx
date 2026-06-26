@@ -37,6 +37,11 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   const pricing = computePricing(clinic.team, clinic.travelBand)
   const clinical = clinicalCount(clinic.team)
   const teamVerified = isTeamVerified(clinic.notes)
+  // Purpose Healthcare is the DEMO for the post-ESSA two-stream pitch — NOT a
+  // live cold target. Its dashboard runs a tighter, curated flow (the redundant
+  // blocks below are gated out) so the demo reads clean. Every other (live)
+  // prospect keeps the proven full flow untouched (Zac 2026-06-27).
+  const isPurpose = clinic.slug === 'purpose-healthcare'
 
   // Location fallback — when city or region is missing/unknown, drop the
   // geographic frame entirely and pitch as the local concussion hub.
@@ -84,7 +89,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           {/* Purpose: the two-stream selector front-and-centre on the home page —
               they pick a discipline and see that stream's modules / the difference,
               before the rest of the pitch. Gated to Purpose (ESSA-pending EP stream). */}
-          {clinic.slug === 'purpose-healthcare' && (
+          {isPurpose && (
             <DualStreamTabs learningHref={`/p/${clinic.slug}/learning?k=${clinic.accessKey ?? ''}`} />
           )}
 
@@ -92,7 +97,10 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             <ZacCredibility />
           </div>
 
-          {/* Trial CTA */}
+          {/* Trial CTA — hidden for the Purpose demo: the dual-stream selector
+              above already surfaces both CCM + CRM Module 1 trials, so a second
+              CCM-only "Start here" card just duplicates and confuses the flow. */}
+          {!isPurpose && (
           <Link
             data-track-section="trial-cta"
             data-track-cta="trial-module1"
@@ -121,6 +129,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               </div>
             </div>
           </Link>
+          )}
 
           {/* Toolkit callout — branded clinical pack, outreach kit, admin
               micro-course, all pre-populated with the clinic's details.
@@ -157,7 +166,10 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             </div>
           </Link>
 
-          {/* Onsite hero */}
+          {/* Onsite hero — hidden for the Purpose demo: it's only a teaser that
+              jumps to #pricing, which sits just below, so it adds a heavy dark
+              block without new information. Live pitches keep it. */}
+          {!isPurpose && (
           <a
             data-track-section="onsite-hero"
             data-track-cta="onsite-hero-see-pricing"
@@ -188,16 +200,21 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               </div>
             </div>
           </a>
+          )}
 
           {/* Team snapshot bento */}
           <div data-track-section="team-snapshot">
             <TeamSnapshot clinic={clinic} verified={teamVerified} />
           </div>
 
-          {/* Multidisciplinary integration value frame */}
-          <div data-track-section="multidisciplinary">
-            <MultidisciplinaryIntegration clinic={clinic} />
-          </div>
+          {/* Multidisciplinary integration value frame — hidden for the Purpose
+              demo: the team snapshot above already carries the "whole team, one
+              protocol" story, so this repeats it. Live pitches keep it. */}
+          {!isPurpose && (
+            <div data-track-section="multidisciplinary">
+              <MultidisciplinaryIntegration clinic={clinic} />
+            </div>
+          )}
 
           {/* Pricing — small clinics (2–5 clinical) get the self-serve Hub Pack
               (online, no travel, can check out); ≥6 get the on-site cohort
@@ -413,10 +430,10 @@ function MultidisciplinaryIntegration({ clinic }: { clinic: ProspectClinic }) {
         Multidisciplinary integration
       </p>
       <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mb-2 leading-tight">
-        Your whole team, one protocol.
+        Your whole team activated for the best concussion outcomes.
       </h3>
       <p className="text-sm text-muted-foreground leading-relaxed mb-4 max-w-2xl">
-        Each step of concussion care sits with a different clinician — the Hub Program trains them all on the same pathway, so the case stays in-house from diagnosis to discharge.
+        Concussion isn&apos;t a single-discipline problem. Acute assessment, vestibular, cervical, sub-symptom-threshold aerobic, return-to-play clearance, and discharge documentation each sit with a different clinician on the {clinic.shortName} floor. The Hub Program trains the protocol across the team so the case stays in-house from diagnosis to discharge.
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
