@@ -31,6 +31,8 @@ import { computePricing, clinicalCount, isTeamVerified } from '@/lib/prospect/pr
 import { IndividualInterestCard } from './IndividualInterestCard'
 import { HubPackBuyCard } from './HubPackBuyCard'
 import { DualStreamTabs } from './DualStreamTabs'
+import { getModulesMeta } from '@/data/module-meta'
+import { getEpModulesMeta } from '@/data/ep-modules'
 import { ProspectTracker } from './ProspectTracker'
 import { ProspectSidebar } from './ProspectSidebar'
 
@@ -91,7 +93,14 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               they pick a discipline and see that stream's modules / the difference,
               before the rest of the pitch. Gated to Purpose (ESSA-pending EP stream). */}
           {isPurpose && (
-            <DualStreamTabs learningHref={`/p/${clinic.slug}/learning?k=${clinic.accessKey ?? ''}`} />
+            <DualStreamTabs
+              detailed={{
+                slug: clinic.slug,
+                accessKey: clinic.accessKey ?? '',
+                ccm: getModulesMeta(),
+                crm: getEpModulesMeta(),
+              }}
+            />
           )}
 
           <div data-track-section="credibility">
