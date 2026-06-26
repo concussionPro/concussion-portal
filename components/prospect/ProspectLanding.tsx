@@ -22,6 +22,7 @@ import {
   FileText,
   Stethoscope,
   BookMarked,
+  ClipboardList,
   Lock,
   Mail,
 } from 'lucide-react'
@@ -461,8 +462,8 @@ function PricingTiers({ clinic, pricing }: { clinic: ProspectClinic; pricing: Pr
         </p>
         <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
           {clinic.city && !/unknown/i.test(clinic.city)
-            ? `On-site training at ${clinic.city}`
-            : `On-site training for ${clinic.shortName}`}
+            ? `On-site training at ${clinic.shortName}, ${clinic.city}`
+            : `On-site training at ${clinic.shortName}`}
         </h3>
       </div>
 
@@ -489,24 +490,33 @@ function PricingTiers({ clinic, pricing }: { clinic: ProspectClinic; pricing: Pr
         ))}
       </div>
 
-      <div className="mt-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white to-white border border-emerald-300/60 p-5">
-        <div className="flex items-start gap-3 flex-wrap">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-            <span className="text-emerald-700 font-bold">+</span>
+      <Link
+        data-track-section="front-of-house"
+        data-track-cta="front-of-house-pack"
+        href={`/p/${clinic.slug}/toolkit/admin?k=${clinic.accessKey}`}
+        className="group block mt-4 rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-50/40 to-white border-2 border-emerald-300/70 ring-1 ring-emerald-200/50 p-5 sm:p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400 transition-all"
+      >
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="w-12 h-12 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <ClipboardList className="w-6 h-6 text-emerald-700" strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-[200px]">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 mb-1">
+            <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-emerald-700 mb-1">
               Front-of-house — included with every cohort
             </p>
-            <p className="text-sm font-bold text-foreground mb-1">
+            <p className="text-base sm:text-lg font-bold text-foreground mb-1 leading-tight">
               Concussion forms toolkit + &ldquo;AI in Concussion&rdquo; admin primer
             </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Reception team gets the intake/discharge forms and a brief non-clinical primer. No extra cost.
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
+              Your reception team gets the intake/discharge forms and a brief non-clinical primer — pre-loaded for {clinic.shortName}. No extra cost.
             </p>
           </div>
+          <div className="shrink-0 inline-flex items-center gap-1.5 text-sm font-bold bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-sm group-hover:bg-emerald-700 group-hover:translate-x-0.5 transition-all">
+            Open the front-desk pack
+            <ArrowUpRight className="w-4 h-4" />
+          </div>
         </div>
-      </div>
+      </Link>
     </section>
   )
 }

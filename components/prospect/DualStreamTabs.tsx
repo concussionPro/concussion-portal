@@ -138,15 +138,13 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
         {activeModules ? (
           <div className="space-y-2.5">
             {activeModules.map((m, i) => {
-              // Both streams share the SAME structure: module 1 is the open
-              // trial (clickable into its stream-specific trial page), 2-8 are
-              // locked. CRM's trial lives at /learning/crm/module-1.
+              const isCrm = stream === 'crm'
+              // Module 1 is the clickable entry. CCM opens its trial-preview
+              // page. CRM opens the ACTUAL built EP course — the real /ep-course
+              // app — via the /demo/essa reviewer entry (sets the demo cookie,
+              // new tab). We do NOT re-implement the CRM course; we link to it.
               const isLiveTrial = m.id === 1
-              const trialHref = detailed
-                ? stream === 'crm'
-                  ? `/p/${detailed.slug}/learning/crm/module-1?k=${detailed.accessKey}`
-                  : `/p/${detailed.slug}/learning/module-1?k=${detailed.accessKey}`
-                : null
+              const ccmHref = detailed ? `/p/${detailed.slug}/learning/module-1?k=${detailed.accessKey}` : null
               const inner = (
                 <div className="flex items-start gap-4">
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isLiveTrial ? 'bg-gradient-to-br from-accent/20 to-accent/5' : 'bg-black/[0.03]'}`}>
@@ -158,7 +156,7 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                       <p className="text-sm font-bold text-foreground">{m.title}</p>
                       {isLiveTrial ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">Trial open</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">{isCrm ? 'Open course' : 'Trial open'}</span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider"><Lock className="w-2.5 h-2.5" /> Locked</span>
                       )}
@@ -174,10 +172,24 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
                   </div>
                 </div>
               )
-              return isLiveTrial && trialHref ? (
+              if (isLiveTrial && isCrm) {
+                // Real EP course (gated /ep-course) via the demo entry, new tab.
+                return (
+                  <a
+                    key={m.id}
+                    href="/demo/essa"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-2xl p-4 sm:p-5 border-l-2 border-l-accent bg-black/[0.02] hover:bg-accent/[0.04] transition-colors"
+                  >
+                    {inner}
+                  </a>
+                )
+              }
+              return isLiveTrial && ccmHref ? (
                 <Link
                   key={m.id}
-                  href={trialHref}
+                  href={ccmHref}
                   className="block rounded-2xl p-4 sm:p-5 border-l-2 border-l-accent bg-black/[0.02] hover:bg-accent/[0.04] transition-colors"
                 >
                   {inner}
