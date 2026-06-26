@@ -43,7 +43,7 @@ export function HubPackBuyCard({ clinical, slug }: { clinical: number; slug: str
   }
 
   const includes = [
-    `${seats} clinician online seats — 8 modules, 14 CPD hours each, OA-endorsed`,
+    `${seats} clinician online seats — 8 modules, 8 CPD hours each, OA-endorsed`,
     'Lifetime access — your whole team trains on their own schedule',
     'Branded clinical docs (GP letters, NDIS, school-sport intake, RTP tracking)',
     'Admin/billing pack + 90-day launch playbook + 30-min strategy call',

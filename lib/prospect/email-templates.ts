@@ -342,8 +342,8 @@ export function mergeTemplate(
   const tierLine = isOnSiteTarget
     ? `For a team ${safeShortName}'s size the natural step is an on-site practical day — your team trained on your own cases, ready to manage concussion in-house. 14 CPD hours each, Osteopathy Australia endorsed.`
     : isIndividualTarget
-      ? `The full course is self-paced online — everything to manage concussion, 14 CPD hours, Osteopathy Australia endorsed.`
-      : `For a team your size the Hub Pack trains everyone online plus your own clinic-branded toolkit, ready to manage concussion in-house. 14 CPD hours each, Osteopathy Australia endorsed.`
+      ? `The course is self-paced online — everything to manage concussion, 8 CPD hours, Osteopathy Australia endorsed.`
+      : `For a team your size the Hub Pack trains everyone online plus your own clinic-branded toolkit, ready to manage concussion in-house. 8 CPD hours each, Osteopathy Australia endorsed.`
   const sp = seasonalPrefix()
   const hook = sp ? sp + REGULATORY_LINE.charAt(0).toLowerCase() + REGULATORY_LINE.slice(1) : REGULATORY_LINE
   const t1Body = [
@@ -371,7 +371,7 @@ export function mergeTemplate(
       ? `<p>If you're weighing it up for ${safeShortName}, the most direct next step is to lock in a date for the on-site day — your whole team trained on your own cases, 14 CPD hours each. Reply and I'll sort the details, or it's all set up on your page: ${FREE_LINK}</p>`
       : isIndividualTarget
         ? `<p>If you'd like to get started, the course is ready whenever you are — reply and I'll point you to the quickest way in, or jump in here: ${FREE_LINK}</p>`
-        : `<p>If you'd like the whole clinic trained, the Hub Pack does it online — no travel, everyone in, 14 CPD hours each. You can set ${safeShortName} up straight from your page: ${FREE_LINK} — or reply and I'll get it sorted.</p>`
+        : `<p>If you'd like the whole clinic trained, the Hub Pack does it online — no travel, everyone in, 8 CPD hours each. You can set ${safeShortName} up straight from your page: ${FREE_LINK} — or reply and I'll get it sorted.</p>`
   } else if (hint === 'pricing') {
     t2SecondPara =
       `<p>If the pricing was the question, I'm happy to walk through what it'd look like for ${safeShortName} — just reply. The SCAT6/SCOAT6 forms and baseline tool are yours to use either way. ${tierLine}</p>`
