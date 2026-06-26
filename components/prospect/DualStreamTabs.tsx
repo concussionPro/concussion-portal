@@ -15,13 +15,15 @@ import { GraduationCap, HeartPulse, Activity, ClipboardList, Stethoscope, Check,
 
 type StreamId = 'ccm' | 'crm'
 const STREAMS: Record<StreamId, {
-  code: string; name: string; who: string; cpd: string; icon: typeof GraduationCap; modules: string[]
+  code: string; name: string; who: string; cpd: string; accredBody: string; accredNote: string; icon: typeof GraduationCap; modules: string[]
 }> = {
   ccm: {
     code: 'CCM',
     name: 'Concussion Clinical Mastery',
     who: 'Assessment, diagnosis & return-to-play — for physios & allied health',
-    cpd: '8 CPD hours online · Osteopathy Australia endorsed',
+    cpd: '8 CPD hours online',
+    accredBody: 'AHPRA-aligned · OA-endorsed',
+    accredNote: 'Counts toward your AHPRA CPD',
     icon: GraduationCap,
     modules: [
       'What is a Concussion?',
@@ -38,7 +40,9 @@ const STREAMS: Record<StreamId, {
     code: 'CRM',
     name: 'Concussion Rehab Mastery',
     who: 'The exercise-rehab pathway — built for exercise physiologists',
-    cpd: '8 CPD hours online · ESSA-aligned (approval pending)',
+    cpd: '8 CPD hours online',
+    accredBody: 'ESSA-accredited · pending',
+    accredNote: 'Counts toward your ESSA CPD',
     icon: HeartPulse,
     modules: [
       'Concussion for the Exercise Physiologist',
@@ -105,6 +109,7 @@ export function DualStreamTabs() {
               <p className={`text-2xl sm:text-3xl font-bold tracking-tight leading-none ${on ? 'text-white' : 'text-foreground'}`}>{s.code}</p>
               <p className={`text-sm font-semibold mt-1.5 ${on ? 'text-emerald-50' : 'text-accent'}`}>{s.name}</p>
               <p className={`text-xs mt-2 leading-snug ${on ? 'text-white/80' : 'text-muted-foreground'}`}>{s.who}</p>
+              <span className={`inline-flex items-center mt-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${on ? 'bg-white/15 text-white' : 'bg-accent/10 text-accent'}`}>{s.accredBody}</span>
             </button>
           )
         })}
@@ -117,7 +122,7 @@ export function DualStreamTabs() {
             <active.icon className="w-5 h-5 text-accent" strokeWidth={1.8} />
             <h4 className="text-lg font-bold text-foreground">{active.code} · {active.name}</h4>
           </div>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-accent">{active.cpd}</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-accent">{active.cpd} · {active.accredBody}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {active.modules.map((m, i) => (
@@ -153,7 +158,7 @@ export function DualStreamTabs() {
       </div>
 
       <p className="text-[11px] text-muted-foreground mt-4 inline-flex items-center gap-1.5">
-        <Lock className="w-3 h-3" /> Preview of the live clinic portal · CRM goes live once ESSA approval lands. Both streams train together on the practical day — 14 CPD hours total.
+        <Lock className="w-3 h-3" /> Preview of the live clinic portal · CRM goes live once ESSA approval lands. Each stream is 8 hrs online CPD; the shared in-person practical day adds 6 — 14 CPD hours total.
       </p>
     </section>
   )

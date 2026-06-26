@@ -62,7 +62,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
             Learning Suite
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            8 modules · 14 CPD hrs · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.
+            8 modules · 8 CPD hrs online (+6 in-person = 14 total) · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.
           </p>
 
           {/* Purpose (dual-discipline): both course streams (CCM + CRM) up top.
