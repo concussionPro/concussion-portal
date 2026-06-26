@@ -7,6 +7,7 @@ import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { getModulesMeta } from '@/data/module-meta'
+import { DualStreamTabs } from '@/components/prospect/DualStreamTabs'
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -63,6 +64,10 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
           <p className="text-sm text-muted-foreground mb-6">
             8 modules · 14 CPD hrs · AHPRA-aligned · OA endorsed. Module 1 is open as a trial — 2-8 unlock with the Hub Program.
           </p>
+
+          {/* Purpose (dual-discipline): both course streams (CCM + CRM) up top.
+              Gated by slug — every other prospect sees the standard CCM suite. */}
+          {clinic.slug === 'purpose-healthcare' && <DualStreamTabs />}
 
           <Link
             href={`/p/${clinic.slug}/learning/module-1?k=${clinic.accessKey}`}
