@@ -104,7 +104,15 @@ export async function GET(request: Request) {
     // exists to offer them. Auto-applies to every workshop once its date passes.
     const allUsers = await loadUsers()
     const users = allUsers.filter(
-      (u) => !isWorkshopAlumnus({ accessLevel: u.accessLevel, workshopLocation: u.workshopLocation }),
+      (u) =>
+        !isWorkshopAlumnus({ accessLevel: u.accessLevel, workshopLocation: u.workshopLocation }) &&
+        // Past attendees granted portal access (signup_source 'alumni-grant', and
+        // any future 'alumni-*') are NOT new buyers — they did the course months
+        // ago. Exclude from ALL nurture sequences so we never send a months-ago
+        // attendee the new-buyer onboarding ("you picked up the course a few days
+        // ago — start Module 1"). isWorkshopAlumnus misses them because granted
+        // accounts have no workshopLocation. Bug fix 2026-06-26.
+        !String(u.signupSource ?? '').startsWith('alumni'),
     )
     const now = new Date()
     let emailsSent = 0
