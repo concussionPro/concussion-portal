@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { ProspectLanding } from '@/components/prospect/ProspectLanding'
 import { TotumLanding } from '@/components/prospect/TotumLanding'
+import { PurposeLanding } from '@/components/prospect/PurposeLanding'
 import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 import { accessKeyMatches } from '@/lib/prospect/access-key'
 
@@ -50,6 +51,9 @@ export default async function ProspectPage({ params, searchParams }: PageProps) 
   // renders regardless of whether a clinic row exists. Canada-specific pitch.
   if (token === 'totum-life-science') {
     return <TotumLanding />
+  }
+  if (token === 'purpose-healthcare') {
+    return <PurposeLanding />
   }
 
   const clinic = await getClinicBySlug(token)
