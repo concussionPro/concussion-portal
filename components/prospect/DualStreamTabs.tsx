@@ -138,13 +138,13 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
         {activeModules ? (
           <div className="space-y-2.5">
             {activeModules.map((m, i) => {
-              // Both streams behave IDENTICALLY (Zac): module 1 is the open
-              // trial preview, 2-8 locked. CCM → /learning/module-1, CRM →
-              // /learning/crm/module-1 — same prospect-portal trial pattern.
+              // Both streams use the SAME existing trial-preview build: module 1
+              // open, 2-8 locked. CCM → /learning/module-1, CRM → the same page
+              // with ?course=crm (renders the EP course's module 1). No clone.
               const isLiveTrial = m.id === 1
               const trialHref = detailed
                 ? stream === 'crm'
-                  ? `/p/${detailed.slug}/learning/crm/module-1?k=${detailed.accessKey}`
+                  ? `/p/${detailed.slug}/learning/module-1?course=crm&k=${detailed.accessKey}`
                   : `/p/${detailed.slug}/learning/module-1?k=${detailed.accessKey}`
                 : null
               const inner = (

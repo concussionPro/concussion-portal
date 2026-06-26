@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { headers } from 'next/headers'
 import { modules } from '@/data/modules'
+import { getEpModuleById } from '@/data/ep-modules'
 import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
@@ -73,10 +74,14 @@ export default async function ProspectModuleOneTrial({
   searchParams,
 }: {
   params: Promise<{ token: string }>
-  searchParams: Promise<{ k?: string }>
+  searchParams: Promise<{ k?: string; course?: string }>
 }) {
   const { token } = await params
-  await searchParams
+  const { course } = await searchParams
+  // SAME trial-preview build serves both streams — ?course=crm renders the EP
+  // course's module 1 (data/ep-modules), otherwise the flagship CCM module 1.
+  // No new renderer; the existing build is reused for the CRM stream.
+  const isCrm = course === 'crm'
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
   // Keyless per-clinic URL (Zac 2026-06-11): cold emails link to /p/<slug>
@@ -94,13 +99,13 @@ export default async function ProspectModuleOneTrial({
     clinicId: clinic.id,
     viewerIp,
     userAgent,
-    section: 'module-1-trial',
+    section: isCrm ? 'crm-module-1-trial' : 'module-1-trial',
     utmSource: 'cold_outreach',
     utmCampaign: 'prospect_portal_email',
     utmTerm: clinic.slug,
   }).catch((err) => console.error('[Portal view tracking failed]', err))
 
-  const m1 = modules.find((m) => m.id === 1)
+  const m1 = isCrm ? getEpModuleById(1) : modules.find((m) => m.id === 1)
   if (!m1) notFound()
 
   const trialSections = m1.sections.slice(0, TRIAL_SECTION_COUNT)
@@ -142,7 +147,7 @@ export default async function ProspectModuleOneTrial({
             <span>·</span>
             <span className="flex items-center gap-1"><Award className="w-3 h-3" />{m1.points} CPD hr</span>
             <span>·</span>
-            <span>AHPRA-aligned</span>
+            <span>{isCrm ? 'ESSA-accredited' : 'AHPRA-aligned'}</span>
           </div>
 
           {/* Trial content — readable on screen but NOT copyable (select-none)
@@ -197,6 +202,7 @@ export default async function ProspectModuleOneTrial({
             accessKey={ak}
             clinicShortName={clinic.shortName}
             clinicRegion={clinic.region || clinic.city || clinic.state}
+            isCrm={isCrm}
           />
           <div className="h-20" />
         </div>
@@ -321,9 +327,9 @@ function ContentLine({ line }: { line: string }) {
 }
 
 function EndOfTrialPitch({
-  slug, accessKey, clinicShortName, clinicRegion,
+  slug, accessKey, clinicShortName, clinicRegion, isCrm = false,
 }: {
-  slug: string; accessKey: string; clinicShortName: string; clinicRegion: string
+  slug: string; accessKey: string; clinicShortName: string; clinicRegion: string; isCrm?: boolean
 }) {
   return (
     <section className="mt-10 space-y-6">
@@ -338,7 +344,9 @@ function EndOfTrialPitch({
           Become the concussion hub for {clinicRegion}.
         </h2>
         <p className="text-sm text-foreground leading-relaxed mb-5 max-w-xl">
-          The next 7 modules cover diagnosis, acute management, PPCS, multidisciplinary care, return-to-play, phenotype-targeted rehab, and documentation. Every clinician at {clinicShortName} gets full access.
+          {isCrm
+            ? <>The next 7 modules cover recognition &amp; scope, the Buffalo treadmill/bike test, sub-symptom-threshold aerobic rehab, phenotype-specific exercise, graded return to sport, persistent symptoms, and documentation. Every exercise physiologist at {clinicShortName} gets full access.</>
+            : <>The next 7 modules cover diagnosis, acute management, PPCS, multidisciplinary care, return-to-play, phenotype-targeted rehab, and documentation. Every clinician at {clinicShortName} gets full access.</>}
         </p>
         <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">
           Why this region · why now
