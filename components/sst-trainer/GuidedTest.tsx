@@ -277,9 +277,8 @@ export default function GuidedTest({
         </p>
         <button
           type="button"
-          disabled={!hrValid}
           onClick={() => endEarly('exhaustion-limited')}
-          className="rounded-[14px] border-[1.5px] border-[#cdd9da] bg-white p-3 text-[13.5px] font-semibold text-[#5d7174] transition active:scale-[0.98] disabled:opacity-40"
+          className="rounded-[14px] border-[1.5px] border-[#cdd9da] bg-white p-3 text-[13.5px] font-semibold text-[#5d7174] transition active:scale-[0.98]"
         >
           Stop — exhausted (RPE maxed, no symptoms)
         </button>

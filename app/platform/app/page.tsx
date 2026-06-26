@@ -19,6 +19,7 @@ import ResultPrescription from '@/components/sst-trainer/ResultPrescription'
 import HomeHub from '@/components/sst-trainer/HomeHub'
 import TrainingSession from '@/components/sst-trainer/TrainingSession'
 import ProgressDashboard from '@/components/sst-trainer/ProgressDashboard'
+import { syncSessionToClinic } from '@/lib/sst-trainer/clinic-sync'
 import { SstAppShell } from '@/components/platform/SstAppShell'
 import SstOnboarding, { type OnboardingResult } from '@/components/platform/SstOnboarding'
 import SstPwaRegister from '@/components/platform/SstPwaRegister'
@@ -171,6 +172,22 @@ export default function PlatformAppPage() {
           hasPrescription={prescription !== null}
           onContinue={(rx) => {
             setPrescription(rx)
+            // Assessment / re-test → clinician. interpretation is the recovery
+            // marker: 'physiologic' = in rehab, 'no-intolerance' = clearance signal.
+            syncSessionToClinic({
+              clinicCode: welcome?.clinicCode,
+              sessionType: 'threshold',
+              hrtBpm: rx.hrt,
+              bandLow: rx.lowerBpm,
+              bandHigh: rx.upperBpm,
+              condition,
+              payload: {
+                interpretation: thresholdResult?.interpretation,
+                thresholdStage: thresholdResult?.thresholdStage,
+                restingSymptomScore,
+                symptoms: selectedSymptomIds,
+              },
+            })
             setStep('home')
           }}
           onRetest={() => setStep('readiness')}
@@ -202,6 +219,16 @@ export default function PlatformAppPage() {
           hrStatus={feed.status}
           onComplete={(log) => {
             setSessions((prev) => [...prev, log])
+            // Rehab session → clinician (HR, minutes, symptom Δ).
+            syncSessionToClinic({
+              clinicCode: welcome?.clinicCode,
+              sessionType: 'training',
+              hrtBpm: prescription?.hrt,
+              bandLow: prescription?.lowerBpm,
+              bandHigh: prescription?.upperBpm,
+              condition,
+              payload: log,
+            })
             setStep('progress')
           }}
           onCancel={() => setStep(prescription ? 'home' : 'result')}
