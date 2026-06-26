@@ -138,7 +138,15 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
         {activeModules ? (
           <div className="space-y-2.5">
             {activeModules.map((m, i) => {
-              const isLiveTrial = stream === 'ccm' && m.id === 1
+              // Both streams share the SAME structure: module 1 is the open
+              // trial (clickable into its stream-specific trial page), 2-8 are
+              // locked. CRM's trial lives at /learning/crm/module-1.
+              const isLiveTrial = m.id === 1
+              const trialHref = detailed
+                ? stream === 'crm'
+                  ? `/p/${detailed.slug}/learning/crm/module-1?k=${detailed.accessKey}`
+                  : `/p/${detailed.slug}/learning/module-1?k=${detailed.accessKey}`
+                : null
               const inner = (
                 <div className="flex items-start gap-4">
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isLiveTrial ? 'bg-gradient-to-br from-accent/20 to-accent/5' : 'bg-black/[0.03]'}`}>
@@ -151,8 +159,6 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
                       <p className="text-sm font-bold text-foreground">{m.title}</p>
                       {isLiveTrial ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">Trial open</span>
-                      ) : stream === 'crm' ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">Preview</span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider"><Lock className="w-2.5 h-2.5" /> Locked</span>
                       )}
@@ -168,10 +174,10 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
                   </div>
                 </div>
               )
-              return isLiveTrial && detailed ? (
+              return isLiveTrial && trialHref ? (
                 <Link
                   key={m.id}
-                  href={`/p/${detailed.slug}/learning/module-1?k=${detailed.accessKey}`}
+                  href={trialHref}
                   className="block rounded-2xl p-4 sm:p-5 border-l-2 border-l-accent bg-black/[0.02] hover:bg-accent/[0.04] transition-colors"
                 >
                   {inner}
