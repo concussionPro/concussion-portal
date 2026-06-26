@@ -46,12 +46,6 @@ export default async function ProspectPage({ params, searchParams }: PageProps) 
   const { token } = await params
   const { utm_source, utm_campaign, utm_term } = await searchParams
 
-  // Bespoke hand-built prospect page — checked BEFORE the DB lookup so it
-  // renders regardless of whether a clinic row exists. Canada-specific pitch.
-  if (token === 'totum-life-science') {
-    return <TotumLanding />
-  }
-
   const clinic = await getClinicBySlug(token)
   if (!clinic) notFound()
 
@@ -83,6 +77,14 @@ export default async function ProspectPage({ params, searchParams }: PageProps) 
     utmCampaign: utm_campaign ?? 'prospect_portal_email',
     utmTerm: utm_term ?? clinic.slug,
   }).catch((err) => console.error('[Portal view tracking failed]', err))
+
+  // Totum is a bespoke Canadian pitch with its own hand-built landing. It now
+  // has a real clinic row, so the server view above persists and the tracker
+  // inside TotumLanding logs section/CTA/dwell — same analytics pipe as every
+  // other prospect. It just renders its own layout instead of the standard dash.
+  if (token === 'totum-life-science') {
+    return <TotumLanding slug={clinic.slug} accessKey={clinic.accessKey} />
+  }
 
   return <ProspectLanding clinic={clinic} />
 }

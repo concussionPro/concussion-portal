@@ -10,6 +10,7 @@
  */
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -26,7 +27,8 @@ import {
   Mail,
   Check,
 } from 'lucide-react'
-import { getPartnerBySlug } from '@/lib/partners/repo'
+import { getPartnerBySlug, recordPartnerView } from '@/lib/partners/repo'
+import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 
 const ZAC_EMAIL = 'zac@concussion-education-australia.com'
 const ZAC_CAL = 'https://cal.com/zac-lewis-so8zjs'
@@ -59,11 +61,22 @@ export default async function PartnerPage({ params }: PageProps) {
   const name = partner.name
   const orgWord = partner.type === 'school' ? 'school' : partner.type === 'club' ? 'club' : 'academy'
 
+  // Server-side landing view — fire-and-forget, never blocks render. Same pipe
+  // as the prospect portal, into partner_portal_views (Zac 2026-06-27).
+  const h = await headers()
+  const userAgent = h.get('user-agent') ?? undefined
+  const viewerIp = h.get('x-forwarded-for')?.split(',')[0]?.trim()
+  recordPartnerView({ partnerId: partner.id, viewerIp, userAgent, section: 'landing' })
+    .catch((err) => console.error('[Partner view tracking failed]', err))
+
   return (
     <div className="min-h-screen dashboard-bg">
+      {/* Same engagement tracker as every prospect surface — section scroll, CTA
+          clicks and dwell POST to the partner track route → partner_portal_views. */}
+      <ProspectTracker token={partner.slug} accessKey={partner.accessKey} endpoint={`/api/partners/${partner.slug}/track`} />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         {/* ── Hero ─────────────────────────────────────────────────── */}
-        <section className="mb-12">
+        <section data-track-section="hero" className="mb-12">
           <div className="flex flex-wrap items-center gap-3 mb-5">
             <Image src="/logo.png" alt="" width={28} height={28} className="rounded-lg" />
             <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-accent">
@@ -90,7 +103,7 @@ export default async function PartnerPage({ params }: PageProps) {
         </section>
 
         {/* ── 1. The FREE give — leads, so it doesn't read as asking for patients ── */}
-        <section className="mb-6">
+        <section data-track-section="free-give" className="mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
             Set up free for every {name} athlete
           </h2>
@@ -128,7 +141,7 @@ export default async function PartnerPage({ params }: PageProps) {
         </section>
 
         {/* ── 2. Authority ─────────────────────────────────────────────── */}
-        <section className="mb-12">
+        <section data-track-section="authority" className="mb-12">
           <div className="rounded-2xl border border-accent/15 bg-gradient-to-br from-accent/5 via-white to-white px-5 py-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4">
             <Image
               src="/osteopathy-australia-endorsed.png"
@@ -151,7 +164,7 @@ export default async function PartnerPage({ params }: PageProps) {
         </section>
 
         {/* ── 3. The expert backup — LAST, framed as a safety net not a sales pitch ── */}
-        <section className="mb-6">
+        <section data-track-section="expert-backup" className="mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
             Use the baseline to inform an expert assessment
           </h2>
@@ -212,7 +225,7 @@ export default async function PartnerPage({ params }: PageProps) {
         </section>
 
         {/* ── CTA ──────────────────────────────────────────────────────── */}
-        <section className="mb-14">
+        <section data-track-section="cta" className="mb-14">
           <div className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-white to-white px-6 py-8 sm:px-10 sm:py-10 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
               Set {name} up &mdash; it&rsquo;s free
@@ -222,10 +235,10 @@ export default async function PartnerPage({ params }: PageProps) {
               on call &mdash; at no cost to the {orgWord}.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a href={ZAC_CAL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white hover:bg-accent-light transition-colors">
+              <a data-track-cta="partner-book-call" href={ZAC_CAL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white hover:bg-accent-light transition-colors">
                 <Phone className="w-4 h-4" /> Book a 10-min call <ArrowRight className="w-4 h-4" />
               </a>
-              <a href={`mailto:${ZAC_EMAIL}?subject=${encodeURIComponent(`Concussion resource for ${name}`)}`} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-foreground hover:border-accent transition-colors">
+              <a data-track-cta="partner-email-zac" href={`mailto:${ZAC_EMAIL}?subject=${encodeURIComponent(`Concussion resource for ${name}`)}`} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-foreground hover:border-accent transition-colors">
                 <Mail className="w-4 h-4" /> Email Zac
               </a>
             </div>
@@ -249,7 +262,7 @@ function ImageBento({
   href, image, icon, eyebrow, title, body,
 }: { href: string; image: string; icon: React.ReactNode; eyebrow: string; title: string; body: string }) {
   return (
-    <Link href={href} className="group flex flex-col rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-accent hover:shadow-md transition-all">
+    <Link href={href} data-track-cta={`partner-tool-${href.replace(/^\//, '')}`} className="group flex flex-col rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-accent hover:shadow-md transition-all">
       <div className="relative h-40 w-full overflow-hidden">
         <Image src={image} alt="" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-[1.03] transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
@@ -279,10 +292,11 @@ function MiniCard({
     </>
   )
   const cls = 'group flex flex-col rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-5 hover:border-accent hover:shadow-sm transition-all'
+  const cta = `partner-tool-${href.replace(/^\//, '')}`
   return external ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+    <a href={href} data-track-cta={cta} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
   ) : (
-    <Link href={href} className={cls}>{inner}</Link>
+    <Link href={href} data-track-cta={cta} className={cls}>{inner}</Link>
   )
 }
 

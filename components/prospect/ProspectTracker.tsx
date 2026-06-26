@@ -27,9 +27,17 @@ import { useEffect, useRef } from 'react'
 export function ProspectTracker({
   token,
   accessKey,
+  endpoint: endpointOverride,
 }: {
   token: string
   accessKey: string
+  /**
+   * Override the POST endpoint. Defaults to the prospect track route. Partner
+   * portals pass `/api/partners/${slug}/track` so the SAME observer/CTA/dwell
+   * machinery feeds the partner engagement table. Keeps one tracker for every
+   * outreach surface (Zac 2026-06-27 — sweep all tracking into analytics).
+   */
+  endpoint?: string
 }) {
   const startTimeRef = useRef<number>(Date.now())
   const lastVisibleSectionRef = useRef<string>('hero')
@@ -37,7 +45,7 @@ export function ProspectTracker({
   const exitedRef = useRef(false)
 
   useEffect(() => {
-    const endpoint = `/api/prospect/${token}/track`
+    const endpoint = endpointOverride ?? `/api/prospect/${token}/track`
 
     function emit(payload: Record<string, unknown>): void {
       // Best-effort fetch — silent on failure
@@ -117,7 +125,7 @@ export function ProspectTracker({
       document.removeEventListener('click', onClick, { capture: true } as AddEventListenerOptions)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-  }, [token, accessKey])
+  }, [token, accessKey, endpointOverride])
 
   return null
 }

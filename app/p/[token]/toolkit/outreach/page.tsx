@@ -7,7 +7,8 @@ import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
 import { OUTREACH_TEMPLATES } from '@/data/hub-program-content'
 import { OutreachToolkitDoc } from '@/components/toolkit/OutreachToolkitDoc'
-import { getClinicBySlug } from '@/lib/prospect/repo'
+import { headers } from 'next/headers'
+import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -33,6 +34,21 @@ export default async function OutreachKitPage({ params, searchParams }: PageProp
   // with NO access key. This is non-sensitive marketing content, so any valid
   // clinic slug renders. The key is honoured when present (legacy links) but
   // no longer required.
+
+  // Engagement signal — fire-and-forget. Failures don't block the render.
+  const h = await headers()
+  const userAgent = h.get('user-agent') ?? undefined
+  const forwarded = h.get('x-forwarded-for') ?? undefined
+  const viewerIp = forwarded?.split(',')[0]?.trim()
+  recordPortalView({
+    clinicId: clinic.id,
+    viewerIp,
+    userAgent,
+    section: 'toolkit-outreach',
+    utmSource: 'cold_outreach',
+    utmCampaign: 'prospect_portal_email',
+    utmTerm: clinic.slug,
+  }).catch((err) => console.error('[Portal view tracking failed]', err))
 
   const accessKey = clinic.accessKey
   const baseHref = `/p/${clinic.slug}`

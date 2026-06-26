@@ -15,6 +15,7 @@ import { teamTotal, clinicalCount, computePricing, clinicSizeBucket, hubPackPric
 import { classifyStage, isHunterClean, buildStageMatrix, type MatrixRowInput, type PipelineStage } from '@/lib/prospect/stage'
 import { computeAdaptiveCap, type CapDecision } from '@/lib/prospect/adaptive-cap'
 import { summarizeVariantPerformance, DEFAULT_MIN_SAMPLES_PER_KEY, type VariantStat, type VariantPerformanceRow } from '@/lib/prospect/subject-optimizer'
+import { listPartners, getPartnerEngagement } from '@/lib/partners/repo'
 
 interface ClinicDbRow {
   id: number
@@ -1529,8 +1530,15 @@ export async function GET(req: NextRequest) {
       onSite: emptyTargetTier(),
       hub: emptyTargetTier(),
       individual: emptyTargetTier(),
-      partnership: { total: 0, lead: 0, contacted: 0, active: 0 },
+      partnership: { total: 0, lead: 0, contacted: 0, active: 0, views: 0, ctaClicks: 0, viewed: 0, lastViewedAt: null as string | null },
     }
+    // Per-institution partner portal engagement (views/CTA/dwell/last-seen),
+    // surfaced so the partnerships segment shows real engagement, not just
+    // sends. Additive + tolerant of a missing partner_portal_views table.
+    let partnerEngagement: Array<{
+      slug: string; name: string; status: string; tier: number
+      views: number; ctaClicks: number; avgDwellMs: number | null; lastViewedAt: string | null; topSection: string | null
+    }> = []
     try {
       const { rows: tRows } = await sql<ClinicTargetRow>`
         SELECT
@@ -1594,6 +1602,35 @@ export async function GET(req: NextRequest) {
     } catch (err) {
       console.error('[prospect-engagement] targetsByType partnership split failed:', err)
     }
+    // Partner portal engagement — join each institution to its portal_views
+    // rollup. Drives the partnerships analytics segment + admin page.
+    try {
+      const [partners, engagement] = await Promise.all([listPartners(), getPartnerEngagement()])
+      let totalViews = 0, totalCta = 0, viewedCount = 0
+      let lastViewed: string | null = null
+      partnerEngagement = partners.map((p) => {
+        const e = engagement.get(p.id)
+        const views = e?.views ?? 0
+        const ctaClicks = e?.ctaClicks ?? 0
+        if (views > 0) viewedCount += 1
+        totalViews += views
+        totalCta += ctaClicks
+        if (e?.lastViewedAt && (!lastViewed || e.lastViewedAt > lastViewed)) lastViewed = e.lastViewedAt
+        return {
+          slug: p.slug, name: p.name, status: p.status, tier: p.tier,
+          views, ctaClicks, avgDwellMs: e?.avgDwellMs ?? null,
+          lastViewedAt: e?.lastViewedAt ?? null, topSection: e?.topSection ?? null,
+        }
+      })
+      // Most-engaged first so the segment surfaces who's actually reading.
+      partnerEngagement.sort((a, b) => b.views - a.views || b.ctaClicks - a.ctaClicks)
+      targetsByType.partnership.views = totalViews
+      targetsByType.partnership.ctaClicks = totalCta
+      targetsByType.partnership.viewed = viewedCount
+      targetsByType.partnership.lastViewedAt = lastViewed
+    } catch (err) {
+      console.error('[prospect-engagement] partner engagement rollup failed:', err)
+    }
 
     return NextResponse.json({
       ok: true,
@@ -1622,6 +1659,9 @@ export async function GET(req: NextRequest) {
       // individual from prospect_clinics + Partnership telehealth from
       // partner_institutions). Non-terminal only. Additive.
       targetsByType,
+      // Per-institution partner portal engagement (views/CTA/dwell/last-seen),
+      // sorted most-engaged first. Powers the partnerships engagement panel.
+      partnerEngagement,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

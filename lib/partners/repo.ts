@@ -127,6 +127,99 @@ export async function seedPartners(): Promise<{ created: number; total: number }
   return { created: rowCount ?? 0, total: PARTNER_SEED.length }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PARTNER PORTAL ENGAGEMENT — mirror of prospect_portal_views, keyed to
+// partner_institutions. Lets the partnerships analytics show real engagement
+// (views / sections / CTA clicks / dwell / last-seen), not just send counts.
+// (Zac 2026-06-27 — sweep all outreach tracking into analytics.)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Idempotent — safe to call on every request (matches ensurePartnerTable). */
+export async function ensurePartnerViewsTable(): Promise<void> {
+  await sql`
+    CREATE TABLE IF NOT EXISTS partner_portal_views (
+      id               SERIAL PRIMARY KEY,
+      partner_id       INT NOT NULL,
+      viewer_ip        TEXT,
+      user_agent       TEXT,
+      section_visited  TEXT,
+      interaction_type TEXT NOT NULL DEFAULT 'view',
+      target           TEXT,
+      dwell_ms         INT,
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `
+  await sql`CREATE INDEX IF NOT EXISTS partner_portal_views_partner_idx ON partner_portal_views (partner_id)`
+}
+
+/** Log one partner-portal interaction (server 'view' or client section/CTA/exit). */
+export async function recordPartnerView(input: {
+  partnerId: number
+  viewerIp?: string
+  userAgent?: string
+  section: string
+  interactionType?: 'view' | 'section_view' | 'cta_click' | 'exit'
+  target?: string
+  dwellMs?: number
+}): Promise<void> {
+  await ensurePartnerViewsTable()
+  await sql`
+    INSERT INTO partner_portal_views
+      (partner_id, viewer_ip, user_agent, section_visited, interaction_type, target, dwell_ms)
+    VALUES
+      (${input.partnerId}, ${input.viewerIp ?? null}, ${input.userAgent ?? null},
+       ${input.section}, ${input.interactionType ?? 'view'}, ${input.target ?? null}, ${input.dwellMs ?? null})
+  `
+}
+
+export interface PartnerEngagement {
+  partnerId: number
+  views: number          // non-bot view + section_view events
+  ctaClicks: number
+  avgDwellMs: number | null
+  lastViewedAt: string | null
+  topSection: string | null
+}
+
+// Mirror of the prospect-engagement bot filter so scanner hits don't inflate.
+const PARTNER_BOT_REGEX = 'bot|crawl|spider|slurp|bingpreview|mediapartners|facebookexternalhit|microsoft|defender|mimecast|proofpoint|barracuda|safelinks|preview|monitor|curl|wget|python|headless|phantom|scan'
+
+/** Per-partner engagement rollup for the partnerships analytics segment. */
+export async function getPartnerEngagement(): Promise<Map<number, PartnerEngagement>> {
+  await ensurePartnerViewsTable()
+  const { rows } = await sql<{
+    partner_id: number; views: number; cta_clicks: number; avg_dwell_ms: number | null; last_viewed_at: string | null; top_section: string | null
+  }>`
+    WITH human AS (
+      SELECT * FROM partner_portal_views
+      WHERE COALESCE(user_agent, '') !~* ${PARTNER_BOT_REGEX}
+    )
+    SELECT
+      partner_id,
+      COUNT(*) FILTER (WHERE interaction_type IN ('view','section_view'))::int AS views,
+      COUNT(*) FILTER (WHERE interaction_type = 'cta_click')::int AS cta_clicks,
+      AVG(dwell_ms) FILTER (WHERE interaction_type = 'exit')::int AS avg_dwell_ms,
+      MAX(created_at)::text AS last_viewed_at,
+      (SELECT section_visited FROM human h2 WHERE h2.partner_id = h.partner_id
+         AND interaction_type IN ('view','section_view')
+       GROUP BY section_visited ORDER BY COUNT(*) DESC LIMIT 1) AS top_section
+    FROM human h
+    GROUP BY partner_id
+  `
+  const map = new Map<number, PartnerEngagement>()
+  for (const r of rows) {
+    map.set(r.partner_id, {
+      partnerId: r.partner_id,
+      views: r.views ?? 0,
+      ctaClicks: r.cta_clicks ?? 0,
+      avgDwellMs: r.avg_dwell_ms ?? null,
+      lastViewedAt: r.last_viewed_at ?? null,
+      topSection: r.top_section ?? null,
+    })
+  }
+  return map
+}
+
 export async function getPartnerBySlug(slug: string): Promise<PartnerInstitution | null> {
   await ensurePartnerTable()
   const { rows } = await sql<DbPartnerRow>`

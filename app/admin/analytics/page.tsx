@@ -378,6 +378,8 @@ interface ProspectsData {
   capDecision?: { cap: number; reason: string } | null
   /** Targets organised by the four segment pitches. Non-terminal only. */
   targetsByType?: TargetsByType
+  /** Per-institution partner portal engagement, most-engaged first. */
+  partnerEngagement?: PartnerEngagementRow[]
   status?: string
   message?: string
 }
@@ -394,7 +396,17 @@ interface TargetsByType {
   onSite: ClinicTargetTier
   hub: ClinicTargetTier
   individual: ClinicTargetTier
-  partnership: { total: number; lead: number; contacted: number; active: number }
+  partnership: {
+    total: number; lead: number; contacted: number; active: number
+    // Portal engagement rollup (Zac 2026-06-27) — real signals, not just sends.
+    views?: number; ctaClicks?: number; viewed?: number; lastViewedAt?: string | null
+  }
+}
+/** Per-institution partner portal engagement row. */
+interface PartnerEngagementRow {
+  slug: string; name: string; status: string; tier: number
+  views: number; ctaClicks: number; avgDwellMs: number | null
+  lastViewedAt: string | null; topSection: string | null
 }
 
 
@@ -3853,16 +3865,16 @@ export default function AnalyticsDashboard() {
                           },
                           {
                             label: 'Partnership telehealth',
-                            sub: 'Sports institutions · funnel',
+                            sub: `Sports institutions · ${t.partnership.viewed ?? 0} viewed the portal`,
                             total: t.partnership.total,
                             href: '/admin/partnerships',
                             cardCls: 'border-violet-200 bg-violet-50/40',
                             dotCls: 'bg-violet-500',
                             numCls: 'text-violet-700',
                             splits: [
-                              { label: 'Lead', value: t.partnership.lead },
-                              { label: 'Contacted', value: t.partnership.contacted },
                               { label: 'Active', value: t.partnership.active },
+                              { label: 'Portal views', value: t.partnership.views ?? 0 },
+                              { label: 'CTA clicks', value: t.partnership.ctaClicks ?? 0 },
                             ],
                           },
                         ]
@@ -3919,6 +3931,51 @@ export default function AnalyticsDashboard() {
                           </div>
                         )
                       })()}
+
+                      {/* ── PARTNER PORTAL ENGAGEMENT — per-institution signals
+                          (views / CTA clicks / dwell / last seen). Was previously
+                          sends-only; now the partner pitch portal is tracked into
+                          partner_portal_views. (Zac 2026-06-27) ── */}
+                      {prospectsData.partnerEngagement && prospectsData.partnerEngagement.length > 0 && (
+                        <div>
+                          <SectionTitle
+                            title="Partner portal engagement · who's actually reading"
+                            subtitle="Per-institution signals from the /partners pitch portal — section views, CTA clicks, dwell and last-seen · scanners filtered out · most-engaged first"
+                          />
+                          <div className="card rounded-2xl overflow-hidden">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead className="bg-[rgba(124,58,237,0.05)]">
+                                  <tr>
+                                    <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Institution</th>
+                                    <th className="text-left px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Status</th>
+                                    <th className="text-right px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Views</th>
+                                    <th className="text-right px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">CTA clicks</th>
+                                    <th className="text-right px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Avg dwell</th>
+                                    <th className="text-left px-2 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Top section</th>
+                                    <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">Last seen</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {prospectsData.partnerEngagement.map((p) => (
+                                    <tr key={p.slug} className="border-t border-slate-100 hover:bg-slate-50/60">
+                                      <td className="px-3 py-2 font-semibold text-[var(--foreground)]">
+                                        <a href={`/partners/${p.slug}`} target="_blank" rel="noopener" className="hover:text-[var(--accent)]">{p.name}</a>
+                                      </td>
+                                      <td className="px-2 py-2 text-[var(--muted-foreground)] capitalize">{p.status}</td>
+                                      <td className={`px-2 py-2 text-right tabular-nums font-semibold ${p.views > 0 ? 'text-violet-700' : 'text-slate-300'}`}>{p.views}</td>
+                                      <td className={`px-2 py-2 text-right tabular-nums font-semibold ${p.ctaClicks > 0 ? 'text-emerald-700' : 'text-slate-300'}`}>{p.ctaClicks}</td>
+                                      <td className="px-2 py-2 text-right tabular-nums text-[var(--muted-foreground)]">{p.avgDwellMs ? `${Math.round(p.avgDwellMs / 1000)}s` : '—'}</td>
+                                      <td className="px-2 py-2 text-[var(--muted-foreground)]">{p.topSection ?? '—'}</td>
+                                      <td className="px-3 py-2 text-[var(--muted-foreground)] whitespace-nowrap">{p.lastViewedAt ? new Date(p.lastViewedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '—'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* ── PIPELINE MATRIX + DETAIL · collapsed by default ──
                           The biggest scroll-eater on the overview and reference

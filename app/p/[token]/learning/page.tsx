@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { ArrowLeft, Lock, Clock } from 'lucide-react'
-import { getClinicBySlug } from '@/lib/prospect/repo'
+import { getClinicBySlug, recordPortalView } from '@/lib/prospect/repo'
 import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import { ProspectSidebar } from '@/components/prospect/ProspectSidebar'
 import { TalkToZacFooter } from '@/components/prospect/TalkToZacFooter'
@@ -30,6 +31,21 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
   // with NO access key. This is non-sensitive marketing content, so any valid
   // clinic slug renders. The key is honoured when present (legacy links) but
   // no longer required.
+
+  // Engagement signal — fire-and-forget. Failures don't block the render.
+  const h = await headers()
+  const userAgent = h.get('user-agent') ?? undefined
+  const forwarded = h.get('x-forwarded-for') ?? undefined
+  const viewerIp = forwarded?.split(',')[0]?.trim()
+  recordPortalView({
+    clinicId: clinic.id,
+    viewerIp,
+    userAgent,
+    section: 'learning-suite',
+    utmSource: 'cold_outreach',
+    utmCampaign: 'prospect_portal_email',
+    utmTerm: clinic.slug,
+  }).catch((err) => console.error('[Portal view tracking failed]', err))
 
   const modules = getModulesMeta()
   const m1 = modules.find((m) => m.id === 1)!

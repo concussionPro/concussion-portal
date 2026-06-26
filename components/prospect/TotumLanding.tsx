@@ -15,6 +15,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { ProspectTracker } from '@/components/prospect/ProspectTracker'
 import {
   Brain,
   ArrowUpRight,
@@ -54,23 +55,33 @@ const NAV = [
   { id: 'pricing', label: 'Pricing' },
 ]
 
-export function TotumLanding() {
+export function TotumLanding({
+  slug = SLUG,
+  accessKey = 'totum-2026',
+}: {
+  slug?: string
+  accessKey?: string
+} = {}) {
   return (
     <div className="flex min-h-screen dashboard-bg">
+      {/* Same engagement tracker as every other prospect surface — section
+          scroll, CTA clicks and dwell feed prospect_portal_views via the real
+          Totum clinic row, so the Totum pitch shows up in B2B analytics. */}
+      <ProspectTracker token={slug} accessKey={accessKey} />
       <TotumSidebar />
       <main className="flex-1 ml-0 md:ml-64">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 pt-16 md:pt-8 pb-10 sm:pb-14">
-          <Hero />
-          <Opportunity />
-          <RowansLaw />
-          <WhyTotum />
-          <Format />
-          <Curriculum />
-          <CoursePreview />
-          <PracticalDay />
-          <Toolkit />
-          <Pricing />
-          <Footer />
+          <div data-track-section="hero"><Hero /></div>
+          <div data-track-section="opportunity"><Opportunity /></div>
+          <div data-track-section="rowans-law"><RowansLaw /></div>
+          <div data-track-section="why-totum"><WhyTotum /></div>
+          <div data-track-section="format"><Format /></div>
+          <div data-track-section="curriculum"><Curriculum /></div>
+          <div data-track-section="preview"><CoursePreview /></div>
+          <div data-track-section="practical-day"><PracticalDay /></div>
+          <div data-track-section="toolkit"><Toolkit /></div>
+          <div data-track-section="pricing"><Pricing /></div>
+          <div data-track-section="footer"><Footer /></div>
         </div>
       </main>
     </div>
