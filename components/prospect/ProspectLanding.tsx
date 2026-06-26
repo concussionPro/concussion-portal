@@ -29,6 +29,7 @@ import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
 import { computePricing, teamTotal, clinicalCount, isTeamVerified } from '@/lib/prospect/pricing'
 import { IndividualInterestCard } from './IndividualInterestCard'
 import { HubPackBuyCard } from './HubPackBuyCard'
+import { DualStreamTabs } from './DualStreamTabs'
 import { ProspectTracker } from './ProspectTracker'
 import { ProspectSidebar } from './ProspectSidebar'
 
@@ -80,6 +81,11 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               </div>
             )}
           </div>
+
+          {/* Purpose: the two-stream selector front-and-centre on the home page —
+              they pick a discipline and see that stream's modules / the difference,
+              before the rest of the pitch. Gated to Purpose (ESSA-pending EP stream). */}
+          {clinic.slug === 'purpose-healthcare' && <DualStreamTabs />}
 
           <div data-track-section="credibility">
             <ZacCredibility />
@@ -191,44 +197,6 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           <div data-track-section="multidisciplinary">
             <MultidisciplinaryIntegration clinic={clinic} />
           </div>
-
-          {/* EP + Allied course streams — only for dual-discipline clinics
-              (Purpose Healthcare). Gated by slug so no live single-discipline
-              prospect sees the ESSA-pending EP course; generalises once approved. */}
-          {clinic.slug === 'purpose-healthcare' && (
-            <div data-track-section="streams" className="mt-8">
-              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
-                Your clinic portal · two streams
-              </p>
-              <h3 className="text-2xl font-bold text-foreground tracking-tight mb-2">A stream for each discipline</h3>
-              <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
-                Each clinician logs in and trains on their own online stream — your physios and EPs do
-                different content matched to their scope, then share the clinical tools, admin docs and the
-                hands-on day.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="glass-premium rounded-2xl p-5 border border-accent/10">
-                  <p className="text-sm font-bold text-foreground mb-1">Physiotherapists — Clinical Mastery</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Assessment, SCAT6/SCOAT6, VOMS &amp; oculomotor screening, return-to-play decisions.
-                    8 CPD hours online · Osteopathy Australia endorsed.
-                  </p>
-                </div>
-                <div className="glass-premium rounded-2xl p-5 border border-accent/20">
-                  <p className="text-sm font-bold text-foreground mb-1">Exercise Physiologists — Rehab Mastery</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    The exercise side: sub-symptom-threshold testing, heart-rate-paced aerobic rehab, graded
-                    return-to-sport. EP-specific, 8 CPD hours online (ESSA-aligned, approval pending).
-                  </p>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Shared by the whole team: SCAT6/SCOAT6 forms, baseline testing, the SST trainer, the patient
-                hub and your clinic admin docs — then everyone trains together on the practical day
-                (14 CPD hours total with the in-person day).
-              </p>
-            </div>
-          )}
 
           {/* Pricing — small clinics (2–5 clinical) get the self-serve Hub Pack
               (online, no travel, can check out); ≥6 get the on-site cohort
