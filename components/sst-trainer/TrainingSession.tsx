@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SESSION_STOP_RISE, type Prescription, type SessionLog } from '@/lib/sst-trainer/protocol'
 import { PrimaryButton, SecondaryButton, SegmentBars, numFont } from './shell'
 
@@ -78,15 +78,26 @@ export default function TrainingSession({
     return () => clearInterval(iv)
   }, [])
 
-  // live source drives the gauge; manual entry stays available as override.
+  // Live source drives the gauge; a manual override must stick (not be wiped by
+  // the next live emission). Only auto-fill when empty or still showing the last
+  // streamed value.
+  const lastLiveRef = useRef<string>('')
   useEffect(() => {
     if (typeof liveHr === 'number' && Number.isFinite(liveHr)) {
-      setHeartRate(String(liveHr))
+      const next = String(liveHr)
+      setHeartRate((cur) => {
+        if (cur === '' || cur === lastLiveRef.current) {
+          lastLiveRef.current = next
+          return next
+        }
+        return cur
+      })
     }
   }, [liveHr])
 
   const hrValue = heartRate.trim() === '' ? null : Number(heartRate)
-  const hrValid = hrValue !== null && Number.isFinite(hrValue) && hrValue > 0
+  // Physiologic plausibility cap — a fat-finger must not drive the zone gauge.
+  const hrValid = hrValue !== null && Number.isFinite(hrValue) && hrValue >= 30 && hrValue <= 240
   const gaugeHr = hrValid ? (hrValue as number) : mid
 
   // zone off the live reading

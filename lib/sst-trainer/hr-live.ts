@@ -85,8 +85,12 @@ interface BluetoothApi {
  * Byte 0 = flags; bit 0 selects 8-bit (clear) vs 16-bit (set) HR value.
  */
 function parseHeartRate(value: DataView): number | null {
+  // Guard against malformed/short packets — getUint8(1)/getUint16(1) would
+  // throw on a 1-byte frame inside the notification listener.
+  if (value.byteLength < 2) return null
   const flags = value.getUint8(0)
   const is16bit = (flags & 0x1) === 0x1
+  if (is16bit && value.byteLength < 3) return null
   const bpm = is16bit ? value.getUint16(1, true) : value.getUint8(1)
   if (!Number.isFinite(bpm) || bpm <= 0 || bpm > 250) return null
   return bpm
@@ -193,17 +197,28 @@ function estimateBpm(samples: number[], times: number[]): number | null {
   const minLag = Math.max(1, Math.floor((60 / PPG_MAX_BPM) * fps))
   const maxLag = Math.min(n - 1, Math.ceil((60 / PPG_MIN_BPM) * fps))
 
+  // NORMALIZED autocorrelation. Dividing the raw lag-sum by the number of
+  // overlapping terms removes the short-lag bias (long lags have fewer terms,
+  // so an un-normalized sum favours high bpm). Dividing by the signal energy
+  // (variance = autocorr at lag 0) gives a 0..1 coefficient we can threshold.
+  const energy = variance
   let bestLag = -1
-  let bestCorr = -Infinity
+  let bestCoef = 0
   for (let lag = minLag; lag <= maxLag; lag++) {
-    let corr = 0
-    for (let i = 0; i + lag < n; i++) corr += sig[i] * sig[i + lag]
-    if (corr > bestCorr) {
-      bestCorr = corr
+    const terms = n - lag
+    if (terms < 8) break // too few overlapping samples → unreliable at this lag
+    let sum = 0
+    for (let i = 0; i < terms; i++) sum += sig[i] * sig[i + lag]
+    const coef = energy > 0 ? sum / terms / energy : 0
+    if (coef > bestCoef) {
+      bestCoef = coef
       bestLag = lag
     }
   }
-  if (bestLag <= 0 || bestCorr <= 0) return null
+  // Confidence gate: a true pulse autocorrelates strongly at its period. If the
+  // best coefficient is weak the signal isn't periodic enough — return NULL (no
+  // reading) rather than a spurious bpm that would poison the threshold test.
+  if (bestLag <= 0 || bestCoef < 0.3) return null
 
   const bpm = (60 * fps) / bestLag
   if (bpm < PPG_MIN_BPM || bpm > PPG_MAX_BPM) return null

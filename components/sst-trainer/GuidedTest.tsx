@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   detectThreshold,
   PROVOCATION_RISE,
@@ -79,16 +79,29 @@ export default function GuidedTest({
   const [symptomScore, setSymptomScore] = useState(restingSymptomScore)
   const [tappedSymptoms, setTappedSymptoms] = useState<Set<string>>(new Set())
 
-  // When a live source is streaming, the paired device drives the HR field — the
-  // patient just logs the minute (manual entry stays available as override).
+  // When a live source is streaming, the paired device drives the HR field — but
+  // a MANUAL override must stick (a typed correction shouldn't be wiped within a
+  // second). We only auto-fill when the field is empty or still showing the last
+  // streamed value; once the patient types something different, live stops
+  // clobbering it until they clear it.
+  const lastLiveRef = useRef<string>('')
   useEffect(() => {
     if (typeof liveHr === 'number' && Number.isFinite(liveHr)) {
-      setHeartRate(String(liveHr))
+      const next = String(liveHr)
+      setHeartRate((cur) => {
+        if (cur === '' || cur === lastLiveRef.current) {
+          lastLiveRef.current = next
+          return next
+        }
+        return cur // manual override — leave it
+      })
     }
   }, [liveHr])
 
   const hrValue = heartRate.trim() === '' ? null : Number(heartRate)
-  const hrValid = hrValue !== null && Number.isFinite(hrValue) && hrValue > 0
+  // Plausibility cap: reject a fat-finger (e.g. 1500) that would become HRt and
+  // yield a dangerous training band. Physiologic HR range only.
+  const hrValid = hrValue !== null && Number.isFinite(hrValue) && hrValue >= 30 && hrValue <= 240
 
   // reaching a >=3-pt rise this minute means logging it sets the HRt
   const reachesThreshold = symptomScore - restingSymptomScore >= PROVOCATION_RISE

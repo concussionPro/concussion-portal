@@ -197,7 +197,11 @@ export function progressionDecision(
   const step = opts.stepBpm ?? 5
   if (!recent.length) return { decision: 'hold', message: 'Log a few sessions first.' }
 
-  const flares = recent.filter((s) => s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE)
+  // Regress only on RECENT repeated provocation — window to the last few
+  // sessions so old, long-since-resolved flares can't ratchet the ceiling down
+  // forever (a recovered patient with clean recent runs must not keep regressing).
+  const flareWindow = recent.slice(-Math.max(cleanNeeded, 3))
+  const flares = flareWindow.filter((s) => s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE)
   if (flares.length >= 2) {
     return { decision: 'regress', newCeilingBpm: rx.upperBpm - step, message: 'Symptoms are being provoked repeatedly — ease the ceiling back and rebuild. If it keeps happening, re-test or check in with your clinician.' }
   }
