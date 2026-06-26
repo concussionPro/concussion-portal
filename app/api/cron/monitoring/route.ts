@@ -259,6 +259,36 @@ export async function GET(request: NextRequest) {
     recordCheckFailure('Check 5 (ad spend)', err)
   }
 
+  // ── CHECK 6: Cold-outreach engine DARK ────────────
+  // The B2B send-cron can 500 silently (it did 17–26 June — 9 days dark from a
+  // corrupted '+&+' in the selection SQL — and nothing flagged it). If prospects
+  // are DUE but zero has sent in 48h, the engine is halted: alert loudly.
+  try {
+    const { rows: sentRows } = await sql`
+      SELECT COUNT(*)::int AS n FROM prospect_outreach_log
+      WHERE sent_at > NOW() - INTERVAL '48 hours' AND audit_key NOT LIKE '%:test:%'
+    `
+    const sent48h = sentRows[0]?.n ?? 0
+    const { rows: dueRows } = await sql`
+      SELECT COUNT(*)::int AS n FROM prospect_clinics
+      WHERE next_template_slug IS NOT NULL
+        AND status IN ('approved','sent','opened')
+        AND (scheduled_send_at AT TIME ZONE 'Australia/Sydney')::date <= (NOW() AT TIME ZONE 'Australia/Sydney')::date
+    `
+    const dueNow = dueRows[0]?.n ?? 0
+    if (sent48h === 0 && dueNow > 0) {
+      findings.push({
+        severity: 'alert',
+        title: 'Cold-outreach engine is DARK',
+        detail: `0 cold emails sent in the last 48h while ${dueNow} prospects are due. The send-cron may be crashing (it silently 500'd for 9 days in June).`,
+        suggestion: 'Check Vercel runtime logs for /api/cron/prospect-process-scheduled. If the adaptive cap is intentionally 0 (deliverability throttle), ignore; otherwise the cron is erroring — fix and re-fire via the admin x-admin-key trigger.',
+      })
+    }
+    console.log(`[monitoring] Check 6: cold sends 48h=${sent48h}, due=${dueNow}`)
+  } catch (err) {
+    recordCheckFailure('Check 6 (cold engine dark)', err)
+  }
+
   // ── Send alert email if findings exist ────────────
   const alerts = findings.filter(f => f.severity === 'alert')
   const infos = findings.filter(f => f.severity === 'info')
