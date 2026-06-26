@@ -176,6 +176,7 @@ export default function PlatformAppPage() {
             // marker: 'physiologic' = in rehab, 'no-intolerance' = clearance signal.
             syncSessionToClinic({
               clinicCode: welcome?.clinicCode,
+              patientLabel: welcome?.patientName,
               sessionType: 'threshold',
               hrtBpm: rx.hrt,
               bandLow: rx.lowerBpm,
@@ -222,6 +223,7 @@ export default function PlatformAppPage() {
             // Rehab session → clinician (HR, minutes, symptom Δ).
             syncSessionToClinic({
               clinicCode: welcome?.clinicCode,
+              patientLabel: welcome?.patientName,
               sessionType: 'training',
               hrtBpm: prescription?.hrt,
               bandLow: prescription?.lowerBpm,

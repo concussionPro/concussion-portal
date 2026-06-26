@@ -67,6 +67,7 @@ export default function SstOnboarding({
 }) {
   const [mode, setMode] = useState<TrainerMode>('self-guided')
   const [clinicCode, setClinicCode] = useState('')
+  const [patientName, setPatientName] = useState('')
   const [goal, setGoal] = useState<string | null>(null)
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
   const [pairError, setPairError] = useState<string | null>(null)
@@ -201,6 +202,18 @@ export default function SstOnboarding({
             placeholder="e.g. CEA-4827"
             autoCapitalize="characters"
             className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base tracking-[0.06em] text-[#16243f] outline-none font-[family-name:var(--font-space)] focus:border-[#5b9aa6]"
+          />
+          <label htmlFor="patient-name" className="mt-1.5 text-xs font-semibold text-[#3b4f52]">
+            Your name
+          </label>
+          <input
+            id="patient-name"
+            type="text"
+            value={patientName}
+            onChange={(e) => setPatientName(e.target.value)}
+            placeholder="So your clinician can find you"
+            autoCapitalize="words"
+            className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base text-[#16243f] outline-none focus:border-[#5b9aa6]"
           />
           <span className="text-[10.5px] leading-tight text-[#9bafb0]">
             Links you to your clinician&apos;s dashboard — they set and oversee your threshold.
@@ -339,6 +352,7 @@ export default function SstOnboarding({
             welcome: {
               mode,
               clinicCode: mode === 'clinic-code' ? clinicCode.trim() : null,
+              patientName: mode === 'clinic-code' ? patientName.trim() || null : null,
               condition,
             },
             goal,

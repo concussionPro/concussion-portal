@@ -9,6 +9,9 @@ export type TrainerMode = 'self-guided' | 'clinic-code'
 export interface WelcomeSelection {
   mode: TrainerMode
   clinicCode: string | null
+  /** Patient name — only captured in clinic-code mode so the clinician can tell
+   *  their patients apart in the dashboard (mirrors the preseason athlete name). */
+  patientName: string | null
   condition: Condition
 }
 
@@ -37,6 +40,7 @@ export default function WelcomeMode({
 }) {
   const [mode, setMode] = useState<TrainerMode>(initial?.mode ?? 'self-guided')
   const [clinicCode, setClinicCode] = useState(initial?.clinicCode ?? '')
+  const [patientName, setPatientName] = useState(initial?.patientName ?? '')
   const [condition, setCondition] = useState<Condition>(initial?.condition ?? 'concussion')
 
   const codeRequiredButMissing = mode === 'clinic-code' && clinicCode.trim().length === 0
@@ -92,21 +96,38 @@ export default function WelcomeMode({
         </div>
       </div>
 
-      {/* TODO: real clinic pairing backend (validate code → link patient to clinician dashboard). For now we just capture the string. */}
+      {/* Clinic-code mode: code links to the clinician (validated server-side at
+          /api/sst/session); the name lets them tell their patients apart. */}
       {mode === 'clinic-code' && (
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="clinic-code" className="text-xs font-semibold text-[#3b4f52]">
-            Clinic code
-          </label>
-          <input
-            id="clinic-code"
-            type="text"
-            value={clinicCode}
-            onChange={(e) => setClinicCode(e.target.value.toUpperCase())}
-            placeholder="e.g. CEA-4827"
-            autoCapitalize="characters"
-            className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base tracking-[0.06em] text-[#16282b] outline-none font-[family-name:var(--font-space)] focus:border-[#5b9aa6]"
-          />
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="clinic-code" className="text-xs font-semibold text-[#3b4f52]">
+              Clinic code
+            </label>
+            <input
+              id="clinic-code"
+              type="text"
+              value={clinicCode}
+              onChange={(e) => setClinicCode(e.target.value.toUpperCase())}
+              placeholder="e.g. CEA-4827"
+              autoCapitalize="characters"
+              className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base tracking-[0.06em] text-[#16282b] outline-none font-[family-name:var(--font-space)] focus:border-[#5b9aa6]"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="patient-name" className="text-xs font-semibold text-[#3b4f52]">
+              Your name
+            </label>
+            <input
+              id="patient-name"
+              type="text"
+              value={patientName}
+              onChange={(e) => setPatientName(e.target.value)}
+              placeholder="So your clinician can find you"
+              autoCapitalize="words"
+              className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base text-[#16282b] outline-none focus:border-[#5b9aa6]"
+            />
+          </div>
         </div>
       )}
 
@@ -161,6 +182,7 @@ export default function WelcomeMode({
           onContinue({
             mode,
             clinicCode: mode === 'clinic-code' ? clinicCode.trim() : null,
+            patientName: mode === 'clinic-code' ? patientName.trim() || null : null,
             condition,
           })
         }
