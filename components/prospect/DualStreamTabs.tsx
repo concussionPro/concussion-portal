@@ -74,7 +74,7 @@ const DOCS = [
   'Return-to-Play Tracking Sheets', 'Billing & Item-Number Guide',
 ]
 
-export function DualStreamTabs({ detailed }: { detailed?: DetailedStreams }) {
+export function DualStreamTabs({ detailed, learningHref }: { detailed?: DetailedStreams; learningHref?: string }) {
   const [stream, setStream] = useState<StreamId>('ccm')
   const active = STREAMS[stream]
   const activeModules = detailed ? detailed[stream] : null
@@ -182,14 +182,32 @@ export function DualStreamTabs({ detailed }: { detailed?: DetailedStreams }) {
             })}
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {active.modules.map((m, i) => (
-              <div key={m} className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3 transition hover:bg-accent/[0.04]">
-                <span className="w-7 h-7 rounded-lg bg-accent/10 text-accent text-[13px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                <span className="text-sm text-foreground/90 font-medium leading-snug">{m}</span>
-              </div>
-            ))}
+            {active.modules.map((m, i) => {
+              const row = (
+                <>
+                  <span className="w-7 h-7 rounded-lg bg-accent/10 text-accent text-[13px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                  <span className="text-sm text-foreground/90 font-medium leading-snug">{m}</span>
+                </>
+              )
+              return learningHref ? (
+                <Link key={m} href={learningHref} className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3 transition hover:bg-accent/[0.06] hover:translate-x-0.5 cursor-pointer">
+                  {row}
+                </Link>
+              ) : (
+                <div key={m} className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3 transition hover:bg-accent/[0.04]">
+                  {row}
+                </div>
+              )
+            })}
           </div>
+          {learningHref && (
+            <Link href={learningHref} className="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-accent hover:gap-2.5 transition-all">
+              Open the full learning suite →
+            </Link>
+          )}
+          </>
         )}
       </div>
 

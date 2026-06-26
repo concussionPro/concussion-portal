@@ -84,7 +84,9 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           {/* Purpose: the two-stream selector front-and-centre on the home page —
               they pick a discipline and see that stream's modules / the difference,
               before the rest of the pitch. Gated to Purpose (ESSA-pending EP stream). */}
-          {clinic.slug === 'purpose-healthcare' && <DualStreamTabs />}
+          {clinic.slug === 'purpose-healthcare' && (
+            <DualStreamTabs learningHref={`/p/${clinic.slug}/learning?k=${clinic.accessKey ?? ''}`} />
+          )}
 
           <div data-track-section="credibility">
             <ZacCredibility />
