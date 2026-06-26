@@ -1,127 +1,160 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  HeartPulse, Activity, GraduationCap, FileText, ClipboardList, Stethoscope, Check, Lock,
-} from 'lucide-react'
+import { GraduationCap, HeartPulse, Activity, ClipboardList, Stethoscope, Check, Lock } from 'lucide-react'
 
 /**
- * The discipline-tabbed course-stream view, embedded INTO the prospect dash
- * (ProspectLanding) — not a standalone page. Clean tabs between the Allied
- * (Clinical Mastery) and EP (Rehab Mastery) course streams with their modules,
- * plus the shared clinical tools and admin docs every clinician gets. Client
- * island purely because the dash is server-rendered and the tabs need state.
- * Currently shown only for Purpose (gated in ProspectLanding); generalises once
- * the EP/CRM stream clears ESSA.
+ * PITCH-ONLY preview of the post-ESSA dual-stream clinic portal, embedded in the
+ * prospect dash (ProspectLanding) and gated to the Purpose slug. Two large
+ * side-by-side tabs for the two course streams — CCM (Concussion Clinical
+ * Mastery) and CRM (Concussion Rehab Mastery) — each showing its REAL modules,
+ * over the shared clinical tools + admin docs. Module titles are pulled from the
+ * built courses (data/modules.ts for CCM, data/ep-modules for CRM). Static
+ * preview — does NOT touch the live course/learning engine.
  */
 
-type TabId = 'physio' | 'ep' | 'tools' | 'admin'
-const TABS: { id: TabId; label: string; sub: string; icon: typeof HeartPulse }[] = [
-  { id: 'physio', label: 'Physiotherapists', sub: 'Clinical Mastery', icon: GraduationCap },
-  { id: 'ep', label: 'Exercise Physiologists', sub: 'Rehab Mastery', icon: HeartPulse },
-  { id: 'tools', label: 'Clinical Tools', sub: 'Shared', icon: Activity },
-  { id: 'admin', label: 'Admin & Docs', sub: 'Shared', icon: FileText },
-]
-const PHYSIO_MODULES = [
-  'The neuroscience of concussion', 'Diagnosis & initial assessment', 'SCAT6 & SCOAT6 in practice',
-  'VOMS & oculomotor screening', 'Vestibular & cervical contributions', 'Sub-symptom exercise & return-to-play',
-  'Persistent symptoms & complex cases', 'Documentation & medicolegal',
-]
-const EP_MODULES = [
-  'Concussion physiology for exercise rehab', 'Interpreting screening results (EP scope)',
-  'Sub-symptom-threshold exercise testing', 'Heart-rate-paced aerobic rehabilitation',
-  'Graded return-to-sport progression', 'Monitoring, red flags & referral',
-  'Special populations', 'Putting it into practice',
-]
-const TOOLS = [
-  { icon: ClipboardList, name: 'SCAT6 & SCOAT6 forms', note: 'Fillable, printable assessment tools' },
-  { icon: Activity, name: 'Pre-season baseline testing', note: 'Capture baselines, compare serial tests' },
-  { icon: HeartPulse, name: 'SST Trainer', note: 'Sub-symptom-threshold exercise rehab app' },
-  { icon: Stethoscope, name: 'Clinical Hub', note: 'Manage your patients across the team' },
-]
-const DOCS = [
-  'GP referral & handback letters', 'NDIS / WorkCover report templates', 'School & sport return-to-play letters',
-  'Return-to-play tracking sheets', 'Billing & item-number guide',
-]
-
-function ModuleGrid({ list, cpd }: { list: string[]; cpd: string }) {
-  return (
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-wider text-accent mb-3">{cpd}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {list.map((m, i) => (
-          <div key={m} className="flex items-center gap-2.5 rounded-xl bg-black/[0.015] px-3 py-2.5">
-            <span className="w-5 h-5 rounded-md bg-accent/10 text-accent text-[11px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-            <span className="text-[13px] text-foreground/85 leading-snug">{m}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+type StreamId = 'ccm' | 'crm'
+const STREAMS: Record<StreamId, {
+  code: string; name: string; who: string; cpd: string; icon: typeof GraduationCap; modules: string[]
+}> = {
+  ccm: {
+    code: 'CCM',
+    name: 'Concussion Clinical Mastery',
+    who: 'Assessment, diagnosis & return-to-play — for physios & allied health',
+    cpd: '8 CPD hours online · Osteopathy Australia endorsed',
+    icon: GraduationCap,
+    modules: [
+      'What is a Concussion?',
+      'Concussion Diagnosis & Initial Assessment',
+      'Practical Assessment & Acute Concussion Management',
+      'Persistent Post-Concussive Symptoms & Long-Term Management',
+      'Multidisciplinary Approach to Concussion Management',
+      'Return to Play, Work, and School Protocols',
+      'Rehabilitation Pathways by Phenotype',
+      'Legal, Ethical, Communication & Documentation',
+    ],
+  },
+  crm: {
+    code: 'CRM',
+    name: 'Concussion Rehab Mastery',
+    who: 'The exercise-rehab pathway — built for exercise physiologists',
+    cpd: '8 CPD hours online · ESSA-aligned (approval pending)',
+    icon: HeartPulse,
+    modules: [
+      'Concussion for the Exercise Physiologist',
+      'Recognition, Red Flags & Scope of Practice',
+      'Assessment That Is the Treatment',
+      'Sub-Symptom-Threshold Aerobic Rehabilitation',
+      'Phenotype-Specific Exercise Rehabilitation',
+      'Graded Return to Activity, Sport & Performance',
+      'Persistent Symptoms & the Complex Case',
+      'Documentation, Communication & Referral',
+    ],
+  },
 }
 
+const TOOLS = [
+  { icon: ClipboardList, name: 'SCAT6 & SCOAT6 Forms' },
+  { icon: Activity, name: 'Pre-Season Baseline Testing' },
+  { icon: HeartPulse, name: 'SST Trainer' },
+  { icon: Stethoscope, name: 'Clinical Hub' },
+]
+const DOCS = [
+  'GP Referral & Handback Letters', 'NDIS / WorkCover Reports', 'School & Sport Return-to-Play Letters',
+  'Return-to-Play Tracking Sheets', 'Billing & Item-Number Guide',
+]
+
 export function DualStreamTabs() {
-  const [tab, setTab] = useState<TabId>('physio')
+  const [stream, setStream] = useState<StreamId>('ccm')
+  const active = STREAMS[stream]
+
   return (
-    <div className="mt-8" data-track-section="streams">
-      <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">Your clinic portal · two streams</p>
-      <h3 className="text-2xl font-bold text-foreground tracking-tight mb-2">A stream for each discipline</h3>
-      <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
-        Each clinician logs in and trains on their own online stream — physios and EPs see different modules
-        matched to their scope, and share the clinical tools, admin docs and the hands-on day.
+    <section className="mb-10" data-track-section="streams">
+      <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-accent mb-1.5">Your clinic portal · two course streams</p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">CCM &amp; CRM — one portal, two streams</h3>
+      <p className="text-[15px] text-muted-foreground mb-6 max-w-2xl leading-relaxed">
+        Your team gets both streams under one roof. Pick a stream to see its modules — the clinical tools, admin
+        docs and the hands-on day are shared across both.
       </p>
-      <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
-        <div className="flex flex-wrap gap-1 bg-muted/40 border-b border-border p-1.5">
-          {TABS.map((t) => {
-            const active = t.id === tab
-            return (
-              <button key={t.id} type="button" onClick={() => setTab(t.id)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left transition ${active ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}>
-                <t.icon className={`w-4 h-4 ${active ? 'text-accent' : 'text-muted-foreground'}`} strokeWidth={1.8} />
-                <span>
-                  <span className={`block text-[12px] font-semibold ${active ? 'text-foreground' : 'text-muted-foreground'}`}>{t.label}</span>
-                  <span className="block text-[10px] text-muted-foreground">{t.sub}</span>
-                </span>
-              </button>
-            )
-          })}
-        </div>
-        <div className="bg-white p-5 sm:p-6">
-          {tab === 'physio' && <ModuleGrid list={PHYSIO_MODULES} cpd="8 CPD hours online · Osteopathy Australia endorsed" />}
-          {tab === 'ep' && (
-            <>
-              <ModuleGrid list={EP_MODULES} cpd="8 CPD hours online · ESSA-aligned (approval pending)" />
-              <p className="text-[12px] text-muted-foreground mt-3 inline-flex items-center gap-1.5">
-                <HeartPulse className="w-3.5 h-3.5 text-accent" /> Concussion rehab is EP work — content built for their scope.
-              </p>
-            </>
-          )}
-          {tab === 'tools' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {TOOLS.map((t) => (
-                <div key={t.name} className="flex items-start gap-3 rounded-xl bg-black/[0.015] p-3.5">
-                  <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0"><t.icon className="w-[18px] h-[18px] text-accent" strokeWidth={1.8} /></div>
-                  <div><p className="text-sm font-semibold text-foreground">{t.name}</p><p className="text-xs text-muted-foreground leading-snug">{t.note}</p></div>
+
+      {/* TWO LARGE TABS, SIDE BY SIDE */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+        {(['ccm', 'crm'] as const).map((id) => {
+          const s = STREAMS[id]
+          const on = id === stream
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setStream(id)}
+              aria-pressed={on}
+              className={`group text-left rounded-2xl p-5 sm:p-6 cursor-pointer transition-all ${
+                on ? 'bg-accent text-white shadow-xl shadow-accent/25 ring-2 ring-accent' : 'glass-premium hover:-translate-y-0.5 hover:shadow-lg'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${on ? 'bg-white/15' : 'bg-accent/10'}`}>
+                  <s.icon className={`w-6 h-6 ${on ? 'text-white' : 'text-accent'}`} strokeWidth={1.7} />
                 </div>
-              ))}
-              <p className="sm:col-span-2 text-[11px] text-muted-foreground">Shared across every clinician at your practice — physios and EPs alike.</p>
+                {on ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full"><Check className="w-3 h-3" /> Viewing</span>
+                ) : (
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-2.5 py-1 rounded-full border border-border">View</span>
+                )}
+              </div>
+              <p className={`text-2xl sm:text-3xl font-bold tracking-tight leading-none ${on ? 'text-white' : 'text-foreground'}`}>{s.code}</p>
+              <p className={`text-sm font-semibold mt-1.5 ${on ? 'text-emerald-50' : 'text-accent'}`}>{s.name}</p>
+              <p className={`text-xs mt-2 leading-snug ${on ? 'text-white/80' : 'text-muted-foreground'}`}>{s.who}</p>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Selected stream's REAL modules */}
+      <div className="glass-premium rounded-2xl p-6 sm:p-7">
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
+          <div className="flex items-center gap-2.5">
+            <active.icon className="w-5 h-5 text-accent" strokeWidth={1.8} />
+            <h4 className="text-lg font-bold text-foreground">{active.code} · {active.name}</h4>
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-accent">{active.cpd}</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {active.modules.map((m, i) => (
+            <div key={m} className="flex items-center gap-3 rounded-xl bg-black/[0.02] px-4 py-3 transition hover:bg-accent/[0.04]">
+              <span className="w-7 h-7 rounded-lg bg-accent/10 text-accent text-[13px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+              <span className="text-sm text-foreground/90 font-medium leading-snug">{m}</span>
             </div>
-          )}
-          {tab === 'admin' && (
-            <div>
-              <ul className="space-y-2">
-                {DOCS.map((d) => (
-                  <li key={d} className="flex items-center gap-2.5 text-sm text-foreground/85"><Check className="w-4 h-4 text-accent flex-shrink-0" strokeWidth={2.2} />{d}</li>
-                ))}
-              </ul>
-              <p className="text-[11px] text-muted-foreground mt-3">Clinic-branded where it matters — ready for your front desk and reports.</p>
-            </div>
-          )}
+          ))}
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground mt-3 inline-flex items-center gap-1.5">
-        <Lock className="w-3 h-3" /> Preview of the live portal · the EP stream launches once ESSA approval lands. Everyone trains together on the practical day (14 CPD hours total).
+
+      {/* Shared layer */}
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-2xl bg-muted/30 border border-border p-5">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Shared clinical tools</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {TOOLS.map((t) => (
+              <div key={t.name} className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0"><t.icon className="w-[16px] h-[16px] text-accent" strokeWidth={1.8} /></div>
+                <span className="text-[12.5px] font-medium text-foreground/85 leading-tight">{t.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl bg-muted/30 border border-border p-5">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Shared admin & docs</p>
+          <ul className="space-y-2">
+            {DOCS.map((d) => (
+              <li key={d} className="flex items-center gap-2 text-[13px] text-foreground/85"><Check className="w-3.5 h-3.5 text-accent flex-shrink-0" strokeWidth={2.4} />{d}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <p className="text-[11px] text-muted-foreground mt-4 inline-flex items-center gap-1.5">
+        <Lock className="w-3 h-3" /> Preview of the live clinic portal · CRM goes live once ESSA approval lands. Both streams train together on the practical day — 14 CPD hours total.
       </p>
-    </div>
+    </section>
   )
 }
