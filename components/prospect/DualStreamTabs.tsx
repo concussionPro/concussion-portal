@@ -173,13 +173,12 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
                 </div>
               )
               if (isLiveTrial && isCrm) {
-                // Real EP course (gated /ep-course) via the demo entry, new tab.
+                // Real EP course (gated /ep-course) via the demo entry — same
+                // tab, stays in the dash (no new window).
                 return (
                   <a
                     key={m.id}
                     href="/demo/essa"
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="block rounded-2xl p-4 sm:p-5 border-l-2 border-l-accent bg-black/[0.02] hover:bg-accent/[0.04] transition-colors"
                   >
                     {inner}
