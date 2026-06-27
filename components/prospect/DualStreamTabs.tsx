@@ -138,14 +138,15 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
         {activeModules ? (
           <div className="space-y-2.5">
             {activeModules.map((m, i) => {
-              // Both streams use the SAME existing trial-preview build: module 1
-              // open, 2-8 locked. CCM → /learning/module-1, CRM → the same page
-              // with ?course=crm (renders the EP course's module 1). No clone.
+              // Both streams open the EXISTING public locked-trial preview (no
+              // login, already built): CCM → /preview, CRM → /preview?course=crm
+              // (same preview architecture, EP course data). Module 1 unlocked,
+              // the rest locked — handled entirely by /preview.
               const isLiveTrial = m.id === 1
               const trialHref = detailed
                 ? stream === 'crm'
-                  ? `/p/${detailed.slug}/learning/module-1?course=crm&k=${detailed.accessKey}`
-                  : `/p/${detailed.slug}/learning/module-1?k=${detailed.accessKey}`
+                  ? `/preview?course=crm`
+                  : `/preview`
                 : null
               const inner = (
                 <div className="flex items-start gap-4">

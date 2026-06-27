@@ -47,16 +47,22 @@ interface PreviewModuleData {
 
 export default function PreviewPage() {
   const router = useRouter()
-  const modules = getPreviewModules()
+  const ccmModules = getPreviewModules()
+  const [isCrm, setIsCrm] = useState(false)
   const [expandedModule, setExpandedModule] = useState<number>(0)
   const [previewContent, setPreviewContent] = useState<PreviewModuleData[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    // ?course=crm serves the EP course (Concussion Rehab Mastery) through this
+    // SAME locked-trial preview. Read it client-side (avoids a Suspense bailout)
+    // so the same page mimics the structure for both streams.
+    const crm = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('course') === 'crm'
+    setIsCrm(crm)
     async function fetchPreviewContent() {
       setLoading(true)
       try {
-        const res = await fetch('/api/preview-content')
+        const res = await fetch(`/api/preview-content${crm ? '?course=crm' : ''}`)
         if (res.ok) {
           const data = await res.json()
           setPreviewContent(data)
@@ -69,6 +75,13 @@ export default function PreviewPage() {
     }
     fetchPreviewContent()
   }, [])
+
+  // CCM uses the lightweight static meta (bundled). For CRM the list is derived
+  // from the public API response, so the EP course content is never bundled into
+  // this client page — identical render, different course data.
+  const modules = isCrm
+    ? previewContent.map((p) => ({ id: p.id, title: p.title, subtitle: p.subtitle, duration: p.duration, points: p.points, description: p.description }))
+    : ccmModules
 
   const toggleModule = (moduleId: number) => {
     setExpandedModule(expandedModule === moduleId ? 0 : moduleId)
