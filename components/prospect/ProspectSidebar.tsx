@@ -30,6 +30,7 @@ export function ProspectSidebar({
   clinicCity,
   clinicState,
   active,
+  accreditation = 'ahpra',
 }: {
   slug: string
   accessKey: string
@@ -37,6 +38,7 @@ export function ProspectSidebar({
   clinicCity?: string | null
   clinicState?: string | null
   active?: ActiveSection
+  accreditation?: 'ahpra' | 'essa'
 }) {
   const portalBase = `/p/${slug}`
   const ak = `k=${accessKey}`
@@ -82,6 +84,7 @@ export function ProspectSidebar({
           clinicState={clinicState}
           cityKnown={cityKnown}
           active={active}
+          accreditation={accreditation}
           onLinkClick={() => setMobileOpen(false)}
         />
       </div>
@@ -96,6 +99,7 @@ export function ProspectSidebar({
           clinicState={clinicState}
           cityKnown={cityKnown}
           active={active}
+          accreditation={accreditation}
         />
       </div>
     </>
@@ -103,7 +107,7 @@ export function ProspectSidebar({
 }
 
 function SidebarBody({
-  portalBase, ak, clinicShortName, clinicCity, clinicState, cityKnown, active, onLinkClick,
+  portalBase, ak, clinicShortName, clinicCity, clinicState, cityKnown, active, onLinkClick, accreditation = 'ahpra',
 }: {
   portalBase: string
   ak: string
@@ -113,6 +117,7 @@ function SidebarBody({
   cityKnown: boolean
   active?: ActiveSection
   onLinkClick?: () => void
+  accreditation?: 'ahpra' | 'essa'
 }) {
   return (
     <>
@@ -161,8 +166,17 @@ function SidebarBody({
       </nav>
 
       <div className="pt-5 border-t border-white/30">
-        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
+        {accreditation === 'essa' ? (
+          <>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">ESSA Accredited</p>
+            <p className="text-[10px] text-muted-foreground">8 CPD hrs online</p>
+          </>
+        ) : (
+          <>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
+            <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
+          </>
+        )}
       </div>
     </>
   )

@@ -124,6 +124,7 @@ export default async function ProspectModuleOneTrial({
         clinicCity={clinic.city}
         clinicState={clinic.state}
         active="learning"
+        accreditation={isCrm ? 'essa' : 'ahpra'}
       />
       <main className="flex-1 ml-0 md:ml-64">
         <div data-track-section="module-1-trial" className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
