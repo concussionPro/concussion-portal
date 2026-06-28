@@ -377,11 +377,8 @@ export default function PreviewPage() {
           </div>
         </div>
 
-        {/* Pricing + bottom CTA are CCM-specific (Concussion Clinical Mastery
-            pricing, Melbourne workshop, SCAT6/VOMS/BESS, "14 CPD"). Hidden on the
-            CRM variant — the ESSA EP-course offer/pricing lives on the pitch dash. */}
-        {!isCrm && (<>
-        {/* Pricing Options */}
+        {/* Pricing Options — shared across both streams: both complete the same
+            Concussion Clinical Mastery practical day (8 online + 6 practical = 14). */}
         <div id="pricing-section" className="mt-16 mb-12">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-bold mb-4">
@@ -458,7 +455,6 @@ export default function PreviewPage() {
             </div>
           </div>
         </div>
-        </>)}
       </div>
       </div>
     </>

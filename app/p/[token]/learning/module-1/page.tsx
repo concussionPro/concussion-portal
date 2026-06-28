@@ -148,7 +148,7 @@ export default async function ProspectModuleOneTrial({
             <span>·</span>
             <span className="flex items-center gap-1"><Award className="w-3 h-3" />{m1.points} CPD hr</span>
             <span>·</span>
-            <span>{isCrm ? 'ESSA-accredited' : 'AHPRA-aligned'}</span>
+            <span>{isCrm ? 'ESSA-aligned' : 'AHPRA-aligned'}</span>
           </div>
 
           {/* Trial content — readable on screen but NOT copyable (select-none)

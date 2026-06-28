@@ -166,17 +166,8 @@ function SidebarBody({
       </nav>
 
       <div className="pt-5 border-t border-white/30">
-        {accreditation === 'essa' ? (
-          <>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">ESSA Accredited</p>
-            <p className="text-[10px] text-muted-foreground">8 CPD hrs online</p>
-          </>
-        ) : (
-          <>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">AHPRA Aligned</p>
-            <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
-          </>
-        )}
+        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{accreditation === 'essa' ? 'ESSA Aligned' : 'AHPRA Aligned'}</p>
+        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
       </div>
     </>
   )

@@ -47,7 +47,7 @@ const STREAMS: Record<StreamId, {
     name: 'Concussion Rehab Mastery',
     who: 'The exercise-rehab pathway — built for exercise physiologists',
     cpd: '8 CPD hours online',
-    accredBody: 'ESSA-accredited · pending',
+    accredBody: 'ESSA-aligned · OA-endorsed',
     accredNote: 'Counts toward your ESSA CPD',
     icon: HeartPulse,
     modules: [
@@ -242,7 +242,7 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
       </div>
 
       <p className="text-[11px] text-muted-foreground mt-4 inline-flex items-center gap-1.5">
-        <Lock className="w-3 h-3" /> Preview of the live clinic portal · CRM goes live once ESSA approval lands. Each stream is 8 hrs online CPD; the shared in-person practical day adds 6 — 14 CPD hours total.
+        <Lock className="w-3 h-3" /> Preview of the live clinic portal · two streams, one Concussion Clinical Mastery practical day. Each stream is 8 hrs online CPD; the shared practical day adds 6 — 14 CPD hours total.
       </p>
     </section>
   )
