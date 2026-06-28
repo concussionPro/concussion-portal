@@ -433,6 +433,12 @@
     <div id="mv-surface">
       <div class="blob" id="bA"></div><div class="blob" id="bB"></div>
       <div class="blob" id="bC"></div><div class="blob" id="bD"></div>
+      <div id="readcard" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,84%);background:#fbfaf7;color:#1a1714;border-radius:16px;padding:36px 44px;box-shadow:0 24px 70px rgba(0,0,0,.4);font-family:Newsreader,Georgia,serif;line-height:1.62;z-index:1">
+        <h3 style="font:600 22px/1.3 Newsreader,serif;margin:0 0 14px">A quiet test of light</h3>
+        <p style="font-size:16.5px;margin:0 0 11px">Just read this, naturally. As you read, the screen behind these words is slowly shifting its brightness, colour and contrast — searching for the light your eyes are calmest under.</p>
+        <p style="font-size:16.5px;margin:0 0 11px">Most settings will feel fine. The moment one feels <em>worse</em> on your eyes — too bright, too sharp, harder to read — press the button below. The screen eases at once, then keeps tuning to you.</p>
+        <p style="font-size:16.5px;margin:0">Nothing to chase, nothing to get right. Read, and react only when it feels worse.</p>
+      </div>
     </div>
     <div id="toneWash"></div>
     <div id="grain"></div>
@@ -506,18 +512,16 @@
 
   <!-- progress + controls (bottom-center) -->
   <div class="progress" id="progress"><div class="ptxt" id="progTxt">—</div><div class="pbar"><i id="progBar"></i></div></div>
-  <div class="holdhint" id="holdHint">follow the light — tap <b>Uncomfortable</b> the moment it strains (it eases at once), or <b>Comfortable</b> to edge a little crisper. Hold and your squint decides.</div>
+  <div class="holdhint" id="holdHint"><b>Follow the light</b> as the screen drifts brighter & sharper. The instant it feels <b>worse</b> on your eyes, press the button — or <b>click anywhere</b>, or press <b>any key</b>. It eases at once and keeps tuning. No need to look away.</div>
   <div class="controls" id="controls">
-    <button class="feedbtn easier" id="easierBtn">
-      <span class="ic"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7 7 7-7"/></svg></span>
-      <span class="t"><span class="big">Uncomfortable</span><span class="sm">ease it · dimmer · warmer · softer</span></span>
+    <button class="feedbtn easier" id="easierBtn" style="min-width:340px">
+      <span class="ic"><svg viewBox="0 0 24 24" width="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7 7 7-7"/></svg></span>
+      <span class="t"><span class="big">Worse on my eyes</span><span class="sm">ease it — dimmer · warmer · softer · (click anywhere / any key)</span></span>
     </button>
     <button class="stopbtn" id="stopBtn">■ rest</button>
-    <button class="feedbtn harder" id="harderBtn">
-      <span class="ic"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
-      <span class="t"><span class="big">Comfortable</span><span class="sm">feels easy · edge a little crisper</span></span>
-    </button>
   </div>
+  <!-- harderBtn retained hidden so existing 'Comfortable' wiring no-ops safely -->
+  <button id="harderBtn" style="display:none"></button>
 
   <!-- ===== INTRO ===== -->
   <div class="phase show" id="intro">
@@ -900,21 +904,25 @@
   byId('downloadBtn').addEventListener('click', ()=> MV.emit('download'));
   byId('saveBtn').addEventListener('click', ()=> MV.emit('save'));
   byId('replayBtn').addEventListener('click', ()=> MV.emit('replay'));
-  addEventListener('keydown', e=>{ if(MV._phase!=='assess') return;
-    if(e.key==='ArrowDown'){e.preventDefault();byId('easierBtn').click();}
-    if(e.key==='ArrowUp'){e.preventDefault();byId('harderBtn').click();}
-    if(e.key==='Escape') byId('stopBtn').click(); });
+  // ONE input: during the assessment, ANY key (except Esc) or a click ANYWHERE on the stage = "worse → ease".
+  // Keeps the eyes on the moving pursuit target — no looking away to find a button.
+  addEventListener('keydown', e=>{ if(MV._phase!=='assess'&&!(MV.liveActive&&MV.liveActive())) return;
+    if(e.key==='Escape'){ byId('stopBtn').click(); return; }
+    if(e.metaKey||e.ctrlKey||e.altKey) return;
+    e.preventDefault(); byId('easierBtn').click(); });
+  const _stage=byId('stage'); if(_stage) _stage.addEventListener('pointerdown', e=>{
+    if(MV._phase==='assess' || (MV.liveActive&&MV.liveActive())){ e.preventDefault(); byId('easierBtn').click(); } });
 
   /* ---------- coach-marks (spotlight the REAL, live HUD) ---------- */
   const COACH=[
     {sel:null, rectCenter:[150,150], title:'Follow the glowing light',
-     body:'Keep your eyes on it as it drifts and darts across the screen. Your tracking IS the measurement — no clicking needed here.'},
-    {sel:'#controls', title:'Comfortable, or not?',
-     body:'The one honest question: does this feel comfortable? Tap “Uncomfortable” and the screen eases at once — dimmer, warmer, softer. Tap “Comfortable” and it edges a touch crisper to find where comfort ends.'},
-    {sel:'#hunt', title:'Watch it hunt your setting',
-     body:'Contrast, brightness, tone and saturation retune every step as the instrument closes in on your least-strain point.'},
+     body:'Keep your eyes on it as it drifts and darts. Your smooth-pursuit tracking IS a measurement — it reads how cleanly your eyes follow, which tunes contrast.'},
+    {sel:'#controls', title:'One job: react when it feels worse',
+     body:'The screen quietly drifts brighter & sharper on its own, searching. The moment it feels WORSE on your eyes, press the button — or just click anywhere, or press any key. It eases at once. You never look away from the light.'},
+    {sel:'#hunt', title:'Watch it adapt',
+     body:'Contrast, brightness, tone and saturation retune continuously as it closes in on the light your eyes are calmest under.'},
     {sel:'#inst', title:'The instrument is watching too',
-     body:'Your squint (EAR), gaze and blinks read out live and on-device, corroborating every choice. Nothing is uploaded.'},
+     body:'Your squint (EAR), gaze and blinks read out live and on-device, anchoring every choice. Nothing is uploaded.'},
   ];
   let ci=0, spot=null, spotPulse=null;
   function buildCoach(){ ci=0; setTimeout(showCoach,80); }   // let HUD lay out first
@@ -991,7 +999,7 @@
     let lastDir=0, reversals=0;
     const ev={}; order.forEach(c=>ev[c.id]=0.5);     // evidence per condition (EMA)
     const seen={}; order.forEach(c=>seen[c.id]=0);
-    let trialT=0, trialDur=4200, trialN=0, totalTrials=14;
+    let trialT=0, trialDur=3000, trialN=0, totalTrials=12;
     let mode='pursuit';                    // alternates pursuit / saccade
     let target={x:0.5,y:0.5}, prevTarget={x:0.5,y:0.5};
     let sacAt=0, sacIndex=0;
@@ -1047,13 +1055,13 @@
     };
     MV.on('walkthroughDone', ()=>{ if(!running) return; MV.gotoPhase('assess'); beginTrial(); });
 
-    let awaiting=false, holdT=0;
+    let awaiting=false, holdT=0, trialStart=0;
     function beginTrial(){
-      if(trialN>=totalTrials || reversals>=6){ finish(); return; }
+      if(trialN>=totalTrials || reversals>=4){ finish(); return; }
       const c=order[idx]; seen[c.id]++; MV.renderCondition(c);
-      MV.renderProgress(Math.min(1, Math.max(trialN/totalTrials, reversals/6)), 'Setting '+(idx+1)+' of '+N+' · reversals '+reversals+'/6');
+      MV.renderProgress(Math.min(1, Math.max(trialN/totalTrials, reversals/4)), 'Adapting to your eyes · '+reversals+'/4 eases');
       mode = (trialN%2===0)?'pursuit':'saccade';
-      trialT=0; errAcc=0; errN=0; apAcc=0; apN=0; sacIndex=0; sacAt=0; awaiting=true; holdT=0;
+      trialT=0; errAcc=0; errN=0; apAcc=0; apN=0; sacIndex=0; sacAt=0; awaiting=true; holdT=0; trialStart=performance.now();
       if(mode==='saccade'){ target={...SAC[0]}; }
       setHint(true);
     }
@@ -1080,10 +1088,10 @@
       // accumulate REAL per-condition measurements for the findings report
       const A=obs[order[idx]]; if(A){ A.ms+=dt; A.errSum+=err; A.errN++; if(faceFresh()){ A.apSum+=aperture; A.apN++; } }
       MV.renderInstrument({ aperture, blinks, gaze, ambient,
-        evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/6,0,1) });
+        evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/4,0,1) });
       drawField(tt);
       // auto-commit only if the user hasn't answered after a long hold
-      if(awaiting && holdT>=trialDur){ commitTrial(null); }
+      if(awaiting && performance.now()-trialStart>=trialDur){ commitTrial(null); }   // creep on REAL time, not frame-time
     }
 
     // a tap (or timeout) commits the current setting, adapts, and advances to a visibly new one
@@ -1098,9 +1106,11 @@
       ev[c.id]=clamp(ev[c.id]*0.55 + q*0.45 - pushed, 0, 1);
       trialN++;
       if(userDir!=null){ sciCallout(userDir); comfortVote[c.id] += (userDir<0?1:-1); }  // comfortable=-1 dir → +1 ; too-harsh=+1 dir → −1
-      const dir = userDir!=null ? userDir : (q>0.55?+1:-1);
+      // ONE-BUTTON AUTO-ADAPT: with no input the system creeps HARSHER (brighter/sharper) so the user
+      // has a rising stimulus to veto; "worse" (userDir=+1) eases. The squint anchors the final pick (finish).
+      const dir = userDir!=null ? userDir : -1;
       stepStaircase(dir, userDir!=null);          // moves idx → new setting
-      MV.renderInstrument({ evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/6,0,1) });
+      MV.renderInstrument({ evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/4,0,1) });
       setTimeout(()=>{ if(running) beginTrial(); }, 200);  // brief beat so the retune reads
     }
 
@@ -1110,8 +1120,9 @@
       // dir: +1 → gentler (lower idx), -1 → harsher (higher idx)
       if(lastDir!==0 && dir!==lastDir){ reversals++; step=Math.max(1, step-1); }
       lastDir=dir;
-      idx=clamp(idx - dir*step, 0, N-1);
-      MV.renderInstrument({ evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/6,0,1) });
+      const mag = fromClick ? step : 1;   // user "worse" = decisive ease; idle creep drifts by 1 so the whole range is seen
+      idx=clamp(idx - dir*mag, 0, N-1);
+      MV.renderInstrument({ evidence: order.map(c=>({id:c.id,score:ev[c.id]})), lock: clamp(reversals/4,0,1) });
     }
 
     MV.on('feedback', dir=>{ if(!running||enginePresent()) return; commitTrial(dir); });
@@ -1264,9 +1275,13 @@
     function loop(t){ const dt=Math.min(50,t-(last||t)); last=t; if(!enginePresent()){ if(running) tick(dt); drawScope(); } requestAnimationFrame(loop); }
     requestAnimationFrame(loop);
 
-    /* ---- aura blob drift ---- */
-    if(!reduce){ const blobs=[...document.querySelectorAll('.blob')]; let at=0;
-      (function drift(){ at+=0.0014; blobs.forEach((b,i)=>{ const px=Math.sin(at*(1+i*0.3)+i)*3, py=Math.cos(at*(0.8+i*0.25)+i)*3; b.style.transform=`translate(${px}%,${py}%)`; }); requestAnimationFrame(drift); })(); }
+    /* ---- aura blob drift (paused on the result screen: 9 backdrop-filter cards over a moving
+       blurred field re-composite every frame = the slow summary. Freeze the field when reading the result) ---- */
+    if(!reduce){ const blobs=[...document.querySelectorAll('.blob')]; let at=0, drot=0;
+      (function drift(t){ requestAnimationFrame(drift);
+        if(MV._phase!=='intro') return;     // animate the field ONLY on the landing; freeze during the test
+        if(t-drot < 40) return; drot=t;     // (9 backdrop-filter cards over a moving blurred field = the jank)
+        at+=0.0046; blobs.forEach((b,i)=>{ const px=Math.sin(at*(1+i*0.3)+i)*3, py=Math.cos(at*(0.8+i*0.25)+i)*3; b.style.transform=`translate(${px}%,${py}%)`; }); })(); }
 
     return { start, get isCamera(){return isCamera;}, stopVisualsOnly(){ running=false; } };
   })();
