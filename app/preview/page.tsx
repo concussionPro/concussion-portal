@@ -377,6 +377,10 @@ export default function PreviewPage() {
           </div>
         </div>
 
+        {/* Pricing + bottom CTA are CCM-specific (Concussion Clinical Mastery
+            pricing, Melbourne workshop, SCAT6/VOMS/BESS, "14 CPD"). Hidden on the
+            CRM variant — the ESSA EP-course offer/pricing lives on the pitch dash. */}
+        {!isCrm && (<>
         {/* Pricing Options */}
         <div id="pricing-section" className="mt-16 mb-12">
           <div className="text-center mb-8">
@@ -454,6 +458,7 @@ export default function PreviewPage() {
             </div>
           </div>
         </div>
+        </>)}
       </div>
       </div>
     </>
