@@ -69,6 +69,9 @@ export function SstLivePanel({ code }: { code: string }) {
         <h3 className="text-sm font-bold text-slate-900">Live now</h3>
         <span className="text-xs text-slate-500">{active.length ? `${active.length} training` : 'no active sessions'}</span>
       </div>
+      <p className="text-[11.5px] text-slate-500 -mt-2 mb-3">
+        Every reading streams from the patient&rsquo;s own wearable and is verified live — never estimated or filled in. Recovery data you can act on.
+      </p>
 
       {active.length === 0 ? (
         <p className="text-xs text-slate-500">When a patient runs a session with this clinic code, they appear here in real time.</p>

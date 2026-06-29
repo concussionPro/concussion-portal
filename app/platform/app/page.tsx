@@ -78,6 +78,10 @@ export default function PlatformAppPage() {
   // Completion timestamps — the weekly adherence ring counts only the last 7
   // days, not lifetime sessions.
   const [sessionTimes, setSessionTimes] = useState<number[]>([])
+  // Fail-closed progression: ONLY sessions trained on a verified live HR source
+  // (paired wearable / camera, not manual) count toward advancing the band. The
+  // ceiling can never be ratcheted up on unverified data — the defensible wedge.
+  const [verifiedSessions, setVerifiedSessions] = useState(0)
   const [progressionCheckpoint, setProgressionCheckpoint] = useState(0)
 
   const condition: Condition = welcome?.condition ?? 'concussion'
@@ -257,6 +261,7 @@ export default function PlatformAppPage() {
           onComplete={(log) => {
             setSessions((prev) => [...prev, log])
             setSessionTimes((prev) => [...prev, Date.now()])
+            if (feed.live) setVerifiedSessions((n) => n + 1) // verified-only counts toward progression
             // Rehab session → clinician (HR, minutes, symptom Δ).
             syncSessionToClinic({
               clinicCode: welcome?.clinicCode,
@@ -280,7 +285,7 @@ export default function PlatformAppPage() {
           sessions={sessions}
           onHome={() => setStep('home')}
           onNewSession={() => setStep('training')}
-          canApply={sessions.length > progressionCheckpoint}
+          canApply={verifiedSessions > progressionCheckpoint}
           onApplyCeiling={(newCeilingBpm) => {
             setPrescription((prev) => {
               if (!prev) return prev
@@ -293,7 +298,7 @@ export default function PlatformAppPage() {
                 summary: `Train at ${lowerBpm}–${upperBpm} bpm. Aim for ${prev.sessionMinutes} minutes, ${prev.daysPerWeek} days a week. Keep your heart rate under ${upperBpm} bpm. Stop the session if your symptoms rise ${prev.stopRisePoints} or more points above how you felt before you started.`,
               }
             })
-            setProgressionCheckpoint(sessions.length)
+            setProgressionCheckpoint(verifiedSessions)
             setStep('home')
           }}
         />
