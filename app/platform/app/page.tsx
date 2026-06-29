@@ -220,7 +220,7 @@ export default function PlatformAppPage() {
                 thresholdStage: thresholdResult?.thresholdStage,
                 restingSymptomScore,
                 symptoms: selectedSymptomIds,
-                researchConsent: welcome?.researchConsent ?? false,
+                dataConsent: welcome?.dataConsent ?? false,
               },
             })
             setStep('home')
@@ -264,7 +264,7 @@ export default function PlatformAppPage() {
               bandLow: prescription?.lowerBpm,
               bandHigh: prescription?.upperBpm,
               condition,
-              payload: { ...log, researchConsent: welcome?.researchConsent ?? false },
+              payload: { ...log, dataConsent: welcome?.dataConsent ?? false },
             })
             setStep('progress')
           }}

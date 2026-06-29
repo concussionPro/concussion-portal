@@ -8,8 +8,10 @@ export type TrainerMode = 'self-guided' | 'clinic-code'
 
 export interface WelcomeSelection {
   mode: TrainerMode
-  /** Opt-in consent to contribute anonymised session data for research. */
-  researchConsent?: boolean
+  /** Opt-in consent for de-identified session data to be used to monitor and
+   *  improve the service / care quality (QA/service-evaluation framing — NOT
+   *  research-purpose; that distinction keeps collection out of the HREC gate). */
+  dataConsent?: boolean
   clinicCode: string | null
   /** Patient name — only captured in clinic-code mode so the clinician can tell
    *  their patients apart in the dashboard (mirrors the preseason athlete name). */

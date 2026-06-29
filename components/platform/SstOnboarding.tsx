@@ -71,7 +71,7 @@ export default function SstOnboarding({
   const [mode, setMode] = useState<TrainerMode>(initialClinicCode ? 'clinic-code' : 'self-guided')
   const [clinicCode, setClinicCode] = useState(initialClinicCode ?? '')
   const [patientName, setPatientName] = useState('')
-  const [researchConsent, setResearchConsent] = useState(false)
+  const [dataConsent, setDataConsent] = useState(false)
   const [goal, setGoal] = useState<string | null>(null)
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
   const [pairError, setPairError] = useState<string | null>(null)
@@ -362,18 +362,19 @@ export default function SstOnboarding({
         )}
       </div>
 
-      {/* Anonymised data-collection consent — opt-in, withdrawable. Declining
-          still sends data to YOUR clinician for your care; it just won't be
-          included in the de-identified research pool. */}
+      {/* De-identified data consent — opt-in, withdrawable. QA / service-quality
+          framing (NOT "research"): the stated purpose is monitoring + improving
+          this service, which keeps collection on the QA side of the HREC line.
+          Declining never affects care — results still go to the clinician. */}
       <label className="flex items-start gap-2.5 rounded-xl border border-[#d7e3e4] bg-[#f3f8f8] px-3.5 py-3 cursor-pointer">
         <input
           type="checkbox"
-          checked={researchConsent}
-          onChange={(e) => setResearchConsent(e.target.checked)}
+          checked={dataConsent}
+          onChange={(e) => setDataConsent(e.target.checked)}
           className="mt-0.5 h-4 w-4 flex-none accent-[#3c7681]"
         />
         <span className="text-[11.5px] leading-snug text-[#3c5658]">
-          I agree to share my <strong>anonymised</strong> session data to help improve concussion rehab and for research. No name or contact details are shared; I can withdraw any time. Declining still sends my results to my own clinician.
+          I agree that my <strong>de-identified</strong> session data may be used to monitor and improve this service and the quality of care. No name or contact details are shared, and I can withdraw any time. Declining doesn&rsquo;t affect my care — my results still go to my own clinician.
         </span>
       </label>
 
@@ -383,7 +384,7 @@ export default function SstOnboarding({
           onStart({
             welcome: {
               mode,
-              researchConsent,
+              dataConsent,
               clinicCode: mode === 'clinic-code' ? clinicCode.trim() : null,
               patientName: mode === 'clinic-code' ? patientName.trim() || null : null,
               condition,
