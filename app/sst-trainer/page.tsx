@@ -10,6 +10,7 @@ import type {
 } from '@/lib/sst-trainer/protocol'
 import { AppShell, type Step } from '@/components/sst-trainer/shell'
 import WelcomeMode, { type WelcomeSelection } from '@/components/sst-trainer/WelcomeMode'
+import SstInstallPrompt from '@/components/sst-trainer/SstInstallPrompt'
 import SymptomSelect from '@/components/sst-trainer/SymptomSelect'
 import Readiness, { type ReadinessResult } from '@/components/sst-trainer/Readiness'
 import GuidedTest from '@/components/sst-trainer/GuidedTest'
@@ -60,6 +61,8 @@ export default function SstTrainerPage() {
   return (
     <AppShell step={step}>
       {step === 'welcome' && (
+        <>
+        <SstInstallPrompt />
         <WelcomeMode
           initial={welcome ?? prefill}
           onContinue={(selection) => {
@@ -67,6 +70,7 @@ export default function SstTrainerPage() {
             setStep('symptoms')
           }}
         />
+        </>
       )}
 
       {step === 'symptoms' && (
