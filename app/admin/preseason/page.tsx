@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Users, ClipboardList, Calendar, Mail, Search } from 'lucide-react'
+import { Building2, Users, ClipboardList, Calendar, Mail, Search, QrCode } from 'lucide-react'
+import { SstPatientQrCard } from '@/components/sst-trainer/SstPatientQrCard'
 
 interface Clinic {
   clinicName: string
@@ -29,6 +30,8 @@ export default function AdminPreseasonPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  // Clinic whose SST patient-onboarding QR card is open (null = closed).
+  const [qrClinic, setQrClinic] = useState<Clinic | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -139,6 +142,7 @@ export default function AdminPreseasonPage() {
                   <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Code</th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Registered</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">SST Patient App</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -174,6 +178,15 @@ export default function AdminPreseasonPage() {
                           {new Date(clinic.createdAt).toLocaleDateString()}
                         </span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => setQrClinic(clinic)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 text-teal-700 text-xs font-semibold hover:bg-teal-100 transition-colors"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                        QR &amp; link
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -251,6 +264,14 @@ export default function AdminPreseasonPage() {
           </div>
         )}
       </div>
+
+      {qrClinic && (
+        <SstPatientQrCard
+          clinicName={qrClinic.clinicName}
+          code={qrClinic.code}
+          onClose={() => setQrClinic(null)}
+        />
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type {
   Condition,
   Prescription,
@@ -37,6 +37,14 @@ export default function SstTrainerPage() {
 
   // collected across the flow
   const [welcome, setWelcome] = useState<WelcomeSelection | null>(null)
+  // Deep-link prefill: a per-clinic QR points to /sst-trainer?clinic=CODE so the
+  // patient lands with their clinic code already filled + clinic-code mode on —
+  // they just add their name and go. Read client-side (no SSR/Suspense needed).
+  const [prefill, setPrefill] = useState<Partial<WelcomeSelection> | undefined>(undefined)
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('clinic')?.trim()
+    if (code) setPrefill({ mode: 'clinic-code', clinicCode: code.toUpperCase() })
+  }, [])
   const [selectedSymptomIds, setSelectedSymptomIds] = useState<string[]>([])
   const [restingSymptomScore, setRestingSymptomScore] = useState(0)
   const [, setTestInput] = useState<TestInput | null>(null)
@@ -53,7 +61,7 @@ export default function SstTrainerPage() {
     <AppShell step={step}>
       {step === 'welcome' && (
         <WelcomeMode
-          initial={welcome ?? undefined}
+          initial={welcome ?? prefill}
           onContinue={(selection) => {
             setWelcome(selection)
             setStep('symptoms')
