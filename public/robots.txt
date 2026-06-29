@@ -26,6 +26,8 @@ Disallow: /demo/
 # Pre-launch hidden tools suite (Screen Comfort + future on-device eye tools)
 Disallow: /tools/
 Disallow: /screen-comfort
+# Research & publications — hidden until the first DOIs land
+Disallow: /publications
 
 # AI Crawlers — explicitly allowed
 User-agent: GPTBot
