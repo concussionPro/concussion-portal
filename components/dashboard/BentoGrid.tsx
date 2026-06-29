@@ -292,6 +292,51 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
         </p>
       </Card>
 
+      {/* ── Clinical Tools suite — the in-clinic instruments (paid only).
+            Baseline at initial exam + the SST Trainer for rehab. Unpaid users
+            see it locked; the tools are inaccessible to them from the dash. ── */}
+      {isPreview ? (
+        <Card>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-200/50 to-slate-100/50 flex items-center justify-center">
+              <Lock className="w-[18px] h-[18px] text-slate-400" strokeWidth={1.8} />
+            </div>
+            <p className="stat-label mb-0">Clinical Tools</p>
+            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 uppercase tracking-wider">Paid</span>
+          </div>
+          <p className="text-sm text-foreground font-semibold mb-1">Baseline testing + SST Trainer</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Apply pre-season baselines at the initial exam and run sub-symptom-threshold rehab — included with the course.
+          </p>
+        </Card>
+      ) : (
+        <Card span2 className="border border-emerald-200/40">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 flex items-center justify-center">
+              <Stethoscope className="w-[18px] h-[18px] text-emerald-600/70" strokeWidth={1.8} />
+            </div>
+            <p className="stat-label mb-0">Clinical Tools</p>
+          </div>
+          <p className="text-sm text-foreground font-semibold mb-3">In-clinic instruments — assessment &amp; rehab</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <Link href="/preseason" className="flex items-center gap-2.5 rounded-xl border border-border bg-white/50 px-3.5 py-3 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors">
+              <FileText className="w-4 h-4 text-emerald-600/70 flex-shrink-0" strokeWidth={1.8} />
+              <span className="min-w-0">
+                <span className="block text-[13px] font-semibold text-foreground leading-tight">Baseline Testing</span>
+                <span className="block text-[11px] text-muted-foreground leading-tight">SCAT6 baselines · initial exam</span>
+              </span>
+            </Link>
+            <Link href="/sst-trainer" className="flex items-center gap-2.5 rounded-xl border border-border bg-white/50 px-3.5 py-3 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors">
+              <Stethoscope className="w-4 h-4 text-emerald-600/70 flex-shrink-0" strokeWidth={1.8} />
+              <span className="min-w-0">
+                <span className="block text-[13px] font-semibold text-foreground leading-tight">SST Trainer</span>
+                <span className="block text-[11px] text-muted-foreground leading-tight">Sub-symptom-threshold rehab · wearable</span>
+              </span>
+            </Link>
+          </div>
+        </Card>
+      )}
+
       {/* ── SST Trainer subscription (HIDDEN until launch) ── */}
       {sstLive && (
         <Card span2 className="border border-accent/20">
