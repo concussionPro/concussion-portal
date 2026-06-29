@@ -12,6 +12,34 @@ Plain-English, properly-scoped consent and data-governance copy for two audience
 
 ---
 
+> ## ⚠️ CRITICAL — this consent design may itself trigger HREC review. Resolve before building.
+>
+> **This is the single biggest risk in the whole publication/data plan. Treat it as a hard dependency, not a footnote.**
+>
+> The "publish-around-HREC / negligible-risk" route the whole strategy relies on is valid **only for genuinely RETROSPECTIVE analysis**: data that *arose from routine clinical care* and is analysed after the fact.
+>
+> **The moment the app collects data FOR THE PURPOSE OF research** — i.e. *prospectively, by design*, with research consent gathered up front through this exact consent screen (Part A) and the clinic data-contribution agreement (Part B) — a reviewer or an HREC may classify it as **PROSPECTIVE research requiring FULL HREC review and prospective consent.** The opt-in flow below and the clinic pooling agreement are precisely the design features that could trip this classification. If they do, you have walked straight into the ethics gate the strategy was built to avoid.
+>
+> **ACTION — gate the build on this.** *Before* building the in-app research-data capture (the Part A opt-in, the research-export path, the clinic pooling), put this exact question to a research-ethics advisor (an HREC officer or university ethics contact):
+>
+> > *"Is purpose-built in-app data collection, consented via clinic terms, classified as RETROSPECTIVE or PROSPECTIVE for HREC purposes?"*
+>
+> The answer gates the build. Do not ship the research-capture flow until you have it.
+>
+> **Practical mitigation if it comes back "prospective"** — do not pretend the risk away. Either:
+> - **(a)** keep collection strictly for *clinical care* (the care/clinic-sync flow only — no research-purpose opt-in, no research pooling designed in) and analyse retrospectively later; or
+> - **(b)** accept HREC review for a prospective registry and build the consent to that standard from the start.
+>
+> See the matching ⚠️ CRITICAL warning at the top of `04-venues.md`.
+
+---
+
+> **Regulatory positioning (carry this framing everywhere).** SST Trainer is positioned as a **clinician-directed rehab-assistance and monitoring/data tool, NOT a diagnostic or treatment medical device.** It is intended to stay outside FDA SaMD / TGA medical-device classification via the **clinical-decision-support carve-out** (FDA 21st Century Cures Act §3060; TGA's CDS exclusion): the qualified clinician independently makes every clinical decision — interprets the threshold, sets the heart-rate band, approves progression, and clears return to activity — while the software only executes, paces, monitors, and records. **It informs; it never decides.** Nothing patient- or clinic-facing claims the tool *treats, diagnoses, or clears concussion*. Patient-facing copy uses "heart-rate-guided exercise companion" framing with symptom-stop and seek-clinician disclaimers. This positioning *reduces but does not guarantee* non-device status — claims and intended use drive classification — so a **SaMD scoping opinion should be obtained before launch.**
+>
+> **Intended Use statement (display at first run and in the clinic agreement):** *"SST Trainer is a clinician-directed exercise-pacing and monitoring assistant. It does not diagnose, treat, or replace clinical judgment. The clinician makes all clinical decisions, including return to activity."*
+
+---
+
 ## Part A — Patient in-app consent
 
 ### A.1 The short version (the screen the patient sees)
@@ -26,6 +54,8 @@ Separately, you can choose to let us use a **de-identified copy** of this data (
 - [ ] **No thanks — just send my results to my clinician.**
 
 *Either way, your clinician still receives everything they need for your care.*
+
+> *SST Trainer is a heart-rate-guided exercise companion that helps you follow the plan your clinician set. It does not diagnose or treat concussion and is not a substitute for your clinician's advice. Stop and rest if your symptoms get worse, and contact your clinician (or seek urgent care for any red-flag symptom).*
 
 [ What we collect ] [ How we de-identify ] [ Your choices ] — (expandable links to A.2–A.4)
 
