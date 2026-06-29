@@ -81,8 +81,42 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // everything EXCEPT /tools/* gets the strict, locked-down headers
-        source: '/((?!tools/).*)',
+        // SST Trainer (PWA at /sst-trainer): the patient app needs the CAMERA
+        // (PPG heart-rate) and Web Bluetooth (BLE HR straps) — both forbidden by
+        // the strict global policy below. Same carve-out shape as /tools/*, but
+        // we DON'T move the route under /tools because /sst-trainer is the PWA
+        // start_url + the QR deep-link target.
+        source: '/sst-trainer/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          // camera for PPG, bluetooth for BLE HR straps (global policy is camera=())
+          { key: 'Permissions-Policy', value: 'camera=(self), bluetooth=(self), microphone=(), geolocation=()' },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval' https://cdn.jsdelivr.net",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https:",
+              "connect-src 'self' blob: data: https://cdn.jsdelivr.net https://storage.googleapis.com",
+              "worker-src 'self' blob:",
+              "child-src 'self' blob:",
+              "media-src 'self' blob:",
+              "frame-ancestors 'self'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "upgrade-insecure-requests"
+            ].join('; ')
+          }
+        ],
+      },
+      {
+        // everything EXCEPT /tools/* and /sst-trainer gets the strict, locked-down headers
+        source: '/((?!tools/|sst-trainer).*)',
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
