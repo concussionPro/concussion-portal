@@ -71,6 +71,9 @@ export default function SstOnboarding({
   const [goal, setGoal] = useState<string | null>(null)
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
   const [pairError, setPairError] = useState<string | null>(null)
+  // The source currently mid-pair (set on tap, BEFORE the async connect resolves
+  // and updates `device`) so the tapped row shows "Connecting…" right away.
+  const [pendingId, setPendingId] = useState<string | null>(null)
   // capability detection runs on the client only (navigator isn't on the server).
   const [caps, setCaps] = useState({ bt: false, cam: false })
 
@@ -99,6 +102,7 @@ export default function SstOnboarding({
         setPairError('Bluetooth pairing needs Chrome / Edge / Android — use the phone camera or enter your heart rate manually.')
         return
       }
+      setPendingId(d.id)
       setPairStatus('connecting')
       try {
         // connectBluetoothHr() calls requestDevice() first, preserving the gesture.
@@ -109,6 +113,8 @@ export default function SstOnboarding({
         onPair(d, null) // user cancelled the chooser or pairing failed → manual
         setPairStatus('error')
         setPairError('Couldn’t connect that sensor — you can try again or enter your heart rate manually.')
+      } finally {
+        setPendingId(null)
       }
       return
     }
@@ -120,6 +126,7 @@ export default function SstOnboarding({
       setPairError('Camera HR needs a secure (HTTPS) browser with camera access — enter your heart rate manually instead.')
       return
     }
+    setPendingId(d.id)
     setPairStatus('connecting')
     try {
       const conn = await connectCameraPpg()
@@ -129,6 +136,8 @@ export default function SstOnboarding({
       onPair(d, null)
       setPairStatus('error')
       setPairError('Couldn’t start the camera — check the permission, or enter your heart rate manually.')
+    } finally {
+      setPendingId(null)
     }
   }
 
@@ -290,7 +299,11 @@ export default function SstOnboarding({
                   <span className="text-[10.5px] leading-snug text-[#7d9092]">{subtitle}</span>
                 </span>
                 <span className="flex-none text-right">
-                  {disabled ? (
+                  {pendingId === s.id ? (
+                    <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#9bafb0]">
+                      Connecting…
+                    </span>
+                  ) : disabled ? (
                     <span className="text-[9px] font-bold uppercase tracking-[0.04em] text-[#9bafb0]">
                       Unavailable
                     </span>

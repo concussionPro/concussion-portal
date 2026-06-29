@@ -95,12 +95,29 @@ export function useLiveHr(connection: LiveHrConnection | null): HrFeed {
     }
     setBpm(null)
     setStatus('connecting')
+    let last = 0
     const unsubscribe = connection.subscribe((next) => {
       if (!Number.isFinite(next) || next <= 0) return
+      last = Date.now()
       setBpm(Math.round(next))
       setStatus('streaming')
     })
-    return unsubscribe
+    // Staleness watchdog: a BLE strap dropping out of range or a finger lifting
+    // off the camera just STOPS emitting — the last bpm would otherwise freeze
+    // on screen, still labelled "live". After STALE_MS with no new value, clear
+    // the reading + fall back to 'connecting' (re-acquiring) so a dead feed is
+    // never shown as a current heart rate. Never fabricate a bpm.
+    const STALE_MS = 5000
+    const watchdog = setInterval(() => {
+      if (last && Date.now() - last > STALE_MS) {
+        setBpm(null)
+        setStatus('connecting')
+      }
+    }, 1000)
+    return () => {
+      unsubscribe()
+      clearInterval(watchdog)
+    }
   }, [connection])
 
   return { bpm, status, live: !!connection }

@@ -75,6 +75,9 @@ export default function PlatformAppPage() {
   const [thresholdResult, setThresholdResult] = useState<ThresholdResult | null>(null)
   const [prescription, setPrescription] = useState<Prescription | null>(null)
   const [sessions, setSessions] = useState<SessionLog[]>([])
+  // Completion timestamps — the weekly adherence ring counts only the last 7
+  // days, not lifetime sessions.
+  const [sessionTimes, setSessionTimes] = useState<number[]>([])
   const [progressionCheckpoint, setProgressionCheckpoint] = useState(0)
 
   const condition: Condition = welcome?.condition ?? 'concussion'
@@ -226,7 +229,7 @@ export default function PlatformAppPage() {
           clinicCode={welcome.clinicCode}
           goalLabel={goalLabel ?? undefined}
           deviceName={device.name}
-          sessionsThisWeek={sessions.length}
+          sessionsThisWeek={sessionTimes.filter((t) => Date.now() - t < 604800000).length}
           onStartSession={() => setStep('training')}
           onProgress={() => setStep('progress')}
           onRetest={() => setStep('readiness')}
@@ -241,6 +244,7 @@ export default function PlatformAppPage() {
           hrStatus={feed.status}
           onComplete={(log) => {
             setSessions((prev) => [...prev, log])
+            setSessionTimes((prev) => [...prev, Date.now()])
             // Rehab session → clinician (HR, minutes, symptom Δ).
             syncSessionToClinic({
               clinicCode: welcome?.clinicCode,
