@@ -433,11 +433,11 @@
     <div id="mv-surface">
       <div class="blob" id="bA"></div><div class="blob" id="bB"></div>
       <div class="blob" id="bC"></div><div class="blob" id="bD"></div>
-      <div id="readcard" style="display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,84%);background:#fbfaf7;color:#1a1714;border-radius:16px;padding:36px 44px;box-shadow:0 24px 70px rgba(0,0,0,.4);font-family:Newsreader,Georgia,serif;line-height:1.62;z-index:1">
+      <div id="readcard" style="display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,90%);background:#f7f5f1;color:#26221c;border-radius:12px;padding:34px 52px;box-shadow:0 8px 34px rgba(0,0,0,.22);font-family:Newsreader,Georgia,serif;line-height:1.7;z-index:1">
         <h3 style="font:600 22px/1.3 Newsreader,serif;margin:0 0 14px">A quiet test of light</h3>
-        <p style="font-size:16.5px;margin:0 0 11px">Just read this, naturally. As you read, the screen behind these words is slowly shifting its brightness, colour and contrast — searching for the light your eyes are calmest under.</p>
-        <p style="font-size:16.5px;margin:0 0 11px">Most settings will feel fine. The moment one feels <em>worse</em> on your eyes — too bright, too sharp, harder to read — press the button below. The screen eases at once, then keeps tuning to you.</p>
-        <p style="font-size:16.5px;margin:0">Nothing to chase, nothing to get right. Read, and react only when it feels worse.</p>
+        <p style="font-size:16.5px;margin:0 0 11px">A small light glides across these words — let your eyes follow it as you read. Behind the text, the screen is slowly shifting its brightness, colour and contrast, searching for the light your eyes are calmest under.</p>
+        <p style="font-size:16.5px;margin:0 0 11px">Most settings will feel fine. The moment one feels <em>worse</em> on your eyes — too bright, too sharp, harder to read — press <em>Worse</em> (or click anywhere, or press any key). The screen eases at once, then keeps tuning to you.</p>
+        <p style="font-size:16.5px;margin:0">Nothing to get right. Just follow the light, and react only when it feels worse.</p>
       </div>
     </div>
     <div id="toneWash"></div>
@@ -541,7 +541,7 @@
             <p><b>Why colour isn’t arbitrary.</b> Photophobia tracks a specific retinal pathway: melanopsin-expressing ipRGCs (peak ≈479&nbsp;nm) plus cone contributions converge on thalamic trigeminovascular neurons. So a comfort-aware filter has a principled spectral target — not a generic “blue-light block.”</p>
             <p><b>What a webcam can honestly measure.</b> Reflexive squint (palpebral-aperture ratio) and blink are validated, camera-readable correlates of light discomfort. We read them from face landmarks (EAR). They’re <em>comfort proxies, not diagnostics</em> — bidirectional and confounded by load, dryness and fatigue — so fine fixation/saccade metrics below the webcam noise floor are deliberately excluded.</p>
             <p><b>Contrast is the stronger axis.</b> Contrast sensitivity is a validated construct (Pelli-Robson, quick&nbsp;CSF) causally tied to oculomotor performance — higher contrast shortens saccade latency and raises smooth-pursuit gain. The follow-the-light tasks use exactly those effects to probe your response while it tunes contrast and colour.</p>
-            <p><b>How it converges.</b> One honest question — comfortable or not? “Uncomfortable” eases the light; “comfortable” edges it crisper. That runs a transformed up-down adaptive staircase (Cornsweet 1962; Levitt 1971) — the family behind Békésy audiometry and quick&nbsp;CSF — anchored by the objective squint/blink signal, which fixes the poor repeatability of subjective-only tint selection. It settles where comfortable and uncomfortable meet: your most comfortable usable setting.</p>
+            <p><b>How it converges.</b> The screen drifts gently brighter &amp; sharper on its own; you press <em>Worse</em> only when it crosses into discomfort, and it eases. That single boundary response drives an ascending up-down adaptive staircase (Cornsweet 1962; Levitt 1971) — the family behind Békésy audiometry and quick&nbsp;CSF — anchored by the objective squint/blink signal, which fixes the poor repeatability of subjective-only tint selection. It settles just below where it starts feeling worse: your most comfortable usable setting.</p>
             <p><b>Honest scope.</b> Generic blue-light filters “probably make no difference” (Cochrane 2023); “precision-tint” reading claims are placebo-equivalent. MellowVision personalizes the <em>environment</em> to your stated &amp; observed comfort — it does not diagnose, treat, or prescribe. Wellness/accessibility-grade only.</p>
 
             <div class="papers">
@@ -995,7 +995,7 @@
     const order = MV.conditions;          // gentle→harsh
     const N = order.length;
     let running=false, isCamera=false;
-    let idx=Math.floor(N/2);              // current step on the staircase
+    let idx=1;                            // START GENTLE (warm/dim) and creep up — never hit a light-sensitive user with bright first
     let step=2;                            // staircase step size: bold early moves, fine near the threshold
     let lastDir=0, reversals=0;
     const ev={}; order.forEach(c=>ev[c.id]=0.5);     // evidence per condition (EMA)
@@ -1014,7 +1014,8 @@
     const lumCtx=lumCv.getContext('2d',{willReadFrequently:true});
     function frameLum(){ try{ const cam=byId('mv-cam'); if(!cam||cam.readyState<2) return null; lumCtx.drawImage(cam,0,0,32,24);
       const d=lumCtx.getImageData(0,0,32,24).data; let s=0; for(let i=0;i<d.length;i+=4) s+=0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2]; return s/(d.length/4)/255; }catch(e){ return null; } }
-    const SAC=[{x:0.16,y:0.5},{x:0.84,y:0.5},{x:0.5,y:0.2},{x:0.5,y:0.8},{x:0.2,y:0.28},{x:0.8,y:0.72}];
+    // saccade targets constrained to the reading band (jumps along the text, not screen corners)
+    const SAC=[{x:0.33,y:0.46},{x:0.67,y:0.46},{x:0.33,y:0.53},{x:0.67,y:0.53},{x:0.50,y:0.44},{x:0.50,y:0.55}];
 
     /* ---- gaze/aperture inputs (stub-overridable) ---- */
     MV.onGaze = function(x,y){ gazeRaw.x=x; gazeRaw.y=y; MV._gx=x; MV._gy=y; };
@@ -1026,7 +1027,7 @@
     addEventListener('touchmove',e=>{ if(!isCamera&&e.touches[0]) MV.onGaze(e.touches[0].clientX/innerWidth, e.touches[0].clientY/innerHeight); },{passive:true});
 
     function start(useCam){
-      running=true; trialN=0; idx=Math.floor(N/2); step=2; lastDir=0; reversals=0;
+      running=true; trialN=0; idx=1; step=2; lastDir=0; reversals=0;   // start gentle, creep up
       order.forEach(c=>{ev[c.id]=0.5;seen[c.id]=0;comfortVote[c.id]=0;obs[c.id]={apSum:0,apN:0,blk:0,errSum:0,errN:0,ms:0};}); byId('eviList').innerHTML='';
       byId('inst').classList.toggle('show',true);
       byId('statuswrap').classList.add('show');
@@ -1067,9 +1068,10 @@
       setHint(true);
     }
 
-    function pursuitPath(t){ // smooth lissajous in 0.12..0.88
-      const x=0.5+0.36*Math.sin(t*1.1)*Math.cos(t*0.6);
-      const y=0.46+0.30*Math.sin(t*1.7+0.7);
+    function pursuitPath(t){ // smooth-pursuit sweep ACROSS the reading text (so following the light = reading the lit line)
+      const sweep=(Math.sin(t*0.85)+1)/2;        // 0..1 left↔right across the text
+      const x=0.31+sweep*0.38;                    // 0.31..0.69 — within the reading card
+      const y=0.47+0.05*Math.sin(t*0.31);         // 0.42..0.52 — drifts gently over the lines
       return {x,y};
     }
 
@@ -1241,9 +1243,11 @@
           tctx.fillStyle='rgba(255,210,170,1)'; tctx.beginPath(); tctx.arc(p.x*TW,p.y*TH, 3+(11-k)*0.7, 0,7); tctx.fill(); }
         tctx.globalAlpha=1;
       }
-      // the light
-      glow(txp,typ,18,'rgba(255,225,190,.95)');
-      tctx.fillStyle='#fff'; tctx.beginPath(); tctx.arc(txp,typ,6,0,7); tctx.fill();
+      // the light — dark halo + ring so it stays visible on BOTH dark and bright settings
+      tctx.beginPath(); tctx.arc(txp,typ,12,0,7); tctx.fillStyle='rgba(8,10,16,.45)'; tctx.fill();
+      glow(txp,typ,15,'rgba(255,210,150,.95)');
+      tctx.beginPath(); tctx.arc(txp,typ,5.5,0,7); tctx.fillStyle='#fff'; tctx.fill();
+      tctx.lineWidth=1.6; tctx.strokeStyle='rgba(16,20,30,.75)'; tctx.beginPath(); tctx.arc(txp,typ,5.6,0,7); tctx.stroke();
     }
     function drawIdle(){ tctx.setTransform(DPR,0,0,DPR,0,0); tctx.clearRect(0,0,TW,TH); }
     // walkthrough preview: a calm orb orbiting near center with the gaze ring, so step 1 has a live thing to point at
@@ -1423,7 +1427,7 @@
       ['hunt','inst','evibox','statuswrap','controls','progress'].forEach(id=>{const e=byId(id);if(e)e.classList.add('show');});
       const sp=byId('statusPill'); if(sp)sp.dataset.state='live'; const stx=byId('statusTxt'); if(stx)stx.textContent='live tuning · on-device';
       const pt=byId('progTxt'); if(pt)pt.textContent='Live — adjusting to your eyes continuously';
-      this.t0=0; this.raf=requestAnimationFrame(this.loop.bind(this)); MV.toast&&MV.toast('Live tuning on — it keeps adjusting to your eyes. Tap “too harsh” any time.'); },
+      this.t0=0; this.raf=requestAnimationFrame(this.loop.bind(this)); MV.toast&&MV.toast('Live tuning on — it keeps adjusting to your eyes. Press “Worse” (or click anywhere) any time.'); },
     stop(){ this.active=false; if(this.raf)cancelAnimationFrame(this.raf); this.raf=null; try{ window.eyeComfort&&window.eyeComfort.applyLive&&window.eyeComfort.applyLive(null); }catch(e){} },
     tap(webDir){ if(this.ctrl) this.apply(this.ctrl.tap(webDir>0?-1:+1)); },   // web +1=too-harsh → controller -1
     apply(cmd){ if(!cmd)return;
