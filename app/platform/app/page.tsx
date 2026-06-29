@@ -221,6 +221,8 @@ export default function PlatformAppPage() {
                 restingSymptomScore,
                 symptoms: selectedSymptomIds,
                 dataConsent: welcome?.dataConsent ?? false,
+                hrVerified: feed.live,
+                hrSource: device.connect,
               },
             })
             setStep('home')
@@ -264,7 +266,7 @@ export default function PlatformAppPage() {
               bandLow: prescription?.lowerBpm,
               bandHigh: prescription?.upperBpm,
               condition,
-              payload: { ...log, dataConsent: welcome?.dataConsent ?? false },
+              payload: { ...log, dataConsent: welcome?.dataConsent ?? false, hrVerified: feed.live, hrSource: device.connect },
             })
             setStep('progress')
           }}
