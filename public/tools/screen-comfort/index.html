@@ -433,7 +433,7 @@
     <div id="mv-surface">
       <div class="blob" id="bA"></div><div class="blob" id="bB"></div>
       <div class="blob" id="bC"></div><div class="blob" id="bD"></div>
-      <div id="readcard" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,84%);background:#fbfaf7;color:#1a1714;border-radius:16px;padding:36px 44px;box-shadow:0 24px 70px rgba(0,0,0,.4);font-family:Newsreader,Georgia,serif;line-height:1.62;z-index:1">
+      <div id="readcard" style="display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,84%);background:#fbfaf7;color:#1a1714;border-radius:16px;padding:36px 44px;box-shadow:0 24px 70px rgba(0,0,0,.4);font-family:Newsreader,Georgia,serif;line-height:1.62;z-index:1">
         <h3 style="font:600 22px/1.3 Newsreader,serif;margin:0 0 14px">A quiet test of light</h3>
         <p style="font-size:16.5px;margin:0 0 11px">Just read this, naturally. As you read, the screen behind these words is slowly shifting its brightness, colour and contrast — searching for the light your eyes are calmest under.</p>
         <p style="font-size:16.5px;margin:0 0 11px">Most settings will feel fine. The moment one feels <em>worse</em> on your eyes — too bright, too sharp, harder to read — press the button below. The screen eases at once, then keeps tuning to you.</p>
@@ -824,6 +824,7 @@
     ['hunt','inst','evibox','statuswrap'].forEach(id=> byId(id).classList.toggle('show', showHud));
     byId('controls').classList.toggle('show', showHud);
     byId('progress').classList.toggle('show', name==='assess');
+    const rc=byId('readcard'); if(rc) rc.style.display = (name==='assess') ? 'block' : 'none';   // reading surface: assessment only
     if(name==='walkthrough') buildCoach();
     if(name!=='assess') clearScreen();
     MV._phase=name;
