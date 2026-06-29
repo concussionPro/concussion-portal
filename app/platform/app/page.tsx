@@ -82,6 +82,14 @@ export default function PlatformAppPage() {
 
   const condition: Condition = welcome?.condition ?? 'concussion'
 
+  // Per-clinic QR deep link (/sst-trainer?clinic=CODE) → pre-fill the clinic code
+  // in onboarding. Read client-side (no Suspense bailout).
+  const [urlClinicCode, setUrlClinicCode] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('clinic')?.trim()
+    if (code) setUrlClinicCode(code.toUpperCase())
+  }, [])
+
   // Live HR feed from the REAL paired connection (same value drives the
   // threshold-test ramp and the training gauge). Null connection → 'manual'.
   const feed = useLiveHr(connection)
@@ -141,6 +149,7 @@ export default function PlatformAppPage() {
       {step === 'welcome' && (
         <SstOnboarding
           device={device}
+          initialClinicCode={urlClinicCode}
           onPair={handlePair}
           onStart={(r: OnboardingResult) => {
             setWelcome(r.welcome)

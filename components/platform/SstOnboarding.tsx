@@ -59,14 +59,17 @@ export default function SstOnboarding({
   device,
   onPair,
   onStart,
+  initialClinicCode,
 }: {
   device: HrSource
   /** lifts the chosen source + the REAL connection (or null for manual) up to the page */
   onPair: (d: HrSource, connection: LiveHrConnection | null) => void
   onStart: (result: OnboardingResult) => void
+  /** pre-fill from a per-clinic QR deep link (/sst-trainer?clinic=CODE) */
+  initialClinicCode?: string
 }) {
-  const [mode, setMode] = useState<TrainerMode>('self-guided')
-  const [clinicCode, setClinicCode] = useState('')
+  const [mode, setMode] = useState<TrainerMode>(initialClinicCode ? 'clinic-code' : 'self-guided')
+  const [clinicCode, setClinicCode] = useState(initialClinicCode ?? '')
   const [patientName, setPatientName] = useState('')
   const [goal, setGoal] = useState<string | null>(null)
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
