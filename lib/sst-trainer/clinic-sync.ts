@@ -22,6 +22,42 @@ export interface ClinicSyncInput {
   payload?: unknown
 }
 
+/**
+ * LIVE in-session tick — pushes the patient's current HR/band/zone every few
+ * seconds WHILE training, so the clinician dashboard can watch in real time.
+ * Fire-and-forget; only fires when a clinic code is present.
+ */
+export function pushLiveTick(input: {
+  clinicCode?: string | null
+  patientLabel?: string | null
+  bpm?: number | null
+  bandLow?: number | null
+  bandHigh?: number | null
+  elapsedSec?: number | null
+  phase?: string | null
+}): void {
+  const code = input.clinicCode?.trim()
+  if (!code) return
+  try {
+    void fetch('/api/sst/live', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clinicCode: code,
+        patientLabel: input.patientLabel ?? null,
+        bpm: input.bpm ?? null,
+        bandLow: input.bandLow ?? null,
+        bandHigh: input.bandHigh ?? null,
+        elapsedSec: input.elapsedSec ?? null,
+        phase: input.phase ?? null,
+      }),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {
+    /* best-effort — never throw into the patient UI */
+  }
+}
+
 export function syncSessionToClinic(input: ClinicSyncInput): void {
   const code = input.clinicCode?.trim()
   if (!code) return // self-guided — nothing flows

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type {
   Condition,
   Prescription,
@@ -19,7 +19,7 @@ import ResultPrescription from '@/components/sst-trainer/ResultPrescription'
 import HomeHub from '@/components/sst-trainer/HomeHub'
 import TrainingSession from '@/components/sst-trainer/TrainingSession'
 import ProgressDashboard from '@/components/sst-trainer/ProgressDashboard'
-import { syncSessionToClinic } from '@/lib/sst-trainer/clinic-sync'
+import { syncSessionToClinic, pushLiveTick } from '@/lib/sst-trainer/clinic-sync'
 import { SstAppShell } from '@/components/platform/SstAppShell'
 import SstOnboarding, { type OnboardingResult } from '@/components/platform/SstOnboarding'
 import SstPwaRegister from '@/components/platform/SstPwaRegister'
@@ -89,6 +89,27 @@ export default function PlatformAppPage() {
       connection?.stop()
     }
   }, [connection])
+
+  // LIVE in-session monitoring: while training with a clinic code, push the
+  // current HR/band every 3s so the clinician dashboard can watch in real time.
+  // A ref carries the latest values so the interval stays stable (no resets).
+  const liveRef = useRef({ bpm: feed.bpm, code: welcome?.clinicCode, name: welcome?.patientName, low: prescription?.lowerBpm, high: prescription?.upperBpm })
+  liveRef.current = { bpm: feed.bpm, code: welcome?.clinicCode, name: welcome?.patientName, low: prescription?.lowerBpm, high: prescription?.upperBpm }
+  useEffect(() => {
+    if (step !== 'training' || !welcome?.clinicCode) return
+    const start = Date.now()
+    const tick = () => {
+      const d = liveRef.current
+      pushLiveTick({
+        clinicCode: d.code, patientLabel: d.name, bpm: d.bpm,
+        bandLow: d.low ?? null, bandHigh: d.high ?? null,
+        elapsedSec: Math.round((Date.now() - start) / 1000), phase: 'training',
+      })
+    }
+    tick()
+    const iv = setInterval(tick, 3000)
+    return () => clearInterval(iv)
+  }, [step, welcome?.clinicCode])
 
   // Pair a source: stop any previous connection, then adopt the new one.
   const handlePair = (d: HrSource, conn: LiveHrConnection | null) => {

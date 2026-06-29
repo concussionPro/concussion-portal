@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { SstLivePanel } from '@/components/sst-trainer/SstLivePanel'
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
   AlertTriangle, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock, NotebookPen,
@@ -290,6 +291,7 @@ export default function ClinicalHubPage() {
   const [selectedId, setSelectedId] = useState('p1')
   const [query, setQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+  const [clinicCode, setClinicCode] = useState('')
 
   // Real data: ?clinic=<code> loads that clinic's actual SST sessions from
   // /api/sst/clinic-sessions (additive — without the param the Hub shows the
@@ -297,6 +299,7 @@ export default function ClinicalHubPage() {
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get('clinic')
     if (!code) return
+    setClinicCode(code.toUpperCase())
     fetch(`/api/sst/clinic-sessions?code=${encodeURIComponent(code)}`)
       .then((r) => r.json())
       .then((data: { patients?: ApiPatient[] }) => {
@@ -343,6 +346,8 @@ export default function ClinicalHubPage() {
       </div>
 
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+        {/* Live in-session monitor — only with a real ?clinic=<code> */}
+        {clinicCode && <SstLivePanel code={clinicCode} />}
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
           <div className="flex items-center gap-3">
