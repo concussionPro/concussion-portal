@@ -89,6 +89,17 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             )}
           </div>
 
+          {/* Purpose: warm, named EP contact — lead with WHO delivers it before
+              the two-stream product tour. The trial-first/proof-later CRO order
+              is tuned for COLD traffic; for an engaged contact the credibility
+              frame should load first, so the bio sits above the stream selector
+              here (and the duplicate later instance is gated out). Zac 2026-07-01. */}
+          {isPurpose && (
+            <div data-track-section="credibility" className="mb-6">
+              <ZacCredibility />
+            </div>
+          )}
+
           {/* Purpose: the two-stream selector front-and-centre on the home page —
               they pick a discipline and see that stream's modules / the difference,
               before the rest of the pitch. Gated to Purpose (ESSA-pending EP stream). */}
@@ -102,10 +113,6 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               }}
             />
           )}
-
-          <div data-track-section="credibility">
-            <ZacCredibility />
-          </div>
 
           {/* Trial CTA — hidden for the Purpose demo: the dual-stream selector
               above already surfaces both CCM + CRM Module 1 trials, so a second
@@ -163,10 +170,10 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                   </p>
                 </div>
                 <h3 className="text-lg sm:text-xl font-bold text-foreground mb-1 leading-tight">
-                  Clinical pack · outreach kit · admin micro-course
+                  For clinicians <span className="text-muted-foreground font-semibold">&</span> your front desk
                 </h3>
                 <p className="text-[13px] text-muted-foreground leading-relaxed">
-                  Fillable templates pre-populated with {clinic.shortName}&apos;s name. GP letters, NDIS, school sport intake, RTP tracking, capability one-pager, front-desk training.
+                  Clinical pack pre-populated with {clinic.shortName}&apos;s name — GP letters, NDIS, school sport intake, RTP tracking — <strong className="text-foreground/80">plus an admin micro-course</strong> so reception can field concussion calls and bookings.
                 </p>
               </div>
               <div className="shrink-0 inline-flex items-center gap-1.5 text-sm font-bold bg-accent text-white px-4 py-2.5 rounded-lg shadow-sm group-hover:translate-x-0.5 transition-transform">
@@ -176,40 +183,12 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             </div>
           </Link>
 
-          {/* Onsite hero — hidden for the Purpose demo: it's only a teaser that
-              jumps to #pricing, which sits just below, so it adds a heavy dark
-              block without new information. Live pitches keep it. */}
+          {/* Bio renders above the stream selector for Purpose (see note in hero),
+              so only show it here for live pitches. */}
           {!isPurpose && (
-          <a
-            data-track-section="onsite-hero"
-            data-track-cta="onsite-hero-see-pricing"
-            href="#pricing"
-            className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg group hover:shadow-xl transition-shadow"
-          >
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,#fbbf24,transparent_60%)]" />
-            <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-amber-400/20 backdrop-blur flex items-center justify-center">
-                    <GraduationCap className="w-4 h-4 text-amber-300" strokeWidth={2} />
-                  </div>
-                  <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-300">
-                    {cityUnknown ? `On-site at ${clinic.shortName}` : `The day at ${clinic.city}`} · highest-value product
-                  </p>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">
-                  On-site Practical Skills · your team trained on your own cases
-                </h3>
-                <p className="text-sm text-white/85 leading-relaxed">
-                  Full practical day in-clinic. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
-                </p>
-              </div>
-              <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-300 text-slate-900 px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
-                See pricing
-                <ArrowUpRight className="w-4 h-4" />
-              </div>
+            <div data-track-section="credibility">
+              <ZacCredibility />
             </div>
-          </a>
           )}
 
           {/* Team snapshot bento */}
@@ -226,6 +205,44 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             </div>
           )}
 
+          {/* On-site offer — the high-ticket team option. Placed AFTER the trial
+              + content (clinical + admin toolkit) + context sections (Zac
+              2026-06-30): prospects sample the product before the on-site pitch,
+              and it sits implicitly atop the pricing ladder below rather than as
+              an early hero. Jumps to #pricing directly beneath. Purpose hidden. */}
+          {!isPurpose && (
+          <a
+            data-track-section="onsite-hero"
+            data-track-cta="onsite-hero-see-pricing"
+            href="#pricing"
+            className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg group hover:shadow-xl transition-shadow"
+          >
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,#fbbf24,transparent_60%)]" />
+            <div className="relative p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-400/20 backdrop-blur flex items-center justify-center">
+                    <GraduationCap className="w-4 h-4 text-amber-300" strokeWidth={2} />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-amber-300">
+                    {cityUnknown ? `On-site at ${clinic.shortName}` : `The day at ${clinic.city}`} · your whole team, in your clinic
+                  </p>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">
+                  On-site Practical Skills · your team trained on your own cases
+                </h3>
+                <p className="text-sm text-white/85 leading-relaxed">
+                  Full practical day in-clinic · <span className="font-bold text-white">from A$7,500</span>. 8 hrs online pre-work + 1 day on-site = 14 CPD hrs · OA-endorsed.
+                </p>
+              </div>
+              <div className="shrink-0 flex items-center gap-2 text-sm font-bold bg-amber-300 text-slate-900 px-5 py-3 rounded-xl shadow-md group-hover:scale-[1.02] transition-transform">
+                See pricing
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
+          </a>
+          )}
+
           {/* Pricing — small clinics (2–5 clinical) get the self-serve Hub Pack
               (online, no travel, can check out); ≥6 get the on-site cohort
               (book-a-call, since no-one cold-checks-out a $5–10k team day). */}
@@ -235,6 +252,13 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
             ) : (
               <PricingTiers clinic={clinic} pricing={pricing} />
             )}
+          </div>
+
+          {/* Individual enrolment — the DIY tier, kept beside Hub/on-site so the
+              single → hub → on-site ladder reads together: do it yourself and
+              come to a course, or provide it for your team. */}
+          <div data-track-section="individual-signup">
+            <IndividualInterestCard />
           </div>
 
           {/* Risk reversal */}
@@ -250,13 +274,6 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           {/* Booking + reply CTAs (consolidated; workshop fallback removed — on-site only) */}
           <div data-track-section="next-step">
             <NextStepCTA clinic={clinic} />
-          </div>
-
-          {/* Quiet pointer to individual enrolment — for clinicians who land
-              on the dashboard and would rather enrol themselves than wait for
-              the team deal. Links straight to /pricing. */}
-          <div data-track-section="individual-signup">
-            <IndividualInterestCard />
           </div>
 
           {/* Footer */}

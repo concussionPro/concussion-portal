@@ -21,12 +21,13 @@ export type DetailedStreams = { slug: string; accessKey: string; ccm: StreamModu
 
 type StreamId = 'ccm' | 'crm'
 const STREAMS: Record<StreamId, {
-  code: string; name: string; who: string; cpd: string; accredBody: string; accredNote: string; icon: typeof GraduationCap; modules: string[]
+  code: string; name: string; audience: string; tagline: string; cpd: string; accredBody: string; accredNote: string; icon: typeof GraduationCap; modules: string[]
 }> = {
   ccm: {
     code: 'CCM',
     name: 'Concussion Clinical Mastery',
-    who: 'Assessment, diagnosis & return-to-play — for physios & allied health',
+    audience: 'For physios & allied health',
+    tagline: 'Assessment, diagnosis & return-to-play',
     cpd: '8 CPD hours online',
     accredBody: 'AHPRA-aligned · OA-endorsed',
     accredNote: 'Counts toward your AHPRA CPD',
@@ -45,10 +46,11 @@ const STREAMS: Record<StreamId, {
   crm: {
     code: 'CRM',
     name: 'Concussion Rehab Mastery',
-    who: 'The exercise-rehab pathway — built for exercise physiologists',
+    audience: 'For exercise physiologists',
+    tagline: 'The exercise-rehab pathway',
     cpd: '8 CPD hours online',
-    accredBody: 'ESSA-aligned · OA-endorsed',
-    accredNote: 'Counts toward your ESSA CPD',
+    accredBody: 'ESSA endorsement pending',
+    accredNote: 'CRM has been submitted to ESSA for CPD endorsement — approval pending',
     icon: HeartPulse,
     modules: [
       'Concussion for the Exercise Physiologist',
@@ -115,7 +117,10 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
               </div>
               <p className={`text-2xl sm:text-3xl font-bold tracking-tight leading-none ${on ? 'text-white' : 'text-foreground'}`}>{s.code}</p>
               <p className={`text-sm font-semibold mt-1.5 ${on ? 'text-emerald-50' : 'text-accent'}`}>{s.name}</p>
-              <p className={`text-xs mt-2 leading-snug ${on ? 'text-white/80' : 'text-muted-foreground'}`}>{s.who}</p>
+              {/* Audience as a prominent headline — who each stream is FOR is the
+                  fastest signal for a prospect scanning the two cards (Zac 2026-07-01). */}
+              <p className={`text-lg sm:text-xl font-bold tracking-tight leading-tight mt-3 ${on ? 'text-white' : 'text-foreground'}`}>{s.audience}</p>
+              <p className={`text-xs mt-1 leading-snug ${on ? 'text-white/80' : 'text-muted-foreground'}`}>{s.tagline}</p>
               <span className={`inline-flex items-center mt-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${on ? 'bg-white/15 text-white' : 'bg-accent/10 text-accent'}`}>{s.accredBody}</span>
             </button>
           )
@@ -134,6 +139,18 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
           </div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-accent">{active.cpd} · {active.accredBody}</span>
         </div>
+
+        {/* ESSA approval is genuinely pending — the CRM stream PDO is submitted,
+            not yet endorsed. Surface that explicitly so the pitch never implies
+            live ESSA accreditation it doesn't have (Zac 2026-07-01). */}
+        {stream === 'crm' && (
+          <div className="-mt-2 mb-5 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5">
+            <Clock className="w-3.5 h-3.5 text-amber-700 mt-0.5 flex-shrink-0" strokeWidth={2} />
+            <p className="text-[12px] text-amber-800 leading-snug">
+              <strong>ESSA endorsement pending.</strong> The CRM stream has been submitted to ESSA for CPD endorsement — approval is in progress, not yet granted. Modules are preview-only until it lands.
+            </p>
+          </div>
+        )}
 
         {activeModules ? (
           <div className="space-y-2.5">
