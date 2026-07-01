@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SstLivePanel } from '@/components/sst-trainer/SstLivePanel'
+import { SstTrajectory, type TrajectoryPoint } from '@/components/sst-trainer/SstTrajectory'
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
   AlertTriangle, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock, NotebookPen,
@@ -33,6 +34,7 @@ type Patient = {
   baseline: 'captured' | 'due' | 'none'
   baselineDate?: string
   trend: number[]          // symptom score over weeks (lower = better)
+  hrtPoints?: TrajectoryPoint[]  // serial MEASURED HRt = the recovery-trajectory instrument
   sessions: Session[]
   flag?: string
   notes?: string
@@ -44,6 +46,13 @@ const PATIENTS: Patient[] = [
     injuryDate: '2 Jun 2026', daysPost: 22, stage: { n: 4, label: 'Sub-symptom aerobic' },
     hrt: 148, bandLow: 118, bandHigh: 133, restSymptoms: 2, baseline: 'captured', baselineDate: '14 Mar 2026',
     trend: [38, 31, 22, 14, 9, 5],
+    hrtPoints: [
+      { date: '2026-06-04', hrt: 128, source: 'bluetooth', verified: true, gated: true },
+      { date: '2026-06-11', hrt: 135, source: 'camera', verified: true, gated: true },
+      { date: '2026-06-18', hrt: 142, source: 'bluetooth', verified: true, gated: true },
+      { date: '2026-06-21', hrt: 139, source: 'manual', verified: false, gated: true },
+      { date: '2026-06-24', hrt: 148, source: 'bluetooth', verified: true, gated: true },
+    ],
     sessions: [
       { date: 'Today', avgHr: 126, peakHr: 134, mins: 18, symptomDelta: 0, status: 'clean' },
       { date: '22 Jun', avgHr: 124, peakHr: 131, mins: 18, symptomDelta: 1, status: 'clean' },
@@ -64,6 +73,12 @@ const PATIENTS: Patient[] = [
     injuryDate: '9 May 2026', daysPost: 46, stage: { n: 6, label: 'Return-to-sport progression' },
     hrt: 171, bandLow: 154, bandHigh: 162, restSymptoms: 0, baseline: 'captured', baselineDate: '2 Feb 2026',
     trend: [29, 20, 12, 6, 2, 0, 0],
+    hrtPoints: [
+      { date: '2026-05-12', hrt: 142, source: 'bluetooth', verified: true, gated: true },
+      { date: '2026-05-26', hrt: 156, source: 'bluetooth', verified: true, gated: true },
+      { date: '2026-06-09', hrt: 164, source: 'bluetooth', verified: true, gated: true },
+      { date: '2026-06-23', hrt: 171, source: 'bluetooth', verified: true, gated: true },
+    ],
     sessions: [
       { date: 'Today', avgHr: 158, peakHr: 168, mins: 30, symptomDelta: 0, status: 'clean' },
       { date: '23 Jun', avgHr: 156, peakHr: 165, mins: 28, symptomDelta: 0, status: 'clean' },
@@ -75,6 +90,10 @@ const PATIENTS: Patient[] = [
     injuryDate: '13 Jun 2026', daysPost: 11, stage: { n: 3, label: 'Sub-symptom aerobic' },
     hrt: 139, bandLow: 111, bandHigh: 125, restSymptoms: 3, baseline: 'none',
     trend: [40, 33, 27],
+    hrtPoints: [
+      { date: '2026-06-16', hrt: 124, source: 'camera', verified: true, gated: true },
+      { date: '2026-06-23', hrt: 139, source: 'bluetooth', verified: true, gated: true },
+    ],
     sessions: [
       { date: 'Today', avgHr: 117, peakHr: 126, mins: 14, symptomDelta: 1, status: 'clean' },
       { date: '22 Jun', avgHr: 114, peakHr: 122, mins: 12, symptomDelta: 2, status: 'clean' },
@@ -245,7 +264,7 @@ type ApiPatient = {
   hrt?: number | null
   bandLow?: number | null
   bandHigh?: number | null
-  hrtTrajectory?: { hrt?: number | null }[]
+  hrtTrajectory?: { date?: string; hrt?: number | null; source?: string; verified?: boolean; gated?: boolean }[]
   sessions?: { date?: string; avgHr?: number; peakHr?: number; minutes?: number; mins?: number; symptomDelta?: number }[]
   clearanceReady?: boolean
 }
@@ -278,7 +297,14 @@ function mapRealPatient(p: ApiPatient, clinicCode: string, i: number): Patient {
     bandHigh: p.bandHigh ?? 0,
     restSymptoms: 0,
     baseline: 'none',
-    trend: (p.hrtTrajectory ?? []).map((t) => Number(t.hrt) || 0).filter(Boolean), // serial HRt = recovery curve
+    trend: (p.hrtTrajectory ?? []).map((t) => Number(t.hrt) || 0).filter(Boolean), // legacy symptom-style sparkline (unused for HRt now)
+    hrtPoints: (p.hrtTrajectory ?? []).map((t) => ({
+      date: t.date ?? '',
+      hrt: t.hrt ?? null,
+      source: t.source,
+      verified: t.verified === true,
+      gated: t.gated === true,
+    })),
     sessions,
     flag: p.clearanceReady
       ? 'Recovered — no-intolerance on re-test. Ready for your clearance review.'
@@ -519,17 +545,10 @@ export default function ClinicalHubPage() {
                 )}
               </div>
 
-              {/* Recovery trajectory */}
-              <div className="glass-premium rounded-2xl p-5 sm:p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
-                    <h3 className="text-sm font-bold text-foreground">Recovery trajectory</h3>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground">symptom score / week</span>
-                </div>
-                <Trend data={p.trend} />
-              </div>
+              {/* Measured-HRt recovery-trajectory instrument — the wedge made
+                  visible (serial MEASURED HRt, not a symptom-score curve), with
+                  per-point provenance + clinician-gated-only enforcement. */}
+              <SstTrajectory points={p.hrtPoints ?? []} />
             </div>
 
             {/* Baseline & serial testing — the SCAT6/SCOAT6 tool */}

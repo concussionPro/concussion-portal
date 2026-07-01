@@ -70,7 +70,7 @@ export function SstLivePanel({ code }: { code: string }) {
         <span className="text-xs text-slate-500">{active.length ? `${active.length} training` : 'no active sessions'}</span>
       </div>
       <p className="text-[11.5px] text-slate-500 -mt-2 mb-3">
-        Every reading streams from the patient&rsquo;s own wearable and is verified live — never estimated or filled in. Recovery data you can act on.
+        <strong>Provenance-verified</strong> live HR — streamed from a paired sensor and signal-quality gated, never held or estimated. This is a data-integrity guarantee, <strong>not an accuracy guarantee</strong>: chest-strap HR is most accurate, wrist/optical has known error during exercise. Interpret with clinical judgment.
       </p>
 
       {active.length === 0 ? (

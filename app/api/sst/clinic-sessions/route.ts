@@ -52,10 +52,16 @@ export async function GET(request: NextRequest) {
         hrt: latest?.hrt_bpm ?? null,
         bandLow: latest?.band_low ?? null,
         bandHigh: latest?.band_high ?? null,
-        // serial HRt = the recovery curve
+        // serial MEASURED HRt = the recovery-trajectory instrument. Each point
+        // carries provenance (source tier + verified) so the curve is
+        // self-documenting; `gated` is true because only clinic-code
+        // (clinician-overseen) sessions ever reach this table.
         hrtTrajectory: p.thresholds.map((t) => ({
           date: t.created_at,
           hrt: t.hrt_bpm,
+          source: (t.payload?.hrSource as string | undefined) ?? undefined,
+          verified: t.payload?.hrVerified === true,
+          gated: true,
           interpretation: (t.payload?.interpretation as string | undefined) ?? null,
         })),
         sessions: p.trainings.map((t) => ({ date: t.created_at, ...(t.payload ?? {}) })),
