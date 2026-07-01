@@ -5,6 +5,10 @@
       "schedule": "0 22 * * *"
     },
     {
+      "path": "/api/cron/completer-conversion",
+      "schedule": "30 22 * * *"
+    },
+    {
       "path": "/api/cron/monitoring",
       "schedule": "0 20 * * *"
     },

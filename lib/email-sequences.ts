@@ -13,7 +13,7 @@
  * - Stop after 6 emails. No more sales emails after that.
  */
 
-import { CONFIG } from '@/lib/config'
+import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { escapeHtml } from '@/lib/resend-client'
 import { signSurveyAnswer } from '@/lib/survey-token'
 import { findCourse, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
@@ -894,6 +894,82 @@ export const SCAT_COMPLETER_PERSONAL_FOLLOWUP = {
     <p style="font-size: 14px; color: #475569; margin: 0 0 14px;">No pitch follows. No automated sequence is triggered by this &mdash; we&rsquo;re optimising how we help clinicians upskill, and your answer shapes what we build next.</p>
     <p style="font-size: 14px; margin: 18px 0 0;">Thanks,<br>Zac</p>
     <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">Concussion Education Australia &middot; Melbourne, VIC</p>
+  `),
+}
+
+// ─── Completer conversion — BEHAVIOUR-triggered (not survey-answer) ──────────
+//
+// Free-course completers (all 3 SCAT modules, still preview) get ONE targeted
+// conversion email chosen by what they DID, not what they said in the survey.
+// The survey promises "no automated sequence is triggered by this", so these
+// branch off behaviour signals (workshop-interest / pricing-view / neither),
+// keeping that promise intact. One email per user, ever (deduped in the cron).
+
+/** Branch 1 — viewed pricing / started checkout but didn't buy. Price/value
+ *  objection: restack the value, reinstate the standing $50 code, no fake
+ *  scarcity. */
+export const COMPLETER_CONVERT_PRICE = {
+  subject: 'The concussion course — your $50 code is still active',
+  template: (name: string, pricingLink: string) => {
+    const discounted = CONFIG.COURSE.PRICE_ONLINE - 50
+    return emailShell(`
+      <h2>Hi ${escapeHtml(name.split(' ')[0])} — still weighing it up?</h2>
+      <p>You finished SCAT6 Mastery and had a look at the full online course. Totally fair to take your time, so here's the honest case for it.</p>
+      <p>SCAT6 tells you how to <em>assess</em>. The online course is the part that tells you what to <em>do next</em> — the bit most concussion CPD skips:</p>
+      <ul>
+        <li><strong>Phenotype-based rehab</strong> — vestibular, autonomic, cervicogenic and migraine subtypes, each with a targeted protocol</li>
+        <li><strong>VOMS &amp; BESS</strong> — the assessments that separate a confident clinician from a guessing one</li>
+        <li><strong>Return-to-play, work &amp; school</strong> — staged protocols and the documentation that protects you medico-legally</li>
+        <li><strong>Persistent symptoms</strong> — when recovery stalls and how to intervene</li>
+      </ul>
+      <div class="callout">
+        <strong>Your code ${CONFIG.COURSE.PROMO_CODE} is still active</strong> — $50 off the online modules brings it to <strong>A$${discounted}</strong> (was A$${CONFIG.COURSE.PRICE_ONLINE}). ${escapeHtml(afterpayInstalment(discounted))}
+      </div>
+      <center><a href="${utm(pricingLink + (pricingLink.includes('?') ? '&' : '?') + 'promo=' + CONFIG.COURSE.PROMO_CODE, 'completer_convert_price', 'apply_code')}" class="cta-btn">Apply my code &amp; enrol</a></center>
+      <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">8 online modules &middot; 8 CPD hours &middot; lifetime access &middot; Osteopathy Australia endorsed</p>
+      <p class="ps">P.S. Prefer the hands-on day too? You can add the in-person workshop later and only pay the difference.</p>
+      <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+    `)
+  },
+}
+
+/** Branch 2 — completed but never opened pricing. Awareness/relevance: they
+ *  may not know what the paid course even adds. */
+export const COMPLETER_CONVERT_RELEVANCE = {
+  subject: "You've got SCAT6 down — here's what comes after",
+  template: (name: string, pricingLink: string) => emailShell(`
+    <h2>Nice work finishing SCAT6 Mastery, ${escapeHtml(name.split(' ')[0])}</h2>
+    <p>That covers the assessment side. Most clinicians tell us the harder part is what happens <em>after</em> the sideline test — the management and rehab that actually gets someone back to sport, work and school safely.</p>
+    <p>That's the whole online course. Eight modules built for exactly that gap:</p>
+    <ul>
+      <li>Concussion pathophysiology — the neurometabolic cascade in plain clinical terms</li>
+      <li>Persistent post-concussive symptoms — recognising and managing the stalled recovery</li>
+      <li>Phenotype-specific rehabilitation — vestibular, autonomic, cervicogenic, migraine</li>
+      <li>Return-to-play, work &amp; school — staged protocols and defensible documentation</li>
+    </ul>
+    <center><a href="${utm(pricingLink, 'completer_convert_relevance', 'see_course')}" class="cta-btn">See the online course</a></center>
+    <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">A$${CONFIG.COURSE.PRICE_ONLINE} &middot; 8 modules &middot; 8 CPD hours &middot; lifetime access &middot; Osteopathy Australia endorsed</p>
+    <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
+  `),
+}
+
+/** Branch 3 — registered workshop interest. Point them at the pathway and let
+ *  them start the online pre-work now while their city's date firms up. */
+export const COMPLETER_CONVERT_WORKSHOP = {
+  subject: 'The hands-on day you registered interest in',
+  template: (name: string, pricingLink: string) => emailShell(`
+    <h2>Hi ${escapeHtml(name.split(' ')[0])} — you flagged wanting the hands-on day</h2>
+    <p>Good instinct: the practical skills (VOMS, BESS, vestibular and cervical assessment on real cases) land far better in person than on a screen.</p>
+    <p>Here's how the pathway works:</p>
+    <ul>
+      <li><strong>8 hours online pre-work</strong> — the full course, done at your own pace (8 CPD hours)</li>
+      <li><strong>1 day in person</strong> — the practical skills day (6 more CPD hours)</li>
+      <li><strong>= up to 14 CPD hours</strong> total, Osteopathy Australia endorsed</li>
+    </ul>
+    <p>You're already on the list for your city, so you'll be first to hear when the date is confirmed. In the meantime you can start the online pre-work now — it's the same course either way, and it counts toward the 14 hours.</p>
+    <center><a href="${utm(pricingLink, 'completer_convert_workshop', 'start_prework')}" class="cta-btn">Start the online course</a></center>
+    <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 4px;">A$${CONFIG.COURSE.PRICE_ONLINE} online &middot; add the in-person day later for the difference</p>
+    <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
   `),
 }
 
