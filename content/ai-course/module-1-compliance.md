@@ -3,7 +3,7 @@
 **Course:** AI in Clinical Practice
 **Provider:** Concussion Education Australia (CEA)
 **Author:** Zac Lewis — Osteopath (B.Clin.Sci., M.Ost.Med), AHPRA-registered (OST), Founder, Concussion Education Australia
-**Last reviewed:** 2026-05-22
+**Last reviewed:** 2026-07-02
 **Estimated reading time:** 40 minutes
 **Module weight:** Load-bearing — every later module assumes you have read this one
 
@@ -46,7 +46,7 @@ AHPRA does not certify, accredit, or endorse individual AI products. Any vendor 
 
 [REDFLAG: A vendor claiming "AHPRA-approved" or "AHPRA-certified" is a vendor red flag. AHPRA does not approve, certify, or endorse AI products — full stop.]
 
-The accurate phrasing is *"aligned with AHPRA's 2025 AI guidance"* or *"designed to support compliance with AHPRA's AI guidance"*. If a vendor pitches their tool to you as AHPRA-approved, treat that as a red flag about the vendor's general claims-handling.
+The accurate phrasing is *"aligned with AHPRA's 2024 AI guidance"* or *"designed to support compliance with AHPRA's AI guidance"*. If a vendor pitches their tool to you as AHPRA-approved, treat that as a red flag about the vendor's general claims-handling.
 
 [KEYPOINT: AHPRA's guidance does not prohibit AI use. It requires you to understand the tool, verify outputs, retain clinical responsibility, protect privacy, be transparent with patients, and document AI use in the record.]
 
@@ -85,7 +85,7 @@ The *Privacy Act 1988* (Cth) and its thirteen Australian Privacy Principles (APP
 OAIC publishes the authoritative APP Guidelines and specific generative-AI guidance — your two anchor sources.
 
 - [OAIC · Australian Privacy Principles Guidelines](https://www.oaic.gov.au/privacy/australian-privacy-principles)
-- [OAIC · Guidance on privacy and commercially-available AI products](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/hands-on-guides/guidance-on-privacy-and-the-use-of-commercially-available-ai-products)
+- [OAIC · Guidance on privacy and commercially-available AI products](https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/guidance-on-privacy-and-the-use-of-commercially-available-ai-products)
 
 Of the thirteen APPs, **six matter most** the moment an LLM enters a clinical workflow.
 
@@ -171,10 +171,23 @@ For AI workflows that means: vendor security posture (SOC 2 Type II, ISO 27001),
 | **Liability if breached** | Direct breach by APP entity | The APP entity is treated as having done the act itself (s 16C) |
 | **Relevance to LLMs** | Pasting transcripts into a chatbot for summarisation | Sending data to any US-hosted (or otherwise overseas) AI inference endpoint |
 
+### Two recent Privacy Act amendments you must know
+
+The *Privacy and Other Legislation Amendment Act 2024* (Cth) added two instruments that directly touch AI workflows:
+
+**1. The statutory tort for serious invasions of privacy — in force since 10 June 2025.** Schedule 2 of the *Privacy Act 1988* now gives individuals a direct cause of action for a serious invasion of privacy — by intrusion upon seclusion (which includes recording a person's private activities) or misuse of information — where the invasion was intentional or reckless and the person had a reasonable expectation of privacy. Damages for non-economic loss are capped at the greater of $478,550 or the defamation cap. Two features matter for clinics: the tort is **broader than the APPs** (it reaches individuals and entities that are not APP entities, and it can found vicarious liability for an employee's conduct), and an AI-scribe recording made without proper consent is precisely the kind of "recording of private activities" the intrusion limb contemplates. The APP analysis in this module is now the *floor*, not the whole exposure.
+
+[REDFLAG: Since 10 June 2025, a patient recorded by an AI scribe without informed consent has a potential direct damages claim under the statutory tort — separate from, and in addition to, any OAIC complaint under the APPs. Practices can be vicariously liable for a staff member's reckless AI use.]
+
+**2. Automated decision-making transparency (APP 1 amendment) — commences 10 December 2026.** From that date, if your practice has arranged for a computer program to make — or do a thing substantially and directly related to making — a decision that could reasonably be expected to significantly affect an individual's rights or interests, and personal information is used in that program, your APP privacy policy must disclose it in prescribed terms. Triage tools, eligibility screening, appointment-prioritisation and AI-assisted report generation can all qualify depending on how determinative the tool is. The OAIC consulted on its guidance in mid-2026 and intends to publish final guidance by around September 2026 — re-check your privacy policy against that guidance before December.
+
+[KEYPOINT: From 10 December 2026, AI tools that materially contribute to decisions significantly affecting a patient must be disclosed in your privacy policy in prescribed terms. Diarise a privacy-policy review for Q4 2026 once the OAIC's final ADM guidance lands (~September 2026).]
+
 ### Self-check
 
 1. Your practice signs up to an AI scribe vendor whose inference servers are in Oregon, USA. The vendor's DPA says they will not train on your data. Under APP 8, have you discharged your obligation? What further steps would you take?
 2. A locum at your clinic pastes a de-identified case summary into a free public LLM to draft a referral letter. Is APP 6 engaged? Is APP 8? Why or why not?
+3. Your clinic uses an AI intake tool that scores referrals and books urgent cases first. Which December 2026 obligation is engaged, and what document must change?
 
 ---
 
@@ -182,7 +195,7 @@ For AI workflows that means: vendor security posture (SOC 2 Type II, ISO 27001),
 
 [DEFINITION: TGA | The Therapeutic Goods Administration — the federal regulator of medicines, medical devices, and biologicals in Australia under the *Therapeutic Goods Act 1989* (Cth). The TGA also enforces the Therapeutic Goods Advertising Code.]
 
-The Therapeutic Goods Administration (TGA) regulates the advertising of therapeutic goods in Australia under the *Therapeutic Goods Act 1989* (Cth) and the *Therapeutic Goods Advertising Code 2021*. The Code is enforced strictly; the TGA publishes its compliance approach at <https://www.tga.gov.au/products/advertising-therapeutic-goods>.
+The Therapeutic Goods Administration (TGA) regulates the advertising of therapeutic goods in Australia under the *Therapeutic Goods Act 1989* (Cth) and the *Therapeutic Goods Advertising Code 2021*. The Code is enforced strictly; the TGA publishes its compliance approach at <https://www.tga.gov.au/products/regulations-all-products/advertising>.
 
 ### When AI-generated patient material becomes "therapeutic advertising"
 
@@ -513,6 +526,7 @@ The following are the most common errors clinicians make when reasoning about AI
 - **Patient consent is context-dependent.** AI scribes that record the consultation require express informed consent; passive backend AI typically requires only updated privacy policy notification.
 - **High-risk populations — minors, mental health, sensitive information — warrant stricter vendor selection and consent practices.**
 - **Confirm your indemnity carrier's current position before deploying any AI tool.** Vendor and course summaries are not a substitute for direct carrier guidance.
+- **Two 2024-amendment instruments are now live or imminent:** the statutory tort for serious invasions of privacy (in force 10 June 2025 — direct damages exposure for non-consensual AI-scribe recording) and the APP 1 automated-decision-making disclosure obligation (commences 10 December 2026 — privacy-policy update required).
 
 ---
 
@@ -520,10 +534,12 @@ The following are the most common errors clinicians make when reasoning about AI
 
 - AHPRA — *Meeting your professional obligations when using Artificial Intelligence in healthcare* (2024): <https://www.ahpra.gov.au/Resources/Artificial-Intelligence-in-healthcare.aspx>
 - OAIC — Australian Privacy Principles Guidelines: <https://www.oaic.gov.au/privacy/australian-privacy-principles>
-- OAIC — Guidance on privacy and the use of commercially available AI products: <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/hands-on-guides/guidance-on-privacy-and-the-use-of-commercially-available-ai-products>
+- OAIC — Guidance on privacy and the use of commercially available AI products: <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/guidance-on-privacy-and-the-use-of-commercially-available-ai-products>
 - OAIC — De-identification and the Privacy Act: <https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/handling-personal-information/de-identification-and-the-privacy-act>
 - OAIC — Notifiable Data Breaches scheme: <https://www.oaic.gov.au/privacy/notifiable-data-breaches>
-- TGA — Advertising therapeutic goods: <https://www.tga.gov.au/products/advertising-therapeutic-goods>
+- OAIC — Statutory tort for serious invasions of privacy: <https://www.oaic.gov.au/privacy/your-privacy-rights/more-privacy-rights/statutory-tort-for-serious-invasions-of-privacy>
+- OAIC — Consultation on guidance for transparency in automated decision making: <https://www.oaic.gov.au/engage-with-us/consultations/consultation-on-guidance-for-transparency-in-automated-decision-making>
+- TGA — Advertising therapeutic goods: <https://www.tga.gov.au/products/regulations-all-products/advertising>
 - *Privacy Act 1988* (Cth): <https://www.legislation.gov.au/C2004A03712/latest>
 - *Therapeutic Goods Act 1989* (Cth): <https://www.legislation.gov.au/C2004A03952/latest>
 

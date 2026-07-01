@@ -43,7 +43,8 @@ export const CONTENT_SOURCES: ContentSource[] = [
     id: 'oaic-ai-guidance',
     category: 'regulator',
     name: 'OAIC — Privacy and AI',
-    url: 'https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/general-advice-on-privacy/guidance-on-privacy-and-the-use-of-commercially-available-ai-products',
+    // URL corrected 2026-07-02 — the old general-advice-on-privacy/ path 404s
+    url: 'https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/guidance-on-privacy-and-the-use-of-commercially-available-ai-products',
     watchFor: 'New OAIC guidance on commercial AI products, healthcare-specific notes',
     affectsModules: ['module-1-compliance', 'module-2-tools'],
   },
@@ -59,7 +60,11 @@ export const CONTENT_SOURCES: ContentSource[] = [
     id: 'tga-advertising-code',
     category: 'regulator',
     name: 'TGA — Therapeutic Goods Advertising Code',
-    url: 'https://www.tga.gov.au/resources/resource/guidance/therapeutic-goods-advertising-code',
+    // Watch the legislative instrument itself (legislation.gov.au) — it changes
+    // exactly when the Code is amended, and it responds fast. The old
+    // tga.gov.au resource page 404s and tga.gov.au times out non-browser UAs
+    // (2026-07-02).
+    url: 'https://www.legislation.gov.au/F2021L01159/latest/text',
     watchFor: 'Code revisions, AI-specific guidance, supplement / complementary medicine notes',
     affectsModules: ['module-1-compliance', 'module-4-patient-comms', 'module-5-naturopath'],
   },
