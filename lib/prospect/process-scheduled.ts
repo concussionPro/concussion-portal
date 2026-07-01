@@ -373,7 +373,7 @@ export type FollowupCategory = 'hot' | 'warm' | 'cool'
  */
 async function classifyFollowup(
   clinicId: number,
-): Promise<{ category: FollowupCategory; hint: 'pricing' | 'trial' | 'toolkit' | null }> {
+): Promise<{ category: FollowupCategory; hint: 'pricing' | 'trial' | 'sample' | 'toolkit' | null; openedTrial: boolean }> {
   try {
     const { rows } = await sql<{
       section_visited: string | null
@@ -402,25 +402,34 @@ async function classifyFollowup(
     }
     const decision = decideOutreach({ sectionFunnel, maxDwellMs, sessions: Math.max(sessions, 1) })
     const sec = new Set(Object.keys(sectionFunnel))
-    const hint: 'pricing' | 'trial' | 'toolkit' | null = sec.has('pricing')
+    // 'sample' (Zac 2026-06-30): engaged a value section but NEVER opened the
+    // actual Module 1 trial — the #1 intent signal (decideOutreach weights it 30)
+    // and the data shows 38/39 engaged clinics never trigger it. Getting them to
+    // SAMPLE the product is the proven next step before any pricing/call ask, so
+    // a non-sampler who's shown real interest gets the Module 1 teaser copy. Sits
+    // below pricing (already evaluating cost) but above the generic toolkit nudge.
+    const engagedValue =
+      sec.has('trial-cta') || sec.has('onsite-hero') || TOOLKIT_SECTIONS.some((s) => sec.has(s))
+    const openedM1 = sec.has('module-1-trial')
+    const hint: 'pricing' | 'trial' | 'sample' | 'toolkit' | null = sec.has('pricing')
       ? 'pricing'
-      : sec.has('module-1-trial')
+      : openedM1
         ? 'trial'
-        : TOOLKIT_SECTIONS.some((s) => sec.has(s))
-          ? 'toolkit'
+        : engagedValue
+          ? 'sample'
           : null
     // hot = decideOutreach earned a personal close; warm = real interest in a
     // buying section (or a solid score); else cool. Timing never changes (Zac's
     // standing rule) — only the copy.
     const category: FollowupCategory =
       decision.action === 'direct' ? 'hot' : hint || decision.score >= 25 ? 'warm' : 'cool'
-    return { category, hint }
+    return { category, hint, openedTrial: openedM1 }
   } catch (err) {
     console.error(
       `[process-scheduled] follow-up classify failed for clinic ${clinicId} — degrading to generic:`,
       err,
     )
-    return { category: 'cool', hint: null }
+    return { category: 'cool', hint: null, openedTrial: false }
   }
 }
 
@@ -508,6 +517,9 @@ export async function processScheduledSends(
         -- the rank so on-site is densest (highest value) but hub/individual
         -- always get slots. ~16 on-site / 9 hub / 5 individual per 30/day.
         ORDER BY
+          -- Stage-first (Zac 2026-07-01): warm followups (T3 then T2) clear
+          -- before cold T1s, so overdue chases never wait behind new cold sends.
+          CASE pc.next_template_slug WHEN 'final' THEN 0 WHEN 'followup' THEN 1 ELSE 2 END ASC,
           (ROW_NUMBER() OVER (
              PARTITION BY CASE
                WHEN (COALESCE((pc.team->>'osteopaths')::int,0)+COALESCE((pc.team->>'chiropractors')::int,0)+COALESCE((pc.team->>'generalPractitioners')::int,0)+COALESCE((pc.team->>'sportsMedicineDoctors')::int,0)+COALESCE((pc.team->>'exercisePhys')::int,0)+COALESCE((pc.team->>'myotherapists')::int,0)+COALESCE((pc.team->>'remedialMassage')::int,0)) >= 8 THEN 0
@@ -554,6 +566,9 @@ export async function processScheduledSends(
         -- Clinical sum must stay in lockstep with clinicalCount() in
         -- lib/prospect/pricing.ts (7 clinical keys, excludes practiceManager/admin).
         ORDER BY
+          -- Stage-first (Zac 2026-07-01): warm followups (T3 then T2) clear
+          -- before cold T1s, so overdue chases never wait behind new cold sends.
+          CASE pc.next_template_slug WHEN 'final' THEN 0 WHEN 'followup' THEN 1 ELSE 2 END ASC,
           CASE
             WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
                 + COALESCE((pc.team->>'chiropractors')::int, 0)
@@ -799,12 +814,14 @@ export async function processScheduledSends(
     // T2/T3 copy to what the prospect actually viewed on their portal. T1 has
     // no prior engagement, so we only look it up for followup/final touches.
     // Read-only + degrades to null → generic copy; never blocks the send.
-    let engagementHint: 'pricing' | 'trial' | 'toolkit' | null = null
+    let engagementHint: 'pricing' | 'trial' | 'sample' | 'toolkit' | null = null
     let followupCategory: FollowupCategory = 'cool'
+    let openedTrial = false
     if (templateSlug !== 'initial') {
       const c = await classifyFollowup(clinic.id)
       engagementHint = c.hint
       followupCategory = c.category
+      openedTrial = c.openedTrial
     }
 
     const { subject, html, text, subjectKey } = mergeTemplate(template, clinic, BASE_URL, unsubToken, {
@@ -812,6 +829,7 @@ export async function processScheduledSends(
       forceSubjectKey,
       engagementHint,
       followupCategory,
+      openedTrial,
     })
     // Deterministic key — concurrent runs (cron + manual fire-now, or two
     // overlapping cron invocations) collide on the UNIQUE audit_key instead
