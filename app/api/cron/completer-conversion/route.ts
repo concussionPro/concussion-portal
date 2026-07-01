@@ -74,6 +74,7 @@ async function findTargets(): Promise<Target[]> {
     JOIN user_progress up ON up.user_id = u.id
     WHERE u.access_level = 'preview'
       AND COALESCE(u.nurture_unsubscribed, false) = false
+      AND NOT EXISTS (SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(u.email))
       AND u.created_at <= NOW() - (${MIN_AGE_DAYS} || ' days')::interval
       AND NOT EXISTS (
         SELECT 1 FROM email_audit_log l

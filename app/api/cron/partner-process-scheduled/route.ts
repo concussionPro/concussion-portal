@@ -152,6 +152,7 @@ export async function GET(request: NextRequest) {
     FROM partner_institutions pi
     WHERE pi.status = 'contacted'
       AND pi.contact_email IS NOT NULL AND pi.contact_email <> ''
+      AND NOT EXISTS (SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(pi.contact_email))
     ORDER BY pi.tier ASC, pi.id ASC`
   const FOLLOWUP_GAP_MS = 10 * 24 * 60 * 60 * 1000 // ~7 business days between touches
   const followEligible = followRows.filter((p) =>
@@ -186,6 +187,7 @@ export async function GET(request: NextRequest) {
     WHERE pi.status = 'lead'
       AND pi.contact_email IS NOT NULL AND pi.contact_email <> ''
       AND NOT EXISTS (SELECT 1 FROM partner_outreach_log ol WHERE ol.institution_id = pi.id)
+      AND NOT EXISTS (SELECT 1 FROM email_suppression es WHERE LOWER(es.email) = LOWER(pi.contact_email))
     ORDER BY pi.tier ASC, pi.id ASC
     LIMIT ${capLeft}` : { rows: [] }
 
