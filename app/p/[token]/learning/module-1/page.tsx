@@ -41,7 +41,7 @@ const PREVIEW_PRINT_CSS = `
   @media print {
     body * { visibility: hidden !important; }
     body::before {
-      content: "Module 1 trial preview — full Concussion Clinical Mastery (8 modules, 14 CPD hrs) activates with the Hub Program. portal.concussion-education-australia.com";
+      content: "Module 1 trial preview — full Concussion Clinical Mastery (8 modules · 8 CPD hrs online, 14 with the in-person day) activates with the Hub Program. portal.concussion-education-australia.com";
       visibility: visible !important;
       display: block !important;
       padding: 24px !important;
