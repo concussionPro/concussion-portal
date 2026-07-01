@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Check, Star, ShieldCheck, BookOpen, BedDouble } from 'lucide-react'
+import { ArrowRight, Check, Star, ShieldCheck, BookOpen, BedDouble, MapPin } from 'lucide-react'
 import { CONFIG, afterpayInstalment } from '@/lib/config'
 import { CourseSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
@@ -241,6 +241,61 @@ export default function HomeClient() {
                   className="h-20 md:h-24 w-auto"
                 />
               </div>
+            </div>
+          </div>
+        </section>
+
+
+        {/* ── Workshop locations ───────────────────────────── */}
+        <section className="section-padding relative z-10">
+          <div className="max-w-[960px] mx-auto">
+            <div className="text-center mb-8 md:mb-10">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)] mb-2">
+                <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+                Hands-on workshops across Australia
+              </span>
+              <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
+                Where the <span className="text-gradient">practical day</span> runs
+              </h2>
+              <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-lg mx-auto">
+                The in-person day — VOMS, BESS, vestibular &amp; cervical assessment on real cases — runs in major cities as demand opens. Register and you&apos;ll be first to know when your city&apos;s date is confirmed.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { city: 'Melbourne', img: '/locations/melbourne.webp', href: '/courses/melbourne', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Next round opening — register interest' },
+                { city: 'Sydney', img: '/locations/sydney.jpg', href: '/pricing', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: 'First to know when the date lands' },
+                { city: 'Byron Bay', img: '/locations/byron-bay.jpg', href: '/pricing', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: 'First to know when the date lands' },
+              ].map((loc) => (
+                <Link
+                  key={loc.city}
+                  href={loc.href}
+                  className="group relative block rounded-2xl overflow-hidden border border-slate-200 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_14px_40px_-8px_rgba(15,23,42,0.25)] transition-all aspect-[3/4]"
+                >
+                  <Image
+                    src={loc.img}
+                    alt={`${loc.city} — Concussion Clinical Mastery workshop location`}
+                    fill
+                    sizes="(min-width: 640px) 300px, 100vw"
+                    className="object-cover group-hover:scale-[1.04] transition-transform duration-[600ms]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent" aria-hidden="true" />
+                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
+                    <span className={`inline-flex h-1.5 w-1.5 rounded-full ${loc.dotClass}`} aria-hidden="true" />
+                    <span className={`text-[10px] font-bold uppercase tracking-wide ${loc.statusTextClass}`}>{loc.status}</span>
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
+                    <h3 className="text-white text-xl md:text-2xl font-bold tracking-tight leading-none mb-1 [text-shadow:0_1px_8px_rgba(0,0,0,0.4)]">
+                      {loc.city}
+                    </h3>
+                    <p className="text-white/85 text-[12px] leading-snug inline-flex items-center gap-1">
+                      {loc.caption}
+                      <ArrowRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" aria-hidden="true" />
+                    </p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
