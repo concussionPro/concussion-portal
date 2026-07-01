@@ -47,7 +47,9 @@ function displayClinicName(name: string): string {
  *
  * Approved facts ONLY (never fabricate claims/deadlines/discounts):
  * Concussion Clinical Mastery; Osteopathy Australia endorsed; AHPRA-aligned;
- * 14 CPD hours per clinician (8 online); SCAT6/SCOAT6, VOMS, oculomotor,
+ * online course = 8 CPD hours; 14 CPD hours ONLY combined with the in-person
+ * workshop (8 online + 6 in-person) — NEVER claim 14 for an online-only pitch;
+ * SCAT6/SCOAT6, VOMS, oculomotor,
  * BESS, cervical, RTP protocols; on-site full-day team training; Hub Pack
  * (team online + clinic-branded clinical doc pack); online course A$497;
  * 2024 AIS/SMA guidelines made the 21-day RTP stand-down mandatory in
@@ -287,7 +289,12 @@ export function mergeTemplate(
      * and passes it in. T1 ('initial') has no prior engagement, so the hint is
      * a no-op there.
      */
-    engagementHint?: 'pricing' | 'trial' | 'toolkit' | null
+    engagementHint?: 'pricing' | 'trial' | 'sample' | 'toolkit' | null
+    /** Whether they actually opened the Module 1 trial. Non-samplers (false) get
+     *  the relevance-hook → Module 1 follow-up regardless of hot/pricing — the
+     *  missing step for ~38/39 engaged clinics. Evidence: lead with clinical
+     *  relevance, deliver via the sample (reinforcer), never a bare sample lead. */
+    openedTrial?: boolean
     /**
      * Intent CATEGORY (Zac 2026-06-25). Derived from the same scanner-proof
      * portal behaviour via decideOutreach() — it grades INTENSITY, which the
@@ -385,7 +392,24 @@ export function mergeTemplate(
   const hint = options.engagementHint ?? null
   const category = options.followupCategory ?? 'cool'
   let t2SecondPara: string
-  if (category === 'hot') {
+  const hasOpenedTrial = options.openedTrial ?? false
+  if (!hasOpenedTrial) {
+    // The missing step for ~38/39 engaged clinics: they haven't experienced the
+    // content. Lead with the CLINICAL RELEVANCE hook (the evidence-backed driver),
+    // delivered through Module 1 (the reinforcer), then a close matched to warmth.
+    // Applies to EVERY non-sampler (hot/warm/cool) — relevance first, never a bare
+    // sample lead, never a deal-close before they've seen the teaching.
+    const closeLine =
+      category === 'hot'
+        ? isOnSiteTarget
+          ? `if it's a fit for ${safeShortName}, the on-site day trains your whole team on your own cases — reply and I'll sort a date.`
+          : isIndividualTarget
+            ? `if it's a fit, the course is ready whenever you are — just reply.`
+            : `if it's a fit for ${safeShortName}, the Hub Pack trains your whole team online — reply, or set it up from the same page.`
+        : `the SCAT6/SCOAT6 forms and baseline tool are yours to use either way.`
+    t2SecondPara =
+      `<p>Most concussions that reach a clinic don't present as one — they look like neck pain, migraine, or low mood, and the call on which is which is where management lives or dies. That's where Module 1 starts, and it's open on your page — the real first module, not a brochure: ${FREE_LINK}</p>\n<p>Have a look — and ${closeLine}</p>`
+  } else if (category === 'hot') {
     // Genuine buying intent (returned, next-step, deep trial, studied pricing).
     // The most direct, deal-type-specific close — drives to the portal (where
     // the buy button / booking now lives) and offers a reply. Value-framed, not
@@ -400,10 +424,17 @@ export function mergeTemplate(
       `<p>If the pricing was the question, I'm happy to walk through what it'd look like for ${safeShortName} — just reply. The SCAT6/SCOAT6 forms and baseline tool are yours to use either way. ${tierLine}</p>`
   } else if (hint === 'trial') {
     t2SecondPara =
-      `<p>Hope Module 1 was a useful start — the full program builds from there into the hands-on protocol, 14 CPD hours each, OA endorsed. The SCAT6/SCOAT6 forms and baseline tool are yours to use either way.</p>`
+      `<p>Hope Module 1 was a useful start — the full online program builds from there into the complete protocol training, 8 CPD hours, OA endorsed. The SCAT6/SCOAT6 forms and baseline tool are yours to use either way.</p>`
+  } else if (hint === 'sample') {
+    // Engaged a value section but never opened Module 1 — the proven next step is
+    // to get them to SAMPLE before any pricing/call ask. Value-first hook; never
+    // references their browsing (no surveillance). Link lands on the trial-first
+    // portal flow.
+    t2SecondPara =
+      `<p>Most concussions that reach a clinic don't present as one — they look like neck pain, migraine, or low mood, and the call on which is which is where management lives or dies. That's the ground Module 1 covers — the real first module, open on your page, knowledge checks and all (not a brochure): ${FREE_LINK}</p>`
   } else if (hint === 'toolkit') {
     t2SecondPara =
-      `<p>The clinical toolkit (GP/NDIS/school letters, billing) unlocks with the full course — along with the protocol training and 14 CPD hours. The SCAT6/SCOAT6 forms and baseline tool are yours either way.</p>`
+      `<p>The clinical toolkit (GP/NDIS/school letters, billing) unlocks with the online course — along with the protocol training and 8 CPD hours. The SCAT6/SCOAT6 forms and baseline tool are yours either way.</p>`
   } else {
     t2SecondPara =
       `<p>The SCAT6/SCOAT6 forms and baseline tool are yours to use either way. The clinical toolkit (GP/NDIS/school letters, billing), admin pack and reference library are previewable on the page — they unlock with the course. ${tierLine}</p>`
@@ -431,8 +462,12 @@ export function mergeTemplate(
   // talk the numbers through (value-framed, not "I saw you viewed pricing").
   // Every other hint (and null) keeps the standard breakup price line. Both
   // keep the identical "reply 'later' / STOP" close.
-  const t3SecondPara =
-    category === 'hot'
+  const t3SecondPara = !hasOpenedTrial
+    ? // Never sampled — one last relevance → Module 1 nudge before closing the
+      // loop. Same evidence structure as T2 (clinical hook, then the real module),
+      // kept low-pressure for a breakup. No price-lead, no hype.
+      `<p>Before I close the loop — the part worth ten minutes is Module 1 itself, open on your page: the real first module, not a brochure, on spotting the concussion that doesn't look like one. Quickest way to judge whether the full course earns its place at ${safeShortName}: ${FREE_LINK}. Either way no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+    : category === 'hot'
       ? `<p>If you're ready to move on it — ${priceLine}, and it's all set up for ${safeShortName} at ${FREE_LINK}, or just reply and I'll sort it directly. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
       : hint === 'pricing'
         ? `<p>And if cost was the sticking point — ${priceLine}, and I'm happy to talk through the options for ${safeShortName} if it helps; just reply. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
