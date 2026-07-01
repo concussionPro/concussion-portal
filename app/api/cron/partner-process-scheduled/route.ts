@@ -54,6 +54,35 @@ function buildPitch(name: string, slug: string, firstName: string) {
   return { subject: `Concussion resource for ${name}'s athletes`, text, html }
 }
 
+function wrapHtml(text: string): string {
+  return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.5;color:#0f172a">`
+    + text.split('\n').map((l) => (l === '' ? '<br>' : `<div>${l}</div>`)).join('')
+    + `</div>`
+}
+
+/** Followup touches (Zac 2026-07-01). Gentle, value-first, no "free", never
+ *  references browsing. The final touch offers a clean opt-out. */
+function buildFollowup(stage: 'followup' | 'final', name: string, slug: string, firstName: string) {
+  const link = `${BASE}/partners/${slug}`
+  if (stage === 'followup') {
+    const text = [
+      `Hi ${firstName},`, ``,
+      `Circling back on the concussion resource I set up for ${name} — the season-long baseline testing, the SCAT6/SCOAT6 forms and a short trainer refresher are ready whenever you'd like to switch them on: ${link}`, ``,
+      `The part most academies find useful: if an athlete's concussed, your trainers can flag it fast, and I pick it up via telehealth and connect them with a local clinician for rehab.`, ``,
+      `There's a time to book on the page if it's worth a look. No rush either way.`, ``,
+      `Zac Lewis, Osteopath`, `Concussion Education Australia`,
+    ].join('\n')
+    return { subject: `Following up — concussion cover for ${name}'s athletes`, text, html: wrapHtml(text) }
+  }
+  const text = [
+    `Hi ${firstName},`, ``,
+    `Last note from me on this — the athlete concussion resource for ${name} stays available: baseline testing, the SCAT6/SCOAT6 tools, and telehealth assessments for your athletes, all here: ${link}`, ``,
+    `If concussion cover isn't a priority this season, no problem at all — just reply and I'll leave it there.`, ``,
+    `Zac Lewis, Osteopath`, `Concussion Education Australia`,
+  ].join('\n')
+  return { subject: `Athlete concussion resource for ${name}`, text, html: wrapHtml(text) }
+}
+
 export async function GET(request: NextRequest) {
   // Auth — admin OR cron secret.
   const adminKey = request.headers.get('x-admin-key')
@@ -83,6 +112,13 @@ export async function GET(request: NextRequest) {
   await sql`CREATE TABLE IF NOT EXISTS partner_outreach_log (
     id SERIAL PRIMARY KEY, institution_id INT NOT NULL, sent_at TIMESTAMPTZ DEFAULT NOW(),
     resend_email_id TEXT, UNIQUE(institution_id))`
+  // Followup migration (Zac 2026-07-01): the original UNIQUE(institution_id)
+  // capped every partner at ONE email ever — the root cause of 0 engagement.
+  // Add a stage column and re-key uniqueness on (institution_id, stage) so each
+  // of initial/followup/final logs once. Existing rows backfill to 'initial'.
+  await sql`ALTER TABLE partner_outreach_log ADD COLUMN IF NOT EXISTS stage TEXT NOT NULL DEFAULT 'initial'`
+  await sql`ALTER TABLE partner_outreach_log DROP CONSTRAINT IF EXISTS partner_outreach_log_institution_id_key`
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS partner_outreach_log_inst_stage_uidx ON partner_outreach_log(institution_id, stage)`
 
   // TRUE daily cap (Zac 2026-06-17): subtract today's partner sends so the
   // 11:30am backup schedule only sends the remainder of a missed 9:30am run —
@@ -95,22 +131,63 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, sent: 0, reason: `daily cap ${PARTNER_DAILY_MAX} already met today` })
   }
 
-  // Eligible: lead status, has a contact email, not already sent.
-  const { rows: due } = await sql`
-    SELECT id, name, slug, contact_email, contact_name
-    FROM partner_institutions pi
-    WHERE pi.status = 'lead'
-      AND pi.contact_email IS NOT NULL AND pi.contact_email <> ''
-      AND NOT EXISTS (SELECT 1 FROM partner_outreach_log ol WHERE ol.institution_id = pi.id)
-    ORDER BY pi.tier ASC, pi.id ASC
-    LIMIT ${remainingToday}`
-
   const resend = new Resend(resendKey)
   const runStart = Date.now()
   // First send is ~5 min out (must be strictly FUTURE for Resend scheduledAt),
   // then 8-12 min apart — founder-paced, never a blast.
   let staggerMs = 5 * 60_000
   const results: Array<{ name: string; outcome: string }> = []
+  let capLeft = remainingToday
+
+  // ── FOLLOWUPS FIRST (Zac 2026-07-01) ──────────────────────────────────────
+  // Contacted partners with no reply get a 2nd (+~10 days) then 3rd touch — the
+  // fix for the single-touch dead pipeline. Already Hunter-verified + delivered
+  // on the initial, so no re-verification. NOTE: this lane has no inbound reply
+  // detection, so a partner that engages must be moved OFF status='contacted'
+  // (e.g. to 'lead-warm'/'won') for followups to stop.
+  const { rows: followRows } = await sql<{ id: number; name: string; slug: string; contact_email: string; contact_name: string; touches: number; last_sent: string }>`
+    SELECT pi.id, pi.name, pi.slug, pi.contact_email, pi.contact_name,
+           (SELECT COUNT(*)::int FROM partner_outreach_log ol WHERE ol.institution_id = pi.id) AS touches,
+           (SELECT MAX(sent_at) FROM partner_outreach_log ol WHERE ol.institution_id = pi.id) AS last_sent
+    FROM partner_institutions pi
+    WHERE pi.status = 'contacted'
+      AND pi.contact_email IS NOT NULL AND pi.contact_email <> ''
+    ORDER BY pi.tier ASC, pi.id ASC`
+  const FOLLOWUP_GAP_MS = 10 * 24 * 60 * 60 * 1000 // ~7 business days between touches
+  const followEligible = followRows.filter((p) =>
+    p.touches >= 1 && p.touches < 3 && p.last_sent &&
+    (runStart - new Date(p.last_sent).getTime()) >= FOLLOWUP_GAP_MS
+  ).slice(0, capLeft)
+
+  for (const inst of followEligible) {
+    await new Promise((r) => setTimeout(r, 700))
+    const stage: 'followup' | 'final' = inst.touches === 1 ? 'followup' : 'final'
+    const firstName = (inst.contact_name && !/reception|office|general/i.test(inst.contact_name))
+      ? inst.contact_name.split(' ')[0] : 'there'
+    const { subject, text, html } = buildFollowup(stage, inst.name, inst.slug, firstName)
+    const scheduledAt = new Date(runStart + staggerMs).toISOString()
+    staggerMs += STAGGER_MIN_MS + Math.random() * (STAGGER_MAX_MS - STAGGER_MIN_MS)
+    try {
+      const out = await resend.emails.send({ from: FROM, to: inst.contact_email, replyTo: REPLY_TO, subject, text, html, scheduledAt })
+      if (out.error) { results.push({ name: inst.name, outcome: `error: ${out.error.message}` }); continue }
+      await sql`INSERT INTO partner_outreach_log (institution_id, stage, resend_email_id) VALUES (${inst.id}, ${stage}, ${out.data?.id ?? null}) ON CONFLICT (institution_id, stage) DO NOTHING`
+      if (stage === 'final') await sql`UPDATE partner_institutions SET status='sequence-complete' WHERE id=${inst.id}`
+      capLeft--
+      results.push({ name: inst.name, outcome: `sent ${stage}` })
+    } catch (err) {
+      results.push({ name: inst.name, outcome: `error: ${err instanceof Error ? err.message : String(err)}` })
+    }
+  }
+
+  // ── INITIAL sends — leads not yet contacted, with whatever cap remains. ────
+  const { rows: due } = capLeft > 0 ? await sql`
+    SELECT id, name, slug, contact_email, contact_name
+    FROM partner_institutions pi
+    WHERE pi.status = 'lead'
+      AND pi.contact_email IS NOT NULL AND pi.contact_email <> ''
+      AND NOT EXISTS (SELECT 1 FROM partner_outreach_log ol WHERE ol.institution_id = pi.id)
+    ORDER BY pi.tier ASC, pi.id ASC
+    LIMIT ${capLeft}` : { rows: [] }
 
   for (const inst of due) {
     // Space the API CALLS to stay under Resend's 2 req/sec limit (the stagger
@@ -163,7 +240,7 @@ export async function GET(request: NextRequest) {
         scheduledAt,
       })
       if (out.error) { results.push({ name: inst.name, outcome: `error: ${out.error.message}` }); continue }
-      await sql`INSERT INTO partner_outreach_log (institution_id, resend_email_id) VALUES (${inst.id}, ${out.data?.id ?? null}) ON CONFLICT (institution_id) DO NOTHING`
+      await sql`INSERT INTO partner_outreach_log (institution_id, stage, resend_email_id) VALUES (${inst.id}, 'initial', ${out.data?.id ?? null}) ON CONFLICT (institution_id, stage) DO NOTHING`
       await sql`UPDATE partner_institutions SET status='contacted' WHERE id=${inst.id}`
       results.push({ name: inst.name, outcome: 'sent' })
     } catch (err) {
@@ -171,5 +248,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, due: due.length, sent: results.filter((r) => r.outcome === 'sent').length, cap: PARTNER_DAILY_MAX, results })
+  return NextResponse.json({ ok: true, due: due.length, followups: followEligible.length, sent: results.filter((r) => r.outcome.startsWith('sent')).length, cap: PARTNER_DAILY_MAX, results })
 }
