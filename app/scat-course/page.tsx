@@ -140,7 +140,7 @@ export default function SCATCoursePage() {
                 Concussion Education Australia Home
               </Link>
               <h1 className="text-3xl font-bold mb-2">Free SCAT6/SCOAT6 Mastery Course</h1>
-              <p className="text-blue-100">Welcome back! Continue your learning journey.</p>
+              <p className="text-blue-100">Welcome back! Finish all modules and get <span className="font-bold text-white">$50 off</span> the full online course.</p>
             </div>
             <div className="text-right">
               <div className="text-sm text-blue-100 mb-1">Logged in as</div>

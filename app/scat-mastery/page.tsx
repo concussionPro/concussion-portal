@@ -188,9 +188,14 @@ export default function SCATMasteryPage() {
               </span>
             </h1>
 
-            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+            <p className="text-lg text-slate-600 mb-4 leading-relaxed">
               The complete guide to administering, scoring, and interpreting the SCAT6 and SCOAT6. Built for physiotherapists, osteopaths, chiropractors, and all AHPRA-registered clinicians. Free, online, and instantly accessible.
             </p>
+            <div className="inline-flex items-center gap-2 mb-8 rounded-lg bg-[#5b9aa6]/10 border border-[#5b9aa6]/25 px-4 py-2.5">
+              <span className="text-sm font-semibold text-slate-800">
+                Finish it and get <span className="text-[#5b9aa6] font-bold">$50 off</span> the full online course
+              </span>
+            </div>
 
             {/* Trust pills */}
             <div className="flex flex-wrap gap-3 mb-10">
