@@ -8,6 +8,7 @@ import { CourseSchema } from '@/components/SchemaMarkup'
 import { SiteNav } from '@/components/SiteNav'
 import { OtherCityInterest } from '@/components/OtherCityInterest'
 import { HomepageAiCourseCard } from '@/components/HomepageAiCourseCard'
+import { LocationInterestCard } from '@/components/LocationInterestCard'
 import { trackShopClick } from '@/lib/analytics'
 
 export default function HomeClient() {
@@ -263,38 +264,12 @@ export default function HomeClient() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { city: 'Melbourne', img: '/locations/melbourne.webp', href: '/courses/melbourne', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Next round opening — register interest' },
-                { city: 'Sydney', img: '/locations/sydney.jpg', href: '/pricing', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: 'First to know when the date lands' },
-                { city: 'Byron Bay', img: '/locations/byron-bay.jpg', href: '/pricing', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: 'First to know when the date lands' },
-              ].map((loc) => (
-                <Link
-                  key={loc.city}
-                  href={loc.href}
-                  className="group relative block rounded-2xl overflow-hidden border border-slate-200 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.12)] hover:shadow-[0_14px_40px_-8px_rgba(15,23,42,0.25)] transition-all aspect-[3/4]"
-                >
-                  <Image
-                    src={loc.img}
-                    alt={`${loc.city} — Concussion Clinical Mastery workshop location`}
-                    fill
-                    sizes="(min-width: 640px) 300px, 100vw"
-                    className="object-cover group-hover:scale-[1.04] transition-transform duration-[600ms]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent" aria-hidden="true" />
-                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
-                    <span className={`inline-flex h-1.5 w-1.5 rounded-full ${loc.dotClass}`} aria-hidden="true" />
-                    <span className={`text-[10px] font-bold uppercase tracking-wide ${loc.statusTextClass}`}>{loc.status}</span>
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
-                    <h3 className="text-white text-xl md:text-2xl font-bold tracking-tight leading-none mb-1 [text-shadow:0_1px_8px_rgba(0,0,0,0.4)]">
-                      {loc.city}
-                    </h3>
-                    <p className="text-white/85 text-[12px] leading-snug inline-flex items-center gap-1">
-                      {loc.caption}
-                      <ArrowRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" aria-hidden="true" />
-                    </p>
-                  </div>
-                </Link>
+              {([
+                { city: 'Melbourne', citySlug: 'melbourne', img: '/locations/melbourne.webp', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Register for the next Melbourne round' },
+                { city: 'Sydney', citySlug: 'sydney', img: '/locations/sydney.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Sydney's date is confirmed" },
+                { city: 'Byron Bay', citySlug: 'byron-bay', img: '/locations/byron-bay.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Byron Bay's date is confirmed" },
+              ] as const).map((loc) => (
+                <LocationInterestCard key={loc.city} {...loc} />
               ))}
             </div>
           </div>
