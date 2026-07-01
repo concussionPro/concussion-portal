@@ -43,6 +43,10 @@ export const maxDuration = 60
 const SEND_CAP = 40
 const MIN_AGE_DAYS = 18
 
+// Excluded from this sequence — leads already on a separate bespoke track.
+// Micah is on the Purpose EP pitch (/p/purpose-healthcare); don't double-touch.
+const EXCLUDED_EMAILS = new Set(['micah@purposehealthcare.com.au'])
+
 type Branch = 'workshop' | 'price' | 'relevance'
 const BRANCH = {
   workshop: { seq: COMPLETER_CONVERT_WORKSHOP, tag: 'completer_convert_workshop' },
@@ -86,6 +90,7 @@ async function findTargets(): Promise<Target[]> {
     if (scat !== 3) continue
 
     const email: string = r.email
+    if (EXCLUDED_EMAILS.has(email.toLowerCase())) continue
     const branch = await classify(email)
     targets.push({ id: r.id, email, name: r.name || 'there', branch })
   }
