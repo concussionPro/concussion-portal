@@ -77,6 +77,8 @@ When suggesting or implementing marketing/SEO changes, default to these — don'
 - **Don't enable Turbopack FS cache** in `next.config.ts` — `turbopackFileSystemCacheForDev: false` (Next 16+ default-on causes 230 MB/sec disk writes).
 - **Don't touch `neurovision/`** — separate project living at the root, has its own lifecycle.
 - **Read code before proposing changes.** No speculative refactors.
+- **Run a CLEAN typecheck before pushing engine changes:** `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit`. Incremental tsc caches unchanged regions and gave false-green locally while Vercel's clean build FAILED on a real type error (2026-07-01). Also: `git add <file>` stages the WHOLE file — don't sweep uncommitted WIP into an unrelated commit (that's how a consumer shipped without its type-acceptor and broke the build).
+- **Every outreach send lane MUST check `email_suppression`.** As of 2026-07-01 all lanes enforce it: cold-clinic (`preflight.ts`), nurture cron, partner cron, and Agent B (`completer-conversion`). Never add a new send path without a suppression check. Unsubs are zero-tolerance.
 
 ## Admin auth
 
@@ -95,6 +97,9 @@ When suggesting or implementing marketing/SEO changes, default to these — don'
 - `lib/require-admin.ts` — single source of truth for admin auth.
 - `app/api/webhooks/stripe/route.ts` — Stripe webhook with idempotency.
 - `app/api/webhooks/resend/route.ts` — Resend bounce/complaint events. Signature secret needs rotation in Vercel env (`RESEND_WEBHOOK_SECRET`).
+- `app/api/cron/prospect-process-scheduled` + `lib/prospect/process-scheduled.ts` — cold-clinic engine. Send order is **stage-first** (final > followup > initial) THEN size-tier THEN date, so warm followups clear before new cold T1s (fixed 2026-07-01; was size-tier-first, starving overdue T2/T3).
+- `app/api/cron/completer-conversion` — **Agent B** (2026-07-01): behaviour-triggered free-completer conversion. One email per completer, chosen by behaviour (workshop-interest / pricing-view / relevance) NOT the survey answer (keeps the survey's "no automated sequence" promise). Fires ≥18 days post-signup. Micah excluded. Daily 22:30 UTC.
+- `app/api/cron/partner-process-scheduled` — partner engine. Now **multi-touch** (2026-07-01): `partner_outreach_log` is keyed `UNIQUE(institution_id, stage)`; followups send first, then initials, 6/day. Was single-touch (`UNIQUE(institution_id)`) which killed all engagement. NO inbound reply detection — a partner that engages must be moved off `status='contacted'` to stop followups.
 
 ## Workshops
 
@@ -159,7 +164,10 @@ When to chain them:
 - Existing users have `signupSource: undefined` (display as "Unknown" in admin)
 - Stripe `checkout.session.expired` IS enabled and delivering 200s (verified in dashboard 2026-06-10 — earlier "pending" note was stale). Real historical gap: anonymous checkouts expired with `customer_email: null`, so most abandons were unrecoverable. Fixed: session email pre-filled for any identifiable visitor + Stripe `after_expiration.recovery` URL in all three recovery emails.
 - Vercel env to verify: `AI_COURSE_PUBLIC` (visibility only now — enrolled users always have access), `BUSINESS_GST_REGISTERED`, `RESEND_INBOUND_WEBHOOK_SECRET` (reply detection), `RESEND_WEBHOOK_SECRET` drift — rotate to align
-- Reply detection requires inbound mail forwarding: replies to cold outreach land in zac@'s inbox; forward them to the Resend inbound address or `status='replied'` never fires
+- Reply detection requires inbound mail forwarding: replies to cold outreach land in zac@'s inbox; forward them to the Resend inbound address or `status='replied'` never fires. **Domain-mismatch gap:** a STOP from a *different address at the same domain* (e.g. `info@` when the contact is `tim@`) won't auto-match `contact_email` — pull the whole clinic manually (suppress both addresses + archive the clinic). Hit twice: Aeon Health, Physio Focus.
+- **Apollo import pollution (harden before next import):** the Apollo import pulled a generic AU business list (corporates, wine, law firms, schools) and enrichment fabricated `physiotherapists` counts so non-clinics passed the clinical gate. Cleaned the send queue 3,014 → 1,137 on 2026-07-01 (rule: **retain only Hunter-verified AND clinic/allied-health/sports-org**; archived tagged `cleanup-*`/`auto-clean-nonhealth`). Harden `scripts/apollo-categorize.mjs` / the import gate so re-imports can't re-pollute.
+- **Free-course funnel leak is ACTIVATION, not the course.** Genuine `signup_source='free-course'` users: 76% who START finish (course is fine — don't rewrite it). But ~half never open Module 1 — a signup→start handoff problem (magic-link friction). The 200-user "87% never start" was inflated by 128 squarespace cold-imports who were never course-intenders.
+- **$50 completion discount** already runs via `SCAT_COMPLETION_UPSELL` (code `SCAT6`, $497→$447) on cert generation — don't build a custom re-engage. Homepage Free-SCAT section promotes "finish it → $50 off" (on-site only; never "free" in cold email).
 - Google Ads conversion actions (deprioritized — channel is cold outreach now): `scat_mastery_signup`, `free_course_complete`, `scat6_form_download`, `interest_registration`, `checkout_complete`
 - Friday 2026-06-12 blog post `ahpra-ai-code-section-by-section` is `not-started`; blog schedule runs dry 2026-08-13 (cron now warns)
 - After a new workshop round opens: update `CONFIG.WORKSHOP.ROUND_START` for the city so enrollment counts scope to the round
