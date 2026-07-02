@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getAllModules } from '@/data/modules'
-import { getEpModules } from '@/data/ep-modules'
+import { getEpModules, epDisplayId } from '@/data/ep-modules'
 
 /**
  * Public (no auth) API route — the locked-trial preview.
@@ -20,11 +20,14 @@ export async function GET(request: Request) {
   const modules = course === 'crm' ? getEpModules() : getAllModules()
 
   const previewData = modules.map((module) => {
-    const previewCount = module.id === 1 ? MODULE_1_PREVIEW_COUNT : 1
+    // EP data ids are namespaced to 201-208 (progress-store collision fix);
+    // the preview always presents the DISPLAY id (1-8).
+    const displayId = course === 'crm' ? epDisplayId(module.id) : module.id
+    const previewCount = displayId === 1 ? MODULE_1_PREVIEW_COUNT : 1
     const unlocked = module.sections.slice(0, previewCount)
 
     return {
-      id: module.id,
+      id: displayId,
       title: module.title,
       subtitle: module.subtitle,
       duration: module.duration,

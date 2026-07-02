@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { getEpModulesMeta as getModulesMeta } from '@/data/ep-modules'
+import { getEpModulesMeta as getModulesMeta, epProgressId } from '@/data/ep-modules'
 import { useProgress } from '@/contexts/ProgressContext'
 import { ChevronDown, ChevronRight, CheckCircle2, Circle, FileText, Brain, Menu, X, Lock, BookOpen, Rocket, Library, Award, Wrench } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -132,8 +132,11 @@ export function EpCourseNavigation({
           {modules.map((module, moduleIndex) => {
             const isExpanded = expandedModules.includes(module.id)
             const isActive = currentModuleId === module.id
-            const isComplete = isModuleComplete(module.id)
-            const progress = getModuleProgress(module.id)
+            // Meta ids are DISPLAY ids (1-8); the shared progress store
+            // namespaces EP modules to 201-208 — read progress via epProgressId
+            // so EP completion never reflects (or corrupts) flagship modules 1-8.
+            const isComplete = isModuleComplete(epProgressId(module.id))
+            const progress = getModuleProgress(epProgressId(module.id))
 
             return (
               <div key={module.id} className="space-y-0.5">
@@ -315,14 +318,14 @@ export function EpCourseNavigation({
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-600">Your Progress</span>
             <span className="font-semibold text-slate-800">
-              {modules.filter(m => isModuleComplete(m.id)).length} / {modules.length} Modules
+              {modules.filter(m => isModuleComplete(epProgressId(m.id))).length} / {modules.length} Modules
             </span>
           </div>
           <div className="w-full bg-slate-200 rounded-full h-1.5">
             <div
               className="bg-teal-500 h-1.5 rounded-full transition-all"
               style={{
-                width: `${(modules.filter(m => isModuleComplete(m.id)).length / modules.length) * 100}%`
+                width: `${(modules.filter(m => isModuleComplete(epProgressId(m.id))).length / modules.length) * 100}%`
               }}
             />
           </div>
