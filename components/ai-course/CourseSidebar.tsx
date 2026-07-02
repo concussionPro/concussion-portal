@@ -49,7 +49,7 @@ export function CourseSidebar() {
         <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mb-2">CEA Learning</p>
         <p className="text-base font-bold text-foreground leading-tight mb-2">AI in Clinical Practice</p>
         <p className="text-[11px] text-muted-foreground tabular-nums">
-          {MODULES.length} modules · {totalMin}m total · 3 CPD hours
+          {MODULES.length} modules · {totalMin}m total · 2 CPD hours
         </p>
       </Link>
 

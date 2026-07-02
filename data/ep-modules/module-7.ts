@@ -1,7 +1,7 @@
 import type { Module } from '@/data/modules'
 
 export const module7: Module = {
-  id: 7,
+  id: 207,
   title: 'Persistent Symptoms & the Complex Case',
   subtitle: 'Pathophysiology of Persistence, Active Rehabilitation in PPCS, and Navigating the Limits of EP Scope',
   duration: '60 min',

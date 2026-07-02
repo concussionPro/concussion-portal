@@ -1,7 +1,7 @@
 import type { Module } from '@/data/modules'
 
 export const module3: Module = {
-  id: 3,
+  id: 203,
   title: 'Assessment That Is the Treatment',
   subtitle:
     'The Buffalo Concussion Treadmill/Bike Test — Exercise Physiology Rationale, Standardised Protocol, and the Symptom Threshold That Becomes the Prescription',

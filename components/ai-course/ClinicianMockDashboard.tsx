@@ -99,7 +99,7 @@ export function ClinicianMockDashboard() {
                 The Vagus Nerve in Clinical Practice
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mb-1">
-                1.25 CPD hours · A$97
+                1 CPD hour · A$97
               </p>
               <p className="text-[10px] text-accent leading-snug">
                 Matches your recent scribe topics (autonomic, POTS)

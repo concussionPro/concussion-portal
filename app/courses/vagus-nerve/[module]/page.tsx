@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { findVagusModule, loadVagusModuleContent, VAGUS_MODULES } from '@/lib/vagus-course/content'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCourseAccess } from '@/lib/course-access'
 import { VagusCourseSidebar } from '@/components/ai-course/VagusCourseSidebar'
 import { ModuleViewer } from '@/components/ai-course/ModuleViewer'
 import { parseModuleSections } from '@/lib/ai-course/module-sections'
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
 }
 
 export default async function VagusModulePage({ params }: PageParams) {
-  const access = await requireAiCourseAccess()
+  const access = await requireCourseAccess('vagus-nerve')
   const { module } = await params
   const meta = findVagusModule(module)
   if (!meta) notFound()

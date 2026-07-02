@@ -1,7 +1,7 @@
 import type { Module } from '@/data/modules'
 
 export const module6: Module = {
-  id: 6,
+  id: 206,
   title: 'Graded Return to Activity, Sport & Performance',
   subtitle: 'The Six-Stage Strategy, Australian Stand-Down Rules & Reconditioning Science',
   duration: '60 min',

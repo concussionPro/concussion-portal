@@ -1,7 +1,7 @@
 import type { Module } from '@/data/modules'
 
 export const module4: Module = {
-  id: 4,
+  id: 204,
   title: 'Sub-Symptom-Threshold Aerobic Rehabilitation',
   subtitle: 'The Biochemistry of Recovery, the FITT Prescription, and Progressing the Physiological Ceiling',
   duration: '90 min',

@@ -1,7 +1,7 @@
 /**
  * Vagus Nerve in Clinical Practice — module metadata.
  *
- * Short-form course (~75 min total, 1.25 CPD hours, A$97).
+ * Short-form course (~75 min total, 1 CPD hour, A$97).
  * Mirrors the structure of lib/ai-course/modules.ts so the same
  * client-side components (CourseSidebar, ModuleViewer, etc.) work
  * unchanged.

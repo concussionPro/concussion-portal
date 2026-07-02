@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 import { EpCourseNavigation } from '@/components/ep-course/EpCourseNavigation'
-import { epModules } from '@/data/ep-modules'
+import { epModules, epDisplayId } from '@/data/ep-modules'
 
 export const metadata: Metadata = {
   title: 'Reference Repository — Concussion Rehab for EPs',
@@ -54,7 +54,7 @@ export default async function EpReferencesPage() {
               <section key={m.id} className="rounded-xl border border-slate-200 bg-white p-6">
                 <div className="mb-3 flex items-baseline justify-between gap-4">
                   <h2 className="text-lg font-bold text-slate-900">
-                    Module {m.id} — {m.title}
+                    Module {epDisplayId(m.id)} — {m.title}
                   </h2>
                   <span className="shrink-0 text-xs font-medium text-slate-400">
                     {m.clinicalReferences?.length ?? 0} refs

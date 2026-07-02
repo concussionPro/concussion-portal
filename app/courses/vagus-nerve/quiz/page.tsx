@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import { SiteNav } from '@/components/SiteNav'
 import { VagusCourseSidebar } from '@/components/ai-course/VagusCourseSidebar'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCourseAccess } from '@/lib/course-access'
 import { QuizClient } from './QuizClient'
 import { VAGUS_QUIZ_QUESTIONS, VAGUS_QUIZ_PASS_MARK } from '@/lib/vagus-course/quiz'
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default async function VagusQuizPage() {
-  const access = await requireAiCourseAccess()
+  const access = await requireCourseAccess('vagus-nerve')
   const questions = VAGUS_QUIZ_QUESTIONS.map((q) => ({
     id: q.id,
     question: q.question,

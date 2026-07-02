@@ -58,24 +58,27 @@ export async function issueCourseCertificate(args: {
   const issuedAt = new Date()
   const expiresAt = new Date(issuedAt.getTime() + CERT_VALIDITY_MS)
 
-  await sql`
+  const { rows } = await sql<{ name: string | null }>`
     INSERT INTO course_certificates
       (certificate_id, email, name, course_slug, course_title, cpd_hours, issued_at, expires_at)
     VALUES
       (${certificateId}, ${email}, ${args.name ?? null}, ${args.courseSlug}, ${args.courseTitle}, ${args.cpdHours}, ${issuedAt.toISOString()}, ${expiresAt.toISOString()})
     ON CONFLICT (email, course_slug) DO UPDATE
       SET certificate_id = EXCLUDED.certificate_id,
-          name = EXCLUDED.name,
+          -- Never wipe a previously-captured holder name with NULL on
+          -- re-issue — keep the best name we have.
+          name = COALESCE(EXCLUDED.name, course_certificates.name),
           course_title = EXCLUDED.course_title,
           cpd_hours = EXCLUDED.cpd_hours,
           issued_at = EXCLUDED.issued_at,
           expires_at = EXCLUDED.expires_at
+    RETURNING name
   `
 
   return {
     certificateId,
     email,
-    name: args.name ?? null,
+    name: rows[0]?.name ?? args.name ?? null,
     courseSlug: args.courseSlug,
     courseTitle: args.courseTitle,
     cpdHours: args.cpdHours,

@@ -1,7 +1,10 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 import { Check, Clock, AlertCircle, FileSearch } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -59,7 +62,14 @@ function statusStyle(s: StatusItem['status']) {
 }
 
 export default async function BuildStatusPage() {
-  const access = await requireAiCourseAccess()
+  // INTERNAL build-status ledger for the partner pitch. Verified admin
+  // session ONLY — never customer/demo visible. notFound() so the page
+  // doesn't advertise its existence to anyone else.
+  const cookieStore = await cookies()
+  if (!verifyAdminSessionToken(cookieStore.get(ADMIN_COOKIE_NAME)?.value)) {
+    notFound()
+  }
+
   const groups: Array<{ status: StatusItem['status']; items: StatusItem[]; title: string; description: string }> = [
     { status: 'shipped', items: STATUS.filter((s) => s.status === 'shipped'), title: 'Shipped', description: 'Live in production. Clickable, demo-able, working.' },
     { status: 'in-progress', items: STATUS.filter((s) => s.status === 'in-progress'), title: 'In progress', description: 'Active work, not yet complete.' },
@@ -78,7 +88,7 @@ export default async function BuildStatusPage() {
     <div className="min-h-screen bg-background">
       <SiteNav />
       <div className="max-w-4xl mx-auto px-6 pt-[120px] pb-20">
-        <AdminPreviewBadge access={access} />
+        <AdminPreviewBadge access={{ ok: true, reason: 'admin-cookie' }} />
 
         <Link href="/courses" className="text-xs text-accent hover:underline mb-4 inline-block">
           ← Marketplace

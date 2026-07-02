@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, Award, AlertCircle, ArrowRight, BookOpen, Clock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { trackEvent, ANALYTICS_EVENTS, trackFreeCourseCompletion } from '@/lib/analytics'
+import { trackEvent, ANALYTICS_EVENTS } from '@/lib/analytics'
 import { DynamicContentRenderer } from '@/components/course/DynamicContentRenderer'
 import { DownloadableResources } from '@/components/course/DownloadableResources'
 import { ApplyTomorrow } from '@/components/course/ApplyTomorrow'
@@ -17,6 +17,7 @@ import { SectionStepper, type VirtualSection } from '@/components/course/Section
 import { SectionNavButtons } from '@/components/course/SectionNavButtons'
 import { SectionTypeBadge, estimateReadingTime } from '@/components/course/SectionTypeBadge'
 import { useEpModuleData } from '@/hooks/useEpModuleData'
+import { epProgressId } from '@/data/ep-modules'
 import { CONFIG } from '@/lib/config'
 import type { QuizQuestion } from '@/data/modules'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
@@ -94,17 +95,6 @@ export default function ModulePage() {
   // answers must never persist or restore, so the review always sees blank quizzes.
   const [isDemoViewer, setIsDemoViewer] = useState(false)
 
-  if (!isValidModuleId) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Module Not Found</h1>
-          <Link href="/ep-course/modules/1" className="text-accent hover:underline">Back to Dashboard</Link>
-        </div>
-      </div>
-    )
-  }
-
   // Check authentication first
   useEffect(() => {
     async function checkAuth() {
@@ -137,6 +127,18 @@ export default function ModulePage() {
     checkAuth()
   }, [moduleId, router])
 
+  // NOTE: all early returns live BELOW every hook call (rules of hooks)
+  if (!isValidModuleId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Module Not Found</h1>
+          <Link href="/ep-course/modules/1" className="text-accent hover:underline">Back to Dashboard</Link>
+        </div>
+      </div>
+    )
+  }
+
   // Show loading while checking auth
   if (checkingAuth) {
     return (
@@ -166,6 +168,12 @@ export default function ModulePage() {
 }
 
 function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { moduleId: number; router: AppRouterInstance; userEmail: string; isDemoViewer: boolean }) {
+  // moduleId is the DISPLAY id from the URL (1-8). The shared ProgressContext
+  // store namespaces EP modules to 201-208 (EP shares the store with the
+  // flagship course, whose modules are 1-8 — identical ids corrupted progress
+  // across the two courses). ALL progress reads/writes use progressId.
+  const progressId = epProgressId(moduleId)
+
   // Fetch module content from secure API
   const { module, loading: moduleLoading, error: moduleError, accessLevel, needsUpgrade, allSectionTitles } = useEpModuleData(moduleId)
   const {
@@ -179,13 +187,15 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
     canMarkModuleComplete,
     isModuleComplete,
     syncState,
+    isInitialized,
   } = useProgress()
 
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>(() => {
-    // Restore in-progress answers from server-synced ProgressContext
-    const saved = getModuleProgress(moduleId).quizAnswers
-    return saved || {}
-  })
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({})
+  // In-progress answers hydrate from the server-synced ProgressContext AFTER
+  // the server load completes (isInitialized) — hydrating in the useState
+  // initializer read the pre-load default ({}), and the save effect then
+  // pushed {} back over the saved answers.
+  const [answersHydrated, setAnswersHydrated] = useState(false)
   const [quizSubmitted, setQuizSubmitted] = useState<Record<number, boolean>>({})
   const [quizValidationError, setQuizValidationError] = useState<string | null>(null)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
@@ -194,7 +204,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
   const [visitedSections, setVisitedSections] = useState<Set<number>>(new Set([0]))
   const contentAreaRef = useRef<HTMLDivElement>(null)
 
-  const moduleProgress = getModuleProgress(moduleId)
+  const moduleProgress = getModuleProgress(progressId)
 
   // Determine if user has full access based on API response
   const hasFullAccess = accessLevel === 'online-only' || accessLevel === 'full-course'
@@ -286,12 +296,30 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
     }
   }, [moduleProgress.quizCompleted, isRetaking, module])
 
-  // Sync in-progress quiz answers via ProgressContext — but NEVER for demo/review
-  // viewers (ephemeral shared session): their answers must not persist or restore.
+  // Hydrate in-progress quiz answers once the server-synced progress is loaded
+  // (never for demo/review viewers — their quizzes always start blank). Merge
+  // under any selections the user already made on this device so a slow load
+  // can never clobber fresh input.
   useEffect(() => {
-    if (isDemoViewer) return
-    saveQuizAnswers(moduleId, quizAnswers)
-  }, [quizAnswers, moduleId, isDemoViewer])
+    if (!isInitialized || answersHydrated) return
+    if (!isDemoViewer) {
+      const saved = getModuleProgress(progressId).quizAnswers
+      if (saved && Object.keys(saved).length > 0) {
+        setQuizAnswers(prev => ({ ...saved, ...prev }))
+      }
+    }
+    setAnswersHydrated(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized, answersHydrated, progressId, isDemoViewer])
+
+  // Sync in-progress quiz answers via ProgressContext — never before hydration
+  // (we'd push {} over the saved answers), and NEVER for demo/review viewers
+  // (ephemeral shared session): their answers must not persist or restore.
+  useEffect(() => {
+    if (isDemoViewer || !answersHydrated) return
+    saveQuizAnswers(progressId, quizAnswers)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quizAnswers, progressId, isDemoViewer, answersHydrated])
 
   // Once we know it's a demo/review session, clear any answers restored from this
   // browser's localStorage so every review starts with blank quizzes.
@@ -299,10 +327,11 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
     if (isDemoViewer) setQuizAnswers({})
   }, [isDemoViewer])
 
-  // Save current section to localStorage as checkpoint
+  // Save current section to localStorage as checkpoint — ep- prefixed key so it
+  // can never collide with the flagship course's `module-N-checkpoint` keys.
   useEffect(() => {
     if (module) {
-      localStorage.setItem(`module-${moduleId}-checkpoint`, currentSectionIndex.toString())
+      localStorage.setItem(`ep-module-${moduleId}-checkpoint`, currentSectionIndex.toString())
       setVisitedSections(prev => new Set(prev).add(currentSectionIndex))
     }
   }, [currentSectionIndex, moduleId, module])
@@ -310,7 +339,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
   // Restore checkpoint on mount
   useEffect(() => {
     if (module) {
-      const saved = localStorage.getItem(`module-${moduleId}-checkpoint`)
+      const saved = localStorage.getItem(`ep-module-${moduleId}-checkpoint`)
       if (saved) {
         const idx = parseInt(saved)
         if (idx >= 0 && idx < virtualSections.length) {
@@ -360,34 +389,61 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
   // Mark module as started and track active study time
   useEffect(() => {
     if (module) {
-      markModuleStarted(moduleId)
-      trackActiveStudy(moduleId)
+      markModuleStarted(progressId)
+      trackActiveStudy(progressId)
 
       // Track study time every 60 seconds while the user is on the page
       const interval = setInterval(() => {
-        trackActiveStudy(moduleId)
+        trackActiveStudy(progressId)
       }, 60000)
 
       return () => clearInterval(interval)
     }
-  }, [moduleId, module])
+  }, [progressId, module])
+
+  // FULL module-completion flow — the single path for BOTH the auto-complete
+  // on quiz pass and the manual "Complete Module" button. Owns the celebration
+  // screen, the progress flush and checkpoint cleanup. (A previous regression
+  // had the auto-complete path call markModuleComplete directly, silently
+  // skipping all of this.)
+  const completionRanRef = useRef(false)
+  const runModuleCompletion = useCallback(async () => {
+    if (!module) return
+    if (!canMarkModuleComplete(progressId)) return
+    if (completionRanRef.current) return
+    completionRanRef.current = true
+
+    markModuleComplete(progressId)
+
+    try {
+      await flushSave()
+    } catch (error) {
+      console.error('Failed to save progress:', error)
+      // Still show completion — progress is saved locally and will sync on next load
+    }
+    // Clean up section checkpoint
+    localStorage.removeItem(`ep-module-${moduleId}-checkpoint`)
+    // Show celebration before redirecting
+    setShowCompletionCelebration(true)
+  }, [module, moduleId, progressId, canMarkModuleComplete, markModuleComplete, flushSave])
 
   useEffect(() => {
     if (module && moduleProgress) {
-      const canComplete = canMarkModuleComplete(moduleId)
-      const alreadyComplete = isModuleComplete(moduleId)
+      const canComplete = canMarkModuleComplete(progressId)
+      const alreadyComplete = isModuleComplete(progressId)
       // AUTO-COMPLETE on quiz pass (80%+) — was requiring a manual button click
       // which most users miss. Result: paid users who finished content showed
       // as 'barely finished' in admin, and upgrade pitches gated on completion
       // count never fired (SCAT-free → paid upsell, almost-done nurture etc).
       // The button stays visible as a redundant affordance, but completion
-      // now fires automatically the moment quiz pass criteria are met.
+      // now fires automatically — through the FULL completion flow — the
+      // moment quiz pass criteria are met.
       if (canComplete && !alreadyComplete) {
-        markModuleComplete(moduleId)
+        runModuleCompletion()
       }
       setShowCompleteButton(canComplete && !alreadyComplete)
     }
-  }, [module, moduleProgress, moduleId, canMarkModuleComplete, isModuleComplete, markModuleComplete])
+  }, [module, moduleProgress, progressId, canMarkModuleComplete, isModuleComplete, runModuleCompletion])
 
   // Show loading state while fetching module
   if (moduleLoading) {
@@ -451,7 +507,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
               </a>
 
               <p className="text-slate-400 text-sm mt-6">
-                Online from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()} · Full course with workshop from ${(new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}
+                Online from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()} · Full course with workshop from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
               </p>
 
               <button
@@ -547,11 +603,12 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
       }
     })
 
-    updateQuizScore(moduleId, correctCount, module.quiz.length, quizAnswers)
+    updateQuizScore(progressId, correctCount, module.quiz.length, quizAnswers)
 
-    // Fire analytics event with quiz details
+    // Fire analytics event with quiz details (namespaced id — distinguishes EP
+    // quiz submits from flagship modules 1-8 in analytics)
     trackEvent(ANALYTICS_EVENTS.QUIZ_SUBMIT, {
-      moduleId,
+      moduleId: progressId,
       score: correctCount,
       totalQuestions: module.quiz.length,
       passed: correctCount / module.quiz.length >= 0.8,
@@ -569,35 +626,8 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
     }
   }
 
-  const handleCompleteModule = async () => {
-    if (!module) return
-
-    if (canMarkModuleComplete(moduleId)) {
-      markModuleComplete(moduleId)
-
-      // Check if all 3 SCAT modules (101-103) are now complete
-      if (moduleId >= 101 && moduleId <= 103) {
-        const scatModuleIds = [101, 102, 103]
-        const allScatComplete = scatModuleIds.every(
-          id => id === moduleId || isModuleComplete(id)
-        )
-        if (allScatComplete && userEmail) {
-          trackFreeCourseCompletion(userEmail)
-        }
-      }
-
-      try {
-        await flushSave()
-      } catch (error) {
-        console.error('Failed to save progress:', error)
-        // Still show completion — progress is saved locally and will sync on next load
-      }
-      // Clean up section checkpoint
-      localStorage.removeItem(`module-${moduleId}-checkpoint`)
-      // Show celebration before redirecting
-      setShowCompletionCelebration(true)
-    }
-  }
+  // Manual button path — same full completion flow as the auto-complete.
+  const handleCompleteModule = runModuleCompletion
 
   // Check if any part has been submitted (for overall quiz result display)
   const anyQuizSubmitted = Object.values(quizSubmitted).some(Boolean)
@@ -609,9 +639,9 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
     const percentage = (moduleProgress.quizScore / totalQuestions) * 100
     // EP course pass mark is 80% — matches the on-screen copy ("Score at least
     // 80%"), the quiz intro (Math.ceil(quiz.length * 0.8)), the completion-
-    // requirements check and the QUIZ_SUBMIT analytics flag. (For the 5- and
-    // 6-question EP quizzes no achievable score falls in [75,80), so this also
-    // stays in lockstep with canMarkModuleComplete's 0.75 gate.)
+    // requirements check, the QUIZ_SUBMIT analytics flag AND ProgressContext's
+    // canMarkModuleComplete gate (quizPassThreshold returns 0.8 for the
+    // namespaced EP ids 201-208).
     const passed = percentage >= 80
     return { percentage, passed, score: moduleProgress.quizScore }
   }
@@ -759,9 +789,9 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Module {module.id}
+                      Module {moduleId}
                     </span>
-                    {isModuleComplete(moduleId) && (
+                    {isModuleComplete(progressId) && (
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200">
                         <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
                         Completed
@@ -796,13 +826,13 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
                 onClick={() => navigateSection(0)}
                 className="text-xs font-bold text-slate-400 uppercase tracking-wider hover:text-teal-600 transition-colors"
               >
-                Module {module.id}
+                Module {moduleId}
               </button>
               <span className="text-slate-300">/</span>
               <h1 className="text-lg font-bold text-slate-900 tracking-tight truncate">
                 {module.title}
               </h1>
-              {isModuleComplete(moduleId) && (
+              {isModuleComplete(progressId) && (
                 <CheckCircle2 className="w-4 h-4 text-teal-600 flex-shrink-0" strokeWidth={2.5} />
               )}
               {/* Sync status indicator */}
@@ -1396,7 +1426,7 @@ function ModulePageContent({ moduleId, router, userEmail, isDemoViewer }: { modu
             </div>
           )}
 
-          {!showCompleteButton && !isModuleComplete(moduleId) && (
+          {!showCompleteButton && !isModuleComplete(progressId) && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6">
               <h3 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">
                 Completion Requirements

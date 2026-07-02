@@ -8,7 +8,7 @@ import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CONFIG } from '@/lib/config'
 import { SessionProvider, useSession } from '@/contexts/SessionContext'
 
@@ -24,10 +24,15 @@ function LearningSuiteInner() {
   const router = useRouter()
   const { getTotalCompletedModules, getTotalCPDPoints, getTotalStudyTime, isModuleComplete, getModuleProgress, progress } = useProgress()
   const { user, isLoading: accessLoading } = useSession()
-  const [showFramingCard, setShowFramingCard] = useState(() => {
-    if (typeof window === 'undefined') return true
-    return localStorage.getItem('framing-card-dismissed') !== 'true'
-  })
+  // Start false and resolve the localStorage dismissal in an effect — reading
+  // localStorage inside the useState initializer made the server render (true)
+  // diverge from the client's first render, causing a hydration mismatch.
+  const [showFramingCard, setShowFramingCard] = useState(false)
+  useEffect(() => {
+    if (localStorage.getItem('framing-card-dismissed') !== 'true') {
+      setShowFramingCard(true)
+    }
+  }, [])
   if (accessLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -96,7 +101,7 @@ function LearningSuiteInner() {
                 <div className="glass rounded-lg p-4">
                   <div className="text-xs font-medium text-muted-foreground mb-1">{isPreview ? 'Free CPD Hours' : 'Online CPD Hours'}</div>
                   <div className="text-xl font-bold text-gradient">
-                    {isPreview ? 'Free' : `${cpdPoints} / 8`}
+                    {isPreview ? `${scatCPD} / 1` : `${cpdPoints} / 8`}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-4">
@@ -127,8 +132,10 @@ function LearningSuiteInner() {
               })()}
             </div>
 
-            {/* Course Framing Card — shown to users who haven't started Module 1 */}
-            {!isPreview && showFramingCard && !getModuleProgress(1).startedAt && (
+            {/* Course Framing Card — shown to ALL users (free/preview included —
+                they're the segment that most needs orientation) until they start
+                their first module */}
+            {showFramingCard && !getModuleProgress(isPreview ? 101 : 1).startedAt && (
               <div className="glass rounded-xl p-5 mb-5 border-l-4 border-teal-500 relative">
                 <button
                   onClick={(e) => { e.stopPropagation(); localStorage.setItem('framing-card-dismissed', 'true'); setShowFramingCard(false) }}
@@ -139,13 +146,16 @@ function LearningSuiteInner() {
                 </button>
                 <h3 className="text-sm font-bold text-foreground mb-1">How This Course Works</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  8 online modules build your clinical reasoning foundation. The full-day practical workshop (full-course access) is where you apply assessment skills hands-on.
+                  {isPreview
+                    ? '3 short modules take you through SCAT6, SCOAT6 and Child SCAT6 — about an hour all up, with 1 CPD hour and a certificate on completion. The full program adds 8 clinical modules (8 CPD hours online, up to 14 with the hands-on workshop).'
+                    : '8 online modules build your clinical reasoning foundation. The full-day practical workshop (full-course access) is where you apply assessment skills hands-on.'}
                 </p>
               </div>
             )}
 
-            {/* Resume Banner — shown when user has a module in progress */}
-            {!isPreview && (() => {
+            {/* Resume Banner — shown to ALL users with a module in progress
+                (previously hidden from free/preview users) */}
+            {(() => {
               const inProgressModule = modules.find(m => {
                 const p = getModuleProgress(m.id)
                 return p.startedAt !== null && !isModuleComplete(m.id)
@@ -161,7 +171,7 @@ function LearningSuiteInner() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium text-amber-600 mb-0.5">Continue where you left off</div>
-                      <div className="text-sm font-bold text-foreground truncate">Module {inProgressModule.id}: {inProgressModule.title}</div>
+                      <div className="text-sm font-bold text-foreground truncate">Module {isPreview ? inProgressModule.id - 100 : inProgressModule.id}: {inProgressModule.title}</div>
                     </div>
                     <span className="btn-primary px-3 sm:px-4 py-2 rounded-lg text-xs font-bold">
                       Continue

@@ -112,11 +112,11 @@ export function Sidebar() {
               <Brain className="w-5 h-5 text-white" strokeWidth={2} />
             </div>
             <h1 className="text-xl font-bold text-foreground group-hover:text-accent transition-colors tracking-tight">
-              Concussion<span className="text-accent">Pro</span>
+              CEA<span className="text-accent"> Portal</span>
             </h1>
           </div>
           <p className="text-[0.65rem] text-muted-foreground ml-12 uppercase tracking-widest font-medium">
-            Professional Workspace
+            Concussion Education Australia
           </p>
         </Link>
 

@@ -29,7 +29,7 @@ import {
   PlayCircle,
   Sparkles,
 } from 'lucide-react'
-import { getEpModulesMeta } from '@/data/ep-modules'
+import { getEpModulesMeta, epProgressId } from '@/data/ep-modules'
 import { useProgress } from '@/contexts/ProgressContext'
 import { cn } from '@/lib/utils'
 import { CONFIG } from '@/lib/config'
@@ -178,21 +178,25 @@ function DashboardContent() {
   const { isModuleComplete, getModuleProgress } = useProgress()
   const modules = getEpModulesMeta()
 
+  // Meta ids are DISPLAY ids (1-8) for URLs/labels; the shared progress store
+  // namespaces EP modules to 201-208 — always read progress via epProgressId.
+  const isEpComplete = (displayId: number) => isModuleComplete(epProgressId(displayId))
+
   const totalModules = modules.length
-  const completedCount = modules.filter((m) => isModuleComplete(m.id)).length
+  const completedCount = modules.filter((m) => isEpComplete(m.id)).length
   const totalCPD = modules.reduce((sum, m) => sum + m.points, 0)
   const earnedCPD = modules
-    .filter((m) => isModuleComplete(m.id))
+    .filter((m) => isEpComplete(m.id))
     .reduce((sum, m) => sum + m.points, 0)
   const pct = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0
 
   // Primary "Continue"/"Start" affordance: the first in-progress module, else the
   // first not-yet-completed module.
   const inProgressModule = modules.find((m) => {
-    const p = getModuleProgress(m.id)
-    return p.startedAt !== null && !isModuleComplete(m.id)
+    const p = getModuleProgress(epProgressId(m.id))
+    return p.startedAt !== null && !isEpComplete(m.id)
   })
-  const nextModule = inProgressModule || modules.find((m) => !isModuleComplete(m.id))
+  const nextModule = inProgressModule || modules.find((m) => !isEpComplete(m.id))
   const allComplete = completedCount === totalModules
   const notStarted = completedCount === 0 && !inProgressModule
 
@@ -304,8 +308,8 @@ function DashboardContent() {
           </div>
           <div className="space-y-3 mb-12">
             {modules.map((module) => {
-              const completed = isModuleComplete(module.id)
-              const progress = getModuleProgress(module.id)
+              const completed = isEpComplete(module.id)
+              const progress = getModuleProgress(epProgressId(module.id))
               const hasStarted = progress.startedAt !== null
               const isNext = nextModule?.id === module.id
 

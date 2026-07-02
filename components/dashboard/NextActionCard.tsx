@@ -5,11 +5,23 @@ import { useRouter } from 'next/navigation'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import { getModulesMeta, getSCATModulesMeta } from '@/data/module-meta'
-import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2, Lock } from 'lucide-react'
+import { ArrowRight, Clock, Award, CheckCircle2, TrendingUp, Sparkles, Download, Mail, MapPin, Loader2, Lock, GraduationCap } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { CONFIG } from '@/lib/config'
+import Link from 'next/link'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
+import { COURSES } from '@/lib/ai-course/provider-catalogue'
 import { trackEvent } from '@/lib/analytics'
 
+// Short-course cross-sell for completers — sourced from the catalogue (single
+// source of truth for price + CPD hours) so this copy can never drift from checkout.
+const CROSS_SELL_COURSES = ['ai-in-clinical-practice', 'vagus-nerve']
+  .map(id => COURSES.find(c => c.id === id))
+  .filter((c): c is NonNullable<typeof c> => !!c)
+
+// Ready-to-Train waiting-pool NOMINATION selector — all cities stay listed,
+// including ones whose last round has already run (a completed city simply
+// starts collecting demand for its next round). The surrounding copy must
+// frame this as a nomination, never as a scheduled date.
 const POOL_CITIES = Object.values(CONFIG.LOCATIONS).map(loc => ({
   value: loc.slug,
   label: loc.city,
@@ -47,7 +59,14 @@ export function NextActionCard() {
   const allComplete = !nextModule
 
 
-  // Auto-trigger certificate email when all modules complete
+  // Auto-trigger certificate email when all modules complete.
+  //
+  // Dedupe is SERVER-SIDE: POST /api/certificate is idempotent — it inserts an
+  // email_audit_log key (certificate_email_<type>_<userId>) with ON CONFLICT DO
+  // NOTHING and skips the send when the key already exists, returning
+  // { success: true, emailSent: false }. The localStorage flag below is only a
+  // per-device fast-path to avoid the network call; a second device may still
+  // fire the POST, but the server will never double-send the email.
   useEffect(() => {
     if (allComplete && accessLevel && userEmail && !certTriggered.current) {
       certTriggered.current = true
@@ -67,7 +86,12 @@ export function NextActionCard() {
           if (data.success) {
             setCertificateStatus('sent')
             if (typeof window !== 'undefined') localStorage.setItem(sentKey, '1')
-            trackEvent('course_complete', { courseType: certType, accessLevel, modules: totalModules })
+            // Only fire analytics when the server actually sent the email this
+            // time (emailSent=false means it was already emailed previously —
+            // don't double-count course_complete from a second device).
+            if (data.emailSent) {
+              trackEvent('course_complete', { courseType: certType, accessLevel, modules: totalModules })
+            }
           } else {
             setCertificateStatus('error')
           }
@@ -238,10 +262,9 @@ export function NextActionCard() {
               )}
 
               {accessLevel === 'online-only' && (() => {
-                const earlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
-                const price = earlyBird
-                  ? CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
-                  : CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+                // Early-bird upgrade price (no city context here — the /upgrade
+                // page prices per-city; pre-launch every city is early-bird)
+                const price = upgradePriceFor()
                 return (
                   <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl text-center">
                     <p className="text-sm text-blue-900 font-bold mb-1">Add the hands-on workshop — ${price} AUD</p>
@@ -253,14 +276,40 @@ export function NextActionCard() {
                       Upgrade to Workshop
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
-                    {earlyBird && (
-                      <p className="text-[11px] text-blue-600 font-medium mt-2">
-                        Lifetime access included
-                      </p>
-                    )}
+                    <p className="text-[11px] text-blue-600 font-medium mt-2">
+                      Lifetime access included
+                    </p>
                   </div>
                 )
               })()}
+
+              {/* More CPD from CEA — completers see a next step */}
+              {CROSS_SELL_COURSES.length > 0 && (
+                <div className="rounded-2xl border border-border bg-gradient-to-br from-slate-50 to-teal-50/40 p-4 mb-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <GraduationCap className="w-4 h-4 text-teal-700" strokeWidth={1.8} />
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">More CPD from CEA</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {CROSS_SELL_COURSES.map(c => (
+                      <Link
+                        key={c.id}
+                        href={c.route}
+                        onClick={() => trackEvent('cross_sell_click', { courseId: c.id, source: 'completion_card', accessLevel })}
+                        className="flex items-center justify-between gap-2 rounded-xl border border-border bg-white/70 px-3.5 py-2.5 hover:border-teal-300 hover:bg-teal-50/50 transition-colors"
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-[13px] font-semibold text-foreground leading-tight truncate">{c.title}</span>
+                          <span className="block text-[11px] text-muted-foreground leading-tight">
+                            {c.cpdHours} CPD {c.cpdHours === 1 ? 'hr' : 'hrs'}{c.priceAUD !== null && <> · A${c.priceAUD.toLocaleString('en-AU')}</>}
+                          </span>
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5 text-teal-600/60 flex-shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-3">
                 <button
@@ -275,7 +324,7 @@ export function NextActionCard() {
                     onClick={() => { trackEvent('upgrade_cta_click', { source: 'completion_primary', from: 'preview' }); router.push('/pricing') }}
                     className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/25 transition-all flex items-center gap-2"
                   >
-                    Upgrade — Unlock 14 CPD Hours
+                    Unlock all 8 modules · 8 CPD hrs (up to 14 with the workshop)
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : accessLevel !== 'online-only' ? (
@@ -367,17 +416,14 @@ export function NextActionCard() {
   const showWorkshopNudge = accessLevel === 'online-only' && progressPercentage >= 25
   const workshopNudge = (() => {
     if (!showWorkshopNudge) return null
-    const earlyBird = new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
-    const price = earlyBird
-      ? CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE
-      : CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+    const price = upgradePriceFor()
     const milestone = progressPercentage >= 75 ? 75 : progressPercentage >= 50 ? 50 : 25
     const message = milestone >= 75
       ? "You're nearly done — lock in hands-on skills while the theory is fresh."
       : milestone >= 50
       ? 'Halfway through the theory. The workshop turns this knowledge into clinical confidence.'
       : 'Great start. Add the workshop to practise SCAT6, VOMS & BESS with expert feedback.'
-    return { price, earlyBird, message, milestone }
+    return { price, message, milestone }
   })()
 
   return (
@@ -487,11 +533,9 @@ export function NextActionCard() {
                   Upgrade to Workshop
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
-                {workshopNudge.earlyBird && (
-                  <span className="text-[11px] text-blue-600 font-medium">
-                    Lifetime access included
-                  </span>
-                )}
+                <span className="text-[11px] text-blue-600 font-medium">
+                  Lifetime access included
+                </span>
               </div>
             </div>
           </div>

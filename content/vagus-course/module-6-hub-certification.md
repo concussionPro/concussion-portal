@@ -48,18 +48,18 @@ The certification quiz tests the load-bearing content from Modules 1, 2, and 4 �
 - Pass mark: 8/10
 - Unlimited retries
 - Issues a verifiable certificate valid for 12 months
-- Counts as 1.25 CPD hours (Educational Activities — your AHPRA Board CPD Home rules apply)
+- Counts as 1 CPD hour (Educational Activities — your AHPRA Board CPD Home rules apply)
 
 [KEYPOINT: The certificate is not a diagnostic qualification. It documents that you've completed the course and understood the regulatory + evidence framing. Clinical decisions still rest with you and your treating relationships.]
 
 ## Logging this course to AHPRA
 
-Open the CPD Record dashboard (link in the sidebar) to:
+Once you pass the quiz, your certificate page gives you everything an audit needs:
 
-- See this course's hours logged automatically against your annual requirement
-- Export an AHPRA-audit-ready PDF of all your CEA-platform CPD
-- Get per-Board calibration (the 17 AHPRA Boards + RACGP + ACRRM have different requirements)
+- A verifiable certificate with a unique public verification URL (anyone — employer, insurer, auditor — can confirm it without an account)
+- The certificate ID, issue date, and validity window
+- A suggested AHPRA log entry you can copy into your CPD record — activity name, provider, hours, date, plus a prompt for the brief reflection most Boards require
 
-If you're a Heidi user, your Evidence + Scribe activity feeds into the same dashboard as passive CPD (your AHPRA Board's percentage allowance applies — see the per-Board reference page).
+Keep the verification URL with your CPD records; check it still resolves before any audit or insurer request.
 
-[TRYTHIS: Take the certification quiz now. The retake is free. The certificate goes straight into your CPD record.]
+[TRYTHIS: Take the certification quiz now. Retakes are unlimited. Then copy the suggested log entry from your certificate page into your CPD record while the learning is fresh.]

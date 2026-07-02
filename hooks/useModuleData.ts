@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Module } from '@/data/modules'
 
-interface UseModuleDataResult {
+export interface UseModuleDataResult {
   module: Module | null
   loading: boolean
   error: string | null
@@ -12,13 +12,24 @@ interface UseModuleDataResult {
   allSectionTitles: string[] | null
 }
 
+export type CourseKey = 'flagship' | 'ep'
+
+const COURSE_ENDPOINTS: Record<CourseKey, string> = {
+  flagship: '/api/modules',
+  ep: '/api/ep-course/modules',
+}
+
 /**
  * Hook to fetch module content from secure API
  *
  * Content is fetched from server based on user's authentication.
  * This prevents unauthorized users from accessing paid content.
+ *
+ * Parameterised by course: the flagship learning suite and the EP course
+ * (Concussion Rehab Mastery) share this single implementation — only the
+ * API endpoint differs. (useEpModuleData is a thin wrapper.)
  */
-export function useModuleData(moduleId: number): UseModuleDataResult {
+export function useModuleData(moduleId: number, course: CourseKey = 'flagship'): UseModuleDataResult {
   const [module, setModule] = useState<Module | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -33,7 +44,7 @@ export function useModuleData(moduleId: number): UseModuleDataResult {
     }
 
     try {
-      const response = await fetch(`/api/modules/${moduleId}`, {
+      const response = await fetch(`${COURSE_ENDPOINTS[course]}/${moduleId}`, {
         credentials: 'include',
       })
 
@@ -77,7 +88,7 @@ export function useModuleData(moduleId: number): UseModuleDataResult {
     } finally {
       if (!isRefresh) setLoading(false)
     }
-  }, [moduleId])
+  }, [moduleId, course])
 
   // Initial fetch
   useEffect(() => {

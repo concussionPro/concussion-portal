@@ -1553,7 +1553,7 @@ export function ReferenceRepository({ accessLevel, loading }: ReferenceRepositor
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href={CONFIG.SHOP_URL}
+                  href="/upgrade"
                   onClick={() => trackShopClick('references-online-only-upgrade', { accessLevel: 'online-only' })}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                 >

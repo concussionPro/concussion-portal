@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyCertificate } from '@/lib/ai-course/certificate'
-import { checkAiCourseAccess } from '@/lib/ai-course/access'
 import { jsPDF } from 'jspdf'
 import { CONFIG } from '@/lib/config'
 
 /**
  * GET /api/ai-course/certificate/pdf/:id
  *
- * Admin-gated during preview. The certificate ID alone is no longer
- * enough — even a leaked URL doesn't expose the PDF. Once
- * AI_COURSE_PUBLIC=true, the bearer-token model resumes (high-entropy
- * ID guards guessing).
+ * PUBLIC — the high-entropy certificate ID is the bearer token. Employers
+ * and AHPRA auditors (who have no portal account) must be able to download
+ * the PDF from the verify URL printed on the certificate.
  */
 
 interface RouteParams {
@@ -18,11 +16,6 @@ interface RouteParams {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const access = await checkAiCourseAccess(request)
-  if (!access.ok) {
-    return NextResponse.json({ error: 'Admin key required during preview.' }, { status: 401 })
-  }
-
   const { id } = await params
   if (!id || id.length < 8 || !/^[A-Za-z0-9_-]+$/.test(id)) {
     return NextResponse.json({ error: 'Invalid certificate ID' }, { status: 400 })

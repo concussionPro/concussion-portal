@@ -2,7 +2,6 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { SiteNav } from '@/components/SiteNav'
 import { verifyCertificate } from '@/lib/ai-course/certificate'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
 
 interface PageParams {
   params: Promise<{ id: string }>
@@ -14,13 +13,12 @@ export const metadata: Metadata = {
 }
 
 /**
- * Verification page — admin-gated during preview. Once AI_COURSE_PUBLIC
- * is set, this becomes accessible to anyone with a certificate ID URL.
- * Until then, third-party verification (insurers, employers) requires
- * the admin key — by design, since the course is not yet public.
+ * PUBLIC verification page — no auth. The high-entropy certificate ID is
+ * the bearer token: anyone holding the URL (employers, insurers, AHPRA
+ * auditors — who typically have no portal account) can confirm the
+ * certificate. Only the holder's name and email DOMAIN are exposed.
  */
 export default async function VerifyCertificatePage({ params }: PageParams) {
-  const access = await requireAiCourseAccess()
   const { id } = await params
   if (!id || id.length < 8) notFound()
   const cert = await verifyCertificate(id)
@@ -34,7 +32,6 @@ export default async function VerifyCertificatePage({ params }: PageParams) {
     <div className="min-h-screen bg-background">
       <SiteNav />
       <div className="max-w-2xl mx-auto px-6 pt-[120px] pb-20">
-        <AdminPreviewBadge access={access} />
         <p className="text-xs font-bold uppercase tracking-wide text-accent mb-2">
           Certificate verification
         </p>

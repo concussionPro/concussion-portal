@@ -85,21 +85,11 @@ export async function GET(request: NextRequest) {
       ? customerEmail.slice(0, 3) + '***@' + customerEmail.split('@')[1]
       : ''
 
-    const response = NextResponse.json({
-      success: true,
-      session: {
-        customerName,
-        customerEmail: maskedEmail,
-        courseType,
-        location: session.metadata?.location || '',
-        amountPaid: (session.amount_total || 0) / 100,
-        currency: (session.currency || 'aud').toUpperCase(),
-      },
-    })
-
-    // Auto-login + JWT refresh after purchase
+    // Auto-login + JWT refresh after purchase — resolved BEFORE building the
+    // response so the client knows whether a logged-in session was minted.
     // - Retries user lookup if webhook hasn't created/upgraded the user yet (#11)
     // - Always sets fresh JWT so access level reflects the purchase (#13)
+    let sessionToken: string | null = null
     if (customerEmail) {
       try {
         let user = await findUserByEmail(customerEmail)
@@ -112,19 +102,38 @@ export async function GET(request: NextRequest) {
         }
         if (user) {
           const accessLevel = user.accessLevel as 'preview' | 'online-only' | 'full-course'
-          const sessionToken = createJWTSession(user.id, user.email, user.name || customerName, accessLevel, true)
-          response.cookies.set('session', sessionToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 365 * 24 * 60 * 60,
-            path: '/',
-          })
+          sessionToken = createJWTSession(user.id, user.email, user.name || customerName, accessLevel, true)
         }
       } catch (err) {
         // Best effort — user can still use magic link
         console.error('Auto-login on success page failed:', err)
       }
+    }
+
+    const response = NextResponse.json({
+      success: true,
+      // Whether a logged-in session cookie was minted on this response. When
+      // false (webhook race — user row not created yet), the success page must
+      // NOT link into gated course content; the magic-link email is the path in.
+      loggedIn: !!sessionToken,
+      session: {
+        customerName,
+        customerEmail: maskedEmail,
+        courseType,
+        location: session.metadata?.location || '',
+        amountPaid: (session.amount_total || 0) / 100,
+        currency: (session.currency || 'aud').toUpperCase(),
+      },
+    })
+
+    if (sessionToken) {
+      response.cookies.set('session', sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 365 * 24 * 60 * 60,
+        path: '/',
+      })
     }
 
     return response

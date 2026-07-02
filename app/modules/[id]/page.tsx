@@ -91,17 +91,6 @@ export default function ModulePage() {
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
 
-  if (!isValidModuleId) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Module Not Found</h1>
-          <Link href="/learning" className="text-accent hover:underline">Back to Dashboard</Link>
-        </div>
-      </div>
-    )
-  }
-
   // Check authentication first
   useEffect(() => {
     async function checkAuth() {
@@ -132,6 +121,18 @@ export default function ModulePage() {
     }
     checkAuth()
   }, [moduleId, router])
+
+  // NOTE: all early returns live BELOW every hook call (rules of hooks)
+  if (!isValidModuleId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Module Not Found</h1>
+          <Link href="/learning" className="text-accent hover:underline">Back to Dashboard</Link>
+        </div>
+      </div>
+    )
+  }
 
   // Show loading while checking auth
   if (checkingAuth) {
@@ -175,13 +176,15 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     canMarkModuleComplete,
     isModuleComplete,
     syncState,
+    isInitialized,
   } = useProgress()
 
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>(() => {
-    // Restore in-progress answers from server-synced ProgressContext
-    const saved = getModuleProgress(moduleId).quizAnswers
-    return saved || {}
-  })
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({})
+  // In-progress answers hydrate from the server-synced ProgressContext AFTER
+  // the server load completes (isInitialized). Hydrating in the useState
+  // initializer read the pre-load default ({}), and the save effect then
+  // pushed {} back over the saved answers — destroying cross-device resume.
+  const [answersHydrated, setAnswersHydrated] = useState(false)
   const [quizSubmitted, setQuizSubmitted] = useState<Record<number, boolean>>({})
   const [quizValidationError, setQuizValidationError] = useState<string | null>(null)
   const [showCompleteButton, setShowCompleteButton] = useState(false)
@@ -285,10 +288,26 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     }
   }, [moduleProgress.quizCompleted, isRetaking, module])
 
-  // Sync in-progress quiz answers to server via ProgressContext
+  // Hydrate in-progress quiz answers once the server-synced progress is loaded.
+  // Merge under any selections the user already made on this device so a slow
+  // load can never clobber fresh input.
   useEffect(() => {
+    if (!isInitialized || answersHydrated) return
+    const saved = getModuleProgress(moduleId).quizAnswers
+    if (saved && Object.keys(saved).length > 0) {
+      setQuizAnswers(prev => ({ ...saved, ...prev }))
+    }
+    setAnswersHydrated(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized, answersHydrated, moduleId])
+
+  // Sync in-progress quiz answers to server via ProgressContext — never before
+  // hydration, or we'd push {} over the saved answers.
+  useEffect(() => {
+    if (!answersHydrated) return
     saveQuizAnswers(moduleId, quizAnswers)
-  }, [quizAnswers, moduleId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quizAnswers, moduleId, answersHydrated])
 
   // Save current section to localStorage as checkpoint
   useEffect(() => {
@@ -363,6 +382,44 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     }
   }, [moduleId, module])
 
+  // FULL module-completion flow — the single path for BOTH the auto-complete
+  // on quiz pass and the manual "Complete Module" button. Owns the celebration
+  // screen, the SCAT $50-off reveal, free-course completion tracking, the
+  // progress flush and checkpoint cleanup. (A previous regression had the
+  // auto-complete path call markModuleComplete directly, silently skipping
+  // all of this.)
+  const completionRanRef = useRef(false)
+  const runModuleCompletion = useCallback(async () => {
+    if (!module) return
+    if (!canMarkModuleComplete(moduleId)) return
+    if (completionRanRef.current) return
+    completionRanRef.current = true
+
+    markModuleComplete(moduleId)
+
+    // Check if all 3 SCAT modules (101-103) are now complete
+    if (moduleId >= 101 && moduleId <= 103) {
+      const scatModuleIds = [101, 102, 103]
+      const allScatComplete = scatModuleIds.every(
+        id => id === moduleId || isModuleComplete(id)
+      )
+      if (allScatComplete && userEmail) {
+        trackFreeCourseCompletion(userEmail)
+      }
+    }
+
+    try {
+      await flushSave()
+    } catch (error) {
+      console.error('Failed to save progress:', error)
+      // Still show completion — progress is saved locally and will sync on next load
+    }
+    // Clean up section checkpoint
+    localStorage.removeItem(`module-${moduleId}-checkpoint`)
+    // Show celebration before redirecting
+    setShowCompletionCelebration(true)
+  }, [module, moduleId, userEmail, canMarkModuleComplete, markModuleComplete, isModuleComplete, flushSave])
+
   useEffect(() => {
     if (module && moduleProgress) {
       const canComplete = canMarkModuleComplete(moduleId)
@@ -372,13 +429,14 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
       // as 'barely finished' in admin, and upgrade pitches gated on completion
       // count never fired (SCAT-free → paid upsell, almost-done nurture etc).
       // The button stays visible as a redundant affordance, but completion
-      // now fires automatically the moment quiz pass criteria are met.
+      // now fires automatically — through the FULL completion flow — the
+      // moment quiz pass criteria are met.
       if (canComplete && !alreadyComplete) {
-        markModuleComplete(moduleId)
+        runModuleCompletion()
       }
       setShowCompleteButton(canComplete && !alreadyComplete)
     }
-  }, [module, moduleProgress, moduleId, canMarkModuleComplete, isModuleComplete, markModuleComplete])
+  }, [module, moduleProgress, moduleId, canMarkModuleComplete, isModuleComplete, runModuleCompletion])
 
   // Show loading state while fetching module
   if (moduleLoading) {
@@ -442,7 +500,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
               </a>
 
               <p className="text-slate-400 text-sm mt-6">
-                Online from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()} · Full course with workshop from ${(new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') ? CONFIG.COURSE.PRICE_EARLY_BIRD : CONFIG.COURSE.PRICE_REGULAR).toLocaleString()}
+                Online from ${CONFIG.COURSE.PRICE_ONLINE.toLocaleString()} · Full course with workshop from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
               </p>
 
               <button
@@ -560,35 +618,8 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
     }
   }
 
-  const handleCompleteModule = async () => {
-    if (!module) return
-
-    if (canMarkModuleComplete(moduleId)) {
-      markModuleComplete(moduleId)
-
-      // Check if all 3 SCAT modules (101-103) are now complete
-      if (moduleId >= 101 && moduleId <= 103) {
-        const scatModuleIds = [101, 102, 103]
-        const allScatComplete = scatModuleIds.every(
-          id => id === moduleId || isModuleComplete(id)
-        )
-        if (allScatComplete && userEmail) {
-          trackFreeCourseCompletion(userEmail)
-        }
-      }
-
-      try {
-        await flushSave()
-      } catch (error) {
-        console.error('Failed to save progress:', error)
-        // Still show completion — progress is saved locally and will sync on next load
-      }
-      // Clean up section checkpoint
-      localStorage.removeItem(`module-${moduleId}-checkpoint`)
-      // Show celebration before redirecting
-      setShowCompletionCelebration(true)
-    }
-  }
+  // Manual button path — same full completion flow as the auto-complete.
+  const handleCompleteModule = runModuleCompletion
 
   // Check if any part has been submitted (for overall quiz result display)
   const anyQuizSubmitted = Object.values(quizSubmitted).some(Boolean)
@@ -1329,7 +1360,7 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                     )}
                     {!quizResult?.passed && isSCATModule && (
                       <p className="text-sm text-amber-700 mb-4">
-                        These clinical scenarios are covered in depth in the <Link href="/pricing" className="font-semibold underline hover:no-underline">full concussion management course</Link> — 8 modules, 14 CPD hours.
+                        These clinical scenarios are covered in depth in the <Link href="/pricing" className="font-semibold underline hover:no-underline">full concussion management course</Link> — 8 modules · 8 CPD hours online (up to 14 with the in-person day).
                       </p>
                     )}
                     {!quizResult?.passed && (

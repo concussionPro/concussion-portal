@@ -1,7 +1,7 @@
 import type { Module } from '@/data/modules'
 
 export const module2: Module = {
-  id: 2,
+  id: 202,
   title: 'Recognition, Red Flags & Scope of Practice',
   subtitle:
     'Neurophysiology of Observable Signs, Red-Flag Pathophysiology and the Medico-Legal Scope Boundary',

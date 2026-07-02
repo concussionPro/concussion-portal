@@ -7,6 +7,7 @@
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { verifySessionToken } from '@/lib/jwt-session'
+import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 import { isUserEnrolled } from '@/lib/ai-course/access'
 import { DEMO_KEY } from '@/lib/demo-key'
 
@@ -30,9 +31,13 @@ export async function checkServerAccess(): Promise<GateResult> {
   const cookieStore = await cookies()
   const headerList = await headers()
 
-  // Admin always allowed
-  const adminSession = cookieStore.get('admin_session')?.value
-  if (adminSession) return { ok: true, reason: 'admin-cookie' }
+  // Admin always allowed — the cookie must actually VERIFY (HMAC-signed
+  // admin_session, see lib/admin-session). Never accept a merely non-empty
+  // cookie: anyone can set `admin_session=x` in devtools.
+  const adminSession = cookieStore.get(ADMIN_COOKIE_NAME)?.value
+  if (adminSession && verifyAdminSessionToken(adminSession)) {
+    return { ok: true, reason: 'admin-cookie' }
+  }
   const adminKey = headerList.get('x-admin-key')
   if (adminKey && process.env.ADMIN_API_KEY && adminKey === process.env.ADMIN_API_KEY) {
     return { ok: true, reason: 'admin-header' }

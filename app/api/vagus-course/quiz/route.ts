@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { checkAiCourseAccess } from '@/lib/ai-course/access'
+import { checkCourseApiAccess } from '@/lib/course-access'
 import {
   VAGUS_QUIZ_QUESTIONS,
   VAGUS_QUIZ_PASS_MARK,
@@ -9,6 +9,9 @@ import {
 } from '@/lib/vagus-course/quiz'
 import { issueCourseCertificate } from '@/lib/course-certificates'
 import { findCourse } from '@/lib/ai-course/provider-catalogue'
+import { findUserByEmail } from '@/lib/users'
+
+const COURSE_SLUG = 'vagus-nerve'
 
 const submissionSchema = z.object({
   answers: z
@@ -23,7 +26,7 @@ const submissionSchema = z.object({
 })
 
 export async function GET(request: NextRequest) {
-  const access = await checkAiCourseAccess(request)
+  const access = await checkCourseApiAccess(request, COURSE_SLUG)
   if (!access.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -39,7 +42,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const access = await checkAiCourseAccess(request)
+  const access = await checkCourseApiAccess(request, COURSE_SLUG)
   if (!access.ok) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -63,13 +66,19 @@ export async function POST(request: NextRequest) {
 
   let certificate = null
   if (result.passed && access.email) {
-    const course = findCourse('vagus-nerve')
+    const course = findCourse(COURSE_SLUG)
     try {
+      // Certificates must carry the holder's NAME, never their email —
+      // fetch it from the users store. If the user genuinely has no name,
+      // pass null and let render surfaces fall back gracefully.
+      const user = await findUserByEmail(access.email).catch(() => null)
+      const holderName = user?.name?.trim() || null
       certificate = await issueCourseCertificate({
         email: access.email,
-        courseSlug: 'vagus-nerve',
+        name: holderName,
+        courseSlug: COURSE_SLUG,
         courseTitle: course?.title ?? 'The Vagus Nerve in Clinical Practice',
-        cpdHours: course?.cpdHours ?? 1.25,
+        cpdHours: course?.cpdHours ?? 1,
       })
     } catch (err) {
       console.error('[vagus-course/quiz] Certificate issuance failed:', err)

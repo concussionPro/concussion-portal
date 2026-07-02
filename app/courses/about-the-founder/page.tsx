@@ -89,8 +89,8 @@ export default async function AboutFounderPage() {
               },
               {
                 icon: Award,
-                title: 'Melbourne workshop · Sat 13 June 2026',
-                body: 'In-person CCM workshop, Melbourne CBD. Confirmed running. Early-bird cutoff 31 May 2026. Catering + materials included.',
+                title: 'Melbourne workshop · Delivered June 2026',
+                body: 'In-person CCM workshop, Melbourne CBD — delivered Saturday 13 June 2026 to the first full-course cohort. Next rounds open by city nomination.',
                 evidence: '/courses/melbourne',
               },
             ].map((b) => {

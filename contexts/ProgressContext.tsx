@@ -22,6 +22,7 @@ interface ProgressContextType {
   progress: Record<number, ModuleProgress>
   syncState: SyncState
   restoredFromServer: boolean
+  isInitialized: boolean
   updateQuizScore: (moduleId: number, score: number, totalQuestions: number, answers?: Record<string, number>) => void
   saveQuizAnswers: (moduleId: number, answers: Record<string, number>) => void
   markModuleComplete: (moduleId: number) => void
@@ -41,6 +42,16 @@ interface ProgressContextType {
 const ProgressContext = createContext<ProgressContextType | undefined>(undefined)
 
 const STORAGE_KEY = 'concussion-pro-progress'
+
+// EP (Concussion Rehab Mastery) modules are namespaced to 201-208 in the shared
+// progress store so they can never collide with flagship modules 1-8.
+// URLs stay /ep-course/modules/1-8 — the EP surfaces map display id → 200 + id.
+export const EP_MODULE_ID_OFFSET = 200
+const isEpModuleId = (moduleId: number) => moduleId >= 201 && moduleId <= 208
+// EP quizzes pass at 80% (matches all EP UI copy); flagship + SCAT pass at 75%.
+export function quizPassThreshold(moduleId: number): number {
+  return isEpModuleId(moduleId) ? 0.8 : 0.75
+}
 
 function createDefaultModuleProgress(moduleId: number): ModuleProgress {
   return {
@@ -68,6 +79,10 @@ function getDefaultProgress(): Record<number, ModuleProgress> {
   for (let i = 101; i <= 103; i++) {
     defaults[i] = createDefaultModuleProgress(i)
   }
+  // EP course modules 201-208 (namespaced — see EP_MODULE_ID_OFFSET)
+  for (let i = 201; i <= 208; i++) {
+    defaults[i] = createDefaultModuleProgress(i)
+  }
   return defaults
 }
 
@@ -88,6 +103,57 @@ function parseStoredProgress(data: Record<string, any>): Record<number, ModulePr
     parsed[Number(key)] = entry
   })
   return parsed
+}
+
+// Merge two progress records for the same module, preferring the MORE ADVANCED
+// state on every axis. Used when the server load resolves so it can never
+// clobber progress made while the fetch was in flight (e.g. the Module-1
+// startedAt activation event fired in the first seconds on the page).
+function mergeModuleProgress(a: ModuleProgress, b: ModuleProgress): ModuleProgress {
+  const earliest = (x: Date | null, y: Date | null) =>
+    x && y ? (x.getTime() <= y.getTime() ? x : y) : x || y
+  const latest = (x: Date | null, y: Date | null) =>
+    x && y ? (x.getTime() >= y.getTime() ? x : y) : x || y
+
+  // Quiz fields travel together — take them from whichever record is further
+  // along (completed quiz beats in-progress; higher score beats lower).
+  const aQuizRank = a.quizCompleted ? 2 + (a.quizScore ?? 0) : a.quizAnswers ? 1 : 0
+  const bQuizRank = b.quizCompleted ? 2 + (b.quizScore ?? 0) : b.quizAnswers ? 1 : 0
+  const quizSource = bQuizRank > aQuizRank ? b : a
+
+  // In-progress answers: prefer the set with more questions answered.
+  const aAnswerCount = a.quizAnswers ? Object.keys(a.quizAnswers).length : 0
+  const bAnswerCount = b.quizAnswers ? Object.keys(b.quizAnswers).length : 0
+
+  return {
+    moduleId: a.moduleId,
+    completed: a.completed || b.completed,
+    quizScore: quizSource.quizScore,
+    quizTotalQuestions: quizSource.quizTotalQuestions,
+    quizCompleted: a.quizCompleted || b.quizCompleted,
+    quizAnswers: quizSource.quizCompleted
+      ? quizSource.quizAnswers
+      : bAnswerCount > aAnswerCount
+        ? b.quizAnswers
+        : a.quizAnswers,
+    quizSubmittedAt: latest(a.quizSubmittedAt, b.quizSubmittedAt),
+    startedAt: earliest(a.startedAt, b.startedAt),
+    completedAt: earliest(a.completedAt, b.completedAt),
+    activeStudyMinutes: Math.max(a.activeStudyMinutes || 0, b.activeStudyMinutes || 0),
+    lastActiveAt: latest(a.lastActiveAt, b.lastActiveAt),
+  }
+}
+
+function mergeProgress(
+  current: Record<number, ModuleProgress>,
+  incoming: Record<number, ModuleProgress>
+): Record<number, ModuleProgress> {
+  const merged: Record<number, ModuleProgress> = { ...getDefaultProgress(), ...current }
+  Object.keys(incoming).forEach((key) => {
+    const id = Number(key)
+    merged[id] = merged[id] ? mergeModuleProgress(merged[id], incoming[id]) : incoming[id]
+  })
+  return merged
 }
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
@@ -120,10 +186,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
               const localStored = localStorage.getItem(STORAGE_KEY)
               const hadLocalData = localStored && Object.values(parseStoredProgress(JSON.parse(localStored))).some(p => p.completed || p.startedAt)
 
-              // NOW write server data
-              const merged = { ...getDefaultProgress(), ...parsed }
-              setProgress(merged)
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+              // NOW write server data — functional merge so any progress made
+              // while this fetch was in flight (startedAt, quiz answers) is
+              // preserved rather than clobbered by the server snapshot.
+              setProgress(prev => {
+                const merged = mergeProgress(prev, parsed)
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+                return merged
+              })
 
               if (!hadLocalData) {
                 const serverHasData = Object.values(parsed).some(p => p.completed || p.startedAt)
@@ -150,8 +220,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         if (stored) {
           try {
             const parsed = parseStoredProgress(JSON.parse(stored))
-            const merged = { ...getDefaultProgress(), ...parsed }
-            setProgress(merged)
+            setProgress(prev => mergeProgress(prev, parsed))
           } catch (error) {
             console.error('Failed to parse stored progress:', error)
           }
@@ -168,19 +237,30 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
-    // Flush pending saves when user leaves the page
-    const handleBeforeUnload = () => {
+    // Flush pending saves when the user leaves or backgrounds the page.
+    // beforeunload alone is unreliable (never fires on mobile Safari / when a
+    // tab is killed from the background) — pagehide + visibilitychange(hidden)
+    // are the events that actually fire on mobile.
+    const flushPending = () => {
       if (hasPendingSaveRef.current) {
         const body = JSON.stringify({ progress: progressRef.current })
-        navigator.sendBeacon('/api/progress', new Blob([body], { type: 'application/json' }))
+        const ok = navigator.sendBeacon('/api/progress', new Blob([body], { type: 'application/json' }))
+        if (ok) hasPendingSaveRef.current = false
       }
     }
-    window.addEventListener('beforeunload', handleBeforeUnload)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushPending()
+    }
+    window.addEventListener('beforeunload', flushPending)
+    window.addEventListener('pagehide', flushPending)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
-      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('beforeunload', flushPending)
+      window.removeEventListener('pagehide', flushPending)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       if (syncClearRef.current) clearTimeout(syncClearRef.current)
     }
   }, [])
@@ -371,7 +451,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       moduleProgress.quizScore !== null &&
       moduleProgress.quizTotalQuestions !== null &&
       moduleProgress.quizTotalQuestions > 0 &&
-      moduleProgress.quizScore / moduleProgress.quizTotalQuestions >= 0.75
+      moduleProgress.quizScore / moduleProgress.quizTotalQuestions >= quizPassThreshold(moduleId)
     )
   }
 
@@ -412,6 +492,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         progress,
         syncState,
         restoredFromServer,
+        isInitialized,
         updateQuizScore,
         saveQuizAnswers,
         markModuleComplete,

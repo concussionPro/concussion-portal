@@ -1,7 +1,7 @@
 import type { Module } from '@/data/modules'
 
 export const module1: Module = {
-  id: 1,
+  id: 201,
   title: 'Concussion for the Exercise Physiologist',
   subtitle: 'Functional Injury, the Neurometabolic Cascade & Why Exercise Is Now First-Line',
   duration: '60 min',

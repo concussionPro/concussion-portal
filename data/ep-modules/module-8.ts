@@ -1,7 +1,7 @@
 import type { Module } from '@/data/modules'
 
 export const module8: Module = {
-  id: 8,
+  id: 208,
   title: 'Documentation, Communication & Referral',
   subtitle: 'Recording, Reporting and Closing the Loop With the Care Team',
   duration: '30 min',

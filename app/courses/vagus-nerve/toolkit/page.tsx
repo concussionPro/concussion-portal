@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCourseAccess } from '@/lib/course-access'
 import { VagusCourseSidebar } from '@/components/ai-course/VagusCourseSidebar'
 import {
   VAGUS_TOOLKIT_ITEMS,
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 }
 
 export default async function VagusToolkitPage() {
-  const access = await requireAiCourseAccess()
+  const access = await requireCourseAccess('vagus-nerve')
 
   const grouped: Array<{ category: VagusToolkitCategory; items: typeof VAGUS_TOOLKIT_ITEMS }> =
     VAGUS_TOOLKIT_CATEGORIES.map((cat) => ({

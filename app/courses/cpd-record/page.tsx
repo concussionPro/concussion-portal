@@ -1,41 +1,97 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { SiteNav } from '@/components/SiteNav'
 import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
-import { COURSES, findProvider } from '@/lib/ai-course/provider-catalogue'
-import { Download, Check, AlertCircle } from 'lucide-react'
+import { COURSES, findCourse, findProvider } from '@/lib/ai-course/provider-catalogue'
+import { getCourseCertificate } from '@/lib/course-certificates'
+import { getUserCertificate } from '@/lib/ai-course/certificate'
+import { verifySessionToken } from '@/lib/jwt-session'
+import { Check, AlertCircle, Award } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'CPD Record — Audit-ready export',
   robots: 'noindex, nofollow',
 }
 
+interface EarnedCert {
+  courseTitle: string
+  providerName: string
+  cpdHours: number
+  completedAt: string
+  certificateId: string
+  isValid: boolean
+  /** Public verification page, where one exists for this certificate type */
+  verifyHref: string | null
+}
+
 /**
- * CPD tracking dashboard mock. In a live marketplace this would
- * aggregate completions across all providers; in the admin preview
- * the table is intentionally illustrative — it shows the SHAPE of
- * audit-ready CPD reporting, with the data sourced from the
- * platform's certificate records.
+ * CPD record — the viewer's GENUINELY earned certificates only.
  *
- * The pitch claim is: "one-click export, direct integration to RACGP
- * / ACRRM CPD Homes". This page demonstrates the export-ready format
- * and surfaces the integration roadmap.
+ * Sources (both real, no demo rows):
+ *   - AI in Clinical Practice — certificate stored on users.* columns
+ *     (lib/ai-course/certificate.ts, getUserCertificate)
+ *   - Short courses (vagus-nerve etc.) — generic course_certificates table
+ *     (lib/course-certificates.ts, getCourseCertificate per catalogue slug)
+ *
+ * Viewers with no session email (e.g. admin/demo-key) or no completions see
+ * the honest empty state.
  */
 export default async function CpdRecordPage() {
   const access = await requireAiCourseAccess()
-  const liveCourses = COURSES.filter((c) => c.status === 'live')
-  const totalHours = liveCourses.reduce((s, c) => s + c.cpdHours, 0)
 
-  // For the demo, we mock "completed" status as if the admin viewer
-  // has worked through everything. Real implementation queries the
-  // users table for issued certificates.
-  const completions = liveCourses.map((c) => ({
-    course: c,
-    provider: findProvider(c.providerId),
-    completedAt: '2026-05-22',
-    certificateId: 'demo-' + c.id.slice(0, 8),
-    status: 'demo-record' as const,
-  }))
+  // Resolve the viewer's email: enrolled users carry it on the gate result;
+  // otherwise fall back to the login session cookie (an admin or demo viewer
+  // may also be logged in as a user).
+  let email = access.email ?? null
+  if (!email) {
+    const sessionCookie = (await cookies()).get('session')?.value
+    const session = sessionCookie ? verifySessionToken(sessionCookie) : null
+    email = session?.email ?? null
+  }
+
+  const earned: EarnedCert[] = []
+  if (email) {
+    // AI course certificate (separate, older pipeline on the users table)
+    const aiCert = await getUserCertificate(email).catch(() => null)
+    if (aiCert) {
+      const course = findCourse('ai-in-clinical-practice')
+      earned.push({
+        courseTitle: course?.title || 'AI in Clinical Practice',
+        providerName: findProvider(course?.providerId || 'cea')?.shortName || 'CEA',
+        cpdHours: course?.cpdHours ?? 2,
+        completedAt: aiCert.issuedAt,
+        certificateId: aiCert.certificateId,
+        isValid: aiCert.isValid,
+        verifyHref: `/courses/ai-in-clinical-practice/verify/${aiCert.certificateId}`,
+      })
+    }
+
+    // Generic per-course certificate store (short courses)
+    const courseCerts = await Promise.all(
+      COURSES.filter((c) => c.id !== 'ai-in-clinical-practice').map((c) =>
+        getCourseCertificate(email as string, c.id).catch(() => null)
+      )
+    )
+    for (const cert of courseCerts) {
+      if (!cert) continue
+      const course = findCourse(cert.courseSlug)
+      earned.push({
+        courseTitle: cert.courseTitle,
+        providerName: findProvider(course?.providerId || 'cea')?.shortName || 'CEA',
+        cpdHours: cert.cpdHours,
+        completedAt: cert.issuedAt,
+        certificateId: cert.certificateId,
+        isValid: cert.isValid,
+        verifyHref: null,
+      })
+    }
+  }
+
+  const totalHours = earned.reduce((s, c) => s + c.cpdHours, 0)
+  const validCount = earned.filter((c) => c.isValid).length
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,93 +106,97 @@ export default async function CpdRecordPage() {
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
           CPD Record
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mb-2">
-          Audit-ready CPD tracking — every completion logged automatically with verifiable certificates.
-        </p>
-        <p className="text-xs text-muted-foreground mb-8 italic">
-          Demo view. In production, this dashboard aggregates completions across every marketplace provider, with one-click export to RACGP CPD Home (planned) and ACRRM CPD Home (planned).
+        <p className="text-lg text-muted-foreground max-w-2xl mb-8">
+          Your completed CEA courses — every certificate you&apos;ve earned, with hours and verification IDs.
         </p>
 
-        {/* Summary */}
-        <div className="grid sm:grid-cols-3 gap-3 mb-8">
-          <div className="card rounded-xl p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Total CPD hours</p>
-            <p className="text-3xl font-bold text-foreground">{totalHours}</p>
-            <p className="text-xs text-muted-foreground">across {liveCourses.length} courses</p>
+        {earned.length === 0 ? (
+          /* Honest empty state — no demo rows, ever */
+          <div className="card rounded-xl p-10 text-center">
+            <Award className="w-10 h-10 text-muted-foreground/40 mx-auto mb-4" />
+            <p className="text-base font-semibold text-foreground mb-2">
+              You haven&apos;t earned any certificates yet — complete a course quiz to generate one.
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Certificates from completed CEA courses appear here automatically, with CPD hours and a verifiable certificate ID.
+            </p>
+            <Link
+              href="/courses"
+              className="inline-block px-5 py-2.5 rounded-lg bg-foreground text-white font-semibold text-sm hover:bg-foreground/90 transition-colors"
+            >
+              Browse courses →
+            </Link>
           </div>
-          <div className="card rounded-xl p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">AHPRA reporting period</p>
-            <p className="text-3xl font-bold text-foreground">2026</p>
-            <p className="text-xs text-muted-foreground">1 Jan – 31 Dec</p>
-          </div>
-          <div className="card rounded-xl p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Verification status</p>
-            <p className="text-3xl font-bold text-emerald-700">All verified</p>
-            <p className="text-xs text-muted-foreground">Each certificate has a public ID</p>
-          </div>
-        </div>
-
-        {/* Export actions */}
-        <div className="card rounded-xl p-5 mb-8 flex flex-wrap items-center gap-3 justify-between">
-          <div>
-            <p className="text-sm font-bold text-foreground mb-1">Audit-ready export</p>
-            <p className="text-xs text-muted-foreground">PDF transcript, CSV, or direct submit to your College CPD Home.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button className="px-4 py-2 rounded-lg bg-foreground text-white text-sm font-semibold hover:bg-foreground/90 flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              Export PDF
-            </button>
-            <button className="px-4 py-2 rounded-lg bg-white border border-slate-300 text-foreground text-sm font-semibold hover:bg-slate-50 flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              Export CSV
-            </button>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground border-l border-slate-200 pl-3">
-              <AlertCircle className="w-3.5 h-3.5" />
-              <span>RACGP / ACRRM CPD Home integration on roadmap</span>
+        ) : (
+          <>
+            {/* Summary */}
+            <div className="grid sm:grid-cols-3 gap-3 mb-8">
+              <div className="card rounded-xl p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">CPD hours earned</p>
+                <p className="text-3xl font-bold text-foreground">{totalHours}</p>
+                <p className="text-xs text-muted-foreground">across {earned.length} {earned.length === 1 ? 'course' : 'courses'}</p>
+              </div>
+              <div className="card rounded-xl p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Certificates</p>
+                <p className="text-3xl font-bold text-foreground">{earned.length}</p>
+                <p className="text-xs text-muted-foreground">{validCount} currently valid</p>
+              </div>
+              <div className="card rounded-xl p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Verification</p>
+                <p className="text-3xl font-bold text-foreground">Per certificate</p>
+                <p className="text-xs text-muted-foreground">Each entry carries its own certificate ID</p>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Completion table */}
-        <div className="card rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left">
-                <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Course</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Provider</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground text-right">Hours</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Recognition</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Completed</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Verification</th>
-              </tr>
-            </thead>
-            <tbody>
-              {completions.map((c) => (
-                <tr key={c.course.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3 font-medium text-foreground">{c.course.title}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{c.provider?.shortName}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{c.course.cpdHours}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {c.course.cpdRecognition.slice(0, 1).join(', ')}
-                    {c.course.cpdRecognition.length > 1 && ' +' + (c.course.cpdRecognition.length - 1)}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{c.completedAt}</td>
-                  <td className="px-4 py-3 text-xs">
-                    <span className="inline-flex items-center gap-1 text-emerald-700">
-                      <Check className="w-3.5 h-3.5" />
-                      Verified
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            {/* Completion table — genuinely earned certificates only */}
+            <div className="card rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50">
+                  <tr className="text-left">
+                    <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Course</th>
+                    <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Provider</th>
+                    <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground text-right">Hours</th>
+                    <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Completed</th>
+                    <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">Certificate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {earned.map((c) => (
+                    <tr key={c.certificateId} className="border-t border-slate-100">
+                      <td className="px-4 py-3 font-medium text-foreground">{c.courseTitle}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{c.providerName}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{c.cpdHours}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{fmtDate(c.completedAt)}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {c.isValid ? (
+                          <span className="inline-flex items-center gap-1 text-emerald-700">
+                            <Check className="w-3.5 h-3.5" />
+                            {c.verifyHref ? (
+                              <Link href={c.verifyHref} className="hover:underline font-mono">
+                                {c.certificateId.slice(0, 12)}
+                              </Link>
+                            ) : (
+                              <span className="font-mono">{c.certificateId.slice(0, 12)}</span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-amber-700">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            Expired — re-take the quiz to renew
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-        <p className="text-xs text-muted-foreground mt-6 leading-relaxed">
-          <strong>How this works in production:</strong> Every course completion (across every provider in the marketplace) issues a verifiable certificate. Hours auto-aggregate here. When AHPRA requests records, the clinician exports a single PDF transcript with every certificate ID resolvable to a public verification URL. RACGP and ACRRM CPD Home integration is the next-step roadmap item — once a single provider partnership is signed and the platform has multi-provider supply, the auto-submit feature is the moat.
-        </p>
+            <p className="text-xs text-muted-foreground mt-6 leading-relaxed">
+              <strong>Logging with AHPRA:</strong> record each activity with the course name, provider (Concussion Education Australia), hours, completion date, certificate ID, and a brief reflection on relevance to your practice.
+            </p>
+          </>
+        )}
       </div>
     </div>
   )

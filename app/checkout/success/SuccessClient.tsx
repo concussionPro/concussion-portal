@@ -27,6 +27,11 @@ function CheckoutSuccessContent() {
   const router = useRouter()
   const sessionId = searchParams.get('session_id')
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
+  // Whether the checkout-session API minted a logged-in session cookie. If it
+  // didn't (webhook race — user row not created yet), linking into gated
+  // course content would bounce the buyer to /login. Default false until the
+  // API confirms.
+  const [loggedIn, setLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -45,9 +50,19 @@ function CheckoutSuccessContent() {
       .then(data => {
         if (data.success) {
           setSessionData(data.session)
+          setLoggedIn(data.loggedIn === true)
 
-          // Fire conversions (only once)
-          if (!conversionFiredRef.current) {
+          // Fire conversions once per checkout session — the ref guards this
+          // mount, the sessionStorage key survives refreshes (the internal
+          // 'purchase' event was double-counting on every reload).
+          const trackedKey = `purchase-tracked-${sessionId}`
+          let alreadyTracked = false
+          try {
+            alreadyTracked = sessionStorage.getItem(trackedKey) === '1'
+          } catch {
+            // sessionStorage unavailable (private mode) — fall back to the ref
+          }
+          if (!conversionFiredRef.current && !alreadyTracked) {
             // Internal analytics event — visible in our dashboard
             trackEvent('purchase', {
               courseType: data.session.courseType,
@@ -55,14 +70,21 @@ function CheckoutSuccessContent() {
               currency: data.session.currency || 'AUD',
               location: data.session.location || null,
             })
-            // Google Ads conversion with enhanced data
+            // Google Ads conversion. No email: the API only exposes a MASKED
+            // email (z***@gmail.com) — hashing that produces a junk identifier,
+            // so we deliberately omit enhanced-conversion user data here.
             trackPurchaseConversion(
               data.session.amountPaid,
               sessionId!,
-              data.session.customerEmail,
+              undefined,
               data.session.currency
             )
             conversionFiredRef.current = true
+            try {
+              sessionStorage.setItem(trackedKey, '1')
+            } catch {
+              // best effort
+            }
           }
         } else {
           setError(true)
@@ -147,13 +169,21 @@ function CheckoutSuccessContent() {
               ? 'Your concussion management training starts now.'
               : 'You now have lifetime access to all 8 modules.'}
           </p>
-          <Link
-            href={sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1'}
-            className="btn-primary px-8 py-4 rounded-xl font-bold inline-flex items-center gap-2"
-          >
-            {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          {loggedIn ? (
+            <Link
+              href={sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1'}
+              className="btn-primary px-8 py-4 rounded-xl font-bold inline-flex items-center gap-2"
+            >
+              {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          ) : (
+            <div className="glass rounded-xl p-5 max-w-md mx-auto border border-accent/20">
+              <p className="text-sm font-semibold text-foreground">
+                We&apos;re setting up your access — check your email for your sign-in link.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Early-bird savings callout removed — early bird closed 31 May 2026.
@@ -298,13 +328,21 @@ function CheckoutSuccessContent() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <Link
-            href={sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1'}
-            className="flex-1 btn-primary px-8 py-4 rounded-xl font-bold text-center flex items-center justify-center gap-2"
-          >
-            {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          {loggedIn ? (
+            <Link
+              href={sessionData?.courseType === 'workshop-upgrade' ? '/dashboard' : '/modules/1'}
+              className="flex-1 btn-primary px-8 py-4 rounded-xl font-bold text-center flex items-center justify-center gap-2"
+            >
+              {sessionData?.courseType === 'workshop-upgrade' ? 'Go to Dashboard' : 'Start Module 1'}
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          ) : (
+            <div className="flex-1 glass rounded-xl p-5 text-center border border-accent/20">
+              <p className="text-sm font-semibold text-foreground">
+                We&apos;re setting up your access — check your email for your sign-in link.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Workshop upsell for online-only buyers */}

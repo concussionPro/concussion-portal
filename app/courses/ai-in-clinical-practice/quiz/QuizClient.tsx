@@ -87,7 +87,12 @@ export function QuizClient({ questions }: { questions: Question[] }) {
             {result.score} / {result.total}
           </p>
           <p className="text-sm text-muted-foreground">
-            Pass mark: {result.passMark} / {result.total}. {result.passed ? 'Your certificate has been issued.' : 'Review the feedback below and re-attempt.'}
+            Pass mark: {result.passMark} / {result.total}.{' '}
+            {result.passed
+              ? result.certificate
+                ? 'Your certificate has been issued.'
+                : 'Your result is saved — your certificate will appear on your certificate page shortly. Contact us if it doesn’t.'
+              : 'Review the feedback below and re-attempt.'}
           </p>
           {result.passed && result.certificate && (
             <Link

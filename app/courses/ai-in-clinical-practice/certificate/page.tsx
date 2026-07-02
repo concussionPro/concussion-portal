@@ -96,7 +96,7 @@ export default async function CertificatePage() {
           </div>
         )}
 
-        <div className="grid sm:grid-cols-2 gap-3 mb-6">
+        <div className="grid sm:grid-cols-2 gap-3 mb-3">
           <a
             href={`/api/ai-course/certificate/pdf/${cert.certificateId}`}
             className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
@@ -115,6 +115,20 @@ export default async function CertificatePage() {
           </a>
         </div>
 
+        {/* LinkedIn share — the verify URL is public, so the post resolves for anyone */}
+        <a
+          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(verifyUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-6 flex items-center justify-between gap-3 rounded-xl bg-[#0A66C2] px-5 py-4 text-white shadow-sm hover:bg-[#004182] transition-colors"
+        >
+          <span>
+            <span className="block text-sm font-semibold">Share this certificate on LinkedIn</span>
+            <span className="block text-xs text-white/80 mt-0.5">Posts your public verification page — colleagues and employers can confirm it in one click.</span>
+          </span>
+          <span aria-hidden className="text-lg font-bold shrink-0">in</span>
+        </a>
+
         {/* AHPRA logging guidance — matches Vagus cert pattern */}
         <section className="rounded-xl bg-slate-50 border border-slate-200 p-5">
           <p className="text-sm font-bold text-foreground mb-2">Logging this in your AHPRA CPD record</p>
@@ -126,11 +140,36 @@ export default async function CertificatePage() {
             <p className="font-mono text-[11px] leading-relaxed">
               Activity: AI in Clinical Practice<br />
               Provider: Concussion Education Australia<br />
-              Hours: 3<br />
+              Hours: 2<br />
               Date completed: {issuedDate}<br />
               Certificate ID: {cert.certificateId}<br />
               Reflection: [Add 2–3 sentences here — what changed in your AI workflow / which compliance gap this addressed / one specific safeguard you&apos;ll implement]
             </p>
+          </div>
+        </section>
+
+        {/* Cross-sell — more CPD from CEA */}
+        <section className="mt-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3">
+            More CPD from CEA
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Link
+              href="/courses/vagus-nerve"
+              className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
+            >
+              <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Short course · 1 CPD hour · A$97</p>
+              <p className="text-sm font-semibold text-foreground leading-tight">The Vagus Nerve in Clinical Practice</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Evidence-based assessment and defensible interventions for autonomic dysfunction — POTS, post-concussion, long COVID.</p>
+            </Link>
+            <Link
+              href="/pricing"
+              className="card rounded-xl p-4 hover:border-accent/40 transition-colors"
+            >
+              <p className="text-xs font-bold uppercase tracking-wide text-accent mb-1">Flagship · 8 CPD hours online · up to 14 with the workshop day</p>
+              <p className="text-sm font-semibold text-foreground leading-tight">Concussion Clinical Mastery</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Osteopathy Australia–endorsed concussion assessment and management — SCAT6, VOMS, BESS, return-to-sport protocols.</p>
+            </Link>
           </div>
         </section>
       </div>

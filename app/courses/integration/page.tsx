@@ -1,7 +1,10 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 import {
   Headphones,
   BookOpen,
@@ -27,13 +30,19 @@ export const metadata: Metadata = {
  * Closes the "is this a deck or a build?" gap a CRO would flag.
  */
 export default async function IntegrationPage() {
-  const access = await requireAiCourseAccess()
+  // INTERNAL partner-pitch material (Heidi acquisition proposal). Verified
+  // admin session ONLY — never customer/demo visible. notFound() so the page
+  // doesn't advertise its existence to anyone else.
+  const cookieStore = await cookies()
+  if (!verifyAdminSessionToken(cookieStore.get(ADMIN_COOKIE_NAME)?.value)) {
+    notFound()
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
       <div className="max-w-5xl mx-auto px-6 pt-[120px] pb-20">
-        <AdminPreviewBadge access={access} />
+        <AdminPreviewBadge access={{ ok: true, reason: 'admin-cookie' }} />
 
         <Link href="/courses" className="text-xs text-accent hover:underline mb-4 inline-block">
           ← Marketplace

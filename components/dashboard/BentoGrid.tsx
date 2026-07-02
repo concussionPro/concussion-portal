@@ -23,6 +23,13 @@ import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
+import { COURSES } from '@/lib/ai-course/provider-catalogue'
+
+/* Short-course cross-sell — sourced from the catalogue (single source of truth
+   for price + CPD hours) so dashboard copy can never drift from checkout. */
+const CROSS_SELL_COURSES = ['ai-in-clinical-practice', 'vagus-nerve']
+  .map(id => COURSES.find(c => c.id === id))
+  .filter((c): c is NonNullable<typeof c> => !!c)
 
 /* ──────────────── Micro Progress Ring ──────────────── */
 function MicroRing({ value, max, size = 40 }: { value: number; max: number; size?: number }) {
@@ -165,7 +172,14 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
   const displayModules = isPreview ? scatCompleted : completedModules
   const displayMaxModules = isPreview ? 3 : 8
   const displayCPD = isPreview ? scatCPD : cpdPoints
-  const displayMaxCPD = isPreview ? 0 : 8
+  // Free SCAT6 Mastery course = 1 CPD hour (awarded when all 3 modules complete).
+  const displayMaxCPD = isPreview ? 1 : 8
+  // The CPD hour is awarded all-at-once on completion, so for preview users the
+  // bar tracks module completion toward that 1 hour (honest progress, not a
+  // fractional CPD claim).
+  const cpdBarPct = isPreview
+    ? (scatCompleted / 3) * 100
+    : displayMaxCPD > 0 ? (displayCPD / displayMaxCPD) * 100 : 0
 
   const inProgressCount = isPreview
     ? scatInProgress
@@ -215,11 +229,13 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
           {displayCPD}<span className="text-base text-muted-foreground font-medium"> / {displayMaxCPD}</span>
         </p>
         <div className="mt-3 progress-track">
-          <div className="progress-fill" style={{ width: `${displayMaxCPD > 0 ? (displayCPD / displayMaxCPD) * 100 : 0}%` }} />
+          <div className="progress-fill" style={{ width: `${cpdBarPct}%` }} />
         </div>
-        {displayModules === displayMaxModules && displayMaxModules > 0 && (
+        {displayModules === displayMaxModules && displayMaxModules > 0 ? (
           <p className="text-xs text-accent font-semibold mt-2">All {isPreview ? 'free' : 'online'} points earned</p>
-        )}
+        ) : isPreview ? (
+          <p className="text-xs text-muted-foreground mt-2">1 CPD hour awarded on completing all 3 modules</p>
+        ) : null}
       </Card>
 
       {/* ── 3. Study Time ───────────────────────────── */}
@@ -422,6 +438,36 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
         </div>
       </Card>
 
+      {/* ── More CPD from CEA — short-course cross-sell ── */}
+      {CROSS_SELL_COURSES.length > 0 && (
+        <Card>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500/10 to-teal-400/5 flex items-center justify-center">
+              <GraduationCap className="w-[18px] h-[18px] text-teal-600/70" strokeWidth={1.8} />
+            </div>
+            <p className="stat-label mb-0">More CPD from CEA</p>
+          </div>
+          <p className="text-sm text-foreground font-semibold mb-3">Short specialty courses</p>
+          <div className="space-y-2">
+            {CROSS_SELL_COURSES.map(c => (
+              <Link
+                key={c.id}
+                href={c.route}
+                className="flex items-center justify-between gap-2 rounded-xl border border-border bg-white/50 px-3.5 py-2.5 hover:border-teal-300 hover:bg-teal-50/40 transition-colors"
+              >
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-semibold text-foreground leading-tight truncate">{c.title}</span>
+                  <span className="block text-[11px] text-muted-foreground leading-tight">
+                    {c.cpdHours} CPD {c.cpdHours === 1 ? 'hr' : 'hrs'}{c.priceAUD !== null && <> · A${c.priceAUD.toLocaleString('en-AU')}</>}
+                  </span>
+                </span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-teal-600/60 flex-shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* ── 8. In-Person Workshop ───────────────────── */}
       <WorkshopCard
         accessLevel={accessLevel}
@@ -473,7 +519,7 @@ function WorkshopCard({
         body: JSON.stringify({ location: selectedCity }),
       })
       if (res.ok) {
-        setFeedback({ type: 'success', message: `Nominated for ${cityLabel(selectedCity)}! We'll email you ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop date.` })
+        setFeedback({ type: 'success', message: `Nominated for ${cityLabel(selectedCity)}! When your city's round fills we confirm a date and give you ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice.` })
         setTimeout(() => onWorkshopNominated?.(selectedCity), 1500)
       } else {
         setFeedback({ type: 'error', message: 'Failed to save. Please try again.' })
@@ -498,16 +544,19 @@ function WorkshopCard({
             Nominate
           </span>
         </div>
-        <p className="text-sm text-foreground font-semibold mb-2">Choose Your Workshop City</p>
+        <p className="text-sm text-foreground font-semibold mb-2">Nominate Your Workshop City</p>
         <p className="text-xs text-muted-foreground mb-3">
-          Online modules complete. Nominate your city — we confirm dates as demand opens up.
+          Online modules complete. Nominate your city — a date is confirmed once your city&apos;s round fills. This is a nomination, not a scheduled date.
         </p>
         <select
           value={selectedCity}
           onChange={(e) => setSelectedCity(e.target.value)}
           className="w-full py-2 px-2.5 rounded-lg border border-border/50 bg-background text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-accent/20"
         >
-          <option value="">Select city...</option>
+          <option value="">Nominate a city...</option>
+          {/* All cities stay listed (including ones whose last round has run) —
+              this is a Ready-to-Train NOMINATION selector, not a scheduled-date
+              picker. A completed city simply starts collecting for its next round. */}
           {Object.values(CONFIG.LOCATIONS).map(loc => (
             <option key={loc.slug} value={loc.slug}>{loc.city}</option>
           ))}
@@ -547,7 +596,7 @@ function WorkshopCard({
         </div>
         <p className="text-sm text-foreground font-semibold mb-1">6 Practical CPD Hours</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Nominated for {cityLabel(workshopLocation!)}. You&apos;ll be notified {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks before your workshop date.
+          Nominated for {cityLabel(workshopLocation!)}. We confirm a date once the round fills — you&apos;ll get {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&apos; notice.
         </p>
       </Card>
     )

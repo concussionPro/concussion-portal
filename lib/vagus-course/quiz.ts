@@ -162,7 +162,7 @@ export const VAGUS_QUIZ_QUESTIONS: VagusQuizQuestion[] = [
   {
     id: 'vq10-cpd-documentation',
     module: 'module-6-hub-certification',
-    question: 'On completion of this course, what is the minimum documentation required to defend the 1.25 CPD hours at an AHPRA audit?',
+    question: 'On completion of this course, what is the minimum documentation required to defend the 1 CPD hour at an AHPRA audit?',
     options: [
       'A screenshot of the certificate is sufficient',
       'Certificate ID + issuance date + course title + CPD hours + a brief reflection on how the learning applies to your practice',

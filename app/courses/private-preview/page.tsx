@@ -1,7 +1,10 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 import { ArrowRight, Award, BookOpen, Workflow, Activity, Layers, ShoppingBag } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 
@@ -11,13 +14,19 @@ export const metadata: Metadata = {
 }
 
 export default async function PreviewPage() {
-  const access = await requireAiCourseAccess()
+  // INTERNAL partner-pitch surface. Verified admin session ONLY — never
+  // customer/demo visible. notFound() so the page doesn't advertise its
+  // existence to anyone else.
+  const cookieStore = await cookies()
+  if (!verifyAdminSessionToken(cookieStore.get(ADMIN_COOKIE_NAME)?.value)) {
+    notFound()
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
       <div className="max-w-5xl mx-auto px-6 pt-[100px] pb-20">
-        <AdminPreviewBadge access={access} />
+        <AdminPreviewBadge access={{ ok: true, reason: 'admin-cookie' }} />
 
         {/* HERO — lead with the insight, not the feature list */}
         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-3">
@@ -133,7 +142,7 @@ export default async function PreviewPage() {
                 Concussion Clinical Mastery
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                14 CPD hours · 11 modules · SCAT6 + SCOAT6 · the only concussion training Osteopathy Australia endorses for osteopaths in Australia.
+                8 online modules + full-day workshop · up to 14 CPD hours (8 online-only) · SCAT6 + SCOAT6 · Osteopathy Australia–endorsed.
               </p>
             </div>
             <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">

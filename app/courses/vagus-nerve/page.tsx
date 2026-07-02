@@ -2,7 +2,8 @@ import { Metadata } from 'next'
 import { VAGUS_MODULES } from '@/lib/vagus-course/modules'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCourseAccess } from '@/lib/course-access'
 import { VagusCourseSidebar } from '@/components/ai-course/VagusCourseSidebar'
 import { ArrowRight, BookMarked, FileQuestion, Award, Wrench } from 'lucide-react'
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default async function VagusCoursePage() {
-  const access = await requireAiCourseAccess()
+  const access = await requireCourseAccess('vagus-nerve')
   const totalMin = VAGUS_MODULES.reduce((sum, m) => sum + m.durationMin, 0)
 
   return (
@@ -25,7 +26,7 @@ export default async function VagusCoursePage() {
           <AdminPreviewBadge access={access} />
 
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent mb-2">
-            Course · 6 modules · A$97 · 1.25 CPD hours
+            Course · 6 modules · A$97 · 1 CPD hour
           </p>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
             The Vagus Nerve in Clinical Practice

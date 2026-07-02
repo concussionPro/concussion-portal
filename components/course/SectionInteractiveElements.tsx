@@ -377,7 +377,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
       {moduleId === 2 && section.id === 'voms-overview' && (
         <KeyConcept
           title="VOMS Components & Scoring"
-          content="The VOMS assesses 5 domains: smooth pursuit, saccades, near point convergence (NPC), vestibulo-ocular reflex (VOR), and visual motion sensitivity (VMS). Scoring uses a 0-10 scale for headache, dizziness, nausea, and fogginess. A ≥2 point increase from baseline on ANY symptom during ANY subtest is clinically significant. NPC distance >5 cm is abnormal. Even one abnormal subtest indicates vestibular-ocular dysfunction requiring targeted rehabilitation."
+          content="The VOMS assesses 5 domains: smooth pursuit, saccades, near point convergence (NPC), vestibulo-ocular reflex (VOR), and visual motion sensitivity (VMS). Scoring uses a 0-10 scale for headache, dizziness, nausea, and fogginess. A ≥2 point increase from baseline on ANY symptom during ANY subtest is clinically significant. NPC distance of 6 cm or greater is abnormal (a positive screen); less than 6 cm is normal. Even one abnormal subtest indicates vestibular-ocular dysfunction requiring targeted rehabilitation."
         />
       )}
 
@@ -634,7 +634,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
             steps={[
               { label: "Week 2-4: Symptoms Persist", description: "Evaluate for specific phenotypes needing specialist input" },
               { label: "Positive VOMS/BESS", description: "→ Vestibular physiotherapy" },
-              { label: "NPC >6cm or Visual Symptoms", description: "→ Optometry/neuro-ophthalmology" },
+              { label: "NPC ≥6cm or Visual Symptoms", description: "→ Optometry/neuro-ophthalmology" },
               { label: "Neck Pain or Cervicogenic Headache", description: "→ Cervical physiotherapy" },
               { label: "PHQ-9 ≥10 or GAD-7 ≥10", description: "→ Psychology/psychiatry" },
               { label: "Complex/Atypical Case", description: "→ Neurology or concussion specialist" }
@@ -668,7 +668,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
           <ClinicalInsight
             type="warning"
             title="Vision Dysfunction is Common & Overlooked"
-            content="40-50% of concussions involve convergence insufficiency. NPC >6cm, difficulty reading, headache with visual tasks, photophobia = OPTOMETRY REFERRAL. Vision therapy typically 6-12 weeks, dramatically improves function. Don't miss this!"
+            content="40-50% of concussions involve convergence insufficiency. NPC ≥6cm, difficulty reading, headache with visual tasks, photophobia = OPTOMETRY REFERRAL. Vision therapy typically 6-12 weeks, dramatically improves function. Don't miss this!"
           />
           <QuickCheck
             question="Near point of convergence (NPC) of 9cm indicates:"
@@ -679,7 +679,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
               "Cervical problem - refer to manual therapy"
             ]}
             correctAnswer={1}
-            explanation="NPC >6cm = convergence insufficiency requiring OPTOMETRY/vision therapy referral. Normal NPC is <6cm. Convergence insufficiency causes difficulty reading, headache with near work, words jumping on page. Responds well to vision therapy (pencil push-ups, convergence exercises)."
+            explanation="NPC ≥6cm = convergence insufficiency requiring OPTOMETRY/vision therapy referral. Less than 6cm is normal; 6cm or greater is a positive screen. Convergence insufficiency causes difficulty reading, headache with near work, words jumping on page. Responds well to vision therapy (pencil push-ups, convergence exercises)."
           />
         </>
       )}
@@ -774,7 +774,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
         <>
           <KeyConcept
             title="Clearance Criteria (All Must Be Met)"
-            content="1) Symptom-free at rest AND with exertion, 2) Normal clinical exam (VOMS, BESS, cognitive), 3) Completed full 6-stage protocol without symptoms, 4) Return to academic baseline (if student), 5) Medical provider documentation. NPC >6cm = absolute contraindication."
+            content="1) Symptom-free at rest AND with exertion, 2) Normal clinical exam (VOMS, BESS, cognitive), 3) Completed full 6-stage protocol without symptoms, 4) Return to academic baseline (if student), 5) Medical provider documentation. A residual NPC ≥6cm is a positive oculomotor screen — a flag warranting vestibulo-ocular assessment (and treatment of any confirmed convergence insufficiency) before progressing to final clearance."
           />
           <QuickCheck
             question="An athlete progresses through Stages 1-5 but has residual near-point convergence (NPC) of 10cm. Your decision:"
@@ -785,7 +785,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
               "Repeat BESS testing only"
             ]}
             correctAnswer={1}
-            explanation="Convergence insufficiency (NPC >6cm) is an absolute contraindication to clearance regardless of symptom status or protocol completion. Refer to vision therapy/optometry first. Clearing with unresolved visual dysfunction creates serious re-injury risk."
+            explanation="An NPC of 10cm is well beyond the ≥6cm positive-screen cutoff and indicates unresolved convergence insufficiency. The Amsterdam consensus does not list NPC as an absolute contraindication, but a positive oculomotor screen is a flag warranting vestibulo-ocular assessment before progression — withhold final clearance, refer to optometry/vision therapy, and reassess. Clearing with unaddressed visual dysfunction risks symptom recurrence and impaired on-field visual performance."
           />
         </>
       )}
@@ -798,13 +798,12 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
             content="RTL must begin BEFORE and progress ALONGSIDE RTS. Academic success and cognitive recovery are primary concerns for student-athletes. Don't progress to RTS Stage 5 (full contact) until RTL is complete or near-complete."
           />
           <Flowchart
-            title="5-Stage Return-to-Learn Protocol"
+            title="4-Stage Return-to-Learn Strategy (Amsterdam 2022)"
             steps={[
-              { label: "Stage 1: Daily Activities at Home", description: "Short periods (15-30 min) of reading, screen time with breaks" },
-              { label: "Stage 2: School Activities at Home", description: "Homework, reading 30-60 min sessions before rest" },
-              { label: "Stage 3: Return to School Part-Time", description: "Half-day or specific classes only with accommodations" },
-              { label: "Stage 4: Full-Time with Accommodations", description: "Full attendance with support (extended time, breaks, etc)" },
-              { label: "Stage 5: Full Academic Load", description: "No accommodations needed, all activities tolerated" }
+              { label: "Stage 1: Daily Activities at Home That Do Not Worsen Symptoms", description: "Typical daily activities in short bursts (5-15 min of reading or screen time), gradually building up" },
+              { label: "Stage 2: School Activities Outside the Classroom", description: "Homework, reading and other cognitive activities at home, in longer sessions with rest breaks" },
+              { label: "Stage 3: Return to School Part-Time", description: "Gradual reintroduction — half-days or selected classes with accommodations (breaks, reduced workload)" },
+              { label: "Stage 4: Return to School Full-Time", description: "Full attendance, gradually increasing until a full day is tolerated; phase out remaining accommodations" }
             ]}
           />
         </>
@@ -906,7 +905,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
         <>
           <KeyConcept
             title="Vision Therapy Exercises"
-            content="Convergence: Pencil push-ups (15x, 2x/day), Brock string. Accommodation: Near-far focus, Hart charts. Saccades: Rapid target jumps. Smooth Pursuit: Track moving objects. Goal: NPC from >6cm to <5cm in 6-12 weeks."
+            content="Convergence: Pencil push-ups (15x, 2x/day), Brock string. Accommodation: Near-far focus, Hart charts. Saccades: Rapid target jumps. Smooth Pursuit: Track moving objects. Goal: restore NPC from ≥6cm (positive screen) to less than 6cm (normal) in 6-12 weeks."
           />
           <ClinicalInsight
             type="success"
@@ -917,12 +916,12 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
             question="Goal of convergence exercises (pencil push-ups):"
             options={[
               "Improve distance vision",
-              "Reduce NPC from >6cm to <5cm",
+              "Restore NPC from ≥6cm to less than 6cm (normal)",
               "Treat vestibular dysfunction",
               "Eliminate all headaches"
             ]}
             correctAnswer={1}
-            explanation="Convergence exercises aim to improve NPC from >6cm (convergence insufficiency) to <5cm (normal). Treats difficulty reading, headache with near work, words jumping on page. Typically 6-12 weeks of daily exercises."
+            explanation="Convergence exercises aim to improve NPC from ≥6cm (convergence insufficiency — a positive screen) back to less than 6cm (normal). Treats difficulty reading, headache with near work, words jumping on page. Typically 6-12 weeks of daily exercises."
           />
         </>
       )}
@@ -1441,8 +1440,8 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
             'Brief dizziness that resolves in 30 seconds',
             'Positive VOMS findings',
           ]}
-          correctAnswers={[0, 1, 2, 5]}
-          explanation="Any suspected concussion, abnormal SCAT6, failed Maddocks, or positive VOMS findings mandate removal from play with no same-day return. A brief, isolated symptom (like transient dizziness) after observed impact warrants close monitoring. Normal assessment after an observed mechanism may allow continued play with close sideline monitoring."
+          correctAnswers={[0, 1, 2, 4, 5]}
+          explanation="Any suspected concussion sign or symptom — including brief, transient dizziness that resolves within seconds — mandates removal from play with no same-day return. 'If in doubt, sit them out': symptoms can fluctuate and evolve over hours, so momentary resolution does not indicate recovery. Abnormal SCAT6, failed Maddocks, and positive VOMS findings likewise mandate removal. A genuinely normal assessment with NO signs or symptoms after an observed mechanism is the only scenario here that may allow continued play, with close sideline monitoring."
         />
       )}
 
@@ -1651,10 +1650,10 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
           title="Return-to-Learn Accommodations"
           instruction="Match each return-to-learn stage to the appropriate academic accommodations."
           pairs={[
-            { id: 'stage1', left: 'Stage 1: Daily activities at home', right: 'Limit screen time, short reading periods (5-15 min), no homework', explanation: 'Focus on rest with brief cognitive activity to avoid prolonged inactivity.' },
-            { id: 'stage2', left: 'Stage 2: School activities', right: 'Part-day attendance, reduced workload, extra time, quiet environment', explanation: 'Gradual return to school with significant accommodations to manage cognitive fatigue.' },
-            { id: 'stage3', left: 'Stage 3: Return to school', right: 'Full attendance, some ongoing supports (breaks, deadline extensions)', explanation: 'Near-normal schedule with residual accommodations as needed.' },
-            { id: 'stage4', left: 'Stage 4: Full academic activities', right: 'No accommodations needed — full participation in all academic activities', explanation: 'Complete return to normal academic functioning including exams.' },
+            { id: 'stage1', left: 'Stage 1: Daily activities at home that do not worsen symptoms', right: 'Limit screen time, short reading periods (5-15 min), no homework', explanation: 'Brief cognitive activity that does not provoke symptoms, avoiding prolonged inactivity.' },
+            { id: 'stage2', left: 'Stage 2: School activities outside the classroom', right: 'Homework and reading at home in longer sessions, with scheduled rest breaks', explanation: 'Cognitive load increases at home (homework, reading) before returning to the school environment.' },
+            { id: 'stage3', left: 'Stage 3: Return to school part-time', right: 'Half-days or selected classes, reduced workload, extra time, quiet environment', explanation: 'Gradual return to the classroom with significant accommodations to manage cognitive fatigue.' },
+            { id: 'stage4', left: 'Stage 4: Return to school full-time', right: 'Full attendance, phasing out remaining supports until full participation including exams', explanation: 'Complete return to normal academic functioning as tolerance allows.' },
           ]}
           leftLabel="Return-to-Learn Stage"
           rightLabel="Accommodations"
@@ -2043,7 +2042,7 @@ export function SectionInteractiveElements({ moduleId, section, sectionIndex, is
             {
               id: 'step-1',
               narrative: 'This patient presents with multiple concurrent issues. Based on the clinical findings, which specialist referral should you prioritise FIRST?',
-              clinicalData: ['Dizziness with head turns — vestibular involvement', 'NPC 9cm (abnormal >5cm) — oculomotor dysfunction', 'Cervical FRT 28° (positive <32°) — cervicogenic component', 'PHQ-9 = 13 — moderate depression', 'Missing school — academic impact'],
+              clinicalData: ['Dizziness with head turns — vestibular involvement', 'NPC 9cm (abnormal ≥6cm) — oculomotor dysfunction', 'Cervical FRT 28° (positive <32°) — cervicogenic component', 'PHQ-9 = 13 — moderate depression', 'Missing school — academic impact'],
               choices: [
                 { label: 'Psychology first — the PHQ-9 score of 13 indicates moderate depression requiring immediate attention', nextStepId: 'step-2-psych' },
                 { label: 'Vestibular physiotherapy first — dizziness and oculomotor dysfunction are driving functional limitation', nextStepId: 'step-2-vestib' },

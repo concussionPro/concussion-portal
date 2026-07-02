@@ -1,7 +1,10 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { verifyAdminSessionToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 import {
   FileSearch,
   BookOpen,
@@ -60,7 +63,14 @@ function kindLabel(kind: PassiveEvent['kind']) {
 }
 
 export default async function PassiveCpdPage() {
-  const access = await requireAiCourseAccess()
+  // INTERNAL mockup (illustrative data) built for the partner pitch. Verified
+  // admin session ONLY — never customer/demo visible. notFound() so the page
+  // doesn't advertise its existence to anyone else.
+  const cookieStore = await cookies()
+  if (!verifyAdminSessionToken(cookieStore.get(ADMIN_COOKIE_NAME)?.value)) {
+    notFound()
+  }
+
   const logged = EVENTS.filter((e) => e.status === 'logged')
   const totalLoggedMin = logged.reduce((s, e) => s + e.minutes, 0)
   const totalLoggedHours = (totalLoggedMin / 60).toFixed(1)
@@ -78,7 +88,7 @@ export default async function PassiveCpdPage() {
     <div className="min-h-screen bg-background">
       <SiteNav />
       <div className="max-w-5xl mx-auto px-6 pt-[120px] pb-20">
-        <AdminPreviewBadge access={access} />
+        <AdminPreviewBadge access={{ ok: true, reason: 'admin-cookie' }} />
 
         <Link href="/courses/cpd-record" className="text-xs text-accent hover:underline mb-4 inline-block">
           ← CPD Record

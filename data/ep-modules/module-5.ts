@@ -1,7 +1,7 @@
 import type { Module } from '@/data/modules'
 
 export const module5: Module = {
-  id: 5,
+  id: 205,
   title: 'Phenotype-Specific Exercise Rehabilitation',
   subtitle:
     'Neurophysiology, Recognition and Exercise Prescription Across the Seven Concussion Phenotypes',

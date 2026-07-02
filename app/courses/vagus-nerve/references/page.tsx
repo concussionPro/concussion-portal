@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { requireCourseAccess } from '@/lib/course-access'
 import { VagusCourseSidebar } from '@/components/ai-course/VagusCourseSidebar'
 import { VAGUS_REFERENCES, VAGUS_REF_CATEGORIES, type VagusResourceKind } from '@/lib/vagus-course/references'
 import { ExternalLink, Star, Mic, Video, GraduationCap, FileText, ScrollText, Headphones, PlaySquare } from 'lucide-react'
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 }
 
 export default async function VagusReferencesPage() {
-  const access = await requireAiCourseAccess()
+  const access = await requireCourseAccess('vagus-nerve')
 
   const grouped = VAGUS_REF_CATEGORIES.map((cat) => ({
     category: cat,
