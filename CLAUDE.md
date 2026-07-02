@@ -78,7 +78,7 @@ When suggesting or implementing marketing/SEO changes, default to these — don'
 - **Don't touch `neurovision/`** — separate project living at the root, has its own lifecycle.
 - **Read code before proposing changes.** No speculative refactors.
 - **Run a CLEAN typecheck before pushing engine changes:** `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit`. Incremental tsc caches unchanged regions and gave false-green locally while Vercel's clean build FAILED on a real type error (2026-07-01). Also: `git add <file>` stages the WHOLE file — don't sweep uncommitted WIP into an unrelated commit (that's how a consumer shipped without its type-acceptor and broke the build).
-- **Every outreach send lane MUST check `email_suppression`.** As of 2026-07-01 all lanes enforce it: cold-clinic (`preflight.ts`), nurture cron, partner cron, and Agent B (`completer-conversion`). Never add a new send path without a suppression check. Unsubs are zero-tolerance.
+- **Every outreach send lane MUST check `email_suppression`, and suppression checks FAIL CLOSED.** The 2026-07-01 "all lanes enforce it" claim was WRONG in code (nurture checked 2 of 11 lanes; squarespace-sync and admin-unsubscribe didn't touch the blacklist). Fixed 2026-07-02: nurture filters the users list against the suppression set (aborts the run if the set can't load), squarespace-sync skips suppressed, `unsubscribeUser` writes `email_suppression`, STOP replies from nurture users are handled, partner sends carry List-Unsubscribe + an opt-out line. Never add a new send path without a suppression check; on DB error treat as suppressed. Unsubs are zero-tolerance.
 
 ## Admin auth
 
@@ -101,11 +101,15 @@ When suggesting or implementing marketing/SEO changes, default to these — don'
 - `app/api/cron/completer-conversion` — **Agent B** (2026-07-01): behaviour-triggered free-completer conversion. One email per completer, chosen by behaviour (workshop-interest / pricing-view / relevance) NOT the survey answer (keeps the survey's "no automated sequence" promise). Fires ≥18 days post-signup. Micah excluded. Daily 22:30 UTC.
 - `app/api/cron/partner-process-scheduled` — partner engine. Now **multi-touch** (2026-07-01): `partner_outreach_log` is keyed `UNIQUE(institution_id, stage)`; followups send first, then initials, 6/day. Was single-touch (`UNIQUE(institution_id)`) which killed all engagement. NO inbound reply detection — a partner that engages must be moved off `status='contacted'` to stop followups.
 
-## Workshops
+## Workshops & pricing (NOMINATION MODEL — owner decision 2026-07-02)
 
-- Melbourne: confirmed Sat 13 June 2026, CBD. Early bird ENDED 2026-05-31 — price is $1,400 everywhere (display and charge). After 13 June flip `CONFIG.LOCATIONS` Melbourne to `completed` (checkout already refuses past-date workshop sales from 14 June).
-- Sydney + Byron Bay: status `collecting` (demand capture only).
-- `workshopLocation` is required at full-course checkout — validate client-side.
+- **The Complete Course is buyable at ANY time for ANY city.** The buyer nominates a city at checkout; nominations feed the Ready-to-Train pipeline in admin, and a date launches when a city hits `CONFIRMATION_THRESHOLD` (≥6 weeks' notice).
+- **Pricing:** sticker $1,400 (`PRICE_REGULAR`); **$1,190 early-bird** (`PRICE_EARLY_BIRD`) for anyone who buys before their city's date launches, and after launch until 14 days before the workshop (`EARLY_BIRD_DAYS_BEFORE`). The final 2 weeks charge $1,400 — that window is what keeps $1,400 a REAL price (ACL: never present $1,190 as a discount off a price that's never charged).
+- **Single source of truth:** `isEarlyBirdForLocation()` / `workshopPriceFor()` / `upgradePriceFor()` in `lib/config.ts` — display AND the Stripe charge (`lib/stripe.ts`) use the same functions. Never hardcode a workshop price or date in copy; derive from CONFIG.
+- Upgrade (online-only → full): difference to the current Complete price ($693 early-bird). $50 SCAT completion code (SCAT6) applies to ONLINE-ONLY only ($497→$447).
+- Melbourne: `completed` (ran 13 June 2026, 6 alumni). Sydney / Byron Bay / Adelaide / WA: `collecting`. A completed city is still nominatable for its next round.
+- `workshopLocation` is required at full-course checkout — it is the nomination.
+- **Date-bearing copy rule:** any copy naming a workshop date/city status MUST derive from `CONFIG.LOCATIONS`, never be hardcoded (the June sweep found ~15 hardcoded past-date/fake-date instances).
 
 ## Operational guides at root
 
