@@ -1,11 +1,9 @@
 import Link from 'next/link'
 import { CONFIG } from '@/lib/config'
 
-/* DRAFT — review with legal/privacy counsel before relying on this.
-   This is the app-store privacy policy for the SST Trainer mobile app.
-   It is intentionally self-contained (no SiteNav) so it renders cleanly
-   as a stand-alone URL pasted into the Apple App Store / Google Play
-   listings. */
+/* SST Trainer privacy policy — pre-launch pass completed 2026-07-02.
+   Intentionally self-contained (no SiteNav) so it renders cleanly as a
+   stand-alone URL pasted into app-store listings when those go live. */
 
 export const metadata = {
   title: 'SST Trainer — Privacy Policy',
@@ -19,20 +17,9 @@ export default function SstPrivacyPage() {
         <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">
           SST Trainer — Privacy Policy
         </h1>
-        <p className="text-sm text-muted-foreground mb-6">Last updated: June 2026</p>
-
-        {/* Draft / counsel-review banner */}
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 mb-10">
-          <p className="text-sm text-amber-900 font-semibold mb-1">Draft — under review</p>
-          <p className="text-sm text-amber-800 leading-relaxed">
-            This policy is a working draft and should be reviewed and approved by legal/privacy
-            counsel before it is relied upon. If anything here is unclear or appears inaccurate,
-            please contact us at{' '}
-            <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="underline font-medium">
-              {CONFIG.CONTACT_EMAIL}
-            </a>.
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          Last updated: 2 July 2026 · Last reviewed: 2 July 2026
+        </p>
 
         <p className="text-sm text-muted-foreground leading-relaxed mb-6">
           This policy explains how Concussion Education Australia (CEA Pty Ltd, ABN 15 657 685 613)
@@ -56,15 +43,17 @@ export default function SstPrivacyPage() {
         <section className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4">1. What information the app collects</h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            The app is designed to work without requiring your name, email address or other direct
-            identifiers — it is <strong className="text-foreground">clinic-code / anonymous by design</strong>.
-            It collects:
+            Used on your own, the app works without your email address or other direct identifiers.
+            In <strong className="text-foreground">clinic mode</strong> (when you enter a clinic
+            code), your name is required so your clinic can identify your program. The app collects:
           </p>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5">
+            <li><strong className="text-foreground">Name</strong> — optional when you use the app on your own; in clinic mode your name is required and is shared with your clinic.</li>
             <li><strong className="text-foreground">Heart rate</strong> — measured live during a session (from a paired Bluetooth heart-rate sensor, your phone camera pulse, or manual entry) to calculate your heart-rate threshold and pace each session.</li>
             <li><strong className="text-foreground">Symptom ratings</strong> — scores you enter during a session, used to gate progression and to stop a session that is provoking symptoms.</li>
             <li><strong className="text-foreground">Session records</strong> — the prescribed training band, exertion test results and session history, so progress can be tracked over time.</li>
             <li><strong className="text-foreground">Clinic code</strong> (optional) — a code that links your program to your treating clinic.</li>
+            <li><strong className="text-foreground">Live session stream</strong> (clinic mode) — during a session, your live heart rate and band status stream to your clinic&apos;s dashboard so your clinician can monitor the session as it happens. This live data is held in a short-lived cache (around 15 seconds) and is not stored.</li>
           </ul>
         </section>
 
@@ -87,6 +76,13 @@ export default function SstPrivacyPage() {
             rehabilitation. We do <strong className="text-foreground">not</strong> use your information
             for advertising and we do <strong className="text-foreground">not</strong> sell it to third parties.
           </p>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+            <strong className="text-foreground">De-identified research use (optional):</strong> the app
+            may ask whether your session records can be used, in de-identified form (name, clinic code
+            and other identifiers removed), for research and service improvement — for example,
+            aggregate analysis of recovery trajectories. This consent is optional, is not required to
+            use the app, and can be withdrawn at any time by emailing us (section 7).
+          </p>
         </section>
 
         {/* 4. Who can access */}
@@ -104,9 +100,10 @@ export default function SstPrivacyPage() {
         <section className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4">5. Storage and retention</h2>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5">
-            <li><strong className="text-foreground">Database:</strong> where a clinic code is used, session records are stored in a PostgreSQL database hosted in Australia (Sydney region) by our database provider (Neon). Data is encrypted in transit.</li>
+            <li><strong className="text-foreground">Database:</strong> where a clinic code is used, session records are stored in a PostgreSQL database with our Australian-region database provider (Neon). Data is encrypted in transit.</li>
+            <li><strong className="text-foreground">Live session data:</strong> the real-time heart-rate stream sent to your clinic&apos;s dashboard during a session is held in a short-lived cache (around 15 seconds) and is not stored.</li>
             <li><strong className="text-foreground">Retention:</strong> records are kept for as long as needed to support your rehabilitation program, and are deleted or de-identified when no longer required or on a valid request, subject to any legal retention obligations.</li>
-            <li><strong className="text-foreground">Deletion:</strong> you can request deletion of your records by emailing us (section 7).</li>
+            <li><strong className="text-foreground">Deletion:</strong> email us at {CONFIG.CONTACT_EMAIL} to have your records deleted (section 7).</li>
           </ul>
         </section>
 
@@ -118,8 +115,9 @@ export default function SstPrivacyPage() {
             some information may be processed outside Australia (APP 8):
           </p>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5">
-            <li><strong className="text-foreground">Neon</strong> — managed PostgreSQL database hosting (Australia, Sydney region).</li>
+            <li><strong className="text-foreground">Neon</strong> — managed PostgreSQL database hosting (Australian region).</li>
             <li><strong className="text-foreground">Vercel</strong> — application hosting and delivery.</li>
+            <li><strong className="text-foreground">Vercel KV / Upstash</strong> — the short-lived cache used for the live in-session heart-rate stream; may process data outside Australia.</li>
             <li><strong className="text-foreground">Resend</strong> — transactional email delivery, where used; United States.</li>
           </ul>
         </section>
@@ -155,8 +153,13 @@ export default function SstPrivacyPage() {
         </section>
 
         <div className="border-t border-border pt-6">
-          <p className="text-xs text-muted-foreground italic">
-            Note: this is a draft policy and should be reviewed by legal/privacy counsel before being relied upon.
+          <p className="text-xs text-muted-foreground">
+            If anything in this policy is unclear, or you believe it does not reflect how the app
+            behaves, email us at{' '}
+            <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="underline">
+              {CONFIG.CONTACT_EMAIL}
+            </a>{' '}
+            and we will review it.
           </p>
         </div>
       </div>

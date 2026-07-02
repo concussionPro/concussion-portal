@@ -20,15 +20,6 @@ const PER = 3200 // ms per chapter
 const FADE = 480 // crossfade duration ms
 const N = CHAPTERS.length
 
-const DEVICES = [
-  { name: 'Apple Watch', method: 'On-watch app · HealthKit', tag: 'Live HR', live: true, glyph: '⌚', tint: '#1d2325' },
-  { name: 'Garmin', method: 'Connect IQ · on-watch', tag: 'Live HR', live: true, glyph: '⌚', tint: '#0b7fab' },
-  { name: 'WHOOP', method: 'Bluetooth HR broadcast', tag: 'Live HR', live: true, glyph: '▬', tint: '#0f172a' },
-  { name: 'Polar / Wahoo', method: 'Bluetooth chest strap', tag: 'Most accurate', live: true, glyph: '◍', tint: '#d2463a' },
-  { name: 'Fitbit', method: 'Web API sync', tag: 'Near-real-time', live: false, glyph: '◆', tint: '#3c7681' },
-  { name: 'Phone camera', method: 'Camera PPG · no wearable', tag: 'Live HR', live: true, glyph: '◎', tint: '#5d7174' },
-]
-
 // ── geometry helpers (ported verbatim from the DCLogic builders) ─────────────
 function pt(cx: number, cy: number, r: number, deg: number): [number, number] {
   const a = (deg * Math.PI) / 180
@@ -293,7 +284,7 @@ export function SstHomepageDemo() {
                 <div style={{ ...frameStyle(0), gap: 11 }}>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[9px] font-bold uppercase leading-none tracking-[0.08em] text-[#5b9aa6]">
-                      Concussion · Self-guided
+                      Concussion · Clinic program
                     </span>
                     <span className="text-[22px] font-extrabold leading-[1.05] tracking-[-0.02em]">Good morning</span>
                   </div>

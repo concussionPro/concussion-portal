@@ -29,13 +29,13 @@ const STEPS = [
   {
     n: 1,
     title: 'Find the threshold (the Buffalo test)',
-    body: 'The Buffalo Concussion Treadmill/Bike Test adapts a cardiac stress test to stress the brain instead of the heart. Effort is raised by the minute while heart rate and symptoms are tracked; the heart rate at which symptoms first intensify is the Heart-Rate threshold (HRt) — the only validated measure of exercise tolerance after concussion.',
+    body: 'The Buffalo Concussion Treadmill/Bike Test adapts a cardiac stress test to stress the brain instead of the heart. Effort is raised by the minute while heart rate and symptoms are tracked; the heart rate at which symptoms first intensify is the Heart-Rate threshold (HRt) — a validated measure of exercise tolerance after concussion.',
     callout: 'a guided per-minute ramp captures your HRt automatically, and stops the test at the +3-point symptom rise.',
   },
   {
     n: 2,
     title: 'Prescribe a sub-symptom band',
-    body: 'Trials prescribe aerobic exercise at roughly 80–90% of the HRt — hard enough to stimulate recovery, low enough to stay under the symptom threshold. The dose is about 20 minutes a day, most days of the week, individualised to each patient.',
+    body: 'Trials prescribe aerobic exercise at roughly 80–90% of the HRt — hard enough to stimulate recovery, low enough to stay under the symptom threshold. The dose is about 20 minutes a day, most days of the week, individualised to each patient. Some apps prescribe from an age formula (a fixed percentage of 220 − age). SST Trainer prescribes from your patient’s measured threshold.',
     callout: 'your band is computed at 80–90% of your HRt, with an adjustable 4–7 day/week schedule and a hard ceiling you should not cross.',
   },
   {

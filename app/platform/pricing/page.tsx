@@ -38,11 +38,11 @@ type Tier = {
 const TIERS: Tier[] = [
   {
     name: 'Per-episode',
-    who: 'Occasional / very low volume',
+    who: 'Occasional / very low volume · planned pricing',
     price: 'A$18',
-    unit: '/ patient course',
-    cta: 'Start free',
-    href: '/platform/app',
+    unit: '/ patient course · planned',
+    cta: 'Join free as a founding clinic',
+    href: FOUNDING_HREF,
     popular: false,
     cardBg: '#fff',
     border: '1px solid #e2e8f0',
@@ -57,7 +57,7 @@ const TIERS: Tier[] = [
     ctaBg: '#fff',
     ctaBorder: '1.5px solid #cbd5e1',
     features: [
-      'First 3 patients free',
+      'Planned pricing — founding clinics join free today',
       'Pay only when you prescribe — no subscription',
       'Switch to the flat clinic licence anytime',
       'Patient app always free',
@@ -67,7 +67,7 @@ const TIERS: Tier[] = [
     name: 'Clinic licence',
     who: 'Whole clinic · unlimited clinicians',
     price: 'Free',
-    unit: 'for our first 50 clinics',
+    unit: 'during the founding period',
     cta: 'Start a founding clinic',
     href: FOUNDING_HREF,
     popular: true,
@@ -84,19 +84,19 @@ const TIERS: Tier[] = [
     ctaBg: '#16243f',
     ctaBorder: 'none',
     features: [
-      'Then A$99/month — founding rate locked for life',
+      'Free during the founding period',
+      'When paid plans launch, founding clinics lock A$99/month — for life',
       'One flat price — unlimited clinicians & patients',
       'No per-seat fees as your team grows',
-      'Outcomes & adherence dashboard',
-      'Clinic-branded patient codes',
-      'Standard A$149/month after the first 50',
+      'Live in-session monitoring, measured-HRt trajectory, flare flags & review queue',
+      'Planned standard rate A$149/month after the founding period',
     ],
   },
   {
     name: 'Club · School · Payer',
     who: 'Sporting bodies · insurers · workers’ comp',
     price: 'From A$900',
-    unit: '/ year',
+    unit: '/ year · planned',
     cta: 'Talk to us',
     href: FOUNDING_HREF,
     popular: false,
@@ -113,11 +113,11 @@ const TIERS: Tier[] = [
     ctaBg: '#bfe79a',
     ctaBorder: 'none',
     features: [
+      'Planned pricing — talk to us about a founding arrangement',
       'Whole squad — baseline + in-season + rehab',
       '≈ A$6 / athlete / yr at squad scale',
       'Multi-site & league rates',
       'Workers’ comp / insurer: per-episode funded',
-      'Aggregate reporting & data feeds',
     ],
   },
 ]
@@ -126,36 +126,36 @@ const STEPS = [
   {
     n: '1',
     title: 'Start free',
-    body: 'Join as a founding clinic or prescribe your first 3 patients free — no card, no commitment.',
+    body: 'Join as a founding clinic — free during the founding period, no card, no commitment.',
   },
   {
     n: '2',
     title: 'Prescribe & progress',
-    body: 'Patients train on their own wearable; their threshold, adherence and recovery flow back to your dashboard.',
+    body: 'Patients train with their own watch or heart-rate strap; their measured threshold and session history flow back to your dashboard.',
   },
   {
     n: '3',
-    title: 'Scale when it works',
-    body: 'Move to a per-episode or clinic plan once you see the adherence and outcomes for yourself.',
+    title: 'Keep your founding rate',
+    body: 'When paid plans launch, founding clinics lock A$99/month — for life. Everyone after joins on the standard plans.',
   },
 ]
 
 const FAQS = [
   {
     q: 'Is this a regulated medical device?',
-    a: 'No. It’s a training and monitoring tool for clinician-supervised graded return — you set and oversee the sub-symptom threshold; the app delivers the plan and monitors heart rate. It does not diagnose or treat concussion and is not a return-to-play clearance.',
+    a: 'SST Trainer is a training and monitoring tool used under the treating clinician’s direction — you set and oversee the sub-symptom threshold; the app delivers the plan and monitors heart rate. It does not diagnose or treat concussion, and it does not make clearance decisions — you do.',
   },
   {
     q: 'Who pays — clinic or patient?',
-    a: 'You do — one flat clinic licence covering every clinician and patient, or pay per-episode. The patient app is always free to download and use, which is what keeps patients adherent.',
+    a: 'The clinic does, once paid plans launch — one flat clinic licence covering every clinician and patient, or per-episode. The patient app is always free to download and use, which is what keeps patients adherent.',
   },
   {
-    q: 'Is there really a free trial?',
-    a: 'Yes — two ways. Our first 50 founding clinics are free (rate locked for life), and beyond that your first 3 active patients are always free, so you only pay once you’ve seen it work across a real care episode.',
+    q: 'What does “founding period” actually mean?',
+    a: 'The platform is free during the founding period. When paid plans launch, founding clinics lock A$99/month — for life. No card is taken today, and nothing is billed until then.',
   },
   {
     q: 'Who owns the data?',
-    a: 'Your clinic and your patient. You receive the reports; we never sell data. Hosted in Australia, privacy-aligned.',
+    a: 'Your clinic and your patient. You receive the reports; we never sell data. Clinical records stored with our Australian-region database provider; see the privacy policy for full hosting detail.',
   },
 ]
 
@@ -231,8 +231,8 @@ export default function PlatformPricingPage() {
           style={{ fontSize: 'clamp(15px, 1.4vw, 17px)', lineHeight: 1.55 }}
         >
           Your patients download and use the app free. You prescribe, oversee,
-          and see their recovery — and only pay as you actually use it. Start
-          free, scale when it’s working.
+          and see their recovery. Free during the founding period — and when
+          paid plans launch, founding clinics lock their rate for life.
         </p>
       </header>
 
@@ -256,7 +256,7 @@ export default function PlatformPricingPage() {
                 className="absolute -top-[11px] left-6 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.06em] text-white"
                 style={{ background: '#57a82e' }}
               >
-                Most popular
+                Founding offer
               </span>
             )}
 
@@ -313,8 +313,9 @@ export default function PlatformPricingPage() {
       </section>
 
       <p className="mx-auto max-w-[1140px] px-8 pb-2 pt-1 text-center text-[12px] font-normal leading-[1.5] text-slate-400">
-        All prices AUD, ex GST. Founding clinic + clinic-plan rates locked for
-        early adopters. No app-store fees — billed directly. Cancel anytime.
+        All prices AUD, ex GST. Per-episode and club plans are planned pricing —
+        nothing is billed during the founding period, and founding-clinic rates
+        are locked when paid plans launch.
       </p>
 
       {/* Patients never pay band */}
@@ -331,9 +332,9 @@ export default function PlatformPricingPage() {
               className="text-[14px] font-normal"
               style={{ color: '#a7c2c5', lineHeight: 1.45 }}
             >
-              The app is free to download and use on the wearable they already
-              own. Zero cost and zero friction is what keeps them adherent — and
-              adherence is what drives recovery.
+              The app is free to install and use with the watch or heart-rate
+              strap they already own. Zero cost and zero friction is what keeps
+              them adherent — and adherence is what drives recovery.
             </span>
           </div>
           <span
@@ -438,8 +439,9 @@ export default function PlatformPricingPage() {
             className="m-0 max-w-[520px] text-[14.5px] font-normal text-slate-500"
             style={{ lineHeight: 1.55 }}
           >
-            Free while we build the evidence together — your feedback shapes the
-            product, and your founding rate is locked for good.
+            Free during the founding period. When paid plans launch, founding
+            clinics lock A$99/month — for life. Your feedback shapes the product
+            while we build the evidence together.
           </p>
           <Link
             href={FOUNDING_HREF}

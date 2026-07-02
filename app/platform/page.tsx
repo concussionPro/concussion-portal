@@ -9,13 +9,16 @@ import { PlatformNav, PlatformFooter, PLATFORM } from '@/components/platform/Pla
 // the "Find your threshold" screen. Gating + noindex live in layout.tsx.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Honest device story: wrist watches stream live HR via their standard
+// Bluetooth heart-rate BROADCAST mode (readable by Web Bluetooth) — never
+// imply HealthKit / Connect IQ / Fitbit API integrations (none exist).
 const DEVICES = [
-  { name: 'Apple Watch', glyph: '⌚', tint: '#1d2325' },
-  { name: 'Garmin', glyph: '⌚', tint: '#0b7fab' },
-  { name: 'WHOOP', glyph: '▬', tint: '#0f172a' },
-  { name: 'Polar / Wahoo', glyph: '◍', tint: '#d2463a' },
-  { name: 'Fitbit', glyph: '◆', tint: '#3c7a1f' },
-  { name: 'Phone camera', glyph: '◎', tint: '#5d7174' },
+  { name: 'Garmin · broadcast', glyph: '⌚', tint: '#0b7fab' },
+  { name: 'Polar · watch or strap', glyph: '◍', tint: '#d2463a' },
+  { name: 'WHOOP · broadcast', glyph: '▬', tint: '#0f172a' },
+  { name: 'Suunto / Coros · broadcast', glyph: '⌚', tint: '#1d2325' },
+  { name: 'Any Bluetooth chest strap', glyph: '◍', tint: '#3c7a1f' },
+  { name: 'Phone camera · resting check', glyph: '◎', tint: '#5d7174' },
 ]
 
 const NAV_CARDS = [
@@ -53,46 +56,29 @@ const FEATURES = [
   {
     glyph: '✓',
     title: 'Built on the evidence',
-    body: 'The Buffalo protocol and sub-symptom-threshold training, delivered one-handed to the wrist — mid-exercise.',
+    body: 'The Buffalo protocol and sub-symptom-threshold training, delivered live mid-exercise — your heart rate and band on screen for the whole session.',
   },
 ]
 
-function AppleStoreBadge() {
+// Honest install CTA — no store badges until the listings are actually live.
+function InstallCta() {
   return (
-    <Link
-      href="/platform/app"
-      className="flex items-center gap-[11px] rounded-[14px] px-[18px] py-[11px] text-white transition-transform hover:-translate-y-0.5"
-      style={{ background: PLATFORM.navy }}
-    >
-      <svg viewBox="0 0 384 512" width="22" height="22" fill="#fff" aria-hidden="true">
-        <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C40.6 141.9-.1 184.7-.1 273.1c0 26.1 4.8 53.1 14.4 80.9 12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.6-90-61.6-91.2zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-      </svg>
-      <span className="flex flex-col leading-none">
-        <span className="text-[10px] font-medium leading-[1.3] opacity-80">Download on the</span>
-        <span className="text-[16px] font-bold leading-[1.1]">App Store</span>
-      </span>
-    </Link>
-  )
-}
-
-function GooglePlayBadge() {
-  return (
-    <Link
-      href="/platform/app"
-      className="flex items-center gap-[11px] rounded-[14px] px-[18px] py-[11px] text-white transition-transform hover:-translate-y-0.5"
-      style={{ background: PLATFORM.navy }}
-    >
-      <svg viewBox="0 0 512 512" width="20" height="20" aria-hidden="true">
-        <path d="M48 32 296 256 48 480c-9 4-32-2-32-26V58C16 34 39 28 48 32z" fill="#16243f" />
-        <path d="M48 32l180 158 52-52L96 24C72 12 56 22 48 32z" fill="#7fc0c9" />
-        <path d="M48 480l180-158 52 52L96 488c-24 12-40 2-48-8z" fill="#3c7a1f" />
-        <path d="M380 196l48 30c22 14 22 46 0 60l-48 30-60-60 60-60z" fill="#a9d6db" />
-      </svg>
-      <span className="flex flex-col leading-none">
-        <span className="text-[10px] font-medium leading-[1.3] opacity-80">Get it on</span>
-        <span className="text-[16px] font-bold leading-[1.1]">Google Play</span>
-      </span>
-    </Link>
+    <div className="mt-1 flex flex-wrap items-center gap-3">
+      <Link
+        href="/platform/app"
+        className="rounded-[14px] px-[22px] py-[15px] text-[15px] font-bold text-white transition-transform hover:-translate-y-0.5"
+        style={{ background: PLATFORM.navy }}
+      >
+        Install in 60 seconds — no app store needed
+      </Link>
+      <Link
+        href="/platform/clinicians"
+        className="rounded-[14px] border-[1.5px] border-slate-300 bg-white px-[22px] py-[14px] text-[15px] font-bold transition-colors hover:border-slate-400"
+        style={{ color: PLATFORM.navy }}
+      >
+        For clinicians →
+      </Link>
+    </div>
   )
 }
 
@@ -316,16 +302,14 @@ export default function PlatformHome() {
             style={{ fontSize: 'clamp(15px, 1.4vw, 18px)', lineHeight: 1.55 }}
           >
             One platform finds your heart-rate threshold, prescribes a safe training band, and steps it up
-            as you recover — across concussion, cancer rehab, dysautonomia and cardiac care. Set up and
-            overseen by your clinician.
+            as you recover — for concussion recovery, with further rehabilitation pathways in development.
+            Set up and overseen by your clinician.
           </p>
 
-          <div className="mt-1 flex flex-wrap gap-3">
-            <AppleStoreBadge />
-            <GooglePlayBadge />
-          </div>
+          <InstallCta />
           <p className="m-0 text-[13px] font-medium leading-[1.5] text-[#849c9c]">
-            Free to start. Installs in seconds — and no clinic hardware required.
+            Runs in your browser and installs to your home screen. Free to start — no clinic hardware
+            required.
           </p>
         </div>
 
@@ -340,11 +324,12 @@ export default function PlatformHome() {
               Compatible devices
             </span>
             <span className="text-[24px] font-extrabold leading-[1.15] tracking-[-0.02em] text-white">
-              Works with the wearable you already own.
+              Works with the watch you already own.
             </span>
             <span className="text-[14px] font-normal leading-[1.45] text-[#a7c2c5]">
-              Live heart rate streams straight into every session — no clinic hardware. Download once, install
-              in seconds.
+              Garmin, Polar, WHOOP, Suunto, Coros and more stream live heart rate via their heart-rate
+              broadcast mode — or pair any Bluetooth chest strap. On Android and desktop today; no clinic
+              hardware.
             </span>
           </div>
 
@@ -366,8 +351,8 @@ export default function PlatformHome() {
             ))}
           </div>
           <p className="mt-[13px] text-[11.5px] font-normal leading-[1.4] text-[#7c9598]">
-            Chest strap = most accurate · Fitbit syncs near-real-time · no wearable? your phone camera reads
-            your pulse.
+            Chest strap = most accurate · iPhone: manual entry today — native iPhone app in development ·
+            phone-camera pulse check for resting measurements.
           </p>
 
           {/* Nav cards */}

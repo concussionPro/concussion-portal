@@ -26,7 +26,7 @@ const LOOP: { n: string; t: string; d: string }[] = [
   {
     n: '2',
     t: 'Patient pairs a wearable',
-    d: 'They enter your clinic code and train on the Apple Watch, Garmin, WHOOP or chest strap they already own.',
+    d: 'They enter your clinic code and train with the watch they already own — Garmin, Polar, WHOOP and more via heart-rate broadcast mode — or any Bluetooth chest strap.',
   },
   {
     n: '3',
@@ -36,7 +36,7 @@ const LOOP: { n: string; t: string; d: string }[] = [
   {
     n: '4',
     t: 'Data returns to you',
-    d: 'Adherence, symptom trend and re-test prompts arrive for your review — between appointments.',
+    d: 'Their measured-HRt trajectory, session log and flare flags land in your review queue — between appointments.',
   },
 ]
 
@@ -53,8 +53,8 @@ const VALUES: { icon: string; title: string; body: string }[] = [
   },
   {
     icon: '↺',
-    title: 'Automatic re-test loop',
-    body: 'The fortnightly recalculation runs itself and surfaces when a patient is ready to step up.',
+    title: 'A review queue, not a data dump',
+    body: 'Sessions that flare or drift over the ceiling land in a queue for your eyes — nothing slips between appointments.',
   },
   {
     icon: '⚑',
@@ -64,10 +64,10 @@ const VALUES: { icon: string; title: string; body: string }[] = [
 ]
 
 const DASH = [
-  'Threshold & prescribed band',
-  'Session-by-session adherence',
-  'Symptom trend vs baseline',
-  'Re-test & progression prompts',
+  'Live in-session monitoring',
+  'Serial measured-HRt trajectory, per-point provenance',
+  'Session log with flare flags & review queue',
+  'Clearance-ready signal on a no-intolerance re-test',
 ]
 
 export default function CliniciansPage() {
@@ -205,9 +205,11 @@ export default function CliniciansPage() {
               Every patient&apos;s recovery, on one dashboard.
             </h2>
             <p className="m-0 max-w-[540px] text-[14px] font-normal leading-[1.55] text-slate-600">
-              Threshold, prescribed band, session adherence, symptom trend and re-test prompts — for
-              each patient on your clinic code. The fortnightly recalculation that used to tie up an
-              appointment happens automatically and arrives ready for your review.
+              Watch a session live as it happens, then follow the serial measured-HRt recovery
+              trajectory — every point tagged with how it was measured — for each patient on your
+              clinic code. Sessions with flare flags queue for your review, and a re-test with no
+              symptom intolerance surfaces a clearance-ready signal. The clearance decision stays
+              with you.
             </p>
           </div>
           <div className="flex flex-[0_0_auto] flex-col gap-[9px]">

@@ -23,7 +23,8 @@ const VOLUMES: { value: string; label: string }[] = [
 ]
 
 const PERKS = [
-  'Free founding rate — locked for the life of your clinic',
+  'Free during the founding period',
+  'When paid plans launch, founding clinics lock A$99/month — for life',
   'Unlimited clinicians & patients on one licence',
   'Your feedback directly shapes the product roadmap',
   'The patient app is always free to download',
@@ -106,9 +107,9 @@ export default function FoundingClinicPage() {
             className="m-0 max-w-[440px] font-normal text-slate-600"
             style={{ fontSize: 'clamp(14.5px, 1.4vw, 16px)', lineHeight: 1.55 }}
           >
-            Free while we build the evidence together. Your feedback shapes the product, your
-            founding rate is locked for good, and your patients never pay. Tell us about your clinic
-            and Zac will set you up personally.
+            Free during the founding period — and when paid plans launch, founding clinics lock
+            A$99/month, for life. Your feedback shapes the product, and your patients never pay.
+            Tell us about your clinic and Zac will set you up personally.
           </p>
           <div className="mt-1 flex flex-col gap-[11px]">
             {PERKS.map((p) => (
