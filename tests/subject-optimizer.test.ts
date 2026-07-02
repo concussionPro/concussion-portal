@@ -31,7 +31,8 @@ function statsOf(entries: Record<string, VariantStat>): Map<string, VariantStat>
   return new Map(Object.entries(entries))
 }
 
-// Every key warmed past the threshold (15 sends), with a clear winner.
+// Every key warmed past the threshold (DEFAULT_MIN_SAMPLES_PER_KEY = 10
+// sends as of 2026-07-02), with a clear winner.
 function warmedStats(winner: string): Map<string, VariantStat> {
   const m = new Map<string, VariantStat>()
   for (const k of KEYS) m.set(k, { sends: 20, realViews: k === winner ? 18 : 2 })
@@ -43,12 +44,12 @@ describe('chooseSubjectKey — cold start (uniform warmup)', () => {
     const slug = 'ballina-osteo'
     // empty stats = all zero sends = fully cold
     const cold = chooseSubjectKey({ candidateKeys: KEYS, slug, stats: new Map() })
-    // a variant with a perfect conversion rate but still < 15 sends must NOT
+    // a variant with a perfect conversion rate but still < 10 sends must NOT
     // be exploited — the result must match the performance-blind cold pick.
     const tempting = chooseSubjectKey({
       candidateKeys: KEYS,
       slug,
-      stats: statsOf({ city: { sends: 10, realViews: 10 } }),
+      stats: statsOf({ city: { sends: 9, realViews: 9 } }),
     })
     expect(tempting).toBe(cold)
     expect(KEYS).toContain(cold)
@@ -64,16 +65,22 @@ describe('chooseSubjectKey — cold start (uniform warmup)', () => {
 
   it('warmup holds until EVERY variant crosses the sample threshold', () => {
     const slug = 'coastal-health'
-    // three of four warmed, one still at 14 sends → still cold-start
+    // Threshold is DEFAULT_MIN_SAMPLES_PER_KEY = 10 (lowered from 15,
+    // 2026-07-02). Three of four warmed, one still at 9 sends → still
+    // cold-start; at 10 the same stats would exploit 'city'.
     const stats = statsOf({
       name: { sends: 20, realViews: 1 },
       city: { sends: 20, realViews: 19 }, // would be the winner if warmed
       capability_q: { sends: 20, realViews: 1 },
-      name_ready: { sends: 14, realViews: 0 }, // one short
+      name_ready: { sends: 9, realViews: 0 }, // one short of the 10 threshold
     })
     const result = chooseSubjectKey({ candidateKeys: KEYS, slug, stats, epsilon: 0 })
     const coldPick = chooseSubjectKey({ candidateKeys: KEYS, slug, stats: new Map(), epsilon: 0 })
     expect(result).toBe(coldPick) // not yet exploiting 'city'
+    // And the moment the last arm reaches 10, exploitation kicks in.
+    stats.set('name_ready', { sends: 10, realViews: 0 })
+    const warmed = chooseSubjectKey({ candidateKeys: KEYS, slug, stats, epsilon: 0 })
+    expect(warmed).toBe('city')
   })
 })
 

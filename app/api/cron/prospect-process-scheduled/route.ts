@@ -96,6 +96,17 @@ export async function GET(request: Request) {
   // them due NOW is deliberate: the adaptive cap meters volume and the
   // size-tier ORDER BY decides sequence, so the backlog drains largest-
   // clinics-first at whatever rate reputation allows.
+  // POSITIVE ICP GATE (2026-07-02): Hunter-clean is necessary but NOT
+  // sufficient — the Apollo pollution proved a wine bar with a valid mailbox
+  // sails through verification. Mirror the 2026-07-01 cleanup rule (retain
+  // only Hunter-verified AND clinic/allied-health/sports-org): Apollo-imported
+  // rows may only auto-schedule when something POSITIVELY marks them as a
+  // clinic — an allied-health/sports signal in the name or website domain, or
+  // a real website-categorizer detection stamped in notes ('[categorize]
+  // <tier> · N practitioners detected …'; the fetch-failed "defaulted hub"
+  // stamp deliberately does NOT count — that default was the pollution
+  // vector). Hand-vetted sources (manual / imported research) pass unchanged.
+  // A bad Apollo import now strands in 'researching' for manual review.
   const promoted = await sql`
     UPDATE prospect_clinics pc
     SET status = 'approved',
@@ -108,6 +119,13 @@ export async function GET(request: Request) {
       AND COALESCE(pc.verification_role, FALSE) = FALSE
       AND COALESCE(pc.verification_accept_all, FALSE) = FALSE
       AND COALESCE(pc.verification_disposable, FALSE) = FALSE
+      AND (
+        pc.research_source <> 'apollo-import'
+        OR pc.name ~* '(physio|osteo|chiro|sports?[ -]?(injur|med|clinic|rehab|therap)|rehab|musculoskeletal|exercise physiol|myotherap|allied health|spine|spinal)'
+        OR pc.short_name ~* '(physio|osteo|chiro|sports?[ -]?(injur|med|clinic|rehab|therap)|rehab|musculoskeletal|exercise physiol|myotherap|allied health|spine|spinal)'
+        OR pc.clinic_website_url ~* '(physio|osteo|chiro|sportsmed|rehab|myotherapy|alliedhealth)'
+        OR pc.notes ~* '\\[categorize\\] (on-site|hub|individual) ·'
+      )
       AND NOT EXISTS (
         SELECT 1 FROM prospect_outreach_log ol
         WHERE ol.clinic_id = pc.id AND ol.audit_key NOT LIKE '%:test:%'

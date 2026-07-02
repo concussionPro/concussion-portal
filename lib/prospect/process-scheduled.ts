@@ -614,22 +614,45 @@ export async function processScheduledSends(
   const runStart = Date.now()
   let staggerCursorMs = 0 // offset from runStart for the NEXT send
 
-  // ── Send window (Zac 2026-06-11): deliver Mon-Fri until 5:30pm AEST, Sat
-  // until 1pm AEST, never Sunday. AEST = UTC+10 (no DST — AU east-coast winter /
-  // QLD year-round). We stop QUEUEING once the next staggered slot would fall
-  // past today's window-end; the leftover prospects wait for the next run
-  // (9am Mon-Fri / 8am Sat). Env override COLD_WINDOW_END_HOUR for testing.
-  const AEST_OFFSET_MS = 10 * 3_600_000
-  const aestNow = new Date(runStart + AEST_OFFSET_MS)
-  const aestDay = aestNow.getUTCDay() // 0=Sun … 6=Sat, evaluated in AEST
-  const aestMidnightUtcMs =
-    Date.UTC(aestNow.getUTCFullYear(), aestNow.getUTCMonth(), aestNow.getUTCDate()) - AEST_OFFSET_MS
-  const windowEndHourAest = aestDay === 0 ? 0 : aestDay === 6 ? 13 : 17.5 // Sun none · Sat 1pm · wk 5:30pm
-  const windowEndUtcMs = aestMidnightUtcMs + windowEndHourAest * 3_600_000
+  // ── Send window (Zac 2026-06-11): deliver Mon-Fri until 5:30pm, Sat until
+  // 1pm, never Sunday — SYDNEY local time. Fixed 2026-07-02: this block used a
+  // hardcoded UTC+10, which drifted an hour off the Australia/Sydney entry gate
+  // (isInOptimalSendWindow) every DST summer. Now both use the same zone. We
+  // stop QUEUEING once the next staggered slot would fall past today's
+  // window-end; the leftover prospects wait for the next run (9am Mon-Fri /
+  // 8am Sat). force=true bypasses the window break (manual "fire now" runs —
+  // Sunday's windowEnd is midnight, so without the bypass a forced run
+  // silently queued nothing: due:N sent:0 with no explanation). Caps and all
+  // per-row guards still apply under force.
+  const sydParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Australia/Sydney',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(new Date(runStart))
+  const sydGet = (type: string) => parseInt(sydParts.find((p) => p.type === type)?.value ?? '0', 10)
+  const sydYear = sydGet('year')
+  const sydMonth = sydGet('month')
+  const sydDay = sydGet('day')
+  let sydHour = sydGet('hour')
+  if (sydHour === 24) sydHour = 0 // some ICU builds report midnight as 24
+  // Sydney's current UTC offset, derived from the wall-clock delta (second
+  // precision is plenty for an hours-scale window).
+  const sydWallAsUtcMs = Date.UTC(sydYear, sydMonth - 1, sydDay, sydHour, sydGet('minute'), sydGet('second'))
+  const sydOffsetMs = sydWallAsUtcMs - Math.floor(runStart / 1000) * 1000
+  const sydDow = new Date(Date.UTC(sydYear, sydMonth - 1, sydDay)).getUTCDay() // 0=Sun … 6=Sat
+  const sydMidnightUtcMs = Date.UTC(sydYear, sydMonth - 1, sydDay) - sydOffsetMs
+  const windowEndHourSyd = sydDow === 0 ? 0 : sydDow === 6 ? 13 : 17.5 // Sun none · Sat 1pm · wk 5:30pm
+  const windowEndUtcMs = sydMidnightUtcMs + windowEndHourSyd * 3_600_000
 
   for (const row of due) {
     // Stop queueing once the next staggered slot falls past today's window-end.
-    if (runStart + staggerCursorMs > windowEndUtcMs) break
+    // force=true bypasses the window (still respects the daily cap below).
+    if (!force && runStart + staggerCursorMs > windowEndUtcMs) break
     const templateSlug = row.next_template_slug
     if (!isValidTemplateSlug(templateSlug)) {
       // Defensive — DB has a slug we don't know how to handle. Skip.
@@ -754,47 +777,11 @@ export async function processScheduledSends(
     const template = EMAIL_TEMPLATES.find((t) => t.slug === templateSlug)!
     const unsubToken = generateUnsubscribeToken(clinic.slug)
 
-    // For followup + final sends, look up engagement signal from the
-    // previous template. Drives variant selection in mergeTemplate:
-    //   - clicked → strongest variant ("noticed you opened the {clinic} preview")
-    //   - opened  → soft variant ("saw you took a look")
-    //   - none    → generic followup
-    // Bot/scanner UAs filtered out so SafeLinks pre-fetches don't trigger
-    // the "we noticed you clicked" variant when no human actually engaged.
-    // (Webhook rows never carry user_agent — NULL coalesces to '' which the
-    // regex doesn't match, so those events count as human. Intentional.)
-    // Wrapped in try/catch: variant selection is cosmetic — a lookup failure
-    // degrades to the generic variant, it must never kill the send run.
-    let priorEngagement: 'none' | 'opened' | 'clicked' = 'none'
-    if (templateSlug !== 'initial') {
-      try {
-        const priorSlug = templateSlug === 'followup' ? 'initial' : 'followup'
-        const { rows: priorSends } = await sql<{ resend_email_id: string | null }>`
-          SELECT resend_email_id FROM prospect_outreach_log
-          WHERE clinic_id = ${clinic.id}
-            AND template_slug = ${priorSlug}
-            AND resend_email_id IS NOT NULL
-          ORDER BY sent_at DESC LIMIT 1
-        `
-        const priorResendId = priorSends[0]?.resend_email_id
-        if (priorResendId) {
-          const { rows: events } = await sql<{ event_type: string }>`
-            SELECT event_type FROM email_events
-            WHERE email_id = ${priorResendId}
-              AND event_type IN ('opened', 'clicked')
-              AND COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|crawler|spider|slurp|facebook|linkedin|whatsapp|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
-          `
-          if (events.some((e) => e.event_type === 'clicked')) priorEngagement = 'clicked'
-          else if (events.some((e) => e.event_type === 'opened')) priorEngagement = 'opened'
-        }
-      } catch (err) {
-        console.error(
-          `[process-scheduled] prior-engagement lookup failed for clinic ${clinic.id} — degrading to 'none':`,
-          err,
-        )
-        priorEngagement = 'none'
-      }
-    }
+    // NOTE (2026-07-02): the old email-open/click "priorEngagement" lookup
+    // (two extra queries per followup/final send) was deleted — mergeTemplate
+    // ignores that option entirely (open/click proved to be scanner noise; see
+    // email-templates.ts). Real engagement drives copy via classifyFollowup()
+    // below, which reads scanner-proof portal section beacons instead.
 
     // ── DYNAMIC subject-line pick ──────────────────────────────────────
     // Candidate keys = the subject variants eligible for THIS clinic + touch
@@ -825,7 +812,6 @@ export async function processScheduledSends(
     }
 
     const { subject, html, text, subjectKey } = mergeTemplate(template, clinic, BASE_URL, unsubToken, {
-      priorEngagement,
       forceSubjectKey,
       engagementHint,
       followupCategory,

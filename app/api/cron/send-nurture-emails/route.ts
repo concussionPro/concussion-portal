@@ -103,7 +103,7 @@ export async function GET(request: Request) {
     // or prep emails. They sit in the alumni cohort, no action, until a Level 2
     // exists to offer them. Auto-applies to every workshop once its date passes.
     const allUsers = await loadUsers()
-    const users = allUsers.filter(
+    const alumniFilteredUsers = allUsers.filter(
       (u) =>
         !isWorkshopAlumnus({ accessLevel: u.accessLevel, workshopLocation: u.workshopLocation }) &&
         // Past attendees granted portal access (signup_source 'alumni-grant', and
@@ -153,17 +153,30 @@ export async function GET(request: Request) {
     }
 
     // Global suppression list (hard bounces / complaints / manual opt-outs).
-    // Used to gate the operational workshop emails (section 3) and
-    // abandoned-checkout sends to addresses with no users row (section 5).
-    let suppressedEmails = new Set<string>()
+    // MASTER BLACKLIST (2026-07-02): gates EVERY lane in this cron — the users
+    // array is filtered against it once below, and the per-lane checks
+    // (section 3 transactional, abandoned-checkout section 5) stay as
+    // belt-and-braces. FAIL CLOSED: if the table can't be read we abort the
+    // run rather than proceed with an empty set (which would email suppressed
+    // addresses). Unsubs are zero-tolerance.
+    let suppressedEmails: Set<string>
     try {
       const { rows: suppressionRows } = await sql<{ email: string }>`
         SELECT LOWER(email) AS email FROM email_suppression
       `
       suppressedEmails = new Set(suppressionRows.map(r => r.email))
     } catch (err) {
-      console.error('[Nurture] Failed to load email_suppression — treating as empty:', err)
+      console.error('[Nurture] Failed to load email_suppression — ABORTING run (fail closed):', err)
+      return NextResponse.json(
+        { error: 'email_suppression load failed — run aborted (fail closed)' },
+        { status: 503 }
+      )
     }
+
+    // Single global suppression gate for every nurture/lifecycle lane.
+    const users = alumniFilteredUsers.filter(
+      (u) => !suppressedEmails.has(u.email.toLowerCase())
+    )
 
     // Stagger nurture sends across ~30-45 min with per-domain throttling so
     // the daily batch doesn't read as a marketing blast to inbox providers.

@@ -243,6 +243,41 @@ async function handleProspectReply(
   }
 }
 
+/**
+ * Users-table opt-out fallback (2026-07-02). A STOP/unsubscribe reply from a
+ * nurture/lifecycle recipient (users row, NOT a prospect clinic) previously
+ * fell through to the Squarespace parser and was ignored — the person kept
+ * getting emails. If the sender matches a users row and the message is an
+ * opt-out, suppress globally + set nurture_unsubscribed=true. Never throws.
+ */
+async function handleUserOptOut(
+  fromEmail: string,
+  subject: string,
+  bodyText: string,
+): Promise<{ matched: boolean }> {
+  try {
+    if (!isOptOutMessage(subject, bodyText)) return { matched: false }
+    const { rows } = await sql<{ id: string }>`
+      SELECT id FROM users WHERE LOWER(email) = ${fromEmail} LIMIT 1
+    `
+    if (!rows[0]) return { matched: false }
+
+    await sql`
+      INSERT INTO email_suppression (email, reason, source)
+      VALUES (${fromEmail}, 'reply-opt-out', 'resend-inbound:user')
+      ON CONFLICT (email) DO NOTHING
+    `
+    await sql`
+      UPDATE users SET nurture_unsubscribed = true WHERE id = ${rows[0].id}
+    `
+    console.log(`[resend-inbound] user opt-out from ${fromEmail.slice(0, 3)}*** — suppressed + nurture_unsubscribed`)
+    return { matched: true }
+  } catch (err) {
+    console.error('[resend-inbound] user opt-out handling failed:', err)
+    return { matched: false }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text()
@@ -287,6 +322,13 @@ export async function POST(request: NextRequest) {
           prospectReply: true,
           optOut: replyResult.optOut ?? false,
         })
+      }
+
+      // Users-table fallback (2026-07-02): a STOP from a nurture recipient
+      // who isn't a cold prospect must still land on the master blacklist.
+      const userOptOut = await handleUserOptOut(fromEmail, subject, bodyText)
+      if (userOptOut.matched) {
+        return NextResponse.json({ success: true, userOptOut: true })
       }
     }
 

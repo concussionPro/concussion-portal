@@ -303,11 +303,20 @@ export async function POST(request: NextRequest) {
               SET clicked_count = clicked_count + 1
               WHERE resend_email_id = ${data.email_id}
             `
-            await sql`
-              UPDATE prospect_clinics
-              SET status = 'engaged', updated_at = NOW()
-              WHERE id = ${pidNum} AND status IN ('sent', 'opened')
-            `
+            // Click → status='engaged' is GATED OFF by default (2026-07-02).
+            // Email click tracking is OFF for cold sends and click events are
+            // dominated by SafeLinks/Mimecast scanner detonations — a single
+            // stray scanner click flipped a clinic to 'engaged', which the
+            // cron excludes, silently yanking it from the T2/T3 queue. Real
+            // engagement comes from prospect_portal_views section beacons.
+            // Set PROSPECT_CLICK_ENGAGED_ENABLED=true to restore the old flip.
+            if (process.env.PROSPECT_CLICK_ENGAGED_ENABLED === 'true') {
+              await sql`
+                UPDATE prospect_clinics
+                SET status = 'engaged', updated_at = NOW()
+                WHERE id = ${pidNum} AND status IN ('sent', 'opened')
+              `
+            }
             await writeAnalyticsEvent('prospect_email_clicked', {
               prospect_id: pidNum,
               template: templateSlug,

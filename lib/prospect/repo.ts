@@ -178,6 +178,13 @@ export async function updateClinicStatus(id: number, status: ProspectStatus): Pr
  *
  * Returns the number of inserted rows. Conflicts on slug are silently
  * skipped (ON CONFLICT DO NOTHING) so re-runs are idempotent.
+ *
+ * Import screens (2026-07-02):
+ *  - email_suppression: a suppressed address must never re-enter the pool
+ *    under a fresh slug (unsubs are zero-tolerance).
+ *  - LOWER(contact_email) dedupe against existing clinics AND within the
+ *    batch itself: the same clinic re-imported under a new slug must not
+ *    restart a T1 sequence.
  */
 export async function bulkCreateClinics(inputs: CreateClinicInput[]): Promise<number> {
   if (inputs.length === 0) return 0
@@ -215,7 +222,7 @@ export async function bulkCreateClinics(inputs: CreateClinicInput[]): Promise<nu
       travel_band, travel_surcharge, cohort_recommendation,
       status, research_source, valid_until, notes
     )
-    SELECT
+    SELECT DISTINCT ON (LOWER(elem->>'contact_email'))
       (elem->>'slug')::text,
       (elem->>'access_key')::text,
       (elem->>'name')::text,
@@ -239,6 +246,18 @@ export async function bulkCreateClinics(inputs: CreateClinicInput[]): Promise<nu
       (elem->>'valid_until')::timestamptz,
       (elem->>'notes')::text
     FROM jsonb_array_elements(${payloadJson}::jsonb) AS elem
+    -- Suppression screen: never re-import an address on the master blacklist.
+    WHERE NOT EXISTS (
+        SELECT 1 FROM email_suppression es
+        WHERE es.email = LOWER(elem->>'contact_email')
+      )
+      -- Email-level dedupe: the same clinic re-imported under a NEW slug
+      -- (so ON CONFLICT (slug) can't catch it) must not restart a sequence.
+      AND NOT EXISTS (
+        SELECT 1 FROM prospect_clinics existing
+        WHERE LOWER(existing.contact_email) = LOWER(elem->>'contact_email')
+      )
+    ORDER BY LOWER(elem->>'contact_email'), (elem->>'slug')
     ON CONFLICT (slug) DO NOTHING
   `
   return rowCount ?? 0
@@ -249,10 +268,19 @@ export async function bulkCreateClinics(inputs: CreateClinicInput[]): Promise<nu
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function isSuppressed(email: string): Promise<boolean> {
-  const { rows } = await sql`
-    SELECT 1 FROM email_suppression WHERE email = ${email.toLowerCase()} LIMIT 1
-  `
-  return rows.length > 0
+  try {
+    const { rows } = await sql`
+      SELECT 1 FROM email_suppression WHERE email = ${email.toLowerCase()} LIMIT 1
+    `
+    return rows.length > 0
+  } catch (err) {
+    // FAIL CLOSED (2026-07-02): a transient DB error used to throw here and
+    // 500 the whole send run. Instead treat the address as suppressed — the
+    // caller skips just this row and it retries on the next run. Unsubs are
+    // zero-tolerance; never send when the blacklist can't be read.
+    console.error(`[prospect repo] isSuppressed check failed for ${email.slice(0, 3)}*** — treating as suppressed (fail closed):`, err)
+    return true
+  }
 }
 
 export async function suppress(email: string, reason: string, source?: string): Promise<void> {
@@ -368,9 +396,14 @@ export async function recordPortalView(input: {
 export async function todaysSentCount(): Promise<number> {
   // Test-mode previews (audit_key contains ':test:') go to Zac's inbox, not
   // prospects — they must not consume the production daily cap.
+  //
+  // "Today" is the SYDNEY calendar day (2026-07-02): the old
+  // `sent_at::date = CURRENT_DATE` compared in UTC, so the 9am and 11am AEST
+  // runs straddled UTC midnight — the second run saw a fresh "day" and sent a
+  // full second batch (double the intended daily volume).
   const { rows } = await sql<{ count: string }>`
     SELECT COUNT(*) AS count FROM prospect_outreach_log
-    WHERE sent_at::date = CURRENT_DATE
+    WHERE (sent_at AT TIME ZONE 'Australia/Sydney')::date = (NOW() AT TIME ZONE 'Australia/Sydney')::date
       AND audit_key NOT LIKE '%:test:%'
   `
   return parseInt(rows[0]?.count ?? '0', 10)

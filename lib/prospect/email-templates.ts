@@ -372,14 +372,20 @@ export function mergeTemplate(
       : `For a team your size, the Hub Pack trains everyone online and gives you your own clinic-branded toolkit. 8 CPD hours each, Osteopathy Australia endorsed.`
   const sp = seasonalPrefix()
   const hook = sp ? sp + REGULATORY_LINE.charAt(0).toLowerCase() + REGULATORY_LINE.slice(1) : REGULATORY_LINE
-  // Structured as four short, distinct beats — regulatory hook, the kit I made
-  // for them (name used ONCE), the tier-matched next step, then the link on its
-  // own line. Cutting the name from 3x→1x is what stops it reading as a merge.
+  // T1 (trimmed 2026-07-02, doctrine: <80 words + ONE interest-question
+  // closer). Three beats — regulatory hook, the kit + tier option + link in
+  // one sentence, then the reply-bait question (the only CTA). The clinic
+  // name appears ONCE in the body copy (the closer) so it never reads as a
+  // merge; the tier angle survives as a three-word option mention.
+  const t1TierNoun = isOnSiteTarget
+    ? 'on-site team training option'
+    : isIndividualTarget
+      ? 'self-paced course option'
+      : 'team Hub Pack option'
   const t1Body = [
     `<p>${hook} Most ${soloPlural}${cityPhrase} aren't set up for it yet.</p>`,
-    `<p>I've put a concussion kit together for ${safeShortName} — the fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial, all yours to use. The clinical toolkit, admin pack and reference library are previewed there too.</p>`,
-    `<p>${tierLine}</p>`,
-    `<p>It's all set up on your page here: ${FREE_LINK}</p>`,
+    `<p>I've put a concussion kit together for your clinic — fillable SCAT6/SCOAT6 forms, a baseline tool and the Module 1 trial of the OA-endorsed CPD course, with the ${t1TierNoun} alongside: ${FREE_LINK}</p>`,
+    `<p>Worth a look for ${safeShortName}?</p>`,
   ].join('\n')
 
   // T2 — re-offer: free tools + the toolkit/docs value + the tier line, clean
@@ -407,8 +413,11 @@ export function mergeTemplate(
             ? `if it's a fit, the course is ready whenever you are — just reply.`
             : `if it's a fit for ${safeShortName}, the Hub Pack trains your whole team online — reply, or set it up from the same page.`
         : `the SCAT6/SCOAT6 forms and baseline tool are yours to use either way.`
+    // ONE link per email (2026-07-02): the non-hot opener already carries the
+    // portal link, so only the hot variant (whose opener is link-free) embeds
+    // it here.
     t2SecondPara =
-      `<p>Most concussions that reach a clinic don't present as one — they look like neck pain, migraine, or low mood, and the call on which is which is where management lives or dies. That's where Module 1 starts, and it's open on your page — the real first module, not a brochure: ${FREE_LINK}</p>\n<p>Have a look — and ${closeLine}</p>`
+      `<p>Most concussions that reach a clinic don't present as one — they look like neck pain, migraine, or low mood, and the call on which is which is where management lives or dies. That's where Module 1 starts, and it's open on your page — the real first module, not a brochure${category === 'hot' ? `: ${FREE_LINK}` : '.'}</p>\n<p>Have a look — and ${closeLine}</p>`
   } else if (category === 'hot') {
     // Genuine buying intent (returned, next-step, deep trial, studied pricing).
     // The most direct, deal-type-specific close — drives to the portal (where
@@ -430,8 +439,9 @@ export function mergeTemplate(
     // to get them to SAMPLE before any pricing/call ask. Value-first hook; never
     // references their browsing (no surveillance). Link lands on the trial-first
     // portal flow.
+    // No link here — the opener above already carries the ONE portal link.
     t2SecondPara =
-      `<p>Most concussions that reach a clinic don't present as one — they look like neck pain, migraine, or low mood, and the call on which is which is where management lives or dies. That's the ground Module 1 covers — the real first module, open on your page, knowledge checks and all (not a brochure): ${FREE_LINK}</p>`
+      `<p>Most concussions that reach a clinic don't present as one — they look like neck pain, migraine, or low mood, and the call on which is which is where management lives or dies. That's the ground Module 1 covers — the real first module, open on your page, knowledge checks and all (not a brochure).</p>`
   } else if (hint === 'toolkit') {
     t2SecondPara =
       `<p>The clinical toolkit (GP/NDIS/school letters, billing) unlocks with the online course — along with the protocol training and 8 CPD hours. The SCAT6/SCOAT6 forms and baseline tool are yours either way.</p>`
@@ -460,21 +470,26 @@ export function mergeTemplate(
   }
   // T3 second paragraph — when they looked at pricing, lead with the offer to
   // talk the numbers through (value-framed, not "I saw you viewed pricing").
-  // Every other hint (and null) keeps the standard breakup price line. Both
-  // keep the identical "reply 'later' / STOP" close.
+  // Every other hint (and null) keeps the standard breakup price line.
+  // ONE link per email (2026-07-02): the opening line carries the only portal
+  // link; the variants below reference "that page" instead of re-linking.
+  // The "reply 'later' / STOP" close now sits on its OWN short line (t3Close)
+  // so it can't get buried at the end of a dense paragraph.
   const t3SecondPara = !hasOpenedTrial
     ? // Never sampled — one last relevance → Module 1 nudge before closing the
       // loop. Same evidence structure as T2 (clinical hook, then the real module),
       // kept low-pressure for a breakup. No price-lead, no hype.
-      `<p>Before I close the loop — the part worth ten minutes is Module 1 itself, open on your page: the real first module, not a brochure, on spotting the concussion that doesn't look like one. Quickest way to judge whether the full course earns its place at ${safeShortName}: ${FREE_LINK}. Either way no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+      `<p>Before I close the loop — the part worth ten minutes is Module 1, open on the same page: the real first module, not a brochure, on spotting the concussion that doesn't look like one. Quickest way to judge whether the full course earns its place at ${safeShortName}.</p>`
     : category === 'hot'
-      ? `<p>If you're ready to move on it — ${priceLine}, and it's all set up for ${safeShortName} at ${FREE_LINK}, or just reply and I'll sort it directly. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+      ? `<p>If you're ready to move on it — ${priceLine}, and it's all set up for ${safeShortName} on that page, or just reply and I'll sort it directly.</p>`
       : hint === 'pricing'
-        ? `<p>And if cost was the sticking point — ${priceLine}, and I'm happy to talk through the options for ${safeShortName} if it helps; just reply. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
-        : `<p>And if you ever want the full course, ${priceLine}. Otherwise no problem — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
+        ? `<p>And if cost was the sticking point — ${priceLine}, and I'm happy to talk through the options for ${safeShortName} if it helps; just reply.</p>`
+        : `<p>And if you ever want the full course, ${priceLine}.</p>`
+  const t3Close = `<p>No problem either way — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>`
   const t3Body = [
     `<p>Last one from me. The SCAT6/SCOAT6 forms, baseline tool and CPD module are at ${FREE_LINK} whenever you want them.</p>`,
     t3SecondPara,
+    t3Close,
   ].join('\n')
 
   // ── Subject lines — short, specific, sentence-case, non-salesy ─────────

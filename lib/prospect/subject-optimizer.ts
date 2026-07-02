@@ -50,7 +50,9 @@ export interface VariantStat {
 
 /** Defaults shared by the optimizer, the admin readout, and the UI threshold. */
 export const DEFAULT_EPSILON = 0.25
-export const DEFAULT_MIN_SAMPLES_PER_KEY = 15
+// Lowered 15 → 10 (2026-07-02): at current send volumes 15/variant kept the
+// engine in permanent warmup — 10 is still enough evidence to start exploiting.
+export const DEFAULT_MIN_SAMPLES_PER_KEY = 10
 
 // Large prime modulus for mapping a hash into a [0,1) pseudo-random.
 const EXPLORE_MODULUS = 2_147_483_647
@@ -96,7 +98,7 @@ export interface ChooseSubjectKeyArgs {
   stats: Map<string, VariantStat>
   /** Explore probability once warmed up. Default 0.25. */
   epsilon?: number
-  /** Per-variant send threshold before exploitation is allowed. Default 15. */
+  /** Per-variant send threshold before exploitation is allowed. Default 10. */
   minSamplesPerKey?: number
 }
 

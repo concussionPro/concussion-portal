@@ -68,7 +68,7 @@ describe('monitoring cron failure visibility', () => {
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(body.alerts).toBe(5) // all 5 checks threw → 5 alert findings
+    expect(body.alerts).toBe(6) // all 6 checks threw → 6 alert findings (check 6 = cold-send health)
     expect(sendEmailMock).toHaveBeenCalledTimes(1)
     const emailArgs = sendEmailMock.mock.calls[0][0]
     expect(emailArgs.subject).toContain('alert')

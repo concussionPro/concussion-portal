@@ -698,7 +698,7 @@ export const WORKSHOP_MOMENTUM_EMAILS = [
       return emailShell(`
         <h2>Hi ${escapeHtml(name.split(' ')[0])},</h2>
         <p>This is my last update on workshop numbers. ${city} has <strong>${count} of ${threshold}</strong> registrants${remaining > 0 ? ` — ${remaining} more needed to confirm a date` : ''}.</p>
-        <p>If you have colleagues who'd benefit from this training, now's the time to let them know. Early bird pricing is still active for ${city}.</p>
+        <p>If you have colleagues who'd benefit from this training, now's the time to let them know. The A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird rate still applies for ${city} — it holds until 14 days before your city's workshop date.</p>
         <center><a href="${utm('https://portal.concussion-education-australia.com/pricing', 'workshop_momentum_d58', 'share')}" class="cta-secondary">Share the Course</a></center>
         <p class="ps">P.S. No more momentum emails from me after this one. You'll hear from us when your city's date is confirmed.</p>
         <div class="sig">Zac Lewis<br>Concussion Education Australia</div>
@@ -792,7 +792,7 @@ export const ONLINE_UPGRADE_SEQUENCE = [
         <li>Practice VOMS and BESS scoring — the assessments clinicians find hardest to learn from text alone</li>
         <li>Work through clinical scenarios with other clinicians</li>
       </ul>
-      <p>The next workshop is confirmed &mdash; Melbourne, Saturday 13 June 2026 at Rydges Exhibition St. Add the hands-on day anytime to cap off your 14 CPD hours.</p>
+      <p>You can lock in the workshop upgrade whenever you're ready &mdash; pay the difference to the A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')} early-bird rate, nominate your city, and your date launches once enough clinicians register there. That caps off your 14 CPD hours.</p>
       ${nextWorkshopCallout()}
       <center><a href="${utm(upgradeLink, 'upgrade_nudge', 'see_workshop')}" class="cta-btn">See Workshop Options</a></center>
       <p style="font-size: 13px; color: #64748b; text-align: center;">6 extra CPD hours · Small group (max 12) · Upgrade anytime</p>
@@ -1080,7 +1080,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
         &#8226; 8 video modules with clinical demonstrations (the VOMS and cervical screens especially)<br>
         &#8226; Case-based walkthroughs — watch me reason through real patient presentations<br>
         &#8226; ${CONFIG.COURSE.ONLINE_CPD_POINTS} AHPRA-aligned CPD hours and a certificate<br>
-        &#8226; Optional Melbourne workshop for hands-on practice (6 more CPD hours)
+        &#8226; Optional hands-on workshop day &mdash; nominate your city, the date launches when it fills (6 more CPD hours)
       </div>
       <center><a href="${utm(pricingLink, 'ref_upgrade_d9', 'bundle_credit')}" class="cta-btn">See Your Discounted Price</a></center>
       <p class="ps">P.S. The credit doesn't expire — it's tied to your account, not a code.</p>
@@ -1107,7 +1107,7 @@ export const REFERENCE_UPGRADE_SEQUENCE = [
         <li>You need CPD hours and want them in one structured block</li>
         <li>You want the confidence of watching it done before attempting it yourself</li>
       </ul>
-      <p>With the A$100 bundle credit, the online course is <strong>A$${CONFIG.COURSE.PRICE_ONLINE - 100}</strong> — about the cost of one private consult. Full course (online + Melbourne workshop) drops to <strong>A$${(CONFIG.COURSE.PRICE_REGULAR - 100).toLocaleString('en-AU')}</strong>.</p>
+      <p>With the A$100 bundle credit, the online course is <strong>A$${CONFIG.COURSE.PRICE_ONLINE - 100}</strong> — about the cost of one private consult. The full course (online + a hands-on workshop day in your nominated city) drops to <strong>A$${(CONFIG.COURSE.PRICE_REGULAR - 100).toLocaleString('en-AU')}</strong>.</p>
       <center><a href="${utm(pricingLink, 'ref_upgrade_d21', 'comparison')}" class="cta-btn">View Course Options</a></center>
       <div class="sig">Zac</div>
     `),
@@ -1217,25 +1217,51 @@ export const MELBOURNE_EARLY_BIRD_LAST_CALL = {
 }
 
 export const MELBOURNE_WORKSHOP_PUSH = {
-  subject: 'Concussion Clinical Mastery — Melbourne 13 June 2026',
-  template: (name: string, pricingLink: string) => emailShell(`
+  // DEFUSED (2026-07-02, same treatment as MELBOURNE_EARLY_BIRD_LAST_CALL):
+  // the 13 June 2026 Melbourne round is COMPLETED and must never be sold
+  // again. The template now reads CONFIG.LOCATIONS.MELBOURNE at render time —
+  // an accidental re-trigger while Melbourne isn't 'confirmed' renders the
+  // truthful nominate-your-city copy with NO date, instead of pitching a
+  // workshop that already ran. If a future Melbourne round is confirmed, the
+  // dated branch below picks up the new config date automatically.
+  subject: 'Concussion Clinical Mastery — Melbourne workshop',
+  template: (name: string, pricingLink: string) => {
+    const mel = CONFIG.LOCATIONS.MELBOURNE
+    if (mel.status !== 'confirmed' || !mel.date) {
+      return emailShell(`
     <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
-    <p>The next Concussion Clinical Mastery workshop in Melbourne is confirmed for <strong>Saturday 13 June 2026</strong> at Rydges Exhibition St (CBD).</p>
+    <p>The hands-on Concussion Clinical Mastery workshop day runs city by city &mdash; you can enrol in the complete course now, nominate Melbourne, and the date launches once enough clinicians register there.</p>
     <ul>
-      <li>14 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
-      <li>Full day 8am&ndash;4pm</li>
-      <li>Buffet lunch included &mdash; please let me know any dietary needs</li>
-      <li>25% off Rydges accommodation for attendees if you&rsquo;re travelling in</li>
-      <li>Capped at 12 clinicians for hands-on practice time</li>
+      <li>14 CPD hours (8 online + 6 in-person), AHPRA-aligned, Osteopathy Australia endorsed</li>
+      <li>Full day, capped at 12 clinicians for hands-on practice time</li>
+      <li><strong>A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</strong> early-bird &mdash; it applies now and holds until 14 days before your city&rsquo;s confirmed date (then A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')})</li>
     </ul>
+    <p>The online course on its own is A$${CONFIG.COURSE.PRICE_ONLINE} anytime &mdash; you can upgrade to the full course later by paying the difference to the early-bird rate.</p>
     <center><a href="${utm(pricingLink, 'melbourne_push_v1', 'enrol')}" class="cta-btn">Full details + enrol</a></center>
-    <p>The complete course (online + workshop) is <strong>$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}</strong> all-in.</p>
     <p>Any questions, just reply.</p>
     <div class="sig">
       Zac<br>
       Concussion Education Australia
     </div>
-  `),
+  `)
+    }
+    return emailShell(`
+    <p>Hi ${escapeHtml(name.split(' ')[0])},</p>
+    <p>The next Concussion Clinical Mastery workshop in Melbourne is confirmed for <strong>${escapeHtml(mel.date)}</strong>.</p>
+    <ul>
+      <li>14 CPD hours, AHPRA-aligned, Osteopathy Australia endorsed</li>
+      <li>Full day 8am&ndash;4pm, catered lunch included</li>
+      <li>Capped at 12 clinicians for hands-on practice time</li>
+    </ul>
+    <center><a href="${utm(pricingLink, 'melbourne_push_v1', 'enrol')}" class="cta-btn">Full details + enrol</a></center>
+    <p>The complete course (online + workshop) is <strong>A$${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString('en-AU')}</strong> early-bird until 14 days before the workshop, then A$${CONFIG.COURSE.PRICE_REGULAR.toLocaleString('en-AU')}.</p>
+    <p>Any questions, just reply.</p>
+    <div class="sig">
+      Zac<br>
+      Concussion Education Australia
+    </div>
+  `)
+  },
 }
 
 /**
@@ -1333,7 +1359,7 @@ export const AI_SAFETY_CHECKLIST_DAY14 = {
     <p>Two weeks with the AI Safety Checklist &mdash; if it&rsquo;s earning its place in your workflow, the course is the full framework behind it. 3 CPD hours, 9 modules, certificate.</p>
     <p>${aiCoursePricing().priceLine}</p>
     <center><a href="${utm(courseLink, 'ai_checklist_day14', 'last_chance')}" class="cta-btn">${aiCoursePricing().ctaLabel}</a></center>
-    <p>If you&rsquo;ve decided it&rsquo;s not for you, no worries &mdash; you&rsquo;ll stay on the list for the MBS Billing for Allied Health course landing in August.</p>
+    <p>If you&rsquo;ve decided it&rsquo;s not for you, no worries &mdash; you&rsquo;ll stay on the list for future short courses.</p>
     <div class="sig">
       Zac<br>
       Concussion Education Australia

@@ -128,6 +128,26 @@ export async function GET(request: Request) {
     let errors = 0
     let totalFetched = 0
 
+    // Master blacklist (2026-07-02): this sync used to create users AND send
+    // the Day-0 welcome with NO email_suppression check — a suppressed address
+    // re-submitting a Squarespace form got emailed again. FAIL CLOSED: abort
+    // if the table can't be read. Suppressed profiles still get a user record
+    // (harmless, keeps the import complete) but are flagged
+    // nurture_unsubscribed=true and never sent the welcome.
+    let suppressedEmails: Set<string>
+    try {
+      const { rows: suppressionRows } = await sql<{ email: string }>`
+        SELECT LOWER(email) AS email FROM email_suppression
+      `
+      suppressedEmails = new Set(suppressionRows.map((r: { email: string }) => r.email))
+    } catch (suppErr) {
+      console.error('[SS Sync] Failed to load email_suppression — ABORTING run (fail closed):', suppErr)
+      return NextResponse.json(
+        { error: 'email_suppression load failed — run aborted (fail closed)' },
+        { status: 503 }
+      )
+    }
+
     // Fetch profiles sorted by createdOn descending (newest first)
     // Stop when we hit profiles older than lookback window or already in our DB
     // Use ?days=N to override default 30-day lookback (e.g. ?days=999 for full history)
@@ -242,8 +262,15 @@ export async function GET(request: Request) {
 
           created++
 
-          // Only email subscribers from the last 30 days
-          const isRecent = profileDate >= emailCutoff
+          // Suppressed address: keep the user record but flag it unsubscribed
+          // and NEVER send the welcome (master-blacklist enforcement).
+          const isSuppressed = suppressedEmails.has(email)
+          if (isSuppressed) {
+            await sql`UPDATE users SET nurture_unsubscribed = true WHERE id = ${userId}`
+          }
+
+          // Only email non-suppressed subscribers from the last 30 days
+          const isRecent = !isSuppressed && profileDate >= emailCutoff
           if (isRecent) {
             // Check audit log BEFORE sending to prevent duplicates on re-runs
             const auditKey = `scat_day0_${userId}`
@@ -276,7 +303,7 @@ export async function GET(request: Request) {
             }
           }
 
-          console.log(`[SS Sync] Created${isRecent ? ' + emailed' : ' (silent)'}: ${redact(email)}`)
+          console.log(`[SS Sync] Created${isRecent ? ' + emailed' : isSuppressed ? ' (suppressed — no email, flagged unsubscribed)' : ' (silent)'}: ${redact(email)}`)
         } catch (err) {
           console.error(`[SS Sync] Error processing ${redact(email)}:`, err)
           errors++

@@ -151,11 +151,17 @@ async function handle(request: NextRequest, live: boolean) {
     `
     if (!inserted) { skipped++; continue }
 
+    // sendEmail returns false on failure — it never throws — so honour the
+    // boolean and roll the audit-key claim back on ANY failure (ported from
+    // send-nurture-emails' sendOrRollbackAudit, 2026-07-02). Without the
+    // rollback a failed send permanently burned this user's ONE conversion
+    // email: findTargets excludes anyone with a completer_convert_* key.
+    let ok = false
     try {
       const unsubToken = generateUnsubscribeToken(t.email)
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(t.email)}&token=${unsubToken}`
       const html = seq.template(t.name, pricingLink).replace('{{unsubscribe_url}}', unsubscribeUrl)
-      await sendEmail({
+      ok = await sendEmail({
         to: t.email,
         subject: seq.subject,
         html,
@@ -168,10 +174,20 @@ async function handle(request: NextRequest, live: boolean) {
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       })
-      sent++
     } catch (err) {
-      console.error(`[completer-conversion] Failed for ${t.email.slice(0, 3)}***:`, err)
+      console.error(`[completer-conversion] Send threw for ${t.email.slice(0, 3)}***:`, err)
+    }
+
+    if (ok) {
+      sent++
+    } else {
       errors++
+      console.error(`[completer-conversion] Send failed for ${t.email.slice(0, 3)}*** — rolling back audit key so next run retries`)
+      try {
+        await sql`DELETE FROM email_audit_log WHERE audit_key = ${auditKey}`
+      } catch (rollbackErr) {
+        console.error(`[completer-conversion] Failed to roll back audit key ${auditKey}:`, rollbackErr)
+      }
     }
   }
 

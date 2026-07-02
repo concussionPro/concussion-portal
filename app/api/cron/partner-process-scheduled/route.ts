@@ -19,6 +19,7 @@ import { Resend } from 'resend'
 import { sql } from '@/lib/db'
 import { computeAdaptiveCap } from '@/lib/prospect/adaptive-cap'
 import { verifyEmailAddress, HunterRateLimitError } from '@/lib/prospect/hunter-verify'
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route'
 
 export const maxDuration = 300
 
@@ -45,6 +46,8 @@ function buildPitch(name: string, slug: string, firstName: string) {
     ``,
     `Here's what it looks like for ${name} — there's a time to book on the page if you'd like to set it up: ${link}`,
     ``,
+    `If this isn't relevant, just reply and I'll close it off — no follow-ups.`,
+    ``,
     `Zac Lewis, Osteopath`,
     `Concussion Education Australia`,
   ].join('\n')
@@ -60,6 +63,21 @@ function wrapHtml(text: string): string {
     + `</div>`
 }
 
+/**
+ * List-Unsubscribe header for partner sends (2026-07-02) — same shape as the
+ * cold-clinic lane in process-scheduled.ts: functional URL + mailto pair, and
+ * deliberately NO List-Unsubscribe-Post one-click bulk marker at this volume.
+ * /api/unsubscribe verifies an HMAC over the email (works for ANY address, no
+ * users row required) and unsubscribeUser() now also writes email_suppression,
+ * which every partner query checks — so the header is a real opt-out.
+ */
+function partnerUnsubHeaders(email: string): Record<string, string> {
+  const unsubUrl = `${BASE}/api/unsubscribe?email=${encodeURIComponent(email)}&token=${generateUnsubscribeToken(email)}`
+  return {
+    'List-Unsubscribe': `<${unsubUrl}>, <mailto:unsubscribe@concussion-education-australia.com>`,
+  }
+}
+
 /** Followup touches (Zac 2026-07-01). Gentle, value-first, no "free", never
  *  references browsing. The final touch offers a clean opt-out. */
 function buildFollowup(stage: 'followup' | 'final', name: string, slug: string, firstName: string) {
@@ -70,6 +88,7 @@ function buildFollowup(stage: 'followup' | 'final', name: string, slug: string, 
       `Circling back on the concussion resource I set up for ${name} — the season-long baseline testing, the SCAT6/SCOAT6 forms and a short trainer refresher are ready whenever you'd like to switch them on: ${link}`, ``,
       `The part most academies find useful: if an athlete's concussed, your trainers can flag it fast, and I pick it up via telehealth and connect them with a local clinician for rehab.`, ``,
       `There's a time to book on the page if it's worth a look. No rush either way.`, ``,
+      `If this isn't relevant, just reply and I'll close it off — no follow-ups.`, ``,
       `Zac Lewis, Osteopath`, `Concussion Education Australia`,
     ].join('\n')
     return { subject: `Following up — concussion cover for ${name}'s athletes`, text, html: wrapHtml(text) }
@@ -124,8 +143,12 @@ export async function GET(request: NextRequest) {
   // 11:30am backup schedule only sends the remainder of a missed 9:30am run —
   // never a second full batch (would be 12/day). Idempotency already prevents
   // re-pitching the same institution; this keeps the daily VOLUME at 6.
+  // "Today" in SYDNEY time (2026-07-02): sent_at::date = CURRENT_DATE compared
+  // in UTC, so the morning + late-morning AEST runs straddled UTC midnight and
+  // the second run sent a full second batch (double volume).
   const { rows: todayRows } = await sql<{ n: number }>`
-    SELECT COUNT(*)::int n FROM partner_outreach_log WHERE sent_at::date = CURRENT_DATE`
+    SELECT COUNT(*)::int n FROM partner_outreach_log
+    WHERE (sent_at AT TIME ZONE 'Australia/Sydney')::date = (NOW() AT TIME ZONE 'Australia/Sydney')::date`
   const remainingToday = Math.max(0, PARTNER_DAILY_MAX - (todayRows[0]?.n ?? 0))
   if (remainingToday === 0) {
     return NextResponse.json({ ok: true, sent: 0, reason: `daily cap ${PARTNER_DAILY_MAX} already met today` })
@@ -168,14 +191,36 @@ export async function GET(request: NextRequest) {
     const { subject, text, html } = buildFollowup(stage, inst.name, inst.slug, firstName)
     const scheduledAt = new Date(runStart + staggerMs).toISOString()
     staggerMs += STAGGER_MIN_MS + Math.random() * (STAGGER_MAX_MS - STAGGER_MIN_MS)
+    // INSERT-FIRST audit-key claim (2026-07-02, ported from the cold lane):
+    // claim the (institution_id, stage) row BEFORE the send so two overlapping
+    // runs can't double-send; roll the claim back if the send fails.
+    const { rowCount: claimed } = await sql`
+      INSERT INTO partner_outreach_log (institution_id, stage, resend_email_id)
+      VALUES (${inst.id}, ${stage}, NULL)
+      ON CONFLICT (institution_id, stage) DO NOTHING`
+    if (!claimed) {
+      results.push({ name: inst.name, outcome: `skipped: ${stage} already claimed (concurrent run or prior send)` })
+      continue
+    }
+    const releaseClaim = () =>
+      sql`DELETE FROM partner_outreach_log WHERE institution_id = ${inst.id} AND stage = ${stage} AND resend_email_id IS NULL`
+        .catch((e) => console.error('[partner cron] failed to release audit claim:', e))
     try {
-      const out = await resend.emails.send({ from: FROM, to: inst.contact_email, replyTo: REPLY_TO, subject, text, html, scheduledAt })
-      if (out.error) { results.push({ name: inst.name, outcome: `error: ${out.error.message}` }); continue }
-      await sql`INSERT INTO partner_outreach_log (institution_id, stage, resend_email_id) VALUES (${inst.id}, ${stage}, ${out.data?.id ?? null}) ON CONFLICT (institution_id, stage) DO NOTHING`
+      const out = await resend.emails.send({
+        from: FROM, to: inst.contact_email, replyTo: REPLY_TO, subject, text, html, scheduledAt,
+        headers: partnerUnsubHeaders(inst.contact_email),
+      })
+      if (out.error) {
+        await releaseClaim()
+        results.push({ name: inst.name, outcome: `error: ${out.error.message}` })
+        continue
+      }
+      await sql`UPDATE partner_outreach_log SET resend_email_id = ${out.data?.id ?? null} WHERE institution_id = ${inst.id} AND stage = ${stage}`
       if (stage === 'final') await sql`UPDATE partner_institutions SET status='sequence-complete' WHERE id=${inst.id}`
       capLeft--
       results.push({ name: inst.name, outcome: `sent ${stage}` })
     } catch (err) {
+      await releaseClaim()
       results.push({ name: inst.name, outcome: `error: ${err instanceof Error ? err.message : String(err)}` })
     }
   }
@@ -215,6 +260,13 @@ export async function GET(request: NextRequest) {
     }
     if (verdict.bounce) {
       // Undeliverable / invalid / disposable — a real bounce. Suppress forever.
+      // Fixed 2026-07-02: this branch logged "suppressed" but only set the
+      // partner status — it never actually inserted into email_suppression,
+      // so another lane (or a re-imported row) could still email the address.
+      await sql`
+        INSERT INTO email_suppression (email, reason, source)
+        VALUES (${inst.contact_email.toLowerCase()}, 'hunter-undeliverable', ${'partner-hunter:' + verdict.status + '/' + verdict.result})
+        ON CONFLICT (email) DO NOTHING`
       await sql`UPDATE partner_institutions SET status='bounced' WHERE id=${inst.id}`
       results.push({ name: inst.name, outcome: `suppressed: ${verdict.status}/${verdict.result}` })
       continue
@@ -236,16 +288,38 @@ export async function GET(request: NextRequest) {
     const { subject, text, html } = buildPitch(inst.name, inst.slug, firstName)
     const scheduledAt = new Date(runStart + staggerMs).toISOString()
     staggerMs += STAGGER_MIN_MS + Math.random() * (STAGGER_MAX_MS - STAGGER_MIN_MS)
+    // INSERT-FIRST audit-key claim (2026-07-02, ported from the cold lane at
+    // process-scheduled.ts): the old order was send → log, so two overlapping
+    // runs (9:30am + backup schedule, or cron + manual trigger) could both
+    // pass the NOT EXISTS check and double-send. Claim (institution_id,
+    // 'initial') BEFORE the send; roll the claim back on send failure.
+    const { rowCount: claimed } = await sql`
+      INSERT INTO partner_outreach_log (institution_id, stage, resend_email_id)
+      VALUES (${inst.id}, 'initial', NULL)
+      ON CONFLICT (institution_id, stage) DO NOTHING`
+    if (!claimed) {
+      results.push({ name: inst.name, outcome: 'skipped: initial already claimed (concurrent run or prior send)' })
+      continue
+    }
+    const releaseInitialClaim = () =>
+      sql`DELETE FROM partner_outreach_log WHERE institution_id = ${inst.id} AND stage = 'initial' AND resend_email_id IS NULL`
+        .catch((e) => console.error('[partner cron] failed to release initial audit claim:', e))
     try {
       const out = await resend.emails.send({
         from: FROM, to: inst.contact_email, replyTo: REPLY_TO, subject, text, html,
         scheduledAt,
+        headers: partnerUnsubHeaders(inst.contact_email),
       })
-      if (out.error) { results.push({ name: inst.name, outcome: `error: ${out.error.message}` }); continue }
-      await sql`INSERT INTO partner_outreach_log (institution_id, stage, resend_email_id) VALUES (${inst.id}, 'initial', ${out.data?.id ?? null}) ON CONFLICT (institution_id, stage) DO NOTHING`
+      if (out.error) {
+        await releaseInitialClaim()
+        results.push({ name: inst.name, outcome: `error: ${out.error.message}` })
+        continue
+      }
+      await sql`UPDATE partner_outreach_log SET resend_email_id = ${out.data?.id ?? null} WHERE institution_id = ${inst.id} AND stage = 'initial'`
       await sql`UPDATE partner_institutions SET status='contacted' WHERE id=${inst.id}`
       results.push({ name: inst.name, outcome: 'sent' })
     } catch (err) {
+      await releaseInitialClaim()
       results.push({ name: inst.name, outcome: `error: ${err instanceof Error ? err.message : String(err)}` })
     }
   }

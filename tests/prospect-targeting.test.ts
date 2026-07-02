@@ -54,18 +54,22 @@ function bodyWordCount(html: string): number {
 }
 
 describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub > individuals)', () => {
-  it('T1 lists the real free/trial products accurately — Module 1 is a TRIAL, never a free module', () => {
+  it('T1 lists the real trial products accurately — Module 1 is a TRIAL, never a free module', () => {
+    // 2026-07-02 trim: the toolkit/admin-pack/reference-library recap moved
+    // OFF T1 (word budget ≤80) — it lives on the portal and in the T2
+    // re-offer (asserted below). T1 keeps the kit trio + the reply-question.
     for (const n of [1, 4, 8]) {
-      const { html } = mergeTemplate(T1, clinic({ team: team(n) }), 'https://example.com', 'tok')
+      const { html, text } = mergeTemplate(T1, clinic({ team: team(n) }), 'https://example.com', 'tok')
       expect(html).toMatch(/SCAT6\/SCOAT6 forms/i)
       expect(html).toMatch(/baseline tool/i)
       expect(html).toMatch(/Module 1 trial/i)
-      expect(html).toMatch(/clinical toolkit/i)
-      expect(html).toMatch(/admin pack/i)
-      expect(html).toMatch(/reference library/i)
       // Correction (Zac 2026-06-11): Module 1 is NOT free — it's a trial section.
       expect(html).not.toMatch(/free (CPD )?module/i)
       expect(html).not.toMatch(/I built/i)
+      // The ONE CTA is the interest question closing the note (2026-07-02).
+      expect(text).toContain('Worth a look for Test Clinic?')
+      // Exactly ONE link: the clean /p/<slug> portal path.
+      expect(html.match(/<a\s+href=/gi) ?? []).toHaveLength(1)
     }
   })
 
@@ -73,28 +77,34 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     // notes:'' ⇒ team JSONB is the import placeholder. Even a "large" (8) or
     // "solo" (1) fake team must NOT trigger the on-site or individual pitch —
     // both commit to a specific size we haven't verified. Falls to Hub Pack.
+    // (2026-07-02 copy: T1's tier mention is now a short "option" noun.)
     for (const n of [1, 8, 20]) {
       const html = mergeTemplate(T1, clinic({ team: team(n), notes: '' }), 'x', 'tok').html
       expect(html).toMatch(/Hub Pack/i)
-      expect(html).not.toMatch(/on-site practical day/i)
-      expect(html).not.toMatch(/self-paced online/i)
+      expect(html).not.toMatch(/on-site team training/i)
+      expect(html).not.toMatch(/self-paced course/i)
     }
     // And T3 quotes the FIXED hub price, never a team-derived on-site total.
-    const t3 = mergeTemplate(T3, clinic({ team: team(12), notes: '' }), 'x', 'tok').html
+    // (openedTrial:true reaches the price-disclosure branch — the default
+    // non-sampler T3 leads with the Module 1 nudge instead of a price.)
+    const t3 = mergeTemplate(T3, clinic({ team: team(12), notes: '' }), 'x', 'tok', { openedTrial: true }).html
     expect(t3).toMatch(/Hub Pack/i)
     expect(t3).not.toMatch(/on-site team training day starts at/i)
   })
 
   it('T1 is tailored per tier — on-site (large) / Hub Pack (medium) / self-paced (solo)', () => {
+    // 2026-07-02: the tier pitch is folded into the kit sentence as a short
+    // tier-matched option noun (the full tier pitch lives on the portal + T2).
     const solo = mergeTemplate(T1, clinic({ team: team(1) }), 'x', 'tok').html
-    expect(solo).toMatch(/self-paced online/i)
+    expect(solo).toMatch(/self-paced course option/i)
     expect(solo).not.toMatch(/Hub Pack/i)
-    expect(solo).not.toMatch(/on-site practical day/i)
+    expect(solo).not.toMatch(/on-site team training/i)
     const hub = mergeTemplate(T1, clinic({ team: team(4) }), 'x', 'tok').html
-    expect(hub).toMatch(/Hub Pack/i)
-    expect(hub).not.toMatch(/on-site practical day/i)
+    expect(hub).toMatch(/team Hub Pack option/i)
+    expect(hub).not.toMatch(/on-site team training/i)
     const onsite = mergeTemplate(T1, clinic({ team: team(8) }), 'x', 'tok').html
-    expect(onsite).toMatch(/on-site practical day/i)
+    expect(onsite).toMatch(/on-site team training option/i)
+    expect(onsite).not.toMatch(/Hub Pack/i)
   })
 
   it('T1 never mentions the Melbourne workshop date or stale prices', () => {
@@ -105,20 +115,28 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
     expect(html).not.toContain('1190')
   })
 
-  it('T1 stays tight (product-led, under 120 words)', () => {
-    // 120 aligns with the hygiene test below + cold-email best practice (the
-    // sweet spot is ~50-125 words). The seasonal hook + capability/ROI framing
-    // (Zac 2026-06-16 conversion pass) sit inside this budget.
+  it('T1 stays tight (product-led, 80 words or fewer)', () => {
+    // Doctrine (2026-07-02 trim): first touch runs 80 words max — the prior
+    // 95-105-word T1 was over the cold-note budget. Checked on the on-site
+    // tier (the longest tier noun) so every tier fits.
     const { html } = mergeTemplate(T1, clinic({ team: team(8) }), 'https://example.com', 'tok')
     const words = html.replace(/<[^>]+>/g, ' ').split('Zac Lewis')[0].split(/\s+/).filter((w) => /[a-z0-9]/i.test(w)).length
-    expect(words, `T1 = ${words} words`).toBeLessThan(120)
+    expect(words, `T1 = ${words} words`).toBeLessThanOrEqual(80)
   })
 
   it('T2 re-offers the free tools + the toolkit/docs value', () => {
-    const { html } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok')
+    // The full toolkit/docs recap is the GENERIC re-offer, which renders for
+    // prospects who already sampled Module 1 (openedTrial:true). Non-samplers
+    // (the default) get the Module 1 relevance hook instead — asserted after.
+    const { html } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { openedTrial: true })
     expect(html).toMatch(/SCAT6\/SCOAT6 forms/i)
     expect(html).toMatch(/clinical toolkit/i)
     expect(html).toMatch(/admin pack/i)
+    // Default (never opened the trial) → relevance-first Module 1 nudge, the
+    // proven missing step for engaged-but-never-sampled clinics.
+    const nonSampler = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok')
+    expect(nonSampler.html).toMatch(/Module 1/i)
+    expect(nonSampler.html).toMatch(/don't present as one/i)
   })
 
   it('every T1/T2 link is the CLEAN per-clinic portal path — no ?k=, no utm, no image', () => {
@@ -134,14 +152,22 @@ describe('size-tier pitch selection (Zac 2026-06-10: large on-site > medium hub 
   })
 
   it('T3 disclosure shows the config-derived price per tier', () => {
-    const solo = mergeTemplate(T3, clinic({ team: team(1) }), 'https://example.com', 'tok')
+    // Price transparency belongs to the sampled path (openedTrial:true) —
+    // a non-sampler's breakup leads with the Module 1 nudge, no price-lead.
+    // Prices stay config-derived: $497 online, $1,497 Hub Pack, on-site total.
+    const opts = { openedTrial: true } as const
+    const solo = mergeTemplate(T3, clinic({ team: team(1) }), 'https://example.com', 'tok', opts)
     expect(solo.html).toContain('online course is A$497')
     expect(solo.html).not.toContain('Hub Pack')
-    const medium = mergeTemplate(T3, clinic({ team: team(4) }), 'https://example.com', 'tok')
+    const medium = mergeTemplate(T3, clinic({ team: team(4) }), 'https://example.com', 'tok', opts)
     expect(medium.html).toContain('Hub Pack')
     expect(medium.html).toContain('A$1,497')
-    const large = mergeTemplate(T3, clinic({ team: team(8) }), 'https://example.com', 'tok')
+    const large = mergeTemplate(T3, clinic({ team: team(8) }), 'https://example.com', 'tok', opts)
     expect(large.html).toContain('on-site team training day starts at A$8,000')
+    // The default non-sampler breakup carries NO price — relevance nudge only.
+    const nonSampler = mergeTemplate(T3, clinic({ team: team(4) }), 'https://example.com', 'tok')
+    expect(nonSampler.html).not.toContain('A$1,497')
+    expect(nonSampler.html).toMatch(/Module 1/i)
   })
 
   it("T3 carries the breakup line (reply 'later' / STOP)", () => {
@@ -186,10 +212,10 @@ describe('cold-email hygiene (2026-06-10 portal-led: the dashboard is the pitch,
     }
   })
 
-  it('bodies stay tight — T1 under 120 words, T2/T3 under 90 (screenshot-led, not a wall of text)', () => {
+  it('bodies stay tight — T1 80 words max, T2/T3 under 90 (portal-led, not a wall of text)', () => {
     for (const [label, c] of tiers) {
       const t1 = bodyWordCount(mergeTemplate(T1, c, 'x', 'tok').html)
-      expect(t1, `${label} T1 = ${t1} words`).toBeLessThan(120)
+      expect(t1, `${label} T1 = ${t1} words`).toBeLessThanOrEqual(80)
       const t2 = bodyWordCount(mergeTemplate(T2, c, 'x', 'tok').html)
       expect(t2, `${label} T2 = ${t2} words`).toBeLessThan(90)
       const t3 = bodyWordCount(mergeTemplate(T3, c, 'x', 'tok').html)
@@ -287,32 +313,40 @@ describe('intent-aware follow-ups (Zac 2026-06-14: T2/T3 adapt to what they view
     expect(words, `${label} = ${words} words (<90)`).toBeLessThan(90)
   }
 
+  // NOTE (2026-07-02): hint-tailored copy applies to prospects who already
+  // opened the Module 1 trial (openedTrial:true). A NON-sampler always gets
+  // the relevance→Module-1 nudge first, regardless of hint — that override is
+  // asserted separately below.
+  const SAMPLED = { openedTrial: true } as const
+
   it("T2 hint='pricing' leads with an offer to talk pricing/options for the clinic", () => {
-    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: 'pricing' })
+    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { ...SAMPLED, engagementHint: 'pricing' })
     expect(text).toMatch(/pricing was the question/i)
     expect(text).toMatch(/walk through what it'd look like for Test Clinic/i)
     expect(text).toMatch(/just reply/i)
     assertHygiene(html, "T2 pricing")
   })
 
-  it("T2 hint='trial' references the Module 1 trial → full program value", () => {
-    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: 'trial' })
+  it("T2 hint='trial' references the Module 1 trial → full-program value at the TRUE online CPD hours (8, never 14)", () => {
+    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { ...SAMPLED, engagementHint: 'trial' })
     expect(text).toMatch(/Module 1/i)
-    expect(text).toMatch(/full program/i)
-    expect(text).toMatch(/14 CPD hours/i)
+    expect(text).toMatch(/full online program/i)
+    // Online-only copy must claim 8 CPD hours — 14 is ONLY online+in-person.
+    expect(text).toMatch(/8 CPD hours/i)
+    expect(text).not.toMatch(/14 CPD hours/i)
     assertHygiene(html, "T2 trial")
   })
 
-  it("T2 hint='toolkit' nudges the practical toolkit value + the full-course upsell", () => {
-    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: 'toolkit' })
+  it("T2 hint='toolkit' nudges the practical toolkit value + the course upsell", () => {
+    const { html, text } = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { ...SAMPLED, engagementHint: 'toolkit' })
     expect(text).toMatch(/clinical toolkit/i)
-    expect(text).toMatch(/full course/i)
+    expect(text).toMatch(/unlocks with the online course/i)
     assertHygiene(html, "T2 toolkit")
   })
 
   it('T2 hint=null (or omitted) is the GENERIC re-offer — identical to no-hint', () => {
-    const generic = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok')
-    const explicitNull = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: null })
+    const generic = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { ...SAMPLED })
+    const explicitNull = mergeTemplate(T2, clinic({ team: team(4) }), 'https://example.com', 'tok', { ...SAMPLED, engagementHint: null })
     expect(explicitNull.html).toBe(generic.html)
     // Generic keeps the full docs recap; doesn't carry the pricing-talk sentence.
     expect(generic.html).toMatch(/admin pack and reference library/i)
@@ -320,16 +354,30 @@ describe('intent-aware follow-ups (Zac 2026-06-14: T2/T3 adapt to what they view
   })
 
   it('each T2 hint produces DISTINCT copy from the generic', () => {
-    const generic = mergeTemplate(T2, clinic({ team: team(4) }), 'x', 'tok').html
+    const generic = mergeTemplate(T2, clinic({ team: team(4) }), 'x', 'tok', { ...SAMPLED }).html
     for (const h of ['pricing', 'trial', 'toolkit'] as const) {
-      const hinted = mergeTemplate(T2, clinic({ team: team(4) }), 'x', 'tok', { engagementHint: h }).html
+      const hinted = mergeTemplate(T2, clinic({ team: team(4) }), 'x', 'tok', { ...SAMPLED, engagementHint: h }).html
       expect(hinted, `hint=${h} differs from generic`).not.toBe(generic)
     }
   })
 
-  it("T3 hint='pricing' offers to talk the numbers through but keeps the breakup close", () => {
-    const { html, text } = mergeTemplate(T3, clinic({ team: team(4) }), 'https://example.com', 'tok', { engagementHint: 'pricing' })
+  it('a NON-sampler T2 overrides every hint with the relevance→Module-1 nudge (one link, hygienic)', () => {
+    const base = mergeTemplate(T2, clinic({ team: team(4) }), 'x', 'tok').html
+    expect(base).toMatch(/don't present as one/i)
+    expect(base).toMatch(/Module 1/i)
+    for (const h of ['pricing', 'trial', 'toolkit'] as const) {
+      const hinted = mergeTemplate(T2, clinic({ team: team(4) }), 'x', 'tok', { engagementHint: h }).html
+      expect(hinted, `non-sampler ignores hint=${h}`).toBe(base)
+    }
+    assertHygiene(base, 'T2 non-sampler')
+  })
+
+  it("T3 hint='pricing' offers to talk the numbers through but keeps the breakup close on its OWN line", () => {
+    const { html, text } = mergeTemplate(T3, clinic({ team: team(4) }), 'https://example.com', 'tok', { ...SAMPLED, engagementHint: 'pricing' })
     expect(text).toMatch(/talk through the options for Test Clinic/i)
+    // The breakup close is its own short paragraph (2026-07-02), never buried
+    // at the tail of the price sentence.
+    expect(html).toContain("<p>No problem either way — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>")
     expect(text).toContain("reply 'later' and I'll check back next season")
     expect(text).toContain("STOP and I won't email again")
     // Still the config-derived price, still one link, still hygienic.
@@ -338,11 +386,18 @@ describe('intent-aware follow-ups (Zac 2026-06-14: T2/T3 adapt to what they view
     expect(html).not.toMatch(/saw you|noticed you/i)
   })
 
-  it('T3 hint=null is the generic breakup (unchanged)', () => {
-    const generic = mergeTemplate(T3, clinic({ team: team(4) }), 'x', 'tok')
-    const explicitNull = mergeTemplate(T3, clinic({ team: team(4) }), 'x', 'tok', { engagementHint: null })
+  it('T3 hint=null is the generic breakup (unchanged), close on its own line for EVERY variant', () => {
+    const generic = mergeTemplate(T3, clinic({ team: team(4) }), 'x', 'tok', { ...SAMPLED })
+    const explicitNull = mergeTemplate(T3, clinic({ team: team(4) }), 'x', 'tok', { ...SAMPLED, engagementHint: null })
     expect(explicitNull.html).toBe(generic.html)
     expect(generic.html).toMatch(/if you ever want the full course/i)
+    // Non-sampler default: relevance→Module-1 nudge, no price-lead, same
+    // standalone close line.
+    const nonSampler = mergeTemplate(T3, clinic({ team: team(4) }), 'x', 'tok')
+    expect(nonSampler.html).toMatch(/Module 1/i)
+    for (const variant of [generic.html, nonSampler.html]) {
+      expect(variant).toContain("<p>No problem either way — reply 'later' and I'll check back next season, or STOP and I won't email again.</p>")
+    }
   })
 
   it('engagementHint never leaks into T1 copy (T1 = no prior engagement)', () => {

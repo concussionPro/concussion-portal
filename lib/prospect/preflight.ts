@@ -116,8 +116,13 @@ async function isSuppressed(email: string): Promise<boolean> {
       SELECT EXISTS(SELECT 1 FROM email_suppression WHERE LOWER(email) = ${email.toLowerCase()}) AS exists
     `
     return rows[0]?.exists === true
-  } catch {
-    return false
+  } catch (err) {
+    // FAIL CLOSED (2026-07-02): if the suppression table can't be read we must
+    // assume the address IS suppressed and skip the send. Unsubs are
+    // zero-tolerance — a transient DB error must never let a suppressed
+    // address through. The row is skipped this run and retried next run.
+    console.error(`[preflight] email_suppression check failed for ${email.slice(0, 3)}*** — treating as suppressed (fail closed):`, err)
+    return true
   }
 }
 

@@ -208,11 +208,39 @@ export async function getEnrollmentCount(location: string): Promise<number> {
   return rows[0]?.count || 0
 }
 
-// Get full-course enrollments grouped by location (for admin dashboard)
+// Get full-course enrollments grouped by location (for admin dashboard).
+// Applies the SAME round scoping as getEnrollmentCount — previously this
+// listed all-time registrants while the count was round-scoped, so the
+// admin board's number and its registrant table disagreed.
 export async function getEnrollmentsByLocation(location: string): Promise<Array<{ name: string; email: string; createdAt: string }>> {
+  const roundStart = CONFIG.WORKSHOP.ROUND_START[location]
+  const { rows } = roundStart
+    ? await sql`
+        SELECT name, email, created_at FROM users
+        WHERE access_level = 'full-course'
+          AND workshop_location = ${location}
+          AND created_at >= ${roundStart}
+        ORDER BY created_at DESC
+      `
+    : await sql`
+        SELECT name, email, created_at FROM users
+        WHERE access_level = 'full-course' AND workshop_location = ${location}
+        ORDER BY created_at DESC
+      `
+  return rows.map(r => ({
+    name: r.name,
+    email: r.email,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+  }))
+}
+
+// Full-course users with NO workshop location — mostly manual sales created
+// via /admin/create-user before the form had a city selector. Surfaced on
+// the workshop seat board so these sales aren't invisible.
+export async function getEnrollmentsWithoutLocation(): Promise<Array<{ name: string; email: string; createdAt: string }>> {
   const { rows } = await sql`
     SELECT name, email, created_at FROM users
-    WHERE access_level = 'full-course' AND workshop_location = ${location}
+    WHERE access_level = 'full-course' AND workshop_location IS NULL
     ORDER BY created_at DESC
   `
   return rows.map(r => ({
@@ -227,11 +255,24 @@ export async function updateLastLogin(userId: string) {
   await sql`UPDATE users SET last_login_at = now() WHERE id = ${userId}`
 }
 
-// Unsubscribe user from nurture emails
+// Unsubscribe user from nurture emails.
+// ALSO inserts into email_suppression (2026-07-02): email_suppression is the
+// master blacklist checked by EVERY send lane (nurture, cold-clinic, partner,
+// Agent B) — nurture_unsubscribed alone only covered users-table lanes, so an
+// unsubscribed user could still be emailed by the prospect/partner engines.
 export async function unsubscribeUser(email: string): Promise<boolean> {
   const { rowCount } = await sql`
     UPDATE users SET nurture_unsubscribed = true WHERE LOWER(email) = LOWER(${email})
   `
+  try {
+    await sql`
+      INSERT INTO email_suppression (email, reason, source)
+      VALUES (${email.toLowerCase()}, 'unsubscribed', 'admin-unsubscribe')
+      ON CONFLICT (email) DO NOTHING
+    `
+  } catch (err) {
+    console.error(`[unsubscribeUser] email_suppression insert failed for ${email.slice(0, 3)}***:`, err)
+  }
   return (rowCount ?? 0) > 0
 }
 
