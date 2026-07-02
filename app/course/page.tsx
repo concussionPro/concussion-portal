@@ -20,9 +20,11 @@ import { SiteNav } from '@/components/SiteNav'
 const locations = Object.values(CONFIG.LOCATIONS)
   .map(loc => ({
     city: loc.city,
-    date: loc.status === 'confirmed' && loc.date ? loc.date : CONFIG.WORKSHOP.NEXT_ROUND,
-    availability: loc.status === 'confirmed' ? 'Available' : 'Scheduling Now',
-    shopUrl: '/pricing',
+    date: loc.status === 'confirmed' && loc.date
+      ? loc.date
+      : 'Date launches as your city fills — enrol now at early-bird',
+    availability: loc.status === 'confirmed' ? 'Available' : 'Taking nominations',
+    shopUrl: `/pricing?location=${loc.slug}`,
     status: loc.status,
   }))
 
@@ -172,9 +174,10 @@ export default function CoursePage() {
 
           <div className="space-y-4">
             {locations.map((location) => (
-              <div
+              <Link
                 key={location.city}
-                className="glass rounded-2xl p-6"
+                href={location.shopUrl}
+                className="glass rounded-2xl p-6 block hover:border-accent/40 hover:shadow-md transition-all group"
               >
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
@@ -192,19 +195,24 @@ export default function CoursePage() {
                     </div>
                   </div>
 
-                  <span
-                    className={`badge ${
-                      location.availability === 'Scheduling Now'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : location.availability === 'Limited spots'
-                        ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                        : ''
-                    }`}
-                  >
-                    {location.availability}
+                  <span className="flex items-center gap-3">
+                    <span
+                      className={`badge ${
+                        location.availability === 'Taking nominations'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : location.availability === 'Limited spots'
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                          : ''
+                      }`}
+                    >
+                      {location.availability}
+                    </span>
+                    <span className="text-sm font-semibold text-accent group-hover:translate-x-0.5 transition-transform">
+                      Enrol →
+                    </span>
                   </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

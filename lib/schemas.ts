@@ -8,7 +8,7 @@ import { z } from 'zod'
 // Shared primitives
 export const emailSchema = z.string().trim().toLowerCase().email().max(254)
 export const nameSchema = z.string().trim().min(1).max(100)
-export const locationSchema = z.enum(['sydney', 'melbourne'])
+export const locationSchema = z.enum(['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa'])
 export const courseTypeSchema = z.enum([
   'online-only',
   'full-course',

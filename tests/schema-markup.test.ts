@@ -26,9 +26,12 @@ describe('organizationSchema', () => {
     expect(organizationSchema.address.addressCountry).toBe('AU')
   })
 
-  it('populates sameAs with at least the marketing site and Osteopathy Australia', () => {
+  it('keeps sameAs to same-entity URLs only — Osteopathy Australia (a different entity) lives in memberOf', () => {
     expect(organizationSchema.sameAs.length).toBeGreaterThan(0)
-    expect(organizationSchema.sameAs).toContain('https://osteopathy.org.au')
+    expect(organizationSchema.sameAs).toContain('https://concussion-education-australia.com')
+    // sameAs must reference THIS entity; the OA relationship is memberOf.
+    expect(organizationSchema.sameAs).not.toContain('https://osteopathy.org.au')
+    expect(organizationSchema.memberOf.url).toBe('https://osteopathy.org.au')
   })
 
   it('exposes founder as a Person with credentials', () => {
@@ -147,9 +150,10 @@ describe('createCourseSchema', () => {
     expect(inst.offers.availability).toContain('LimitedAvailability')
   })
 
-  it('recognises AHPRA as the awarding body', () => {
+  it('recognises Osteopathy Australia (never AHPRA — AHPRA does not accredit CPD)', () => {
     const s = createCourseSchema({ name: 'X', description: 'Y', cpdHours: 14 })
-    expect(s.educationalCredentialAwarded.recognizedBy.alternateName).toBe('AHPRA')
+    expect(s.educationalCredentialAwarded.recognizedBy.name).toBe('Osteopathy Australia')
+    expect(JSON.stringify(s.educationalCredentialAwarded.recognizedBy)).not.toContain('AHPRA')
   })
 
   it('declares en-AU on top-level Course', () => {
@@ -323,6 +327,16 @@ describe('createMedicalConditionSchema', () => {
   })
 })
 
+// Fixture: a confirmed FUTURE-dated Melbourne round (the live CONFIG entry is
+// 'completed', which must emit nothing — fixtures let us keep asserting the
+// venue/date/price shape without depending on live workshop state).
+const FUTURE_MELBOURNE = {
+  city: 'Melbourne',
+  slug: 'melbourne',
+  dateObj: new Date('2099-06-13T08:00:00+10:00'),
+  status: 'confirmed' as const,
+}
+
 describe('buildCourseSchema (homepage/pricing Course markup)', () => {
   it('does not carry a self-asserted aggregateRating (review-snippet spam-policy risk)', () => {
     const s = buildCourseSchema()
@@ -335,14 +349,22 @@ describe('buildCourseSchema (homepage/pricing Course markup)', () => {
     expect(s.offers.priceCurrency).toBe('AUD')
   })
 
-  it('only emits instances for cities with confirmed dates, with local-offset startDate', () => {
-    const s = buildCourseSchema() as {
+  it('emits NO dated instances under live CONFIG — Melbourne is completed, everything else is collecting', () => {
+    const s = buildCourseSchema() as { hasCourseInstance?: unknown[] }
+    // Completed/collecting cities must never surface as scheduled instances.
+    expect(s.hasCourseInstance).toBeUndefined()
+  })
+
+  it('only emits instances for confirmed FUTURE-dated cities, with local-offset startDate', () => {
+    const s = buildCourseSchema({
+      MELBOURNE: FUTURE_MELBOURNE,
+      SYDNEY: { ...CONFIG.LOCATIONS.SYDNEY }, // still collecting → no instance
+    }) as {
       hasCourseInstance: Array<{ name: string; startDate: string }>
     }
-    // Melbourne is the only confirmed city right now
     expect(s.hasCourseInstance.length).toBe(1)
     expect(s.hasCourseInstance[0].name).toBe('Melbourne Session')
-    expect(s.hasCourseInstance[0].startDate).toBe('2026-06-13T08:00:00+10:00')
+    expect(s.hasCourseInstance[0].startDate).toBe('2099-06-13T08:00:00+10:00')
   })
 })
 
@@ -351,8 +373,15 @@ describe('buildEventSchema (workshop EducationEvent markup)', () => {
     expect(buildEventSchema('SYDNEY')).toBeNull()
   })
 
+  it('returns null for a completed round — Melbourne June 2026 must not resurface as a scheduled event', () => {
+    // Live CONFIG: Melbourne status 'completed' with a past dateObj.
+    expect(buildEventSchema('MELBOURNE')).toBeNull()
+    // And explicitly: even a future-dated entry emits nothing once completed.
+    expect(buildEventSchema('MELBOURNE', { ...FUTURE_MELBOURNE, status: 'completed' })).toBeNull()
+  })
+
   it('emits the real Melbourne venue with street address', () => {
-    const s = buildEventSchema('MELBOURNE') as {
+    const s = buildEventSchema('MELBOURNE', FUTURE_MELBOURNE) as {
       location: { name: string; address: { streetAddress: string; addressLocality: string; addressRegion: string; postalCode: string; addressCountry: string } }
     }
     expect(s.location.name).toBe('Rydges Melbourne')
@@ -364,34 +393,45 @@ describe('buildEventSchema (workshop EducationEvent markup)', () => {
   })
 
   it('uses local-offset start/end dates, not UTC (which shifts the calendar date)', () => {
-    const s = buildEventSchema('MELBOURNE') as { startDate: string; endDate: string }
-    expect(s.startDate).toBe('2026-06-13T08:00:00+10:00')
-    expect(s.endDate).toBe('2026-06-13T16:00:00+10:00')
+    const s = buildEventSchema('MELBOURNE', FUTURE_MELBOURNE) as { startDate: string; endDate: string }
+    expect(s.startDate).toBe('2099-06-13T08:00:00+10:00')
+    expect(s.endDate).toBe('2099-06-13T16:00:00+10:00')
   })
 
   it('includes an image for rich results', () => {
-    const s = buildEventSchema('MELBOURNE') as { image: string }
+    const s = buildEventSchema('MELBOURNE', FUTURE_MELBOURNE) as { image: string }
     expect(s.image).toBe(`${CONFIG.SEO.SITE_URL}/melbourne-workshop.jpg`)
   })
 
-  it('prices the offer at the regular Complete Course price (early bird is over)', () => {
-    const s = buildEventSchema('MELBOURNE') as {
+  it('prices the offer at the $1,190 early-bird outside the final window (nomination model 2026-07-02)', () => {
+    const s = buildEventSchema('MELBOURNE', FUTURE_MELBOURNE) as {
       offers: { price: number; priceCurrency: string; availability: string }
     }
-    expect(s.offers.price).toBe(CONFIG.COURSE.PRICE_REGULAR)
-    expect(s.offers.price).toBe(1400)
-    expect(s.offers.price).not.toBe(CONFIG.COURSE.PRICE_EARLY_BIRD)
+    expect(s.offers.price).toBe(CONFIG.COURSE.PRICE_EARLY_BIRD)
+    expect(s.offers.price).toBe(1190)
+    expect(s.offers.price).not.toBe(CONFIG.COURSE.PRICE_REGULAR)
     expect(s.offers.priceCurrency).toBe('AUD')
   })
 
-  it('marks the offer SoldOut once the round is closed/completed, else LimitedAvailability', () => {
-    const s = buildEventSchema('MELBOURNE') as { offers: { availability: string } }
-    const status = CONFIG.LOCATIONS.MELBOURNE.status
-    const expected =
-      status === 'closed' || status === 'completed'
-        ? 'https://schema.org/SoldOut'
-        : 'https://schema.org/LimitedAvailability'
-    expect(s.offers.availability).toBe(expected)
+  it('charges the $1,400 sticker only inside the final EARLY_BIRD_DAYS_BEFORE window', () => {
+    const inFinalWindow = new Date(
+      Date.now() + (CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE - 1) * 24 * 60 * 60 * 1000
+    )
+    const s = buildEventSchema('MELBOURNE', { ...FUTURE_MELBOURNE, dateObj: inFinalWindow }) as {
+      offers: { price: number }
+    }
+    expect(s.offers.price).toBe(CONFIG.COURSE.PRICE_REGULAR)
+    expect(s.offers.price).toBe(1400)
+  })
+
+  it('marks a live round LimitedAvailability; SoldOut only for a closed-but-future round', () => {
+    const live = buildEventSchema('MELBOURNE', FUTURE_MELBOURNE) as { offers: { availability: string } }
+    expect(live.offers.availability).toBe('https://schema.org/LimitedAvailability')
+
+    const closed = buildEventSchema('MELBOURNE', { ...FUTURE_MELBOURNE, status: 'closed' }) as {
+      offers: { availability: string }
+    }
+    expect(closed.offers.availability).toBe('https://schema.org/SoldOut')
   })
 })
 

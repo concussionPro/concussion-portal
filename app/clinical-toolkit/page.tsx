@@ -5,7 +5,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { FileText, Download, Lock, Star, ClipboardCheck, Heart, FileEdit, BookOpen, GitBranch, Archive } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { trackDownload, trackShopClick, trackEvent } from '@/lib/analytics'
 
 interface ToolkitResource {
@@ -331,7 +331,7 @@ export default function ClinicalToolkitPage() {
                           }}
                           className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all text-center"
                         >
-                          Add Workshop — ${new Date() < new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59') ? (CONFIG.COURSE.PRICE_EARLY_BIRD - CONFIG.COURSE.PRICE_ONLINE) : (CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE)}
+                          Add Workshop — ${upgradePriceFor()}
                         </button>
                         <button
                           onClick={() => {

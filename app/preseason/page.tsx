@@ -230,8 +230,8 @@ export default function PreseasonLandingPage() {
             </h2>
             <p className="m-0 max-w-[560px] text-[14.5px] leading-[1.55] text-slate-600">
               Collecting baselines is step one. Our free Mastery course teaches you to administer and
-              interpret every section — fillable auto-scoring forms, clinical toolkit, and a certificate.{' '}
-              {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours, AHPRA-aligned.
+              interpret every section — fillable auto-scoring forms, clinical toolkit, and a
+              certificate with 1 CPD hour on completion.
             </p>
             <div className="mt-[18px] flex flex-wrap gap-3">
               <Link

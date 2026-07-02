@@ -441,7 +441,7 @@ export default function PreviewPage() {
                   { label: '14 CPD Hours', desc: '8 online + 6 workshop' },
                   { label: 'Lifetime Access', desc: 'Content updated regularly' },
                   { label: 'Clinical Toolkit', desc: 'Flowcharts, templates, forms' },
-                  { label: 'Flexible Dates', desc: `Next workshops ${CONFIG.WORKSHOP.NEXT_ROUND}` },
+                  { label: 'Flexible Dates', desc: 'Workshop dates launch city-by-city as rounds fill' },
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 border border-white/10">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />

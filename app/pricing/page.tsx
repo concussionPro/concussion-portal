@@ -164,7 +164,7 @@ function PricingContent() {
   const faqs: FaqItem[] = [
     {
       q: 'Can I upgrade from online-only to the full course later?',
-      a: 'Yes — contact us to arrange an upgrade. Enrolling in the complete course now locks in the registered-list price.',
+      a: 'Yes — self-serve from your dashboard. You pay the difference between your online course and the Complete Course ($693 at the early-bird rate), and nominate your workshop city at checkout.',
     },
     {
       q: 'When do I get access to the online modules?',
@@ -201,7 +201,7 @@ function PricingContent() {
     },
     {
       q: 'Where are workshops held and when is the next one?',
-      a: 'The next confirmed workshop is Melbourne — Saturday 13 June 2026, Rydges Melbourne (Exhibition St), 8am–4pm with a catered lunch plus morning and afternoon tea included. Sydney workshops open as soon as dates are confirmed (max 12 per session to keep hands-on practice time high). Drop your details on the interest list for your city — you\'ll get at least 6 weeks\' notice when your date is locked in.',
+      a: 'Workshops run city by city as each city fills — the June 2026 Melbourne workshop ran at Rydges Melbourne with a full hands-on day (max 12 per session to keep practice time high). When you enrol in the Complete Course you nominate your city; the date launches once enough clinicians in your city have enrolled, and you get at least 6 weeks\' notice. Enrolling before your city\'s date is announced locks in the $1,190 early-bird rate.',
     },
     {
       q: 'Can I pay in instalments?',
@@ -298,11 +298,11 @@ function PricingContent() {
           {heroVariant === 'cpd' ? (
             <>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                Earn 14 AHPRA CPD Hours{' '}
-                <span className="text-gradient">Online</span>
+                Earn 8 CPD Hours Online —{' '}
+                <span className="text-gradient">14 with the Workshop</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Concussion assessment training for physiotherapists &amp; osteopaths.
+                AHPRA-aligned concussion assessment training for physiotherapists &amp; osteopaths.
                 Certificate on completion. Most employers reimburse — we provide the tax invoice.
               </p>
             </>
@@ -363,7 +363,7 @@ function PricingContent() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto mt-7">
             <div className="rounded-xl bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500 p-3 sm:p-4 text-left">
               <p className="text-2xl sm:text-3xl font-bold text-amber-700 leading-none">14<span className="text-base font-semibold">hrs</span></p>
-              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">AHPRA CPD</p>
+              <p className="text-[11px] sm:text-xs uppercase tracking-wider font-semibold text-slate-600 mt-1">CPD (8 online + 6)</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-teal-50 to-white border-l-4 border-teal-500 p-3 sm:p-4 text-left">
               <p className="text-2xl sm:text-3xl font-bold text-teal-700 leading-none">8</p>
@@ -392,7 +392,7 @@ function PricingContent() {
           <div className="text-left">
             <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-0.5">Endorsed by</p>
             <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">Osteopathy Australia</p>
-            <p className="text-xs text-muted-foreground mt-0.5">AHPRA aligned · 14 CPD hours</p>
+            <p className="text-xs text-muted-foreground mt-0.5">AHPRA aligned · 8 CPD hrs online, 14 with the workshop</p>
           </div>
         </div>
 
@@ -602,7 +602,7 @@ function PricingContent() {
             Enrol — from ${CONFIG.COURSE.PRICE_ONLINE}
           </span>
           <a
-            href="#pricing-compact"
+            href="#pricing-cards"
             className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 flex-shrink-0"
           >
             View Plans

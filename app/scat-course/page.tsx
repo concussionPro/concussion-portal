@@ -286,13 +286,14 @@ export default function SCATCoursePage() {
                     Ready for the full course?
                   </p>
                   <p className="text-sm text-emerald-700 mb-3">
-                    Unlock {CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS, return-to-play protocols, phenotype-based rehabilitation, and more. Online from ${CONFIG.COURSE.PRICE_ONLINE} · Complete ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}.
+                    Unlock {CONFIG.COURSE.TOTAL_MODULES} modules covering VOMS, BESS, return-to-play protocols, phenotype-based rehabilitation, and more. Your completion discount makes the online course{' '}
+                    <strong>${CONFIG.COURSE.PRICE_ONLINE - 50}</strong> (normally ${CONFIG.COURSE.PRICE_ONLINE}) · Complete from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird.
                   </p>
                   <Link
-                    href="/pricing"
+                    href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors"
                   >
-                    See Pricing &amp; Options
+                    Claim $50 Off &amp; See Pricing
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -470,14 +471,14 @@ export default function SCATCoursePage() {
               </ul>
               <div className="bg-white/80 rounded-lg p-3 mb-5 border border-purple-100">
                 <p className="text-sm text-slate-800">
-                  <strong>Online from ${CONFIG.COURSE.PRICE_ONLINE}</strong> · Complete <strong>${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</strong>
+                  <strong>Online from ${CONFIG.COURSE.PRICE_ONLINE}</strong> ({`$${CONFIG.COURSE.PRICE_ONLINE - 50} with your completion discount`}) · Complete from <strong>${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()}</strong> early-bird
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   7-day satisfaction guarantee · Afterpay / Klarna available
                 </p>
               </div>
               <Link
-                href="/pricing"
+                href={`/pricing?promo=${CONFIG.COURSE.PROMO_CODE}`}
                 className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors inline-flex items-center gap-2"
               >
                 View Pricing &amp; Enrol

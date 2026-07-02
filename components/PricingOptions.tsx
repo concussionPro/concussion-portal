@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CONFIG, afterpayInstalment } from '@/lib/config'
+import { CONFIG, afterpayInstalment, isEarlyBirdForLocation, workshopPriceFor } from '@/lib/config'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 import { HomepageAiCourseCard } from './HomepageAiCourseCard'
 
@@ -22,28 +22,28 @@ const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
 
 // ─── City catalogue ──────────────────────────────────────────────────────────
 //
-// Cities offered on the Complete Course tile. Slugs must match what
-// /api/register-interest accepts (sydney | melbourne | adelaide |
-// wa). Melbourne status comes from CONFIG.LOCATIONS so admin date changes
-// flow through automatically. The other four are interest-capture only —
-// no live workshops, so clicking them swaps the Enrol button for the
-// notify-me form below.
+// Cities offered on the Complete Course tile. Slugs must match
+// /api/register-interest AND lib/schemas locationSchema. Every city is
+// buyable at any time (nomination model, 2026-07-02): a city without a live
+// scheduled date sells at the $1,190 early-bird rate as a nomination — the
+// date launches when the city hits the confirmation threshold.
 const CITY_OPTIONS = [
   { slug: 'melbourne', label: 'Melbourne' },
   { slug: 'sydney', label: 'Sydney' },
+  { slug: 'byron-bay', label: 'Byron Bay' },
   { slug: 'adelaide', label: 'Adelaide' },
   { slug: 'wa', label: 'Perth (WA)' },
 ] as const
 
-/**
- * True when the selected city has a confirmed workshop date. Currently only
- * Melbourne can hit this branch — Sydney/Adelaide/WA are all in
- * collecting status.
- */
-function isCityConfirmed(slug: string | null | undefined): boolean {
+/** True when the city has a confirmed, future-dated round (a live date). */
+function cityHasLiveDate(slug: string | null | undefined): boolean {
   if (!slug) return false
   const config = Object.values(CONFIG.LOCATIONS).find((loc) => loc.slug === slug)
-  return config?.status === 'confirmed'
+  return (
+    config?.status === 'confirmed' &&
+    !!config.dateObj &&
+    config.dateObj.getTime() > Date.now()
+  )
 }
 
 function cityLabel(slug: string): string {
@@ -144,10 +144,10 @@ function WorkshopInterestForm({ citySlug, variant }: WorkshopInterestFormProps) 
         <Bell className={`text-[var(--accent)] flex-shrink-0 mt-0.5 ${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
         <div>
           <p className={`font-semibold text-foreground leading-tight ${isCompact ? 'text-xs' : 'text-sm'}`}>
-            {`${label} workshop isn’t confirmed yet`}
+            {`Get a date alert for ${label}`}
           </p>
           <p className={`text-muted-foreground leading-snug mt-0.5 ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
-            Drop your details — you&apos;ll be first to know when the date is locked in.
+            Drop your details — you&apos;ll be first to know when the {label} date is locked in.
           </p>
         </div>
       </div>
@@ -249,13 +249,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
 
   // Bundle owners get A$100 off online-only and full-course (applied at checkout).
-  // Early bird is over (cutoff 2026-05-31) — the Complete Course is always
-  // PRICE_REGULAR. Server (lib/stripe.ts) is the source of truth at checkout.
+  // Complete Course price is early-bird-aware per selected city ($1,190 with
+  // no live scheduled date; $1,400 only inside the final window of a
+  // scheduled round). Server (lib/stripe.ts) is the source of truth at checkout.
   const BUNDLE_DISCOUNT = 100
   const onlinePrice = bookOwner ? CONFIG.COURSE.PRICE_ONLINE - BUNDLE_DISCOUNT : CONFIG.COURSE.PRICE_ONLINE
-  const fullCoursePrice = bookOwner
-    ? CONFIG.COURSE.PRICE_REGULAR - BUNDLE_DISCOUNT
-    : CONFIG.COURSE.PRICE_REGULAR
+  const earlyBird = isEarlyBirdForLocation(selectedLocation)
+  const fullCourseBase = workshopPriceFor(selectedLocation)
+  const fullCoursePrice = bookOwner ? fullCourseBase - BUNDLE_DISCOUNT : fullCourseBase
+  const hasLiveDate = cityHasLiveDate(selectedLocation)
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     try {
@@ -400,18 +402,28 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <p className="text-[10px] text-slate-500 mb-3">Full Concussion Clinical Mastery — online modules + hands-on workshop</p>
 
             <div className="mb-4">
-              {bookOwner && (
-                <div className="flex items-center gap-2 mb-0.5">
+              {(earlyBird || bookOwner) && (
+                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                   <span className="text-sm text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
+                  {earlyBird && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Early bird</span>
+                  )}
+                  {bookOwner && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">Bundle −${BUNDLE_DISCOUNT}</span>
+                  )}
                 </div>
               )}
               <div className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold text-[var(--foreground)]">${fullCoursePrice.toLocaleString()}</span>
-                <span className="text-[10px] text-slate-400">≈ $910 USD</span>
+                <span className="text-[10px] text-slate-400">AUD</span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">or 4 x ${afterpayInstalment(fullCoursePrice)} with Afterpay or Klarna</p>
-              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 AHPRA CPD hours</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">One-time · 14 CPD hours (8 online + 6 in-person)</p>
+              {earlyBird && (
+                <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
+                  Standard ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before each scheduled workshop.
+                </p>
+              )}
             </div>
 
             {/* Next workshop — Melbourne */}
@@ -461,27 +473,26 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               ))}
             </ul>
 
-            {isCityConfirmed(selectedLocation) ? (
-              <>
-                <button
-                  onClick={() => handleCheckout('full-course')}
-                  disabled={loading !== null}
-                  className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading === 'full-course' ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    `Enrol Now — $${fullCoursePrice.toLocaleString()}`
-                  )}
-                </button>
+            <button
+              onClick={() => handleCheckout('full-course')}
+              disabled={loading !== null}
+              className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading === 'full-course' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                `Enrol Now — $${fullCoursePrice.toLocaleString()}`
+              )}
+            </button>
 
-                <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
-                  &ldquo;Hands on component was invaluable&rdquo; — Amelia
-                </p>
-              </>
-            ) : (
-              <WorkshopInterestForm citySlug={selectedLocation} variant="compact" />
+            {!hasLiveDate && (
+              <p className="text-[10px] text-[var(--muted-foreground)] mt-2 leading-snug">
+                Start the online modules today. Your {cityLabel(selectedLocation)} workshop date launches when your city fills — minimum {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&rsquo; notice, early-bird rate locked in.
+              </p>
             )}
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 text-center italic">
+              &ldquo;Hands on component was invaluable&rdquo; — Amelia
+            </p>
 
           </div>
         </div>
@@ -544,15 +555,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       {/* Pricing Cards — 3 equal-sized bento tiles. items-stretch forces
           all three cells to the same height so cards match regardless of
           content length. */}
+      {/* Tile order: Complete (flagship anchor) first, Online second, AI add-on
+          last — the price ladder reads top-down, never a $99 SKU anchoring the
+          flagship. Order is set with CSS order utilities; DOM order below is
+          Online → Complete → AI for edit-diff stability. */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 pt-5 items-stretch">
 
-        {/* ── AI in Clinical Practice — coming-soon tier (replaces never-sold Reference + Toolkit) ── */}
-        <HomepageAiCourseCard />
-
-
-        {/* ── CCM Online — online component of CCM ────────────────── */}
+        {/* ── CCM Online — online component of CCM (displays second) ── */}
         <div
-          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative"
+          className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-2"
           style={{ borderWidth: '1.5px', borderColor: 'rgba(13, 115, 119, 0.15)' }}
         >
           {/* Header row: badge left, price right */}
@@ -640,8 +651,8 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           </Link>
         </div>
 
-        {/* ── CCM Complete — online + workshop, MOST POPULAR ────────── */}
-        <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
+        {/* ── CCM Complete — online + workshop, MOST POPULAR (displays first) ── */}
+        <div className="card card-visible rounded-2xl p-5 md:p-6 flex flex-col relative order-1" style={{ borderWidth: '2px', borderColor: 'rgba(13, 115, 119, 0.3)' }}>
           {/* Header row: badge left, price right */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
@@ -656,10 +667,15 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               </span>
             </div>
             <div className="text-right flex-shrink-0">
-              {bookOwner && (
-                <div className="flex items-center gap-1.5 justify-end mb-0.5">
+              {(earlyBird || bookOwner) && (
+                <div className="flex items-center gap-1.5 justify-end mb-0.5 flex-wrap">
                   <span className="text-[11px] text-[var(--muted-foreground)] line-through">${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}</span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">−${BUNDLE_DISCOUNT}</span>
+                  {earlyBird && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Early bird</span>
+                  )}
+                  {bookOwner && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">−${BUNDLE_DISCOUNT}</span>
+                  )}
                 </div>
               )}
               <div className="flex items-baseline gap-1 justify-end">
@@ -717,7 +733,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
               'Full-day workshop',
               'SCAT6, VOMS, BESS',
               '1:1 expert feedback',
-              '14 AHPRA CPD',
+              '14 CPD (8 online + 6)',
               'AU locations',
             ].map((feature, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[12px]">
@@ -729,11 +745,10 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
 
           {/* City picker. "Later" button removed — it let users click Enrol
               with no city, sending location=undefined to Stripe and creating
-              an ops mess. Default selection is Melbourne (only confirmed
-              workshop). Cities without a confirmed date show a notify-me
-              form below instead of the Enrol button. */}
+              an ops mess. Every city is buyable (nomination model): no live
+              date = early-bird nomination, date launches when the city fills. */}
           <div className="mb-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">City</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">Your workshop city</p>
             <div className="flex flex-wrap gap-1">
               {CITY_OPTIONS.map((city) => (
                 <button
@@ -756,27 +771,46 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             </div>
           </div>
 
-          {isCityConfirmed(selectedLocation) ? (
-            <>
-              <button
-                onClick={() => handleCheckout('full-course')}
-                disabled={loading !== null}
-                className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
-              >
-                {loading === 'full-course' ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    Enrol Now — ${fullCoursePrice.toLocaleString()}
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+          <button
+            onClick={() => handleCheckout('full-course')}
+            disabled={loading !== null}
+            className="w-full py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-[var(--foreground)] text-white hover:bg-[var(--foreground)]/90 transition-colors"
+          >
+            {loading === 'full-course' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                Enrol Now — ${fullCoursePrice.toLocaleString()}
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
 
+          {!hasLiveDate && (
+            <>
+              <p className="text-[11px] text-[var(--muted-foreground)] mt-2.5 leading-snug">
+                Start the 8 online modules today. Your {cityLabel(selectedLocation)} workshop
+                date launches when your city fills — minimum {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&rsquo;
+                notice, and your ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
+                rate is locked in. Standard price ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies
+                only in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a scheduled workshop.
+              </p>
+              <details className="mt-2.5 group">
+                <summary className="text-[11px] text-[var(--muted-foreground)] cursor-pointer hover:text-[var(--accent)] transition-colors list-none flex items-center gap-1">
+                  <Bell className="w-3 h-3" />
+                  Not ready to enrol? Get a date alert for {cityLabel(selectedLocation)} instead
+                </summary>
+                <div className="mt-2">
+                  <WorkshopInterestForm citySlug={selectedLocation} variant="full" />
+                </div>
+              </details>
             </>
-          ) : (
-            <WorkshopInterestForm citySlug={selectedLocation} variant="full" />
           )}
+        </div>
+
+        {/* ── AI in Clinical Practice — $99 add-on course (displays last) ── */}
+        <div className="order-3 flex [&>*]:flex-1">
+          <HomepageAiCourseCard />
         </div>
       </div>
 
@@ -797,7 +831,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-teal-800 mb-1">For clinics + organisations</p>
             <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1">Training a whole team?</h3>
             <p className="text-sm text-slate-700 leading-relaxed">
-              In-house team training for clinics, sports organisations, and hospital networks — Concussion + AI in Clinical Practice, delivered on-site around your workflow.
+              In-house team training for clinics, sports organisations, and hospital networks — Concussion + AI in Clinical Practice, delivered on-site around your workflow. On-site days from $7,500.
             </p>
           </div>
           <a

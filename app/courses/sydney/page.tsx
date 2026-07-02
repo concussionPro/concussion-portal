@@ -7,6 +7,7 @@ import { EventSchema, BreadcrumbSchema } from '@/components/SchemaMarkup'
 import CountdownTimer from '@/components/CountdownTimer'
 import SpotsRemaining from '@/components/SpotsRemaining'
 import { SiteNav } from '@/components/SiteNav'
+import { NextEarlyBirdCapture } from '@/components/NextEarlyBirdCapture'
 
 export default function SydneyPage() {
   const location = CONFIG.LOCATIONS.SYDNEY as typeof CONFIG.LOCATIONS[keyof typeof CONFIG.LOCATIONS]
@@ -68,10 +69,14 @@ export default function SydneyPage() {
                 </p>
               </>
             ) : (
-              <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
-                <Calendar className="w-4 h-4" aria-hidden="true" />
-                Sydney date to be confirmed — register your interest below
-              </div>
+              <>
+                <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
+                  <Calendar className="w-4 h-4" aria-hidden="true" />
+                  Sydney round forming — no date confirmed yet. Register your interest below.
+                </div>
+                {/* Interest capture — makes the badge's promise true. */}
+                <NextEarlyBirdCapture defaultCity="sydney" />
+              </>
             )}
           </div>
 

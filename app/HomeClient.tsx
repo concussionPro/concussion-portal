@@ -98,7 +98,7 @@ export default function HomeClient() {
                   From ${CONFIG.COURSE.PRICE_ONLINE} (or 4 x ${afterpayInstalment(CONFIG.COURSE.PRICE_ONLINE)} with Afterpay)
                 </p>
                 <p className="text-sm text-slate-500 mt-1">
-                  Complete Course with Melbourne workshop — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                  Complete Course (online + workshop in your city) — ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
                 </p>
 
                 {/* Social proof strip */}

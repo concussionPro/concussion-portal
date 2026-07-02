@@ -103,7 +103,7 @@ function LoginForm() {
                 <Brain className="w-6 h-6 text-white" strokeWidth={2} />
               </div>
               <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                Concussion<span className="text-[#5b9aa6]">Pro</span>
+                Concussion Education <span className="text-[#5b9aa6]">Australia</span>
               </span>
             </div>
           </div>

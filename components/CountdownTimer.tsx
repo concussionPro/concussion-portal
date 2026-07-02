@@ -12,29 +12,35 @@ interface TimeRemaining {
 }
 
 /**
- * CountdownTimer — shows countdown to the EARLY BIRD DEADLINE (price reverts).
- * Hidden when:
- *   - No confirmed workshops exist (nothing to be early about), OR
- *   - The early-bird deadline has already passed (deadline → null → render null)
- *
- * Previously counted down to the workshop date itself which mislabelled the
- * timer as "Early Bird Ends" when it was really showing "Workshop Starts In".
+ * CountdownTimer — counts down to the moment the $1,190 early-bird rate closes
+ * for a LIVE scheduled round (EARLY_BIRD_DAYS_BEFORE days before the workshop
+ * date). Nomination model: with no confirmed future-dated round there is no
+ * deadline — early bird simply holds — so the timer renders nothing (no false
+ * urgency). Pass `locationSlug` to scope to one city; otherwise the soonest
+ * live round's close is used.
  */
-export default function CountdownTimer({ className = '' }: { className?: string }) {
+export default function CountdownTimer({ className = '', locationSlug }: { className?: string; locationSlug?: string }) {
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(null)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
 
-    // Need at least one confirmed workshop for an "early bird" framing to make sense
-    const hasConfirmedWorkshop = Object.values(CONFIG.LOCATIONS).some(
-      (loc) => loc.status === 'confirmed' && loc.dateObj
+    // Early-bird close = confirmed future date − EARLY_BIRD_DAYS_BEFORE.
+    const candidates = Object.values(CONFIG.LOCATIONS).filter(
+      (loc) =>
+        loc.status === 'confirmed' &&
+        loc.dateObj &&
+        loc.dateObj.getTime() > Date.now() &&
+        (!locationSlug || loc.slug === locationSlug)
     )
-    if (!hasConfirmedWorkshop) return
-
-    // The actual target — the early-bird PRICE deadline (config string yyyy-mm-dd, AEST end-of-day)
-    const deadline = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59+10:00').getTime()
+    if (candidates.length === 0) return
+    const soonest = candidates.reduce((a, b) =>
+      (a.dateObj!.getTime() < b.dateObj!.getTime() ? a : b)
+    )
+    const deadline =
+      soonest.dateObj!.getTime() -
+      CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000
 
     const calculateTimeRemaining = (): TimeRemaining | null => {
       const now = new Date().getTime()
@@ -71,7 +77,7 @@ export default function CountdownTimer({ className = '' }: { className?: string 
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [locationSlug])
 
   if (!mounted || !timeRemaining || !CONFIG.FEATURES.SHOW_COUNTDOWN) {
     return null

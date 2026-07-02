@@ -3,7 +3,9 @@
  *
  * One-time payment checkout for concussion courses:
  *   - Online Only: $497 AUD
- *   - Full Course (online + in-person): $1,400 AUD (early bird ended 31 May 2026)
+ *   - Full Course (online + in-person): $1,400 sticker; $1,190 early-bird
+ *     whenever the buyer's city has no live scheduled round or the round is
+ *     more than EARLY_BIRD_DAYS_BEFORE days out (nomination model, 2026-07-02)
  *
  * Uses Stripe Checkout in 'payment' mode (no subscriptions).
  * Environment variables required:
@@ -12,7 +14,7 @@
  */
 
 import Stripe from 'stripe'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, isEarlyBirdForLocation } from '@/lib/config'
 
 // Lazy init: Stripe is only needed at request time, not during build page collection
 let _stripe: Stripe | null = null
@@ -73,7 +75,7 @@ export const COURSE_ACCESS_MAP: Record<string, 'online-only' | 'full-course'> = 
 /**
  * Valid workshop locations
  */
-export const VALID_LOCATIONS = ['sydney', 'melbourne'] as const
+export const VALID_LOCATIONS = ['sydney', 'melbourne', 'byron-bay', 'adelaide', 'wa'] as const
 export type WorkshopLocation = typeof VALID_LOCATIONS[number]
 
 /**
@@ -127,42 +129,38 @@ export async function createCourseCheckoutSession({
   /** AUD dollars (not cents) of discount to apply for Reference+Toolkit bundle owners. */
   bundleDiscountAud?: number
 }) {
-  // Workshop-seat purchases: refuse sessions for workshops that have already
-  // run, and refuse when the confirmed city is at capacity. Online-only and
-  // international stay purchasable year-round.
+  // Workshop-seat purchases follow the NOMINATION model (owner decision
+  // 2026-07-02): the full course / workshop upgrade is buyable at ANY time
+  // for ANY city. If the city has no live scheduled date (collecting,
+  // completed, closed, or a confirmed date that has passed), the purchase is
+  // a NOMINATION for the city's next round — the buyer feeds Ready-to-Train
+  // and a date launches when the city hits the confirmation threshold.
+  // The ONLY refusal is a sold-out live round (honesty: they'd expect that
+  // exact date).
+  let workshopScheduled = false // a confirmed, future-dated round exists for `location`
   if (courseType === 'full-course' || courseType === 'workshop-upgrade') {
     const workshopConfig = location
       ? Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === location)
       : null
-    if (workshopConfig?.status === 'completed') {
-      throw new CheckoutUnavailableError(
-        `The ${workshopConfig.city} workshop has already run. The online course is still available, and you can register interest for the next ${workshopConfig.city} round.`
-      )
-    }
-    // 'closed' = registration shut for the current round (e.g. days out, prep
-    // locked) but the workshop hasn't run. Block new seats; point to next round.
-    if (workshopConfig?.status === 'closed') {
-      throw new CheckoutUnavailableError(
-        `Registration for the ${workshopConfig.city} workshop is closed. We run these regularly — the online course is available now, and you can register interest for the next ${workshopConfig.city} round.`
-      )
-    }
-    if (workshopConfig?.dateObj && workshopConfig.dateObj.getTime() < Date.now()) {
-      throw new CheckoutUnavailableError(
-        `The ${workshopConfig.city} workshop (${workshopConfig.date}) has already run. The online course is still available, and you can register interest for the next round.`
-      )
-    }
-    if (workshopConfig?.status === 'confirmed') {
+    workshopScheduled =
+      workshopConfig?.status === 'confirmed' &&
+      !!workshopConfig.dateObj &&
+      workshopConfig.dateObj.getTime() > Date.now()
+    if (workshopScheduled && workshopConfig) {
       const { getEnrollmentCount } = await import('@/lib/users')
       const enrolled = await getEnrollmentCount(workshopConfig.slug)
       if (enrolled >= CONFIG.WORKSHOP.CAPACITY_PER_COURSE) {
-        throw new CheckoutUnavailableError(
-          `The ${workshopConfig.city} workshop is sold out (${CONFIG.WORKSHOP.CAPACITY_PER_COURSE} seats). The online course is still available — you can add a workshop seat when the next round opens.`
-        )
+        // Live round is full — sell the seat as a NEXT-round nomination
+        // (early-bird pricing) instead of refusing the sale outright.
+        workshopScheduled = false
       }
     }
   }
 
-  const isEarlyBird = await isEarlyBirdActiveForLocation(location)
+  // Early bird ($1,190): active for any purchase that is not a seat at a
+  // live, scheduled, in-window round. A sold-out live round downgraded to a
+  // next-round nomination above is also early-bird.
+  const isEarlyBird = !workshopScheduled || isEarlyBirdForLocation(location)
   let unitAmount: number
   let currency: string
   let productName: string
@@ -205,7 +203,9 @@ export async function createCourseCheckoutSession({
     currency = 'aud'
     const locationLabel = location ? formatLocation(location) : 'TBD'
     productName = `Concussion Education Australia — Complete Course (${locationLabel})`
-    productDescription = `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD hours · AHPRA aligned · All materials included`
+    productDescription = workshopScheduled
+      ? `8 online modules + full-day in-person workshop (${locationLabel}) · 14 CPD hours · AHPRA aligned · All materials included`
+      : `8 online modules (start today) + full-day in-person workshop (${locationLabel} — date launches as your city fills, min ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice) · 14 CPD hours · AHPRA aligned`
   }
 
   // Apply bundle-owner discount to AUD course purchases (online-only / full-course).
@@ -282,6 +282,9 @@ export async function createCourseCheckoutSession({
     metadata: {
       courseType,
       location: location || '',
+      // 'false' = next-round nomination (no live scheduled date at purchase
+      // time) — feeds the Ready-to-Train pipeline in admin.
+      workshopScheduled: workshopScheduled ? 'true' : 'false',
       preferredCity: preferredCity || '',
       accessLevel: COURSE_ACCESS_MAP[courseType],
       isEarlyBird: isEarlyBird ? 'true' : 'false',
@@ -317,55 +320,6 @@ export async function createCourseCheckoutSession({
 }
 
 /**
- * Check if early bird pricing is active for a location.
- *
- * EARLY BIRD IS OVER (owner decision, June 2026): the hard deadline in
- * CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE is 2026-05-31 (past), so this returns
- * false for EVERY location and every charge is at regular price. The
- * per-location rules below only matter if a future round re-opens early bird
- * by moving the deadline forward:
- * - Collecting cities: early bird while within the hard deadline
- * - Confirmed cities: ALSO ends when EITHER condition is met (these
- *   conditions can only disable early bird, never re-enable it):
- *     1. Within 7 days of course date
- *     2. 50% of seats sold (6/12)
- */
-async function isEarlyBirdActiveForLocation(location?: string): Promise<boolean> {
-  // Hard deadline — applies to ALL locations regardless of status
-  const hardDeadline = new Date(CONFIG.WORKSHOP.EARLY_BIRD_DEADLINE + 'T23:59:59')
-  if (new Date() > hardDeadline) return false
-
-  // Find location config
-  const locationConfig = location
-    ? Object.values(CONFIG.LOCATIONS).find(loc => loc.slug === location)
-    : null
-
-  // Collecting or unknown location → early bird (within hard deadline)
-  if (!locationConfig || locationConfig.status === 'collecting') {
-    return true
-  }
-
-  // Confirmed with a date → apply date-proximity + seat-count logic
-  if (locationConfig.status === 'confirmed' && locationConfig.dateObj) {
-    const now = new Date()
-    const dateDeadline = new Date(
-      locationConfig.dateObj.getTime() - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000
-    )
-    dateDeadline.setHours(23, 59, 59, 999)
-    if (now >= dateDeadline) return false
-
-    const { getEnrollmentCount } = await import('@/lib/users')
-    const enrolled = await getEnrollmentCount(locationConfig.slug)
-    if (enrolled >= CONFIG.WORKSHOP.EARLY_BIRD_SEAT_THRESHOLD) return false
-
-    return true
-  }
-
-  // Completed → no early bird
-  return false
-}
-
-/**
  * Get submit message for full-course checkout based on city status
  */
 function getCheckoutSubmitMessage(location?: string): string {
@@ -375,11 +329,15 @@ function getCheckoutSubmitMessage(location?: string): string {
 
   const cityName = formatLocation(location || '')
 
-  if (locationConfig?.status === 'confirmed' && locationConfig.dateObj) {
+  const hasLiveDate =
+    locationConfig?.status === 'confirmed' &&
+    locationConfig.dateObj &&
+    locationConfig.dateObj.getTime() > Date.now()
+  if (hasLiveDate && locationConfig) {
     return `Your workshop: ${cityName}, ${locationConfig.date}. You'll receive a login link by email after purchase.`
   }
 
-  return `Your workshop location: ${cityName}. Your date will be confirmed as demand opens up in your city. You'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice.`
+  return `Your nominated workshop city: ${cityName}. Your date launches when enough clinicians in your city enrol — you'll get at least ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice, and your early-bird rate is locked in.`
 }
 
 /**
@@ -390,6 +348,8 @@ function formatLocation(slug: string): string {
     'sydney': 'Sydney',
     'melbourne': 'Melbourne',
     'byron-bay': 'Byron Bay',
+    'adelaide': 'Adelaide',
+    'wa': 'Perth (WA)',
   }
   return map[slug] || slug || 'TBD'
 }

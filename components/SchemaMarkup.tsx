@@ -15,12 +15,33 @@ function toAESTOffsetISO(date: Date): string {
   return shifted.toISOString().replace(/\.\d{3}Z$/, '+10:00')
 }
 
-/** Plain-object Course schema — exported separately so tests can assert on it. */
-export function buildCourseSchema(): Record<string, unknown> {
-  // Only include course instances that have confirmed dates
+/** Minimal location shape the schema builders need (structural subset of
+ *  CONFIG.LOCATIONS entries; tests may pass fixtures). */
+export type SchemaLocationData = {
+  city: string
+  slug: string
+  dateObj: Date | null
+  status: 'collecting' | 'confirmed' | 'closed' | 'completed'
+}
+
+/**
+ * A location only qualifies for date-bearing schema when its workshop is
+ * confirmed AND still in the future. Completed rounds (e.g. Melbourne June
+ * 2026) and floated-but-unconfirmed dates must never emit as scheduled events.
+ */
+function hasConfirmedFutureDate(loc: { dateObj: Date | null; status: string }): boolean {
+  return !!loc.dateObj && loc.status === 'confirmed' && loc.dateObj.getTime() > Date.now()
+}
+
+/** Plain-object Course schema — exported separately so tests can assert on it.
+ *  `locations` is injectable for tests; production callers use live CONFIG. */
+export function buildCourseSchema(
+  locations: { MELBOURNE: SchemaLocationData; SYDNEY: SchemaLocationData } = CONFIG.LOCATIONS
+): Record<string, unknown> {
+  // Only include course instances with a confirmed FUTURE date
   const courseInstances = []
 
-  if (CONFIG.LOCATIONS.MELBOURNE.dateObj) {
+  if (hasConfirmedFutureDate(locations.MELBOURNE)) {
     courseInstances.push({
       '@type': 'CourseInstance',
       name: 'Melbourne Session',
@@ -35,11 +56,11 @@ export function buildCourseSchema(): Record<string, unknown> {
           addressCountry: 'AU',
         },
       },
-      startDate: toAESTOffsetISO(CONFIG.LOCATIONS.MELBOURNE.dateObj),
+      startDate: toAESTOffsetISO(locations.MELBOURNE.dateObj!),
     })
   }
 
-  if (CONFIG.LOCATIONS.SYDNEY.dateObj) {
+  if (hasConfirmedFutureDate(locations.SYDNEY)) {
     courseInstances.push({
       '@type': 'CourseInstance',
       name: 'Sydney Session',
@@ -54,7 +75,7 @@ export function buildCourseSchema(): Record<string, unknown> {
           addressCountry: 'AU',
         },
       },
-      startDate: toAESTOffsetISO(CONFIG.LOCATIONS.SYDNEY.dateObj),
+      startDate: toAESTOffsetISO(locations.SYDNEY.dateObj!),
     })
   }
 
@@ -62,13 +83,13 @@ export function buildCourseSchema(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@type': 'Course',
     name: 'Concussion Management Clinical Course',
-    description: 'Comprehensive concussion management training covering SCAT6, VOMS, BESS protocols. 8 online modules plus hands-on practical training. 14 CPD hours, AHPRA-aligned, endorsed by Osteopathy Australia.',
+    description: 'Comprehensive concussion management training covering SCAT6, VOMS, BESS protocols. 8 online modules plus an optional hands-on practical day. 8 CPD hours online (up to 14 with the in-person day), AHPRA-aligned, endorsed by Osteopathy Australia.',
     provider: {
       '@type': 'Organization',
       name: 'Concussion Education Australia',
       url: CONFIG.SEO.SITE_URL,
     },
-    educationalCredentialAwarded: '14 CPD hours - AHPRA Aligned, Endorsed by Osteopathy Australia',
+    educationalCredentialAwarded: 'Up to 14 CPD hours (8 online + 6 in-person) - AHPRA Aligned, Endorsed by Osteopathy Australia',
     timeRequired: 'P2W',
     offers: {
       '@type': 'Offer',
@@ -100,14 +121,42 @@ export function CourseSchema() {
 
 type EventLocationKey = 'MELBOURNE' | 'SYDNEY'
 
-/** Plain-object EducationEvent schema, or null when the city has no confirmed date. */
-export function buildEventSchema(location: EventLocationKey): Record<string, unknown> | null {
-  const locationData = CONFIG.LOCATIONS[location]
+/** Plain-object EducationEvent schema, or null when the city has no LIVE
+ *  future-dated round. `locationDataOverride` is injectable for tests;
+ *  production callers use live CONFIG. */
+export function buildEventSchema(
+  location: EventLocationKey,
+  locationDataOverride?: SchemaLocationData
+): Record<string, unknown> | null {
+  const locationData: SchemaLocationData = locationDataOverride ?? CONFIG.LOCATIONS[location]
 
-  // If location has no confirmed date, don't render event schema
-  if (!locationData.dateObj) {
+  // Only emit EventScheduled markup for a LIVE round: a launched date
+  // ('confirmed', or 'closed' = registration closed pre-workshop) that is
+  // still in the future. A completed round (Melbourne June 2026) or a
+  // merely-floated/collecting city must not appear in rich results as a
+  // scheduled event at all — under the nomination model those cities are
+  // "collecting nominations", not running a bookable event.
+  const isLiveFutureRound =
+    !!locationData.dateObj &&
+    locationData.dateObj.getTime() > Date.now() &&
+    (locationData.status === 'confirmed' || locationData.status === 'closed')
+  if (!locationData.dateObj || !isLiveFutureRound) {
     return null
   }
+
+  // Nomination-model pricing (owner decision 2026-07-02): the standing
+  // sellable price is PRICE_EARLY_BIRD ($1,190); PRICE_REGULAR ($1,400) is
+  // only charged in the final EARLY_BIRD_DAYS_BEFORE window of a confirmed
+  // round. Mirrors isEarlyBirdForLocation() in lib/config.ts, computed from
+  // the (possibly injected) locationData so fixtures stay truthful.
+  const inFinalWindow =
+    locationData.status === 'confirmed' &&
+    Date.now() >=
+      locationData.dateObj.getTime() -
+        CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000
+  const offerPrice = inFinalWindow
+    ? CONFIG.COURSE.PRICE_REGULAR
+    : CONFIG.COURSE.PRICE_EARLY_BIRD
 
   // Confirmed workshops have a real venue (currently only Melbourne — Rydges).
   const venue = location === 'MELBOURNE' ? CONFIG.VENUE_BENEFITS.MELBOURNE : null
@@ -151,13 +200,14 @@ export function buildEventSchema(location: EventLocationKey): Record<string, unk
     },
     offers: {
       '@type': 'Offer',
-      // Early bird is over — advertise the regular Complete Course price.
-      price: CONFIG.COURSE.PRICE_REGULAR,
+      price: offerPrice,
       priceCurrency: 'AUD',
-      // SoldOut once the round's registration is closed — avoids misleading
+      // A live round with seats is LimitedAvailability (capped at 12); a
+      // closed-but-not-yet-run round is SoldOut — avoids misleading
       // "available" rich results for a workshop nobody can still book.
+      // Completed rounds never reach here (they emit no event at all).
       availability:
-        locationData.status === 'closed' || locationData.status === 'completed'
+        locationData.status === 'closed'
           ? 'https://schema.org/SoldOut'
           : 'https://schema.org/LimitedAvailability',
       url: `${CONFIG.APP_URL}${CONFIG.SHOP_URL}`,

@@ -4,21 +4,18 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/contexts/SessionContext'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, isEarlyBirdForLocation, upgradePriceFor } from '@/lib/config'
 import { CheckCircle2, ArrowRight, Loader2, MapPin, AlertTriangle } from 'lucide-react'
 
-const LOCATIONS = Object.values(CONFIG.LOCATIONS)
-  .filter(loc => loc.status !== 'completed')
-  .map(loc => ({
-    slug: loc.slug,
-    label: loc.city,
-    status: loc.status,
-    date: loc.date,
-  }))
-
-// Early bird is over (cutoff 2026-05-31) — the server charges
-// WORKSHOP_UPGRADE_REGULAR, so display must match ($903, never $693).
-const UPGRADE_PRICE_REGULAR = CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE
+// Nomination model (2026-07-02): every city is selectable, including
+// completed ones — a completed city means "nominate me for the next
+// {city} round".
+const LOCATIONS = Object.values(CONFIG.LOCATIONS).map(loc => ({
+  slug: loc.slug,
+  label: loc.city,
+  status: loc.status,
+  date: loc.date,
+}))
 
 function UpgradeContent() {
   const router = useRouter()
@@ -29,7 +26,12 @@ function UpgradeContent() {
   const [error, setError] = useState('')
   const canceled = searchParams.get('canceled') === 'true'
 
-  const upgradePrice = UPGRADE_PRICE_REGULAR
+  // Difference to the current Complete Course price for the chosen city:
+  // $693 at the $1,190 early-bird rate (any city without a live scheduled
+  // date), $903 only inside the final window of a scheduled round. Server
+  // (lib/stripe.ts) charges the same function.
+  const upgradePrice = upgradePriceFor(selectedLocation || undefined)
+  const upgradeEarlyBird = isEarlyBirdForLocation(selectedLocation || undefined)
 
   // Auth guard
   useEffect(() => {
@@ -176,7 +178,7 @@ function UpgradeContent() {
                 {loc.status === 'confirmed' && loc.date ? (
                   <p className="text-xs text-accent font-medium mt-1">{loc.date}</p>
                 ) : (
-                  <p className="text-xs text-muted-foreground mt-1">Collecting interest</p>
+                  <p className="text-xs text-muted-foreground mt-1">Date launches as {loc.label} fills</p>
                 )}
               </button>
             ))}
@@ -189,11 +191,28 @@ function UpgradeContent() {
         {/* Price + checkout */}
         <div className="glass rounded-2xl p-6 md:p-8 border-2 border-accent/20">
           <div className="text-center mb-6">
+            {upgradeEarlyBird && (
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <span className="text-sm text-muted-foreground line-through">
+                  ${CONFIG.COURSE.PRICE_REGULAR - CONFIG.COURSE.PRICE_ONLINE}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Early bird
+                </span>
+              </div>
+            )}
             <div className="flex items-baseline justify-center gap-2 mb-1">
               <span className="text-4xl font-bold">${upgradePrice}</span>
               <span className="text-muted-foreground">AUD</span>
             </div>
-            <p className="text-sm text-muted-foreground">Workshop upgrade price</p>
+            <p className="text-sm text-muted-foreground">
+              Adds the full-day workshop (6 CPD hours) to your online course
+            </p>
+            {upgradeEarlyBird && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Standard upgrade price applies only in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a scheduled workshop.
+              </p>
+            )}
           </div>
 
           {error && (

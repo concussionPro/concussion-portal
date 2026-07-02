@@ -2,23 +2,33 @@
 
 import { useState } from 'react'
 import { Lock, ArrowRight, Award, BookOpen, ShieldCheck, Star, Loader2 } from 'lucide-react'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, workshopPriceFor } from '@/lib/config'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 
 // Google Ads conversion label for paid enrol/checkout clicks (Add to cart)
 const ENROL_CLICK_LABEL = 'vHoXCNKd6Y8cEJWXu_9C'
 
+// Workshop-city nomination options (must match lib/schemas locationSchema)
+const CITIES = [
+  { slug: 'melbourne', label: 'Melbourne' },
+  { slug: 'sydney', label: 'Sydney' },
+  { slug: 'byron-bay', label: 'Byron Bay' },
+  { slug: 'adelaide', label: 'Adelaide' },
+  { slug: 'wa', label: 'Perth (WA)' },
+]
+
 export function ContentLockedBanner({ remainingSections }: { remainingSections?: string[] }) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [city, setCity] = useState('melbourne')
+
+  const fullPrice = workshopPriceFor(city)
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     setLoading(courseType)
     setError(null)
-    trackEvent('checkout_start', { courseType, source: 'content_locked_banner' })
-    const value = courseType === 'full-course'
-      ? CONFIG.COURSE.PRICE_REGULAR
-      : CONFIG.COURSE.PRICE_ONLINE
+    trackEvent('checkout_start', { courseType, source: 'content_locked_banner', location: city })
+    const value = courseType === 'full-course' ? fullPrice : CONFIG.COURSE.PRICE_ONLINE
     trackLeadConversion(ENROL_CLICK_LABEL, value)
 
     try {
@@ -26,11 +36,11 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // full-course requires a workshop location (lib/schemas.ts superRefine
-        // rejects it otherwise). Default to Melbourne — the only confirmed
-        // workshop — matching PricingOptions' default selection.
+        // rejects it otherwise). Nomination model: the chosen city's date
+        // launches when the city fills; buyers before then pay early-bird.
         body: JSON.stringify({
           courseType,
-          ...(courseType === 'full-course' ? { location: 'melbourne' } : {}),
+          ...(courseType === 'full-course' ? { location: city } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -133,11 +143,29 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  Complete — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                  Complete — ${fullPrice.toLocaleString()}
+                  {fullPrice < CONFIG.COURSE.PRICE_REGULAR && (
+                    <span className="text-[11px] font-semibold opacity-80">early bird</span>
+                  )}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
+          </div>
+
+          {/* Workshop-city nomination for the Complete option */}
+          <div className="flex items-center justify-center gap-2 mb-3 text-xs text-muted-foreground">
+            <span>Workshop city:</span>
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+              aria-label="Workshop city"
+            >
+              {CITIES.map((c) => (
+                <option key={c.slug} value={c.slug}>{c.label}</option>
+              ))}
+            </select>
           </div>
 
           {error && (
@@ -147,7 +175,7 @@ export function ContentLockedBanner({ remainingSections }: { remainingSections?:
           )}
 
           <p className="text-muted-foreground text-xs mt-2">
-            8 CPD hours (online) &middot; 14 CPD hours (complete with workshop)
+            8 CPD hours (online) &middot; 14 CPD hours (complete with workshop) &middot; your workshop date launches when your city fills
           </p>
         </div>
       </div>

@@ -110,7 +110,7 @@ export default function MelbournePage() {
             ) : (
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-2.5 rounded-full text-sm font-semibold">
                 <Calendar className="w-4 h-4" aria-hidden="true" />
-                {CONFIG.WORKSHOP.NEXT_ROUND} — Reserve Your Spot Below
+                Next Melbourne round forming — Reserve Your Spot Below
               </div>
             )}
           </div>

@@ -2,11 +2,11 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Sydney Concussion Workshop | Hands-On SCAT6 & VOMS Training',
-  description: 'Full-day hands-on concussion workshop in Sydney. Master SCAT6, VOMS, and BESS protocols with expert-led clinical training. 14 AHPRA CPD hours (8 online + 6 in-person). Next round Jun-Aug 2026.',
-  keywords: 'concussion workshop Sydney, SCAT6 training Sydney, concussion course Sydney, AHPRA CPD workshop, hands-on concussion training Sydney',
+  description: 'Full-day hands-on concussion workshop in Sydney. Master SCAT6, VOMS, and BESS protocols with expert-led clinical training. Up to 14 CPD hours (8 online + 6 in-person). Sydney round forming — register your interest.',
+  keywords: 'concussion workshop Sydney, SCAT6 training Sydney, concussion course Sydney, CPD workshop, hands-on concussion training Sydney',
   openGraph: {
     title: 'Sydney Concussion Workshop — Hands-On Clinical Training',
-    description: 'Full-day hands-on concussion training in Sydney. Master SCAT6, VOMS, BESS protocols. 6 AHPRA CPD hours.',
+    description: 'Full-day hands-on concussion training in Sydney. Master SCAT6, VOMS, BESS protocols. Round forming — register your interest.',
     type: 'website',
     url: 'https://portal.concussion-education-australia.com/courses/sydney',
   },

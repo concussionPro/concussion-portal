@@ -15,11 +15,19 @@ export const CONFIG = {
     IN_PERSON_CPD_POINTS: 6,
     CPD_BADGE_TEXT: 'Up to 14 CPD hours - AHPRA Aligned, Endorsed by Osteopathy Australia',
     PRICE_ONLINE: 497,
+    // PRICING MODEL (owner decision 2026-07-02):
+    // PRICE_REGULAR ($1,400) is the sticker/standard price. It is only ever
+    // CHARGED in the final EARLY_BIRD_DAYS_BEFORE window of a confirmed,
+    // scheduled workshop. Everyone who buys BEFORE their city's date launches
+    // (status 'collecting'/'completed'-awaiting-next-round) — or after launch
+    // but outside the final window — pays PRICE_EARLY_BIRD ($1,190).
+    // The Complete Course is buyable at ANY time for ANY city: the buyer
+    // nominates a city, lands in the Ready-to-Train pipeline, and a date
+    // launches when the city hits CONFIRMATION_THRESHOLD.
+    // ACL discipline: $1,400 must remain a REAL price (genuinely charged in
+    // the final window) — never present $1,190 as a discount off a price
+    // that is never charged. Use isEarlyBirdForLocation()/workshopPriceFor().
     PRICE_REGULAR: 1400,
-    // HISTORICAL — early bird ended 31 May 2026 (see EARLY_BIRD_DEADLINE).
-    // Do NOT use for display or charging: the current Complete Course price
-    // is PRICE_REGULAR everywhere. Kept only for past-sale reconciliation
-    // and deadline-gated code paths that now resolve to regular.
     PRICE_EARLY_BIRD: 1190,
     PRICE_INTERNATIONAL: 197,
     SAVINGS: 210,
@@ -55,6 +63,27 @@ export const CONFIG = {
       dateObj: null as Date | null,
       status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
     },
+    BYRON_BAY: {
+      city: 'Byron Bay',
+      slug: 'byron-bay',
+      date: '',
+      dateObj: null as Date | null,
+      status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+    },
+    ADELAIDE: {
+      city: 'Adelaide',
+      slug: 'adelaide',
+      date: '',
+      dateObj: null as Date | null,
+      status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+    },
+    WA: {
+      city: 'Perth (WA)',
+      slug: 'wa',
+      date: '',
+      dateObj: null as Date | null,
+      status: 'collecting' as 'collecting' | 'confirmed' | 'closed' | 'completed',
+    },
     MELBOURNE: {
       city: 'Melbourne',
       slug: 'melbourne',
@@ -73,14 +102,11 @@ export const CONFIG = {
     CAPACITY_PER_COURSE: 12,
     CONFIRMATION_THRESHOLD: 8,    // paid registrants needed to confirm a date
     LEAD_TIME_WEEKS: 6,           // weeks of notice after threshold hit
-    EARLY_BIRD_SEAT_THRESHOLD: 6, // 50% — early bird ends when this many seats sold (for confirmed cities)
-    EARLY_BIRD_DAYS_BEFORE: 7,    // Early bird ends this many days before course date
-    // EARLY BIRD IS OVER (owner decision, June 2026). The Melbourne round's
-    // early-bird cutoff was 31 May 2026 — this date is the documented truth
-    // and is intentionally in the past so every client-side
-    // `new Date() < deadline` check resolves to regular pricing.
-    // The Complete Course is PRICE_REGULAR ($1,400) everywhere, display AND charge.
-    EARLY_BIRD_DEADLINE: '2026-05-31',
+    // Early bird ($1,190) closes this many days before a CONFIRMED workshop
+    // date — the final window is charged at PRICE_REGULAR ($1,400). For
+    // cities with no launched date (collecting / completed awaiting next
+    // round), early bird is ALWAYS active (owner decision 2026-07-02).
+    EARLY_BIRD_DAYS_BEFORE: 14,
     // Current-round enrolment scoping (per location slug). getEnrollmentCount()
     // only counts full-course users created on/after this date so attendees of
     // past rounds (e.g. Q1 2026 workshops) don't consume seats/capacity for the
@@ -90,7 +116,6 @@ export const CONFIG = {
     ROUND_START: {
       melbourne: '2026-01-01',
     } as Record<string, string>,
-    NEXT_ROUND: 'Melbourne — Sat 13 June 2026',   // Lead with confirmed Melbourne date
     Q1_COMPLETED: true,           // Q1 2026 workshops ran — used for social proof
   },
 
@@ -119,7 +144,7 @@ export const CONFIG = {
     SITE_URL: 'https://portal.concussion-education-australia.com',
     TWITTER_HANDLE: '@ConcussionEduAU',
     OG_IMAGE: 'https://portal.concussion-education-australia.com/og-image.jpg',
-    DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules + practical training. 14 CPD hours, endorsed by Osteopathy Australia.',
+    DESCRIPTION: 'AHPRA-aligned concussion management course. SCAT6, VOMS, BESS mastery. 8 online modules (8 CPD hours) + optional practical day (up to 14 CPD hours). Endorsed by Osteopathy Australia.',
   },
 
   // Feature Flags
@@ -134,6 +159,41 @@ export type LocationKey = keyof typeof CONFIG.LOCATIONS
 export type Location = LocationKey
 export type LocationConfig = typeof CONFIG.LOCATIONS[LocationKey]
 export type LocationStatus = 'collecting' | 'confirmed' | 'closed' | 'completed'
+
+/**
+ * Is the $1,190 early-bird rate active for this city? (Pure — safe on client
+ * and server; the server charge in lib/stripe.ts uses this same function.)
+ *
+ *  - No city / unknown city / 'collecting' / 'completed' (awaiting next
+ *    round): TRUE — everyone who buys before a date launches pays $1,190.
+ *  - 'confirmed' with a future date: TRUE until EARLY_BIRD_DAYS_BEFORE days
+ *    out, then FALSE (the final window is charged at PRICE_REGULAR $1,400).
+ *  - 'confirmed' with a past date (admin hasn't flipped to completed yet):
+ *    TRUE — the purchase is a nomination for the next round.
+ */
+export function isEarlyBirdForLocation(locationSlug?: string | null): boolean {
+  const loc = locationSlug
+    ? Object.values(CONFIG.LOCATIONS).find((l) => l.slug === locationSlug)
+    : undefined
+  if (!loc || loc.status !== 'confirmed' || !loc.dateObj) return true
+  const dateMs = loc.dateObj.getTime()
+  if (dateMs < Date.now()) return true // past date = next-round nomination
+  const closeMs = dateMs - CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE * 24 * 60 * 60 * 1000
+  return Date.now() < closeMs
+}
+
+/** Complete Course price for a city under the early-bird model (AUD). */
+export function workshopPriceFor(locationSlug?: string | null): number {
+  return isEarlyBirdForLocation(locationSlug)
+    ? CONFIG.COURSE.PRICE_EARLY_BIRD
+    : CONFIG.COURSE.PRICE_REGULAR
+}
+
+/** Workshop-upgrade price for an online-only owner (difference to the
+ *  current Complete Course price for their city). */
+export function upgradePriceFor(locationSlug?: string | null): number {
+  return workshopPriceFor(locationSlug) - CONFIG.COURSE.PRICE_ONLINE
+}
 
 /** Calculate Afterpay/Klarna instalment amount (price / 4, rounded up to cents) */
 export function afterpayInstalment(price: number): string {
