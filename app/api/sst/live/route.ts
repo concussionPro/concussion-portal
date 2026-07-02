@@ -10,6 +10,22 @@
  */
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
+import { rateLimit } from '@/lib/rate-limit'
+
+/**
+ * Clinic code must exist in the SAME KV registry the preseason tool and
+ * /api/sst/session use (`clinic:{code}`); DEMO00 is the shared demo code.
+ * Without this check anyone could write ticks / read patient labels for an
+ * arbitrary code string (not public yet — still building).
+ */
+async function isRegisteredClinic(code: string): Promise<boolean> {
+  if (code === 'DEMO00') return true
+  try {
+    return (await kv.get(`clinic:${code}`)) != null
+  } catch {
+    return false // fail closed
+  }
+}
 
 const TICK_TTL = 15 // seconds — no tick within this and the patient is "gone"
 const SET_TTL = 90 // seconds — the per-clinic active index
@@ -45,6 +61,11 @@ export async function POST(request: Request) {
 
   const code = clean(body.clinicCode, 40).toUpperCase()
   if (code.length < 3) return NextResponse.json({ error: 'clinic code required' }, { status: 400 })
+  const rl = await rateLimit({ key: `sst-live:${code}`, limit: 120, windowSec: 60 })
+  if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  if (!(await isRegisteredClinic(code))) {
+    return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
+  }
   const patientLabel = clean(body.patientLabel, 60) || 'Unidentified'
 
   const bpmRaw = Number(body.bpm)
@@ -74,6 +95,9 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   const code = clean(new URL(request.url).searchParams.get('code'), 40).toUpperCase()
   if (code.length < 3) return NextResponse.json({ error: 'clinic code required' }, { status: 400 })
+  if (!(await isRegisteredClinic(code))) {
+    return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
+  }
 
   try {
     const members = (await kv.smembers(setKey(code))) as string[]

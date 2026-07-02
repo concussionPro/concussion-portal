@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { kv } from '@vercel/kv'
 import { sql } from '@/lib/db'
 
 /**
@@ -27,6 +28,20 @@ export async function GET(request: NextRequest) {
   if (!code || code.length < 3) {
     return NextResponse.json({ error: 'clinic code required' }, { status: 400 })
   }
+  // Only registered clinic codes (KV `clinic:{code}`, same registry as the
+  // write side) can read — an arbitrary code string must not enumerate
+  // patient labels/HR data. DEMO00 serves the demo dataset only.
+  if (code !== 'DEMO00') {
+    let registered = false
+    try {
+      registered = (await kv.get(`clinic:${code}`)) != null
+    } catch {
+      registered = false // fail closed
+    }
+    if (!registered) {
+      return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
+    }
+  }
   try {
     const { rows } = await sql<Row>`
       SELECT patient_label, session_type, hrt_bpm, band_low, band_high, condition, payload, created_at
@@ -54,16 +69,22 @@ export async function GET(request: NextRequest) {
         bandHigh: latest?.band_high ?? null,
         // serial MEASURED HRt = the recovery-trajectory instrument. Each point
         // carries provenance (source tier + verified) so the curve is
-        // self-documenting; `gated` is true because only clinic-code
-        // (clinician-overseen) sessions ever reach this table.
-        hrtTrajectory: p.thresholds.map((t) => ({
-          date: t.created_at,
-          hrt: t.hrt_bpm,
-          source: (t.payload?.hrSource as string | undefined) ?? undefined,
-          verified: t.payload?.hrVerified === true,
-          gated: true,
-          interpretation: (t.payload?.interpretation as string | undefined) ?? null,
-        })),
+        // self-documenting. `verified` is derived server-side: a session whose
+        // HR source is manual entry can NEVER plot as verified, regardless of
+        // what the client claimed (integrity-not-accuracy line). `gated`
+        // means clinic-code lane (registered code enforced above) — it is not
+        // yet a per-session clinician-authorisation record.
+        hrtTrajectory: p.thresholds.map((t) => {
+          const src = (t.payload?.hrSource as string | undefined) ?? undefined
+          return {
+            date: t.created_at,
+            hrt: t.hrt_bpm,
+            source: src,
+            verified: t.payload?.hrVerified === true && src !== 'manual' && src !== undefined,
+            gated: true,
+            interpretation: (t.payload?.interpretation as string | undefined) ?? null,
+          }
+        }),
         sessions: p.trainings.map((t) => ({ date: t.created_at, ...(t.payload ?? {}) })),
         sessionCount: p.trainings.length,
         // 'no-intolerance' on a re-test = recovered → clinician clearance review
