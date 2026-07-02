@@ -140,7 +140,7 @@ export default function SCATFormsLayout({
                     Sport Concussion Assessment Tool — Children
                   </p>
                   <div className="text-xs text-slate-500 space-y-1">
-                    <p>• For Children Aged 5–12 Years</p>
+                    <p>• For Children Aged 8–12 Years</p>
                     <p>• Acute phase (within 0-72 hours post-injury)</p>
                     <p>• 12 pages • Child + Parent symptom reports</p>
                   </div>
@@ -213,13 +213,13 @@ export default function SCATFormsLayout({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-lg font-bold text-slate-900">Confident using this form clinically?</h3>
-                    <span className="badge text-xs">14 CPD Hours</span>
+                    <span className="badge text-xs">8 CPD hrs online, up to 14 with the in-person day</span>
                   </div>
                   <p className="text-sm text-slate-700 mb-2 leading-relaxed">
-                    Beyond the form: VOMS interpretation, vestibular assessment, BESS scoring, and evidence-based RTP decision-making. AHPRA-aligned with hands-on practice.
+                    Beyond the form: VOMS interpretation, vestibular assessment, BESS scoring, and evidence-based RTP decision-making. CPD hours count toward your AHPRA registration requirements.
                   </p>
                   <div className="flex items-center gap-2 mb-3 text-xs text-slate-600">
-                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">Limited workshop spots</span>
+                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">Workshops run city-by-city as cohorts fill</span>
                     <span>•</span>
                     <span>Endorsed by Osteopathy Australia</span>
                   </div>

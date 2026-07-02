@@ -3,7 +3,6 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, CheckCircle, FileText, Brain, Activity, AlertCircle, Stethoscope, ClipboardList } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
@@ -14,6 +13,8 @@ export const metadata: Metadata = {
     title: 'How to Use the SCAT6 for Concussion Management: A Clinician\'s Guide',
     description: 'Complete step-by-step guide to SCAT6 administration. Covers symptom evaluation, cognitive screening, neurological examination, and balance assessment.',
     type: 'article',
+    publishedTime: '2025-08-01',
+    images: ['/og-image.jpg'],
     url: 'https://portal.concussion-education-australia.com/blog/how-to-use-scat6-clinicians-guide',
   },
   alternates: {
@@ -31,7 +32,7 @@ export default function HowToUseSCAT6Page() {
             title: 'How to Use the SCAT6 for Concussion Management: A Clinician\'s Guide',
             description: 'Complete clinician guide to SCAT6 concussion assessment. Step-by-step instructions for all sections including symptom evaluation, cognitive screening, neurological examination, and balance testing.',
             datePublished: '2025-08-01',
-            dateModified: '2025-08-01',
+            dateModified: '2026-07-02',
             author: 'Zac Lewis',
             url: 'https://portal.concussion-education-australia.com/blog/how-to-use-scat6-clinicians-guide',
           }))
@@ -54,7 +55,7 @@ export default function HowToUseSCAT6Page() {
             </p>
             <div className="flex items-center gap-3 text-blue-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- August 1, 2025 -- 14 min read</span>
+              <span>Zac Lewis — Osteopath (AHPRA-registered) — August 1, 2025 — 14 min read</span>
             </div>
           </div>
         </div>
@@ -100,6 +101,9 @@ export default function HowToUseSCAT6Page() {
               </ul>
               <p>
                 Critically, the SCAT6 is a <strong>screening tool, not a diagnostic instrument</strong>. It informs clinical decision-making but does not replace clinical judgment. A normal SCAT6 score does not rule out concussion, and an abnormal score does not confirm it. The tool must be interpreted within the context of the full clinical picture.
+              </p>
+              <p>
+                If you want the form itself on hand while you work through this guide, you can <Link href="/scat6-download" className="text-blue-600 hover:underline font-semibold">download the official SCAT6 PDF</Link>.
               </p>
             </div>
           </div>
@@ -368,7 +372,7 @@ export default function HowToUseSCAT6Page() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course (14 CPD) — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Full Course — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird
               </Link>
             </div>
           </div>

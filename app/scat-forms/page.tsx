@@ -79,7 +79,7 @@ export default function SCATFormsPage() {
             <div className="flex-1 min-w-0">
               <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight">Child SCAT6</h2>
               <p className="text-sm text-muted-foreground mb-2">
-                Sport Concussion Assessment Tool — for children aged 5–12 years
+                Sport Concussion Assessment Tool — for children aged 8–12 years
               </p>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> 15–20 min</span>

@@ -7,12 +7,14 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'SCAT6 vs SCOAT6: Which Tool to Use When? | Complete Guide 2026',
-  description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool to avoid below standard of care. Updated for Amsterdam 2023 Consensus and AHPRA guidelines.',
+  description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool in line with current consensus guidance (Amsterdam 2022). Updated for 2026.',
   keywords: 'SCAT6 vs SCOAT6, difference between SCAT6 SCOAT6, when to use SCAT6, when to use SCOAT6, concussion assessment tools',
   openGraph: {
     title: 'SCAT6 vs SCOAT6: Which Tool to Use When?',
-    description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool to avoid below standard of care.',
+    description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool in line with current consensus guidance (Amsterdam 2022).',
     type: 'article',
+    publishedTime: '2026-01-31',
+    images: ['/og-image.jpg'],
     url: 'https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference',
   },
   alternates: {
@@ -23,11 +25,11 @@ export const metadata: Metadata = {
 const faqs = [
   {
     question: 'What is the main difference between SCAT6 and SCOAT6?',
-    answer: 'SCAT6 is for sideline/acute assessment within 0-72 hours post-injury (10-15 minutes), designed for immediate remove-from-play decisions. SCOAT6 is for clinic office assessment from Day 3-30 post-injury (20-30 minutes), designed for structured follow-up visits with full VOMS testing and return-to-play planning. Using the wrong tool at the wrong time violates the Amsterdam 2023 Consensus and Australian sporting code requirements.',
+    answer: 'SCAT6 is for sideline/acute assessment within 0-72 hours post-injury (10-15 minutes), designed for immediate remove-from-play decisions. SCOAT6 is for clinic office assessment from Day 3-30 post-injury (20-30 minutes), designed for structured follow-up visits with full VOMS testing and return-to-play planning. Using the wrong tool at the wrong time is inconsistent with current consensus guidance (Amsterdam 2022) and Australian sporting code requirements.',
   },
   {
     question: 'Can I use SCAT6 for office follow-up visits?',
-    answer: 'No. SCAT6 should only be used within 0-72 hours post-injury for acute/sideline assessment. For office-based follow-up visits after Day 3, you must use SCOAT6. Using SCAT6 for late follow-up assessments is below standard of care under AHPRA guidelines and misses critical components like full VOMS testing and structured return-to-play protocols required for clinic settings.',
+    answer: 'No. SCAT6 should only be used within 0-72 hours post-injury for acute/sideline assessment. For office-based follow-up visits after Day 3, you must use SCOAT6. Using SCAT6 for late follow-up assessments is inconsistent with current consensus guidance (Amsterdam 2022) and misses critical components like full VOMS testing and structured return-to-play protocols required for clinic settings.',
   },
   {
     question: 'Which tool includes VOMS testing?',
@@ -51,7 +53,7 @@ export default function SCAT6vsSCOAT6Page() {
             title: 'SCAT6 vs SCOAT6: Which Tool to Use When?',
             description: 'Complete guide to understanding the critical differences between SCAT6 and SCOAT6 concussion assessment tools',
             datePublished: '2026-01-31',
-            dateModified: '2026-01-31',
+            dateModified: '2026-07-02',
             author: 'Zac Lewis',
             url: 'https://portal.concussion-education-australia.com/blog/scat6-vs-scoat6-difference',
           }))
@@ -63,14 +65,17 @@ export default function SCAT6vsSCOAT6Page() {
         <div className="bg-gradient-to-br from-red-600 to-orange-600 text-white pt-[120px] pb-16">
           <div className="max-w-4xl mx-auto px-4">
             <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              Critical for AHPRA Compliance
+              Amsterdam Consensus Essentials
             </div>
             <h1 className="text-5xl font-bold mb-4">
               SCAT6 vs SCOAT6: Which Tool to Use When?
             </h1>
             <p className="text-xl text-red-100 mb-6">
-              Using the wrong assessment tool at the wrong time risks falling below standard of care. Here's how to choose correctly.
+              Using the wrong assessment tool at the wrong time is inconsistent with current consensus guidance. Here's how to choose correctly.
             </p>
+            <div className="flex items-center gap-3 text-red-100 text-sm">
+              <span>Zac Lewis — Osteopath (AHPRA-registered) — January 31, 2026</span>
+            </div>
           </div>
         </div>
 
@@ -83,7 +88,7 @@ export default function SCAT6vsSCOAT6Page() {
                   Why This Matters
                 </h3>
                 <p className="text-slate-700">
-                  Using SCAT6 for Day 7+ office visits (when you should use SCOAT6) is <strong>below standard of care</strong> under AHPRA guidelines and the Amsterdam 2023 Consensus. It misses critical vestibular testing and structured return-to-play protocols required for clinic settings. This creates medicolegal risk and fails the patient.
+                  Using SCAT6 for Day 7+ office visits (when you should use SCOAT6) is <strong>inconsistent with current consensus guidance (Amsterdam 2022)</strong>. It misses critical vestibular testing and structured return-to-play protocols required for clinic settings. This creates medicolegal risk and fails the patient.
                 </p>
               </div>
             </div>
@@ -201,6 +206,9 @@ export default function SCAT6vsSCOAT6Page() {
               <p className="text-red-600 font-semibold">
                 Never use SCAT6 for office-based follow-up visits. This misses critical vestibular testing and return-to-play protocols required by the Amsterdam 2023 Consensus.
               </p>
+              <p>
+                Working from the paper forms? You can <Link href="/scat6-download" className="text-blue-600 hover:underline font-semibold">download the official SCAT6 PDF</Link> to keep on hand at the sideline.
+              </p>
             </div>
           </div>
 
@@ -216,6 +224,9 @@ export default function SCAT6vsSCOAT6Page() {
                 </p>
               </div>
             ))}
+            <p className="text-slate-600">
+              Have more questions about SCAT assessment? See our full <Link href="/faq/scat-assessment" className="text-blue-600 hover:underline font-semibold">SCAT assessment FAQ</Link>.
+            </p>
           </div>
 
           <RelatedPosts slugs={['scat6-guide', 'concussion-update-2026', 'scat6-pdf']} />

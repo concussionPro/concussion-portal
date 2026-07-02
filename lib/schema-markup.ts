@@ -85,7 +85,6 @@ export const organizationSchema = {
   sameAs: [
     MARKETING_URL,
     SITE_URL,
-    'https://osteopathy.org.au',
   ],
   knowsAbout: [
     'Sport-Related Concussion',
@@ -106,7 +105,7 @@ export const organizationSchema = {
     'AI in Clinical Practice',
     'Healthcare AI Compliance',
   ],
-  memberOf: { '@type': 'Organization', name: 'Osteopathy Australia' },
+  memberOf: { '@type': 'Organization', name: 'Osteopathy Australia', url: 'https://osteopathy.org.au' },
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer support',
@@ -260,12 +259,14 @@ export function createCourseSchema(params: {
     hasCourseInstance: instances.map(buildCourseInstance),
     educationalCredentialAwarded: {
       '@type': 'EducationalOccupationalCredential',
-      name: `${params.cpdHours} CPD Hours - AHPRA Aligned`,
+      // AHPRA does not accredit CPD — never claim recognizedBy AHPRA. These
+      // hours count toward practitioners' AHPRA registration CPD requirements.
+      name: `${params.cpdHours} CPD Hours (count toward AHPRA registration CPD requirements)`,
       credentialCategory: 'Continuing Professional Development',
       recognizedBy: {
         '@type': 'Organization',
-        name: 'Australian Health Practitioner Regulation Agency',
-        alternateName: 'AHPRA',
+        name: 'Osteopathy Australia',
+        url: 'https://osteopathy.org.au',
       },
     },
     about: { '@type': 'MedicalCondition', name: 'Sport-Related Concussion' },

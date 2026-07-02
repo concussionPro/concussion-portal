@@ -99,7 +99,7 @@ export default function WhenNotToUseAiPage() {
 
           <section className="bg-gradient-to-br from-red-700 to-rose-700 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">The full safe-use framework</h2>
-            <p className="text-rose-50 leading-relaxed mb-5">The AI in Clinical Practice short course (3 CPD hours, A$99 launch week) walks through the full framework — when to use AI, when to switch it off, and how to document either way. Free 1-page checklist available now.</p>
+            <p className="text-rose-50 leading-relaxed mb-5">The AI in Clinical Practice short course (3 CPD hours, A$99) walks through the full framework — when to use AI, when to switch it off, and how to document either way. Free 1-page checklist available now.</p>
             <Link href="/ai-safety-checklist" className="inline-flex items-center gap-2 bg-white text-red-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-rose-50 transition-colors">Get the AI Safety Checklist (free)</Link>
           </section>
 

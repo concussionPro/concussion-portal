@@ -7,13 +7,15 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Free SCAT6 PDF Download - Fillable Form with Auto-Scoring | Australia 2026',
-  description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for Amsterdam 2023 Consensus protocols. Used by Australian healthcare professionals. No registration required.',
+  description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for Amsterdam 2023 Consensus protocols. Used by Australian healthcare professionals. Instant email delivery.',
   keywords: 'SCAT6 PDF download, free SCAT6 form, fillable SCAT6, SCAT6 PDF Australia, SCAT6 auto-scoring, download SCAT6 2026',
   openGraph: {
     title: 'Free SCAT6 PDF Download — Fillable Form with Auto-Scoring',
-    description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for Amsterdam 2023 Consensus. No registration required.',
+    description: 'Download free fillable SCAT6 PDF with automatic scoring. Updated for Amsterdam 2023 Consensus. Instant email delivery.',
     type: 'article',
     url: 'https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download',
+    images: ['/og-image.jpg'],
+    publishedTime: '2026-01-31',
   },
   alternates: {
     canonical: 'https://portal.concussion-education-australia.com/blog/free-scat6-pdf-download',
@@ -45,15 +47,18 @@ export default function FreeSCAT6PDFDownloadPage() {
               Free SCAT6 PDF Download
             </h1>
             <p className="text-xl text-blue-100 mb-4">
-              Digitally fillable, auto-scoring SCAT6 forms. Updated for Amsterdam 2023 Consensus protocols.
+              Digitally fillable, auto-scoring SCAT6 forms. Updated for Amsterdam 2023 Consensus protocols. Instant email delivery.
+            </p>
+            <p className="text-sm text-blue-100 mb-6">
+              Zac Lewis — Osteopath (AHPRA-registered) · January 31, 2026
             </p>
             <div className="flex gap-4">
               <Link
-                href="/scat-forms/scat6"
+                href="/scat6-download"
                 className="bg-white text-blue-700 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors inline-flex items-center gap-2"
               >
                 <Download className="w-5 h-5" />
-                Download Free SCAT6 →
+                Get the Free SCAT6 →
               </Link>
               <Link
                 href="/scat-mastery"
@@ -102,14 +107,14 @@ export default function FreeSCAT6PDFDownloadPage() {
             <h3 className="text-2xl font-bold text-blue-900 mb-4">Quick Access</h3>
             <div className="grid md:grid-cols-2 gap-4">
               <Link
-                href="/scat-forms/scat6"
+                href="/scat6-download"
                 className="bg-white rounded-lg p-4 border-2 border-blue-200 hover:border-blue-400 transition-colors"
               >
                 <div className="flex items-center gap-3 mb-2">
                   <FileText className="w-6 h-6 text-blue-600" />
                   <div className="font-bold text-lg">SCAT6 Form</div>
                 </div>
-                <p className="text-sm text-slate-600">For sideline/acute assessment (0-72 hours)</p>
+                <p className="text-sm text-slate-600">For sideline/acute assessment (0-72 hours) — delivered straight to your inbox</p>
               </Link>
               <Link
                 href="/scat-forms/scoat6"
@@ -138,7 +143,7 @@ export default function FreeSCAT6PDFDownloadPage() {
               <div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">When NOT to Use SCAT6</h3>
                 <p className="text-slate-700">
-                  Do not use SCAT6 for office-based follow-up visits after Day 3. For structured clinical assessment from Day 3-30 post-injury, use <strong>SCOAT6 (Sport Concussion Office Assessment Tool)</strong> instead. Using the wrong tool at the wrong time violates the Amsterdam 2023 Consensus and constitutes below standard of care under AHPRA guidelines.
+                  Do not use SCAT6 for office-based follow-up visits after Day 3. For structured clinical assessment from Day 3-30 post-injury, use <strong>SCOAT6 (Sport Concussion Office Assessment Tool)</strong> instead. Using the wrong tool at the wrong time is inconsistent with current consensus guidance (Amsterdam 2022) and may fall short of the standard of practice expected of clinicians.
                 </p>
               </div>
               <div>
@@ -152,6 +157,13 @@ export default function FreeSCAT6PDFDownloadPage() {
                   <li><strong>mBESS (Modified Balance Error Scoring System):</strong> Balance testing</li>
                   <li><strong>Delayed Recall:</strong> Memory assessment after minimum 5 minutes</li>
                 </ul>
+              </div>
+              <div>
+                <p className="text-slate-700">
+                  Still have questions about administering the SCAT6? See our{' '}
+                  <Link href="/faq/scat-assessment" className="text-blue-600 hover:underline font-medium">SCAT assessment FAQ</Link>, or browse all of our{' '}
+                  <Link href="/resources" className="text-blue-600 hover:underline font-medium">free clinical resources</Link>.
+                </p>
               </div>
             </div>
           </div>

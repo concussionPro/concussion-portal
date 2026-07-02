@@ -107,6 +107,13 @@ export default function ResourcesPage() {
               )
             })}
           </div>
+          <p className="text-sm text-slate-600 mt-4 text-center">
+            Also available: the official SCAT6 PDF, sent straight to your inbox —{' '}
+            <Link href="/scat6-download" className="text-[#6b9da8] font-semibold hover:underline">
+              get the free SCAT6 download here
+            </Link>
+            .
+          </p>
         </div>
 
         {/* Email gate — AFTER resources are visible */}
@@ -174,7 +181,7 @@ export default function ResourcesPage() {
 
             <div className="text-center pt-6 border-t border-teal-200">
               <p className="text-slate-700 mb-4">
-                Want structured training with 14 AHPRA CPD hours?
+                Want structured training with 8 CPD hours (up to 14 with the in-person day)?
               </p>
               <Link
                 href="/scat-mastery"

@@ -24,11 +24,11 @@ const faqs = [
   },
   {
     question: 'How does SCAT-6 differ from SCAT-5?',
-    answer: 'SCAT-6 introduced major updates from SCAT-5 in 2023. Key changes include: 10-word immediate memory lists (upgraded from 5 words for 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, updated symptom evaluation with 22 items, and stricter cervical spine assessment protocols. SCAT-5 is now outdated and using it may constitute below standard of care in Australia under AHPRA guidelines and the Amsterdam 2023 Consensus.',
+    answer: 'SCAT-6 introduced major updates from SCAT-5 in 2023. Key changes include: 10-word immediate memory lists (upgraded from 5 words for 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, updated symptom evaluation with 22 items, and stricter cervical spine assessment protocols. SCAT-5 is now outdated, and continuing to use it may fall short of the standard of practice expected under current consensus guidance (Amsterdam 2023 Consensus) and Australian professional expectations.',
   },
   {
     question: "What's the difference between SCAT-6 and SCOAT-6?",
-    answer: 'SCAT-6 is for acute/sideline assessment (0-72 hours post-injury, ideally under 30 minutes) taking 10-15 minutes, designed for immediate remove-from-play decisions on the field or in acute settings. SCOAT-6 is for clinical office assessment (Day 3-30 post-injury) taking 20-30 minutes, designed for structured follow-up visits with full VOMS testing, serial symptom tracking across multiple consultations, and comprehensive return-to-learn/play planning. Using the wrong tool at the wrong time violates the Amsterdam Consensus and Australian sporting code requirements.',
+    answer: 'SCAT-6 is for acute/sideline assessment (0-72 hours post-injury, ideally under 30 minutes) taking 10-15 minutes, designed for immediate remove-from-play decisions on the field or in acute settings. SCOAT-6 is for clinical office assessment (Day 3-30 post-injury) taking 20-30 minutes, designed for structured follow-up visits with full VOMS testing, serial symptom tracking across multiple consultations, and comprehensive return-to-learn/play planning. Using the wrong tool at the wrong time is inconsistent with the Amsterdam Consensus and Australian sporting code requirements.',
   },
   {
     question: 'Can I use SCAT-6 on children under 13?',
@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     question: 'Is SCAT-6 mandatory under Australian sports law?',
-    answer: 'While not explicitly mandated by federal law, SCAT-6 is the required standard under multiple Australian frameworks. The Concussion in Sport Australia position statement, all major sporting codes (AFL, NRL, Rugby Australia, Cricket Australia, FFA), and AHPRA professional standards recognize SCAT-6 as the standard of care. The Amsterdam 2023 Consensus adopted by Australian medical bodies explicitly requires appropriate tool use at appropriate times. Failure to use SCAT-6 (or Child SCAT-6) when clinically indicated, or using outdated tools like SCAT-5, may constitute negligence in medicolegal proceedings. Documentation using SCAT-6 is essential for WorkCover, insurance claims, and return-to-play clearances.',
+    answer: 'While not explicitly mandated by federal law, SCAT-6 is the required standard under multiple Australian frameworks. The Concussion in Sport Australia position statement and all major sporting codes (AFL, NRL, Rugby Australia, Cricket Australia, FFA) recognize SCAT-6 as the expected standard of care. The Amsterdam 2023 Consensus adopted by Australian medical bodies explicitly requires appropriate tool use at appropriate times. Failure to use SCAT-6 (or Child SCAT-6) when clinically indicated, or using outdated tools like SCAT-5, may fall short of the standard of practice expected under current consensus guidance and professional expectations. Documentation using SCAT-6 is essential for WorkCover, insurance claims, and return-to-play clearances.',
   },
 ]
 
@@ -50,7 +50,7 @@ export default function SCATAssessmentFAQ() {
             title: 'SCAT-6 Assessment Frequently Asked Questions',
             description: 'Complete guide to SCAT-6 concussion assessment tool for Australian healthcare professionals',
             url: 'https://portal.concussion-education-australia.com/faq/scat-assessment',
-            lastReviewed: '2026-01-31',
+            lastReviewed: '2026-07-02',
             about: 'Sport-Related Concussion Assessment'
           }))
         }}
@@ -83,7 +83,7 @@ export default function SCATAssessmentFAQ() {
               Essential guide for Australian healthcare professionals
             </p>
             <div className="mt-6 text-sm text-white/60">
-              <strong>Last Updated:</strong> January 31, 2026 | <strong>Next Review:</strong> April 30, 2026
+              <strong>Last Updated:</strong> July 2, 2026 | <strong>Next Review:</strong> October 31, 2026
             </div>
           </div>
         </div>

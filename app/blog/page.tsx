@@ -164,14 +164,6 @@ const blogPosts: Array<{
     category: 'practice',
   },
   {
-    title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
-    description: 'Two years since the Amsterdam Consensus, the evidence is clear: passive rest beyond 48 hours does more harm than good. Active recovery, the SCAT6/SCOAT6 two-tool system, and vestibular-ocular screening define the new standard.',
-    date: 'January 5, 2026',
-    href: '/blog/concussion-update-2026-wait-until-symptom-free-obsolete',
-    readTime: '10 min',
-    category: 'practice',
-  },
-  {
     title: 'Free SCAT6 PDF Download - Fillable Form with Auto-Scoring',
     description: 'Download free digitally fillable SCAT6 PDF with automatic scoring. Updated for Amsterdam 2023 Consensus protocols. Used by Australian healthcare professionals.',
     date: 'January 31, 2026',
@@ -181,11 +173,19 @@ const blogPosts: Array<{
   },
   {
     title: 'SCAT6 vs SCOAT6: Which Tool to Use When?',
-    description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool to avoid below standard of care under AHPRA guidelines and the Amsterdam 2023 Consensus.',
+    description: 'Understand the critical differences between SCAT6 and SCOAT6. Learn when to use each tool so your assessments stay consistent with current consensus guidance (Amsterdam 2022).',
     date: 'January 31, 2026',
     href: '/blog/scat6-vs-scoat6-difference',
     readTime: '7 min',
     category: 'clinical-tools',
+  },
+  {
+    title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
+    description: 'Two years since the Amsterdam Consensus, the evidence is clear: passive rest beyond 48 hours does more harm than good. Active recovery, the SCAT6/SCOAT6 two-tool system, and vestibular-ocular screening define the new standard.',
+    date: 'January 5, 2026',
+    href: '/blog/concussion-update-2026-wait-until-symptom-free-obsolete',
+    readTime: '10 min',
+    category: 'practice',
   },
   {
     title: 'Beyond SCAT6: How Vestibular/Ocular Screening Improves Concussion Care',
@@ -213,12 +213,49 @@ const blogPosts: Array<{
   },
 ]
 
+const BASE_URL = 'https://portal.concussion-education-australia.com'
+
 export default function BlogIndexPage() {
   const featured = blogPosts[0]
   const rest = blogPosts.slice(1)
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Blog',
+            name: 'Concussion Education Australia Blog',
+            description: 'Evidence-based concussion management articles for healthcare professionals. Covering SCAT6, SCOAT6, VOMS, return-to-play protocols, and the latest Amsterdam Consensus updates.',
+            url: `${BASE_URL}/blog`,
+            inLanguage: 'en-AU',
+            publisher: {
+              '@type': 'Organization',
+              name: 'Concussion Education Australia',
+              url: BASE_URL,
+            },
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            name: 'Concussion Education Australia Blog Posts',
+            numberOfItems: blogPosts.length,
+            itemListElement: blogPosts.map((post, index) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              name: post.title,
+              url: `${BASE_URL}${post.href}`,
+            })),
+          }),
+        }}
+      />
       <SiteNav />
       <div className="min-h-screen bg-[var(--background)] relative">
 
@@ -330,7 +367,7 @@ export default function BlogIndexPage() {
                     Ready to build clinical confidence?
                   </h2>
                   <p className="text-sm text-[var(--muted-foreground)] leading-relaxed">
-                    Our courses cover everything in these articles and more — with interactive assessments and AHPRA-aligned CPD certification.
+                    Our courses cover everything in these articles and more — with interactive assessments and CPD hours that count toward your AHPRA registration requirements.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2.5 shrink-0">
@@ -343,9 +380,9 @@ export default function BlogIndexPage() {
                   </Link>
                   <Link
                     href="/pricing"
-                    className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
+                    className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 text-center"
                   >
-                    Full Course — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                    Full Course — 8 CPD hrs online, up to 14 with the in-person day · from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
                   </Link>
                 </div>
               </div>

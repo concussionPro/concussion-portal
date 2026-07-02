@@ -125,7 +125,7 @@ export default function AhpraAiGuidelinesPage() {
 
           <section className="bg-gradient-to-br from-teal-700 to-cyan-700 text-white rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold mb-3">The full framework in one course</h2>
-            <p className="text-cyan-50 leading-relaxed mb-5">Our short course <strong>AI in Clinical Practice</strong> walks through each of the four AHPRA obligations with worked examples for physiotherapy, osteopathy, GP and naturopathy. Plus the Tier A / B / C tool framework (Heidi vs Lyrebird vs ChatGPT vs Claude), NDIS audit-safe documentation, and the Australian Privacy Principles for clinicians. 3 CPD hours, fully online, certificate on completion. Launching <strong>17 June 2026</strong>.</p>
+            <p className="text-cyan-50 leading-relaxed mb-5">Our short course <strong>AI in Clinical Practice</strong> walks through each of the four AHPRA obligations with worked examples for physiotherapy, osteopathy, GP and naturopathy. Plus the Tier A / B / C tool framework (Heidi vs Lyrebird vs ChatGPT vs Claude), NDIS audit-safe documentation, and the Australian Privacy Principles for clinicians. 3 CPD hours, fully online, certificate on completion. Now <Link href="/courses/ai-in-clinical-practice" className="underline font-semibold text-white hover:text-cyan-100">available for A$99</Link>.</p>
             <Link href="/ai-safety-checklist" className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-cyan-50 transition-colors">Get the free AI Safety Checklist first</Link>
           </section>
 

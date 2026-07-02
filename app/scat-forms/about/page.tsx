@@ -16,30 +16,30 @@ export const metadata: Metadata = {
 const faqs = [
   {
     question: 'Where can I get free SCAT6 and SCOAT6 forms?',
-    answer: 'Free digitally fillable SCAT6 and SCOAT6 forms are available at portal.concussion-education-australia.com/scat-forms. These auto-scoring PDF forms are updated for 2026 protocols, AHPRA-aligned, and used by Australian healthcare professionals. The official paper versions are available from bjsm.bmj.com, but the digital versions on our platform auto-calculate scores, save time, and export clean PDFs for medical records. No cost, no credit card required.',
+    answer: 'Free web-based SCAT6 and SCOAT6 forms are available at portal.concussion-education-australia.com/scat-forms. These auto-scoring web forms are updated for 2026 protocols, AHPRA-aligned, and used by Australian healthcare professionals. The official paper versions are available from bjsm.bmj.com, but the web-based versions on our platform auto-calculate scores, save time, and export clean PDFs for medical records. No cost, no registration, no credit card required.',
   },
   {
     question: 'What is the difference between SCAT6 and SCOAT6 forms?',
-    answer: 'SCAT6 is for acute/sideline assessment within 0-72 hours post-injury, taking 10-15 minutes, designed for immediate remove-from-play decisions on the sports field. SCOAT6 is for clinical office assessment from Day 3-30 post-injury, taking 20-30 minutes, designed for structured follow-up visits with full VOMS testing and return-to-play planning. Using the wrong form at the wrong time violates the Amsterdam 2023 Consensus and Australian sporting code requirements. Both forms are available free at portal.concussion-education-australia.com.',
+    answer: 'SCAT6 is for acute/sideline assessment within 0-72 hours post-injury, taking 10-15 minutes, designed for immediate remove-from-play decisions on the sports field. SCOAT6 is for clinical office assessment from Day 3-30 post-injury, taking 20-30 minutes, designed for structured follow-up visits with full VOMS testing and return-to-play planning. Using the wrong form at the wrong time is inconsistent with the Amsterdam 2023 Consensus and Australian sporting code requirements. Both forms are available free at portal.concussion-education-australia.com.',
   },
   {
     question: 'Are digital SCAT6 forms as valid as paper forms?',
-    answer: 'Yes. Digital SCAT6 and SCOAT6 forms are equally valid as paper versions when they contain identical questions, scoring, and protocols from the 2023 Amsterdam Consensus Statement. The advantage of digital forms is auto-scoring accuracy, time savings, and clean PDF exports for medical documentation. The digital versions at portal.concussion-education-australia.com are mapped field-by-field to official SCAT6/SCOAT6 specifications from the British Journal of Sports Medicine. Australian healthcare professionals use these forms for AHPRA-aligned concussion assessments.',
+    answer: 'Yes. Digital SCAT6 and SCOAT6 forms are equally valid as paper versions when they contain identical questions, scoring, and protocols from the 2023 Amsterdam Consensus Statement. The advantage of the web-based forms is auto-scoring accuracy, time savings, and clean PDF exports for medical documentation. The web forms at portal.concussion-education-australia.com are mapped field-by-field to official SCAT6/SCOAT6 specifications from the British Journal of Sports Medicine. Australian healthcare professionals use these forms for AHPRA-aligned concussion assessments.',
   },
   {
     question: 'How do I learn to use SCAT6 and SCOAT6 properly?',
-    answer: 'Free SCAT6/SCOAT6 training is available at portal.concussion-education-australia.com/scat-mastery covering: step-by-step administration of every section, red flag recognition, when to use which tool, medicolegal documentation requirements, and common mistakes that constitute below standard of care. The course provides a clinical toolkit with templates and a certificate of completion. Proper SCAT6 administration requires structured training, and using tools incorrectly can result in medicolegal liability.',
+    answer: 'Free SCAT6/SCOAT6 training is available at portal.concussion-education-australia.com/scat-mastery covering: step-by-step administration of every section, red flag recognition, when to use which tool, medicolegal documentation requirements, and common mistakes that fall short of expected practice standards. The course provides a clinical toolkit with templates and a certificate of completion. Proper SCAT6 administration requires structured training, and using the tools incorrectly may fall short of the standard of practice expected under current consensus guidance and professional expectations.',
   },
   {
     question: 'What are the updated 2026 SCAT6 protocols I need to know?',
-    answer: 'SCAT6 replaced SCAT-5 in 2023 with critical updates: 10-word immediate memory lists (was 5 words, now 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, and stricter cervical spine assessment protocols. Using outdated SCAT-5 may constitute below standard of care under AHPRA guidelines and the Amsterdam 2023 Consensus adopted by all major Australian sporting codes. Free updated SCAT6 forms and training available at portal.concussion-education-australia.com.',
+    answer: 'SCAT6 replaced SCAT-5 in 2023 with critical updates: 10-word immediate memory lists (was 5 words, now 80-85% sensitivity), expanded red flag criteria including focal neurological deficits, mandatory delayed recall after minimum 5 minutes, removal of dual-task tandem gait, and stricter cervical spine assessment protocols. Using the outdated SCAT-5 may fall short of the standard of practice expected under current consensus guidance (Amsterdam 2023 Consensus, adopted by all major Australian sporting codes) and professional expectations. Free updated SCAT6 forms and training available at portal.concussion-education-australia.com.',
   },
 ]
 
 const howToSteps = [
   {
     name: 'Access Free SCAT6/SCOAT6 Forms',
-    text: 'Visit portal.concussion-education-australia.com/scat-forms. Register with your email (free, no credit card). Access digitally fillable SCAT6 and SCOAT6 PDFs with auto-scoring.',
+    text: 'Visit portal.concussion-education-australia.com/scat-forms. No registration required — open the free web-based SCAT6 and SCOAT6 fillable forms with auto-scoring directly in your browser.',
   },
   {
     name: 'Complete Training (Optional but Recommended)',
@@ -47,7 +47,7 @@ const howToSteps = [
   },
   {
     name: 'Use Forms in Clinical Practice',
-    text: 'SCAT6 for sideline/acute assessment (0-72 hours post-injury). SCOAT6 for clinic follow-up (Day 3-30). Forms auto-calculate scores. Export clean PDFs for patient records.',
+    text: 'SCAT6 for sideline/acute assessment (0-72 hours post-injury). SCOAT6 for clinic follow-up (Day 3-30). The web forms auto-calculate scores. Export clean PDFs for patient records.',
   },
   {
     name: 'Store Documentation Properly',
@@ -63,9 +63,9 @@ export default function SCATFormsAboutPage() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(createMedicalWebPageSchema({
             title: 'Free SCAT6 & SCOAT6 Forms - Digital Auto-Scoring Assessment Tools',
-            description: 'Free digitally fillable SCAT6 and SCOAT6 forms for Australian healthcare professionals. Auto-scoring, 2026 updated, AHPRA-aligned.',
+            description: 'Free web-based fillable SCAT6 and SCOAT6 forms with PDF export for Australian healthcare professionals. Auto-scoring, 2026 updated, AHPRA-aligned.',
             url: 'https://portal.concussion-education-australia.com/scat-forms/about',
-            lastReviewed: '2026-01-31',
+            lastReviewed: '2026-07-02',
             about: 'SCAT6 and SCOAT6 Concussion Assessment Forms'
           }))
         }}
@@ -102,8 +102,8 @@ export default function SCATFormsAboutPage() {
               Digital auto-scoring assessment tools for Australian healthcare professionals
             </p>
             <div className="flex items-center gap-6 text-sm text-blue-200 mb-6">
-              <span><strong>Last Updated:</strong> January 31, 2026</span>
-              <span><strong>Next Review:</strong> April 30, 2026</span>
+              <span><strong>Last Updated:</strong> July 2, 2026</span>
+              <span><strong>Next Review:</strong> October 31, 2026</span>
             </div>
             <div className="flex gap-4">
               <Link
@@ -152,10 +152,13 @@ export default function SCATFormsAboutPage() {
                 <strong>SCAT6 (Sport Concussion Assessment Tool, 6th Edition)</strong> and <strong>SCOAT6 (Sport Concussion Office Assessment Tool, 6th Edition)</strong> are the gold-standard assessment tools for sport-related concussion, published in the British Journal of Sports Medicine following the 2023 Amsterdam Consensus Conference.
               </p>
               <p>
-                These forms are used by healthcare professionals worldwide to assess, document, and manage concussion in athletes. In Australia, SCAT6 and SCOAT6 are recognized by AHPRA, all major sporting codes (AFL, NRL, Rugby Australia, Cricket Australia, FFA), and Concussion in Sport Australia as the standard of care.
+                These forms are used by healthcare professionals worldwide to assess, document, and manage concussion in athletes. In Australia, SCAT6 and SCOAT6 are recognized by all major sporting codes (AFL, NRL, Rugby Australia, Cricket Australia, FFA) and Concussion in Sport Australia as the expected standard of care.
               </p>
               <p>
-                <strong>Why digital versions matter:</strong> Paper SCAT forms require manual scoring, are prone to calculation errors, and take longer to complete. Our digitally fillable versions auto-calculate all scores, save time, and export clean PDFs for medical documentation—while maintaining 100% accuracy to official specifications.
+                <strong>Why digital versions matter:</strong> Paper SCAT forms require manual scoring, are prone to calculation errors, and take longer to complete. Our free web-based fillable forms auto-calculate all scores, save time, and export clean PDFs for medical documentation—no registration required, while maintaining 100% accuracy to official specifications.
+              </p>
+              <p>
+                Prefer the official paper version? You can also <Link href="/scat6-download" className="text-blue-600 hover:underline">get the official SCAT6 PDF emailed to you</Link>. For common questions on when and how to use each tool, see our <Link href="/faq/scat-assessment" className="text-blue-600 hover:underline">SCAT-6 assessment FAQ</Link>, and browse our <Link href="/resources" className="text-blue-600 hover:underline">free clinical resources</Link> for cheat sheets, patient handouts, and return-to-play ladders.
               </p>
             </div>
           </div>

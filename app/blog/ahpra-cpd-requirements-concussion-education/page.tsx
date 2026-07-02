@@ -15,6 +15,8 @@ export const metadata: Metadata = {
     description: 'Annual CPD requirements for physios, osteos, chiros, and EPs — and how concussion education counts toward your obligations.',
     type: 'article',
     url: 'https://portal.concussion-education-australia.com/blog/ahpra-cpd-requirements-concussion-education',
+    images: ['/og-image.jpg'],
+    publishedTime: '2026-03-18',
   },
   alternates: {
     canonical: 'https://portal.concussion-education-australia.com/blog/ahpra-cpd-requirements-concussion-education',
@@ -54,7 +56,7 @@ export default function AHPRACPDPage() {
             </p>
             <div className="flex items-center gap-3 text-violet-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- March 18, 2026 -- 8 min read</span>
+              <span>Zac Lewis &mdash; Osteopath (AHPRA-registered) &mdash; March 18, 2026 &mdash; 8 min read</span>
             </div>
           </div>
         </div>
@@ -262,7 +264,7 @@ export default function AHPRACPDPage() {
                   <div>
                     <strong className="text-slate-900">Efficient CPD coverage:</strong>{' '}
                     <span className="text-slate-600">
-                      A structured concussion course can cover 8&ndash;14 hours of your annual requirement in a single, cohesive learning activity &mdash; rather than cobbling together unrelated webinars.
+                      A structured concussion course can cover 8 hours of your annual requirement online &mdash; or up to 14 hours with an added in-person workshop day &mdash; in a single, cohesive learning activity, rather than cobbling together unrelated webinars.
                     </span>
                   </div>
                 </div>
@@ -303,6 +305,9 @@ export default function AHPRACPDPage() {
               <p>
                 For exercise physiologists logging through ESSA, structured online courses count under the Further Education category. The same completion certificate serves as evidence.
               </p>
+              <p>
+                Looking for practical tools to pair with your CPD? Browse our <Link href="/resources" className="text-blue-600 hover:underline font-medium">free clinical resources</Link> &mdash; including the <Link href="/scat6-download" className="text-blue-600 hover:underline font-medium">fillable SCAT6 PDF</Link> and the answers to common questions in our <Link href="/faq/scat-assessment" className="text-blue-600 hover:underline font-medium">SCAT assessment FAQ</Link>.
+              </p>
             </div>
           </div>
 
@@ -339,15 +344,15 @@ export default function AHPRACPDPage() {
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">
             <h2 className="text-2xl font-bold mb-3">Make Your CPD Count</h2>
             <p className="text-white/70 mb-6 leading-relaxed">
-              ConcussionPro delivers structured, AHPRA-aligned concussion education with certificates that are ready for your CPD portfolio. Endorsed by Osteopathy Australia.
+              Concussion Education Australia delivers structured concussion education with CPD hours that count toward your AHPRA registration requirements &mdash; and certificates that are ready for your CPD portfolio. Endorsed by Osteopathy Australia.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-900 rounded-xl text-sm font-bold hover:bg-white/90 transition-all">
                 Free SCAT6 Training
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD) &mdash; ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all text-center">
+                Full Course &mdash; 8 CPD hrs online, up to 14 with the in-person day &middot; from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
               </Link>
             </div>
           </div>

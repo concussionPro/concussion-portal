@@ -3,7 +3,6 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, Brain, AlertTriangle, CheckCircle, XCircle, ShieldAlert, Activity, Search, Users } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
@@ -14,6 +13,8 @@ export const metadata: Metadata = {
     title: '7 Concussion Myths Clinicians Should Stop Believing in 2026',
     description: 'Debunking the most persistent concussion myths that still influence clinical practice. From loss of consciousness misconceptions to premature clearance assumptions, learn what the evidence actually says.',
     type: 'article',
+    publishedTime: '2026-03-09',
+    images: ['/og-image.jpg'],
     url: 'https://portal.concussion-education-australia.com/blog/concussion-myths-clinicians-should-stop-believing',
   },
   alternates: {
@@ -31,7 +32,7 @@ export default function ConcussionMythsPage() {
             title: '7 Concussion Myths Clinicians Should Stop Believing in 2026',
             description: 'Debunking the most persistent concussion myths that still influence clinical practice. From loss of consciousness misconceptions to premature clearance assumptions, learn what the evidence actually says.',
             datePublished: '2026-03-09',
-            dateModified: '2026-03-09',
+            dateModified: '2026-07-02',
             author: 'Zac Lewis',
             url: 'https://portal.concussion-education-australia.com/blog/concussion-myths-clinicians-should-stop-believing',
           }))
@@ -54,7 +55,7 @@ export default function ConcussionMythsPage() {
             </p>
             <div className="flex items-center gap-3 text-rose-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- March 9, 2026 -- 9 min read</span>
+              <span>Zac Lewis — Osteopath (AHPRA-registered) — March 9, 2026 — 9 min read</span>
             </div>
           </div>
         </div>
@@ -231,7 +232,7 @@ export default function ConcussionMythsPage() {
                 <strong>Why it persists:</strong> The concept of &ldquo;neuroplasticity&rdquo; has been broadly (and often incorrectly) applied. Because developing brains demonstrate greater capacity for neural reorganisation in certain contexts, there is an assumption that this translates to faster concussion recovery. This belief is also reinforced by the observation that children are often physically active soon after injury -- which parents and clinicians may misinterpret as recovery.
               </p>
               <p>
-                <strong>What the evidence says:</strong> The evidence shows the opposite. Children and adolescents typically take <strong>longer to recover</strong> from concussion than adults (Davis et al., 2017). The developing brain is more vulnerable to the neurometabolic effects of concussion, and the ongoing processes of myelination and synaptic pruning make it more susceptible to disruption. Paediatric concussion recovery times are typically 2-4 weeks, compared to 10-14 days for adults. The Amsterdam Consensus recommends more conservative return-to-play timelines for children, with a minimum of 14 days before full return to contact sport.
+                <strong>What the evidence says:</strong> The evidence shows the opposite. Children and adolescents typically take <strong>longer to recover</strong> from concussion than adults (Davis et al., 2017). The developing brain is more vulnerable to the neurometabolic effects of concussion, and the ongoing processes of myelination and synaptic pruning make it more susceptible to disruption. Paediatric concussion recovery times are typically 2-4 weeks, compared to 10-14 days for adults. Under the Australian Institute of Sport and UK guidance, children face a minimum 14-day stand-down before full return to contact sport; the Amsterdam consensus recommends a more conservative, graded approach for children but does not prescribe a fixed stand-down period.
               </p>
 
               <div className="bg-slate-100 border border-slate-300 rounded-xl p-6 my-4">
@@ -446,7 +447,7 @@ export default function ConcussionMythsPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course (14 CPD) — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Full Course — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird
               </Link>
             </div>
           </div>

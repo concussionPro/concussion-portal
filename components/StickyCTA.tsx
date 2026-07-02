@@ -29,6 +29,8 @@ const EXCLUDED_PATHS = [
   '/preseason/b',
   '/scat-mastery',
   '/preview',
+  // Lead-capture page — the $-course sticky bar competes with the email gate.
+  '/scat6-download',
 ]
 
 export function StickyCTA() {

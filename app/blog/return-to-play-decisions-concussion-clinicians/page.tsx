@@ -3,7 +3,6 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, CheckCircle, ClipboardList, Brain, Activity, Layers, Monitor } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
@@ -14,6 +13,8 @@ export const metadata: Metadata = {
     title: 'Safe Return-to-Play Decisions After Concussion: 5 Quick Wins for Clinicians',
     description: 'Five evidence-based strategies to improve your return-to-play decisions after concussion. Digital tracking, cognitive screening, balance testing, stepwise protocols, and holistic assessment.',
     type: 'article',
+    publishedTime: '2025-09-15',
+    images: ['/og-image.jpg'],
     url: 'https://portal.concussion-education-australia.com/blog/return-to-play-decisions-concussion-clinicians',
   },
   alternates: {
@@ -31,7 +32,7 @@ export default function ReturnToPlayPage() {
             title: 'Safe Return-to-Play Decisions After Concussion: 5 Quick Wins for Clinicians',
             description: 'Five evidence-based strategies to improve return-to-play decisions after concussion. Digital tracking, cognitive screening, balance testing, stepwise protocols, and holistic SCAT6 integration.',
             datePublished: '2025-09-15',
-            dateModified: '2025-09-15',
+            dateModified: '2026-07-02',
             author: 'Zac Lewis',
             url: 'https://portal.concussion-education-australia.com/blog/return-to-play-decisions-concussion-clinicians',
           }))
@@ -54,7 +55,7 @@ export default function ReturnToPlayPage() {
             </p>
             <div className="flex items-center gap-3 text-emerald-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- September 15, 2025 -- 11 min read</span>
+              <span>Zac Lewis — Osteopath (AHPRA-registered) — September 15, 2025 — 11 min read</span>
             </div>
           </div>
         </div>
@@ -374,7 +375,7 @@ export default function ReturnToPlayPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course (14 CPD) — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Full Course — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird
               </Link>
             </div>
           </div>

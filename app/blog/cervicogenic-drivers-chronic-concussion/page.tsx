@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   keywords: 'cervicogenic post-concussion, cervical contribution to concussion, whiplash post-concussion, cervicogenic dizziness, cervicogenic headache, chronic concussion cervical, ppcs cervical, neck contribution concussion symptoms',
-  openGraph: { title: TITLE, description: DESCRIPTION, type: 'article', url: URL },
+  openGraph: { title: TITLE, description: DESCRIPTION, type: 'article', url: URL, images: ['/og-image.jpg'], publishedTime: '2026-05-27' },
   alternates: { canonical: URL },
 }
 
@@ -127,9 +127,16 @@ export default function CervicogenicChronicConcussionPage() {
           </Section>
 
           <section className="bg-gradient-to-br from-rose-700 to-pink-700 text-white rounded-xl p-8 mb-8">
-            <h2 className="text-2xl font-bold mb-3">Get the full PPCS framework</h2>
-            <p className="text-rose-100 leading-relaxed mb-5">A planned PPCS Clinical Mastery course will cover cervical assessment + treatment alongside vestibulo-ocular, autonomic, and headache workups. We&apos;re gauging demand first — waitlist members get first access + 50% off launch week if the course goes ahead.</p>
-            <Link href="/ppcs-waitlist" className="inline-flex items-center gap-2 bg-white text-rose-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-rose-50 transition-colors">Join the PPCS waitlist (50% off launch)</Link>
+            <h2 className="text-2xl font-bold mb-3">PPCS course in development — join the waitlist</h2>
+            <p className="text-rose-100 leading-relaxed mb-5">We&apos;re developing a dedicated PPCS course covering the chronic-case workup in depth — vestibulo-ocular, cervical, autonomic, and headache drivers, with worked clinical scenarios. There&apos;s no launch date yet. Join the waitlist and you&apos;ll be the first to hear when it opens.</p>
+            <Link href="/ppcs-waitlist" className="inline-flex items-center gap-2 bg-white text-rose-700 px-5 py-3 rounded-lg font-semibold text-sm hover:bg-rose-50 transition-colors">Join the PPCS waitlist</Link>
+            <div className="mt-6 pt-6 border-t border-white/20">
+              <p className="text-sm font-semibold text-rose-100 mb-3">Available now:</p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Free SCAT Mastery course</Link>
+                <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 border border-white/25 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors text-center">Concussion Clinical Mastery — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird</Link>
+              </div>
+            </div>
           </section>
 
           <RelatedPosts slugs={['persistent-post-concussion-symptoms-clinician-workup', 'vestibulo-ocular-workup-ppcs', 'how-to-use-scat6-clinicians-guide']} />

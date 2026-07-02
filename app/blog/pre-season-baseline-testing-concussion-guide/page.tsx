@@ -1,9 +1,8 @@
 import { Metadata } from 'next'
-import { createBlogPostSchema } from '@/lib/schema-markup'
+import { createBlogPostSchema, createFAQSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, CheckCircle, ClipboardCheck, Brain, Activity, AlertTriangle, BarChart3, Users, Monitor, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
@@ -14,6 +13,8 @@ export const metadata: Metadata = {
     title: 'Pre-Season Baseline Testing for Concussion: What Every Clinician Needs to Know',
     description: 'Why normative data alone is not enough. How pre-season baselines across symptoms, cognition, balance, and vestibular-ocular domains dramatically improve post-injury concussion assessment.',
     type: 'article',
+    publishedTime: '2026-03-09',
+    images: ['/og-image.jpg'],
     url: 'https://portal.concussion-education-australia.com/blog/pre-season-baseline-testing-concussion-guide',
   },
   alternates: {
@@ -21,9 +22,34 @@ export const metadata: Metadata = {
   },
 }
 
+const faqs = [
+  {
+    question: 'Why does pre-season baseline testing matter?',
+    answer: 'Concussion assessment is fundamentally a comparison exercise. Individual variation in symptoms, cognition, balance, and vestibular-ocular function is substantial — healthy baseline SAC scores range from 23 to 30, and a majority of healthy athletes endorse at least one symptom at baseline. Relying on population normative data alone inflates false positives and false negatives. An individualised pre-season baseline lets the clinician detect genuine change from that athlete\'s normal, dramatically improving the sensitivity and specificity of post-injury assessment.',
+  },
+  {
+    question: 'What should be tested at a pre-season baseline?',
+    answer: 'A comprehensive baseline covers four domains: the 22-item SCAT6 symptom checklist (symptom count and severity score), the SAC cognitive assessment (orientation, immediate memory, concentration, delayed recall), the mBESS balance assessment plus tandem gait time, and the full VOMS vestibular-ocular motor screening (including near point of convergence in centimetres). The King-Devick test is an optional but valuable addition for saccadic eye movement speed.',
+  },
+  {
+    question: 'When should baseline testing be conducted?',
+    answer: 'Conduct baselines 2-4 weeks before competition begins, repeat them annually (particularly for developing adolescent athletes), and consider re-baselining after full recovery from any concussion. Do not test within 24 hours of vigorous exertion, after fewer than 7 hours of sleep, while acutely unwell, under the influence of substances, or during recovery from an uncleared concussion — these conditions invalidate the data.',
+  },
+  {
+    question: 'How long does baseline testing take per athlete?',
+    answer: 'Allow 15-20 minutes per athlete for the full battery (symptoms, SAC, mBESS, VOMS), administered one-on-one in a quiet, distraction-free environment. A team of 30 athletes can typically be baselined across 2-3 dedicated sessions, and the battery can be folded into a pre-participation medical examination for individual athletes.',
+  },
+]
+
 export default function PreSeasonBaselineTestingPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(createFAQSchema(faqs))
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -31,7 +57,7 @@ export default function PreSeasonBaselineTestingPage() {
             title: 'Pre-Season Baseline Testing for Concussion: What Every Clinician Needs to Know',
             description: 'Evidence-based guide to pre-season concussion baseline testing. Covers SCAT6 symptom baselines, SAC cognitive assessment, mBESS balance testing, VOMS vestibular-ocular screening, implementation workflows, and reliable change indices for clinical decision-making.',
             datePublished: '2026-03-09',
-            dateModified: '2026-03-09',
+            dateModified: '2026-07-02',
             author: 'Zac Lewis',
             url: 'https://portal.concussion-education-australia.com/blog/pre-season-baseline-testing-concussion-guide',
           }))
@@ -54,7 +80,7 @@ export default function PreSeasonBaselineTestingPage() {
             </p>
             <div className="flex items-center gap-3 text-sky-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- March 9, 2026 -- 10 min read</span>
+              <span>Zac Lewis — Osteopath (AHPRA-registered) — March 9, 2026 — 10 min read</span>
             </div>
           </div>
         </div>
@@ -75,7 +101,7 @@ export default function PreSeasonBaselineTestingPage() {
                 Individual variation across the domains assessed by the SCAT6 is substantial. McCrea et al. (2003) demonstrated that healthy, uninjured athletes show a wide range of performance on the Standardized Assessment of Concussion (SAC), with baseline scores ranging from 23 to 30 out of 30. An athlete who scores 26 post-injury might be performing normally -- or might have dropped 4 points from their personal baseline. Without that baseline, the clinician cannot tell.
               </p>
               <p>
-                The same principle applies to symptom endorsement. Healthy athletes frequently endorse symptoms at baseline. Covassin et al. (2009) found that <strong>up to 75% of uninjured collegiate athletes endorse at least one symptom on the SCAT symptom checklist</strong> at pre-season testing. Common baseline symptoms include fatigue, difficulty concentrating, and sleep disturbance. If a clinician interprets any symptom endorsement as evidence of concussion without knowing the athlete&apos;s baseline symptom profile, false positive rates increase dramatically.
+                The same principle applies to symptom endorsement. Healthy athletes frequently endorse symptoms at baseline: <strong>a majority of healthy, uninjured athletes endorse at least one symptom on the SCAT symptom checklist</strong> at pre-season testing. Common baseline symptoms include fatigue, difficulty concentrating, and sleep disturbance. If a clinician interprets any symptom endorsement as evidence of concussion without knowing the athlete&apos;s baseline symptom profile, false positive rates increase dramatically.
               </p>
               <p>
                 <strong>Pre-season baseline testing solves this problem.</strong> By establishing individualised reference values before the season begins, clinicians gain the ability to detect genuine change from normal function after injury -- dramatically improving both the sensitivity and specificity of post-injury concussion assessment (Broglio et al., 2007).
@@ -102,7 +128,7 @@ export default function PreSeasonBaselineTestingPage() {
                     <ClipboardCheck className="w-5 h-5 text-sky-600 flex-shrink-0 mt-1" />
                     <div>
                       <h4 className="font-bold text-sky-900">1. SCAT6 Symptom Checklist</h4>
-                      <p className="text-sm text-slate-700 mt-1">Record the athlete&apos;s baseline symptom endorsement using the full 22-item SCAT6 symptom checklist. Document both the number of symptoms endorsed (0-22) and the total severity score (0-132). This establishes their &ldquo;normal&rdquo; symptom profile. Many healthy athletes endorse 1-3 symptoms at baseline, particularly fatigue, difficulty concentrating, and trouble falling asleep (Covassin et al., 2009). Knowing this prevents false positive identification of concussion based on pre-existing symptom endorsement.</p>
+                      <p className="text-sm text-slate-700 mt-1">Record the athlete&apos;s baseline symptom endorsement using the full 22-item SCAT6 symptom checklist. Document both the number of symptoms endorsed (0-22) and the total severity score (0-132). This establishes their &ldquo;normal&rdquo; symptom profile. Many healthy athletes endorse 1-3 symptoms at baseline, particularly fatigue, difficulty concentrating, and trouble falling asleep. Knowing this prevents false positive identification of concussion based on pre-existing symptom endorsement.</p>
                     </div>
                   </div>
                 </div>
@@ -410,7 +436,7 @@ export default function PreSeasonBaselineTestingPage() {
                 </div>
               </div>
               <p>
-                The Amsterdam Consensus Statement does not mandate digital testing, but the practical and clinical advantages are clear. For clinicians managing team baselines, the efficiency gains alone typically justify the investment. For individual practitioners, a digital platform that combines baseline storage with post-injury assessment creates a seamless clinical workflow.
+                The Amsterdam Consensus Statement does not mandate digital testing, but the practical and clinical advantages are clear. For clinicians managing team baselines, the efficiency gains alone typically justify the investment. For individual practitioners, a digital platform that combines baseline storage with post-injury assessment creates a seamless clinical workflow. If you prefer to start with paper, you&apos;ll find the assessment forms and supporting clinical tools in our <Link href="/resources" className="text-sky-600 hover:underline font-semibold">resources library</Link>.
               </p>
             </div>
           </div>
@@ -530,9 +556,6 @@ export default function PreSeasonBaselineTestingPage() {
                 McCrea, M., Guskiewicz, K. M., Marshall, S. W., Barr, W., Randolph, C., Cantu, R. C., ... &amp; Kelly, J. P. (2003). Acute effects and recovery time following concussion in collegiate football players. <em>JAMA</em>, 290(19), 2556-2563.
               </li>
               <li>
-                Covassin, T., Elbin, R. J., Stiller-Ostrowski, J. L., &amp; Kontos, A. P. (2009). Immediate post-concussion assessment and cognitive testing (ImPACT) practices of sports medicine professionals. <em>Journal of Athletic Training</em>, 44(6), 639-644.
-              </li>
-              <li>
                 Echemendia, R. J., et al. (2023). Sport Concussion Assessment Tool - 6th Edition (SCAT6). <em>British Journal of Sports Medicine</em>, 57(11), 622-631.
               </li>
               <li>
@@ -564,7 +587,7 @@ export default function PreSeasonBaselineTestingPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course (14 CPD) — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Full Course — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird
               </Link>
             </div>
           </div>

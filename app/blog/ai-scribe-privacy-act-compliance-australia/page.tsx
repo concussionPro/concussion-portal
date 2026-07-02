@@ -49,7 +49,7 @@ export default function PrivacyActAiScribePage() {
             <ul className="list-disc pl-6 space-y-1.5 text-slate-700">
               <li><strong>AU-resident AI scribes (Heidi, Lyrebird)</strong> — data stays in Australia. APP 8 doesn&apos;t apply. Privacy Act-compliant by default.</li>
               <li><strong>US-resident AI tools (ChatGPT, Claude.ai, Gemini)</strong> — data is disclosed offshore. APP 8 applies. Requires explicit patient consent for the offshore disclosure, plus reasonable steps to ensure the overseas recipient handles it consistently with the Privacy Act.</li>
-              <li><strong>Enterprise AU-residency LLMs (Microsoft Copilot for Healthcare, AWS HealthScribe with AU region)</strong> — middle tier. AU residency is configurable; check your specific subscription before assuming compliance.</li>
+              <li><strong>Enterprise AU-residency LLMs (Microsoft Dragon Copilot, AWS HealthScribe with AU region)</strong> — middle tier. AU residency is configurable; check your specific subscription before assuming compliance.</li>
             </ul>
           </div>
 

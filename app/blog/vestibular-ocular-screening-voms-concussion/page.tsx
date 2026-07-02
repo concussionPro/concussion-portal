@@ -3,7 +3,6 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, Eye, CheckCircle, BarChart3, Target, Stethoscope } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
@@ -14,6 +13,8 @@ export const metadata: Metadata = {
     title: 'Beyond SCAT6: How Vestibular/Ocular Screening Improves Concussion Care',
     description: 'Learn why VOMS is essential for comprehensive concussion assessment. 50-80% of concussed athletes report dizziness, yet standard symptom checklists miss vestibular deficits.',
     type: 'article',
+    publishedTime: '2025-10-18',
+    images: ['/og-image.jpg'],
     url: 'https://portal.concussion-education-australia.com/blog/vestibular-ocular-screening-voms-concussion',
   },
   alternates: {
@@ -31,7 +32,7 @@ export default function VOMSConcussionPage() {
             title: 'Beyond SCAT6: How Vestibular/Ocular Screening Improves Concussion Care',
             description: 'Evidence-based guide to integrating VOMS into concussion assessment. Covers vestibular-ocular motor screening components, diagnostic accuracy, and clinical implementation.',
             datePublished: '2025-10-18',
-            dateModified: '2025-10-18',
+            dateModified: '2026-07-02',
             author: 'Zac Lewis',
             url: 'https://portal.concussion-education-australia.com/blog/vestibular-ocular-screening-voms-concussion',
           }))
@@ -54,7 +55,7 @@ export default function VOMSConcussionPage() {
             </p>
             <div className="flex items-center gap-3 text-purple-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- October 18, 2025 -- 12 min read</span>
+              <span>Zac Lewis — Osteopath (AHPRA-registered) — October 18, 2025 — 12 min read</span>
             </div>
           </div>
         </div>
@@ -305,7 +306,7 @@ export default function VOMSConcussionPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course (14 CPD) — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Full Course — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird
               </Link>
             </div>
           </div>

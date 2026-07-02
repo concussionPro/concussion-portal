@@ -3,7 +3,6 @@ import { createBlogPostSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, CheckCircle, BarChart3, Scale, AlertTriangle, ClipboardList, Footprints } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
@@ -14,6 +13,8 @@ export const metadata: Metadata = {
     title: 'BESS Balance Testing for Concussion: A Clinician\u0027s Complete Guide',
     description: 'Evidence-based guide to administering, scoring, and interpreting the Balance Error Scoring System (BESS) for concussion assessment. Includes mBESS integration with SCAT6/SCOAT6.',
     type: 'article',
+    publishedTime: '2026-03-09',
+    images: ['/og-image.jpg'],
     url: 'https://portal.concussion-education-australia.com/blog/bess-balance-testing-concussion-guide',
   },
   alternates: {
@@ -31,7 +32,7 @@ export default function BESSBalanceTestingPage() {
             title: 'BESS Balance Testing for Concussion: A Clinician\u0027s Complete Guide',
             description: 'Evidence-based guide to the Balance Error Scoring System (BESS) for concussion assessment. Covers administration, scoring, error types, baseline testing, mBESS vs full BESS, and clinical integration with SCAT6/SCOAT6.',
             datePublished: '2026-03-09',
-            dateModified: '2026-03-09',
+            dateModified: '2026-07-02',
             author: 'Zac Lewis',
             url: 'https://portal.concussion-education-australia.com/blog/bess-balance-testing-concussion-guide',
           }))
@@ -54,7 +55,7 @@ export default function BESSBalanceTestingPage() {
             </p>
             <div className="flex items-center gap-3 text-green-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- March 9, 2026 -- 11 min read</span>
+              <span>Zac Lewis — Osteopath (AHPRA-registered) — March 9, 2026 — 11 min read</span>
             </div>
           </div>
         </div>
@@ -183,7 +184,7 @@ export default function BESSBalanceTestingPage() {
                 </div>
               </div>
               <p>
-                Guskiewicz (2001) demonstrated that the BESS could detect postural instability in concussed athletes with reasonable sensitivity, particularly within the first 24-48 hours post-injury. Subsequent work by Guskiewicz et al. (2003) confirmed that BESS-detected deficits typically resolve within 3-5 days, although a subset of patients show prolonged impairment.
+                Guskiewicz (2001) demonstrated that the BESS could detect postural instability in concussed athletes with reasonable sensitivity, particularly within the first 24-48 hours post-injury. Subsequent work by McCrea et al. (2003) confirmed that BESS-detected deficits typically resolve within 3-5 days, although a subset of patients show prolonged impairment.
               </p>
               <p>
                 However, clinicians should be aware of the BESS&apos;s limitations. Bell et al. (2011) documented <strong>significant practice effects</strong> with repeated administration, and <strong>moderate inter-rater reliability</strong> (ICC ranging from 0.57 to 0.96 depending on the condition). Iverson &amp; Koehle (2013) reported that approximately <strong>30% of healthy athletes score in the &ldquo;abnormal&rdquo; range</strong> on a single administration, highlighting the critical importance of baseline testing for accurate interpretation.
@@ -229,7 +230,7 @@ export default function BESSBalanceTestingPage() {
                 <div className="border-l-4 border-green-500 pl-5">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Step 4: Time and Score Each Trial</h3>
                   <p>
-                    Begin timing when the patient closes their eyes. Count errors silently for 20 seconds. Record the error count for each condition. If the patient cannot maintain the position for the full 20 seconds and commits more than identifiable errors, assign the maximum score of 10 for that condition.
+                    Begin timing when the patient closes their eyes. Count errors silently for 20 seconds. Record the error count for each condition. If the patient cannot maintain the position for the full 20 seconds and commits more than 10 identifiable errors, assign the maximum score of 10 for that condition.
                   </p>
                 </div>
 
@@ -539,7 +540,7 @@ export default function BESSBalanceTestingPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course (14 CPD) — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Full Course — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird
               </Link>
             </div>
           </div>

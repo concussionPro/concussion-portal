@@ -8,13 +8,15 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'NSW Mandatory Concussion Training for Combat Sports: What Clinicians Need to Know',
-  description: 'The Combat Sports Amendment Act 2024 requires all NSW combat sports participants to complete mandatory concussion training by 31 December 2025. Here\'s what it means for healthcare professionals working in combat sports.',
+  description: 'Under the Combat Sports Amendment Act 2024, concussion training has been mandatory for all NSW combat sports participants since 31 December 2025. Here\'s what it means for healthcare professionals working in combat sports.',
   keywords: 'NSW concussion training, combat sports concussion, mandatory concussion training australia, Combat Sports Amendment Act 2024, combat sports medical practitioner, concussion education NSW',
   openGraph: {
     title: 'NSW Mandatory Concussion Training for Combat Sports: What Clinicians Need to Know',
-    description: 'The Combat Sports Amendment Act 2024 requires all NSW combat sports participants to complete mandatory concussion training by 31 December 2025.',
+    description: 'Under the Combat Sports Amendment Act 2024, concussion training has been mandatory for all NSW combat sports participants since 31 December 2025.',
     type: 'article',
     url: 'https://portal.concussion-education-australia.com/blog/nsw-mandatory-concussion-training-combat-sports',
+    images: ['/og-image.jpg'],
+    publishedTime: '2026-03-18',
   },
   alternates: {
     canonical: 'https://portal.concussion-education-australia.com/blog/nsw-mandatory-concussion-training-combat-sports',
@@ -29,7 +31,7 @@ export default function NSWConcussionTrainingPage() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(createBlogPostSchema({
             title: 'NSW Mandatory Concussion Training for Combat Sports: What Clinicians Need to Know',
-            description: 'The Combat Sports Amendment Act 2024 requires all NSW combat sports participants to complete mandatory concussion training by 31 December 2025. Here\'s what it means for healthcare professionals.',
+            description: 'Under the Combat Sports Amendment Act 2024, concussion training has been mandatory for all NSW combat sports participants since 31 December 2025. Here\'s what it means for healthcare professionals.',
             datePublished: '2026-03-18',
             dateModified: '2026-03-18',
             author: 'Zac Lewis',
@@ -54,7 +56,7 @@ export default function NSWConcussionTrainingPage() {
             </p>
             <div className="flex items-center gap-3 text-red-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- March 18, 2026 -- 8 min read</span>
+              <span>Zac Lewis &mdash; Osteopath (AHPRA-registered) &mdash; March 18, 2026 &mdash; 8 min read</span>
             </div>
           </div>
         </div>
@@ -137,10 +139,10 @@ export default function NSWConcussionTrainingPage() {
             <div className="flex items-start gap-4">
               <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">The Deadline: 31 December 2025</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">In Force Since 31 December 2025</h3>
                 <div className="space-y-3 text-slate-700 leading-relaxed">
                   <p>
-                    The concussion training provisions commenced on <strong>27 June 2025</strong> (Phase 4 of the reform rollout). All registered individuals had until <strong>31 December 2025</strong> to complete the training.
+                    The concussion training provisions commenced on <strong>27 June 2025</strong> (Phase 4 of the reform rollout). All registered individuals had until <strong>31 December 2025</strong> to complete the training — the requirement has been fully in force since that date.
                   </p>
                   <p>
                     Individuals who did not complete the training by the deadline had their <strong>registration automatically suspended</strong> until they do so. New applicants and those renewing registration must complete the training as part of their application.
@@ -223,7 +225,7 @@ export default function NSWConcussionTrainingPage() {
                   <strong>Athletes and parents are asking better questions.</strong> Increased media coverage and regulatory action mean your patients are more informed &mdash; and more likely to expect evidence-based management.
                 </li>
                 <li>
-                  <strong>Structured assessment competency is becoming the standard.</strong> Knowing how to administer the SCAT6, conduct a VOMS screen, and apply the BESS is increasingly expected, not optional.
+                  <strong>Structured assessment competency is becoming the standard.</strong> Knowing how to administer the SCAT6, conduct a VOMS screen, and apply the BESS is increasingly expected, not optional. If you don&apos;t already have a <Link href="/scat6-download" className="text-blue-600 hover:underline font-medium">fillable SCAT6 form</Link> in your kit, start there &mdash; and browse our <Link href="/resources" className="text-blue-600 hover:underline font-medium">free clinical resources</Link> for more assessment tools.
                 </li>
               </ol>
             </div>
@@ -254,15 +256,15 @@ export default function NSWConcussionTrainingPage() {
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 text-white mt-12">
             <h2 className="text-2xl font-bold mb-3">Build Your Concussion Assessment Skills</h2>
             <p className="text-white/70 mb-6 leading-relaxed">
-              Our courses cover SCAT6 administration, VOMS screening, BESS balance testing, and return-to-play protocols &mdash; aligned with AHPRA CPD requirements and the latest Australian guidelines.
+              Our courses cover SCAT6 administration, VOMS screening, BESS balance testing, and return-to-play protocols &mdash; with CPD hours that count toward your AHPRA registration requirements, aligned with the latest Australian guidelines.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/scat-mastery" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-900 rounded-xl text-sm font-bold hover:bg-white/90 transition-all">
                 Free SCAT6 Training
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course ({CONFIG.COURSE.TOTAL_CPD_POINTS} CPD) &mdash; ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+              <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all text-center">
+                Full Course &mdash; 8 CPD hrs online, up to 14 with the in-person day &middot; from ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
               </Link>
             </div>
           </div>

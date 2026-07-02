@@ -1,9 +1,8 @@
 import { Metadata } from 'next'
-import { createBlogPostSchema } from '@/lib/schema-markup'
+import { createBlogPostSchema, createFAQSchema } from '@/lib/schema-markup'
 import { ArrowRight, Clock, Activity, Eye, Brain, AlertCircle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { CONFIG } from '@/lib/config'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 
 export const metadata: Metadata = {
@@ -14,6 +13,8 @@ export const metadata: Metadata = {
     title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
     description: 'Two years since the Amsterdam Consensus, concussion management has shifted from passive rest to active rehabilitation. Strict rest beyond 48 hours is now considered harmful.',
     type: 'article',
+    publishedTime: '2026-01-05',
+    images: ['/og-image.jpg'],
     url: 'https://portal.concussion-education-australia.com/blog/concussion-update-2026-wait-until-symptom-free-obsolete',
   },
   alternates: {
@@ -21,9 +22,34 @@ export const metadata: Metadata = {
   },
 }
 
+const faqs = [
+  {
+    question: 'Why is "wait until symptom-free" obsolete in concussion management?',
+    answer: 'The Amsterdam 2023 Consensus Statement moved decisively away from prolonged rest. Evidence shows strict rest beyond 48 hours increases the risk of persistent post-concussion symptoms via deconditioning, social isolation, anxiety, and sleep disruption. Randomised controlled trials (Leddy et al., 2019; Willer et al., 2019) demonstrate that early sub-symptom threshold aerobic exercise reduces symptom duration by an average of 4-5 days compared to strict rest. The current standard is 24-48 hours of relative rest, then structured active recovery.',
+  },
+  {
+    question: 'When should clinicians use the SCAT6 versus the SCOAT6?',
+    answer: 'SCAT6 is for the acute phase only — sideline, change room, and emergency assessment within 0-72 hours of injury (10-15 minutes). SCOAT6 is the tool for every office-based follow-up from Day 3 onwards (20-30 minutes) and adds the full VOMS battery, neuro-ophthalmological assessment, and cervical spine examination, none of which are in the SCAT6.',
+  },
+  {
+    question: 'What is sub-symptom threshold exercise?',
+    answer: 'Physical activity at an intensity that does not provoke or significantly worsen concussion symptoms — for example heart-rate-monitored walking or light stationary cycling at 50-70% of age-predicted maximum heart rate from around Day 3 post-injury. The Buffalo Concussion Treadmill Test (BCTT) provides a validated method for determining an individual patient\'s symptom-exacerbation threshold and prescribing exercise accordingly.',
+  },
+  {
+    question: 'Why is vestibular-ocular screening (VOMS) considered essential?',
+    answer: 'Ocular-motor dysfunction is one of the strongest predictors of prolonged concussion recovery — patients with vestibular and oculomotor deficits recover 2-3 times more slowly, yet these deficits are invisible to symptom checklists and cognitive screening. The VOMS takes 5-10 minutes, needs only a target and a ruler, is embedded in the SCOAT6, and identifies patients who need early referral to vestibular physiotherapy or neuro-optometry.',
+  },
+]
+
 export default function ConcussionUpdate2026Page() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(createFAQSchema(faqs))
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -31,7 +57,7 @@ export default function ConcussionUpdate2026Page() {
             title: '2026 Concussion Update: Why "Wait Until Symptom Free" is Officially Obsolete',
             description: 'Two years since the Amsterdam Consensus, concussion management has shifted from passive rest to active rehabilitation. Learn the latest evidence on active recovery, SCAT6/SCOAT6 protocols, and vestibular-ocular screening.',
             datePublished: '2026-01-05',
-            dateModified: '2026-01-05',
+            dateModified: '2026-07-02',
             author: 'Zac Lewis',
             url: 'https://portal.concussion-education-australia.com/blog/concussion-update-2026-wait-until-symptom-free-obsolete',
           }))
@@ -54,7 +80,7 @@ export default function ConcussionUpdate2026Page() {
             </p>
             <div className="flex items-center gap-3 text-amber-100 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Zac Lewis -- January 5, 2026 -- 10 min read</span>
+              <span>Zac Lewis — Osteopath (AHPRA-registered) — January 5, 2026 — 10 min read</span>
             </div>
           </div>
         </div>
@@ -304,7 +330,7 @@ export default function ConcussionUpdate2026Page() {
                 Echemendia, R. J., et al. (2023). Sport Concussion Assessment Tool - 6th Edition (SCAT6). <em>British Journal of Sports Medicine</em>, 57(11), 622-631.
               </li>
               <li>
-                Concussion in Sport Australia (2024). Position Statement on Active Concussion Recovery.{' '}
+                Australian Institute of Sport (2024). AIS Concussion and Brain Health Position Statement.{' '}
                 <a href="https://www.concussioninsport.gov.au/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">concussioninsport.gov.au</a>
               </li>
             </ul>
@@ -313,7 +339,7 @@ export default function ConcussionUpdate2026Page() {
           {/* PPCS retrofit — for patients who DON'T resolve under active recovery */}
           <div className="bg-purple-50 border-l-4 border-purple-600 rounded-lg p-5 mt-12">
             <p className="text-sm text-slate-700 leading-relaxed">
-              <strong className="text-purple-900">Patient not resolving under active recovery?</strong> 5-20% of concussion cases become persistent (PPCS). The chronic-case workup is different from the acute one — vestibulo-ocular, cervical, autonomic. See our <Link href="/blog/persistent-post-concussion-symptoms-clinician-workup" className="text-purple-700 underline font-semibold">PPCS clinical workup guide</Link>, and join the waitlist for the forthcoming <Link href="/ppcs-waitlist" className="text-purple-700 underline font-semibold">PPCS Clinical Mastery course</Link> (50% off launch week).
+              <strong className="text-purple-900">Patient not resolving under active recovery?</strong> 5-20% of concussion cases become persistent (PPCS). The chronic-case workup is different from the acute one — vestibulo-ocular, cervical, autonomic. See our <Link href="/blog/persistent-post-concussion-symptoms-clinician-workup" className="text-purple-700 underline font-semibold">PPCS clinical workup guide</Link>. A dedicated PPCS Clinical Mastery course is in development — <Link href="/ppcs-waitlist" className="text-purple-700 underline font-semibold">join the waitlist</Link>. In the meantime, start with the free <Link href="/scat-mastery" className="text-purple-700 underline font-semibold">SCAT Mastery course</Link> or the full <Link href="/pricing" className="text-purple-700 underline font-semibold">Concussion Clinical Mastery course</Link>.
             </p>
           </div>
 
@@ -331,7 +357,7 @@ export default function ConcussionUpdate2026Page() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all">
-                Full Course (14 CPD) — ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()}
+                Full Course — 8 CPD hrs online, up to 14 with the in-person day · from $1,190 early-bird
               </Link>
             </div>
           </div>

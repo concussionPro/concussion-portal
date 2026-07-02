@@ -5,6 +5,10 @@ import { MetadataRoute } from 'next'
 // changed on every build, which erodes crawl-priority signals.
 const STATIC_PAGES_LAST_MODIFIED = new Date('2026-06-01')
 
+// Pages whose content/meta actually changed in the 2026-07-02 SEO sweep
+// (scat6-download canonical fix, workshop-page meta + Sydney interest form).
+const SEO_SWEEP_LAST_MODIFIED = new Date('2026-07-02')
+
 // Blog posts carry their own datePublished/dateModified in their schema
 // markup — sitemap lastModified mirrors each post's dateModified.
 const BLOG_POSTS: Array<{ slug: string; dateModified: string; priority: number }> = [
@@ -93,7 +97,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/scat6-download`,
-      lastModified: STATIC_PAGES_LAST_MODIFIED,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
@@ -131,6 +135,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // /clinical-toolkit excluded — noindex page (authenticated content)
     {
       url: `${baseUrl}/terms`,
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/privacy`,
       lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency: 'yearly',
       priority: 0.3,
@@ -178,14 +188,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.85,
     },
     {
+      url: `${baseUrl}/courses/ai-in-clinical-practice`,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/courses/melbourne`,
-      lastModified: STATIC_PAGES_LAST_MODIFIED,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/courses/sydney`,
-      lastModified: STATIC_PAGES_LAST_MODIFIED,
+      lastModified: SEO_SWEEP_LAST_MODIFIED,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
