@@ -3,39 +3,71 @@
 import { useEffect, useState } from 'react'
 import { SstLivePanel } from '@/components/sst-trainer/SstLivePanel'
 import { SstTrajectory, type TrajectoryPoint } from '@/components/sst-trainer/SstTrajectory'
+import { SESSION_STOP_RISE } from '@/lib/sst-trainer/protocol'
 import {
   HeartPulse, Activity, Plus, Search, Calendar, TrendingDown, ClipboardList,
-  AlertTriangle, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock, NotebookPen,
+  AlertTriangle, AlertOctagon, Check, ChevronRight, ChevronLeft, Stethoscope, ArrowUpRight, Clock,
+  NotebookPen, ShieldCheck, QrCode, KeyRound,
 } from 'lucide-react'
 
 /* ───────────────────────────────────────────────────────────────────
-   CLINICAL HUB — pre-launch preview.
-   Clinician-facing patient-management surface: roster + per-patient SST
-   (sub-symptom-threshold) program and SCAT6 baseline. Demo data only — the
-   real version reads sessions keyed by clinic code (SST is already wired to
-   receive patient info that way).
+   CLINICAL HUB — the treating clinician's supervision surface for the
+   SST Trainer: live in-session HR, each patient's serial MEASURED HRt
+   recovery trajectory, session history, and the clearance-ready signal.
+
+   Two modes:
+   - DEMO (no ?clinic= param, or ?clinic=DEMO00): the fixture roster below,
+     clearly banner-labelled. Un-wired features (add patient, notes, stage
+     editing, SCAT6 baseline) render ONLY here.
+   - REAL (?clinic=CODE&k=VIEWKEY): everything on screen comes from
+     /api/sst/clinic-sessions. Zero patients → an honest empty state, never
+     the demo roster. A missing/rejected view key shows a key state, never
+     a silent fall-through to fake data.
 ─────────────────────────────────────────────────────────────────── */
 
 type Stage = { n: number; label: string }
-type Session = { date: string; avgHr: number; peakHr: number; mins: number; symptomDelta: number; status: 'clean' | 'flag' }
+
+type Session = {
+  date: string                    // display string
+  dateIso?: string | null         // parseable date when known
+  avgHr?: number | null
+  peakHr?: number | null
+  mins?: number | null
+  symptomDelta?: number | null    // peakSymptom − preSymptom (null = unknown, shown as —)
+  status: 'clean' | 'flare' | 'unknown'
+  eventType?: string | null       // e.g. 'symptom-stopped' | 'abandoned' (new app versions)
+  modality?: string | null        // treadmill / bike / walk
+  verifiedReadingPct?: number | null
+  hrVerified?: boolean
+  nextDayFlare?: boolean
+  overrodeStop?: boolean
+  sessionEndFeel?: string | null
+  timeInBandPct?: number | null
+  deviceName?: string | null      // e.g. "Garmin Forerunner" — future payload field
+}
+
 type Patient = {
   id: string
+  /** stable grouping key — patientRef UUID when the app sent one, else the normalised label */
+  patientKey?: string
   name: string
-  age: number
-  sport: string
+  age?: number | null
+  sport?: string | null
   code: string
-  injuryDate: string
-  daysPost: number
+  injuryDate?: string | null
+  daysPost?: number | null
   stage: Stage
   hrt: number | null
   bandLow: number
   bandHigh: number
-  restSymptoms: number
+  restSymptoms?: number | null
   baseline: 'captured' | 'due' | 'none'
   baselineDate?: string
-  trend: number[]          // symptom score over weeks (lower = better)
-  hrtPoints?: TrajectoryPoint[]  // serial MEASURED HRt = the recovery-trajectory instrument
-  sessions: Session[]
+  trend: number[]                 // symptom score over weeks (lower = better) — demo only
+  hrtPoints?: TrajectoryPoint[]   // serial MEASURED HRt = the recovery-trajectory instrument
+  sessions: Session[]             // newest first
+  lastActivity?: string | null    // ISO
+  clearanceReady?: boolean
   flag?: string
   notes?: string
 }
@@ -57,7 +89,7 @@ const PATIENTS: Patient[] = [
       { date: 'Today', avgHr: 126, peakHr: 134, mins: 18, symptomDelta: 0, status: 'clean' },
       { date: '22 Jun', avgHr: 124, peakHr: 131, mins: 18, symptomDelta: 1, status: 'clean' },
       { date: '20 Jun', avgHr: 121, peakHr: 129, mins: 16, symptomDelta: 0, status: 'clean' },
-      { date: '18 Jun', avgHr: 118, peakHr: 142, mins: 9, symptomDelta: 3, status: 'flag' },
+      { date: '18 Jun', avgHr: 118, peakHr: 142, mins: 9, symptomDelta: 3, status: 'flare' },
     ],
   },
   {
@@ -96,14 +128,15 @@ const PATIENTS: Patient[] = [
     ],
     sessions: [
       { date: 'Today', avgHr: 117, peakHr: 126, mins: 14, symptomDelta: 1, status: 'clean' },
-      { date: '22 Jun', avgHr: 114, peakHr: 122, mins: 12, symptomDelta: 2, status: 'clean' },
+      { date: '22 Jun', avgHr: 114, peakHr: 122, mins: 12, symptomDelta: 2, status: 'flare' },
     ],
   },
 ]
 
 /* Baseline & serial testing — SCAT6/SCOAT6 domain scores: the athlete's
    pre-season baseline vs their latest post-injury test. `better` says which
-   direction is recovery. baseline === null → no pre-season test on file. */
+   direction is recovery. baseline === null → no pre-season test on file.
+   FIXTURE DATA — renders in demo mode only, never for a real clinic. */
 type Domain = { name: string; unit?: string; baseline: number | null; latest: number | null; better: 'higher' | 'lower' }
 type Baseline = { tool: 'SCAT6' | 'SCOAT6'; status: 'captured' | 'due' | 'none'; capturedDate?: string; lastTest?: string; domains: Domain[] }
 
@@ -176,16 +209,18 @@ function initials(name: string) {
   return name.split(' ').map((n) => n[0]).slice(0, 2).join('')
 }
 
-function Trend({ data }: { data: number[] }) {
-  const max = Math.max(...data, 1)
-  return (
-    <div className="flex items-end gap-1 h-12">
-      {data.map((v, i) => (
-        <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-[var(--accent)] to-[var(--accent-light)]"
-          style={{ height: `${Math.max(6, (v / max) * 100)}%`, opacity: 0.35 + (i / data.length) * 0.65 }} />
-      ))}
-    </div>
-  )
+function fmtShort(d?: string | null): string | null {
+  if (!d) return null
+  const t = Date.parse(d)
+  if (Number.isNaN(t)) return d
+  return new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+}
+
+function daysAgo(iso?: string | null): number | null {
+  if (!iso) return null
+  const t = Date.parse(iso)
+  if (Number.isNaN(t)) return null
+  return Math.max(0, Math.floor((Date.now() - t) / 86_400_000))
 }
 
 function BaselinePanel({ base }: { base: Baseline }) {
@@ -198,6 +233,10 @@ function BaselinePanel({ base }: { base: Baseline }) {
           <h3 className="text-sm font-bold text-foreground">Baseline &amp; serial testing</h3>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/[0.04] text-muted-foreground border border-black/5">
             {base.tool}
+          </span>
+          {/* fixture panel — page renders it only in demo mode; badge it anyway */}
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+            Demo preview
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -248,69 +287,311 @@ function BaselinePanel({ base }: { base: Baseline }) {
   )
 }
 
-// A clinic code identifies the CLINIC; each patient also needs a patient-level
-// key so sessions attach to the right card. We mint <CLINIC>-<id> per patient.
+// Demo-mode helper: mints a display code for roster additions. Not wired to
+// anything real — the Add patient flow renders only in demo mode.
 function mintPatientCode(clinic: string, seq: number) {
   return `${clinic}-${String(seq).padStart(2, '0')}`
 }
 
-/* Real data from /api/sst/clinic-sessions → the Hub's display shape. Real SST
-   intake captures fewer fields than the demo (no age/sport/injury date yet), so
-   those show as placeholders; the clinical signal — HRt, band, sessions, the
-   clearance flag — is real. */
+/* ───────────────────────────────────────────────────────────────────
+   Real data: /api/sst/clinic-sessions → the Hub's display shape.
+
+   The patient app writes session payloads with avgHeartRate / peakHeartRate /
+   completedMinutes / preSymptom / peakSymptom (lib/sst-trainer/protocol.ts
+   SessionLog), and newer app versions add eventType / patientRef /
+   verifiedReadingPct / sessionEndFeel / nextDayFlare / overrode_stop /
+   modality. The API spreads the payload straight into each session row, so we
+   accept BOTH the old short keys and the real payload keys, defensively —
+   any of these may be absent on old rows.
+─────────────────────────────────────────────────────────────────── */
+type ApiTrajectoryPoint = {
+  date?: string
+  hrt?: number | null
+  source?: string
+  verified?: boolean
+  gated?: boolean
+  interpretation?: string | null
+  eventType?: string | null
+  modality?: string | null
+  verifiedReadingPct?: number | null
+  patientRef?: string
+}
+
+type ApiSession = {
+  date?: string
+  eventType?: string
+  avgHr?: number
+  avgHeartRate?: number
+  peakHr?: number
+  peakHeartRate?: number
+  minutes?: number
+  mins?: number
+  completedMinutes?: number
+  symptomDelta?: number
+  preSymptom?: number
+  peakSymptom?: number
+  nextDayFlare?: boolean
+  overrode_stop?: boolean
+  overrodeStop?: boolean
+  sessionEndFeel?: string | null
+  verifiedReadingPct?: number
+  hrVerified?: boolean
+  modality?: string
+  patientRef?: string
+  deviceName?: string
+  timeInBandPct?: number
+  inBandPct?: number
+  timeInBandSec?: number
+  inBandSec?: number
+}
+
 type ApiPatient = {
   name?: string
+  patientRef?: string
   condition?: string | null
   hrt?: number | null
   bandLow?: number | null
   bandHigh?: number | null
-  hrtTrajectory?: { date?: string; hrt?: number | null; source?: string; verified?: boolean; gated?: boolean }[]
-  sessions?: { date?: string; avgHr?: number; peakHr?: number; minutes?: number; mins?: number; symptomDelta?: number }[]
+  hrtTrajectory?: ApiTrajectoryPoint[]
+  sessions?: ApiSession[]
   clearanceReady?: boolean
+  lastActivity?: string | null
 }
 
-function mapRealPatient(p: ApiPatient, clinicCode: string, i: number): Patient {
-  const stage: Stage = p.clearanceReady
+function num(v: unknown): number | null {
+  if (v == null || v === '') return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
+/** The app sends namespaced eventTypes (lib/sst-trainer/clinic-sync.ts
+ *  SyncEventType: 'session-symptom-stopped', 'threshold-red-flag',
+ *  'test-aborted'…); accept both those and the bare forms defensively. */
+function normEvent(e?: string | null): string | null {
+  if (!e || typeof e !== 'string') return null
+  const v = e.toLowerCase().trim()
+  if (v === 'session-symptom-stopped' || v === 'symptom-stopped') return 'symptom-stopped'
+  if (v === 'session-abandoned' || v === 'abandoned') return 'abandoned'
+  if (v === 'session-completed' || v === 'completed') return 'completed'
+  if (v === 'threshold-red-flag' || v === 'red-flag') return 'red-flag'
+  if (v === 'test-aborted' || v === 'aborted') return 'aborted'
+  if (v === 'red-flag-cleared') return 'red-flag-cleared'
+  if (v === 'threshold-no-intolerance' || v === 'no-intolerance') return 'no-intolerance'
+  if (v === 'threshold-physiologic' || v === 'physiologic') return 'physiologic'
+  return v
+}
+
+function normLabel(s?: string | null): string {
+  return (s || '').trim().toLowerCase()
+}
+
+/** patientRef may arrive at the patient level (future API) or buried in the
+ *  spread payload of any session (how the app actually sends it today). */
+function extractRef(p: ApiPatient): string | null {
+  if (typeof p.patientRef === 'string' && p.patientRef.trim()) return p.patientRef.trim()
+  for (const s of p.sessions ?? []) {
+    if (typeof s.patientRef === 'string' && s.patientRef.trim()) return s.patientRef.trim()
+  }
+  for (const t of p.hrtTrajectory ?? []) {
+    if (typeof t.patientRef === 'string' && t.patientRef.trim()) return t.patientRef.trim()
+  }
+  return null
+}
+
+/**
+ * Group API patients by patientRef when present (falling back to the
+ * case-insensitive trimmed label). The API groups rows by raw label, so
+ * "Sam" / "sam " / a typo'd rename under the same install must merge into ONE
+ * card — the merged card shows the LATEST name.
+ */
+function groupApiPatients(list: ApiPatient[]): ApiPatient[] {
+  const groups = new Map<string, ApiPatient[]>()
+  for (const p of list) {
+    const key = extractRef(p) ?? `label:${normLabel(p.name) || 'unidentified'}`
+    const g = groups.get(key)
+    if (g) g.push(p)
+    else groups.set(key, [p])
+  }
+  const latestTs = (p: ApiPatient) => {
+    const times = [
+      ...(p.sessions ?? []).map((s) => Date.parse(s.date ?? '')),
+      ...(p.hrtTrajectory ?? []).map((t) => Date.parse(t.date ?? '')),
+      Date.parse(p.lastActivity ?? ''),
+    ].filter((n) => !Number.isNaN(n))
+    return times.length ? Math.max(...times) : 0
+  }
+  return [...groups.values()].map((members) => {
+    if (members.length === 1) return members[0]
+    const byDate = (a?: string, b?: string) => (Date.parse(a ?? '') || 0) - (Date.parse(b ?? '') || 0)
+    const primary = [...members].sort((a, b) => latestTs(a) - latestTs(b))[members.length - 1]
+    const sessions = members.flatMap((m) => m.sessions ?? []).sort((a, b) => byDate(a.date, b.date))
+    const hrtTrajectory = members.flatMap((m) => m.hrtTrajectory ?? []).sort((a, b) => byDate(a.date, b.date))
+    const latestInterp = [...hrtTrajectory].reverse().find((t) => t.interpretation)?.interpretation ?? null
+    return {
+      ...primary, // latest name wins for merged variants
+      sessions,
+      hrtTrajectory,
+      clearanceReady: latestInterp != null ? latestInterp === 'no-intolerance' : members.some((m) => m.clearanceReady === true),
+      lastActivity: members.map((m) => m.lastActivity).filter(Boolean).sort().pop() ?? primary.lastActivity,
+    }
+  })
+}
+
+/**
+ * STATUS DERIVATION (a flare must NEVER display as clean):
+ *  - symptomDelta = explicit symptomDelta, else peakSymptom − preSymptom.
+ *  - 'flare'   when symptomDelta ≥ 2 (SESSION_STOP_RISE) OR eventType is
+ *              'symptom-stopped' OR nextDayFlare is true.
+ *  - 'clean'   only when we HAVE a symptom delta and none of the above fired.
+ *  - 'unknown' when no symptom data exists (old/partial rows) — rendered
+ *              neutrally, never as clean.
+ */
+function mapApiSession(s: ApiSession): Session {
+  const avgHr = num(s.avgHr) ?? num(s.avgHeartRate)
+  const peakHr = num(s.peakHr) ?? num(s.peakHeartRate)
+  const mins = num(s.minutes) ?? num(s.mins) ?? num(s.completedMinutes)
+  const pre = num(s.preSymptom)
+  const peak = num(s.peakSymptom)
+  const symptomDelta = num(s.symptomDelta) ?? (pre != null && peak != null ? peak - pre : null)
+  const overrodeStop = s.overrode_stop === true || s.overrodeStop === true
+  const nextDayFlare = s.nextDayFlare === true
+  const eventType = normEvent(s.eventType)
+  const flare = (symptomDelta != null && symptomDelta >= SESSION_STOP_RISE) || eventType === 'symptom-stopped' || nextDayFlare
+  const status: Session['status'] = flare ? 'flare' : symptomDelta != null ? 'clean' : 'unknown'
+
+  let timeInBandPct = num(s.timeInBandPct) ?? num(s.inBandPct)
+  if (timeInBandPct == null) {
+    const sec = num(s.timeInBandSec) ?? num(s.inBandSec)
+    if (sec != null && mins != null && mins > 0) timeInBandPct = (sec / (mins * 60)) * 100
+  }
+  if (timeInBandPct != null) timeInBandPct = Math.max(0, Math.min(100, Math.round(timeInBandPct)))
+
+  const iso = s.date && !Number.isNaN(Date.parse(s.date)) ? s.date : null
+  return {
+    date: fmtShort(iso) ?? '—',
+    dateIso: iso,
+    avgHr, peakHr, mins, symptomDelta, status,
+    eventType,
+    modality: typeof s.modality === 'string' ? s.modality : null,
+    verifiedReadingPct: num(s.verifiedReadingPct),
+    hrVerified: s.hrVerified === true,
+    nextDayFlare,
+    overrodeStop,
+    sessionEndFeel: typeof s.sessionEndFeel === 'string' ? s.sessionEndFeel : null,
+    timeInBandPct,
+    deviceName: typeof s.deviceName === 'string' && s.deviceName.trim() ? s.deviceName.trim() : null,
+  }
+}
+
+function mapRealPatient(p: ApiPatient, clinicCode: string): Patient {
+  const patientKey = extractRef(p) ?? `label:${normLabel(p.name) || 'unidentified'}`
+  const hrtPoints: TrajectoryPoint[] = (p.hrtTrajectory ?? []).map((t) => ({
+    date: t.date ?? '',
+    hrt: t.hrt ?? null,
+    source: t.source,
+    verified: t.verified === true,
+    gated: t.gated === true,
+    interpretation: t.interpretation ?? null,
+    eventType: normEvent(t.eventType),
+    modality: typeof t.modality === 'string' ? t.modality : null,
+    verifiedReadingPct: num(t.verifiedReadingPct),
+  }))
+  const latestInterp = [...hrtPoints].reverse().find((t) => t.interpretation)?.interpretation ?? null
+  const clearanceReady = p.clearanceReady === true || latestInterp === 'no-intolerance'
+  const stage: Stage = clearanceReady
     ? { n: 7, label: 'Cleared — refer to MD' }
     : p.hrt
       ? { n: 4, label: 'Sub-symptom aerobic' }
       : { n: 2, label: 'Threshold test pending' }
-  const sessions: Session[] = (p.sessions ?? []).map((s) => ({
-    date: s.date ? new Date(s.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '—',
-    avgHr: Number(s.avgHr) || 0,
-    peakHr: Number(s.peakHr) || 0,
-    mins: Number(s.minutes ?? s.mins) || 0,
-    symptomDelta: Number(s.symptomDelta) || 0,
-    status: Number(s.symptomDelta) >= 2 ? 'flag' : 'clean',
-  }))
+  // newest first for display (API returns ascending)
+  const sessions = (p.sessions ?? []).map(mapApiSession).reverse()
+  const condition = (p.condition || '').trim()
   return {
-    id: `real-${i}`,
-    name: p.name || 'Unidentified',
-    age: 0,
-    sport: p.condition || '—',
+    id: `real-${patientKey}`,
+    patientKey,
+    name: p.name?.trim() || 'Unidentified',
+    // Real SST intake doesn't capture these yet — leave them unknown and the
+    // card simply omits them (never "0 · — · 0d post-injury").
+    age: null,
+    sport: condition ? condition.charAt(0).toUpperCase() + condition.slice(1) : null,
     code: clinicCode,
-    injuryDate: '—',
-    daysPost: 0,
+    injuryDate: null,
+    daysPost: null,
     stage,
     hrt: p.hrt ?? null,
     bandLow: p.bandLow ?? 0,
     bandHigh: p.bandHigh ?? 0,
-    restSymptoms: 0,
+    restSymptoms: null,
     baseline: 'none',
-    trend: (p.hrtTrajectory ?? []).map((t) => Number(t.hrt) || 0).filter(Boolean), // legacy symptom-style sparkline (unused for HRt now)
-    hrtPoints: (p.hrtTrajectory ?? []).map((t) => ({
-      date: t.date ?? '',
-      hrt: t.hrt ?? null,
-      source: t.source,
-      verified: t.verified === true,
-      gated: t.gated === true,
-    })),
+    trend: [],
+    hrtPoints,
     sessions,
-    flag: p.clearanceReady
-      ? 'Recovered — no-intolerance on re-test. Ready for your clearance review.'
-      : undefined,
+    lastActivity: p.lastActivity ?? sessions[0]?.dateIso ?? null,
+    clearanceReady,
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   Escalation ladder (three tiers):
+   - ordinary sessions accumulate quietly
+   - REVIEW  (amber): flare session · symptom-stopped · overrode stop ·
+     next-day flare · aborted threshold test
+   - URGENT  (red):  red-flag threshold event
+   Acknowledgement is client-side per-browser for now (localStorage keyed by
+   clinic + patientKey + event date). LIMITATION: an ack does not sync across
+   devices/browsers or to other clinicians — a per-clinic server-side ack
+   store should replace this once clinician accounts exist.
+─────────────────────────────────────────────────────────────────── */
+type Attention = { level: 'urgent' | 'review'; reason: string; dateKey: string }
+
+function deriveAttention(pt: Patient): Attention | null {
+  const traj = pt.hrtPoints ?? [] // chronological (API order)
+  // Urgent unless a 'red-flag-cleared' event LANDED AFTER the red flag —
+  // the app lets a clinician-advised patient clear the hold after review.
+  let redI = -1
+  let clearedI = -1
+  traj.forEach((t, i) => {
+    const e = normEvent(t.interpretation) ?? normEvent(t.eventType)
+    if (e === 'red-flag') redI = i
+    if (e === 'red-flag-cleared') clearedI = i
+  })
+  if (redI >= 0 && redI > clearedI) {
+    const red = traj[redI]
+    return {
+      level: 'urgent',
+      reason: `Red flag reported ${fmtShort(red.date) ?? ''} — patient advised to seek medical review`.replace('  ', ' '),
+      dateKey: red.date || 'red-flag',
+    }
+  }
+  const cands: Attention[] = []
+  for (const s of pt.sessions) { // newest first
+    const key = s.dateIso ?? s.date
+    if (s.eventType === 'symptom-stopped') cands.push({ level: 'review', reason: `Session stopped on symptom rise — ${s.date}`, dateKey: key })
+    else if (s.overrodeStop) cands.push({ level: 'review', reason: `Patient overrode an in-session stop — ${s.date}`, dateKey: key })
+    else if (s.nextDayFlare) cands.push({ level: 'review', reason: `Next-day symptom flare reported — ${s.date}`, dateKey: key })
+    else if (s.status === 'flare') cands.push({ level: 'review', reason: `Symptom flare in session — ${s.date}`, dateKey: key })
+  }
+  const aborted = [...traj].reverse().find((t) => normEvent(t.interpretation) === 'aborted' || normEvent(t.eventType) === 'aborted')
+  if (aborted) cands.push({ level: 'review', reason: `Threshold test aborted — ${fmtShort(aborted.date) ?? aborted.date}`, dateKey: aborted.date || 'aborted' })
+  if (!cands.length) return null
+  cands.sort((a, b) => (Date.parse(b.dateKey) || 0) - (Date.parse(a.dateKey) || 0))
+  return cands[0]
+}
+
+function ackKeyOf(clinic: string, pt: Patient, att: Attention) {
+  return `sst-hub-ack:${clinic || 'DEMO'}:${pt.patientKey ?? pt.id}:${att.dateKey}`
+}
+
+function MiniChip({ tone, children }: { tone: 'slate' | 'amber' | 'emerald'; children: React.ReactNode }) {
+  const cls = tone === 'amber'
+    ? 'bg-amber-50 text-amber-700 border-amber-200'
+    : tone === 'emerald'
+      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+      : 'bg-slate-50 text-slate-600 border-slate-200'
+  return <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${cls}`}>{children}</span>
+}
+
+type RealState = 'idle' | 'loading' | 'ready' | 'missing-key' | 'unauthorized' | 'unknown-code' | 'error'
 
 export default function ClinicalHubPage() {
   const [roster, setRoster] = useState<Patient[]>(PATIENTS)
@@ -318,33 +599,106 @@ export default function ClinicalHubPage() {
   const [query, setQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [clinicCode, setClinicCode] = useState('')
+  const [viewKey, setViewKey] = useState<string | null>(null)
+  const [clinicName, setClinicName] = useState<string | null>(null)
+  const [mode, setMode] = useState<'demo' | 'real'>('demo')
+  const [realState, setRealState] = useState<RealState>('idle')
+  const [acks, setAcks] = useState<Record<string, boolean>>({})
 
-  // Real data: ?clinic=<code> loads that clinic's actual SST sessions from
-  // /api/sst/clinic-sessions (additive — without the param the Hub shows the
-  // demo roster). window.location avoids a Suspense boundary for useSearchParams.
+  // Real data: ?clinic=<code>&k=<viewkey> loads that clinic's actual SST
+  // sessions from /api/sst/clinic-sessions. DEMO00 is the public demo (no key
+  // required). A real code with no/rejected key shows a key state — it never
+  // falls through to the demo roster. window.location avoids a Suspense
+  // boundary for useSearchParams.
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get('clinic')
-    if (!code) return
-    setClinicCode(code.toUpperCase())
-    fetch(`/api/sst/clinic-sessions?code=${encodeURIComponent(code)}`)
-      .then((r) => r.json())
-      .then((data: { patients?: ApiPatient[] }) => {
-        if (data?.patients && data.patients.length) {
-          setRoster(data.patients.map((pp, i) => mapRealPatient(pp, code.toUpperCase(), i)))
-          setSelectedId('real-0')
+    const params = new URLSearchParams(window.location.search)
+    const code = (params.get('clinic') || '').trim().toUpperCase()
+    const k = (params.get('k') || '').trim() || null
+    if (!code) return // pure demo preview
+    setClinicCode(code)
+    setViewKey(k)
+    const isDemoCode = code === 'DEMO00'
+    if (!isDemoCode) {
+      setMode('real')
+      setRoster([]) // never show the demo roster under a real clinic code
+      setSelectedId('')
+      if (!k) {
+        setRealState('missing-key')
+        return
+      }
+      setRealState('loading')
+    }
+    fetch(`/api/sst/clinic-sessions?code=${encodeURIComponent(code)}${k ? `&k=${encodeURIComponent(k)}` : ''}`)
+      .then(async (r) => {
+        if (!r.ok) {
+          if (isDemoCode) return // demo keeps its fixtures
+          setRealState(r.status === 401 || r.status === 403 ? 'unauthorized' : r.status === 404 ? 'unknown-code' : 'error')
+          return
         }
+        const data = (await r.json()) as { patients?: ApiPatient[]; clinicName?: string }
+        if (typeof data?.clinicName === 'string' && data.clinicName.trim()) setClinicName(data.clinicName.trim())
+        const mapped = groupApiPatients(data?.patients ?? []).map((pp) => mapRealPatient(pp, code))
+        if (isDemoCode) {
+          if (mapped.length) {
+            setRoster(mapped)
+            setSelectedId(mapped[0].id)
+          }
+          return
+        }
+        setRoster(mapped)
+        setSelectedId(mapped[0]?.id ?? '')
+        setRealState('ready')
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!isDemoCode) setRealState('error')
+      })
   }, [])
-  const patients = roster.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
+
+  // Load acknowledged-review flags (client-side per-browser — see Attention note).
+  useEffect(() => {
+    try {
+      const next: Record<string, boolean> = {}
+      for (const pt of roster) {
+        const att = deriveAttention(pt)
+        if (!att) continue
+        const key = ackKeyOf(clinicCode, pt, att)
+        if (window.localStorage.getItem(key)) next[key] = true
+      }
+      setAcks(next)
+    } catch {
+      /* storage unavailable (private mode) — acks just don't persist */
+    }
+  }, [roster, clinicCode])
+
+  function markReviewed(key: string) {
+    try {
+      window.localStorage.setItem(key, String(Date.now()))
+    } catch { /* non-persistent fallback below still updates state */ }
+    setAcks((prev) => ({ ...prev, [key]: true }))
+  }
+
+  const isDemo = mode === 'demo'
+  const filtered = roster.filter((pt) => pt.name.toLowerCase().includes(query.toLowerCase()))
+  const decorated = filtered.map((pt) => {
+    const att = deriveAttention(pt)
+    const key = att ? ackKeyOf(clinicCode, pt, att) : null
+    return { pt, att, ackKey: key, acked: key ? !!acks[key] : false }
+  })
+  const needsReview = decorated
+    .filter((d) => d.att && !d.acked)
+    .sort((a, b) => (a.att!.level === b.att!.level ? 0 : a.att!.level === 'urgent' ? -1 : 1))
+  const others = decorated.filter((d) => !d.att || d.acked)
   const p = roster.find((x) => x.id === selectedId) ?? roster[0]
+  const selAtt = p ? deriveAttention(p) : null
+  const selAckKey = p && selAtt ? ackKeyOf(clinicCode, p, selAtt) : null
+  const selAcked = selAckKey ? !!acks[selAckKey] : false
 
   function addPatient(form: { name: string; age: string; sport: string; injuryDate: string }) {
     const seq = roster.length + 1
     const id = `p${seq}-${form.name.replace(/\s+/g, '').toLowerCase()}`
     const next: Patient = {
-      id, name: form.name.trim() || 'New patient', age: Number(form.age) || 0,
-      sport: form.sport.trim() || '—', code: mintPatientCode('CEA-CLN', seq),
+      id, name: form.name.trim() || 'New patient', age: Number(form.age) || null,
+      sport: form.sport.trim() || null, code: mintPatientCode('CEA-CLN', seq),
       injuryDate: form.injuryDate || 'Today', daysPost: 0,
       stage: { n: 1, label: 'Intake — threshold test pending' },
       hrt: null, bandLow: 0, bandHigh: 0, restSymptoms: 0, baseline: 'none',
@@ -360,20 +714,33 @@ export default function ClinicalHubPage() {
     setRoster((r) => r.map((pt) => (pt.id === id ? { ...pt, ...partial } : pt)))
   }
   const setStage = (n: number) => {
+    if (!p) return
     const s = STAGES.find((x) => x.n === n)
-    if (s) updatePatient(p.id, { stage: s, daysPost: p.daysPost })
+    if (s) updatePatient(p.id, { stage: s })
   }
+
+  // TODO(clinic registry): /api/sst/clinic-sessions doesn't return clinicName
+  // yet — the KV clinic registry (`clinic:{code}`) holds the clinic record;
+  // once the API surfaces the name in its response this fallback disappears.
+  const clinicTitle = isDemo
+    ? 'Carter Sports & Spinal (demo)'
+    : clinicName ?? `${clinicCode} · Your clinic`
+
+  const showLive = clinicCode !== '' && (clinicCode === 'DEMO00' || !!viewKey)
 
   return (
     <div className="min-h-screen dashboard-bg">
-      {/* Preview banner */}
-      <div className="bg-[var(--accent)] text-white text-center text-xs py-1.5 px-4 font-medium">
-        Clinical Hub — pre-launch preview · demo data · not visible to enrolled users
-      </div>
+      {/* Preview banner — demo mode only. A real clinic sees its real data, unbannered. */}
+      {isDemo && (
+        <div className="bg-[var(--accent)] text-white text-center text-xs py-1.5 px-4 font-medium">
+          Clinical Hub — pre-launch preview · demo data · not visible to enrolled users
+        </div>
+      )}
 
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
-        {/* Live in-session monitor — only with a real ?clinic=<code> */}
-        {clinicCode && <SstLivePanel code={clinicCode} />}
+        {/* Live in-session monitor */}
+        {showLive && <SstLivePanel code={clinicCode} viewKey={viewKey} />}
+
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
           <div className="flex items-center gap-3">
@@ -382,14 +749,70 @@ export default function ClinicalHubPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground tracking-tight leading-none">Clinical Hub</h1>
-              <p className="text-xs text-muted-foreground mt-1">Carter Sports &amp; Spinal · {roster.length} active patient{roster.length === 1 ? '' : 's'}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {clinicTitle}{realState === 'ready' || isDemo ? <> · {roster.length} active patient{roster.length === 1 ? '' : 's'}</> : null}
+              </p>
             </div>
           </div>
-          <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition">
-            <Plus className="w-4 h-4" /> Add patient
-          </button>
+          {isDemo && (
+            <button onClick={() => setAddOpen(true)} className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition">
+              <Plus className="w-4 h-4" /> Add patient
+            </button>
+          )}
         </div>
 
+        {/* Real-mode key / load states — never fetch-fail into fake data */}
+        {!isDemo && realState !== 'ready' ? (
+          <div className="max-w-xl mx-auto py-10">
+            {realState === 'loading' ? (
+              <div className="glass-premium rounded-2xl p-10 text-center">
+                <p className="text-sm text-muted-foreground">Loading your clinic&apos;s sessions…</p>
+              </div>
+            ) : realState === 'missing-key' || realState === 'unauthorized' ? (
+              <div className="glass-premium rounded-2xl p-10 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4">
+                  <KeyRound className="w-6 h-6 text-amber-600" strokeWidth={1.8} />
+                </div>
+                <h2 className="text-base font-bold text-foreground mb-2">
+                  {realState === 'missing-key' ? 'This hub link is missing its clinic key' : 'This clinic key wasn’t accepted'}
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {realState === 'missing-key'
+                    ? 'This hub link is missing its clinic key — use the link from your welcome email.'
+                    : 'Use the exact hub link from your welcome email — it carries your clinic’s private view key.'}
+                </p>
+              </div>
+            ) : realState === 'unknown-code' ? (
+              <div className="glass-premium rounded-2xl p-10 text-center">
+                <h2 className="text-base font-bold text-foreground mb-2">Clinic code not recognised</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  <span className="font-mono">{clinicCode}</span> isn&apos;t a registered clinic code — check the link from your welcome email.
+                </p>
+              </div>
+            ) : (
+              <div className="glass-premium rounded-2xl p-10 text-center">
+                <h2 className="text-base font-bold text-foreground mb-2">Couldn&apos;t load your clinic&apos;s sessions</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">Refresh to try again — nothing is lost.</p>
+              </div>
+            )}
+          </div>
+        ) : !isDemo && roster.length === 0 ? (
+          /* Real clinic, zero patients — premium empty state, never the demo roster */
+          <div className="max-w-xl mx-auto py-10">
+            <div className="glass-premium rounded-2xl p-10 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center mx-auto mb-4">
+                <QrCode className="w-6 h-6 text-[var(--accent)]" strokeWidth={1.8} />
+              </div>
+              <h2 className="text-base font-bold text-foreground mb-2">No patients yet</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Hand a patient your QR card and their first session appears here live.
+              </p>
+              <p className="text-xs text-muted-foreground/70 leading-relaxed mt-3">
+                Threshold tests, training sessions and live in-session heart rate all flow to this hub the moment a patient enters your clinic code.
+              </p>
+            </div>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5">
           {/* ── Roster ── */}
           <aside className="space-y-3">
@@ -402,35 +825,30 @@ export default function ClinicalHubPage() {
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl glass-premium text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
               />
             </div>
-            {patients.map((pt) => {
-              const active = pt.id === selectedId
-              return (
-                <button key={pt.id} onClick={() => setSelectedId(pt.id)}
-                  className={`w-full text-left glass-premium rounded-2xl p-4 transition group ${active ? 'ring-2 ring-[var(--accent)]/40' : 'hover:-translate-y-0.5'}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)]/15 to-[var(--accent)]/5 flex items-center justify-center text-[var(--accent)] font-bold text-sm flex-shrink-0">
-                      {initials(pt.name)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">{pt.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{pt.age} · {pt.sport}</p>
-                    </div>
-                    {pt.flag
-                      ? <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                      : <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-[var(--accent)] flex-shrink-0" />}
-                  </div>
-                  <div className="flex items-center gap-2 mt-3">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
-                      Stage {pt.stage.n}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground">{pt.daysPost}d post-injury</span>
-                  </div>
-                </button>
-              )
-            })}
+
+            {/* Escalation ladder: unacknowledged attention pins to the top */}
+            {needsReview.length > 0 && (
+              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700/80 px-1 pt-1">
+                Needs review · {needsReview.length}
+              </p>
+            )}
+            {needsReview.map((d) => (
+              <RosterCard key={d.pt.id} pt={d.pt} att={d.att} acked={false}
+                active={d.pt.id === selectedId} onSelect={() => setSelectedId(d.pt.id)} />
+            ))}
+            {needsReview.length > 0 && others.length > 0 && (
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-1 pt-2">
+                All patients
+              </p>
+            )}
+            {others.map((d) => (
+              <RosterCard key={d.pt.id} pt={d.pt} att={d.att} acked={d.acked}
+                active={d.pt.id === selectedId} onSelect={() => setSelectedId(d.pt.id)} />
+            ))}
           </aside>
 
           {/* ── Detail ── */}
+          {p && (
           <section className="space-y-5">
             {/* Patient header */}
             <div className="glass-premium rounded-2xl p-5 sm:p-6">
@@ -441,11 +859,20 @@ export default function ClinicalHubPage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-foreground leading-tight">{p.name}</h2>
-                    <p className="text-sm text-muted-foreground">{p.age} yrs · {p.sport} · clinic code <span className="font-mono text-foreground">{p.code}</span></p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Injured {p.injuryDate}</span>
-                      <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {p.daysPost} days post</span>
-                    </div>
+                    {/* Render only what we actually know — no zeroed placeholders */}
+                    <p className="text-sm text-muted-foreground">
+                      {[p.age != null ? `${p.age} yrs` : null, p.sport ?? null].filter(Boolean).join(' · ')}
+                      {(p.age != null || p.sport) ? ' · ' : ''}clinic code <span className="font-mono text-foreground">{p.code}</span>
+                    </p>
+                    {(p.injuryDate || p.daysPost != null || p.lastActivity) && (
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        {p.injuryDate && <span className="inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Injured {p.injuryDate}</span>}
+                        {p.daysPost != null && <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {p.daysPost} days post</span>}
+                        {p.daysPost == null && p.lastActivity && (
+                          <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Last activity {fmtShort(p.lastActivity)}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
@@ -453,7 +880,45 @@ export default function ClinicalHubPage() {
                 </span>
               </div>
 
-              {p.flag && (
+              {/* URGENT — red-flag test event */}
+              {selAtt?.level === 'urgent' && !selAcked && selAckKey && (
+                <div className="mt-4 flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 p-3">
+                  <AlertOctagon className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-red-800 leading-relaxed flex-1 font-medium">{selAtt.reason}</p>
+                  <button onClick={() => markReviewed(selAckKey)}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-red-300 text-red-700 hover:bg-red-100 transition flex-shrink-0">
+                    Mark reviewed
+                  </button>
+                </div>
+              )}
+              {/* REVIEW — flare / symptom-stopped / overrode stop / next-day flare / aborted test */}
+              {selAtt?.level === 'review' && !selAcked && selAckKey && (
+                <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-amber-800 leading-relaxed flex-1">{selAtt.reason}</p>
+                  <button onClick={() => markReviewed(selAckKey)}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-100 transition flex-shrink-0">
+                    Mark reviewed
+                  </button>
+                </div>
+              )}
+              {selAtt && selAcked && (
+                <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-[var(--accent)]" /> Reviewed on this device — {selAtt.reason}
+                </p>
+              )}
+
+              {/* Clearance-ready — honest framing: the decision stays clinical */}
+              {p.clearanceReady && (
+                <div className="mt-4 flex items-start gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-emerald-800 leading-relaxed">
+                    Recovered — no-intolerance on re-test. Ready for your clearance review — clearance is your clinical decision.
+                  </p>
+                </div>
+              )}
+
+              {p.flag && !p.clearanceReady && (
                 <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
                   <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-amber-800 leading-relaxed">{p.flag}</p>
@@ -461,32 +926,39 @@ export default function ClinicalHubPage() {
               )}
             </div>
 
-            {/* Return-to-activity stage management */}
+            {/* Return-to-activity stage — editable in demo only; stage edits
+                aren't persisted anywhere yet, so a real clinic sees the stage
+                DERIVED from threshold results, read-only. */}
             <div className="glass-premium rounded-2xl p-5 sm:p-6">
               <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
                 <div className="flex items-center gap-2">
                   <Activity className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
                   <h3 className="text-sm font-bold text-foreground">Return-to-activity stage</h3>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setStage(Math.max(1, p.stage.n - 1))} disabled={p.stage.n <= 1}
-                    className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-black/10 text-muted-foreground hover:bg-black/[0.03] transition disabled:opacity-40">
-                    <ChevronLeft className="w-3.5 h-3.5" /> Step back
-                  </button>
-                  <button onClick={() => setStage(Math.min(7, p.stage.n + 1))} disabled={p.stage.n >= 7}
-                    className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition disabled:opacity-40">
-                    Advance <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                {isDemo ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Demo preview</span>
+                    <button onClick={() => setStage(Math.max(1, p.stage.n - 1))} disabled={p.stage.n <= 1}
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-black/10 text-muted-foreground hover:bg-black/[0.03] transition disabled:opacity-40">
+                      <ChevronLeft className="w-3.5 h-3.5" /> Step back
+                    </button>
+                    <button onClick={() => setStage(Math.min(7, p.stage.n + 1))} disabled={p.stage.n >= 7}
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition disabled:opacity-40">
+                      Advance <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-[11px] text-muted-foreground">Derived from threshold results</span>
+                )}
               </div>
-              {/* clickable ladder */}
+              {/* ladder — clickable in demo only */}
               <div className="flex items-center gap-1.5">
                 {STAGES.map((s) => {
                   const done = s.n < p.stage.n, current = s.n === p.stage.n
-                  return (
-                    <button key={s.n} onClick={() => setStage(s.n)} title={s.label}
-                      className={`flex-1 h-2 rounded-full transition ${current ? 'bg-[var(--accent)]' : done ? 'bg-[var(--accent)]/35' : 'bg-black/[0.06] hover:bg-black/10'}`} />
-                  )
+                  const cls = `flex-1 h-2 rounded-full transition ${current ? 'bg-[var(--accent)]' : done ? 'bg-[var(--accent)]/35' : 'bg-black/[0.06]'}`
+                  return isDemo
+                    ? <button key={s.n} onClick={() => setStage(s.n)} title={s.label} className={`${cls} hover:bg-black/10`} />
+                    : <div key={s.n} title={s.label} className={cls} />
                 })}
               </div>
               <div className="flex items-center justify-between mt-3">
@@ -507,23 +979,32 @@ export default function ClinicalHubPage() {
                 <div className="flex items-center gap-2 mb-2"><Activity className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">Training band</p></div>
                 <p className="stat-value">{p.hrt ? <>{p.bandLow}–{p.bandHigh}<span className="text-base font-medium text-muted-foreground"> bpm</span></> : <span className="text-base text-muted-foreground">—</span>}</p>
               </div>
-              <div className="glass-premium rounded-2xl p-5 col-span-2 sm:col-span-1">
-                <div className="flex items-center gap-2 mb-2"><TrendingDown className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">Symptoms at rest</p></div>
-                <p className="stat-value">{p.restSymptoms}<span className="text-base font-medium text-muted-foreground"> / 10</span></p>
-              </div>
+              {p.restSymptoms != null ? (
+                <div className="glass-premium rounded-2xl p-5 col-span-2 sm:col-span-1">
+                  <div className="flex items-center gap-2 mb-2"><TrendingDown className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">Symptoms at rest</p></div>
+                  <p className="stat-value">{p.restSymptoms}<span className="text-base font-medium text-muted-foreground"> / 10</span></p>
+                </div>
+              ) : (
+                <div className="glass-premium rounded-2xl p-5 col-span-2 sm:col-span-1">
+                  <div className="flex items-center gap-2 mb-2"><Clock className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} /><p className="stat-label mb-0">Last activity</p></div>
+                  <p className="stat-value">
+                    {daysAgo(p.lastActivity) != null
+                      ? daysAgo(p.lastActivity) === 0 ? 'Today' : <>{daysAgo(p.lastActivity)}<span className="text-base font-medium text-muted-foreground">d ago</span></>
+                      : <span className="text-base text-muted-foreground">—</span>}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* SST program */}
+              {/* SST session history */}
               <div className="glass-premium rounded-2xl p-5 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <HeartPulse className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
                     <h3 className="text-sm font-bold text-foreground">SST program</h3>
                   </div>
-                  <button className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)] hover:underline">
-                    Open session <ArrowUpRight className="w-3.5 h-3.5" />
-                  </button>
+                  <span className="text-[11px] text-muted-foreground">{p.sessions.length} session{p.sessions.length === 1 ? '' : 's'}</span>
                 </div>
                 {p.sessions.length === 0 ? (
                   <p className="text-xs text-muted-foreground leading-relaxed py-6 text-center">
@@ -531,16 +1012,7 @@ export default function ClinicalHubPage() {
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {p.sessions.map((s, i) => (
-                      <div key={i} className="flex items-center gap-3 rounded-xl bg-black/[0.015] px-3 py-2.5">
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.status === 'flag' ? 'bg-amber-500' : 'bg-[var(--accent)]'}`} />
-                        <p className="text-xs font-medium text-foreground w-14 flex-shrink-0">{s.date}</p>
-                        <p className="text-xs text-muted-foreground flex-1">avg {s.avgHr} · peak {s.peakHr} bpm · {s.mins} min</p>
-                        <span className={`text-[11px] font-semibold ${s.symptomDelta > 2 ? 'text-amber-600' : 'text-[var(--accent)]'}`}>
-                          {s.symptomDelta === 0 ? 'no Δ' : `+${s.symptomDelta}`}
-                        </span>
-                      </div>
-                    ))}
+                    {p.sessions.map((s, i) => <SessionRow key={i} s={s} />)}
                   </div>
                 )}
               </div>
@@ -551,28 +1023,132 @@ export default function ClinicalHubPage() {
               <SstTrajectory points={p.hrtPoints ?? []} />
             </div>
 
-            {/* Baseline & serial testing — the SCAT6/SCOAT6 tool */}
-            <BaselinePanel base={BASELINES[p.id] ?? { tool: 'SCAT6', status: 'none', domains: [] }} />
+            {/* Baseline & serial testing (SCAT6/SCOAT6) — FIXTURE data, demo mode only */}
+            {isDemo && BASELINES[p.id] && <BaselinePanel base={BASELINES[p.id]} />}
 
-            {/* Clinical notes */}
-            <div className="glass-premium rounded-2xl p-5 sm:p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <NotebookPen className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
-                <h3 className="text-sm font-bold text-foreground">Clinical notes</h3>
+            {/* Clinical notes — not persisted anywhere yet, so demo mode only */}
+            {isDemo && (
+              <div className="glass-premium rounded-2xl p-5 sm:p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <NotebookPen className="w-[18px] h-[18px] text-[var(--accent)]" strokeWidth={1.8} />
+                  <h3 className="text-sm font-bold text-foreground">Clinical notes</h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Demo preview — not saved</span>
+                </div>
+                <textarea
+                  value={p.notes ?? ''}
+                  onChange={(e) => updatePatient(p.id, { notes: e.target.value })}
+                  placeholder="Session observations, symptom triggers, RTP decisions, referrals…"
+                  rows={3}
+                  className="w-full px-3 py-2.5 rounded-xl glass-premium text-sm text-foreground placeholder:text-muted-foreground/50 leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+                />
               </div>
-              <textarea
-                value={p.notes ?? ''}
-                onChange={(e) => updatePatient(p.id, { notes: e.target.value })}
-                placeholder="Session observations, symptom triggers, RTP decisions, referrals…"
-                rows={3}
-                className="w-full px-3 py-2.5 rounded-xl glass-premium text-sm text-foreground placeholder:text-muted-foreground/50 leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
-              />
-            </div>
+            )}
           </section>
+          )}
         </div>
+        )}
       </div>
 
-      {addOpen && <AddPatientModal onClose={() => setAddOpen(false)} onAdd={addPatient} />}
+      {addOpen && isDemo && <AddPatientModal onClose={() => setAddOpen(false)} onAdd={addPatient} />}
+    </div>
+  )
+}
+
+function RosterCard({ pt, att, acked, active, onSelect }: {
+  pt: Patient
+  att: Attention | null
+  acked: boolean
+  active: boolean
+  onSelect: () => void
+}) {
+  const meta = [pt.age != null ? String(pt.age) : null, pt.sport ?? null].filter(Boolean).join(' · ')
+  const last = daysAgo(pt.lastActivity)
+  return (
+    <button onClick={onSelect}
+      className={`w-full text-left glass-premium rounded-2xl p-4 transition group ${active ? 'ring-2 ring-[var(--accent)]/40' : 'hover:-translate-y-0.5'}`}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)]/15 to-[var(--accent)]/5 flex items-center justify-center text-[var(--accent)] font-bold text-sm flex-shrink-0">
+          {initials(pt.name)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">{pt.name}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {meta || `${pt.sessions.length} session${pt.sessions.length === 1 ? '' : 's'}`}
+          </p>
+        </div>
+        {att && !acked
+          ? (att.level === 'urgent'
+              ? <AlertOctagon className="w-4 h-4 text-red-500 flex-shrink-0" />
+              : <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />)
+          : pt.flag
+            ? <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            : <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-[var(--accent)] flex-shrink-0" />}
+      </div>
+      <div className="flex items-center gap-2 mt-3 flex-wrap">
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
+          Stage {pt.stage.n}
+        </span>
+        {att?.level === 'review' && !acked && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Review</span>
+        )}
+        {att && acked && (
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/[0.03] text-muted-foreground border border-black/5">Reviewed</span>
+        )}
+        {pt.daysPost != null
+          ? <span className="text-[11px] text-muted-foreground">{pt.daysPost}d post-injury</span>
+          : last != null
+            ? <span className="text-[11px] text-muted-foreground">last session {last === 0 ? 'today' : `${last}d ago`}</span>
+            : null}
+      </div>
+      {/* URGENT — red-flag banner on the patient card */}
+      {att?.level === 'urgent' && !acked && (
+        <div className="mt-3 flex items-start gap-1.5 rounded-lg bg-red-50 border border-red-200 px-2.5 py-1.5">
+          <AlertOctagon className="w-3.5 h-3.5 text-red-600 mt-0.5 flex-shrink-0" />
+          <p className="text-[11px] font-semibold text-red-700 leading-snug">{att.reason}</p>
+        </div>
+      )}
+    </button>
+  )
+}
+
+function SessionRow({ s }: { s: Session }) {
+  const dotCls = s.status === 'flare' ? 'bg-amber-500' : s.status === 'clean' ? 'bg-[var(--accent)]' : 'bg-slate-300'
+  const bits = [
+    s.avgHr != null ? `avg ${s.avgHr}` : null,
+    s.peakHr != null ? `peak ${s.peakHr} bpm` : null,
+    s.mins != null ? `${s.mins} min` : null,
+  ].filter(Boolean).join(' · ')
+  // Verified badge: hrVerified AND (verifiedReadingPct ≥ 80 when present —
+  // absence tolerated for old rows that never reported the percentage).
+  // "Live HR verified" is source-neutral on purpose: the verified tier is any
+  // live Bluetooth HR stream (mostly wrist wearables in broadcast mode), not
+  // chest straps specifically.
+  const verified = s.hrVerified === true && (s.verifiedReadingPct == null || s.verifiedReadingPct >= 80)
+  const hasChips = !!(s.modality || verified || s.timeInBandPct != null || s.eventType === 'symptom-stopped'
+    || s.eventType === 'abandoned' || s.overrodeStop || s.nextDayFlare || s.sessionEndFeel || s.deviceName)
+  return (
+    <div className="rounded-xl bg-black/[0.015] px-3 py-2.5">
+      <div className="flex items-center gap-3">
+        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotCls}`} />
+        <p className="text-xs font-medium text-foreground w-14 flex-shrink-0">{s.date}</p>
+        <p className="text-xs text-muted-foreground flex-1">{bits || 'no data recorded'}</p>
+        <span className={`text-[11px] font-semibold ${s.symptomDelta != null && s.symptomDelta >= SESSION_STOP_RISE ? 'text-amber-600' : s.symptomDelta == null ? 'text-muted-foreground/60' : 'text-[var(--accent)]'}`}>
+          {s.symptomDelta == null ? 'Δ —' : s.symptomDelta === 0 ? 'no Δ' : s.symptomDelta > 0 ? `+${s.symptomDelta}` : `${s.symptomDelta}`}
+        </span>
+      </div>
+      {hasChips && (
+        <div className="flex items-center flex-wrap gap-1.5 mt-1.5 pl-5">
+          {s.modality && <MiniChip tone="slate"><span className="capitalize">{s.modality}</span></MiniChip>}
+          {s.timeInBandPct != null && <MiniChip tone="slate">{s.timeInBandPct}% in band</MiniChip>}
+          {verified && <MiniChip tone="emerald"><ShieldCheck className="w-3 h-3" /> Live HR verified</MiniChip>}
+          {s.deviceName && <MiniChip tone="slate">{s.deviceName}</MiniChip>}
+          {s.eventType === 'symptom-stopped' && <MiniChip tone="amber">stopped on symptoms</MiniChip>}
+          {s.eventType === 'abandoned' && <MiniChip tone="slate">abandoned</MiniChip>}
+          {s.overrodeStop && <MiniChip tone="amber">overrode stop</MiniChip>}
+          {s.nextDayFlare && <MiniChip tone="amber">next-day flare</MiniChip>}
+          {s.sessionEndFeel && <MiniChip tone="slate">felt {s.sessionEndFeel}</MiniChip>}
+        </div>
+      )}
     </div>
   )
 }
@@ -583,7 +1159,10 @@ function AddPatientModal({ onClose, onAdd }: { onClose: () => void; onAdd: (f: {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-md glass-premium rounded-2xl p-6" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-base font-bold text-foreground mb-1">Add patient</h3>
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="text-base font-bold text-foreground">Add patient</h3>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Demo preview — not saved</span>
+        </div>
         <p className="text-xs text-muted-foreground mb-5">
           Each patient gets a unique code under your clinic. Share it with them for the SST app so their sessions flow back to this card.
         </p>

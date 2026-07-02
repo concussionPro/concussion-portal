@@ -1,6 +1,6 @@
 'use client'
 
-import { HeartPulse, ShieldCheck, Info } from 'lucide-react'
+import { HeartPulse, ShieldCheck, Info, Clock } from 'lucide-react'
 
 /**
  * SST Trainer — measured-HRt recovery-trajectory instrument.
@@ -37,6 +37,12 @@ export type TrajectoryPoint = {
   /** the graded test that produced it was clinician-gated (clinic-code / clinician-overseen) */
   gated?: boolean
   interpretation?: string | null
+  /** newer app versions tag threshold results with an eventType (e.g. 'red-flag', 'aborted') */
+  eventType?: string | null
+  /** test modality — treadmill / bike / walk (absent on old rows) */
+  modality?: string | null
+  /** % of readings during the test that were live-signal-verified (absent on old rows) */
+  verifiedReadingPct?: number | null
 }
 
 /** Source accuracy tier — strap/paired sensor is most accurate; camera-PPG has
@@ -53,10 +59,49 @@ function fmtDate(d: string) {
   return new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
 }
 
+/** Collapse the app's namespaced eventTypes ('threshold-red-flag',
+ *  'test-aborted', …) and bare interpretation values onto one vocabulary. */
+function pointKind(p: TrajectoryPoint): string {
+  const raw = (p.interpretation ?? p.eventType ?? '').toLowerCase().trim()
+  if (raw === 'threshold-red-flag') return 'red-flag'
+  if (raw === 'threshold-no-intolerance') return 'no-intolerance'
+  if (raw === 'threshold-physiologic') return 'physiologic'
+  if (raw === 'test-aborted') return 'aborted'
+  return raw
+}
+
+/** Human label for a threshold test that produced no measurable HRt. */
+function nonMeasurableLabel(p: TrajectoryPoint): { label: string; cls: string } {
+  const kind = pointKind(p)
+  if (kind === 'red-flag') return { label: 'red flag — test stopped', cls: 'text-red-700 bg-red-50 border-red-200' }
+  if (kind === 'red-flag-cleared') return { label: 'red-flag hold cleared', cls: 'text-slate-600 bg-slate-50 border-slate-200' }
+  if (kind === 'no-intolerance') return { label: 'no intolerance — exhaustion without provocation', cls: 'text-emerald-700 bg-emerald-50 border-emerald-200' }
+  if (kind === 'aborted') return { label: 'test aborted', cls: 'text-amber-700 bg-amber-50 border-amber-200' }
+  if (kind === 'invalid') return { label: 'invalid — not enough data', cls: 'text-slate-600 bg-slate-50 border-slate-200' }
+  return { label: 'no HRt recorded', cls: 'text-slate-600 bg-slate-50 border-slate-200' }
+}
+
 export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
   // SPEC 3 — only verified, clinician-gated, real measurements are plottable.
   const plottable = points.filter((p) => p.hrt != null && p.verified === true && p.gated === true)
-  const excluded = points.length - plottable.length
+  // Split the exclusions honestly: a test WITHOUT a measurable HRt
+  // (no-intolerance / red-flag / aborted / invalid) is a clinical event, not an
+  // integrity failure — list it in the ledger. Only readings that HAVE an HRt
+  // but failed the verified/gated gate count as excluded readings.
+  const nonMeasurable = points.filter((p) => p.hrt == null)
+  const excluded = points.length - plottable.length - nonMeasurable.length
+
+  // Re-test cadence hint — serial measurement is the whole instrument. Based on
+  // the newest test of ANY kind; suppressed once the patient has recovered
+  // (no-intolerance) or is red-flagged (medical review, not a re-test).
+  const newestTs = points
+    .map((p) => Date.parse(p.date))
+    .filter((n) => !Number.isNaN(n))
+    .reduce((a, b) => Math.max(a, b), 0)
+  const daysSinceTest = newestTs > 0 ? Math.floor((Date.now() - newestTs) / 86_400_000) : null
+  const latestKind = [...points].reverse().find((p) => p.interpretation || p.eventType)
+  const latestState = latestKind ? pointKind(latestKind) : null
+  const retestDue = daysSinceTest != null && daysSinceTest >= 14 && latestState !== 'no-intolerance' && latestState !== 'red-flag'
 
   const hrts = plottable.map((p) => p.hrt as number)
   const min = hrts.length ? Math.min(...hrts) : 0
@@ -98,6 +143,15 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
         suggests improving exercise tolerance; interpret with your clinical judgment.
       </p>
 
+      {retestDue && (
+        <div className="mb-4 flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-2">
+          <Clock className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
+          <p className="text-[11px] font-semibold text-amber-800 leading-snug">
+            Re-test due — last measured {daysSinceTest} days ago
+          </p>
+        </div>
+      )}
+
       {plottable.length === 0 ? (
         <p className="text-xs text-muted-foreground leading-relaxed py-6 text-center">
           No verified, clinician-gated threshold tests yet. The curve plots a point only when a graded test is
@@ -135,18 +189,46 @@ export function SstTrajectory({ points }: { points: TrajectoryPoint[] }) {
           <div className="mt-4 space-y-1">
             {pts.map((q, i) => {
               const t = tier(q.p.source)
+              const pct = q.p.verifiedReadingPct
               return (
-                <div key={i} className="flex items-center gap-2 text-[11px]">
+                <div key={i} className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-[11px]">
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${t.dot}`} />
                   <span className="text-muted-foreground w-12 flex-shrink-0">{fmtDate(q.p.date)}</span>
                   <span className="font-mono font-semibold text-foreground w-14 flex-shrink-0">{q.p.hrt} bpm</span>
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${t.cls}`}>{t.label}</span>
+                  {q.p.modality && (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600 capitalize">{q.p.modality}</span>
+                  )}
+                  {pct != null && Number.isFinite(pct) && (
+                    <span className="text-[10px] text-muted-foreground">{Math.round(pct)}% live-verified</span>
+                  )}
                   {!t.accurate && <span className="text-[10px] text-amber-600">lower accuracy — exercise PPG error</span>}
                 </div>
               )
             })}
           </div>
         </>
+      )}
+
+      {/* Threshold tests that produced no measurable HRt (no-intolerance /
+          red-flag / aborted / invalid) — clinical events, listed not plotted */}
+      {nonMeasurable.length > 0 && (
+        <div className={`space-y-1 ${plottable.length ? 'mt-3 pt-3 border-t border-black/5' : 'mt-1'}`}>
+          {nonMeasurable.map((q, i) => {
+            const lbl = nonMeasurableLabel(q)
+            return (
+              <div key={i} className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-slate-300" />
+                <span className="text-muted-foreground w-12 flex-shrink-0">{fmtDate(q.date)}</span>
+                <span className="font-mono text-muted-foreground/70 w-14 flex-shrink-0">— bpm</span>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${lbl.cls}`}>{lbl.label}</span>
+                {q.modality && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600 capitalize">{q.modality}</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
 
       {/* SPEC 3 — excluded ungated/unverified readings are surfaced, never silently dropped */}

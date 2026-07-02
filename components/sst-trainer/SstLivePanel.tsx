@@ -30,16 +30,29 @@ const ZONE = {
   over: { label: 'OVER band', cls: 'bg-red-100 text-red-800 border-red-300' },
 }
 
-export function SstLivePanel({ code }: { code: string }) {
+export function SstLivePanel({ code, viewKey }: { code: string; viewKey?: string | null }) {
   const [active, setActive] = useState<LivePatient[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [denied, setDenied] = useState(false)
 
   useEffect(() => {
     if (!code) return
     let alive = true
+    let stopped = false
+    let iv: ReturnType<typeof setInterval> | null = null
+    // View-key contract: GET /api/sst/live?code=X&k=VIEWKEY — 401 without a
+    // valid k for any non-DEMO00 code. DEMO00 stays public (no key).
+    const url = `/api/sst/live?code=${encodeURIComponent(code)}${viewKey ? `&k=${encodeURIComponent(viewKey)}` : ''}`
     const poll = async () => {
+      if (stopped) return
       try {
-        const res = await fetch(`/api/sst/live?code=${encodeURIComponent(code)}`, { cache: 'no-store' })
+        const res = await fetch(url, { cache: 'no-store' })
+        if (res.status === 401 || res.status === 403) {
+          stopped = true
+          if (iv) clearInterval(iv)
+          if (alive) setDenied(true)
+          return
+        }
         if (!res.ok) return
         const data = await res.json()
         if (alive) setActive(Array.isArray(data.active) ? data.active : [])
@@ -50,12 +63,24 @@ export function SstLivePanel({ code }: { code: string }) {
       }
     }
     poll()
-    const iv = setInterval(poll, 3000)
+    iv = setInterval(poll, 3000)
     return () => {
       alive = false
-      clearInterval(iv)
+      stopped = true
+      if (iv) clearInterval(iv)
     }
-  }, [code])
+  }, [code, viewKey])
+
+  if (denied) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 mb-6">
+        <h3 className="text-sm font-bold text-amber-900 mb-1">Live view locked</h3>
+        <p className="text-xs text-amber-800 leading-relaxed">
+          This hub link is missing its clinic key — use the link from your welcome email.
+        </p>
+      </div>
+    )
+  }
 
   if (!loaded && active.length === 0) return null
 
