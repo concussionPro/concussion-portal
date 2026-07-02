@@ -3,7 +3,7 @@
   "short_name": "SST",
   "description": "Sub-Symptom-Threshold Trainer — clinician-overseen, heart-rate-paced exercise rehab for concussion recovery. Pairs any Bluetooth heart-rate wearable, phone-camera pulse, or clinician manual entry.",
   "id": "/sst-trainer",
-  "start_url": "/sst-trainer",
+  "start_url": "/sst-trainer?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

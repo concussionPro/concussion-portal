@@ -11,21 +11,15 @@
 import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { rateLimit } from '@/lib/rate-limit'
+import { isRegisteredClinic, verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
 
-/**
- * Clinic code must exist in the SAME KV registry the preseason tool and
- * /api/sst/session use (`clinic:{code}`); DEMO00 is the shared demo code.
- * Without this check anyone could write ticks / read patient labels for an
- * arbitrary code string (not public yet — still building).
- */
-async function isRegisteredClinic(code: string): Promise<boolean> {
-  if (code === 'DEMO00') return true
-  try {
-    return (await kv.get(`clinic:${code}`)) != null
-  } catch {
-    return false // fail closed
-  }
-}
+// Clinic code must exist in the SAME KV registry the preseason tool and
+// /api/sst/session use (`clinic:{code}`, via lib/sst-trainer/clinic-registry);
+// DEMO00 is the shared demo code. Without this check anyone could write ticks
+// for an arbitrary code string. READS additionally require the clinic's
+// private viewKey (`&k=`) — patients hold the code, so code-only reads would
+// expose the live roster to any patient (APP 11). Patient WRITES stay
+// code-only.
 
 const TICK_TTL = 15 // seconds — no tick within this and the patient is "gone"
 const SET_TTL = 90 // seconds — the per-clinic active index
@@ -93,10 +87,17 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const code = clean(new URL(request.url).searchParams.get('code'), 40).toUpperCase()
+  const params = new URL(request.url).searchParams
+  const code = clean(params.get('code'), 40).toUpperCase()
   if (code.length < 3) return NextResponse.json({ error: 'clinic code required' }, { status: 400 })
+  const rl = await rateLimit({ key: `sst-live-read:${code}`, limit: 60, windowSec: 60 })
+  if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   if (!(await isRegisteredClinic(code))) {
     return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
+  }
+  // Clinician read key — patient-held code alone must not read the live view.
+  if (!(await verifyViewKey(code, params.get('k')))) {
+    return NextResponse.json({ error: 'Clinician key required' }, { status: 401 })
   }
 
   try {

@@ -12,6 +12,17 @@ interface Clinic {
   createdAt: string
 }
 
+// Self-serve-provisioned SST Trainer clinics (founding signup → auto code +
+// viewKey). Separate registry table from preseason_clinics.
+interface SstClinicRow {
+  code: string
+  clinicName: string
+  contactName: string
+  email: string
+  createdAt: string
+  hubLink: string
+}
+
 interface Baseline {
   clinicCode: string
   clinicName?: string
@@ -24,6 +35,7 @@ interface Baseline {
 
 export default function AdminPreseasonPage() {
   const [clinics, setClinics] = useState<Clinic[]>([])
+  const [sstClinics, setSstClinics] = useState<SstClinicRow[]>([])
   const [baselines, setBaselines] = useState<Baseline[]>([])
   const [totalClinics, setTotalClinics] = useState(0)
   const [totalBaselines, setTotalBaselines] = useState(0)
@@ -53,6 +65,14 @@ export default function AdminPreseasonPage() {
       setError('Failed to fetch preseason data')
     } finally {
       setLoading(false)
+    }
+    // SST clinic registry (best-effort — never blocks the preseason view).
+    try {
+      const res = await fetch('/api/admin/sst-clinics', { cache: 'no-store' })
+      const data = await res.json()
+      if (res.ok && data.success) setSstClinics(data.clinics)
+    } catch {
+      /* section simply stays empty */
     }
   }
 
@@ -264,6 +284,79 @@ export default function AdminPreseasonPage() {
           </div>
         )}
       </div>
+
+      {/* SST Trainer clinics (self-serve provisioned via the founding form) */}
+      {sstClinics.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mt-8">
+          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+            <h2 className="text-lg font-bold text-slate-900">
+              SST Trainer Clinics ({sstClinics.length})
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Self-serve provisioned — hub links contain the clinic&apos;s private key, don&apos;t share
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Code</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Clinic</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Registered</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Links</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {sstClinics.map((c) => (
+                  <tr key={c.code} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <span className="inline-flex px-2 py-1 text-xs font-mono font-semibold rounded-full bg-teal-50 text-teal-700">
+                        {c.code}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-medium text-slate-900">{c.clinicName}</span>
+                      <span className="block text-xs text-slate-500">{c.contactName}</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-700">{c.email}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {new Date(c.createdAt).toLocaleDateString('en-AU')}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <a
+                          href={c.hubLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-teal-700 hover:underline"
+                        >
+                          Clinical Hub
+                        </a>
+                        <button
+                          onClick={() =>
+                            setQrClinic({
+                              clinicName: c.clinicName,
+                              contactName: c.contactName,
+                              email: c.email,
+                              code: c.code,
+                              createdAt: c.createdAt,
+                            })
+                          }
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 text-teal-700 text-xs font-semibold hover:bg-teal-100 transition-colors"
+                        >
+                          <QrCode className="w-3.5 h-3.5" />
+                          Patient QR
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {qrClinic && (
         <SstPatientQrCard

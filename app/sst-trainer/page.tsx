@@ -1,21 +1,22 @@
 /**
- * /sst-trainer — the SST Trainer PWA entry.
+ * /sst-trainer — the SST Trainer PWA entry. PUBLIC route (launch architecture,
+ * owner-approved 2026-07-02): anyone may load the app shell, but the CLINIC
+ * CODE is the gate — the provocative graded test is unreachable without a
+ * registered code (validated against the shared clinic registry via
+ * /api/sst/validate-code; the onboarding flow inside the app enforces it —
+ * that enforcement lives in SstOnboarding, owned by another workstream).
+ * Regulatory line: the graded test is clinician-distributed.
  *
  * Renders the SAME real, wearable-paired app as /platform/app (Bluetooth /
  * camera HR via useLiveHr, the real engine, clinic sync + live in-session
- * monitoring). NOT PUBLIC YET (owner decision 2026-07-02 — still building):
- * access requires the demo cookie (/demo/sst link), an enrolled user, or an
- * admin session — the same gate as /platform/app. The previous bare re-export
- * bypassed the platform layout's gate (layouts belong to the route segment,
- * not the component), which made the provocative graded test anonymously
- * runnable. The PWA manifest + service worker stay in this segment's layout so
- * install-to-home-screen keeps working for gated users; the QR-card flow goes
- * via /demo/sst, which sets the cookie first.
+ * monitoring). No login gate here any more — the old requireAiCourseAccess
+ * gate is retired for this segment; /platform/* keeps its own gate. The PWA
+ * manifest + service worker live in this segment's layout (which also keeps
+ * the noindex metadata), so install-to-home-screen works straight off the
+ * patient QR link /sst-trainer?clinic=CODE.
  */
-import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
 import PlatformApp from '@/app/platform/app/page'
 
-export default async function SstTrainerPage() {
-  await requireAiCourseAccess('/login')
+export default function SstTrainerPage() {
   return <PlatformApp />
 }

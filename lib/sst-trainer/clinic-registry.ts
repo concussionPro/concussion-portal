@@ -1,0 +1,238 @@
+/**
+ * SST Trainer clinic registry — the CLINIC CODE is the launch gate.
+ *
+ * One registry for both tools: Vercel KV `clinic:{code}` is SHARED with the
+ * preseason baseline tool (app/api/preseason/register/route.ts mints codes into
+ * the same namespace). This module extends that value shape compatibly:
+ *
+ *   clinic:{CODE} = {
+ *     clinicName:  string
+ *     contactName: string
+ *     email:       string      // lowercased
+ *     createdAt:   string      // ISO
+ *     viewKey?:    string      // SST clinician READ key — absent on legacy
+ *                              // preseason-minted records
+ *     product?:    'sst'       // absent on preseason-minted records
+ *   }
+ *
+ * Preseason readers only ever look at clinicName/contactName/email, so the two
+ * extra fields are invisible to them.
+ *
+ * Access model (APP 11): patients hold the clinic CODE (it's on the QR card),
+ * so the code alone must never unlock the clinic's patient roster. Clinician
+ * READ paths additionally require the `viewKey` (verifyViewKey below); patient
+ * WRITE paths stay code-only. DEMO00 is the shared public demo clinic — no key.
+ *
+ * Durability: SST-provisioned clinics are mirrored to Postgres `sst_clinics`
+ * (same pattern as preseason_clinics) for admin listing and KV-loss recovery.
+ */
+
+import crypto from 'crypto'
+import { kv } from '@vercel/kv'
+import { sql } from '@/lib/db'
+
+export const DEMO_CLINIC_CODE = 'DEMO00'
+
+export interface ClinicRecord {
+  clinicName: string
+  contactName?: string
+  email?: string
+  createdAt?: string
+  viewKey?: string
+  product?: string
+}
+
+/** Uppercase, trim; returns '' when the code can't possibly be valid. */
+export function normaliseClinicCode(raw: unknown): string {
+  const code = String(raw ?? '').trim().toUpperCase()
+  return code.length >= 3 && code.length <= 40 ? code : ''
+}
+
+/**
+ * Read a clinic record from the shared KV registry. DEMO00 returns a synthetic
+ * demo record so demo flows never depend on KV state. Fails closed (null) on
+ * KV errors.
+ */
+export async function getClinic(rawCode: unknown): Promise<ClinicRecord | null> {
+  const code = normaliseClinicCode(rawCode)
+  if (!code) return null
+  if (code === DEMO_CLINIC_CODE) {
+    return { clinicName: 'Demo Clinic', product: 'sst' }
+  }
+  try {
+    const rec = await kv.get<ClinicRecord>(`clinic:${code}`)
+    return rec && typeof rec === 'object' ? rec : null
+  } catch {
+    return null // fail closed
+  }
+}
+
+/** True for DEMO00 and any code present in the shared registry. */
+export async function isRegisteredClinic(rawCode: unknown): Promise<boolean> {
+  return (await getClinic(rawCode)) != null
+}
+
+/**
+ * Clinician read-key check. DEMO00 accepts absence of a key (public demo).
+ * Everything else requires an exact match against the stored viewKey —
+ * legacy records WITHOUT a viewKey always fail (re-provision to grant hub
+ * access; the alternative would leave the patient-held code readable).
+ * Constant-time compare so the key can't be sniffed byte-by-byte.
+ */
+export async function verifyViewKey(rawCode: unknown, key: string | null | undefined): Promise<boolean> {
+  const code = normaliseClinicCode(rawCode)
+  if (!code) return false
+  if (code === DEMO_CLINIC_CODE) return true
+  if (!key) return false
+  const clinic = await getClinic(code)
+  if (!clinic?.viewKey) return false
+  const a = Buffer.from(String(key))
+  const b = Buffer.from(clinic.viewKey)
+  if (a.length !== b.length) {
+    // Still burn a comparison so length mismatch isn't a faster path.
+    crypto.timingSafeEqual(a, a)
+    return false
+  }
+  return crypto.timingSafeEqual(a, b)
+}
+
+// ── Provisioning ─────────────────────────────────────────────────────────────
+
+// Same charset as preseason (no I/1/O/0 confusion) — codes are read out loud
+// and typed on phones.
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+function generateCode(): string {
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += CODE_CHARS[crypto.randomInt(CODE_CHARS.length)]
+  }
+  return code
+}
+
+async function ensureSstClinicsTable(): Promise<void> {
+  await sql`
+    CREATE TABLE IF NOT EXISTS sst_clinics (
+      code TEXT PRIMARY KEY,
+      clinic_name TEXT NOT NULL,
+      contact_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      view_key TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `
+}
+
+export interface SstClinic {
+  code: string
+  clinicName: string
+  contactName: string
+  email: string
+  viewKey: string
+  createdAt: string
+}
+
+/**
+ * Look up an already-provisioned SST clinic by contact email (Postgres mirror).
+ * Used to keep founding-form resubmissions idempotent — one clinic per email.
+ */
+export async function getSstClinicByEmail(email: string): Promise<SstClinic | null> {
+  try {
+    const { rows } = await sql`
+      SELECT code, clinic_name, contact_name, email, view_key, created_at
+      FROM sst_clinics
+      WHERE email = ${email.toLowerCase()}
+      ORDER BY created_at ASC
+      LIMIT 1
+    `
+    const r = rows[0]
+    if (!r) return null
+    return {
+      code: r.code,
+      clinicName: r.clinic_name,
+      contactName: r.contact_name,
+      email: r.email,
+      viewKey: r.view_key,
+      createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+    }
+  } catch {
+    return null // table may not exist yet — treat as "not provisioned"
+  }
+}
+
+/**
+ * Mint a new SST clinic: unique 6-char code in the SHARED clinic:{code} KV
+ * namespace (collision-checked against preseason codes too), a crypto-random
+ * viewKey, plus a durable Postgres row. Throws on failure — callers decide
+ * whether provisioning is best-effort.
+ */
+export async function createSstClinic(args: {
+  clinicName: string
+  contactName: string
+  email: string
+}): Promise<SstClinic> {
+  const clinicName = args.clinicName.trim()
+  const contactName = args.contactName.trim()
+  const email = args.email.trim().toLowerCase()
+
+  // Generate unique code (shared namespace — a preseason code is a collision).
+  let code = generateCode()
+  let attempts = 0
+  while ((code === DEMO_CLINIC_CODE || (await kv.exists(`clinic:${code}`))) && attempts < 10) {
+    code = generateCode()
+    attempts++
+  }
+  if (code === DEMO_CLINIC_CODE || (attempts >= 10 && (await kv.exists(`clinic:${code}`)))) {
+    throw new Error('Unable to generate a unique clinic code')
+  }
+
+  // 24-char URL-safe read key (144 bits).
+  const viewKey = crypto.randomBytes(18).toString('base64url')
+  const createdAt = new Date().toISOString()
+
+  // KV first — it's the registry every access check reads.
+  await kv.set(`clinic:${code}`, {
+    clinicName,
+    contactName,
+    email,
+    viewKey,
+    product: 'sst',
+    createdAt,
+  })
+
+  // Postgres mirror for durability/admin (best-effort: the KV record is the
+  // live gate; a missed mirror row must not fail provisioning).
+  try {
+    await ensureSstClinicsTable()
+    await sql`
+      INSERT INTO sst_clinics (code, clinic_name, contact_name, email, view_key, created_at)
+      VALUES (${code}, ${clinicName}, ${contactName}, ${email}, ${viewKey}, ${createdAt})
+      ON CONFLICT (code) DO NOTHING
+    `
+  } catch (err) {
+    console.error('[sst-clinic-registry] Postgres mirror write failed:', err)
+  }
+
+  return { code, clinicName, contactName, email, viewKey, createdAt }
+}
+
+/** Admin listing (newest first). Empty array when the table doesn't exist yet. */
+export async function listSstClinics(): Promise<SstClinic[]> {
+  try {
+    const { rows } = await sql`
+      SELECT code, clinic_name, contact_name, email, view_key, created_at
+      FROM sst_clinics
+      ORDER BY created_at DESC
+    `
+    return rows.map((r) => ({
+      code: r.code,
+      clinicName: r.clinic_name,
+      contactName: r.contact_name,
+      email: r.email,
+      viewKey: r.view_key,
+      createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+    }))
+  } catch {
+    return []
+  }
+}

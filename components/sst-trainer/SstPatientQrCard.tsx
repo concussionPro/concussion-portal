@@ -10,18 +10,34 @@ import { QRCodeSVG } from 'qrcode.react'
  * scans it, lands in the PWA with their clinic code pre-filled and clinic-code
  * mode on, adds their name, pairs a heart-rate source, and trains. Printable
  * (the clinic displays/hands it to patients). No app store / DUNS needed.
+ *
+ * Variants:
+ *  - 'patient' (default): the printable hand-to-patient card. NEVER shows the
+ *    viewKey/hub link — the code is patient-held; the key must not be.
+ *  - 'clinician' (requires `viewKey`): adds the private Clinical Hub link
+ *    (?clinic=CODE&k=viewKey) beneath the patient URL, for the clinician's own
+ *    reference copy.
  */
 export function SstPatientQrCard({
   clinicName,
   code,
   onClose,
+  viewKey,
+  variant = 'patient',
 }: {
   clinicName: string
   code: string
   onClose: () => void
+  /** Clinic's private read key — only rendered on the 'clinician' variant. */
+  viewKey?: string
+  variant?: 'patient' | 'clinician'
 }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://portal.concussion-education-australia.com'
   const url = `${origin}/sst-trainer?clinic=${encodeURIComponent(code)}`
+  const hubUrl =
+    variant === 'clinician' && viewKey
+      ? `${origin}/clinical-hub?clinic=${encodeURIComponent(code)}&k=${encodeURIComponent(viewKey)}`
+      : null
   const [copied, setCopied] = useState(false)
 
   const copy = async () => {
@@ -70,6 +86,20 @@ export function SstPatientQrCard({
         </ol>
 
         <p className="text-[10.5px] text-slate-400 break-all mb-4">{url}</p>
+
+        {hubUrl && (
+          <div className="text-left border border-amber-200 bg-amber-50 rounded-lg px-3 py-2.5 mb-4">
+            <p className="text-[10px] uppercase tracking-[0.14em] font-bold text-amber-700 mb-0.5">
+              Clinician hub — keep private
+            </p>
+            <a href={hubUrl} className="text-[10.5px] text-slate-600 break-all underline decoration-amber-300">
+              {hubUrl}
+            </a>
+            <p className="text-[10px] text-amber-700/80 mt-1">
+              This link is your clinic&apos;s key. Don&apos;t hand this card to patients — print the patient version instead.
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-2 sst-no-print">
           <button onClick={() => window.print()} className="flex-1 px-4 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-bold hover:bg-teal-700 transition-colors">

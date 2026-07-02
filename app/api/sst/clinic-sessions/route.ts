@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { kv } from '@vercel/kv'
 import { sql } from '@/lib/db'
+import { rateLimit } from '@/lib/rate-limit'
+import { isRegisteredClinic, verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
 
 /**
- * GET /api/sst/clinic-sessions?code=CEA-1234
+ * GET /api/sst/clinic-sessions?code=CEA-1234&k=<viewKey>
  *
  * The clinician read-side of the SST data flow. Returns a clinic's sessions
  * grouped into patients (by patient_label) with each patient's HRt trajectory
@@ -11,6 +12,11 @@ import { sql } from '@/lib/db'
  * means the patient can exercise to exhaustion without provoking symptoms
  * (recovered exercise tolerance) and is ready for the clinician's clearance
  * review. The Clinical Hub reads this. Read-only.
+ *
+ * AUTH (APP 11): patients HOLD the clinic code (it's printed on the QR card),
+ * so the code alone must never read the roster. Every non-DEMO00 code also
+ * requires the clinic's private viewKey via `&k=` (minted at provisioning,
+ * delivered in the welcome email / admin). DEMO00 stays keyless — demo data.
  */
 type Row = {
   patient_label: string | null
@@ -28,19 +34,18 @@ export async function GET(request: NextRequest) {
   if (!code || code.length < 3) {
     return NextResponse.json({ error: 'clinic code required' }, { status: 400 })
   }
+  const rl = await rateLimit({ key: `sst-sessions-read:${code}`, limit: 60, windowSec: 60 })
+  if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   // Only registered clinic codes (KV `clinic:{code}`, same registry as the
   // write side) can read — an arbitrary code string must not enumerate
   // patient labels/HR data. DEMO00 serves the demo dataset only.
-  if (code !== 'DEMO00') {
-    let registered = false
-    try {
-      registered = (await kv.get(`clinic:${code}`)) != null
-    } catch {
-      registered = false // fail closed
-    }
-    if (!registered) {
-      return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
-    }
+  if (!(await isRegisteredClinic(code))) {
+    return NextResponse.json({ error: 'Clinic code not recognised' }, { status: 404 })
+  }
+  // Clinician read key — the patient-held code alone must not read the roster.
+  const viewKey = request.nextUrl.searchParams.get('k')
+  if (!(await verifyViewKey(code, viewKey))) {
+    return NextResponse.json({ error: 'Clinician key required' }, { status: 401 })
   }
   try {
     const { rows } = await sql<Row>`

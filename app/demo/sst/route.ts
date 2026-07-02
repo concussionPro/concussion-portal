@@ -1,17 +1,15 @@
 /**
- * GET /demo/sst — clean one-link entry point for the SST Trainer app.
+ * GET /demo/sst — legacy one-link entry point for the SST Trainer app.
  *
- * A clinic opens ONE human-readable link —
- *   portal.concussion-education-australia.com/demo/sst
- * — which sets the demo_key cookie server-side (the key NEVER appears in the
- * URL) and drops them straight into the gated app at /platform/app. From there
- * they can install it to the home screen (PWA) and use it.
+ * /sst-trainer is now PUBLIC (clinic-code gate lives IN the app flow), so this
+ * route is just a clean redirect that PRESERVES the query string —
+ *   /demo/sst?clinic=CODE  →  /sst-trainer?clinic=CODE
+ * — so QR cards / links printed against the old URL keep working, code intact.
  *
- * Same cookie mechanics as /demo/heidi; the key comes from DEMO_KEY
- * (lib/demo-key.ts), which falls back to a committed constant so the link works
- * WITHOUT any Vercel env var during the pre-launch review period. The route
- * group stays gated + noindex (app/platform/layout.tsx) — this just hands the
- * visitor the access cookie. Zac flips the gate at launch.
+ * It still sets the demo_key cookie (same mechanics as /demo/heidi; key from
+ * DEMO_KEY in lib/demo-key.ts). The SST app itself no longer needs it, but the
+ * cookie is harmless and keeps /platform/* demo access working for anyone who
+ * entered through this link during the review period.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { DEMO_KEY } from '@/lib/demo-key'
@@ -25,6 +23,7 @@ export async function GET(request: NextRequest) {
   // worker — camera-PPG and install-to-home-screen only work there. Verified
   // against production headers 2026-07-02.
   const dest = new URL('/sst-trainer', request.url)
+  dest.search = request.nextUrl.search // preserve ?clinic=CODE etc.
   const res = NextResponse.redirect(dest)
   res.cookies.set('demo_key', DEMO_KEY, {
     httpOnly: true,
