@@ -27,28 +27,39 @@ overseen by the patient's clinician; not a diagnosis or return-to-play clearance
 - **Brand teal `#5b9aa6`** is the accent. Red is reserved for red-flag / over-ceiling
   stop states; amber for within-session symptom-rise warnings.
 
-## Screen flow (state machine in `app/sst-trainer/page.tsx`)
+## Screen flow (state machine in `app/platform/app/page.tsx`)
 
-1. **WelcomeMode** — self-guided vs clinic-code, condition picker.
+1. **SstOnboarding** (`components/platform/`) — clinic-code entry (validated,
+   clinic name confirmed), patient name, goal, heart-rate source pairing.
+   Self-guided mode is hidden behind `NEXT_PUBLIC_SST_SELF_GUIDED === 'true'`.
 2. **SymptomSelect** — preselect the symptoms the patient actually gets.
 3. **Readiness** — red-flag/contraindication check (blocks on any tick), resting
-   symptom score, consent/scope acknowledgement.
-4. **GuidedTest** — per-minute ramp: HR entry + "any symptoms?" chips + 0–10 score;
+   symptom score (≥8 blocks the test), consent/scope acknowledgement.
+4. **GuidedTest** — modality setup (treadmill / bike / walk), then the per-minute
+   ramp: 60-second stage timer with end-of-stage chime, effort script, RPE, HR
+   entry (live-verified per reading) + "any symptoms?" chips + 0–10 score;
    stop-symptoms / exhausted / red-flag controls. → runs `detectThreshold`.
 5. **ResultPrescription** — HRt + training band + plan (or the no-intolerance /
    red-flag branch). → runs `computePrescription` when physiologic.
-6. **TrainingSession** — daily session: band reminder, live HR zone, mid-session
-   symptom check (`SESSION_STOP_RISE` rule), records a `SessionLog`.
+6. **TrainingSession** — daily session: countdown from the prescribed minutes,
+   live HR zone with haptic band-exit/re-entry cues, symptom STOP (one logged
+   override), wake lock, then a time-in-band summary + end-feel question.
 7. **ProgressDashboard** — session history + recovery trend + progression call. →
-   runs `progressionDecision`.
+   renders the page-computed `progressionDecision` (regress auto-applies).
+
+The page also owns: persistence (`lib/sst-trainer/store.ts`, `sst:v1`), the
+next-day check-in, the red-flag lock screen, re-test spacing, and clinic sync
+(`lib/sst-trainer/clinic-sync.ts`, with an offline retry queue).
 
 ## Engine (do not reimplement)
 
 All clinical logic lives in `lib/sst-trainer/protocol.ts`
-(`detectThreshold`, `computePrescription`, `progressionDecision`, constants
-`PROVOCATION_RISE`, `SESSION_STOP_RISE`, `EXHAUSTION_RPE`). Symptom + red-flag
-vocabularies live in `lib/sst-trainer/symptoms.ts`. The UI only collects inputs
-and renders the engine's outputs.
+(`detectThreshold`, `computePrescription`, `progressionDecision`, `canRetest`,
+`isVerifiedReading`, `sessionVerification`, constants `PROVOCATION_RISE`,
+`SESSION_STOP_RISE`, `EXHAUSTION_RPE`, `MAX_RESTING_TO_TEST`). Symptom +
+red-flag vocabularies live in `lib/sst-trainer/symptoms.ts`. The UI only
+collects inputs and renders the engine's outputs. Tests:
+`tests/sst-trainer.test.ts` + `tests/sst-protocol.test.ts`.
 
 ## Conventions for the design pass
 
@@ -62,4 +73,5 @@ and renders the engine's outputs.
 
 - Route `app/sst-trainer` is **noindex/nofollow** (see `layout.tsx`) and is **not
   linked from any nav** — pre-launch, patient-facing.
-- State is in-memory only; no persistence/pairing backend yet.
+- State persists in localStorage (`sst:v1` via `lib/sst-trainer/store.ts`); the
+  install UUID rides as `patientRef` on every clinic sync and live tick.

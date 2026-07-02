@@ -1,10 +1,11 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import {
-  progressionDecision,
   SESSION_STOP_RISE,
   type Prescription,
   type ProgressionDecision,
+  type ProgressionResult,
   type SessionLog,
 } from '@/lib/sst-trainer/protocol'
 import { PrimaryButton, ScreenHeading, SecondaryButton, numFont } from './shell'
@@ -15,10 +16,11 @@ const DECISION_META: Record<
 > = {
   advance: { label: 'Advance', icon: '↑', color: '#3c7681', border: '#5b9aa6', bg: '#e7f2f3' },
   hold: { label: 'Hold steady', icon: '→', color: '#3b4f52', border: '#cdd9da', bg: '#eef4f4' },
-  regress: { label: 'Ease back', icon: '↓', color: '#a06a1c', border: '#d79a3a', bg: '#fbf2e1' },
-  // NOTE: progressionDecision() only ever returns advance/hold/regress today —
-  // it never emits `refer`. This entry is a harmless fallback kept in case the
-  // engine adds a referral decision later; it currently never renders.
+  regress: { label: 'Eased back', icon: '↓', color: '#a06a1c', border: '#d79a3a', bg: '#fbf2e1' },
+  // At the HRt cap: the only safe way up is a fresh measurement.
+  retest: { label: 'Time to re-test', icon: '◎', color: '#3c7681', border: '#5b9aa6', bg: '#e7f2f3' },
+  // NOTE: progressionDecision() never emits `refer` today. This entry is a
+  // harmless fallback kept in case the engine adds a referral decision later.
   refer: {
     label: 'Check in with your clinician',
     icon: '!',
@@ -81,26 +83,36 @@ function Trend({ rx, sessions }: { rx: Prescription; sessions: SessionLog[] }) {
 export default function ProgressDashboard({
   rx,
   sessions,
+  decision,
   onHome,
   onNewSession,
   onApplyCeiling,
+  onRetest,
   canApply = true,
+  notice,
 }: {
   rx: Prescription
   sessions: SessionLog[]
+  /**
+   * The engine's decision, computed by the page (which also owns auto-applying
+   * a regress — safety changes never wait for a tap here).
+   */
+  decision: ProgressionResult
   onHome: () => void
   onNewSession: () => void
-  /** apply an advance/regress decision — shifts the live band to the new ceiling */
+  /** apply an ADVANCE decision — shifts the live band to the new ceiling */
   onApplyCeiling?: (newCeilingBpm: number) => void
+  /** the 'retest' decision routes here (the page enforces re-test spacing) */
+  onRetest?: () => void
   /**
-   * Whether a band change may be applied right now. Gated to NEW clean sessions
-   * since the last apply so the ceiling can't be ratcheted by repeated clicks
-   * against the same data (a band change must be earned by fresh sessions).
+   * Whether a band change may be applied right now. Gated to NEW sessions since
+   * the last apply so the ceiling can't be ratcheted by repeated clicks against
+   * the same data (a band change must be earned by fresh sessions).
    */
   canApply?: boolean
+  /** page-level banner (e.g. "we eased your band back" with undo) */
+  notice?: ReactNode
 }) {
-  // engine decides advance / hold / regress / refer from recent sessions
-  const decision = progressionDecision(rx, sessions)
   const dm = DECISION_META[decision.decision]
   const maxHr = Math.max(rx.upperBpm, ...sessions.map((s) => s.peakHeartRate), 1)
 
@@ -113,6 +125,8 @@ export default function ProgressDashboard({
         } logged`}
       />
 
+      {notice}
+
       <div
         className="rounded-[18px] border-2 p-3.5"
         style={{ borderColor: dm.border, background: dm.bg }}
@@ -123,13 +137,14 @@ export default function ProgressDashboard({
           </span>
         </div>
         <p className="mt-2 text-[12.5px] leading-relaxed text-[#3b4f52]">{decision.message}</p>
-        {decision.newCeilingBpm !== undefined && (
+        {decision.decision === 'advance' && decision.newCeilingBpm !== undefined && (
           <p className="mt-2.5 text-[12.5px] font-semibold leading-snug" style={{ color: dm.color }}>
             Suggested new ceiling: {decision.newCeilingBpm} bpm
           </p>
         )}
-        {/* advance / regress only — hold + refer never shift the band */}
-        {decision.newCeilingBpm !== undefined && onApplyCeiling && canApply && (
+        {/* ADVANCE needs a tap (earned by fresh verified sessions). REGRESS is
+            auto-applied by the page — never gated behind a button. */}
+        {decision.decision === 'advance' && decision.newCeilingBpm !== undefined && onApplyCeiling && canApply && (
           <button
             type="button"
             onClick={() => onApplyCeiling(decision.newCeilingBpm as number)}
@@ -139,10 +154,20 @@ export default function ProgressDashboard({
             Apply new ceiling — {decision.newCeilingBpm} bpm
           </button>
         )}
-        {decision.newCeilingBpm !== undefined && onApplyCeiling && !canApply && (
+        {decision.decision === 'advance' && decision.newCeilingBpm !== undefined && onApplyCeiling && !canApply && (
           <p className="mt-3 text-[12px] font-medium leading-snug text-[#5d7174]">
             Log a new session before adjusting your ceiling again.
           </p>
+        )}
+        {decision.decision === 'retest' && onRetest && (
+          <button
+            type="button"
+            onClick={onRetest}
+            className="mt-3 w-full rounded-[14px] p-3 text-[13.5px] font-bold text-white transition active:scale-[0.98]"
+            style={{ background: dm.color }}
+          >
+            Re-test my threshold
+          </button>
         )}
       </div>
 
@@ -197,6 +222,7 @@ export default function ProgressDashboard({
               >
                 <span>
                   avg {s.avgHeartRate} · peak {s.peakHeartRate} bpm
+                  {s.hrVerified === true ? ' · ✓ live' : s.hrVerified === false ? ' · manual' : ''}
                 </span>
                 <span>
                   sx {s.preSymptom}→{s.peakSymptom} · {s.completedMinutes}m

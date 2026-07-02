@@ -2,8 +2,8 @@
 
 import { useSyncExternalStore } from 'react'
 import type { Condition, Prescription } from '@/lib/sst-trainer/protocol'
+import type { TrainerMode } from '@/lib/sst-trainer/store'
 import { BandBar, PrimaryButton, SecondaryButton, numFont } from './shell'
-import type { TrainerMode } from './WelcomeMode'
 
 function greetingForHour(h: number) {
   return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
@@ -28,10 +28,15 @@ export default function HomeHub({
   condition,
   mode,
   clinicCode,
+  clinicName,
+  patientName,
+  welcomeBack = false,
   sessionsThisWeek,
   onStartSession,
   onProgress,
   onRetest,
+  retestBlockedReason,
+  onStartOver,
   goalLabel,
   deviceName,
 }: {
@@ -39,13 +44,23 @@ export default function HomeHub({
   condition: Condition
   mode: TrainerMode
   clinicCode: string | null
+  /** validated clinic name — shown in the badge instead of the raw code */
+  clinicName?: string | null
+  /** the patient's name (clinic mode) — greeted by name */
+  patientName?: string | null
+  /** true on a rehydrated relaunch — "Welcome back" instead of the time greeting */
+  welcomeBack?: boolean
   sessionsThisWeek: number
   onStartSession: () => void
   onProgress: () => void
   onRetest: () => void
+  /** when re-testing is blocked (spacing / red-flag), why — shown inline */
+  retestBlockedReason?: string | null
+  /** the "Start over" escape — the page confirms before clearing the store */
+  onStartOver?: () => void
   /** what the patient is working back to, from onboarding (e.g. "Sport") */
   goalLabel?: string
-  /** paired heart-rate source name, from onboarding (e.g. "Apple Watch") */
+  /** paired heart-rate source name, from onboarding (e.g. "Polar H10") */
   deviceName?: string
 }) {
   // Client-only greeting without an effect: useSyncExternalStore returns the
@@ -56,10 +71,13 @@ export default function HomeHub({
     () => true,
     () => false,
   )
-  const greeting = isClient ? greetingForHour(new Date().getHours()) : 'Welcome back'
+  const firstName = patientName?.trim().split(/\s+/)[0] ?? null
+  const greetingBase =
+    welcomeBack || !isClient ? 'Welcome back' : greetingForHour(new Date().getHours())
+  const greeting = firstName ? `${greetingBase}, ${firstName}` : greetingBase
 
   const badge = `${PATHWAY_LABEL[condition]} · ${
-    mode === 'clinic-code' ? `Linked ${clinicCode || 'clinic'}` : 'Self-guided'
+    mode === 'clinic-code' ? `Linked to ${clinicName || clinicCode || 'your clinic'}` : 'Self-guided'
   }${deviceName ? ` · ${deviceName}` : ''}`
 
   const target = rx.daysPerWeek
@@ -129,6 +147,12 @@ export default function HomeHub({
         </SecondaryButton>
       </div>
 
+      {retestBlockedReason && (
+        <p className="m-0 -mt-1 rounded-[12px] bg-[#eef4f4] px-3.5 py-2.5 text-[11.5px] leading-snug text-[#5d7174]">
+          {retestBlockedReason}
+        </p>
+      )}
+
       {/* Quiet link across to the SCAT6 baseline & serial-testing instrument. */}
       <a
         href="/preseason"
@@ -148,6 +172,17 @@ export default function HomeHub({
         </svg>
         Baseline &amp; serial testing
       </a>
+
+      {/* Start-over escape — quiet, at the very bottom; the page confirms first. */}
+      {onStartOver && (
+        <button
+          type="button"
+          onClick={onStartOver}
+          className="mx-auto mt-1 rounded-[10px] px-2 py-1 text-[11px] font-semibold text-[#9bafb0] transition hover:text-[#b5462f]"
+        >
+          Start over
+        </button>
+      )}
     </section>
   )
 }

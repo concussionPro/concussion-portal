@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { MAX_RESTING_TO_TEST } from '@/lib/sst-trainer/protocol'
 import { RED_FLAGS } from '@/lib/sst-trainer/symptoms'
 import { PrimaryButton, ScreenHeading, SecondaryButton, SegmentBars, numFont } from './shell'
 
@@ -101,6 +102,19 @@ export default function Readiness({
             </div>
           </div>
 
+          {/* Resting symptoms >=8: today is not a test day. A provocation test on
+              top of severe resting symptoms is uninterpretable and unkind. */}
+          {restingScore >= MAX_RESTING_TO_TEST && (
+            <div className="rounded-[16px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] p-3.5">
+              <p className="m-0 text-sm font-bold text-[#a06a1c]">Today isn&rsquo;t the day.</p>
+              <p className="mt-1.5 text-[12.5px] leading-snug text-[#8a6320]">
+                Your symptoms are already high at rest. Rest today and retry when they settle below{' '}
+                {MAX_RESTING_TO_TEST} out of 10. If they stay this high, check in with your
+                clinician.
+              </p>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => setConsented((c) => !c)}
@@ -129,11 +143,11 @@ export default function Readiness({
           Back
         </SecondaryButton>
         <PrimaryButton
-          disabled={blocked || !consented}
+          disabled={blocked || !consented || restingScore >= MAX_RESTING_TO_TEST}
           onClick={() => onContinue({ restingSymptomScore: restingScore })}
           className="flex-[1.4]"
         >
-          Start test
+          {restingScore >= MAX_RESTING_TO_TEST ? 'Rest today' : 'Start test'}
         </PrimaryButton>
       </div>
     </section>

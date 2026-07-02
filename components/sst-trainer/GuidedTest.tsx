@@ -3,27 +3,95 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   detectThreshold,
+  isVerifiedReading,
+  EXHAUSTION_RPE,
+  HR_JUMP_CONFIRM,
   PROVOCATION_RISE,
   type Condition,
+  type TestModality,
   type TestStage,
   type TestInput,
   type TestTermination,
   type ThresholdResult,
 } from '@/lib/sst-trainer/protocol'
 import { CONCUSSION_SYMPTOMS } from '@/lib/sst-trainer/symptoms'
-import { SegmentBars, numFont } from './shell'
+import { PrimaryButton, SecondaryButton, SegmentBars, numFont } from './shell'
 
 // BCTT max test duration (modified Balke ~15 incline stages + speed ramp; the
 // test runs well under ~20 min). Reaching this without a >=3-pt rise ends the
 // test as exhaustion-limited (no exercise-driven threshold).
 const MAX_STAGES = 20
+/** Each stage is one minute — the Buffalo protocol steps effort every minute. */
+const STAGE_SECONDS = 60
 
-/** Decorative minute progress ring. */
-function MinuteRing({ minute }: { minute: number }) {
+// ── stage-indexed effort script (Buffalo convention, in plain words) ─────────
+
+const MODALITIES: { id: TestModality; label: string; sub: string }[] = [
+  { id: 'treadmill', label: 'Treadmill', sub: 'Raise the incline each minute' },
+  { id: 'bike', label: 'Stationary bike', sub: 'Raise the resistance each minute' },
+  { id: 'walk', label: 'Brisk walking', sub: 'Walk a little faster each minute' },
+]
+
+function effortInstruction(modality: TestModality, minute: number): string {
+  if (minute === 1) {
+    switch (modality) {
+      case 'treadmill':
+        return 'Start walking at a brisk, comfortable pace — keep the treadmill flat for this first minute.'
+      case 'bike':
+        return 'Start pedalling at an easy, steady pace with light resistance.'
+      case 'walk':
+        return 'Start walking at an easy, comfortable pace.'
+    }
+  }
+  switch (modality) {
+    case 'treadmill':
+      return minute <= 15
+        ? 'Increase the incline one notch. You should feel it get slightly harder each minute.'
+        : 'Keep the incline where it is — nudge the speed up a touch instead.'
+    case 'bike':
+      return 'Increase the resistance one step (or pedal a little harder). You should feel it get slightly harder each minute.'
+    case 'walk':
+      return 'Walk a little faster than the last minute — enough that it feels slightly harder.'
+  }
+}
+
+// ── gentle end-of-stage cue: a short chime + a vibration pulse ───────────────
+
+function stageEndCue() {
+  try {
+    type AudioContextCtor = typeof AudioContext
+    const Ctor: AudioContextCtor | undefined =
+      window.AudioContext ??
+      (window as Window & { webkitAudioContext?: AudioContextCtor }).webkitAudioContext
+    if (Ctor) {
+      const ctx = new Ctor()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.frequency.value = 880
+      gain.gain.setValueAtTime(0.08, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.5)
+      setTimeout(() => void ctx.close().catch(() => {}), 700)
+    }
+  } catch {
+    /* no audio — the visual + vibration cues still fire */
+  }
+  try {
+    navigator.vibrate?.(250)
+  } catch {
+    /* unsupported */
+  }
+}
+
+/** Stage ring: fills over the 60-second stage; centre shows the countdown. */
+function StageRing({ elapsedSec }: { elapsedSec: number }) {
   const cx = 120
   const cy = 120
   const r = 95
-  const frac = Math.min(0.999, (minute - 1) / (MAX_STAGES - 1))
+  const frac = Math.min(0.999, elapsedSec / STAGE_SECONDS)
   const a = frac * 2 * Math.PI
   const x = cx + r * Math.sin(a)
   const y = cy - r * Math.cos(a)
@@ -35,7 +103,7 @@ function MinuteRing({ minute }: { minute: number }) {
         <path
           d={`M ${cx} ${cy - r} A ${r} ${r} 0 ${large} 1 ${x} ${y}`}
           fill="none"
-          stroke="#5b9aa6"
+          stroke={elapsedSec >= STAGE_SECONDS ? '#3c7a1f' : '#5b9aa6'}
           strokeWidth={9}
           strokeLinecap="round"
         />
@@ -59,11 +127,11 @@ export default function GuidedTest({
   selectedSymptomIds: string[]
   /** receives the engine result + the raw input that produced it */
   onComplete: (result: ThresholdResult, input: TestInput) => void
-  /** leave the test without recording a result (back to readiness, or home if a band exists) */
-  onAbort: () => void
-  /** live bpm from a paired wearable / camera (null = manual entry) */
+  /** leave the test without a result. started=true means the ramp had begun (sync as aborted). */
+  onAbort: (info: { started: boolean; stages: TestStage[] }) => void
+  /** live bpm from a paired Bluetooth stream (null = manual entry) */
   liveHr?: number | null
-  /** paired source name, e.g. "Apple Watch" */
+  /** paired source name, e.g. "Polar H10" */
   hrSourceLabel?: string
   /** feed state for the live/connecting/manual chip */
   hrStatus?: 'idle' | 'connecting' | 'streaming' | 'manual'
@@ -71,19 +139,50 @@ export default function GuidedTest({
   // only the symptoms the user told us they get
   const userSymptoms = CONCUSSION_SYMPTOMS.filter((s) => selectedSymptomIds.includes(s.id))
 
+  const [phase, setPhase] = useState<'setup' | 'ramp'>('setup')
+  const [modality, setModality] = useState<TestModality | null>(null)
+
   const [recordedStages, setRecordedStages] = useState<TestStage[]>([])
   const [minute, setMinute] = useState(1)
 
   // current (in-progress) minute inputs
   const [heartRate, setHeartRate] = useState('')
   const [symptomScore, setSymptomScore] = useState(restingSymptomScore)
+  const [rpe, setRpe] = useState(8)
   const [tappedSymptoms, setTappedSymptoms] = useState<Set<string>>(new Set())
+  /** >40 bpm jump from last stage — needs an explicit confirm before logging */
+  const [confirmJump, setConfirmJump] = useState<number | null>(null)
+
+  // ── 60-second stage timer (Date.now()-based; immune to throttling) ─────────
+  // 0 = not started; stamped on ramp start and on every stage rollover.
+  const stageStartRef = useRef<number>(0)
+  const [stageElapsed, setStageElapsed] = useState(0)
+  const cuedRef = useRef(false)
+  useEffect(() => {
+    if (phase !== 'ramp') return
+    if (stageStartRef.current === 0) stageStartRef.current = Date.now()
+    const iv = setInterval(() => {
+      const sec = Math.floor((Date.now() - stageStartRef.current) / 1000)
+      setStageElapsed(sec)
+      if (sec >= STAGE_SECONDS && !cuedRef.current) {
+        cuedRef.current = true
+        stageEndCue()
+      }
+    }, 250)
+    return () => clearInterval(iv)
+  }, [phase, minute])
+
+  const stageDone = stageElapsed >= STAGE_SECONDS
 
   // When a live source is streaming, the paired device drives the HR field — but
   // a MANUAL override must stick (a typed correction shouldn't be wiped within a
   // second). We only auto-fill when the field is empty or still showing the last
   // streamed value; once the patient types something different, live stops
   // clobbering it until they clear it.
+  //
+  // STALE-FEED RULE: when the feed drops (liveHr null / status back to
+  // connecting), CLEAR the field if it still shows the last live value — a dead
+  // feed must never sit on screen looking like a current heart rate.
   const lastLiveRef = useRef<string>('')
   useEffect(() => {
     if (typeof liveHr === 'number' && Number.isFinite(liveHr)) {
@@ -95,6 +194,8 @@ export default function GuidedTest({
         }
         return cur // manual override — leave it
       })
+    } else {
+      setHeartRate((cur) => (cur !== '' && cur === lastLiveRef.current ? '' : cur))
     }
   }, [liveHr])
 
@@ -103,8 +204,16 @@ export default function GuidedTest({
   // yield a dangerous training band. Physiologic HR range only.
   const hrValid = hrValue !== null && Number.isFinite(hrValue) && hrValue >= 30 && hrValue <= 240
 
-  // reaching a >=3-pt rise this minute means logging it sets the HRt
+  // reaching a >=3-pt rise this minute means logging it sets the HRt.
+  // A symptom spike may ALWAYS be logged early — never make someone wait out
+  // the minute while their symptoms climb.
   const reachesThreshold = symptomScore - restingSymptomScore >= PROVOCATION_RISE
+  const nearMaxEffort = rpe >= EXHAUSTION_RPE && !reachesThreshold
+
+  // Log opens at stage end — but a symptom spike or maximal effort may always
+  // be logged immediately (never make someone wait out the minute while
+  // symptoms climb or at their limit).
+  const canLog = hrValid && (stageDone || reachesThreshold || nearMaxEffort)
 
   const toggleSymptom = (id: string) => {
     setTappedSymptoms((prev) => {
@@ -118,27 +227,49 @@ export default function GuidedTest({
   const currentStage = (): TestStage => ({
     minute,
     heartRate: hrValue as number,
+    rpe,
     symptomScore,
     symptomsReported: [...tappedSymptoms],
+    // verified iff the live feed is FRESH right now and the field equals it
+    hrVerified: isVerifiedReading(hrValue, liveHr ?? null, hrStatus === 'streaming'),
   })
 
   const finish = (termination: TestTermination, stages: TestStage[]) => {
-    const input: TestInput = { restingSymptomScore, stages, termination, condition }
+    const input: TestInput = {
+      restingSymptomScore,
+      stages,
+      termination,
+      condition,
+      modality: modality ?? undefined,
+    }
     onComplete(detectThreshold(input), input)
   }
 
   /** Log this minute. Auto-ends the test on a >=3-pt rise (HRt) or at MAX_STAGES. */
-  const logMinute = () => {
+  const logMinute = (opts: { confirmed?: boolean; finalStage?: boolean } = {}) => {
     if (!hrValid) return
+    // HR sanity: an implausible jump from the last stage needs an explicit
+    // confirm — never silently mint an HRt from a typo.
+    const prev = recordedStages[recordedStages.length - 1]
+    if (!opts.confirmed && prev && Math.abs((hrValue as number) - prev.heartRate) > HR_JUMP_CONFIRM) {
+      setConfirmJump(Math.abs((hrValue as number) - prev.heartRate))
+      return
+    }
+    setConfirmJump(null)
     const stages = [...recordedStages, currentStage()]
     if (reachesThreshold) return finish('symptom-limited', stages)
-    if (minute >= MAX_STAGES) return finish('exhaustion-limited', stages)
+    if (opts.finalStage || minute >= MAX_STAGES) return finish('exhaustion-limited', stages)
     setRecordedStages(stages)
     setMinute((m) => m + 1)
-    // fresh entry for every stage — no HR / symptom carry-over from the last minute
+    // fresh entry for every stage — no HR / symptom carry-over from the last
+    // minute (RPE carries: effort only ramps up)
     setTappedSymptoms(new Set())
     setHeartRate('')
+    lastLiveRef.current = ''
     setSymptomScore(restingSymptomScore)
+    stageStartRef.current = Date.now()
+    setStageElapsed(0)
+    cuedRef.current = false
   }
 
   /** Early termination (exhaustion / red-flag). */
@@ -152,24 +283,90 @@ export default function GuidedTest({
     finish(termination, stages)
   }
 
+  // ── setup: how are you doing this test? ─────────────────────────────────────
+  if (phase === 'setup') {
+    return (
+      <section className="flex flex-col gap-4 pt-1">
+        <button
+          type="button"
+          onClick={() => onAbort({ started: false, stages: [] })}
+          className="-ml-1 -mt-0.5 self-start rounded-[10px] px-1 py-0.5 text-[12px] font-semibold text-[#7d9092] transition active:scale-[0.98]"
+        >
+          ← Back
+        </button>
+
+        <div className="flex flex-col gap-1.5">
+          <h1 className="m-0 text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-[#16282b]">
+            How will you do this test?
+          </h1>
+          <p className="m-0 text-[12.5px] leading-snug text-[#5d7174]">
+            You&rsquo;ll step the effort up a little every minute while we watch your symptoms. Your
+            clinician sees which one you used.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {MODALITIES.map((m) => {
+            const on = modality === m.id
+            return (
+              <button
+                key={m.id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setModality(m.id)}
+                className={`flex flex-col gap-0.5 rounded-[16px] border-[1.5px] px-4 py-3.5 text-left transition active:scale-[0.99] ${
+                  on ? 'border-[#5b9aa6] bg-[#e7f2f3]' : 'border-[#d4e0e1] bg-white'
+                }`}
+              >
+                <span className="text-[15px] font-bold leading-tight text-[#16282b]">{m.label}</span>
+                <span className="text-[11.5px] leading-snug text-[#7d9092]">{m.sub}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <PrimaryButton
+          disabled={modality === null}
+          onClick={() => {
+            stageStartRef.current = Date.now()
+            setStageElapsed(0)
+            cuedRef.current = false
+            setPhase('ramp')
+          }}
+        >
+          {modality === null ? 'Pick one to start' : 'Start minute 1'}
+        </PrimaryButton>
+      </section>
+    )
+  }
+
+  const remaining = Math.max(0, STAGE_SECONDS - stageElapsed)
+
   return (
     <section className="flex flex-col gap-3 pt-1">
-      {/* abort / back — never a dead end */}
+      {/* abort / back — never a dead end (and never a silent discard) */}
       <button
         type="button"
-        onClick={onAbort}
+        onClick={() => onAbort({ started: true, stages: recordedStages })}
         className="-ml-1 -mt-0.5 self-start rounded-[10px] px-1 py-0.5 text-[12px] font-semibold text-[#7d9092] transition active:scale-[0.98]"
       >
-        ← Back
+        ← End test without a result
       </button>
 
-      {/* hero: minute ring + live/entered HR */}
+      {/* hero: stage countdown ring + live/entered HR */}
       <div className="flex items-center gap-3.5">
         <div className="relative h-[114px] w-[114px] flex-none">
-          <MinuteRing minute={minute} />
+          <StageRing elapsedSec={stageElapsed} />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[9px] font-bold tracking-[0.14em] text-[#849c9c]">MIN</span>
-            <span className={`text-[40px] leading-[0.9] text-[#16282b] ${numFont}`}>{minute}</span>
+            <span className="text-[9px] font-bold tracking-[0.14em] text-[#849c9c]">
+              MIN {minute}
+            </span>
+            <span
+              className={`text-[34px] leading-[0.9] ${numFont}`}
+              style={{ color: stageDone ? '#3c7a1f' : '#16282b' }}
+            >
+              {stageDone ? '✓' : `0:${String(remaining).padStart(2, '0')}`}
+            </span>
           </div>
         </div>
         <div className="flex flex-col gap-0.5">
@@ -179,15 +376,19 @@ export default function GuidedTest({
           >
             Heart rate
           </label>
-          {/* Live bpm from the paired connection (Web Bluetooth / camera PPG) auto-
-              fills this field via the liveHr effect above; manual entry overrides. */}
+          {/* Live bpm from the paired connection auto-fills this field via the
+              liveHr effect above; manual entry overrides; a stale feed clears it
+              (dashes — never a frozen number). */}
           <div className="flex items-baseline gap-1.5">
             <input
               id="hr"
               type="number"
               inputMode="numeric"
               value={heartRate}
-              onChange={(e) => setHeartRate(e.target.value)}
+              onChange={(e) => {
+                setHeartRate(e.target.value)
+                setConfirmJump(null)
+              }}
               placeholder="—"
               className={`w-[88px] border-none bg-transparent p-0 text-[46px] leading-[0.92] text-[#5b9aa6] outline-none placeholder:text-[#bcd0d2] ${numFont}`}
             />
@@ -196,19 +397,62 @@ export default function GuidedTest({
           {hrStatus === 'streaming' ? (
             <span className="flex items-center gap-1.5 text-[11px] font-semibold leading-tight text-[#3c7a1f]">
               <span className="inline-block h-[7px] w-[7px] animate-pulse rounded-full bg-[#3c7a1f]" />
-              {hrSourceLabel ?? 'Wearable'} · live
+              {hrSourceLabel ?? 'Watch'} · live
             </span>
           ) : hrStatus === 'connecting' ? (
-            <span className="text-[11px] leading-tight text-[#9bafb0]">
-              Connecting {hrSourceLabel ?? 'device'}…
+            <span className="text-[11px] leading-tight text-[#b58a32]">
+              Signal dropped — re-connecting {hrSourceLabel ?? 'your device'}…
             </span>
           ) : (
             <span className="text-[11px] leading-tight text-[#9bafb0]">
-              rested {restingSymptomScore}/10 · enter from your monitor
+              rested {restingSymptomScore}/10 · type it from your monitor
             </span>
           )}
         </div>
       </div>
+
+      {/* per-stage effort instruction */}
+      <div className="rounded-[14px] border border-[#cfe0e2] bg-[#eef6f6] px-3.5 py-3">
+        <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#3c7681]">
+          This minute
+        </span>
+        <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-[#16282b]">
+          {effortInstruction(modality as TestModality, minute)}
+        </p>
+      </div>
+
+      {/* RPE — Borg 6–20 as a plain slider */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs font-semibold text-[#3b4f52]">How hard does this feel?</span>
+          <span className={`text-[16px] text-[#5b9aa6] ${numFont}`}>
+            {rpe}
+            <span className="text-[11px] text-[#9bafb0]">/20</span>
+          </span>
+        </div>
+        <input
+          type="range"
+          min={6}
+          max={20}
+          step={1}
+          value={rpe}
+          onChange={(e) => setRpe(Number(e.target.value))}
+          aria-label="How hard this feels, 6 easy to 20 maximal"
+          className="w-full accent-[#5b9aa6]"
+        />
+        <div className="flex justify-between text-[10px] font-medium text-[#9bafb0]">
+          <span>6 · easy</span>
+          <span>20 · maximal</span>
+        </div>
+      </div>
+
+      {nearMaxEffort && (
+        <div className="rounded-[14px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
+          <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
+            That&rsquo;s maximal effort — log this as your final stage.
+          </p>
+        </div>
+      )}
 
       {/* symptom chips */}
       <div className="flex flex-col gap-[7px]">
@@ -251,19 +495,47 @@ export default function GuidedTest({
         <span className={`w-4 text-right text-[15px] text-[#5b9aa6] ${numFont}`}>{symptomScore}</span>
       </div>
 
+      {/* HR-jump confirm — never silently mint an HRt from a typo */}
+      {confirmJump !== null && (
+        <div className="rounded-[14px] border-[1.5px] border-[#d79a3a] bg-[#fbf2e1] px-3.5 py-3">
+          <p className="m-0 text-[12.5px] font-bold leading-snug text-[#a06a1c]">
+            That&rsquo;s a jump of {confirmJump} bpm since last minute. Is {hrValue} right?
+          </p>
+          <div className="mt-2.5 flex gap-2">
+            <SecondaryButton onClick={() => setConfirmJump(null)} className="flex-1 p-2.5 text-[12.5px]">
+              Fix it
+            </SecondaryButton>
+            <button
+              type="button"
+              onClick={() => logMinute({ confirmed: true, finalStage: nearMaxEffort })}
+              className="flex-1 rounded-2xl bg-[#d79a3a] p-2.5 text-[12.5px] font-bold text-white transition active:scale-[0.98]"
+            >
+              Yes — log it
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-1.5">
         <button
           type="button"
-          disabled={!hrValid}
-          onClick={logMinute}
+          disabled={!canLog || confirmJump !== null}
+          onClick={() => logMinute({ finalStage: nearMaxEffort })}
           className="w-full rounded-[15px] p-3.5 text-sm font-bold text-white shadow-[0_8px_18px_-8px_rgba(91,154,166,0.8)] transition active:scale-[0.98] disabled:opacity-40"
-          style={{ background: reachesThreshold ? '#3c7681' : '#5b9aa6' }}
+          style={{ background: reachesThreshold ? '#3c7681' : nearMaxEffort ? '#a06a1c' : '#5b9aa6' }}
         >
-          {reachesThreshold ? 'Log — this reaches your threshold' : `Log minute ${minute} & continue`}
+          {reachesThreshold
+            ? 'Log — this reaches my threshold'
+            : nearMaxEffort
+              ? 'Log final stage — maximal effort'
+              : stageDone
+                ? `Log minute ${minute} & step up`
+                : `Log opens when the minute ends (0:${String(remaining).padStart(2, '0')})`}
         </button>
         <p className="m-0 text-center text-[10px] leading-tight text-[#9bafb0]">
-          Test ends automatically at a {PROVOCATION_RISE}-point rise from rest (sets your HRt), or at
-          minute {MAX_STAGES}.
+          The test ends on its own at a {PROVOCATION_RISE}-point symptom rise (that sets your
+          threshold), at maximal effort, or at minute {MAX_STAGES}. A symptom spike can be logged at
+          any time — you never have to wait out the minute.
         </p>
       </div>
 
@@ -271,23 +543,19 @@ export default function GuidedTest({
         <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#849c9c]">
           End the test early
         </span>
-        <p className="m-0 -mt-0.5 text-[10.5px] leading-snug text-[#9bafb0]">
-          Symptom exacerbation ends the test on its own — log it above. Use these only for exhaustion
-          or a red flag.
-        </p>
         <button
           type="button"
           onClick={() => endEarly('exhaustion-limited')}
           className="rounded-[14px] border-[1.5px] border-[#cdd9da] bg-white p-3 text-[13.5px] font-semibold text-[#5d7174] transition active:scale-[0.98]"
         >
-          Stop — exhausted (RPE maxed, no symptoms)
+          Stop — exhausted, no symptoms
         </button>
         <button
           type="button"
           onClick={() => endEarly('red-flag')}
           className="rounded-[14px] bg-[#d2463a] p-3 text-[13.5px] font-bold text-white shadow-[0_8px_18px_-9px_rgba(210,70,58,0.85)] transition active:scale-[0.98]"
         >
-          ⚑ Red flag — stop now
+          ⚑ Warning sign — stop now
         </button>
       </div>
 

@@ -36,22 +36,24 @@ export interface HrSource {
 }
 
 /**
- * The three first-class heart-rate paths. Every wearable on the market reaches
- * the app through one of these — we don't brand-gate, because we can't and
- * don't need to:
- *  - 'bluetooth' covers ANY BLE heart-rate wearable. Polar, Wahoo, WHOOP, Garmin
- *    (HR broadcast), and every chest strap advertise the SAME standard Web
- *    Bluetooth heart-rate service; the browser chooser lists them all and the
- *    user picks theirs.
- *  - 'camera' streams live pulse via phone-camera PPG — no wearable needed.
- *  - 'manual' is the clinician fallback: when no wearable is available, HR is
- *    entered by hand (this is also the path for Apple Watch / Fitbit, which
- *    can't feed a live web page). It is a first-class choice, not a last resort.
+ * The heart-rate paths, in the honesty order that matches the verified tier:
+ *  - 'bluetooth' = the VERIFIED tier: any LIVE standard BLE heart-rate stream.
+ *    Wrist wearables provide this in broadcast mode (Garmin "Broadcast Heart
+ *    Rate", Polar watches, WHOOP Broadcast, Coros / Suunto / Amazfit) as well
+ *    as chest straps — the browser chooser lists them all and the user picks
+ *    theirs. Apple Watch and Fitbit cannot broadcast standard BLE HR → manual
+ *    entry for those until the native iPhone app.
+ *  - 'camera' is a RESTING SPOT-CHECK only. Camera PPG is not valid during
+ *    exercise (motion artefact), so it never feeds a live session and can never
+ *    mark a session verified. Useful for a resting pulse before/after.
+ *  - 'manual' is a first-class path, not a last resort: type each reading from
+ *    any monitor (also the path for Apple Watch / Fitbit). Manual sessions
+ *    still count for safety — they just never advance the band.
  */
 export const HR_SOURCES: HrSource[] = [
-  { id: 'bluetooth-hr', name: 'Bluetooth HR monitor', method: 'Any BLE wearable — Polar, Wahoo, WHOOP, Garmin or chest strap', tag: 'Live HR', connect: 'bluetooth', live: true, glyph: '◍', tint: '#d2463a' },
-  { id: 'phone-camera', name: 'Phone camera', method: 'Live pulse from the camera (PPG) — no wearable needed', tag: 'Live HR', connect: 'camera', live: true, camera: true, glyph: '◎', tint: '#5d7174' },
-  { id: 'manual', name: 'Enter HR manually', method: 'Clinician enters it — also for Apple Watch / Fitbit', tag: 'Clinician', connect: 'manual', live: false, glyph: '✎', tint: '#3c7681' },
+  { id: 'bluetooth-hr', name: 'Watch or heart-rate sensor (Bluetooth)', method: 'Use the watch you already own — turn on its heart-rate broadcast and pair in one tap. Chest straps work too.', tag: 'Live HR', connect: 'bluetooth', live: true, glyph: '◍', tint: '#d2463a' },
+  { id: 'manual', name: 'Type it in yourself', method: 'Read each number from any monitor — also for Apple Watch and Fitbit', tag: 'Manual', connect: 'manual', live: false, glyph: '✎', tint: '#3c7681' },
+  { id: 'phone-camera', name: 'Phone camera — resting spot-check only', method: 'Checks your resting pulse before and after — not live session tracking', tag: 'Spot-check', connect: 'camera', live: true, camera: true, glyph: '◎', tint: '#5d7174' },
 ]
 
 // Default to the manual clinician path: it always works with no hardware, so the

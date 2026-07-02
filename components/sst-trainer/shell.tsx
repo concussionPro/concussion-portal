@@ -1,11 +1,15 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 /**
  * Shared design-system primitives for the Sub-Symptom-Threshold Trainer.
  * Reproduces the "SST Trainer" visual language: warm bg (#f4f8f8), teal accent
  * (#5b9aa6), Hanken Grotesk UI type + Space Grotesk for instrument numerals.
+ *
+ * (The old card-style AppShell + status-bar clock lived here until July 2026 —
+ * dead code once /platform/app moved to SstAppShell; verified unmounted and
+ * deleted.)
  */
 
 export const STEP_ORDER = [
@@ -21,87 +25,8 @@ export const STEP_ORDER = [
 
 export type Step = (typeof STEP_ORDER)[number]
 
-const STEP_CAPTION: Record<Step, string> = {
-  welcome: 'Welcome',
-  symptoms: 'Symptom profile',
-  readiness: 'Safety check',
-  test: 'Threshold test',
-  result: 'Your prescription',
-  home: 'Home',
-  training: 'Live session',
-  progress: 'Progress',
-}
-
 /** Space Grotesk numeral class — tabular figures for HR / scores / clocks. */
 export const numFont = 'font-[family-name:var(--font-space)] [font-variant-numeric:tabular-nums]'
-
-/** Live wall clock for the status bar (client-only to avoid hydration drift). */
-function StatusClock() {
-  const [label, setLabel] = useState('')
-  useEffect(() => {
-    const tick = () => {
-      const d = new Date()
-      let hh = d.getHours() % 12
-      if (hh === 0) hh = 12
-      const ap = d.getHours() < 12 ? 'am' : 'pm'
-      setLabel(`${hh}:${String(d.getMinutes()).padStart(2, '0')} ${ap}`)
-    }
-    tick()
-    const iv = setInterval(tick, 10_000)
-    return () => clearInterval(iv)
-  }, [])
-  return <span className={`text-sm text-[#16282b] ${numFont}`}>{label || ' '}</span>
-}
-
-/**
- * The app surface: warm radial backdrop, a centred phone-width card with the
- * SST status bar, scrollable content, and the flow-dot / caption chrome.
- */
-export function AppShell({ step, children }: { step: Step; children: ReactNode }) {
-  const cur = STEP_ORDER.indexOf(step)
-  return (
-    <main
-      className="flex min-h-screen w-full flex-col items-center justify-center gap-5 px-4 py-8 font-[family-name:var(--font-hanken)] text-[#16282b]"
-      style={{
-        background:
-          'radial-gradient(125% 95% at 50% -5%, #f5f9f9 0%, #e7eeee 52%, #dbe5e5 100%)',
-      }}
-    >
-      <div className="flex w-full max-w-[440px] flex-1 flex-col overflow-hidden rounded-[34px] border border-[#e2ecec] bg-[#f4f8f8] shadow-[0_30px_60px_-24px_rgba(20,40,42,0.4),0_6px_18px_rgba(20,40,42,0.12)] sm:flex-none">
-        {/* status bar */}
-        <div className="sticky top-0 z-30 flex items-center justify-between bg-gradient-to-b from-[#f4f8f8] to-[#f4f8f8]/0 px-6 pb-2 pt-3">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-[#5b9aa6]">
-            <span className="inline-block h-[9px] w-[9px] rounded-full border-2 border-[#5b9aa6]" />
-            SST
-          </div>
-          <StatusClock />
-        </div>
-
-        {/* content */}
-        <div className="flex-1 overflow-y-auto px-5 pb-8 pt-0.5">{children}</div>
-      </div>
-
-      {/* flow dots + caption */}
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-[7px]">
-          {STEP_ORDER.map((k, i) => (
-            <span
-              key={k}
-              className="h-1.5 rounded-full transition-all duration-200"
-              style={{
-                width: i === cur ? 18 : 6,
-                background: i === cur ? '#5b9aa6' : i < cur ? '#a7c7cc' : '#cdd9da',
-              }}
-            />
-          ))}
-        </div>
-        <p className="m-0 text-xs font-medium tracking-[0.02em] text-[#5d7174]">
-          {STEP_CAPTION[step]}
-        </p>
-      </div>
-    </main>
-  )
-}
 
 /** Section heading lockup used at the top of most screens. */
 export function ScreenHeading({ title, sub }: { title: ReactNode; sub?: ReactNode }) {

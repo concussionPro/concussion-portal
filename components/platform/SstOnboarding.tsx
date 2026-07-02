@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Condition } from '@/lib/sst-trainer/protocol'
-import type { WelcomeSelection, TrainerMode } from '@/components/sst-trainer/WelcomeMode'
+import type { WelcomeSelection, TrainerMode } from '@/lib/sst-trainer/store'
 import { HR_SOURCES, type HrSource } from '@/components/sst-trainer/hr-source'
 import {
   bluetoothSupported,
@@ -11,24 +11,27 @@ import {
   connectCameraPpg,
   type LiveHrConnection,
 } from '@/lib/sst-trainer/hr-live'
+import { validateClinicCode } from '@/lib/sst-trainer/clinic-sync'
 import { PrimaryButton } from '@/components/sst-trainer/shell'
 
 /**
  * Onboarding (the "Welcome" step) of the full-screen /platform/app.
  *
- * Target lockup + title, subcopy, the "How are you using this?" Self-guided /
- * Clinic-code toggle, and the "What are you working back to?" goal chip grid —
- * plus the two pieces the app needs before handing into the engine-backed flow:
- * a clinic-code field (clinic mode) and heart-rate-source pairing.
+ * LAUNCH MODE: clinic-code only. The self-guided toggle exists but is hidden
+ * unless NEXT_PUBLIC_SST_SELF_GUIDED === 'true' — at launch every patient
+ * arrives via their clinician's code (usually pre-filled from the QR deep
+ * link ?clinic=CODE).
  *
- * The HR source offers three first-class paths: pair ANY Bluetooth heart-rate
- * wearable, use the phone camera, or enter HR manually (the clinician fallback,
- * usable end-to-end with no hardware).
+ * The clinic code is VALIDATED here (GET /api/sst/validate-code) and confirmed
+ * with the clinic's real name — a typo can't silently orphan a patient's data.
  *
- * Emits { welcome, goal, goalLabel } on Continue; lifts the paired device AND
- * its real heart-rate connection up via onPair (Web Bluetooth / camera PPG,
- * established from the tap so the permission gesture is preserved).
+ * Heart-rate sourcing is honest about the verified tier: VERIFIED = a live
+ * Bluetooth heart-rate stream (watch broadcast mode or chest strap). The phone
+ * camera is a resting spot-check only — it never tracks a live session. Manual
+ * entry always works (and is the Apple Watch / Fitbit path today).
  */
+
+const SELF_GUIDED_ENABLED = process.env.NEXT_PUBLIC_SST_SELF_GUIDED === 'true'
 
 const GOALS: { id: string; label: string }[] = [
   { id: 'sport', label: 'Sport' },
@@ -39,13 +42,23 @@ const GOALS: { id: string; label: string }[] = [
   { id: 'feeling-right', label: 'Just feeling right' },
 ]
 
+/** One-line broadcast instructions for the common watches. */
+const BROADCAST_HOW_TO: { brand: string; how: string }[] = [
+  { brand: 'Garmin', how: 'hold the light/menu button → Settings → Sensors → Broadcast Heart Rate.' },
+  { brand: 'Polar', how: 'Settings → General settings → Pair and sync → turn on "HR visible to other devices".' },
+  { brand: 'WHOOP', how: 'open the WHOOP app → More → Device settings → Broadcast heart rate.' },
+]
+
 export interface OnboardingResult {
   welcome: WelcomeSelection
+  /** the validated clinic name (shown as confirmation, synced for context) */
+  clinicName: string | null
   goal: string | null
   goalLabel: string | null
 }
 
 type PairStatus = 'idle' | 'connecting' | 'connected' | 'error' | 'unavailable'
+type CodeStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'error'
 
 function TargetIcon() {
   return (
@@ -68,13 +81,18 @@ export default function SstOnboarding({
   /** pre-fill from a per-clinic QR deep link (/sst-trainer?clinic=CODE) */
   initialClinicCode?: string
 }) {
-  const [mode, setMode] = useState<TrainerMode>(initialClinicCode ? 'clinic-code' : 'self-guided')
+  const [mode, setMode] = useState<TrainerMode>(
+    SELF_GUIDED_ENABLED && !initialClinicCode ? 'self-guided' : 'clinic-code',
+  )
   const [clinicCode, setClinicCode] = useState(initialClinicCode ?? '')
+  const [codeStatus, setCodeStatus] = useState<CodeStatus>('idle')
+  const [clinicName, setClinicName] = useState<string | null>(null)
   const [patientName, setPatientName] = useState('')
   const [dataConsent, setDataConsent] = useState(false)
   const [goal, setGoal] = useState<string | null>(null)
   const [pairStatus, setPairStatus] = useState<PairStatus>('connected')
   const [pairError, setPairError] = useState<string | null>(null)
+  const [showBroadcastHelp, setShowBroadcastHelp] = useState(false)
   // The source currently mid-pair (set on tap, BEFORE the async connect resolves
   // and updates `device`) so the tapped row shows "Connecting…" right away.
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -83,6 +101,39 @@ export default function SstOnboarding({
 
   useEffect(() => {
     setCaps({ bt: bluetoothSupported(), cam: cameraSupported() })
+  }, [])
+
+  // Validate the code (on blur / continue / prefill). Sequenced so a slow first
+  // response can't overwrite the result of a newer check.
+  const checkSeq = useRef(0)
+  const runValidation = useCallback(async (code: string) => {
+    const trimmed = code.trim()
+    if (!trimmed) {
+      setCodeStatus('idle')
+      setClinicName(null)
+      return
+    }
+    const seq = ++checkSeq.current
+    setCodeStatus('checking')
+    const result = await validateClinicCode(trimmed)
+    if (seq !== checkSeq.current) return // superseded by a newer check
+    if (result === null) {
+      setCodeStatus('error') // couldn't check (offline / rate-limited) — retry
+      setClinicName(null)
+    } else if (result.valid) {
+      setCodeStatus('valid')
+      setClinicName(result.clinicName)
+    } else {
+      setCodeStatus('invalid')
+      setClinicName(null)
+    }
+  }, [])
+
+  // A QR-prefilled code validates immediately — the patient should see their
+  // clinic's name confirmed without touching the field.
+  useEffect(() => {
+    if (initialClinicCode) void runValidation(initialClinicCode)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /**
@@ -103,7 +154,7 @@ export default function SstOnboarding({
       if (!caps.bt) {
         onPair(d, null)
         setPairStatus('unavailable')
-        setPairError('Bluetooth pairing needs Chrome / Edge / Android — use the phone camera or enter your heart rate manually.')
+        setPairError('Bluetooth pairing needs Chrome / Edge / Android — you can still train with manual entry.')
         return
       }
       setPendingId(d.id)
@@ -116,18 +167,18 @@ export default function SstOnboarding({
       } catch {
         onPair(d, null) // user cancelled the chooser or pairing failed → manual
         setPairStatus('error')
-        setPairError('Couldn’t connect that sensor — you can try again or enter your heart rate manually.')
+        setPairError('Couldn’t connect that sensor — check your watch is broadcasting, then try again. Or type your heart rate in.')
       } finally {
         setPendingId(null)
       }
       return
     }
 
-    // camera PPG
+    // camera PPG — resting spot-check only
     if (!caps.cam) {
       onPair(d, null)
       setPairStatus('unavailable')
-      setPairError('Camera HR needs a secure (HTTPS) browser with camera access — enter your heart rate manually instead.')
+      setPairError('The camera spot-check needs a secure (HTTPS) browser with camera access — you can type your heart rate instead.')
       return
     }
     setPendingId(d.id)
@@ -139,7 +190,7 @@ export default function SstOnboarding({
     } catch {
       onPair(d, null)
       setPairStatus('error')
-      setPairError('Couldn’t start the camera — check the permission, or enter your heart rate manually.')
+      setPairError('Couldn’t start the camera — check the permission, or type your heart rate instead.')
     } finally {
       setPendingId(null)
     }
@@ -148,8 +199,18 @@ export default function SstOnboarding({
   const sourceDisabled = (s: HrSource) =>
     (s.connect === 'bluetooth' && !caps.bt) || (s.connect === 'camera' && !caps.cam)
 
-  const codeMissing = mode === 'clinic-code' && clinicCode.trim().length === 0
-  const blocked = codeMissing || goal === null
+  const nameMissing = mode === 'clinic-code' && patientName.trim().length === 0
+  const codeNotValid = mode === 'clinic-code' && codeStatus !== 'valid'
+  const blocked = codeNotValid || nameMissing || goal === null
+
+  const continueLabel =
+    goal === null
+      ? 'Pick a goal to continue'
+      : mode === 'clinic-code' && codeStatus !== 'valid'
+        ? 'Enter your clinic code to continue'
+        : nameMissing
+          ? 'Add your name to continue'
+          : 'Continue'
 
   const condition: Condition = 'concussion'
 
@@ -171,36 +232,38 @@ export default function SstOnboarding({
         </p>
       </div>
 
-      {/* mode segmented control */}
-      <div className="flex flex-col gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
-          How are you using this?
-        </span>
-        <div className="flex gap-1 rounded-[14px] bg-[#e7eeee] p-1">
-          {(
-            [
-              ['self-guided', 'Self-guided'],
-              ['clinic-code', 'Clinic code'],
-            ] as const
-          ).map(([m, label]) => {
-            const on = mode === m
-            return (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={`flex-1 rounded-[10px] p-2.5 text-[13px] font-semibold transition ${
-                  on
-                    ? 'bg-white text-[#16243f] shadow-[0_1px_2px_rgba(20,36,63,0.14)]'
-                    : 'bg-transparent text-[#7d9092]'
-                }`}
-              >
-                {label}
-              </button>
-            )
-          })}
+      {/* mode segmented control — hidden at launch (clinic-code only) */}
+      {SELF_GUIDED_ENABLED && (
+        <div className="flex flex-col gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
+            How are you using this?
+          </span>
+          <div className="flex gap-1 rounded-[14px] bg-[#e7eeee] p-1">
+            {(
+              [
+                ['self-guided', 'Self-guided'],
+                ['clinic-code', 'Clinic code'],
+              ] as const
+            ).map(([m, label]) => {
+              const on = mode === m
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className={`flex-1 rounded-[10px] p-2.5 text-[13px] font-semibold transition ${
+                    on
+                      ? 'bg-white text-[#16243f] shadow-[0_1px_2px_rgba(20,36,63,0.14)]'
+                      : 'bg-transparent text-[#7d9092]'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {mode === 'clinic-code' && (
         <div className="flex flex-col gap-1.5">
@@ -211,11 +274,45 @@ export default function SstOnboarding({
             id="clinic-code"
             type="text"
             value={clinicCode}
-            onChange={(e) => setClinicCode(e.target.value.toUpperCase())}
+            onChange={(e) => {
+              setClinicCode(e.target.value.toUpperCase())
+              setCodeStatus('idle')
+              setClinicName(null)
+            }}
+            onBlur={() => {
+              if (codeStatus === 'idle') void runValidation(clinicCode)
+            }}
             placeholder="e.g. CEA-4827"
             autoCapitalize="characters"
-            className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base tracking-[0.06em] text-[#16243f] outline-none font-[family-name:var(--font-space)] focus:border-[#5b9aa6]"
+            aria-describedby="clinic-code-status"
+            className={`w-full rounded-[14px] border-[1.5px] bg-white px-3.5 py-3 text-base tracking-[0.06em] text-[#16243f] outline-none font-[family-name:var(--font-space)] focus:border-[#5b9aa6] ${
+              codeStatus === 'invalid' ? 'border-[#d2463a]' : codeStatus === 'valid' ? 'border-[#3c7a1f]' : 'border-[#cfdbdc]'
+            }`}
           />
+          <span id="clinic-code-status" aria-live="polite" className="min-h-[16px] text-[11.5px] leading-tight">
+            {codeStatus === 'checking' && <span className="text-[#9bafb0]">Checking your code…</span>}
+            {codeStatus === 'valid' && (
+              <span className="font-semibold text-[#3c7a1f]">✓ {clinicName ?? 'Code confirmed'}</span>
+            )}
+            {codeStatus === 'invalid' && (
+              <span className="font-semibold text-[#b5462f]">
+                That code isn&rsquo;t recognised — check it against your clinic card.
+              </span>
+            )}
+            {codeStatus === 'error' && (
+              <span className="text-[#b5462f]">
+                Couldn&rsquo;t check the code just now.{' '}
+                <button
+                  type="button"
+                  onClick={() => void runValidation(clinicCode)}
+                  className="font-semibold underline"
+                >
+                  Try again
+                </button>
+              </span>
+            )}
+          </span>
+
           <label htmlFor="patient-name" className="mt-1.5 text-xs font-semibold text-[#3b4f52]">
             Your name
           </label>
@@ -224,12 +321,12 @@ export default function SstOnboarding({
             type="text"
             value={patientName}
             onChange={(e) => setPatientName(e.target.value)}
-            placeholder="So your clinician can find you"
+            placeholder="First and last name"
             autoCapitalize="words"
             className="w-full rounded-[14px] border-[1.5px] border-[#cfdbdc] bg-white px-3.5 py-3 text-base text-[#16243f] outline-none focus:border-[#5b9aa6]"
           />
           <span className="text-[10.5px] leading-tight text-[#9bafb0]">
-            Links you to your clinician&apos;s dashboard — they set and oversee your threshold.
+            So your clinician knows it&rsquo;s you.
           </span>
         </div>
       )}
@@ -261,14 +358,14 @@ export default function SstOnboarding({
         </div>
       </div>
 
-      {/* heart-rate source — three first-class paths (wearable / camera / clinician) */}
+      {/* heart-rate source — verified tier first (watch broadcast / strap) */}
       <div className="flex flex-col gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
           Heart-rate source
         </span>
         <p className="m-0 -mt-0.5 text-[11px] leading-snug text-[#7d9092]">
-          Train with live heart rate from any wearable or your phone — or have your clinician enter it
-          when no wearable is on hand. Pick one (you can change it later).
+          Use the watch you already own — turn on its heart-rate broadcast mode and pair in one tap.
+          Chest straps work too. No watch on hand? You can type each reading in.
         </p>
 
         <div className="flex flex-col gap-2">
@@ -344,20 +441,43 @@ export default function SstOnboarding({
           })}
         </div>
 
+        {/* device-specific broadcast one-liners */}
+        <button
+          type="button"
+          onClick={() => setShowBroadcastHelp((v) => !v)}
+          aria-expanded={showBroadcastHelp}
+          className="self-start text-[11px] font-semibold text-[#3c7681] underline decoration-[#a7c7cc] underline-offset-2"
+        >
+          How do I turn on my watch&rsquo;s broadcast?
+        </button>
+        {showBroadcastHelp && (
+          <ul className="m-0 flex list-none flex-col gap-1 rounded-[12px] bg-[#eef4f4] px-3.5 py-2.5 pl-3.5">
+            {BROADCAST_HOW_TO.map((b) => (
+              <li key={b.brand} className="text-[11px] leading-snug text-[#3c5658]">
+                <strong>{b.brand}:</strong> {b.how}
+              </li>
+            ))}
+            <li className="text-[11px] leading-snug text-[#7d9092]">
+              Apple Watch and Fitbit can&rsquo;t broadcast this way — type your heart rate in instead.
+            </li>
+          </ul>
+        )}
+
         {pairError ? (
           <span className="text-[10.5px] leading-snug text-[#b5462f]">{pairError}</span>
         ) : (
           <span className="text-[10.5px] leading-snug text-[#9bafb0]">
             {device.connect === 'camera'
-              ? 'No wearable needed — your phone camera reads your pulse during the test (cover the rear lens with a fingertip).'
+              ? 'Good for a resting pulse check before and after a session (cover the rear lens with a fingertip). During exercise, use your watch broadcast or type your heart rate in.'
               : device.connect === 'bluetooth'
-                ? 'Your wearable streams live heart rate into every session. The browser will ask you to pick your sensor.'
-                : 'You’ll enter the heart rate by hand each minute of the test and during sessions — every screen works this way too.'}
+                ? 'Your watch or strap streams live heart rate into every session. The browser will ask you to pick your device.'
+                : 'You’ll type the heart rate in each minute of the test and during sessions — every screen works this way too.'}
           </span>
         )}
         {!caps.bt && (
           <span className="text-[10px] leading-snug text-[#9bafb0]">
-            Bluetooth pairing needs Chrome, Edge or Android. On iPhone/Safari, use the phone camera or enter HR manually.
+            Live verified tracking needs a Bluetooth heart-rate broadcast (your watch or a strap) via
+            our Android/desktop app today — iPhone app coming. You can still train with manual entry.
           </span>
         )}
       </div>
@@ -389,12 +509,13 @@ export default function SstOnboarding({
               patientName: mode === 'clinic-code' ? patientName.trim() || null : null,
               condition,
             },
+            clinicName: mode === 'clinic-code' ? clinicName : null,
             goal,
             goalLabel: GOALS.find((g) => g.id === goal)?.label ?? null,
           })
         }
       >
-        {goal === null ? 'Pick a goal to continue' : 'Continue'}
+        {continueLabel}
       </PrimaryButton>
 
       <a

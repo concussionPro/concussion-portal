@@ -36,6 +36,9 @@ export type Condition =
   | 'long-covid'
   | 'cardiac'
 
+/** How the graded test is being performed — stored on the result for the clinician. */
+export type TestModality = 'treadmill' | 'bike' | 'walk'
+
 /** A single minute/stage of the guided graded (threshold-finding) test. */
 export interface TestStage {
   minute: number          // 1-based stage index
@@ -44,6 +47,8 @@ export interface TestStage {
   symptomScore: number    // 0-10 overall symptom severity at the stage
   /** symptoms the user tapped this stage (from their preselected list) */
   symptomsReported?: string[]
+  /** true iff at log time the live feed was fresh AND the logged value equalled it */
+  hrVerified?: boolean
 }
 
 export type TestTermination = 'symptom-limited' | 'exhaustion-limited' | 'red-flag'
@@ -53,6 +58,8 @@ export interface TestInput {
   stages: TestStage[]
   termination: TestTermination
   condition?: Condition
+  /** treadmill / bike / brisk walking — chosen on the pre-test setup screen */
+  modality?: TestModality
 }
 
 export interface ThresholdResult {
@@ -102,6 +109,14 @@ export const PROVOCATION_RISE = 3
 export const SESSION_STOP_RISE = 2
 /** Voluntary-exhaustion RPE (Borg) without symptom provocation. */
 export const EXHAUSTION_RPE = 17
+/** Resting symptoms at or above this on the readiness screen → today is not a test day. */
+export const MAX_RESTING_TO_TEST = 8
+/** A stage-to-stage HR jump above this (bpm) needs an explicit confirm — never mint HRt from a typo. */
+export const HR_JUMP_CONFIRM = 40
+/** Minimum spacing between graded tests (hours), except after a regress / clinician instruction. */
+export const RETEST_MIN_HOURS = 48
+/** A session is verified only when at least this share of readings were live-feed-verified. */
+export const VERIFIED_READING_MIN_PCT = 80
 
 /**
  * Detect the heart-rate threshold (HRt) from a guided graded test.
@@ -171,11 +186,114 @@ export interface SessionLog {
   peakHeartRate: number
   preSymptom: number      // 0-10 before
   peakSymptom: number     // 0-10 worst during
-  nextDayFlare?: boolean  // reported worse the next day
+  nextDayFlare?: boolean  // reported worse the next day (set by the next-day check-in)
   completedMinutes: number
+  /**
+   * true = strap/watch-fed session whose readings were live-verified (>=80%).
+   * Sessions logged by this app ALWAYS carry an explicit true/false; only an
+   * explicit `false` is excluded from advance evidence (legacy logs without the
+   * field predate verification and are grandfathered).
+   */
+  hrVerified?: boolean
+  /** share (0-100) of readings that were live-feed-verified at log time */
+  verifiedReadingPct?: number
+  /** the session ended on the >=2-point symptom-rise stop rule */
+  symptomLimited?: boolean
+  /** the patient used their one "I feel okay, continue" override */
+  overrodeStop?: boolean
+  /** immediate post-session self-report ("Compared to before the session…") */
+  endFeel?: 'same' | 'better' | 'worse'
+  /** next-day check-in answer (worse also sets nextDayFlare) */
+  nextDayCheckin?: 'same' | 'better' | 'worse'
+  /** time-in-zone seconds (Garmin/Polar-style summary) */
+  secondsBelow?: number
+  secondsIn?: number
+  secondsAbove?: number
 }
 
-export type ProgressionDecision = 'advance' | 'hold' | 'regress' | 'refer'
+// ── heart-rate reading verification ──────────────────────────────────────────
+
+/**
+ * A single reading is verified iff, at the moment it was logged, the live feed
+ * was FRESH and the logged value equals the feed value. A typed number, a stale
+ * feed, or a mismatch can never produce a verified reading.
+ */
+export function isVerifiedReading(
+  entered: number | null,
+  liveBpm: number | null,
+  feedFresh: boolean,
+): boolean {
+  return feedFresh && entered != null && liveBpm != null && entered === liveBpm
+}
+
+export interface SessionVerification {
+  hrVerified: boolean
+  /** 0-100 integer */
+  verifiedReadingPct: number
+}
+
+/**
+ * Session-level verification: >=80% of readings verified AND the source is a
+ * Bluetooth heart-rate stream (watch broadcast or strap). Camera PPG is a
+ * resting spot-check only and manual entry is by definition unverified — neither
+ * can ever mark a session verified.
+ */
+export function sessionVerification(
+  readings: Array<{ verified: boolean }>,
+  source: 'bluetooth' | 'camera' | 'manual' | string,
+): SessionVerification {
+  const pct = readings.length
+    ? Math.round((readings.filter((r) => r.verified).length / readings.length) * 100)
+    : 0
+  return {
+    verifiedReadingPct: pct,
+    hrVerified: source === 'bluetooth' && readings.length > 0 && pct >= VERIFIED_READING_MIN_PCT,
+  }
+}
+
+// ── re-test spacing ──────────────────────────────────────────────────────────
+
+export interface RetestGate {
+  allowed: boolean
+  reason: string | null
+}
+
+/**
+ * Serial re-tests are spaced: never twice in one day, and at least 48 hours
+ * apart — EXCEPT after a regress (the band just moved down; a fresh threshold is
+ * clinically useful) or on clinician instruction. A red-flag lock blocks
+ * everything until the patient confirms clinical clearance.
+ */
+export function canRetest(
+  nowMs: number,
+  lastTestAt: number | null,
+  opts: { afterRegress?: boolean; clinicianDirected?: boolean; redFlagLocked?: boolean } = {},
+): RetestGate {
+  if (opts.redFlagLocked) {
+    return {
+      allowed: false,
+      reason: 'Testing is paused until a clinician has reviewed you and cleared you to resume.',
+    }
+  }
+  if (lastTestAt == null) return { allowed: true, reason: null }
+  // Max one test per calendar day — no exceptions.
+  if (new Date(nowMs).toDateString() === new Date(lastTestAt).toDateString()) {
+    return {
+      allowed: false,
+      reason: 'You have already tested today. One test a day is the limit — try again tomorrow.',
+    }
+  }
+  const hoursSince = (nowMs - lastTestAt) / 3_600_000
+  if (hoursSince < RETEST_MIN_HOURS && !opts.afterRegress && !opts.clinicianDirected) {
+    return {
+      allowed: false,
+      reason: `Your last test was under ${RETEST_MIN_HOURS} hours ago. Give it a couple of days between tests — your band is still current.`,
+    }
+  }
+  return { allowed: true, reason: null }
+}
+
+export type ProgressionDecision = 'advance' | 'hold' | 'regress' | 'refer' | 'retest'
 
 export interface ProgressionResult {
   decision: ProgressionDecision
@@ -184,9 +302,17 @@ export interface ProgressionResult {
 }
 
 /**
- * Decide whether to advance the ceiling, hold, regress or refer, from recent
- * sessions. Evidence-aligned: advance only after a clean run (no within-session
- * provocation AND no next-day flare); regress/refer on repeated provocation.
+ * Decide whether to advance the ceiling, hold, regress, refer or re-test, from
+ * recent sessions. Evidence-aligned AND fail-closed:
+ *
+ *  - ADVANCE evidence = VERIFIED sessions only (live Bluetooth HR — watch
+ *    broadcast or strap). A session that is explicitly unverified (manual /
+ *    camera / low verified-reading share) can NEVER count toward the clean run.
+ *  - REGRESS is never gated: flare/safety evidence counts from EVERY session,
+ *    verified or not.
+ *  - CEILING CAP: a suggested advance never exceeds the measured HRt. At the
+ *    cap the decision becomes 'retest' — the app prompts a re-test instead of
+ *    ratcheting past the measurement.
  */
 export function progressionDecision(
   rx: Prescription,
@@ -197,21 +323,38 @@ export function progressionDecision(
   const step = opts.stepBpm ?? 5
   if (!recent.length) return { decision: 'hold', message: 'Log a few sessions first.' }
 
+  const isFlare = (s: SessionLog) =>
+    s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE
+
   // Regress only on RECENT repeated provocation — window to the last few
   // sessions so old, long-since-resolved flares can't ratchet the ceiling down
   // forever (a recovered patient with clean recent runs must not keep regressing).
+  // Safety data always counts: this window includes manual/unverified sessions.
   const flareWindow = recent.slice(-Math.max(cleanNeeded, 3))
-  const flares = flareWindow.filter((s) => s.nextDayFlare || s.peakSymptom - s.preSymptom >= SESSION_STOP_RISE)
+  const flares = flareWindow.filter(isFlare)
   if (flares.length >= 2) {
     return { decision: 'regress', newCeilingBpm: rx.upperBpm - step, message: 'Symptoms are being provoked repeatedly — ease the ceiling back and rebuild. If it keeps happening, re-test or check in with your clinician.' }
   }
+  // A single recent flare (any source) blocks an advance — hold and rebuild.
+  if (flares.length > 0) {
+    return { decision: 'hold', message: 'A recent session provoked symptoms — hold your band until you have a clean run.' }
+  }
 
-  const lastClean = recent.slice(-cleanNeeded)
+  // Advance evidence: verified sessions only. `hrVerified === false` (manual /
+  // camera / stale-feed sessions) never counts; the app stamps every session
+  // explicitly, so only pre-verification legacy logs lack the field.
+  const verified = recent.filter((s) => s.hrVerified !== false)
+  const lastClean = verified.slice(-cleanNeeded)
   const allClean = lastClean.length >= cleanNeeded && lastClean.every(
-    (s) => !s.nextDayFlare && s.peakSymptom - s.preSymptom < SESSION_STOP_RISE && s.completedMinutes >= rx.sessionMinutes * 0.8,
+    (s) => !isFlare(s) && s.completedMinutes >= rx.sessionMinutes * 0.8,
   )
   if (allClean) {
-    return { decision: 'advance', newCeilingBpm: rx.upperBpm + step, message: `${cleanNeeded} clean sessions with no flare — you can step your ceiling up by ${step} bpm to keep the stimulus effective. (Or re-test your threshold for a precise update.)` }
+    // Ceiling cap: upperBpm may never exceed the measured HRt.
+    if (rx.upperBpm >= rx.hrt) {
+      return { decision: 'retest', message: 'You have reached your measured threshold — time to re-test. A fresh test is the only safe way to raise your band further.' }
+    }
+    const newCeilingBpm = Math.min(rx.upperBpm + step, rx.hrt)
+    return { decision: 'advance', newCeilingBpm, message: `${cleanNeeded} clean tracked sessions with no flare — you can step your ceiling up to ${newCeilingBpm} bpm to keep the stimulus effective. (Or re-test your threshold for a precise update.)` }
   }
-  return { decision: 'hold', message: 'Staying the course — keep training in your current band until you have a clean run.' }
+  return { decision: 'hold', message: 'Staying the course — keep training in your current band until you have a clean run of tracked sessions.' }
 }
