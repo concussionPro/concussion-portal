@@ -4,17 +4,19 @@ import { ArrowUpRight } from 'lucide-react'
 /**
  * Quiet inline pointer for clinicians who land on the prospect dashboard
  * and want to enrol individually instead of being part of the team deal.
- * No form, no friction — straight to /pricing.
+ * No form, no friction — straight to /pricing (with the ?prospect=
+ * attribution param so the engagement engine can credit the signup).
  */
-export function IndividualInterestCard() {
+export function IndividualInterestCard({ slug }: { slug?: string }) {
+  const href = slug ? `/pricing?prospect=${encodeURIComponent(slug)}` : '/pricing'
   return (
     <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-accent/15 bg-white px-5 py-4">
       <p className="text-[13px] text-foreground/80 leading-snug">
-        Want to enrol just yourself? <span className="text-muted-foreground">Online-only access from $497 · lifetime access · 14 CPD hours.</span>
+        Want to enrol just yourself? <span className="text-muted-foreground">Online-only access from $497 · lifetime access · 8 CPD hours online (up to 14 with the in-person day).</span>
       </p>
       <Link
         data-track-cta="individual-pricing"
-        href="/pricing"
+        href={href}
         className="shrink-0 inline-flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-dark whitespace-nowrap"
       >
         See pricing

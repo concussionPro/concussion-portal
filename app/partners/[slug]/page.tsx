@@ -110,9 +110,11 @@ export default async function PartnerPage({ params }: PageProps) {
           <p className="text-sm text-foreground/60 mb-5">No cost to the {orgWord}. No admin to run.</p>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {/* Baseline — the one that needs explaining, given the most room */}
+            {/* Baseline — the one that needs explaining, given the most room.
+                Free-tool links carry ?prospect={slug} so the engagement engine
+                attributes signups back to this institution. */}
             <ImageBento
-              href="/preseason"
+              href={`/preseason?prospect=${encodeURIComponent(partner.slug)}`}
               image="/workshop-training.jpg"
               icon={<Activity className="w-4 h-4" />}
               eyebrow="The smart bit"
@@ -121,7 +123,7 @@ export default async function PartnerPage({ params }: PageProps) {
             />
             {/* SCAT tools */}
             <ImageBento
-              href="/scat-forms"
+              href={`/scat-forms?prospect=${encodeURIComponent(partner.slug)}`}
               image="/online-course-preview.jpg"
               icon={<FileText className="w-4 h-4" />}
               eyebrow="Clinical tools"
@@ -132,7 +134,7 @@ export default async function PartnerPage({ params }: PageProps) {
 
           <div className="mt-4">
             <MiniCard
-              href="/scat-mastery"
+              href={`/scat-mastery?prospect=${encodeURIComponent(partner.slug)}`}
               icon={<GraduationCap className="w-4 h-4" />}
               title="Free SCAT6 mini-course for your trainers"
               body="Our 1-hour SCAT6 mastery course — recognise concussion, run a sideline SCAT6/SCOAT6, and know when to pull an athlete. Free for your trainers and staff; the same curriculum we teach clinicians."
@@ -262,7 +264,7 @@ function ImageBento({
   href, image, icon, eyebrow, title, body,
 }: { href: string; image: string; icon: React.ReactNode; eyebrow: string; title: string; body: string }) {
   return (
-    <Link href={href} data-track-cta={`partner-tool-${href.replace(/^\//, '')}`} className="group flex flex-col rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-accent hover:shadow-md transition-all">
+    <Link href={href} data-track-cta={`partner-tool-${href.replace(/^\//, '').split('?')[0]}`} className="group flex flex-col rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-accent hover:shadow-md transition-all">
       <div className="relative h-40 w-full overflow-hidden">
         <Image src={image} alt="" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-[1.03] transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
@@ -292,7 +294,7 @@ function MiniCard({
     </>
   )
   const cls = 'group flex flex-col rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-5 hover:border-accent hover:shadow-sm transition-all'
-  const cta = `partner-tool-${href.replace(/^\//, '')}`
+  const cta = `partner-tool-${href.replace(/^\//, '').split('?')[0]}`
   return external ? (
     <a href={href} data-track-cta={cta} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
   ) : (

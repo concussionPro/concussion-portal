@@ -31,7 +31,7 @@ function TopBar() {
         <span style={{ color: ACCENT, fontWeight: 600 }}>· Concussion Clinical Mastery</span>
       </span>
       <span className="text-right">
-        Endorsed by Osteopathy Australia · AHPRA-aligned · RACGP-eligible · 14 CPD hours
+        Endorsed by Osteopathy Australia · AHPRA-aligned · 14 CPD hours
       </span>
     </div>
   )
@@ -495,7 +495,6 @@ function PageThree() {
         style={{ background: '#f8fafc', color: INK_SOFT, border: `1px solid ${LINE}` }}
       >
         Endorsed by Osteopathy Australia · 14 CPD hours each · Certificate of completion · AHPRA-aligned
-        · RACGP-eligible
       </div>
 
       {/* Next step */}

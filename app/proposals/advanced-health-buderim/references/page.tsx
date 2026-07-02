@@ -32,11 +32,10 @@ interface Ref {
   url?: string
 }
 
-// Curated subset for the prospect preview. The full library has 140+ entries
-// across pathophysiology, assessment, PPCS, vestibular, exercise, paediatric,
-// medicolegal, return-to-play, and AI/documentation categories.
-// Realistic per-category totals across the full 140+ library. Used to
-// render honest "{shown} of {total}" labels instead of "of many".
+// Curated subset for the prospect preview. Per-category totals across the
+// full library (they sum to 120 — the customer-facing claim must always
+// match this sum, never a rounded-up "140+"). Used to render honest
+// "{shown} of {total}" labels instead of "of many".
 const CATEGORY_TOTALS: Record<string, number> = {
   'Consensus statements': 12,
   'Pathophysiology': 26,
@@ -48,7 +47,7 @@ const CATEGORY_TOTALS: Record<string, number> = {
 }
 
 // Curated preview: 10 landmark references — enough to demonstrate the
-// library's depth + clinical anchoring without giving away the full 140+
+// library's depth + clinical anchoring without giving away the full
 // catalogue. The full library activates with the Hub Program.
 const PROSPECT_REFS: Record<string, Ref[]> = {
   'Consensus statements': [
@@ -181,7 +180,7 @@ export default async function ProspectReferences({
             Peer-reviewed concussion evidence
           </h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
-            {totalShown} of 140+ references shown as a sample across {Object.keys(PROSPECT_REFS).length} categories. The full library is searchable and unlocked for every clinician with the Hub Program.
+            {totalShown} of {Object.values(CATEGORY_TOTALS).reduce((acc, n) => acc + n, 0)} references shown as a sample across {Object.keys(PROSPECT_REFS).length} categories. The full library is searchable and unlocked for every clinician with the Hub Program.
           </p>
 
           <div className="space-y-8">
@@ -204,7 +203,7 @@ export default async function ProspectReferences({
 
           <div className="mt-10 glass-premium rounded-2xl p-5 text-center">
             <p className="text-sm font-bold text-foreground mb-1">
-              Full library · 140+ references
+              Full library · {Object.values(CATEGORY_TOTALS).reduce((acc, n) => acc + n, 0)} references
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable by category, citation, author, year. Linked to clinical modules. Updated as consensus evolves. Available to every clinician at {CLINIC.shortName} with the Hub Program.

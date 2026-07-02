@@ -51,6 +51,9 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
   const m1 = modules.find((m) => m.id === 1)!
   const locked = modules.filter((m) => m.id !== 1)
   const isPurpose = clinic.slug === 'purpose-healthcare'
+  // Access key is optional (keyless URLs) — guard so links never emit a
+  // literal "?k=undefined".
+  const kq = clinic.accessKey ? `?k=${clinic.accessKey}` : ''
 
   return (
     <div className="flex min-h-screen dashboard-bg">
@@ -66,7 +69,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
       <main className="flex-1 ml-0 md:ml-64">
         <div data-track-section="learning-suite" className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Link
-            href={`/p/${clinic.slug}?k=${clinic.accessKey}`}
+            href={`/p/${clinic.slug}${kq}`}
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors mb-4"
           >
             <ArrowLeft className="w-3 h-3" />
@@ -100,7 +103,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
           ) : (
             <>
               <Link
-                href={`/p/${clinic.slug}/learning/module-1?k=${clinic.accessKey}`}
+                href={`/p/${clinic.slug}/learning/module-1${kq}`}
                 className="block glass-premium rounded-2xl p-5 sm:p-6 mb-4 border-l-2 border-l-accent hover:shadow-md transition-shadow group"
               >
                 <div className="flex items-start gap-4">

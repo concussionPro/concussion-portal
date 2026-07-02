@@ -155,16 +155,20 @@ export function DualStreamTabs({ detailed, learningHref }: { detailed?: Detailed
         {activeModules ? (
           <div className="space-y-2.5">
             {activeModules.map((m, i) => {
-              // Both streams open the EXISTING public locked-trial preview (no
-              // login, already built): CCM → /preview, CRM → /preview?course=crm
-              // (same preview architecture, EP course data). Module 1 unlocked,
-              // the rest locked — handled entirely by /preview.
+              // Both streams open the PERSONALISED per-clinic Module 1 trial —
+              // /p/{slug}/learning/module-1 renders CCM by default and the EP
+              // course with ?course=crm (same renderer, tracked back to the
+              // clinic). Never dump prospects to the generic /preview: it
+              // loses the personalisation AND the engagement attribution.
               const isLiveTrial = m.id === 1
-              const trialHref = detailed
-                ? stream === 'crm'
-                  ? `/preview?course=crm`
-                  : `/preview`
-                : null
+              let trialHref: string | null = null
+              if (detailed) {
+                const qs = new URLSearchParams()
+                if (stream === 'crm') qs.set('course', 'crm')
+                if (detailed.accessKey) qs.set('k', detailed.accessKey)
+                const q = qs.toString()
+                trialHref = `/p/${detailed.slug}/learning/module-1${q ? `?${q}` : ''}`
+              }
               const inner = (
                 <div className="flex items-start gap-4">
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isLiveTrial ? 'bg-gradient-to-br from-accent/20 to-accent/5' : 'bg-black/[0.03]'}`}>

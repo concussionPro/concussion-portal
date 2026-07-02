@@ -323,7 +323,7 @@ function EndOfTrialPitch() {
           <StatPill headline="~144k" label="Sport-related concussions in Australia / year" />
           <StatPill headline="~14%" label="Senior community AFL players concussed / season" />
           <StatPill headline="4–12%" label="Youth contact-sport athletes ≥1 / season" />
-          <StatPill headline="60+" label={`Contact-sport clubs across ${CLINIC.region}`} />
+          <StatPill headline="Local clubs" label={`Contact-sport clubs across the ${CLINIC.region} — your referral catchment`} />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">

@@ -41,7 +41,9 @@ export function ProspectSidebar({
   accreditation?: 'ahpra' | 'essa'
 }) {
   const portalBase = `/p/${slug}`
-  const ak = `k=${accessKey}`
+  // Access key is optional (keyless per-clinic URLs since 2026-06-11) —
+  // guard so hrefs never emit a literal "?k=undefined".
+  const ak = accessKey ? `?k=${accessKey}` : ''
   const cityKnown = Boolean(clinicCity && !/unknown/i.test(clinicCity))
   const [mobileOpen, setMobileOpen] = useState(false)
   return (
@@ -77,6 +79,7 @@ export function ProspectSidebar({
           <X className="w-5 h-5 text-slate-600" />
         </button>
         <SidebarBody
+          slug={slug}
           portalBase={portalBase}
           ak={ak}
           clinicShortName={clinicShortName}
@@ -92,6 +95,7 @@ export function ProspectSidebar({
       {/* Desktop sidebar */}
       <div className="hidden md:flex fixed left-0 top-0 h-screen w-64 sidebar-premium p-6 flex-col z-40 print:hidden">
         <SidebarBody
+          slug={slug}
           portalBase={portalBase}
           ak={ak}
           clinicShortName={clinicShortName}
@@ -107,8 +111,9 @@ export function ProspectSidebar({
 }
 
 function SidebarBody({
-  portalBase, ak, clinicShortName, clinicCity, clinicState, cityKnown, active, onLinkClick, accreditation = 'ahpra',
+  slug, portalBase, ak, clinicShortName, clinicCity, clinicState, cityKnown, active, onLinkClick, accreditation = 'ahpra',
 }: {
+  slug: string
   portalBase: string
   ak: string
   clinicShortName: string
@@ -144,30 +149,32 @@ function SidebarBody({
 
       <nav className="flex-1 space-y-1">
         <Item label="Dashboard" icon={Home}
-          href={active === 'dashboard' ? undefined : `${portalBase}?${ak}`}
+          href={active === 'dashboard' ? undefined : `${portalBase}${ak}`}
           active={active === 'dashboard'} onClick={onLinkClick} />
         <Item label="Learning Suite" icon={BookOpen}
-          href={active === 'learning' ? undefined : `${portalBase}/learning?${ak}`}
+          href={active === 'learning' ? undefined : `${portalBase}/learning${ak}`}
           active={active === 'learning'} onClick={onLinkClick} />
-        <Item label="SCAT Forms" icon={Activity} href="/scat-forms" external onClick={onLinkClick} />
-        <Item label="Baseline Testing" icon={TrendingUp} href="/preseason" external onClick={onLinkClick} />
+        {/* Free tools carry ?prospect={slug} so the engagement engine can
+            attribute signups back to this clinic (users.source_prospect_slug). */}
+        <Item label="SCAT Forms" icon={Activity} href={`/scat-forms?prospect=${encodeURIComponent(slug)}`} external onClick={onLinkClick} />
+        <Item label="Baseline Testing" icon={TrendingUp} href={`/preseason?prospect=${encodeURIComponent(slug)}`} external onClick={onLinkClick} />
         <Item label="Reference Library" icon={Library}
-          href={active === 'references' ? undefined : `${portalBase}/references?${ak}`}
+          href={active === 'references' ? undefined : `${portalBase}/references${ak}`}
           active={active === 'references'} onClick={onLinkClick} />
         <Item label="Clinical Toolkit" icon={FileText}
-          href={active === 'clinical-toolkit' ? undefined : `${portalBase}/toolkit/clinical?${ak}`}
+          href={active === 'clinical-toolkit' ? undefined : `${portalBase}/toolkit/clinical${ak}`}
           active={active === 'clinical-toolkit'} onClick={onLinkClick} />
         <Item label="Outreach Kit" icon={Stethoscope}
-          href={active === 'outreach-kit' ? undefined : `${portalBase}/toolkit/outreach?${ak}`}
+          href={active === 'outreach-kit' ? undefined : `${portalBase}/toolkit/outreach${ak}`}
           active={active === 'outreach-kit'} onClick={onLinkClick} />
         <Item label="Admin Workflow" icon={BookMarked}
-          href={active === 'admin-workflow' ? undefined : `${portalBase}/toolkit/admin?${ak}`}
+          href={active === 'admin-workflow' ? undefined : `${portalBase}/toolkit/admin${ak}`}
           active={active === 'admin-workflow'} onClick={onLinkClick} />
       </nav>
 
       <div className="pt-5 border-t border-white/30">
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{accreditation === 'essa' ? 'ESSA Endorsement Pending' : 'AHPRA Aligned'}</p>
-        <p className="text-[10px] text-muted-foreground">OA Endorsed · 14 CPD hrs</p>
+        <p className="text-[10px] text-muted-foreground">OA Endorsed · 8 CPD hrs online (14 with the practical day)</p>
       </div>
     </>
   )

@@ -23,8 +23,8 @@ import {
   Stethoscope,
   BookMarked,
   ClipboardList,
-  Lock,
   Mail,
+  ArrowRight,
 } from 'lucide-react'
 import type { ProspectClinic, PricingBreakdown } from '@/lib/prospect/types'
 import { computePricing, clinicalCount, isTeamVerified } from '@/lib/prospect/pricing'
@@ -46,6 +46,10 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   // prospect keeps the proven full flow untouched (Zac 2026-06-27).
   const isPurpose = clinic.slug === 'purpose-healthcare'
 
+  // Access-key query suffix — the key is optional (keyless per-clinic URLs
+  // since 2026-06-11). Guard so links never emit a literal "k=undefined".
+  const kq = clinic.accessKey ? `?k=${clinic.accessKey}` : ''
+
   // Location fallback — when city or region is missing/unknown, drop the
   // geographic frame entirely and pitch as the local concussion hub.
   // Clinic name + clinician count carry the personalisation regardless.
@@ -57,6 +61,13 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
   const subhead = regionUnknown
     ? `Become the local hub for concussion management.`
     : `Become the first call for concussion on the ${clinic.region}.`
+
+  // Real pre-mapped local sports clubs (from research), NOT an invented count.
+  // The old hard-coded "60+ clubs" stat was fake precision shown to every
+  // clinic regardless of region — never state a number we didn't verify.
+  const localClubCount = clinic.localTargets.filter(
+    (t) => t.type === 'sports-club' || t.type === 'surf-life-saving' || t.type === 'triathlon' || t.type === 'cycling',
+  ).length
 
   return (
     <div className="flex min-h-screen dashboard-bg">
@@ -84,7 +95,11 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
                 <CatchmentStat headline="~144k" label="Sport-related concussions in Australia / year" />
                 <CatchmentStat headline="~14%" label="Senior community AFL players concussed / season" />
                 <CatchmentStat headline="4–12%" label="Youth contact-sport athletes ≥1 / season" />
-                <CatchmentStat headline="60+" label={`Contact-sport clubs across ${clinic.region}`} />
+                {localClubCount > 0 ? (
+                  <CatchmentStat headline={`${localClubCount}`} label="Local clubs pre-mapped in your catchment" />
+                ) : (
+                  <CatchmentStat headline="Local clubs" label={`Contact-sport clubs across ${clinic.region} — your referral catchment`} />
+                )}
               </div>
             )}
           </div>
@@ -121,7 +136,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           <Link
             data-track-section="trial-cta"
             data-track-cta="trial-module1"
-            href={`/p/${clinic.slug}/learning?k=${clinic.accessKey}`}
+            href={`/p/${clinic.slug}/learning${kq}`}
             className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-accent via-accent to-accent-dark text-white shadow-lg group hover:shadow-xl transition-shadow"
           >
             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_60%)]" />
@@ -156,7 +171,7 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           <Link
             data-track-section="toolkit-callout"
             data-track-cta="toolkit-launcher"
-            href={`/p/${clinic.slug}/toolkit?k=${clinic.accessKey}`}
+            href={`/p/${clinic.slug}/toolkit${kq}`}
             className="block rounded-2xl mb-6 relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-accent/5 border border-amber-200 shadow-sm hover:shadow-md transition-shadow group"
           >
             <div className="relative p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-center">
@@ -209,8 +224,11 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
               + content (clinical + admin toolkit) + context sections (Zac
               2026-06-30): prospects sample the product before the on-site pitch,
               and it sits implicitly atop the pricing ladder below rather than as
-              an early hero. Jumps to #pricing directly beneath. Purpose hidden. */}
-          {!isPurpose && (
+              an early hero. Jumps to #pricing directly beneath. Purpose hidden.
+              GATED to VERIFIED 8+ clinical teams — canon (dealTypeForClinicalCount,
+              Zac 2026-06-18): the cold pitch never shows on-site below 8, and
+              unverified Apollo counts must never trigger the $7.5k+ pitch. */}
+          {!isPurpose && teamVerified && clinical >= 8 && (
           <a
             data-track-section="onsite-hero"
             data-track-cta="onsite-hero-see-pricing"
@@ -243,23 +261,34 @@ export function ProspectLanding({ clinic }: { clinic: ProspectClinic }) {
           </a>
           )}
 
-          {/* Pricing — small clinics (2–5 clinical) get the self-serve Hub Pack
-              (online, no travel, can check out); ≥6 get the on-site cohort
-              (book-a-call, since no-one cold-checks-out a $5–10k team day). */}
+          {/* Pricing — mirrors canonical dealTypeForClinicalCount tiering
+              (lib/prospect/pricing.ts): 8+ clinical → on-site cohort
+              (book-a-call, since no-one cold-checks-out a $5–10k team day);
+              2–7 → self-serve Hub Pack (online, no travel, can check out);
+              0–1 → individual self-serve pricing. HARD GATE: unverified
+              Apollo team counts NEVER pick the tier — hub-default (Zac
+              2026-06-18: "don't quote clinicians targets do not have").
+              Unverified clinics also get clinical=0 passed to the Hub card
+              so no fabricated headcount is ever quoted on the page. */}
           <div data-track-section="pricing">
-            {clinical >= 2 && clinical <= 5 ? (
-              <HubPackBuyCard clinical={clinical} slug={clinic.slug} />
-            ) : (
+            {teamVerified && clinical >= 8 ? (
               <PricingTiers clinic={clinic} pricing={pricing} />
+            ) : teamVerified && clinical <= 1 ? (
+              <IndividualPricingCard slug={clinic.slug} />
+            ) : (
+              <HubPackBuyCard clinical={teamVerified ? clinical : 0} slug={clinic.slug} />
             )}
           </div>
 
           {/* Individual enrolment — the DIY tier, kept beside Hub/on-site so the
               single → hub → on-site ladder reads together: do it yourself and
-              come to a course, or provide it for your team. */}
-          <div data-track-section="individual-signup">
-            <IndividualInterestCard />
-          </div>
+              come to a course, or provide it for your team. Hidden when the
+              pricing section above IS already the individual offer. */}
+          {!(teamVerified && clinical <= 1) && (
+            <div data-track-section="individual-signup">
+              <IndividualInterestCard slug={clinic.slug} />
+            </div>
+          )}
 
           {/* Risk reversal */}
           <div data-track-section="risk-reversal">
@@ -303,60 +332,6 @@ function Sidebar({ clinic }: { clinic: ProspectClinic }) {
   )
 }
 
-function SidebarItem({
-  label,
-  icon: Icon,
-  href,
-  active,
-  locked,
-  external,
-}: {
-  label: string
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
-  href?: string
-  active?: boolean
-  locked?: boolean
-  external?: boolean
-}) {
-  const base = 'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium'
-  if (locked) {
-    return (
-      <div className={`${base} opacity-50 text-muted-foreground cursor-default`}>
-        <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
-        <span>{label}</span>
-        <Lock className="w-3 h-3 ml-auto text-muted-foreground/60" />
-      </div>
-    )
-  }
-  if (active) {
-    return (
-      <div className={`${base} bg-accent/8 text-accent font-semibold cursor-default`}>
-        <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
-        <span>{label}</span>
-      </div>
-    )
-  }
-  if (!href) {
-    return (
-      <div className={`${base} text-muted-foreground cursor-default`}>
-        <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
-        <span>{label}</span>
-      </div>
-    )
-  }
-  return (
-    <a
-      href={href}
-      target={external ? '_blank' : undefined}
-      rel={external ? 'noopener' : undefined}
-      className={`${base} text-muted-foreground hover:text-foreground hover:bg-white/40`}
-    >
-      <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
-      <span>{label}</span>
-    </a>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTENT BLOCKS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -373,7 +348,7 @@ function ZacCredibility() {
           Osteopathy Australia endorsed
         </span>
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-[10.5px] font-bold uppercase tracking-wider border border-amber-200/60">
-          14 CPD hrs · AHPRA aligned
+          8 CPD hrs online (14 with the practical day) · AHPRA aligned
         </span>
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 text-slate-700 text-[10.5px] font-bold uppercase tracking-wider border border-slate-200/60">
           Speaker · OA conference circuit
@@ -519,7 +494,7 @@ function PricingTiers({ clinic, pricing }: { clinic: ProspectClinic; pricing: Pr
       <Link
         data-track-section="front-of-house"
         data-track-cta="front-of-house-pack"
-        href={`/p/${clinic.slug}/toolkit/admin?k=${clinic.accessKey}`}
+        href={`/p/${clinic.slug}/toolkit/admin${clinic.accessKey ? `?k=${clinic.accessKey}` : ''}`}
         className="group block mt-4 rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-50/40 to-white border-2 border-emerald-300/70 ring-1 ring-emerald-200/50 p-5 sm:p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-400 transition-all"
       >
         <div className="flex items-center gap-4 flex-wrap">
@@ -542,6 +517,97 @@ function PricingTiers({ clinic, pricing }: { clinic: ProspectClinic; pricing: Pr
             <ArrowUpRight className="w-4 h-4" />
           </div>
         </div>
+      </Link>
+    </section>
+  )
+}
+
+/**
+ * Individual (0–1 clinical, verified) pricing — the self-serve DIY offer.
+ * Solo practitioners were previously falling into the on-site cohort wall
+ * (an $8k–$10.8k team pitch a solo clinician can't buy). This card leads
+ * with the two things they CAN buy today: online-only $497, or the full
+ * course at the $1,190 early-bird rate (sticker $1,400) with a nominated
+ * workshop city. Links to /pricing with the ?prospect= attribution param.
+ */
+function IndividualPricingCard({ slug }: { slug: string }) {
+  const pricingHref = `/pricing?prospect=${encodeURIComponent(slug)}`
+  return (
+    <section id="pricing" className="mt-8 scroll-mt-8">
+      <div className="mb-4">
+        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent mb-1">
+          Investment · enrol yourself
+        </p>
+        <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          Start online today — add the practical day when you&rsquo;re ready
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Online-only — the always-available entry point */}
+        <Link
+          href={pricingHref}
+          data-track-cta="individual-online-only"
+          className="group glass-premium rounded-2xl border border-accent/8 p-5 sm:p-6 block hover:shadow-lg hover:-translate-y-0.5 transition-all"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <p className="stat-label mb-0">Online course</p>
+            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              Start today
+            </span>
+          </div>
+          <div className="flex items-baseline gap-1.5 mb-3">
+            <p className="text-3xl font-bold text-foreground leading-none">A$497</p>
+            <p className="text-[11px] text-muted-foreground">one-off · GST incl.</p>
+          </div>
+          <ul className="space-y-1.5 text-[12.5px] text-foreground/85 leading-snug mb-4">
+            <li>8 modules · 8 CPD hours online</li>
+            <li>OA-endorsed · AHPRA-aligned</li>
+            <li>Lifetime access — forms, references, templates</li>
+          </ul>
+          <div className="pt-3 border-t border-accent/10 flex items-center justify-between gap-2 text-foreground/70">
+            <span className="text-[11px] font-bold">Enrol online-only →</span>
+            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </div>
+        </Link>
+
+        {/* Full course — early-bird framing, buyer nominates a city */}
+        <Link
+          href={pricingHref}
+          data-track-cta="individual-full-course"
+          className="group rounded-2xl p-5 sm:p-6 block bg-gradient-to-br from-accent/8 via-accent/3 to-white border border-accent/40 ring-1 ring-accent/30 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <p className="stat-label mb-0">Full course · online + practical day</p>
+            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-accent text-white">
+              Early bird
+            </span>
+          </div>
+          <div className="flex items-baseline gap-1.5 mb-3">
+            <p className="text-3xl font-bold text-accent leading-none">A$1,190</p>
+            <p className="text-[11px] text-muted-foreground">
+              <span className="line-through">A$1,400</span> · GST incl.
+            </p>
+          </div>
+          <ul className="space-y-1.5 text-[12.5px] text-foreground/85 leading-snug mb-4">
+            <li>Everything online, plus a hands-on practical workshop day</li>
+            <li>14 CPD hours total (8 online + the in-person day)</li>
+            <li>Nominate your city at enrolment — the workshop day is scheduled as your city&rsquo;s cohort fills</li>
+          </ul>
+          <div className="pt-3 border-t border-accent/10 flex items-center justify-between gap-2 text-accent">
+            <span className="text-[11px] font-bold">Enrol at the early-bird rate →</span>
+            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </div>
+        </Link>
+      </div>
+
+      <Link
+        href={pricingHref}
+        data-track-cta="individual-see-pricing"
+        className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:gap-2.5 transition-all"
+      >
+        See full pricing &amp; enrol
+        <ArrowRight className="w-4 h-4" />
       </Link>
     </section>
   )
@@ -622,7 +688,7 @@ function RiskReversal() {
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         {[
-          ['7-day money-back', "Try the first modules — if the program isn't right for your team, email within 7 days for a full refund (less than 25% of online content accessed)."],
+          ['7-day money-back', "Try the first modules — if the program isn't right for your team, email within 7 days for a full refund (before 2 modules are completed)."],
           ['Reschedule free outside 2 weeks', 'Push the on-site day to a future date at no cost, provided 2+ weeks notice.'],
           ['Lifetime portal access', 'Online modules, forms, references and templates stay accessible — no renewals, no expiry.'],
         ].map(([h, d]) => (
@@ -798,8 +864,8 @@ function SocialProofFooter() {
           {[
             ['500+', 'SCAT6 forms downloaded by AU clinicians'],
             ['OA', 'Endorsed by Osteopathy Australia'],
-            ['14 hrs', 'AHPRA-aligned CPD per clinician'],
-            ['140+', 'Peer-reviewed references in the library'],
+            ['8 hrs', 'Online CPD per clinician — 14 with the practical day'],
+            ['120', 'Peer-reviewed references in the library'],
           ].map(([h, l]) => (
             <div key={h}>
               <p className="text-xl sm:text-2xl font-bold text-accent leading-none mb-1">{h}</p>

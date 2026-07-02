@@ -319,7 +319,7 @@ function ProspectBento() {
         iconTone="amber"
         label="Reference Library"
         title="Amsterdam 2023 · AIS · RACGP · Cochrane"
-        stat="140+"
+        stat="120"
         statSuffix="peer-reviewed sources"
         badge={{ text: 'Preview', tone: 'emerald' }}
         span2
@@ -769,7 +769,7 @@ const FAQS = [
   },
   {
     q: 'What if our team is smaller than 8?',
-    a: 'For under-8 cohorts, the cleanest path is sending the team to one of our public workshops — same 14 CPD hours, same content, no on-site travel logistics for sub-minimum numbers. Public workshops run regularly in Melbourne, Sydney and Brisbane. We can confirm the next available date on the scoping call.',
+    a: 'For under-8 cohorts, the cleanest path is enrolling the team in the full course — same 14 CPD hours, same content, no on-site travel logistics for sub-minimum numbers. Workshop days are scheduled city by city as clinics enrol (the Melbourne round ran in June 2026), and your team nominates its preferred city at enrolment. We can map the timing on the scoping call.',
   },
   {
     q: 'We have two locations — how does the on-site day work?',
@@ -839,7 +839,7 @@ function SocialProofFooter() {
           <Credential headline="500+" label="SCAT6 forms downloaded by AU clinicians" />
           <Credential headline="OA" label="Endorsed by Osteopathy Australia" />
           <Credential headline="14 hrs" label="AHPRA-aligned CPD per clinician" />
-          <Credential headline="140+" label="Peer-reviewed references in the library" />
+          <Credential headline="120" label="Peer-reviewed references in the library" />
         </div>
         <div className="pt-5 border-t border-accent/10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-center">
           <div>

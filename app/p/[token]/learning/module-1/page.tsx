@@ -9,8 +9,9 @@
  * that was kicking prospects out of the proposal demo.
  *
  * Print-suppression CSS prevents Cmd+P save-as-PDF leakage of trial
- * content. Auth gate: access key must match clinic.accessKey, else
- * the access wall is shown.
+ * content. Keyless by design (2026-06-11): any valid clinic slug renders —
+ * the access key is honoured when present in legacy links but is NOT
+ * required, and there is no access wall on this page.
  */
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -112,6 +113,18 @@ export default async function ProspectModuleOneTrial({
   const lockedSections = m1.sections.slice(TRIAL_SECTION_COUNT)
   const slug = clinic.slug
   const ak = clinic.accessKey
+  // Guard against a missing access key — never emit "?k=undefined".
+  const kq = ak ? `?k=${ak}` : ''
+  // Region for the end-of-trial pitch — same /unknown/i filter as
+  // ProspectLanding. Enrichment writes literal "Unknown" into region/city
+  // for some rows; falling through unfiltered rendered "Become the
+  // concussion hub for Unknown." Null ⇒ region-free headline variant.
+  const known = (v?: string | null) => (v && !/unknown/i.test(v) ? v : null)
+  const clinicRegion = known(clinic.region) ?? known(clinic.city) ?? known(clinic.state)
+  // Real pre-mapped local sports clubs — NOT the old fabricated "60+".
+  const localClubCount = clinic.localTargets.filter(
+    (t) => t.type === 'sports-club' || t.type === 'surf-life-saving' || t.type === 'triathlon' || t.type === 'cycling',
+  ).length
 
   return (
     <div className="flex min-h-screen dashboard-bg">
@@ -129,7 +142,7 @@ export default async function ProspectModuleOneTrial({
       <main className="flex-1 ml-0 md:ml-64">
         <div data-track-section="module-1-trial" className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Link
-            href={`/p/${slug}/learning?k=${ak}`}
+            href={`/p/${slug}/learning${kq}`}
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors mb-4"
           >
             <ArrowLeft className="w-3 h-3" />
@@ -200,9 +213,10 @@ export default async function ProspectModuleOneTrial({
 
           <EndOfTrialPitch
             slug={slug}
-            accessKey={ak}
+            kq={kq}
             clinicShortName={clinic.shortName}
-            clinicRegion={clinic.region || clinic.city || clinic.state}
+            clinicRegion={clinicRegion}
+            localClubCount={localClubCount}
             isCrm={isCrm}
           />
           <div className="h-20" />
@@ -328,9 +342,9 @@ function ContentLine({ line }: { line: string }) {
 }
 
 function EndOfTrialPitch({
-  slug, accessKey, clinicShortName, clinicRegion, isCrm = false,
+  slug, kq, clinicShortName, clinicRegion, localClubCount, isCrm = false,
 }: {
-  slug: string; accessKey: string; clinicShortName: string; clinicRegion: string; isCrm?: boolean
+  slug: string; kq: string; clinicShortName: string; clinicRegion: string | null; localClubCount: number; isCrm?: boolean
 }) {
   return (
     <section className="mt-10 space-y-6">
@@ -342,7 +356,7 @@ function EndOfTrialPitch({
           </p>
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight mb-3">
-          Become the concussion hub for {clinicRegion}.
+          {clinicRegion ? `Become the concussion hub for ${clinicRegion}.` : 'Become your local concussion hub.'}
         </h2>
         <p className="text-sm text-foreground leading-relaxed mb-5 max-w-xl">
           {isCrm
@@ -350,13 +364,20 @@ function EndOfTrialPitch({
             : <>The next 7 modules cover diagnosis, acute management, PPCS, multidisciplinary care, return-to-play, phenotype-targeted rehab, and documentation. Every clinician at {clinicShortName} gets full access.</>}
         </p>
         <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">
-          Why this region · why now
+          {clinicRegion ? 'Why this region · why now' : 'Why now'}
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
           <StatPill headline="~144k" label="Sport-related concussions in Australia / year" />
           <StatPill headline="~14%" label="Senior community AFL players concussed / season" />
           <StatPill headline="4–12%" label="Youth contact-sport athletes ≥1 / season" />
-          <StatPill headline="60+" label={`Contact-sport clubs across ${clinicRegion}`} />
+          {localClubCount > 0 ? (
+            <StatPill headline={`${localClubCount}`} label="Local clubs pre-mapped in your catchment" />
+          ) : (
+            <StatPill
+              headline="Local clubs"
+              label={clinicRegion ? `Contact-sport clubs across ${clinicRegion} — your referral catchment` : 'Contact-sport clubs in your local catchment'}
+            />
+          )}
         </div>
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <a
@@ -374,7 +395,7 @@ function EndOfTrialPitch({
         </div>
       </div>
       <Link
-        href={`/p/${slug}/learning?k=${accessKey}`}
+        href={`/p/${slug}/learning${kq}`}
         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors"
       >
         <ArrowLeft className="w-3 h-3" />

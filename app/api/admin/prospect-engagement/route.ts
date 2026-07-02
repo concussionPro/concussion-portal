@@ -410,21 +410,23 @@ export async function GET(req: NextRequest) {
               WHERE COALESCE(user_agent, '') !~* '(microsoft office|bingpreview|mimecast|barracuda|proofpoint|cloudmark|symantec|sophos|fortinet|trend micro|safelinks|headlesschrome|phantomjs|puppeteer|playwright|googlebot|bingbot|yandex|baidu|crawler|spider|slurp|facebook|linkedin|whatsapp|telegram|skype|wget|curl|python-requests|node-fetch|axios|httpie|go-http-client|java/|okhttp|powershell)'
                 AND viewed_at >= NOW() - (${windowDays} || ' days')::interval
             ),
+            -- Per-clinic ranked selection: the previous GROUP BY + global
+            -- LIMIT 1 returned ONE row across ALL clinics, so only a single
+            -- clinic ever got top_cta_target / deepest_section. DISTINCT ON
+            -- (clinic_id) keeps the top-ranked row for EVERY clinic.
             top_cta AS (
-              SELECT clinic_id, target
+              SELECT DISTINCT ON (clinic_id) clinic_id, target
               FROM filtered
               WHERE interaction_type = 'cta_click' AND target IS NOT NULL
               GROUP BY clinic_id, target
-              ORDER BY COUNT(*) DESC
-              LIMIT 1
+              ORDER BY clinic_id, COUNT(*) DESC
             ),
             deepest AS (
-              SELECT clinic_id, section_visited
+              SELECT DISTINCT ON (clinic_id) clinic_id, section_visited
               FROM filtered
               WHERE interaction_type IN ('view','section_view')
               GROUP BY clinic_id, section_visited
-              ORDER BY COUNT(*) DESC
-              LIMIT 1
+              ORDER BY clinic_id, COUNT(*) DESC
             )
             SELECT f.clinic_id,
               COUNT(*)::text AS total,
@@ -592,10 +594,11 @@ export async function GET(req: NextRequest) {
       // outreach-log rows. Ordering mirrors the send priority: deal-type
       // tier ASC (on-site → hub-pack → individual), then Hunter-clean
       // rows first (they're the ones the HARD GATE will actually let
-      // fire), then earliest scheduled. The size-tier CASE is copied
-      // verbatim from the lib/prospect/process-scheduled.ts ORDER BY —
-      // keep in lockstep with clinicalCount() in lib/prospect/pricing.ts
-      // (7 clinical keys, excludes practiceManager/admin).
+      // fire), then earliest scheduled. The size-tier CASE mirrors the
+      // CANONICAL dealTypeForClinicalCount() in lib/prospect/pricing.ts
+      // (on-site >= 8, hub-pack 2-7, individual <= 1 — Zac 2026-06-18:
+      // on-site needs a minimum of 8) and the same 7-key clinical sum as
+      // clinicalCount() (excludes practiceManager/admin). Keep in lockstep.
       sql<ReviewQueueDbRow>`
         SELECT pc.id, pc.short_name, pc.city, pc.state, pc.status,
           pc.scheduled_send_at, pc.verification_score,
@@ -632,7 +635,7 @@ export async function GET(req: NextRequest) {
                 + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
                 + COALESCE((pc.team->>'exercisePhys')::int, 0)
                 + COALESCE((pc.team->>'myotherapists')::int, 0)
-                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 8 THEN 0
             WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
                 + COALESCE((pc.team->>'physiotherapists')::int, 0)
                 + COALESCE((pc.team->>'generalPractitioners')::int, 0)
@@ -694,6 +697,11 @@ export async function GET(req: NextRequest) {
       const clinicReplied = c.status === 'replied' || (!!c.replied_at && c.status !== 'lost')
       const replies = Math.max(logReplies, clinicReplied ? 1 : 0)
       const lastSent = sends[0] // already ORDER BY sent_at DESC
+      // The FIRST (oldest) send — sends is ORDER BY sent_at DESC, so it's the
+      // last element. Previously daysSinceFirstSend was computed off sends[0]
+      // (the LATEST send), which reset the GO-NOW / personal-outreach windows
+      // every time a T2/T3 fired.
+      const firstSent = sends.length ? sends[sends.length - 1] : undefined
 
       const pricing = computePricing(c.team, c.travel_band as TravelBand)
       const recoTier = c.cohort_recommendation as CohortRecommendation
@@ -860,8 +868,8 @@ export async function GET(req: NextRequest) {
       // Days since first send — used by both scoring (personal outreach
       // candidate window) and outreachStatus (GO NOW gate). Declared here
       // so engagementScore can reference it.
-      const daysSinceFirstSend = lastSent?.sent_at
-        ? Math.floor((Date.now() - new Date(lastSent.sent_at).getTime()) / 86_400_000)
+      const daysSinceFirstSend = firstSent?.sent_at
+        ? Math.floor((Date.now() - new Date(firstSent.sent_at).getTime()) / 86_400_000)
         : null
 
       // ── BEHAVIOURAL LEAD SCORING (HubSpot / Marketo / Salesforce model) ──
@@ -1479,7 +1487,7 @@ export async function GET(req: NextRequest) {
                 + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
                 + COALESCE((pc.team->>'exercisePhys')::int, 0)
                 + COALESCE((pc.team->>'myotherapists')::int, 0)
-                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 0
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 8 THEN 0
             WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
                 + COALESCE((pc.team->>'physiotherapists')::int, 0)
                 + COALESCE((pc.team->>'generalPractitioners')::int, 0)
@@ -1508,12 +1516,12 @@ export async function GET(req: NextRequest) {
     }
 
     // ── TARGETS BY TYPE — the outreach pool split into the four segment
-    // pitches Zac runs: on-site team training (>=6 clinical), Hub Pack
-    // (2-5 clinical), individual self-paced (<=1 clinical) — all from
+    // pitches Zac runs: on-site team training (>=8 clinical), Hub Pack
+    // (2-7 clinical), individual self-paced (<=1 clinical) — all from
     // prospect_clinics — plus the telehealth Partnership funnel from the
     // separate partner_institutions table. Non-terminal only. The size-tier
-    // CASE is the same 7-key clinical sum the cron ORDER BY + dealType pool
-    // use (copied verbatim). Each clinic tier carries a status split:
+    // CASE mirrors the canonical dealTypeForClinicalCount() in
+    // lib/prospect/pricing.ts with the same 7-key clinical sum. Each clinic tier carries a status split:
     //   researching (status='researching'), approved (status='approved'),
     //   contacted (everything else non-terminal = sent / opened / engaged).
     // Read-only, additive. Tolerant of a missing partner_institutions table
@@ -1549,7 +1557,7 @@ export async function GET(req: NextRequest) {
                 + COALESCE((pc.team->>'sportsMedicineDoctors')::int, 0)
                 + COALESCE((pc.team->>'exercisePhys')::int, 0)
                 + COALESCE((pc.team->>'myotherapists')::int, 0)
-                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 6 THEN 'on-site'
+                + COALESCE((pc.team->>'remedialMassage')::int, 0)) >= 8 THEN 'on-site'
             WHEN (COALESCE((pc.team->>'osteopaths')::int, 0)
                 + COALESCE((pc.team->>'physiotherapists')::int, 0)
                 + COALESCE((pc.team->>'generalPractitioners')::int, 0)

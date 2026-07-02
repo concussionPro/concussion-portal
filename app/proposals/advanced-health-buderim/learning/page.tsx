@@ -114,7 +114,7 @@ export default async function ProspectLearningSuite({
 
           <div className="glass-premium rounded-2xl p-4 mt-6 text-center">
             <p className="text-xs text-muted-foreground">
-              Modules 2-8 unlock for every {CLINIC.shortName} clinician with the Hub Program · 14 CPD hrs each, AHPRA-aligned.
+              Modules 2-8 unlock for every {CLINIC.shortName} clinician with the Hub Program · 8 CPD hrs online across the course (14 with the in-person day) · AHPRA-aligned.
             </p>
           </div>
         </div>

@@ -173,8 +173,13 @@ export default async function ProspectReferences({
   }).catch((err) => console.error('[Portal view tracking failed]', err))
 
   const totalShown = Object.values(PROSPECT_REFS).reduce((acc, arr) => acc + arr.length, 0)
+  // Library size computed from the per-category totals — the copy must
+  // always match the real number (the old hard-coded "140+" overstated
+  // the 120 the categories actually sum to).
+  const totalLibrary = Object.values(CATEGORY_TOTALS).reduce((acc, n) => acc + n, 0)
   const slug = clinic.slug
   const ak = clinic.accessKey
+  const kq = ak ? `?k=${ak}` : ''
 
   return (
     <div className="flex min-h-screen dashboard-bg">
@@ -190,7 +195,7 @@ export default async function ProspectReferences({
       <main className="flex-1 ml-0 md:ml-64">
         <div data-track-section="reference-library" className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Link
-            href={`/p/${slug}?k=${ak}`}
+            href={`/p/${slug}${kq}`}
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors mb-4"
           >
             <ArrowLeft className="w-3 h-3" />
@@ -204,7 +209,7 @@ export default async function ProspectReferences({
             Peer-reviewed concussion evidence
           </h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
-            {totalShown} of 140+ references shown as a sample across {Object.keys(PROSPECT_REFS).length} categories.
+            {totalShown} of {totalLibrary} references shown as a sample across {Object.keys(PROSPECT_REFS).length} categories.
             The full library is searchable and unlocked for every clinician with the Hub Program.
           </p>
 
@@ -226,7 +231,7 @@ export default async function ProspectReferences({
 
           <div className="mt-10 glass-premium rounded-2xl p-5 text-center">
             <p className="text-sm font-bold text-foreground mb-1">
-              Full library · 140+ references
+              Full library · {totalLibrary} references
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Searchable by category, citation, author, year. Linked to clinical modules. Updated as
