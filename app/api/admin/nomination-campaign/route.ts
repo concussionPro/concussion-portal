@@ -87,7 +87,13 @@ function maskEmail(email: string): string {
 // ─── Candidate queries (exclusion flags computed in SQL — a query failure
 //     means NOTHING sends: fail closed) ──────────────────────────────────────
 
+// OWNER DIRECTIVE (Zac, 2026-07-02): do NOT pitch the Sydney interest group
+// via this campaign — excluded even from an all-cities send. Remove the slug
+// from this list only on an explicit new instruction from Zac.
+const EXCLUDED_CITIES = ['sydney']
+
 async function interestCandidates(city: string | null): Promise<Candidate[]> {
+  if (city && EXCLUDED_CITIES.includes(city)) return []
   const { rows } = await sql<{
     email: string
     name: string | null
@@ -141,16 +147,20 @@ async function interestCandidates(city: string | null): Promise<Candidate[]> {
     FROM latest l
     ORDER BY l.city, l.email
   `
-  return rows.map((r) => ({
-    email: r.email,
-    name: r.name,
-    city: r.city,
-    suppressed: r.suppressed,
-    unsubscribed: r.unsubscribed,
-    alreadyOwns: r.already_owns,
-    alreadyContacted: r.already_contacted,
-    recentAgentB: r.recent_agent_b,
-  }))
+  return rows
+    // Owner directive: excluded cities never receive this campaign, even on
+    // an all-cities send (see EXCLUDED_CITIES above).
+    .filter((r) => !EXCLUDED_CITIES.includes(r.city))
+    .map((r) => ({
+      email: r.email,
+      name: r.name,
+      city: r.city,
+      suppressed: r.suppressed,
+      unsubscribed: r.unsubscribed,
+      alreadyOwns: r.already_owns,
+      alreadyContacted: r.already_contacted,
+      recentAgentB: r.recent_agent_b,
+    }))
 }
 
 async function upgradeCandidates(): Promise<Candidate[]> {

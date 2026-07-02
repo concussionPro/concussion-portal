@@ -98,10 +98,16 @@ const { rows: interestRows } = await sql`
   ORDER BY l.city, l.email
 `
 
+// OWNER DIRECTIVE (Zac, 2026-07-02): the Sydney interest group is NOT pitched
+// by this campaign — the API route excludes it even on all-cities sends.
+// Mirror that here so the dry run matches what would actually send.
+const EXCLUDED_CITIES = ['sydney']
+
 console.log('=== NOMINATION CAMPAIGN — DRY RUN (read-only) ===')
 console.log(cityArg ? `City filter: ${cityArg}` : 'City filter: none (all cities)')
 
-printTally("Segment 'interest' — TOTAL", tally(interestRows))
+const sendableRows = interestRows.filter((r) => !EXCLUDED_CITIES.includes(r.city))
+printTally("Segment 'interest' — TOTAL (after owner exclusions)", tally(sendableRows))
 
 // Per-city breakdown for the interest segment
 const byCity = new Map()
@@ -110,6 +116,10 @@ for (const r of interestRows) {
   byCity.get(r.city).push(r)
 }
 for (const [city, rows] of [...byCity.entries()].sort()) {
+  if (EXCLUDED_CITIES.includes(city)) {
+    console.log(`\n  interest / ${city} — EXCLUDED by owner directive (${rows.length} registrants, will NOT be emailed)`)
+    continue
+  }
   printTally(`  interest / ${city}`, tally(rows))
 }
 
