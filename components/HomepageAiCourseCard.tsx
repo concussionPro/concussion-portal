@@ -75,8 +75,7 @@ export function HomepageAiCourseCard() {
         </div>
         <div className="flex-shrink-0 text-right">
           <div className="inline-flex items-baseline gap-0.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shadow-sm">
-            <span className="text-[10px] font-semibold text-slate-400 line-through">A$197</span>
-            <span className="text-[10px] font-semibold text-emerald-700 ml-1.5">A$</span>
+            <span className="text-[10px] font-semibold text-emerald-700">A$</span>
             <span className="text-lg font-bold text-emerald-700 leading-none">99</span>
           </div>
         </div>
@@ -86,7 +85,7 @@ export function HomepageAiCourseCard() {
         AI in Clinical Practice
       </h3>
       <p className="relative text-[12px] text-slate-600 leading-relaxed mb-3">
-        AHPRA AI guidelines, NDIS-audit-safe reports, and Heidi vs Lyrebird vs ChatGPT for clinical notes — for AU allied health. 3 CPD hours · 9 modules · certificate.
+        AHPRA AI guidelines, NDIS-audit-safe reports, and Heidi vs Lyrebird vs ChatGPT for clinical notes — for AU allied health. 2 CPD hours · certificate.
       </p>
 
       {/* Feature pills */}
@@ -110,7 +109,7 @@ export function HomepageAiCourseCard() {
           >
             <Sparkles className="w-3.5 h-3.5" /> Start the course
           </a>
-          <p className="text-[10px] text-slate-500 italic">Launch-week price — A$99 (50% off A$197).</p>
+          <p className="text-[10px] text-slate-500 italic">A$99 · 2 CPD hours · certificate on completion.</p>
         </div>
       ) : submitted ? (
         <div className="relative rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
@@ -119,7 +118,7 @@ export function HomepageAiCourseCard() {
             You&rsquo;re on the list.
           </p>
           <p className="text-[11px] text-emerald-800 mt-0.5">
-            Your launch-week A$99 code emails on 1 June. 50% off the A$197 regular price.
+            We&rsquo;ll email you when the course opens — A$99, 2 CPD hours.
           </p>
         </div>
       ) : (

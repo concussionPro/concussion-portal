@@ -2,21 +2,114 @@ import { Metadata } from 'next'
 import { MODULES } from '@/lib/ai-course/content'
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { requireAiCourseAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { checkServerAccess, AdminPreviewBadge } from '@/components/ai-course/CourseGate'
+import { BuyCourseCard } from '@/components/ai-course/BuyCourseCard'
+import { COURSES, getEffectivePrice } from '@/lib/ai-course/provider-catalogue'
 import { ClinicianMockDashboard } from '@/components/ai-course/ClinicianMockDashboard'
-import { Library, FileQuestion, Award, ArrowRight, Wrench, BookMarked, PlayCircle, Clock, BookOpen, GraduationCap } from 'lucide-react'
+import { Library, FileQuestion, Award, ArrowRight, Wrench, BookMarked, PlayCircle, Clock, BookOpen, GraduationCap, Check } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'AI in Clinical Practice',
-  description: 'AHPRA-aligned AI compliance course for Australian clinicians.',
-  robots: 'noindex, nofollow',
+  title: 'AI in Clinical Practice — CPD Course for Australian Clinicians | CEA',
+  description:
+    'AHPRA-aligned AI compliance course for Australian clinicians — scribes, Privacy Act, documentation, indemnity positions. 2 CPD hours, A$99, certificate on completion.',
+  alternates: { canonical: '/courses/ai-in-clinical-practice' },
 }
 
 export default async function CoursePage() {
-  const access = await requireAiCourseAccess()
+  // Enrolled/admin/demo → the full course below. Everyone else → the SALES
+  // view (the course launched with checkout live but no reachable buy path:
+  // non-enrolled visitors were redirected to /login).
+  const access = await checkServerAccess()
   const totalMin = MODULES.reduce((sum, m) => sum + m.durationMin, 0)
   const firstModule = MODULES[0]
   const totalHours = Math.round((totalMin / 60) * 10) / 10
+
+  if (!access.ok) {
+    const entry = COURSES.find((c) => c.id === 'ai-in-clinical-practice')
+    const price = (entry ? getEffectivePrice(entry).price : null) ?? 99
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteNav />
+        <main className="max-w-4xl mx-auto px-6 pt-[100px] pb-20">
+          <section className="mb-8">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Now available
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-teal-50 text-teal-800 border border-teal-200">
+                2 CPD hours · Certificate
+              </span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 leading-tight">
+              AI in Clinical Practice
+            </h1>
+            <p className="text-base text-muted-foreground leading-relaxed mb-6 max-w-2xl">
+              For Australian clinicians choosing between Heidi vs Lyrebird vs ChatGPT, writing
+              NDIS-audit-safe reports, and meeting AHPRA AI guidance + the Australian Privacy
+              Principles. Designed against AHPRA, TGA digital-scribes guidance, and
+              indemnity-insurer positions (Avant, MIPS, Guild, MIGA).
+            </p>
+            <BuyCourseCard
+              courseSlug="ai-in-clinical-practice"
+              courseTitle="AI in Clinical Practice"
+              priceAUD={price ?? 99}
+              cpdHours={entry?.cpdHours ?? 2}
+              prefillEmail={access.email ?? ''}
+            />
+          </section>
+
+          <div className="flex items-baseline justify-between mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">
+              What you get
+            </p>
+            <p className="text-[10px] text-muted-foreground tabular-nums">
+              {MODULES.length} modules · {totalMin}m · 2 CPD hours
+            </p>
+          </div>
+          <div className="grid gap-2 mb-10">
+            {MODULES.map((m) => (
+              <div
+                key={m.slug}
+                className="rounded-xl border border-slate-200 bg-white flex items-center gap-3 px-4 py-3"
+              >
+                <span className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-[11px] font-bold tabular-nums bg-slate-100 text-slate-600">
+                  {String(m.number).padStart(2, '0')}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground leading-tight">{m.title}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{m.description}</p>
+                </div>
+                <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-500">
+                  {m.durationMin}m
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 mb-8">
+            <p className="text-sm font-semibold text-foreground mb-2">Also included</p>
+            <ul className="grid sm:grid-cols-3 gap-2">
+              {[
+                'AI Practice Hub — 40 prompts, 14 templates, vendor comparison',
+                'Clinical Toolkit — consent, de-identification, audit, incident artefacts',
+                'Reference Repository — AHPRA · OAIC · TGA, refreshed monthly',
+              ].map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="text-xs text-muted-foreground text-center">
+            By Concussion Education Australia — Osteopathy Australia–endorsed provider ·
+            Certificate with public verification URL · 7-day refund if you&rsquo;ve not completed the quiz
+          </p>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,11 +123,11 @@ export default async function CoursePage() {
           <section className="mt-6 mb-8 rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/[0.04] to-white overflow-hidden">
             <div className="p-6 md:p-7">
               <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
-                  Launches 17 June 2026
-                </span>
                 <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
-                  Launch week A$99 · then A$197
+                  Enrolled
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-teal-50 text-teal-800 border border-teal-200">
+                  2 CPD hours · Certificate
                 </span>
               </div>
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 leading-tight">
@@ -48,19 +141,8 @@ export default async function CoursePage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
                 <Stat icon={BookOpen} value={String(MODULES.length)} label="Modules" />
                 <Stat icon={Clock} value={`${totalHours}h`} label={`${totalMin} min`} />
-                <Stat icon={GraduationCap} value="3" label="CPD hours" />
+                <Stat icon={GraduationCap} value="2" label="CPD hours" />
                 <Stat icon={Award} value="1" label="Certificate" />
-              </div>
-
-              {/* Progress bar — mock 0% for demo */}
-              <div className="rounded-lg bg-white border border-slate-200 p-4 mb-5">
-                <div className="flex items-center justify-between mb-2 text-xs">
-                  <span className="font-semibold text-foreground">Your progress</span>
-                  <span className="text-slate-500 tabular-nums">0 / {MODULES.length} modules · 0%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div className="h-full bg-accent transition-all" style={{ width: '0%' }} />
-                </div>
               </div>
 
               {/* Primary CTA */}

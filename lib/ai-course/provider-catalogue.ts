@@ -169,22 +169,17 @@ export const COURSES: CourseCatalogueEntry[] = [
     cpdRecognition: ['AHPRA-aligned', 'By Osteopathy Australia–endorsed provider'],
     description: 'AHPRA-aligned compliance training for AI use by Australian clinicians. Covers Privacy Act, APP 6/8/11, TGA boundaries, AHPRA documentation, indemnity carrier positions.',
     route: '/courses/ai-in-clinical-practice',
-    priceAUD: 197,
+    // Flat A$99 (owner truth 2026-07-02). The old $197-with-50%-launch-week
+    // structure expired 24 June while every live surface kept saying A$99 —
+    // a perpetual "launch week" is an ACL false-discount risk, so the price
+    // IS A$99 with no strikethrough. Raise by editing priceAUD when decided.
+    priceAUD: 99,
     purchasableViaCheckout: true,
     status: 'coming-soon',
     tags: ['compliance', 'ai', 'documentation', 'privacy', 'all-specialties'],
-    earlyBirdDiscountPct: 50,
-    earlyBirdPriceAUD: 99,
     launchTarget: '17 June 2026',
     // Date-driven launch: getEffectiveStatus() flips this to 'live' once now >= launchAt.
-    // getEffectivePrice() returns A$197 once now > earlyBirdEndsAt.
-    // No cron required — single source of truth, evaluated at every render.
-    //
-    // Date moved from 2026-06-01 to 2026-06-17 (2026-05-30) to space launch
-    // from the Melbourne early-bird blast (30 May). 18 days separation
-    // avoids blast-fatigue on the same engaged list.
     launchAt: '2026-06-17T00:01:00+10:00',
-    earlyBirdEndsAt: '2026-06-24T23:59:59+10:00',
   },
   {
     id: 'vagus-nerve',
