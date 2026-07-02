@@ -19,7 +19,12 @@ import { DEMO_KEY } from '@/lib/demo-key'
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  const dest = new URL('/platform/app', request.url)
+  // Land on /sst-trainer, NOT /platform/app: the global Permissions-Policy
+  // blocks camera on /platform/app (camera=()), while /sst-trainer has the
+  // camera=(self) + bluetooth=(self) carve-out AND the PWA manifest/service
+  // worker — camera-PPG and install-to-home-screen only work there. Verified
+  // against production headers 2026-07-02.
+  const dest = new URL('/sst-trainer', request.url)
   const res = NextResponse.redirect(dest)
   res.cookies.set('demo_key', DEMO_KEY, {
     httpOnly: true,
