@@ -78,12 +78,17 @@ function VerifyContent() {
           // localStorage (set by /login when user came from a gated page) >
           // accessLevel default. URL param wins so admins can point a
           // specific user at a specific page via a baked one-click URL.
+          // Preview users may deep-link ONLY into module content (/modules/*
+          // — the Day-0 welcome CTA lands them IN Module 1); every other
+          // redirect stays blocked for preview.
+          const previewAllowed = (path: string) => path.startsWith('/modules/')
+          const isPreview = data.user.accessLevel === 'preview'
           let target = '/dashboard'
-          if (urlRedirect && isValidRedirect(urlRedirect) && data.user.accessLevel !== 'preview') {
+          if (urlRedirect && isValidRedirect(urlRedirect) && (!isPreview || previewAllowed(urlRedirect))) {
             target = urlRedirect
-          } else if (savedRedirect && isValidRedirect(savedRedirect) && data.user.accessLevel !== 'preview') {
+          } else if (savedRedirect && isValidRedirect(savedRedirect) && (!isPreview || previewAllowed(savedRedirect))) {
             target = savedRedirect
-          } else if (data.user.accessLevel === 'preview') {
+          } else if (isPreview) {
             target = '/modules/101'
           }
           window.location.href = target

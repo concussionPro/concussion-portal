@@ -51,6 +51,25 @@ function cityLabel(slug: string): string {
   return opt?.label ?? slug
 }
 
+// ─── City momentum (real counts only) ────────────────────────────────────────
+//
+// /api/city-progress returns TRUE round-scoped paid-nomination counts. A low
+// count is anti-social-proof ("1 of 8" reads as an empty room), so a numeric
+// momentum line renders ONLY when enrolled >= MOMENTUM_MIN_ENROLLED. Below
+// that, nothing numeric renders — the neutral nomination explainer covers it.
+// Never fabricate; never show zeros; interest counts are never shown here.
+export const MOMENTUM_MIN_ENROLLED = 5
+
+interface CityProgress {
+  slug: string
+  label: string
+  enrolled: number
+  threshold: number
+  interested: number
+  hasLiveDate: boolean
+  date: string | null
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface PricingOptionsProps {
@@ -218,6 +237,7 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   // "Enrol Now with no location" footgun that previously sent a full-course
   // checkout to Stripe with location=undefined. URL ?location= still wins.
   const [selectedLocation, setSelectedLocation] = useState<string>('melbourne')
+  const [cityProgress, setCityProgress] = useState<Record<string, CityProgress>>({})
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
   const [bookOwner, setBookOwner] = useState(false)
@@ -238,6 +258,17 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
       if (val) utm[key] = val
     }
     if (Object.keys(utm).length > 0) setUtmParams(utm)
+    // Real city momentum counts — one fetch on mount, silent failure (the
+    // tile renders fine without it; we never block or error the buy surface)
+    fetch('/api/city-progress')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data || !Array.isArray(data.cities)) return
+        const map: Record<string, CityProgress> = {}
+        for (const c of data.cities as CityProgress[]) map[c.slug] = c
+        setCityProgress(map)
+      })
+      .catch(() => { /* momentum line simply doesn't render */ })
     // Detect bundle-owner status — if true, show discounted course prices
     fetch('/api/auth/session', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
@@ -258,6 +289,11 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
   const fullCourseBase = workshopPriceFor(selectedLocation)
   const fullCoursePrice = bookOwner ? fullCourseBase - BUNDLE_DISCOUNT : fullCourseBase
   const hasLiveDate = cityHasLiveDate(selectedLocation)
+  // Momentum line for the selected city — renders ONLY when the true enrolled
+  // count is genuinely motivating (>= MOMENTUM_MIN_ENROLLED). Never zeros,
+  // never interest counts, never fabricated.
+  const selectedProgress = cityProgress[selectedLocation]
+  const showMomentum = !!selectedProgress && selectedProgress.enrolled >= MOMENTUM_MIN_ENROLLED
 
   const handleCheckout = async (courseType: 'online-only' | 'full-course') => {
     try {
@@ -789,12 +825,24 @@ export function PricingOptions({ variant = 'full' }: PricingOptionsProps) {
           {!hasLiveDate && (
             <>
               <p className="text-[11px] text-[var(--muted-foreground)] mt-2.5 leading-snug">
-                Start the 8 online modules today. Your {cityLabel(selectedLocation)} workshop
+                <strong className="text-[var(--foreground)]">Start the 8 online modules today</strong> —
+                full online access is immediate; only the workshop day waits for a date.
+                Your {cityLabel(selectedLocation)} workshop
                 date launches when your city fills — minimum {CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks&rsquo;
                 notice, and your ${CONFIG.COURSE.PRICE_EARLY_BIRD.toLocaleString()} early-bird
                 rate is locked in. Standard price ${CONFIG.COURSE.PRICE_REGULAR.toLocaleString()} applies
                 only in the final {CONFIG.WORKSHOP.EARLY_BIRD_DAYS_BEFORE} days before a scheduled workshop.
               </p>
+              {showMomentum && selectedProgress && (
+                <div className="mt-2 flex">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+                    <span className="text-[11px] font-semibold text-emerald-800 leading-snug">
+                      {selectedProgress.enrolled} of {selectedProgress.threshold} enrolled in {cityLabel(selectedLocation)} — the date launches at {selectedProgress.threshold}.
+                    </span>
+                  </span>
+                </div>
+              )}
               <details className="mt-2.5 group">
                 <summary className="text-[11px] text-[var(--muted-foreground)] cursor-pointer hover:text-[var(--accent)] transition-colors list-none flex items-center gap-1">
                   <Bell className="w-3 h-3" />

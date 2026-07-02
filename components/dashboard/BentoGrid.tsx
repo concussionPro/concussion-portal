@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
 import Link from 'next/link'
-import { CONFIG } from '@/lib/config'
+import { CONFIG, upgradePriceFor } from '@/lib/config'
 import { COURSES } from '@/lib/ai-course/provider-catalogue'
 
 /* Short-course cross-sell — sourced from the catalogue (single source of truth
@@ -519,8 +519,15 @@ function WorkshopCard({
         body: JSON.stringify({ location: selectedCity }),
       })
       if (res.ok) {
-        setFeedback({ type: 'success', message: `Nominated for ${cityLabel(selectedCity)}! When your city's round fills we confirm a date and give you ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice.` })
-        setTimeout(() => onWorkshopNominated?.(selectedCity), 1500)
+        setFeedback({
+          type: 'success',
+          message: isOnlineOnly
+            ? `Nominated for ${cityLabel(selectedCity)} — costs nothing. You'll get first notice the moment a ${cityLabel(selectedCity)} date is scheduled.`
+            : `Nominated for ${cityLabel(selectedCity)}! When your city's round fills we confirm a date and give you ${CONFIG.WORKSHOP.LEAD_TIME_WEEKS} weeks' notice.`,
+        })
+        // Only paid (full-course) nominations set workshop_location — don't
+        // flip the parent's state for an online-only interest nomination.
+        if (isFullCourse) setTimeout(() => onWorkshopNominated?.(selectedCity), 1500)
       } else {
         setFeedback({ type: 'error', message: 'Failed to save. Please try again.' })
       }
@@ -577,6 +584,64 @@ function WorkshopCard({
             {feedback.message}
           </p>
         )}
+      </Card>
+    )
+  }
+
+  // Online-only user — no-charge city nomination (counts as demand signal for
+  // launching the city's date + first notice). The paid $693 early-bird
+  // upgrade is the SECONDARY action — never push pre-paying to wait
+  // indefinitely for a sparse city to fill.
+  if (isOnlineOnly) {
+    return (
+      <Card>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-400/5 flex items-center justify-center">
+            <GraduationCap className="w-[18px] h-[18px] text-rose-600/70" strokeWidth={1.8} />
+          </div>
+          <p className="stat-label mb-0">In-Person Workshop</p>
+          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-wider">
+            Upgrade
+          </span>
+        </div>
+        <p className="text-sm text-foreground font-semibold mb-2">Nominate Your Workshop City</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Nominating costs nothing and counts toward launching your city&apos;s date — you&apos;ll
+          get first notice when it&apos;s scheduled. Add the hands-on day whenever you&apos;re ready.
+        </p>
+        <select
+          value={selectedCity}
+          onChange={(e) => setSelectedCity(e.target.value)}
+          className="w-full py-2 px-2.5 rounded-lg border border-border/50 bg-background text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-accent/20"
+        >
+          <option value="">Nominate a city...</option>
+          {Object.values(CONFIG.LOCATIONS).map(loc => (
+            <option key={loc.slug} value={loc.slug}>{loc.city}</option>
+          ))}
+        </select>
+        <button
+          onClick={handleNominate}
+          disabled={!selectedCity || saving || feedback?.type === 'success'}
+          className="w-full py-2 rounded-lg text-xs font-semibold bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+        >
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
+          {saving ? 'Saving...' : 'Nominate City'}
+        </button>
+        {feedback && (
+          <p className={cn(
+            'text-[11px] mt-2 font-medium',
+            feedback.type === 'success' ? 'text-emerald-600' : 'text-red-600'
+          )}>
+            {feedback.message}
+          </p>
+        )}
+        <Link
+          href="/upgrade"
+          className="mt-2.5 flex items-center justify-center gap-1 text-[11px] font-semibold text-accent hover:underline"
+        >
+          Ready now? Add the workshop — ${upgradePriceFor(selectedCity || null)} early-bird
+          <ArrowUpRight className="w-3 h-3" />
+        </Link>
       </Card>
     )
   }

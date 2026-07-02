@@ -125,6 +125,11 @@ export async function POST(request: NextRequest) {
     // to the user's real access level on first use if they have paid access.
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const loginLink = generateMagicLinkJWT(userId, email.toLowerCase(), existingUser?.name || userName, 'preview', baseUrl)
+    // Day-0 activation deep link: the known funnel leak is signup→start, so
+    // the primary CTA must land the user IN Module 1, one click, already
+    // authenticated. /auth/verify honours ?redirect for preview users when
+    // the target is a /modules/* path.
+    const startModuleLink = `${loginLink}&redirect=${encodeURIComponent('/modules/101')}`
 
     // Generate unsubscribe URL
     const unsubToken = generateUnsubscribeToken(email)
@@ -169,7 +174,12 @@ export async function POST(request: NextRequest) {
 
                 <p>Using the wrong tool at the wrong time isn't just poor practice &mdash; it's a failure of standard of care with medicolegal consequences. Module 1 covers the distinction, red flag recognition, and when to refer.</p>
 
-                <center><a href="${loginLink}" class="cta-btn">Start Module 1 (20 min)</a></center>
+                <center>
+                  <a href="${startModuleLink}" class="cta-btn">Start Module 1 &mdash; SCAT6 Essentials (10 minutes)</a>
+                  <p style="margin: 8px 0 0; font-size: 13px;">
+                    <a href="${baseUrl}/dashboard" style="color: #64748b;">or go to your dashboard</a>
+                  </p>
+                </center>
 
                 <div class="callout">
                   <strong>What you'll cover:</strong><br><br>

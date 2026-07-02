@@ -5,7 +5,7 @@ import { createMedicalWebPageSchema, organizationSchema } from '@/lib/schema-mar
 import { Users, MapPin, BookOpen, Calendar, ShieldCheck, Sparkles, Stethoscope } from 'lucide-react'
 
 const TITLE = 'Train Your Team — In-House Concussion CPD for AU Clinics'
-const DESCRIPTION = 'In-house concussion training for Australian clinics, sports organisations, hospital networks, and allied health groups. Concussion Clinical Mastery delivered on-site or live online. AHPRA-aligned, Osteopathy Australia endorsed.'
+const DESCRIPTION = 'In-house concussion training for Australian clinics, sports organisations, hospital networks, and allied health groups. Concussion Clinical Mastery delivered on-site or via self-paced online team seats. AHPRA-aligned, Osteopathy Australia endorsed.'
 const URL = 'https://portal.concussion-education-australia.com/team-training'
 
 export const metadata: Metadata = {
@@ -46,10 +46,10 @@ export default function TeamTrainingLanding() {
             Train your team in-house
           </h1>
           <p className="text-lg text-emerald-50 mb-2 max-w-2xl">
-            Bring CEA&apos;s flagship Concussion Clinical Mastery training to your team — on-site, live online, or hybrid. Delivered around your workflow.
+            Bring CEA&apos;s flagship Concussion Clinical Mastery training to your team — an on-site practical day, self-paced online seats, or both. Delivered around your workflow.
           </p>
           <p className="text-sm text-emerald-100 max-w-2xl mb-2">
-            We&rsquo;ve helped many clinics become the local hub for concussion management — the practice GPs, sports clubs, and schools refer to when a head injury happens.
+            We train clinics to become the local hub for concussion management — the practice GPs, sports clubs, and schools refer to when a head injury happens.
           </p>
           <p className="text-sm text-emerald-100 max-w-2xl">
             AHPRA-aligned. Osteopathy Australia endorsed. Per-clinician certification and CPD records included.
@@ -148,7 +148,7 @@ export default function TeamTrainingLanding() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
               <FormatCard title="In-person at your site" desc="Zac travels to your clinic / venue. Full-day hands-on workshop format. Best for ≥10 clinicians at one location." />
-              <FormatCard title="Live online cohort" desc="Multi-session live online delivery over 2-4 weeks. Best for distributed teams or multi-site clinics. Recorded for asynchronous catch-up." />
+              <FormatCard title="Online team seats" desc="Self-paced online seats for the whole team (8 CPD hours each), with per-clinician progress and certification. Best for distributed or multi-site teams." />
               <FormatCard title="Hybrid" desc="Online modules at clinicians' own pace + in-person workshop day. Best for mixed-availability teams." />
             </div>
           </section>

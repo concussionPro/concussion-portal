@@ -1,9 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Check, ArrowRight, Loader2 } from 'lucide-react'
 import { trackInterestRegistration } from '@/lib/analytics'
+import { CONFIG } from '@/lib/config'
+
+// ─── City momentum (real counts only, shared across all cards) ──────────────
+//
+// One module-level fetch shared by every card instance. A low count is
+// anti-social-proof, so the numeric line renders ONLY when the true enrolled
+// count is >= MOMENTUM_MIN_ENROLLED. No zeros, no interest-count fallback,
+// nothing fabricated. Silent failure — the card works fine without it.
+const MOMENTUM_MIN_ENROLLED = 5
+
+interface CityProgress {
+  slug: string
+  enrolled: number
+  threshold: number
+}
+
+let cityProgressPromise: Promise<CityProgress[]> | null = null
+function fetchCityProgress(): Promise<CityProgress[]> {
+  if (!cityProgressPromise) {
+    cityProgressPromise = fetch('/api/city-progress')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => (data && Array.isArray(data.cities) ? (data.cities as CityProgress[]) : []))
+      .catch(() => [])
+  }
+  return cityProgressPromise
+}
 
 export type LocationCardProps = {
   city: string
@@ -29,6 +56,18 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
   const [done, setDone] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [progress, setProgress] = useState<CityProgress | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchCityProgress().then((cities) => {
+      if (cancelled) return
+      setProgress(cities.find((c) => c.slug === citySlug) ?? null)
+    })
+    return () => { cancelled = true }
+  }, [citySlug])
+
+  const showMomentum = !!progress && progress.enrolled >= MOMENTUM_MIN_ENROLLED
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -85,6 +124,26 @@ export function LocationInterestCard({ city, citySlug, img, status, dotClass, st
       </div>
 
       <div className="p-4">
+        {/* Primary action: enrol (tier-neutral — /pricing shows the online
+            $497 → workshop-upgrade ladder for this city). Email capture below
+            is the secondary action. */}
+        <Link
+          href={`/pricing?location=${citySlug}`}
+          className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--foreground)]/90"
+        >
+          Enrol from ${CONFIG.COURSE.PRICE_ONLINE} — early-bird locked
+          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+        </Link>
+        {showMomentum && progress && (
+          <div className="mb-2 flex">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
+              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+              <span className="text-[11px] font-semibold text-emerald-800 leading-snug">
+                {progress.enrolled} of {progress.threshold} enrolled in {city} — the date launches at {progress.threshold}.
+              </span>
+            </span>
+          </div>
+        )}
         {done ? (
           <div className="flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3">
             <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" aria-hidden="true" />

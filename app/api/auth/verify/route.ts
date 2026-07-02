@@ -256,8 +256,13 @@ export async function POST(request: NextRequest) {
     // Build the response: form posts navigate, fetch callers get JSON
     let response: NextResponse
     if (isFormPost) {
+      // Preview users may deep-link ONLY into module content (the Day-0
+      // welcome CTA lands them IN Module 1, one click, authenticated). All
+      // other redirect targets stay blocked for preview so a link can't
+      // point them at gated pages that bounce.
       let target = tokenData.accessLevel === 'preview' ? '/modules/101' : '/dashboard'
-      if (redirect && isValidRedirect(redirect) && tokenData.accessLevel !== 'preview') {
+      if (redirect && isValidRedirect(redirect) &&
+          (tokenData.accessLevel !== 'preview' || redirect.startsWith('/modules/'))) {
         target = redirect
       }
       response = NextResponse.redirect(new URL(target, request.url), 303)

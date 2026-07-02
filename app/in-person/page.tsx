@@ -309,6 +309,7 @@ export default function InPersonTrainingPage() {
                     >
                       <option value="sydney">Sydney</option>
                       <option value="melbourne">Melbourne</option>
+                      <option value="byron-bay">Byron Bay</option>
                       <option value="adelaide">Adelaide</option>
                       <option value="wa">Perth / WA</option>
                     </select>
