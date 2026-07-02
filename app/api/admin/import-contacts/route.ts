@@ -104,12 +104,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'contacts array is required' }, { status: 400 })
     }
 
-    // All contacts enter the nurture funnel — the 'Accepts Marketing' flag
-    // is preserved on the contact for transparency but doesn't filter the
-    // import. Per-recipient unsubscribe is the safety valve via
-    // List-Unsubscribe headers on every nurture email.
-    const filteredContacts = contacts
-    const skippedNoConsent = 0
+    // Marketing-consent gate: contacts who explicitly declined marketing
+    // (acceptsMarketing === false in the Squarespace export) are NEVER
+    // imported into the nurture funnel — importing them and relying on
+    // List-Unsubscribe would breach the zero-tolerance suppression policy.
+    // Contacts without the flag (older exports omit it) submitted a form on
+    // the site, so they're treated as an existing relationship and allowed.
+    const filteredContacts = contacts.filter(c => c.acceptsMarketing !== false)
+    const skippedNoConsent = contacts.length - filteredContacts.length
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
     const preseasonLink = `${baseUrl}/preseason`

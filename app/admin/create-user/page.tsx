@@ -1,13 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, AlertCircle, Loader2, Mail, DollarSign, User, Link2, ClipboardList, Lock } from 'lucide-react'
+import { Check, AlertCircle, Loader2, Mail, DollarSign, User, Link2, ClipboardList, MapPin } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+
+// Workshop city options for full-course manual sales — buyers nominate a
+// city under the Ready-to-Train pricing model, so a manual sale without a
+// location is invisible on the seat board. Read-only from CONFIG.LOCATIONS.
+const CITY_OPTIONS = Object.values(CONFIG.LOCATIONS).map((l) => ({
+  slug: l.slug,
+  label: l.city + (l.status === 'completed' ? ' (past round)' : ''),
+}))
 
 export default function AdminCreateUser() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [amount, setAmount] = useState<'497' | '1400'>('1400')
+  const [location, setLocation] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [magicLink, setMagicLink] = useState('')
@@ -24,7 +33,13 @@ export default function AdminCreateUser() {
       const response = await fetch('/api/admin/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, amount: parseInt(amount) }),
+        body: JSON.stringify({
+          email,
+          name,
+          amount: parseInt(amount),
+          // City only applies to full-course sales (workshop seat nomination)
+          ...(amount === '1400' && location ? { location } : {}),
+        }),
       })
 
       const data = await response.json()
@@ -42,6 +57,7 @@ export default function AdminCreateUser() {
         setEmail('')
         setName('')
         setAmount('1400')
+        setLocation('')
         setStatus('idle')
         setMessage('')
         setMagicLink('')
@@ -133,6 +149,31 @@ export default function AdminCreateUser() {
                 </button>
               </div>
             </div>
+
+            {/* Workshop City — full-course only. The nominated city feeds the
+                Ready-to-Train seat board (getEnrollmentCount), so manual sales
+                count toward launching a date. */}
+            {amount === '1400' && (
+              <div>
+                <label className="block text-sm font-bold text-slate-900 mb-2">
+                  <MapPin className="w-4 h-4 inline mr-2" />
+                  Workshop City (buyer&apos;s nominated city)
+                </label>
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-[#5b9aa6] focus:outline-none text-slate-900 bg-white"
+                >
+                  <option value="">No city nominated (shows as &quot;no location&quot; on the seat board)</option>
+                  {CITY_OPTIONS.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500 mt-1.5">
+                  Full-course buyers nominate a city — once enough buyers, that city&apos;s date launches. Leave blank only if they genuinely didn&apos;t choose.
+                </p>
+              </div>
+            )}
 
             {/* Status Messages */}
             {status === 'success' && (

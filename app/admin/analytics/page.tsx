@@ -9,7 +9,7 @@
  * Auth: handled by middleware (admin_session httpOnly cookie).
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   Users,
@@ -36,7 +36,6 @@ import {
   Lightbulb,
   AlertTriangle,
   Flame,
-  TrendingDown,
   MapPin,
   Building2,
   Mail,
@@ -44,8 +43,6 @@ import {
   Newspaper,
   DollarSign,
   ExternalLink,
-  Search,
-  Bell,
   Trash2,
   Loader2,
   Phone,
@@ -99,6 +96,9 @@ interface RetargetingData {
   summary: {
     totalVisitors: number; returningVisitors: number; returningRate: number
     pricingViewers: number; pricingToConversion: number; converters: number
+    /** Verified reference-book (Clinical Reference Text) purchases in the
+     *  window — reported separately, never counted as course conversions. */
+    bookPurchases?: number
   }
 }
 
@@ -120,7 +120,9 @@ interface Insight {
 }
 
 type Period = '24h' | '7d' | '30d' | '90d'
-type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'google-ads' | 'prospects'
+// 'google-ads' tab removed 2026-07-02 — the Google Ads channel was retired
+// June 2026 (cold B2B outreach is the primary sales channel).
+type TabType = 'overview' | 'channels' | 'flow' | 'funnel' | 'events' | 'retargeting' | 'insights' | 'pool' | 'preseason' | 'users' | 'report' | 'prospects'
 
 interface ProspectSend {
   id: number
@@ -529,7 +531,7 @@ function generateDailyReport(
     if (pricingViewers > 0 && converters === 0) {
       parts.push(`${pricingViewers} visitor${pricingViewers !== 1 ? 's' : ''} viewed the pricing page but none converted yet — these are your warmest leads.`)
     } else if (pricingViewers > 0 && converters > 0) {
-      parts.push(`${pricingViewers} pricing page viewers with ${converters} conversion${converters !== 1 ? 's' : ''} (${Math.round(retargetingData.summary.pricingToConversion * 100)}% rate).`)
+      parts.push(`${pricingViewers} pricing page viewers with ${converters} verified purchase${converters !== 1 ? 's' : ''} (${Math.round(retargetingData.summary.pricingToConversion * 100)}% of pricing viewers went on to buy).`)
     }
 
     if (preLeadCount > 0) {
@@ -1146,7 +1148,7 @@ function DeviceIcon({ device }: { device: string }) {
 }
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
-const VALID_TAB_TYPES: TabType[] = ['overview', 'channels', 'flow', 'funnel', 'events', 'retargeting', 'insights', 'pool', 'preseason', 'users', 'report', 'google-ads', 'prospects']
+const VALID_TAB_TYPES: TabType[] = ['overview', 'channels', 'flow', 'funnel', 'events', 'retargeting', 'insights', 'pool', 'preseason', 'users', 'report', 'prospects']
 
 export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState<Period>('7d')
@@ -1178,6 +1180,9 @@ export default function AnalyticsDashboard() {
     cities: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; city: string; registeredAt: string; completedAt: string }> }>
     paidThreshold?: Array<{ city: string; label: string; count: number; threshold: number; registrants: Array<{ name: string; email: string; createdAt: string }> }>
     paidTotal?: number
+    /** Full-course sales with NO nominated city (mostly historical manual
+     *  sales) — surfaced so they aren't invisible on the seat board. */
+    paidNoLocation?: { count: number; registrants: Array<{ name: string; email: string; createdAt: string }> }
     interest?: Array<{ city: string; label: string; count: number; registrations: Array<{ email: string; name: string; source: string; createdAt: string }> }>
     interestTotal?: number
   } | null>(null)
@@ -1271,12 +1276,37 @@ export default function AnalyticsDashboard() {
   const [showOverviewExtra, setShowOverviewExtra] = useState(false)
   const [showPipelineMatrix, setShowPipelineMatrix] = useState(false)
 
+  // Memoised prospect breakdown tallies — these reduces run over the whole
+  // (potentially 1000+ row) prospect list and are rendered in TWO places
+  // (overview collapsible + Breakdowns sub-tab), so compute them once per
+  // prospectsData load instead of on every render.
+  const prospectBreakdowns = useMemo(() => {
+    const byPriorityWave: Record<string, number> = {}
+    const byDiscipline: Record<string, number> = {}
+    const byPitchVariant: Record<string, number> = {}
+    for (const p of prospectsData?.prospects ?? []) {
+      const w = p.priorityWave ?? 'unassigned'
+      byPriorityWave[w] = (byPriorityWave[w] ?? 0) + 1
+      byDiscipline[p.contactDiscipline] = (byDiscipline[p.contactDiscipline] ?? 0) + 1
+      const v = p.pitchVariant ?? 'metro'
+      byPitchVariant[v] = (byPitchVariant[v] ?? 0) + 1
+    }
+    return { byPriorityWave, byDiscipline, byPitchVariant }
+  }, [prospectsData])
+
+  // Abort controller for the in-flight batch. Every loadAll() aborts the
+  // previous batch first, so a slow 30d response can never land AFTER a 7d
+  // switch and overwrite the 7d view with stale 30d data.
+  const abortRef = useRef<AbortController | null>(null)
+  // Non-null when the last batch had failures — the header shows this instead
+  // of stamping "Updated just now" over partially-stale panels.
+  const [partialFailure, setPartialFailure] = useState<string | null>(null)
 
   const fetchData = useCallback(
-    async (type: string, extra: Record<string, string> = {}): Promise<any> => {
+    async (type: string, extra: Record<string, string> = {}, signal?: AbortSignal): Promise<any> => {
       const apiPeriod = period === '24h' ? '1d' : period
       const params = new URLSearchParams({ type, period: apiPeriod, ...extra })
-      const res = await fetch(`/api/analytics/data?${params}`, { cache: 'no-store' })
+      const res = await fetch(`/api/analytics/data?${params}`, { cache: 'no-store', signal })
       if (!res.ok) throw new Error(`API error ${res.status}`)
       return await res.json()
     },
@@ -1284,22 +1314,34 @@ export default function AnalyticsDashboard() {
   )
 
   const loadAll = useCallback(async () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    const { signal } = controller
+
     setLoading(true)
+    // Counts every failed request in this batch (analytics + admin endpoints).
+    let failed = 0
+    const TOTAL_REQUESTS = 15
     try {
       const results = await Promise.allSettled([
-        fetchData('stats'),          // 0
-        fetchData('pageviews'),      // 1
-        fetchData('metrics', { metricType: 'url' }),      // 2
-        fetchData('metrics', { metricType: 'referrer' }), // 3
-        fetchData('metrics', { metricType: 'browser' }),  // 4
-        fetchData('channels'),       // 5
-        fetchData('flow'),           // 6
-        fetchData('retargeting'),    // 7
-        fetchData('funnel'),         // 8
-        fetchData('events'),         // 9
-        fetchData('insights'),       // 10
+        fetchData('stats', {}, signal),          // 0
+        fetchData('pageviews', {}, signal),      // 1
+        fetchData('metrics', { metricType: 'url' }, signal),      // 2
+        fetchData('metrics', { metricType: 'referrer' }, signal), // 3
+        fetchData('metrics', { metricType: 'browser' }, signal),  // 4
+        fetchData('channels', {}, signal),       // 5
+        fetchData('flow', {}, signal),           // 6
+        fetchData('retargeting', {}, signal),    // 7
+        fetchData('funnel', {}, signal),         // 8
+        fetchData('events', {}, signal),         // 9
+        fetchData('insights', {}, signal),       // 10
       ])
+      // Superseded by a newer batch (period switch / manual refresh) — don't
+      // touch state; the newer batch owns the UI now.
+      if (signal.aborted) return
 
+      failed += results.filter(r => r.status === 'rejected').length
       const get = (i: number) => results[i].status === 'fulfilled' ? (results[i] as PromiseFulfilledResult<any>).value : null
 
       if (get(0)) setStats(get(0) as AnalyticsStats)
@@ -1322,11 +1364,12 @@ export default function AnalyticsDashboard() {
         // re-fetches on every tab switch.
         const apiPeriod = period === '24h' ? '1d' : period
         const [poolRes, preseasonRes, usersRes, prospectsRes] = await Promise.allSettled([
-          fetch('/api/admin/ready-to-train', { cache: 'no-store' }),
-          fetch('/api/admin/preseason', { cache: 'no-store' }),
-          fetch('/api/admin/emails', { cache: 'no-store' }),
-          fetch(`/api/admin/prospect-engagement?period=${apiPeriod}`, { cache: 'no-store' }),
+          fetch('/api/admin/ready-to-train', { cache: 'no-store', signal }),
+          fetch('/api/admin/preseason', { cache: 'no-store', signal }),
+          fetch('/api/admin/emails', { cache: 'no-store', signal }),
+          fetch(`/api/admin/prospect-engagement?period=${apiPeriod}`, { cache: 'no-store', signal }),
         ])
+        if (signal.aborted) return
 
         if (poolRes.status === 'fulfilled' && poolRes.value.ok) {
           const poolJson = await poolRes.value.json()
@@ -1335,13 +1378,18 @@ export default function AnalyticsDashboard() {
             cities: poolJson.readyToUpgrade ?? [],
             paidThreshold: poolJson.paidEnrollments,
             paidTotal: poolJson.paidTotal ?? 0,
+            paidNoLocation: poolJson.paidNoLocation,
             interest: poolJson.interest ?? [],
             interestTotal: poolJson.interestTotal ?? 0,
           })
+        } else {
+          failed++
         }
         if (preseasonRes.status === 'fulfilled' && preseasonRes.value.ok) {
           const preseasonJson = await preseasonRes.value.json()
           if (preseasonJson.success) setPreseasonData(preseasonJson)
+        } else {
+          failed++
         }
         if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
           const usersJson = await usersRes.value.json()
@@ -1349,9 +1397,11 @@ export default function AnalyticsDashboard() {
             setUsersData(usersJson.emails || [])
             setUsersError(null)
           } else {
+            failed++
             setUsersError(usersJson.error || 'Failed to load users')
           }
         } else {
+          failed++
           const statusCode = usersRes.status === 'fulfilled' ? usersRes.value.status : 'network error'
           setUsersError(`Database connection failed (${statusCode}). Check POSTGRES_URL env var.`)
         }
@@ -1361,26 +1411,43 @@ export default function AnalyticsDashboard() {
             setProspectsData(prospectsJson as ProspectsData)
             setProspectsError(null)
           } else {
+            failed++
             setProspectsError(prospectsJson.error || 'Failed to load prospects')
           }
         } else if (prospectsRes.status === 'fulfilled') {
+          failed++
           setProspectsError(`Prospects endpoint failed (${prospectsRes.value.status})`)
         } else {
+          failed++
           setProspectsError('Prospects endpoint network error')
         }
       } catch (err) {
+        if (signal.aborted) return
+        failed++
         console.warn('[Analytics] Admin data load error:', err)
       }
 
-      setLastRefresh(new Date())
+      // Only stamp "Updated ..." when the WHOLE batch succeeded — a partial
+      // failure leaves some panels stale, and stamping them fresh was a lie.
+      if (failed === 0) {
+        setLastRefresh(new Date())
+        setPartialFailure(null)
+      } else {
+        setPartialFailure(`${failed} of ${TOTAL_REQUESTS} requests failed — some panels may be stale`)
+      }
     } catch (err) {
-      console.error('[Analytics] Load error:', err)
+      if (!signal.aborted) console.error('[Analytics] Load error:', err)
     } finally {
-      setLoading(false)
+      if (!signal.aborted) setLoading(false)
     }
   }, [fetchData, period])
 
-  useEffect(() => { loadAll() }, [period, loadAll])
+  useEffect(() => {
+    loadAll()
+    // Abort the in-flight batch when the period changes / on unmount so a
+    // stale response can't populate the new view.
+    return () => abortRef.current?.abort()
+  }, [period, loadAll])
 
   const bounceRate = stats ? stats.bounces.value / Math.max(stats.uniques.value, 1) : 0
   const avgDuration = stats ? Math.round(stats.totaltime.value / Math.max(stats.uniques.value, 1)) : 0
@@ -1399,7 +1466,6 @@ export default function AnalyticsDashboard() {
     { id: 'prospects', label: 'B2B Prospects', icon: Building2 },
     { id: 'users', label: 'Users', icon: Mail },
     { id: 'report', label: 'Daily Report', icon: Newspaper },
-    { id: 'google-ads', label: 'Google Ads', icon: DollarSign },
   ]
 
   return (
@@ -1413,11 +1479,15 @@ export default function AnalyticsDashboard() {
             </div>
             <div>
               <h1 className="text-sm font-bold text-[var(--foreground)]" style={{ letterSpacing: '-0.01em' }}>Marketing Brain</h1>
-              {lastRefresh && (
+              {partialFailure ? (
+                <p className="text-xs text-amber-600 font-semibold hidden sm:block" title="The last refresh didn't fully succeed — numbers on some panels are from an earlier load. Hit Refresh to retry.">
+                  ⚠ {partialFailure}
+                </p>
+              ) : lastRefresh ? (
                 <p className="text-xs text-[var(--muted-foreground)] hidden sm:block">
                   Updated {lastRefresh.toLocaleTimeString('en-AU', { timeStyle: 'short' })}
                 </p>
-              )}
+              ) : null}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1476,6 +1546,7 @@ export default function AnalyticsDashboard() {
               </div>
               <p className="stat-value">{fmtPct(retargetingData.summary.pricingToConversion)}</p>
               <p className="stat-label mt-1">Pricing → Convert</p>
+              <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">purchasing IPs ÷ pricing-viewer IPs (page-based)</p>
             </div>
             <div className="card stat-tile cursor-pointer hover:border-[rgba(13,115,119,0.25)] hover:shadow-md transition-all" style={{ '--shimmer-delay': '0s' } as React.CSSProperties} onClick={() => setActiveTab('retargeting')} role="button" tabIndex={0}>
               <div className="flex items-start justify-between mb-3">
@@ -1489,7 +1560,10 @@ export default function AnalyticsDashboard() {
                 <div className="icon-container w-9 h-9"><CheckCircle2 size={16} className="text-emerald-600" /></div>
               </div>
               <p className="stat-value">{fmtNum(retargetingData.summary.converters)}</p>
-              <p className="stat-label mt-1">Conversions</p>
+              <p className="stat-label mt-1">Verified Purchases</p>
+              <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
+                Stripe-webhook course sales{(retargetingData.summary.bookPurchases ?? 0) > 0 ? ` · +${retargetingData.summary.bookPurchases} book (not counted)` : ''}
+              </p>
             </div>
           </div>
         )}
@@ -1665,7 +1739,7 @@ export default function AnalyticsDashboard() {
             {activeTab === 'channels' && (
               <div className="space-y-6">
                 <div>
-                  <SectionTitle title="Traffic Channels" subtitle="Sessions grouped by acquisition source with conversion data" />
+                  <SectionTitle title="Traffic Channels" subtitle="Sessions grouped by acquisition source. 'Page conv.' = sessions that reached /checkout/success (assisted/page-based attribution — may include refreshes); verified purchases live on the headline card." />
                   {!channelsData?.channels?.length ? (
                     <EmptyState icon={Globe} message="No channel data for this period" />
                   ) : (
@@ -1678,7 +1752,7 @@ export default function AnalyticsDashboard() {
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)] hidden sm:table-cell">Bounce</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)] hidden sm:table-cell">Avg Time</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Intent</th>
-                            <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Conv.</th>
+                            <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]" title="Success-page sessions — assisted/page-based, may include refreshes. Not verified purchases.">Page conv. ⚠</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1708,7 +1782,7 @@ export default function AnalyticsDashboard() {
 
                 {(channelsData?.utmSources?.length ?? 0) > 0 && (
                   <div>
-                    <SectionTitle title="UTM Sources" subtitle="Traffic by utm_source parameter (Google Ads, email campaigns)" />
+                    <SectionTitle title="UTM Sources" subtitle="Traffic by utm_source parameter (email campaigns, partner links)" />
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
@@ -1716,7 +1790,7 @@ export default function AnalyticsDashboard() {
                             <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Source</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Sessions</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Pricing</th>
-                            <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Conv.</th>
+                            <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]" title="Success-page sessions — assisted/page-based, may include refreshes. Not verified purchases.">Page conv. ⚠</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1745,7 +1819,7 @@ export default function AnalyticsDashboard() {
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Sessions</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Bounce</th>
                             <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Pricing</th>
-                            <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Conv.</th>
+                            <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]" title="Success-page sessions — assisted/page-based, may include refreshes. Not verified purchases.">Page conv. ⚠</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -2055,7 +2129,48 @@ export default function AnalyticsDashboard() {
                             <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{poolData.paidTotal ?? 0}</p>
                             <p className="text-xs text-[var(--muted-foreground)] mt-3">Full-course across all cities</p>
                           </div>
+                          {/* Manual / legacy full-course sales with no nominated
+                              city — previously invisible on this board. */}
+                          {(poolData.paidNoLocation?.count ?? 0) > 0 && (
+                            <div className="glass rounded-xl p-4 border border-amber-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <AlertTriangle size={14} className="text-amber-600" />
+                                <span className="text-xs font-bold text-[var(--foreground)]">No Location</span>
+                              </div>
+                              <p className="text-2xl font-bold text-[var(--foreground)] tabular-nums">{poolData.paidNoLocation!.count}</p>
+                              <p className="text-xs text-[var(--muted-foreground)] mt-3">Full-course sales without a nominated city (manual/legacy) — not counted in any threshold</p>
+                            </div>
+                          )}
                         </div>
+
+                        {/* No-location registrant table — so historical manual sales are auditable */}
+                        {(poolData.paidNoLocation?.count ?? 0) > 0 && (
+                          <div>
+                            <SectionTitle title={`No Location — Paid Registrants (${poolData.paidNoLocation!.count})`} subtitle="Full-course purchasers without a workshop city — assign one via a future purchase record or leave as online-only intent. New manual sales should always pick a city in /admin/create-user." />
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b border-[rgba(13,115,119,0.08)]">
+                                    <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Name</th>
+                                    <th className="text-left py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Email</th>
+                                    <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Purchased</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {poolData.paidNoLocation!.registrants.map((r, i) => (
+                                    <tr key={i} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
+                                      <td className="py-2.5 pr-4 text-[var(--foreground)] font-medium">{r.name}</td>
+                                      <td className="py-2.5 px-2 text-[var(--muted-foreground)]">{r.email}</td>
+                                      <td className="py-2.5 pl-2 text-right text-xs text-[var(--muted-foreground)]">
+                                        {new Date(r.createdAt).toLocaleDateString('en-AU')}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Per-city paid registrant tables */}
                         {poolData.paidThreshold.map((city: { city: string; label: string; count: number; registrants: Array<{ name: string; email: string; createdAt: string }> }) => (
@@ -2111,6 +2226,7 @@ export default function AnalyticsDashboard() {
                               cities: j.readyToUpgrade ?? [],
                               paidThreshold: j.paidEnrollments,
                               paidTotal: j.paidTotal ?? 0,
+                              paidNoLocation: j.paidNoLocation,
                               interest: j.interest ?? [],
                               interestTotal: j.interestTotal ?? 0,
                             })
@@ -2553,317 +2669,6 @@ export default function AnalyticsDashboard() {
               </div>
             )}
 
-            {/* ── Google Ads ───────────────────────────────────────────── */}
-            {activeTab === 'google-ads' && (() => {
-              // Live Paid Search data from channelsData
-              const paidSearch = channelsData?.channels?.find(c => c.channel === 'Paid Search')
-              const paidSessions = paidSearch?.sessions ?? 0
-              const paidPageviews = paidSearch?.pageviews ?? 0
-              const paidBounce = paidSearch?.bounceRate ?? 0
-              const paidAvgDuration = paidSearch?.avgDuration ?? 0
-              const paidConversions = paidSearch?.conversions ?? 0
-              const paidIntentRate = paidSearch?.intentRate ?? 0
-              const paidPricingViews = paidSearch?.pricingViews ?? 0
-
-              // Filter UTM data for google/cpc sources
-              const googleCampaigns = channelsData?.utmCampaigns ?? []
-              const googleSources = (channelsData?.utmSources ?? []).filter(
-                s => s.name.toLowerCase().includes('google') || s.name.toLowerCase().includes('cpc')
-              )
-
-              // Configurable active campaigns
-              const ACTIVE_CAMPAIGNS = [
-                {
-                  name: 'C1 - Preseason Sports Clinic',
-                  adGroups: ['1A - Preseason Baseline Testing', '1B - Sports Clinic Owner Intent'],
-                  goal: 'Lead gen (free baseline tool)',
-                  landingPage: '/preseason',
-                },
-                {
-                  name: 'C2 - Course Purchase Intent',
-                  adGroups: ['2A - Concussion Course Direct', '2B - SCAT6 Purchase Intent', '2C - CPD Deadline Intent'],
-                  goal: 'Course sales ($497)',
-                  landingPage: '/pricing',
-                },
-                {
-                  name: 'C3 - SCAT6 Free Lead Capture',
-                  adGroups: ['3 - SCAT6 Free Lead Capture'],
-                  goal: 'Free course signup → nurture → upsell',
-                  landingPage: '/scat-mastery',
-                },
-              ]
-
-              // Dynamic recommendations based on actual data
-              const recs: Array<{ priority: 'high' | 'medium' | 'low'; title: string; detail: string; action: string }> = []
-
-              if (paidSessions === 0) {
-                recs.push({
-                  priority: 'high',
-                  title: 'No Google Ads traffic detected',
-                  detail: 'Zero paid search sessions this period. Campaigns may be paused, budgets exhausted, or tracking broken.',
-                  action: 'Check campaign status in Google Ads. Verify UTM parameters are set on all ad URLs. Ensure budget is allocated.',
-                })
-              }
-
-              if (paidSessions > 0 && paidBounce > 0.5) {
-                recs.push({
-                  priority: 'high',
-                  title: `Ad traffic bouncing at ${fmtPct(paidBounce)}`,
-                  detail: `${fmtPct(paidBounce)} of paid visitors leave after one page. Ad copy may not match landing page content.`,
-                  action: 'Review landing page alignment. Ensure ad keywords match page content. Check mobile page speed. Consider negative keywords for irrelevant queries.',
-                })
-              }
-
-              if (paidSessions > 0 && paidIntentRate > 0.15) {
-                recs.push({
-                  priority: 'low',
-                  title: `Ads driving quality traffic — ${fmtPct(paidIntentRate)} intent rate`,
-                  detail: `${fmtPct(paidIntentRate)} of paid visitors view pricing. Your ads are attracting qualified buyers.`,
-                  action: 'Consider increasing ad budget on high-performing campaigns. This intent rate justifies higher bids.',
-                })
-              }
-
-              if (paidConversions > 0) {
-                recs.push({
-                  priority: 'low',
-                  title: `${paidConversions} conversion${paidConversions !== 1 ? 's' : ''} from paid search`,
-                  detail: `Paid search generated ${paidConversions} conversion${paidConversions !== 1 ? 's' : ''} this period. Tracking is working.`,
-                  action: 'Optimise for ROAS — increase bids on converting keywords, pause high-spend zero-conversion keywords.',
-                })
-              }
-
-              if (paidPricingViews > 0 && paidConversions === 0) {
-                recs.push({
-                  priority: 'medium',
-                  title: `${paidPricingViews} pricing viewer${paidPricingViews !== 1 ? 's' : ''} from ads but 0 conversions`,
-                  detail: 'Paid traffic is reaching the pricing page but not converting. The offer or pricing may need adjustment.',
-                  action: 'Review pricing page for objections. Add testimonials, money-back guarantee, or payment plans. Check checkout flow on mobile.',
-                })
-              }
-
-              if (paidSessions > 0 && paidIntentRate < 0.05) {
-                recs.push({
-                  priority: 'medium',
-                  title: `Low intent from ads — only ${fmtPct(paidIntentRate)} view pricing`,
-                  detail: `Most paid visitors never reach the pricing page. Landing pages may not be driving purchase intent.`,
-                  action: 'Add clear CTAs to pricing on landing pages. Ensure ad keywords target purchase-intent queries rather than informational ones.',
-                })
-              }
-
-              // Weekly checklist
-              const weeklyChecklist = [
-                'Review Search Terms report — add irrelevant terms as negatives',
-                'Pause ads with CTR < 2% after 200+ impressions',
-                'Increase bids on converting keywords, decrease on high-spend/no-conversion',
-                'Check budget pacing — under-spending may mean bids are too low',
-                'Aim for Quality Score 6+ on all keywords',
-              ]
-
-              const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
-              const priorityColor: Record<string, string> = { high: 'bg-rose-100 text-rose-700', medium: 'bg-amber-100 text-amber-700', low: 'bg-blue-100 text-blue-700' }
-
-              return (
-                <div className="space-y-6">
-                  <SectionTitle title="Google Ads — Paid Search Performance" subtitle="Live metrics from your paid search traffic this period" />
-
-                  <a
-                    href="https://ads.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
-                  >
-                    <ExternalLink size={14} />
-                    Open Google Ads
-                  </a>
-
-                  {/* Section A: Paid Search Performance Summary */}
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="icon-container w-9 h-9"><Search size={16} className="text-[var(--accent)]" /></div>
-                      </div>
-                      <p className="stat-value">{fmtNum(paidSessions)}</p>
-                      <p className="stat-label mt-1">Paid Sessions</p>
-                    </div>
-                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="icon-container w-9 h-9"><Eye size={16} className="text-[var(--accent)]" /></div>
-                      </div>
-                      <p className="stat-value">{fmtNum(paidPageviews)}</p>
-                      <p className="stat-label mt-1">Pageviews</p>
-                    </div>
-                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="icon-container w-9 h-9"><TrendingDown size={16} className={paidBounce > 0.5 ? 'text-rose-500' : 'text-[var(--accent)]'} /></div>
-                      </div>
-                      <p className="stat-value">{fmtPct(paidBounce)}</p>
-                      <p className="stat-label mt-1">Bounce Rate</p>
-                    </div>
-                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="icon-container w-9 h-9"><Clock size={16} className="text-[var(--accent)]" /></div>
-                      </div>
-                      <p className="stat-value">{fmtDuration(paidAvgDuration)}</p>
-                      <p className="stat-label mt-1">Avg Duration</p>
-                    </div>
-                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="icon-container w-9 h-9"><Target size={16} className={paidIntentRate > 0.1 ? 'text-emerald-600' : 'text-[var(--accent)]'} /></div>
-                      </div>
-                      <p className="stat-value">{fmtPct(paidIntentRate)}</p>
-                      <p className="stat-label mt-1">Intent Rate</p>
-                    </div>
-                    <div className="card stat-tile" style={{ '--shimmer-delay': '0s' } as React.CSSProperties}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="icon-container w-9 h-9"><CheckCircle2 size={16} className={paidConversions > 0 ? 'text-emerald-600' : 'text-[var(--accent)]'} /></div>
-                      </div>
-                      <p className="stat-value">{paidConversions}</p>
-                      <p className="stat-label mt-1">Conversions</p>
-                    </div>
-                  </div>
-
-                  {/* Section B: Campaign & Source Breakdown */}
-                  {googleCampaigns.length > 0 && (
-                    <div>
-                      <SectionTitle title="Campaign Performance" subtitle="UTM campaigns with sessions, conversions, and pricing views" />
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-[rgba(13,115,119,0.08)]">
-                              <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Campaign</th>
-                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Sessions</th>
-                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Bounce</th>
-                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Pricing</th>
-                              <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Conv.</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {googleCampaigns.map((c) => (
-                              <tr key={c.name} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
-                                <td className="py-2.5 pr-4 font-semibold text-[var(--foreground)] truncate max-w-[200px]" title={c.name}>{c.name}</td>
-                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--accent)] font-semibold">{fmtNum(c.sessions)}</td>
-                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{fmtPct(c.bounceRate)}</td>
-                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{c.pricingViews}</td>
-                                <td className="py-2.5 pl-2 text-right tabular-nums font-semibold text-emerald-600">{c.conversions}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {googleSources.length > 0 && (
-                    <div>
-                      <SectionTitle title="Google / CPC Sources" subtitle="Traffic from Google Ads UTM sources" />
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-[rgba(13,115,119,0.08)]">
-                              <th className="text-left py-2.5 pr-4 text-xs font-semibold text-[var(--muted-foreground)]">Source</th>
-                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Sessions</th>
-                              <th className="text-right py-2.5 px-2 text-xs font-semibold text-[var(--muted-foreground)]">Pricing</th>
-                              <th className="text-right py-2.5 pl-2 text-xs font-semibold text-[var(--muted-foreground)]">Conv.</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {googleSources.map((s) => (
-                              <tr key={s.name} className="border-b border-[rgba(13,115,119,0.04)] hover:bg-[rgba(13,115,119,0.02)]">
-                                <td className="py-2.5 pr-4 font-semibold text-[var(--foreground)]">{s.name}</td>
-                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--accent)]">{fmtNum(s.sessions)}</td>
-                                <td className="py-2.5 px-2 text-right tabular-nums text-[var(--muted-foreground)]">{s.pricingViews}</td>
-                                <td className="py-2.5 pl-2 text-right tabular-nums font-semibold text-emerald-600">{s.conversions}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {paidSessions === 0 && googleCampaigns.length === 0 && (
-                    <div className="rounded-xl border-2 border-amber-200 bg-amber-50/50 p-5">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-bold text-amber-800">No paid search data this period</p>
-                          <p className="text-sm text-amber-700 mt-1">Either campaigns are paused, UTM tracking is missing, or no ads have served. Check Google Ads account status and ensure all ad URLs include UTM parameters.</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Active Campaigns Overview */}
-                  <div className="card rounded-xl p-5">
-                    <h3 className="text-sm font-bold text-[var(--foreground)] mb-3">Active Campaigns</h3>
-                    <div className="space-y-3">
-                      {ACTIVE_CAMPAIGNS.map((c) => (
-                        <div key={c.name} className="flex items-start gap-3 text-sm">
-                          <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-[var(--foreground)]">{c.name}</div>
-                            <div className="text-xs text-[var(--muted-foreground)]">
-                              {c.goal} · Landing: <code className="bg-[rgba(13,115,119,0.06)] px-1 rounded">{c.landingPage}</code>
-                            </div>
-                            <div className="text-xs text-[var(--muted-foreground)] mt-0.5">
-                              Ad groups: {c.adGroups.join(', ')}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Section C: Dynamic Recommendations */}
-                  {recs.length > 0 && (
-                    <div>
-                      <SectionTitle title="Recommendations" subtitle="Data-driven suggestions based on your paid search performance" />
-                      <div className="space-y-3">
-                        {recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).map((rec, i) => (
-                          <div key={i} className={`rounded-xl border-2 p-5 ${
-                            rec.priority === 'high' ? 'border-rose-300 bg-rose-50/50'
-                              : rec.priority === 'medium' ? 'border-amber-300 bg-amber-50/50'
-                              : 'border-emerald-300 bg-emerald-50/50'
-                          }`}>
-                            <div className="flex items-start gap-3">
-                              <div className="shrink-0 mt-0.5">
-                                {rec.priority === 'high' ? <Flame size={18} className="text-rose-600" /> : rec.priority === 'medium' ? <AlertTriangle size={18} className="text-amber-600" /> : <CheckCircle2 size={18} className="text-emerald-600" />}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${priorityColor[rec.priority]}`}>{rec.priority.toUpperCase()}</span>
-                                </div>
-                                <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">{rec.title}</h3>
-                                <p className="text-sm text-[var(--muted-foreground)] leading-relaxed mb-3">{rec.detail}</p>
-                                <div className="rounded-lg bg-white/80 border border-[rgba(13,115,119,0.1)] p-3">
-                                  <p className="text-xs font-semibold text-[var(--accent)] mb-1">What to do:</p>
-                                  <p className="text-sm text-[var(--foreground)] leading-relaxed">{rec.action}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Section D: Weekly Optimization Checklist */}
-                  <div className="card rounded-xl p-5">
-                    <h3 className="text-sm font-bold text-[var(--foreground)] mb-3">Weekly Optimization Checklist</h3>
-                    <p className="text-xs text-[var(--muted-foreground)] mb-3">Run through every Monday — don't optimise daily, Google needs 3-7 days per change.</p>
-                    <div className="space-y-2">
-                      {weeklyChecklist.map((item, i) => (
-                        <label key={i} className="flex items-start gap-2.5 text-sm cursor-pointer group">
-                          <input type="checkbox" className="mt-0.5 accent-[var(--accent)]" />
-                          <span className="text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors">{item}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )
-            })()}
-
             {/* ── B2B Prospects ────────────────────────────────────────── */}
             {activeTab === 'prospects' && (() => {
               const runBootstrap = async (url: string, label: string, payload?: object) => {
@@ -3188,12 +2993,15 @@ export default function AnalyticsDashboard() {
                 .filter(p => p.totalSends > 0)
                 .sort((a, b) => (b.lastSentAt ? new Date(b.lastSentAt).getTime() : 0) - (a.lastSentAt ? new Date(a.lastSentAt).getTime() : 0))
 
-              // Schedule view — group prospects by scheduled_send_at day
+              // Schedule view — group prospects by scheduled_send_at day.
+              // Day keys are Australia/Sydney calendar dates (en-CA gives
+              // YYYY-MM-DD so the string sort still works) — was UTC, which
+              // put evening AEST sends on the wrong day vs the Upcoming tab.
               const scheduleByDay = new Map<string, ProspectRow[]>()
               for (const p of prospects) {
                 if (!p.scheduledSendAt) continue
                 if (p.totalSends > 0) continue // already sent
-                const dayKey = new Date(p.scheduledSendAt).toISOString().slice(0, 10)
+                const dayKey = new Date(p.scheduledSendAt).toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' })
                 if (!scheduleByDay.has(dayKey)) scheduleByDay.set(dayKey, [])
                 scheduleByDay.get(dayKey)!.push(p)
               }
@@ -3363,12 +3171,15 @@ export default function AnalyticsDashboard() {
                           </div>
                           <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                             {[
-                              { label: 'Sent', value: agg.funnel.totalSends, hint: `production sends in the ${windowLabel}` },
-                              { label: 'Delivered', value: agg.funnel.totalDelivered ?? 0, hint: 'Resend confirmed delivery' },
-                              { label: 'Bounced', value: agg.funnel.totalBouncedEmails ?? 0, hint: 'bounced + suppressed' },
-                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: '≥10s real portal dwell or CTA click — scanner-immune', good: true },
-                              { label: 'Replied', value: agg.funnel.totalReplies, hint: 'positive inbound reply (auto-captured only if reply-forwarding is wired — see note)', good: true },
-                              { label: 'Opt-outs', value: agg.coldFunnel.optOuts ?? 0, hint: 'STOP / opt-out replies — proof a real human received + READ the email and replied', amber: true },
+                              // Sent is LIFETIME (all production sends ever) — the
+                              // old hint claimed it was windowed, which made the
+                              // delivered/sent comparison read as a same-window rate.
+                              { label: 'Sent', value: agg.funnel.totalSends, hint: 'production sends · LIFETIME (all-time, not windowed)' },
+                              { label: 'Delivered', value: agg.funnel.totalDelivered ?? 0, hint: `Resend confirmed delivery · ${windowLabel}` },
+                              { label: 'Bounced', value: agg.funnel.totalBouncedEmails ?? 0, hint: `bounced + suppressed · ${windowLabel}` },
+                              { label: 'Real views', value: agg.coldFunnel.realPortalEngagedClinics ?? 0, hint: `≥10s real portal dwell or CTA click — scanner-immune · ${windowLabel}`, good: true },
+                              { label: 'Replied', value: agg.funnel.totalReplies, hint: 'positive inbound reply · lifetime (auto-captured only if reply-forwarding is wired — see note)', good: true },
+                              { label: 'Opt-outs', value: agg.coldFunnel.optOuts ?? 0, hint: 'STOP / opt-out replies · lifetime — proof a real human received + READ the email and replied', amber: true },
                               { label: 'Booked', value: agg.coldFunnel.bookedClinics ?? 0, hint: 'cal.com booking (all-time)', good: true },
                             ].map((m) => (
                               <div key={m.label} title={m.hint} className="text-center">
@@ -3417,6 +3228,8 @@ export default function AnalyticsDashboard() {
                           intentScore: number
                           openedTrial: boolean
                           seconds: number
+                          /** decideOutreach reason — computed once here, reused in the row render */
+                          reason: string
                         }
                         const hotLeads: HotLead[] = prospects
                           .map((p): HotLead | null => {
@@ -3441,6 +3254,7 @@ export default function AnalyticsDashboard() {
                               intentScore: decision.score,
                               openedTrial: decision.openedTrial,
                               seconds: Math.round((p.portalMaxDwellMs ?? 0) / 1000),
+                              reason: decision.reason,
                             }
                           })
                           .filter((x): x is HotLead => x !== null)
@@ -3475,7 +3289,7 @@ export default function AnalyticsDashboard() {
                               Viewed pricing / opened the trial / hit the next-step CTA. Email them while warm — your replies convert.
                             </p>
                             <div className="divide-y divide-emerald-200/70">
-                                {hotLeads.map(({ p, hitEntries, openedTrial, seconds }) => {
+                                {hotLeads.map(({ p, hitEntries, openedTrial, seconds, reason }) => {
                                   const badge = p.dealType ? HOT_TIER_BADGE[p.dealType] : null
                                   const intentSummary = hitEntries
                                     .map(([s, n]) => `${niceHot(s)}${(n ?? 0) > 1 ? ` ×${n}` : ''}`)
@@ -3483,13 +3297,8 @@ export default function AnalyticsDashboard() {
                                   const subject = `Concussion training for ${p.shortName}`
                                   const mailto = `mailto:${p.contactEmail}?subject=${encodeURIComponent(subject)}`
                                   const copied = copiedHotEmail === p.contactEmail
-                                  // Same decision engine the daily outreach report uses —
-                                  // surfaces WHY this clinic warrants a personal email now.
-                                  const decision = decideOutreach({
-                                    sectionFunnel: p.portalFlow?.sectionFunnel ?? {},
-                                    maxDwellMs: p.portalMaxDwellMs ?? 0,
-                                    sessions: p.portalEngagedSessions || 1,
-                                  })
+                                  // The decideOutreach reason was computed once in the
+                                  // hotLeads map above — no second engine call per row.
                                   return (
                                     <div key={p.id} className="py-2.5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
                                       <div className="min-w-0 flex-1">
@@ -3522,7 +3331,7 @@ export default function AnalyticsDashboard() {
                                           <span className="font-semibold">Intent:</span> {intentSummary}
                                         </div>
                                         <div className="text-[11px] italic text-emerald-700/80 mt-0.5">
-                                          {decision.reason}
+                                          {reason}
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-1.5 shrink-0">
@@ -4935,31 +4744,44 @@ export default function AnalyticsDashboard() {
                                 </div>
                               )
                             })}
-                            {/* Conversion KPIs — opens/clicks REMOVED (tracking off, scanner-polluted).
-                                Re-based onto clean signals: delivery (Resend) + replies + wins. */}
-                            <div className="grid md:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
-                              <div className="text-xs">
-                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Send → Delivered</div>
-                                <div className="text-lg font-bold text-[var(--accent)]">{((agg.funnel.deliveryRate ?? 0) * 100).toFixed(1)}%</div>
-                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalDelivered ?? 0} / {agg.funnel.totalSends}</div>
-                              </div>
-                              <div className="text-xs">
-                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Delivered → Reply</div>
-                                <div className="text-lg font-bold text-[var(--accent)]">{(((agg.funnel.totalDelivered ?? 0) > 0 ? agg.funnel.totalReplies / (agg.funnel.totalDelivered ?? 1) : 0) * 100).toFixed(2)}%</div>
-                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalReplies} / {agg.funnel.totalDelivered ?? 0}</div>
-                              </div>
-                              <div className="text-xs">
-                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Send → Reply</div>
-                                <div className="text-lg font-bold text-amber-600">{(agg.funnel.sendReplyRate * 100).toFixed(2)}%</div>
-                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalReplies} / {agg.funnel.totalSends}</div>
-                              </div>
-                              <div className="text-xs">
-                                <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Reply → Win</div>
-                                <div className="text-lg font-bold text-emerald-600">{(agg.funnel.replyToWinRate * 100).toFixed(1)}%</div>
-                                <div className="text-[10px] text-[var(--muted-foreground)]">{agg.revenue.wins} / {agg.funnel.totalReplies}</div>
-                              </div>
-                            </div>
-                            <p className="text-[10px] text-slate-400 mt-2">Open/click conversion removed — tracking off (scanner-polluted). Delivery is from Resend; replies &amp; wins are real.</p>
+                            {/* Conversion KPIs — every rate now uses a CONSISTENT window
+                                and is labelled lifetime vs windowed. The old cards divided
+                                windowed delivered by lifetime sends (read ~4% instead of
+                                ~98%) and lifetime replies by windowed delivered (could
+                                exceed 100%). */}
+                            {(() => {
+                              const delivered = agg.funnel.totalDelivered ?? 0
+                              const bounced = agg.funnel.totalBouncedEmails ?? 0
+                              const deliveryHealth = delivered + bounced > 0 ? delivered / (delivered + bounced) : 0
+                              const deliveredClinics = agg.coldFunnel?.deliveredClinics ?? 0
+                              const realReadClinics = agg.coldFunnel?.realPortalEngagedClinics ?? 0
+                              const readRate = deliveredClinics > 0 ? realReadClinics / deliveredClinics : 0
+                              return (
+                                <div className="grid md:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
+                                  <div className="text-xs">
+                                    <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Delivery health · {windowLabel}</div>
+                                    <div className="text-lg font-bold text-[var(--accent)]">{(deliveryHealth * 100).toFixed(1)}%</div>
+                                    <div className="text-[10px] text-[var(--muted-foreground)]">{delivered} delivered ÷ ({delivered} + {bounced} bounced) — same-window</div>
+                                  </div>
+                                  <div className="text-xs">
+                                    <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Delivered → Real read · {windowLabel}</div>
+                                    <div className="text-lg font-bold text-fuchsia-600">{(readRate * 100).toFixed(1)}%</div>
+                                    <div className="text-[10px] text-[var(--muted-foreground)]">{realReadClinics} real-read clinics / {deliveredClinics} delivered clinics — same-window</div>
+                                  </div>
+                                  <div className="text-xs">
+                                    <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Send → Reply · lifetime</div>
+                                    <div className="text-lg font-bold text-amber-600">{(agg.funnel.sendReplyRate * 100).toFixed(2)}%</div>
+                                    <div className="text-[10px] text-[var(--muted-foreground)]">{agg.funnel.totalReplies} replies / {agg.funnel.totalSends} all-time sends</div>
+                                  </div>
+                                  <div className="text-xs">
+                                    <div className="text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-1">Reply → Win · lifetime</div>
+                                    <div className="text-lg font-bold text-emerald-600">{(agg.funnel.replyToWinRate * 100).toFixed(1)}%</div>
+                                    <div className="text-[10px] text-[var(--muted-foreground)]">{agg.revenue.wins} / {agg.funnel.totalReplies}</div>
+                                  </div>
+                                </div>
+                              )
+                            })()}
+                            <p className="text-[10px] text-slate-400 mt-2">Open/click conversion removed — tracking off (scanner-polluted). Windowed rates divide same-window numbers only; sends aren&apos;t windowed by the API, so send-based rates are lifetime.</p>
                           </div>
                         )}
                       </div>
@@ -4984,20 +4806,9 @@ export default function AnalyticsDashboard() {
                             <BreakdownCard title="By region" data={agg.byRegion} icon={MapPin} />
                             <BreakdownCard title="By cohort tier" data={agg.byCohort} icon={Target} />
                             <BreakdownCard title="By travel band" data={agg.byTravelBand} icon={Globe} />
-                            <BreakdownCard title="By priority wave" data={prospects.reduce<Record<string, number>>((acc, p) => {
-                              const k = p.priorityWave ?? 'unassigned'
-                              acc[k] = (acc[k] ?? 0) + 1
-                              return acc
-                            }, {})} icon={Flame} />
-                            <BreakdownCard title="By discipline" data={prospects.reduce<Record<string, number>>((acc, p) => {
-                              acc[p.contactDiscipline] = (acc[p.contactDiscipline] ?? 0) + 1
-                              return acc
-                            }, {})} icon={Users} />
-                            <BreakdownCard title="By pitch variant" data={prospects.reduce<Record<string, number>>((acc, p) => {
-                              const k = p.pitchVariant ?? 'metro'
-                              acc[k] = (acc[k] ?? 0) + 1
-                              return acc
-                            }, {})} icon={MousePointer} />
+                            <BreakdownCard title="By priority wave" data={prospectBreakdowns.byPriorityWave} icon={Flame} />
+                            <BreakdownCard title="By discipline" data={prospectBreakdowns.byDiscipline} icon={Users} />
+                            <BreakdownCard title="By pitch variant" data={prospectBreakdowns.byPitchVariant} icon={MousePointer} />
                           </div>
                         )}
                       </div>
@@ -5176,29 +4987,43 @@ export default function AnalyticsDashboard() {
                         </div>
                       </div>
 
-                      {/* Opens/clicks REMOVED (tracking off, scanner-polluted) — re-based on clean delivery + replies. */}
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Send → Delivered conversion</div>
-                          <div className="text-3xl font-bold text-[var(--accent)]">{((agg.funnel.deliveryRate ?? 0) * 100).toFixed(1)}%</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalDelivered ?? 0} delivered / {agg.funnel.totalSends} sends</div>
-                        </div>
-                        <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Delivered → Reply conversion</div>
-                          <div className="text-3xl font-bold text-[var(--accent)]">{(((agg.funnel.totalDelivered ?? 0) > 0 ? agg.funnel.totalReplies / (agg.funnel.totalDelivered ?? 1) : 0) * 100).toFixed(2)}%</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalReplies} replies / {agg.funnel.totalDelivered ?? 0} delivered</div>
-                        </div>
-                        <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Send → Reply conversion</div>
-                          <div className="text-3xl font-bold text-amber-600">{(agg.funnel.sendReplyRate * 100).toFixed(2)}%</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalReplies} replies / {agg.funnel.totalSends} sends</div>
-                        </div>
-                        <div className="card rounded-xl p-4">
-                          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Reply → Win conversion</div>
-                          <div className="text-3xl font-bold text-emerald-600">{(agg.funnel.replyToWinRate * 100).toFixed(1)}%</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.revenue.wins} wins / {agg.funnel.totalReplies} replies</div>
-                        </div>
-                      </div>
+                      {/* Opens/clicks REMOVED (tracking off, scanner-polluted). Rates use
+                          CONSISTENT windows only — the old Send→Delivered card divided
+                          windowed delivered by lifetime sends (~4% instead of ~98%), and
+                          Delivered→Reply divided lifetime replies by windowed delivered
+                          (could exceed 100%). */}
+                      {(() => {
+                        const delivered = agg.funnel.totalDelivered ?? 0
+                        const bounced = agg.funnel.totalBouncedEmails ?? 0
+                        const deliveryHealth = delivered + bounced > 0 ? delivered / (delivered + bounced) : 0
+                        const deliveredClinics = agg.coldFunnel?.deliveredClinics ?? 0
+                        const realReadClinics = agg.coldFunnel?.realPortalEngagedClinics ?? 0
+                        const readRate = deliveredClinics > 0 ? realReadClinics / deliveredClinics : 0
+                        return (
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div className="card rounded-xl p-4">
+                              <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Delivery health · {windowLabel}</div>
+                              <div className="text-3xl font-bold text-[var(--accent)]">{(deliveryHealth * 100).toFixed(1)}%</div>
+                              <div className="text-xs text-[var(--muted-foreground)] mt-1">{delivered} delivered ÷ ({delivered} delivered + {bounced} bounced) — both counted in the same window</div>
+                            </div>
+                            <div className="card rounded-xl p-4">
+                              <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Delivered → Real read · {windowLabel}</div>
+                              <div className="text-3xl font-bold text-fuchsia-600">{(readRate * 100).toFixed(1)}%</div>
+                              <div className="text-xs text-[var(--muted-foreground)] mt-1">{realReadClinics} clinics with a real portal read / {deliveredClinics} clinics delivered — both same-window, scanner-immune</div>
+                            </div>
+                            <div className="card rounded-xl p-4">
+                              <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Send → Reply conversion · lifetime</div>
+                              <div className="text-3xl font-bold text-amber-600">{(agg.funnel.sendReplyRate * 100).toFixed(2)}%</div>
+                              <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.funnel.totalReplies} replies / {agg.funnel.totalSends} all-time sends</div>
+                            </div>
+                            <div className="card rounded-xl p-4">
+                              <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wider font-semibold mb-3">Reply → Win conversion · lifetime</div>
+                              <div className="text-3xl font-bold text-emerald-600">{(agg.funnel.replyToWinRate * 100).toFixed(1)}%</div>
+                              <div className="text-xs text-[var(--muted-foreground)] mt-1">{agg.revenue.wins} wins / {agg.funnel.totalReplies} replies</div>
+                            </div>
+                          </div>
+                        )
+                      })()}
                     </div>
                   )}
 
@@ -5211,20 +5036,9 @@ export default function AnalyticsDashboard() {
                       <BreakdownCard title="By region" data={agg.byRegion} icon={MapPin} />
                       <BreakdownCard title="By cohort tier" data={agg.byCohort} icon={Target} />
                       <BreakdownCard title="By travel band" data={agg.byTravelBand} icon={Globe} />
-                      <BreakdownCard title="By priority wave" data={prospects.reduce<Record<string, number>>((acc, p) => {
-                        const k = p.priorityWave ?? 'unassigned'
-                        acc[k] = (acc[k] ?? 0) + 1
-                        return acc
-                      }, {})} icon={Flame} />
-                      <BreakdownCard title="By discipline" data={prospects.reduce<Record<string, number>>((acc, p) => {
-                        acc[p.contactDiscipline] = (acc[p.contactDiscipline] ?? 0) + 1
-                        return acc
-                      }, {})} icon={Users} />
-                      <BreakdownCard title="By pitch variant" data={prospects.reduce<Record<string, number>>((acc, p) => {
-                        const k = p.pitchVariant ?? 'metro'
-                        acc[k] = (acc[k] ?? 0) + 1
-                        return acc
-                      }, {})} icon={MousePointer} />
+                      <BreakdownCard title="By priority wave" data={prospectBreakdowns.byPriorityWave} icon={Flame} />
+                      <BreakdownCard title="By discipline" data={prospectBreakdowns.byDiscipline} icon={Users} />
+                      <BreakdownCard title="By pitch variant" data={prospectBreakdowns.byPitchVariant} icon={MousePointer} />
                     </div>
                   )}
 
@@ -5895,7 +5709,7 @@ export default function AnalyticsDashboard() {
 
         <div className="text-center py-2">
           <p className="text-xs text-[var(--muted-foreground)] opacity-40">
-            Self-hosted analytics · Powered by Vercel Blob
+            Self-hosted analytics · Postgres event store (Neon)
           </p>
         </div>
       </div>

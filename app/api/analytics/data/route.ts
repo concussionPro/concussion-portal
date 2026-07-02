@@ -67,22 +67,65 @@ function isAuthorised(request: NextRequest): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Date helpers
+// Date helpers — ALL day bucketing is Australia/Sydney (the business
+// timezone). Previously every boundary was UTC, so the "24h" tab reset at
+// ~10-11am AEST and growth deltas compared a partial UTC day against a full
+// one every morning. Day keys are Sydney calendar dates; window start/end
+// timestamps are Sydney midnights converted to UTC epoch ms.
 // ---------------------------------------------------------------------------
 
+const SYDNEY_TZ = 'Australia/Sydney';
+
+// en-CA locale formats as YYYY-MM-DD, matching the existing date-key shape.
+const sydneyDayFmt = new Intl.DateTimeFormat('en-CA', {
+  timeZone: SYDNEY_TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+});
+
+/** Calendar date key (YYYY-MM-DD) for an instant, in Australia/Sydney. */
 function toDateKey(date: Date): string {
-  const yyyy = date.getUTCFullYear();
-  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(date.getUTCDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+  return sydneyDayFmt.format(date);
 }
 
-function dateRange(endDate: Date, days: number): string[] {
+/** Sydney's UTC offset in minutes at a given instant — 600 (AEST) or 660 (AEDT). */
+function sydneyOffsetMinutes(at: Date): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: SYDNEY_TZ, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(at).reduce<Record<string, string>>((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  const asUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    Number(parts.hour) % 24, Number(parts.minute), Number(parts.second),
+  );
+  return Math.round((asUtc - at.getTime()) / 60_000);
+}
+
+/** UTC epoch ms of midnight (00:00) in Sydney for a YYYY-MM-DD date key. */
+function sydneyMidnightUtcMs(dateKey: string): number {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  // Start from UTC midnight, then correct by the Sydney offset. Iterate twice
+  // so a DST transition between the initial guess and the target converges.
+  let ts = Date.UTC(y, m - 1, d);
+  for (let i = 0; i < 2; i++) {
+    ts = Date.UTC(y, m - 1, d) - sydneyOffsetMinutes(new Date(ts)) * 60_000;
+  }
+  return ts;
+}
+
+/** Pure calendar arithmetic on a YYYY-MM-DD key (no timezone involved). */
+function addDaysToKey(dateKey: string, days: number): string {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return `${dt.getUTCFullYear()}-${mm}-${dd}`;
+}
+
+/** `days` consecutive Sydney calendar-date keys ending at endKey (inclusive). */
+function dateRange(endKey: string, days: number): string[] {
   const keys: string[] = [];
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(endDate);
-    d.setUTCDate(d.getUTCDate() - i);
-    keys.push(toDateKey(d));
+    keys.push(addDaysToKey(endKey, -i));
   }
   return keys;
 }
@@ -343,6 +386,11 @@ function buildSessionSummaries(events: StoredEvent[]): SessionSummary[] {
 // Marketing response builders
 // ---------------------------------------------------------------------------
 
+// NOTE: `conversions` in the channel/UTM breakdowns are PAGE-BASED (sessions
+// that reached /checkout/success). Server-verified purchase events carry a
+// `server_` session id and can't be attributed to a channel/UTM, so these
+// stay session-based for attribution — the UI labels them "page conv." and
+// the headline Conversions card uses verified purchase events instead.
 function buildChannels(sessions: SessionSummary[]) {
   const channelData = new Map<string, {
     sessions: number; pageviews: number; bounces: number;
@@ -454,7 +502,7 @@ function buildSessionFlow(sessions: SessionSummary[]) {
 }
 
 /**
- * Count verified purchases in the window from server-side events.
+ * Count verified COURSE purchases in the window from server-side events.
  *
  * Why this exists: the client-side `hasConversion` flag was set on any
  * session that hit /checkout/success — so refreshes, bookmarks, and stale
@@ -462,12 +510,18 @@ function buildSessionFlow(sessions: SessionSummary[]) {
  * `purchase_complete` events to the same table with a `server_` session_id
  * (filtered out of session-level analysis), so counting those events in
  * the window gives us a DB-of-record truth number immune to pageview noise.
+ *
+ * `reference_purchase` (the Clinical Reference Text book) is deliberately
+ * EXCLUDED — it's a $-small side product and was inflating course-funnel
+ * conversion counts. It's reported separately via countBookPurchases().
  */
 function countVerifiedPurchases(rawEvents: StoredEvent[]): number {
-  return rawEvents.filter(
-    (e) =>
-      e.eventType === 'purchase_complete' || e.eventType === 'reference_purchase'
-  ).length;
+  return rawEvents.filter((e) => e.eventType === 'purchase_complete').length;
+}
+
+/** Verified reference-book purchases in the window (reported separately). */
+function countBookPurchases(rawEvents: StoredEvent[]): number {
+  return rawEvents.filter((e) => e.eventType === 'reference_purchase').length;
 }
 
 function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[]) {
@@ -532,11 +586,19 @@ function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[]) 
   // Summary stats
   const totalVisitors = ipData.size;
   const returningVisitors = Array.from(ipData.values()).filter((d) => d.sessions.length > 1).length;
-  const pricingViewers = Array.from(ipData.values()).filter((d) => d.pricingViews > 0).length;
+  const pricingViewerEntries = Array.from(ipData.values()).filter((d) => d.pricingViews > 0);
+  const pricingViewers = pricingViewerEntries.length;
+  // Pricing → conversion is a same-unit rate: IPs that viewed pricing AND
+  // hit checkout success ÷ IPs that viewed pricing. Per-IP boolean dedup means
+  // success-page refreshes can't inflate it, and the units match so no clamp
+  // is needed (the old version divided purchase EVENTS by viewer IPs and hid
+  // the mismatch behind Math.min(1, ...)).
+  const convertedPricingViewers = pricingViewerEntries.filter((d) => d.converted).length;
   // Authoritative: count server-side purchase_complete events in the window,
   // not client-side /checkout/success pageviews. Stale URL refreshes inflated
   // the old number (saw 2 "conversions" on days with 0 Stripe payments).
   const converters = countVerifiedPurchases(rawEvents);
+  const bookPurchases = countBookPurchases(rawEvents);
 
   // Geography breakdown
   const countryCounts = new Map<string, number>();
@@ -558,10 +620,13 @@ function buildRetargeting(sessions: SessionSummary[], rawEvents: StoredEvent[]) 
       returningVisitors,
       returningRate: totalVisitors > 0 ? returningVisitors / totalVisitors : 0,
       pricingViewers,
-      // Clamp ratio to [0,1] — verified purchases may come from users who
-      // never registered pricing page views in this window
-      pricingToConversion: pricingViewers > 0 ? Math.min(1, converters / pricingViewers) : 0,
+      // Same-unit rate: purchasing pricing-viewer IPs ÷ pricing-viewer IPs.
+      // Success-page based per IP (server purchases can't be joined to IPs).
+      pricingToConversion: pricingViewers > 0 ? convertedPricingViewers / pricingViewers : 0,
       converters,
+      // Reference-book sales in the window — reported separately, never
+      // mixed into course conversion counts.
+      bookPurchases,
     },
   };
 }
@@ -584,8 +649,11 @@ function buildExpandedFunnel(sessions: SessionSummary[], rawEvents: StoredEvent[
     { label: 'Preseason Landing', count: sessions.filter((s) => s.pages.some((p) => p.startsWith('/preseason'))).length },
     { label: 'Clinic Register', count: sessions.filter((s) => s.hasPreseasonRegister).length },
     { label: 'Baseline Submit', count: sessions.filter((s) => s.hasPreseasonSubmit).length },
+    // Final step stays session-based because server purchase events can't be
+    // joined back to preseason sessions — labelled page-based so it's never
+    // read as a verified-purchase count.
     { label: 'Viewed Pricing', count: sessions.filter((s) => (s.hasPreseasonRegister || s.hasPreseasonSubmit) && s.hasPricingView).length },
-    { label: 'Converted', count: sessions.filter((s) => (s.hasPreseasonRegister || s.hasPreseasonSubmit) && s.hasConversion).length },
+    { label: 'Converted (page-based)', count: sessions.filter((s) => (s.hasPreseasonRegister || s.hasPreseasonSubmit) && s.hasConversion).length },
   ];
 
   return { directFunnel, preseasonFunnel };
@@ -615,7 +683,8 @@ function buildInsights(
   const totalSessions = sessions.length;
   const pricingViewers = sessions.filter((s) => s.hasPricingView).length;
   const enrollClickers = sessions.filter((s) => s.hasEnrollClick).length;
-  const converters = sessions.filter((s) => s.hasConversion).length;
+  // Per-segment "conversion" mentions below are success-page based (session
+  // attribution) — verified purchase truth lives on the headline card.
   const bouncers = sessions.filter((s) => s.isBounce).length;
   const bounceRate = bouncers / totalSessions;
 
@@ -714,7 +783,7 @@ function buildInsights(
       type: emailIntent > 0.1 ? 'positive' : 'opportunity',
       category: 'channel',
       title: `Email driving ${emailSessions.length} sessions`,
-      detail: `${(emailIntent * 100).toFixed(0)}% of email visitors view pricing. ${emailSessions.filter((s) => s.hasConversion).length} converted.`,
+      detail: `${(emailIntent * 100).toFixed(0)}% of email visitors view pricing. ${emailSessions.filter((s) => s.hasConversion).length} reached the success page (page-based).`,
       metric: `${emailSessions.length} email sessions`,
       action: emailIntent < 0.1
         ? 'Cold emails are reaching the site but not driving pricing views. Add a direct /pricing link in the email. Lead with the problem, not the product.'
@@ -756,7 +825,7 @@ function buildInsights(
       type: blogToIntent > 0.05 ? 'positive' : 'opportunity',
       category: 'content',
       title: `Blog generating ${blogSessions.length} sessions`,
-      detail: `${(blogToIntent * 100).toFixed(1)}% of blog readers view pricing. ${blogSessions.filter((s) => s.hasConversion).length} converted.`,
+      detail: `${(blogToIntent * 100).toFixed(1)}% of blog readers view pricing. ${blogSessions.filter((s) => s.hasConversion).length} reached the success page (page-based).`,
       metric: `${(blogToIntent * 100).toFixed(1)}% blog → pricing`,
       action: blogToIntent < 0.05
         ? 'Blog posts need stronger CTAs. Add "Related: Our SCAT6 Mastery Course" boxes. Internal link to /pricing from every post.'
@@ -797,7 +866,7 @@ function buildInsights(
       type: 'opportunity',
       category: 'audience',
       title: `${(returnRate * 100).toFixed(0)}% are returning visitors`,
-      detail: `Returning visitors converted ${returnerConversions} times vs ${firstVisitConversions} first-visit conversions. ${returnRate > 0.3 ? 'Clinicians are researching before buying — this is normal for $500+ purchases.' : 'Most traffic is first-time — focus on capturing emails for follow-up.'}`,
+      detail: `Returning visitors hit the success page ${returnerConversions} times vs ${firstVisitConversions} first-visit (page-based). ${returnRate > 0.3 ? 'Clinicians are researching before buying — this is normal for $500+ purchases.' : 'Most traffic is first-time — focus on capturing emails for follow-up.'}`,
       metric: `${(returnRate * 100).toFixed(0)}% return rate`,
       action: returnRate > 0.3
         ? 'Your retargeting strategy should nurture these returners. Send email follow-ups 3-5 days after first visit.'
@@ -816,7 +885,7 @@ function buildInsights(
         type: 'warning',
         category: 'audience',
         title: 'Mobile traffic high but conversions low',
-        detail: `${mobileSessions.length} mobile sessions vs ${desktopSessions.length} desktop, but mobile converts at ${(mobileConvRate * 100).toFixed(1)}% vs desktop ${(desktopConvRate * 100).toFixed(1)}%.`,
+        detail: `${mobileSessions.length} mobile sessions vs ${desktopSessions.length} desktop, but mobile converts at ${(mobileConvRate * 100).toFixed(1)}% vs desktop ${(desktopConvRate * 100).toFixed(1)}% (success-page based).`,
         metric: `${(mobileConvRate * 100).toFixed(1)}% mobile conv.`,
         action: 'Review pricing page on mobile. Ensure checkout flow works on phone. Clinicians may browse on mobile but buy on desktop — consider "email yourself this link" feature.',
       });
@@ -957,11 +1026,11 @@ function buildMetrics(
 
 async function getEventsForDateRange(dateKeys: string[]): Promise<StoredEvent[]> {
   if (dateKeys.length === 0) return [];
-  // Convert date keys to timestamp range
-  const startDate = new Date(dateKeys[0] + 'T00:00:00Z');
-  const endDate = new Date(dateKeys[dateKeys.length - 1] + 'T00:00:00Z');
-  endDate.setUTCDate(endDate.getUTCDate() + 1); // inclusive end
-  return fetchEventsFromPostgres(startDate.getTime(), endDate.getTime());
+  // Window boundaries are Sydney midnights (converted to UTC epoch ms), so a
+  // "day" here means a full Australia/Sydney calendar day.
+  const startMs = sydneyMidnightUtcMs(dateKeys[0]);
+  const endMs = sydneyMidnightUtcMs(addDaysToKey(dateKeys[dateKeys.length - 1], 1)); // exclusive end
+  return fetchEventsFromPostgres(startMs, endMs);
 }
 
 // ---------------------------------------------------------------------------
@@ -980,12 +1049,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const days = parsePeriodDays(periodParam);
 
-  const today = new Date();
-  const currentDates = dateRange(today, days);
-
-  const prevEnd = new Date(today);
-  prevEnd.setUTCDate(prevEnd.getUTCDate() - days);
-  const prevDates = dateRange(prevEnd, days);
+  // Windows compare like-for-like Sydney calendar days: the current window is
+  // the last `days` Sydney dates ending today; the previous window is the
+  // `days` Sydney dates immediately before it.
+  const todayKey = toDateKey(new Date());
+  const currentDates = dateRange(todayKey, days);
+  const prevDates = dateRange(addDaysToKey(todayKey, -days), days);
 
   if (type === 'stats') {
     const [currentEvents, prevEvents] = await Promise.all([

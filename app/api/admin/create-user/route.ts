@@ -43,12 +43,21 @@ export async function POST(request: NextRequest) {
 
     const accessLevel = amount >= CONFIG.COURSE.PRICE_EARLY_BIRD ? 'full-course' : 'online-only'
 
+    // workshopLocation only makes sense on a full-course sale, and must be a
+    // known CONFIG.LOCATIONS slug — otherwise the seat board / enrollment
+    // counts would silently miss (or mis-bucket) manual sales.
+    const validLocations = new Set(Object.values(CONFIG.LOCATIONS).map((l) => l.slug))
+    const workshopLocation =
+      accessLevel === 'full-course' && typeof location === 'string' && validLocations.has(location)
+        ? location
+        : undefined
+
     const userId = await createUser({
       email,
       name,
       accessLevel: accessLevel as 'online-only' | 'full-course' | 'preview',
       signupSource: 'admin',
-      ...(location ? { workshopLocation: location } : {}),
+      ...(workshopLocation ? { workshopLocation } : {}),
     })
 
     const user = await findUserById(userId)

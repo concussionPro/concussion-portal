@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { getEnrollmentsByLocation, getEnrollmentCount } from '@/lib/users'
+import { getEnrollmentsByLocation, getEnrollmentCount, getEnrollmentsWithoutLocation } from '@/lib/users'
 import { CONFIG } from '@/lib/config'
 import { isAdminRequest } from '@/lib/require-admin'
 
@@ -52,11 +52,29 @@ export async function GET(request: NextRequest) {
       paidTotal += count
     }
 
-    // 2. Ready to upgrade (online-only users who completed modules)
+    // 1b. Full-course sales with NO workshop location — manual sales created
+    // before /admin/create-user had a city selector (plus any legacy rows).
+    // Surfaced so they aren't invisible on the seat board; not counted toward
+    // any city threshold.
+    const noLocationRegistrants = await getEnrollmentsWithoutLocation()
+    const paidNoLocation = {
+      count: noLocationRegistrants.length,
+      registrants: noLocationRegistrants,
+    }
+
+    // 2. Ready to upgrade (online-only users who completed modules).
+    // Excludes anyone who has since bought the full course — they're counted
+    // in section 1 (paidEnrollments); leaving them here double-counted the
+    // same person against "Paid".
     const { rows: rttRows } = await sql`
-      SELECT city, email, name, registered_at, completed_at
-      FROM workshop_ready_to_train
-      ORDER BY city, registered_at DESC
+      SELECT w.city, w.email, w.name, w.registered_at, w.completed_at
+      FROM workshop_ready_to_train w
+      WHERE NOT EXISTS (
+        SELECT 1 FROM users u
+        WHERE LOWER(u.email) = LOWER(w.email)
+          AND u.access_level = 'full-course'
+      )
+      ORDER BY w.city, w.registered_at DESC
     `
 
     const readyByCity = new Map<string, Array<{ email: string; name: string; registeredAt: string; completedAt: string }>>()
@@ -143,6 +161,7 @@ export async function GET(request: NextRequest) {
       success: true,
       paidEnrollments,
       paidTotal,
+      paidNoLocation,
       readyToUpgrade,
       readyTotal,
       interest,
