@@ -3,15 +3,15 @@
 Concussion Education Australia (CEA)
 Draft v1.0 · 2026
 
-This document recommends a target venue for each of the three papers, explains the rationale and submission requirements for each, and sets out a sequencing strategy. The strategy is deliberately **publish-around-HREC, authority-over-revenue**: none of the three papers requires an ethics-gated prospective trial, so all three can ship on the strength of the existing literature plus the described build/framework. A future *retrospective observational study* on de-identified routine-care data is flagged as the (low-burden) path to genuine outcome evidence and the only piece that needs an ethics pathway. The venue choices below are reordered around **fastest credible public output first** (a medRxiv preprint and a protocols.io deposit go live in days), with indexed-journal acceptance following.
+This document recommends a target venue for each of the three papers, explains the rationale and submission requirements for each, and sets out a sequencing strategy. The strategy is deliberately **publish-around-HREC, authority-over-revenue**: none of the three papers requires an ethics-gated prospective trial, so all three can ship on the strength of the existing literature plus the described build/framework. Any outcome/effectiveness study on routine-care data is **explicitly out of scope for this package** — it is gated on primary data and ethics, and per the CEA publications strategy it stays off the target list until it is real (see §5.4). The venue choices below are reordered around **fastest credible public output first** (a medRxiv preprint and a protocols.io deposit go live in days), with indexed-journal acceptance following.
 
 ---
 
 > ## ⚠️ CRITICAL — read before building the data capture
 >
-> **This is the single biggest risk in the whole plan, and it determines whether the sequencing above holds at all. Treat it as a hard dependency, not a footnote.**
+> **This does NOT gate the three-paper package (those papers use no patient data). It is a build/consent-design caution that governs `06-data-consent-copy.md` and any future outcome study — treat it as a build gate, not a footnote.**
 >
-> The "publish-around-HREC / negligible-risk" route is valid **only for genuinely RETROSPECTIVE analysis**: data that *arose from routine clinical care* and is analysed after the fact. That is the lawful basis for the low/negligible-risk review the future outcome study relies on.
+> The "publish-around-HREC / negligible-risk" route is valid **only for genuinely RETROSPECTIVE analysis**: data that *arose from routine clinical care* and is analysed after the fact. That is the lawful basis for the low/negligible-risk review any future (out-of-scope) outcome study would rely on.
 >
 > **The moment the app is built to collect data FOR THE PURPOSE OF research** — i.e. *prospectively, by design*, with research consent gathered up front via clinic or in-app terms — a reviewer or an HREC may classify it as **PROSPECTIVE research requiring FULL HREC review and prospective consent**. If that happens, you have walked straight into the ethics gate the entire publish-around-HREC strategy was built to avoid. The `06-data-consent-copy.md` in-app research opt-in and the clinic data-contribution agreement are exactly the design features that could trip this classification.
 >
@@ -25,7 +25,7 @@ This document recommends a target venue for each of the three papers, explains t
 > - **(a)** keep collection strictly for *clinical care* (no research-purpose design, no up-front research consent baked into the build) and analyse it retrospectively later; or
 > - **(b)** accept HREC review for a prospective registry and build to that standard from the start.
 >
-> The retrospective study described in §5 below remains the only ethics-gated piece **only if the data capture is not itself designed as prospective research.** Resolve this question first.
+> Any future outcome study (out of scope for this package — see §5.4) would qualify for low/negligible-risk review **only if the data capture is not itself designed as prospective research.** Resolve this question before building the in-app capture — independently of the three papers, which do not touch patient data at all.
 
 ---
 
@@ -81,11 +81,11 @@ This document recommends a target venue for each of the three papers, explains t
 
 **"A standardised clinician-supervised digital workflow for SSTAE after concussion."**
 
-**Speed strategy: deposit the protocol NOW, journal in parallel.** This is the highest-leverage output in the whole package — the step-by-step protocol is what clinics actually adopt, and adoption is what seeds the de-identified routine-care dataset the future outcome study depends on.
+**Speed strategy: deposit the protocol NOW, journal in parallel.** This is the highest-leverage output in the whole package — the step-by-step protocol is what clinics actually adopt, and adoption (authority + reach) is the payoff in its own right.
 
 ### Step 1 (do immediately): deposit on *protocols.io*
 
-- **Why:** protocols.io gives the standardised workflow a **living, versioned, citable (DOI) home within days**, with minimal gatekeeping. It is the **fastest real-world output of any of the three papers** and the highest-leverage one: it is the operational, step-by-step protocol clinics follow, it drives clinical adoption directly, and that adoption seeds the dataset. Free-to-low-cost and updatable as the workflow evolves.
+- **Why:** protocols.io gives the standardised workflow a **living, versioned, citable (DOI) home within days**, with minimal gatekeeping. It is the **fastest real-world output of any of the three papers** and the highest-leverage one: it is the operational, step-by-step protocol clinics follow, and it drives clinical adoption directly. Free-to-low-cost and updatable as the workflow evolves.
 - **Requirements:** Structured steps; versioning; DOI on publication; minimal gatekeeping. No ethics approval to *describe* a workflow built on existing evidence.
 
 ### Step 2 (in parallel): submit to *JMIR Research Protocols* (JMIR Res Protoc)
@@ -95,31 +95,31 @@ This document recommends a target venue for each of the three papers, explains t
 
 ### Reserve: *BMJ Open* or *Frontiers* (Methods/Protocol article)
 
-- **Why:** *BMJ Open* carries strong general-medical authority and publishes protocols, but leans toward protocols for *planned studies* and may expect a trial design; better suited later, to register the future retrospective study. *Frontiers* Methods articles are a viable home if JMIR declines.
+- **Why:** *BMJ Open* carries strong general-medical authority and publishes protocols, but leans toward protocols for *planned studies* and may expect a trial design — so it is a weaker fit for this framework paper. *Frontiers* Methods articles are a viable home if JMIR declines. (Neither is held for any outcome study — that is out of scope; see §5.4.)
 
-**Verdict:** Deposit the executable step-by-step on **protocols.io immediately** (fastest, highest-leverage, drives adoption + seeds the dataset) + submit the narrative framework to **JMIR Research Protocols** in parallel; reserve **BMJ Open** for the future retrospective-study protocol.
+**Verdict:** Deposit the executable step-by-step on **protocols.io immediately** (fastest, highest-leverage, drives adoption) + submit the narrative framework to **JMIR Research Protocols** in parallel; hold **BMJ Open / Frontiers** only as a fallback if JMIR declines. No outcome-study venue is part of this package (§5.4).
 
 ---
 
 ## 4. Supporting artefacts (not standalone papers)
 
-- **`05-evidence-backtest.md`** — best published as a **supplementary table** to Paper 1 (clinical review) and reused as the evidence appendix in Paper 3. Not a standalone submission.
-- **`06-data-consent-copy.md`** — operational copy, not a publication; governs the data flow that feeds the future retrospective study. Should be referenced (not reproduced) in Papers 2 and 3 as the consent/governance basis.
+- **`05-evidence-backtest.md`** — best published as a **supplementary table** to Paper 1 (clinical review) and reused as the evidence appendix in Paper 3. Not a standalone submission. (If a citable standalone artefact is ever wanted, deposit it on **Zenodo** as a versioned report for a real DOI — a genuine output, unlike a trial gated on primary data.)
+- **`06-data-consent-copy.md`** — operational copy, not a publication; governs the clinical-care data flow and consent. Should be referenced (not reproduced) in Papers 2 and 3 as the consent/governance basis. (It is *not* a research-capture design — keeping it clinical-care-only is what avoids tripping the prospective-research classification; see the ⚠️ CRITICAL note.)
 
 ---
 
 ## 5. Sequencing and strategy
 
-**Principle: publish-around-HREC, authority-over-revenue — fastest public output first.** All three papers ship without an ethics-gated trial. They establish CEA as the authority on *delivering* SSTAE, drive clinic adoption, and seed the dataset — and only the eventual outcome study touches an ethics committee, **provided the data capture is not itself designed as prospective research** (see the ⚠️ CRITICAL HREC warning at the top of this document — that question gates the build before any of this runs).
+**Principle: publish-around-HREC, authority-over-revenue — fastest public output first.** All three papers ship without an ethics-gated trial and make **no** effectiveness claim. They establish CEA as the authority on *delivering* SSTAE and drive clinic adoption. **No outcome/dataset study is part of this package** (see §5.4 — it is excluded as primary-data/ethics-gated vapor). The only ethics question that bites at build time is not to accidentally design the in-app data capture *as prospective research* (see the ⚠️ CRITICAL HREC note at the top — that is a build/consent-design caution, not a dependency of these three papers).
 
 **Recommended order, reordered around getting something public in *days* rather than months:**
 
 1. **Get two outputs public immediately (days, not months).** In parallel:
    - **Paper 1 → medRxiv preprint.** Public and citable within days; stakes the authority claim and supplies the citation base the other two lean on.
-   - **Paper 3 → protocols.io deposit.** The fastest *real-world* output and the highest-leverage one: it is what clinics actually adopt, and adoption seeds the dataset. Deposit the executable step-by-step first.
+   - **Paper 3 → protocols.io deposit.** The fastest *real-world* output and the highest-leverage one: it is what clinics actually adopt, and adoption is the goal in its own right. Deposit the executable step-by-step first.
 2. **Submit the indexed-journal versions in parallel.** Paper 1 → *Journal of Concussion* (fastest credible indexed venue, no code gating); Paper 3 → *JMIR Research Protocols*. These upgrade the preprint/deposit to peer-reviewed authority without holding up the public output.
 3. **Paper 2 (tools paper) → *JMIR mHealth and uHealth*.** A write-and-submit development paper; it benefits from citing Papers 1 and 3 as the clinical/workflow context. **Do not route this to JOSS** — the open-sourcing + open-review burden is a multi-week project at odds with speed and the IP position.
-4. **Future: retrospective observational study.** Once routine clinical use has accumulated de-identified data (serial HRt trajectories, adherence, time-to-clearance, flare rates), design a retrospective observational analysis. This is the *only* component needing an ethics pathway — typically a **low/negligible-risk review** for de-identified, already-collected data (governed by the consent and clinic-contribution terms in `06-data-consent-copy.md` and consistent with the Australian Privacy Principles) — **and that is true only if the data capture was for clinical care, not designed as prospective research.** Register/protocolise it (BMJ Open or JMIR Res Protoc) and report it (BJSM, *Journal of Concussion*, or JMIR). This is the path to a genuine effectiveness claim — *not* something any of the first three papers assert.
+4. **Out of scope for this package: any outcome/effectiveness study.** A retrospective (or prospective) observational analysis of accumulated routine-care data is **explicitly excluded from this publication package** — it is gated on primary data *and* an ethics pathway, i.e. exactly the "vapor" the CEA publications strategy keeps off the list until it is real. Do **not** carry it as a target, a deliverable, or a promised output in any paper, pitch, or the summary table. It is noted here only so the boundary is explicit: the three papers above make **no** effectiveness claim and do **not** depend on such a study existing. If and when de-identified routine-care data has genuinely accumulated *and* an ethics classification has been obtained, it can be scoped as its own separate effort — but nothing in this package is contingent on it.
 
 **Cross-cutting requirements to prepare once:**
 
@@ -139,4 +139,4 @@ This document recommends a target venue for each of the three papers, explains t
 | 1 — Clinical review | **medRxiv preprint** (days) | Journal of Concussion (OA); fallback Frontiers; skip BJSM unless enquiry hot | No | Preprint: no · Journal: yes |
 | 2 — Tools/methods | (none — write-and-submit) | **JMIR mHealth and uHealth** (NOT JOSS) | No | Yes |
 | 3 — Protocol/framework | **protocols.io deposit** (days) | JMIR Research Protocols | No | Protocols.io minimal · JMIR: yes |
-| Future — Retrospective study | — | BJSM / Journal of Concussion / JMIR | **Yes — only if capture was clinical-care, not prospective research** (see ⚠️ CRITICAL) | Varies |
+| ~~Future — outcome/retrospective study~~ | **OUT OF SCOPE for this package** — excluded as gated on primary data + ethics (see §5.4); not a target, deliverable, or promised output | — | Yes (if ever pursued) | — |
