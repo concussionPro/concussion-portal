@@ -21,8 +21,15 @@ import { PrimaryButton, SecondaryButton, SegmentBars, numFont } from './shell'
 // test runs well under ~20 min). Reaching this without a >=3-pt rise ends the
 // test as exhaustion-limited (no exercise-driven threshold).
 const MAX_STAGES = 20
-/** Each stage is one minute — the Buffalo protocol steps effort every minute. */
-const STAGE_SECONDS = 60
+/**
+ * Each stage is one minute — the Buffalo protocol steps effort every minute.
+ * Overridable ONLY for automated end-to-end testing via
+ * NEXT_PUBLIC_SST_STAGE_SECONDS (e.g. 3); production is always 60.
+ */
+const STAGE_SECONDS = (() => {
+  const raw = Number(process.env.NEXT_PUBLIC_SST_STAGE_SECONDS)
+  return Number.isFinite(raw) && raw >= 1 && raw <= 60 ? raw : 60
+})()
 
 // ── stage-indexed effort script (Buffalo convention, in plain words) ─────────
 
