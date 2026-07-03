@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Condition } from '@/lib/sst-trainer/protocol'
 import type { WelcomeSelection, TrainerMode } from '@/lib/sst-trainer/store'
-import { HR_SOURCES, type HrSource } from '@/components/sst-trainer/hr-source'
+import { HR_SOURCES, isNativeApp, type HrSource } from '@/components/sst-trainer/hr-source'
 import {
   bluetoothSupported,
   cameraSupported,
@@ -28,7 +28,13 @@ import { PrimaryButton } from '@/components/sst-trainer/shell'
  * Heart-rate sourcing is honest about the verified tier: VERIFIED = a live
  * Bluetooth heart-rate stream (watch broadcast mode or chest strap). The phone
  * camera is a resting spot-check only — it never tracks a live session. Manual
- * entry always works (and is the Apple Watch / Fitbit path today).
+ * entry always works (and is the Apple Watch / Fitbit path — those can't
+ * broadcast standard BLE HR on any platform).
+ *
+ * The Bluetooth path adapts to the runtime (isNativeApp()):
+ *  - native app (iOS OR Android): full BLE pairing, incl. iPhone → primary path.
+ *  - web Chrome / Edge (Android / desktop): Web Bluetooth → primary path.
+ *  - web iOS Safari (no Web Bluetooth): honestly points to our app or manual.
  */
 
 const SELF_GUIDED_ENABLED = process.env.NEXT_PUBLIC_SST_SELF_GUIDED === 'true'
@@ -98,9 +104,13 @@ export default function SstOnboarding({
   const [pendingId, setPendingId] = useState<string | null>(null)
   // capability detection runs on the client only (navigator isn't on the server).
   const [caps, setCaps] = useState({ bt: false, cam: false })
+  // running inside the native app shell? (Capacitor — real BLE on iPhone too).
+  // Client-only, same as caps: window.Capacitor isn't present during SSR.
+  const [native, setNative] = useState(false)
 
   useEffect(() => {
     setCaps({ bt: bluetoothSupported(), cam: cameraSupported() })
+    setNative(isNativeApp())
   }, [])
 
   // Validate the code (on blur / continue / prefill). Sequenced so a slow first
@@ -154,7 +164,7 @@ export default function SstOnboarding({
       if (!caps.bt) {
         onPair(d, null)
         setPairStatus('unavailable')
-        setPairError('Bluetooth pairing needs Chrome / Edge / Android — you can still train with manual entry.')
+        setPairError('Bluetooth pairing needs our iPhone/Android app, or Chrome / Edge on Android or desktop — you can still train with manual entry here.')
         return
       }
       setPendingId(d.id)
@@ -374,7 +384,7 @@ export default function SstOnboarding({
             const disabled = sourceDisabled(s)
             const subtitle =
               disabled && s.connect === 'bluetooth'
-                ? 'Needs Chrome, Edge or Android'
+                ? 'Needs our app, or Chrome / Edge on Android or desktop'
                 : disabled && s.connect === 'camera'
                   ? 'Needs camera access (HTTPS)'
                   : s.method
@@ -474,12 +484,17 @@ export default function SstOnboarding({
                 : 'You’ll type the heart rate in each minute of the test and during sessions — every screen works this way too.'}
           </span>
         )}
-        {!caps.bt && (
+        {native ? (
           <span className="text-[10px] leading-snug text-[#9bafb0]">
-            Live verified tracking needs a Bluetooth heart-rate broadcast (your watch or a strap) via
-            our Android/desktop app today — iPhone app coming. You can still train with manual entry.
+            You&rsquo;re in the app — your watch or strap pairs directly over Bluetooth (iPhone
+            included). Turn on its heart-rate broadcast, tap the top option and pick your device.
           </span>
-        )}
+        ) : !caps.bt ? (
+          <span className="text-[10px] leading-snug text-[#9bafb0]">
+            Live Bluetooth tracking runs in our iPhone or Android app, or in Chrome / Edge on
+            Android or desktop. On this browser you can still train with manual entry.
+          </span>
+        ) : null}
       </div>
 
       {/* De-identified data consent — opt-in, withdrawable. QA / service-quality

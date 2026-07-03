@@ -106,32 +106,68 @@ interface BluetoothApi {
 // app carries NO native dependency — the plugin exists only inside the native
 // shell (see sst-native/). One HR code path serves every wearable on iOS,
 // Android and the web.
-interface NativeBleListener { remove(): Promise<void> }
+// Shapes mirror @capacitor-community/bluetooth-le@6.x's *native* plugin
+// contract (BluetoothLePlugin in dist/esm/definitions.d.ts) — the methods the
+// BleClient JS wrapper calls on `BluetoothLe.<method>` — NOT the wrapper's own
+// (deviceId, service, characteristic, callback) signatures. We call the native
+// plugin raw so the web bundle never imports the plugin.
+interface NativeBleListener { remove(): Promise<void> } // = PluginListenerHandle
 interface NativeBlePlugin {
-  initialize(opts?: Record<string, unknown>): Promise<void>
-  requestDevice(opts: { services?: string[] }): Promise<{ deviceId: string; name?: string }>
-  connect(opts: { deviceId: string }): Promise<void>
+  initialize(opts?: { androidNeverForLocation?: boolean }): Promise<void>
+  // requestDevice shows the OS device picker (CoreBluetooth on iOS / a system
+  // dialog on Android) filtered to the given service UUIDs, and resolves with
+  // the chosen device. This is what actually surfaces a wearable chooser.
+  requestDevice(opts?: { services?: string[]; optionalServices?: string[] }): Promise<{ deviceId: string; name?: string }>
+  connect(opts: { deviceId: string; timeout?: number }): Promise<void>
   disconnect(opts: { deviceId: string }): Promise<void>
   startNotifications(opts: { deviceId: string; service: string; characteristic: string }): Promise<void>
   stopNotifications(opts: { deviceId: string; service: string; characteristic: string }): Promise<void>
-  addListener(event: string, cb: (result: { value: string }) => void): Promise<NativeBleListener>
+  // On native, notification events carry `value` as a HEX STRING (e.g.
+  // "16 00 4b"), not base64 — the wrapper decodes it via hexStringToDataView.
+  // `ReadResult.value` is optional (Data = DataView | string), so guard it.
+  addListener(event: string, cb: (result: { value?: string }) => void): Promise<NativeBleListener>
 }
 interface CapacitorGlobal {
   isNativePlatform?(): boolean
   Plugins?: { BluetoothLe?: NativeBlePlugin }
 }
 
-// Standard Bluetooth SIG Heart Rate profile — full 128-bit UUIDs (the native
-// plugin wants full form; the web layer accepts the 'heart_rate' alias).
+// Standard Bluetooth SIG Heart Rate profile — full 128-bit UUIDs, LOWERCASE.
+// The native plugin's parseUUID() lowercases + demands full 128-bit form, and
+// it builds the notification event key from those parsed UUIDs — so these
+// constants must be exactly the lowercased 128-bit strings to make our raw
+// event name match what the plugin emits. (The web layer accepts the
+// 'heart_rate' alias instead.)
 const HR_SERVICE_UUID = '0000180d-0000-1000-8000-00805f9b34fb'
 const HR_MEASUREMENT_UUID = '00002a37-0000-1000-8000-00805f9b34fb'
 
-/** base64 (native characteristic value) → DataView for parseHeartRate. */
-function base64ToDataView(b64: string): DataView {
-  const bin = atob(b64)
-  const bytes = new Uint8Array(bin.length)
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-  return new DataView(bytes.buffer)
+/**
+ * Native characteristic value → DataView for parseHeartRate.
+ *
+ * The @capacitor-community/bluetooth-le plugin delivers notification values on
+ * native (iOS/Android) as a HEX STRING (e.g. "16 00 4b" or "16004b"), NOT
+ * base64. Its BleClient wrapper decodes this with hexStringToDataView(); we
+ * replicate that byte-for-byte here (ignore any char outside [0-9a-fA-F], pair
+ * nibbles high-then-low) so our raw parse matches the wrapper exactly.
+ */
+function hexStringToDataView(hex: string): DataView {
+  const bytes: number[] = []
+  let hi = -1
+  for (let i = 0; i < hex.length; i++) {
+    const c = hex.charCodeAt(i)
+    let nibble = -1
+    if (c > 47 && c < 58) nibble = c - 48 // '0'-'9'
+    else if (c > 64 && c < 71) nibble = c - 55 // 'A'-'F'
+    else if (c > 96 && c < 103) nibble = c - 87 // 'a'-'f'
+    else continue // skip spaces / any non-hex char, like the plugin does
+    if (hi < 0) {
+      hi = nibble
+    } else {
+      bytes.push((hi << 4) | nibble)
+      hi = -1
+    }
+  }
+  return new DataView(Uint8Array.from(bytes).buffer)
 }
 
 /**
@@ -149,10 +185,14 @@ async function connectNativeBleHr(plugin: NativeBlePlugin): Promise<LiveHrConnec
   await plugin.connect({ deviceId: device.deviceId })
 
   const listeners = new Set<(bpm: number) => void>()
+  // Event-name format is fixed by the plugin: `notification|<deviceId>|<service>|<characteristic>`
+  // where service/characteristic are the LOWERCASED full 128-bit UUIDs (our
+  // constants already are). The listener must be registered BEFORE
+  // startNotifications so no early frame is missed.
   const notifyEvent = `notification|${device.deviceId}|${HR_SERVICE_UUID}|${HR_MEASUREMENT_UUID}`
   const handle = await plugin.addListener(notifyEvent, (result) => {
     if (!result?.value) return
-    const bpm = parseHeartRate(base64ToDataView(result.value))
+    const bpm = parseHeartRate(hexStringToDataView(result.value))
     if (bpm != null) listeners.forEach((cb) => cb(bpm))
   })
   await plugin.startNotifications({

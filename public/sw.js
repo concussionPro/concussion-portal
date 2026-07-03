@@ -10,10 +10,22 @@
  *    (Web Bluetooth) and clinic syncs need a live connection, and we never want
  *    a stale cached API response serving a recovering patient.
  *
+ * NATIVE SHELL BYPASS: inside the Capacitor app (iOS / Android) the same origin
+ * is loaded via server.url, so this SW would otherwise register and intercept.
+ * That's harmful there — a cached shell can go stale against the live build and
+ * clash with the native bridge injection. The native app boots
+ * `/sst-trainer?source=app`, so the moment we see that marker we flip to a pure
+ * passthrough (no caching, no shell interception) for the life of the worker,
+ * and remember it across SW restarts via a cache sentinel. Plain web installs
+ * never carry `source=app`, so they keep full PWA/offline behaviour.
+ *
  * Bump CACHE on any strategy change so old caches are dropped at activate.
  */
 const CACHE = 'sst-v2'
 const APP_SHELL = '/sst-trainer'
+// Cache sentinel + in-memory flag marking this a native (Capacitor) shell.
+const NATIVE_FLAG = '/__sst_native_shell__'
+let nativeShell = false
 const PRECACHE = [
   APP_SHELL,
   '/sst.webmanifest',
@@ -40,6 +52,13 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      // Rehydrate the native-shell flag: the SW is killed/restarted often and
+      // loses in-memory state, so re-read the persisted sentinel on activate.
+      .then(() => caches.open(CACHE).then((cache) => cache.match(NATIVE_FLAG)))
+      .then((hit) => {
+        if (hit) nativeShell = true
+      })
+      .catch(() => {})
       // Take control of open clients so the install prompt resolves promptly.
       .then(() => self.clients.claim()),
   )
@@ -51,6 +70,17 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url)
   if (url.origin !== self.location.origin) return
+
+  // Native (Capacitor) shell → total passthrough. The app boots
+  // /sst-trainer?source=app; the first request carrying that marker flips the
+  // worker into no-op mode (and persists a sentinel so it survives restarts),
+  // so the WebView always gets the fresh remote build + native bridge and this
+  // SW never caches or serves a shell there.
+  if (url.searchParams.get('source') === 'app') {
+    nativeShell = true
+    caches.open(CACHE).then((cache) => cache.put(NATIVE_FLAG, new Response('1'))).catch(() => {})
+  }
+  if (nativeShell) return // default browser handling — no caching, no interception
 
   // Navigations into the app: network-first (always prefer the live build),
   // falling back to the cached shell when offline.
