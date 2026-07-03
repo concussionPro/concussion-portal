@@ -58,6 +58,9 @@ const REFERENCES = [
   'Haider MN, Leddy JJ, Willer BS, et al. Exercise for Sport-Related Concussion and Persistent Postconcussive Symptoms (review). Sports Health, 2021.',
   'Janssen A, Pope R, Rando N. Clinical application of the Buffalo Concussion Treadmill Test and Bike Test: a systematic review, 2022.',
   'Leddy JJ, et al. A preliminary study of sub-symptom threshold exercise training for refractory post-concussion syndrome. Clinical Journal of Sport Medicine, 2010.',
+  'Patricios JS, Schneider KJ, Dvorak J, et al. Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport — Amsterdam, October 2022. British Journal of Sports Medicine, 2023.',
+  'Chizuk HM, et al. Evaluating User Experience and Satisfaction in a Concussion Rehabilitation App (Rhea): a Usability Study. JMIR Formative Research, 2025.',
+  'Hutchison MG, Di Battista AP, Loenhart MM. A Continuous Aerobic Resistance Exercise (CARE) Protocol for Concussion Rehabilitation Delivered Remotely via a Mobile App: a Feasibility Study. JMIR Formative Research, 2023.',
 ]
 
 export default function EvidencePage() {
@@ -144,6 +147,61 @@ export default function EvidencePage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Measured vs estimated */}
+      <section className="px-6 pb-16">
+        <div className="mx-auto max-w-[860px]">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-9">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#3c7a1f]/25 bg-[#eef5e8] px-3 py-1 text-[11.5px] font-bold tracking-[0.02em] text-[#3c7a1f]">
+              Measured vs estimated
+            </span>
+            <h2 className="mt-4 text-[22px] font-bold tracking-[-0.01em] text-[#16243f]">
+              Where the dose comes from
+            </h2>
+            <p className="mt-4 text-[15px] leading-relaxed text-slate-600">
+              The whole method turns on one number: the heart rate just below which symptoms intensify. It
+              is individual, and how a tool obtains it is what separates them. SST Trainer measures it with
+              a symptom-limited graded exertion test — the Buffalo test — for each patient. By contrast, the
+              leading commercial concussion-rehab app, Rhea, prescribes from age-predicted maximum heart
+              rate: the published CARE protocol it delivers targeted 55–65% of a fixed 220 − age, with no
+              graded test to individualise the dose. An age formula can miss a given patient&rsquo;s
+              measured threshold by 10 bpm or more.
+            </p>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-5">
+                <p className="text-[12px] font-bold tracking-[0.06em] text-slate-500">
+                  ESTIMATED · AGE FORMULA
+                </p>
+                <p className="mt-2 text-[14px] leading-relaxed text-slate-600">
+                  Dose set as a fixed share of 220 − age — the same formula for every patient of a given
+                  age, with no graded test (Chizuk et al. 2025; Hutchison et al. 2023).
+                </p>
+              </div>
+              <div className="rounded-xl border border-[#3c7a1f]/20 bg-[#eef5e8] p-5">
+                <p className="text-[12px] font-bold tracking-[0.06em] text-[#3c7a1f]">
+                  MEASURED · GRADED TEST
+                </p>
+                <p className="mt-2 text-[14px] leading-relaxed text-slate-700">
+                  Dose set just below the patient&rsquo;s own measured heart-rate threshold, re-measured as
+                  they recover (Leddy &amp; Willer 2013; Leddy et al. 2019).
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-6 text-[13.5px] leading-relaxed text-slate-500">
+              Two safeguards sit on top of the measured band: progression is verification-gated — the band
+              advances only on live, verified wearable sessions and is capped at the measured threshold, so
+              it never ratchets up on an unverified number — and the clinician reads a serial trajectory of
+              measured thresholds, not a self-reported symptom log. To our knowledge, no other commercial
+              concussion app combines a measured heart-rate threshold, verification-gated training, and a
+              serial measured-HRt clinician trajectory. The sub-symptom-threshold protocol itself is
+              endorsed by the 6th International Consensus on Concussion in Sport and supported by
+              randomised-trial evidence (Patricios et al. 2023; Leddy et al. 2019).
+            </p>
+          </div>
         </div>
       </section>
 

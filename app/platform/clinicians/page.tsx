@@ -63,6 +63,21 @@ const VALUES: { icon: string; title: string; body: string }[] = [
   },
 ]
 
+const WEDGE: { title: string; body: string }[] = [
+  {
+    title: 'A measured, individualised band',
+    body: 'The band is set from your patient’s own BCTT heart-rate threshold — not an age-predicted maximum applied to everyone of their age.',
+  },
+  {
+    title: 'Verification-gated progression',
+    body: 'The dose advances only on live, verified wearable sessions and stays capped at the measured threshold — it can’t ratchet up on an unverified number.',
+  },
+  {
+    title: 'A serial measured-HRt curve',
+    body: 'You read a trajectory of measured thresholds over time, each tagged with how it was captured — not a self-reported symptom log.',
+  },
+]
+
 const DASH = [
   'Live in-session monitoring',
   'Serial measured-HRt trajectory, per-point provenance',
@@ -158,6 +173,52 @@ export default function CliniciansPage() {
           ))}
         </div>
       </header>
+
+      {/* ── Measured, not estimated (the wedge) ────────────────────────── */}
+      <section className="mx-auto max-w-[1180px] px-8 pb-11 pt-1.5">
+        <div className="rounded-[22px] border border-slate-200 bg-white px-8 py-9 sm:px-10">
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-[13px] py-[7px] text-[12px] font-bold"
+            style={{ background: '#e6f3da', color: PLATFORM.green }}
+          >
+            Measured, not estimated
+          </span>
+          <h2
+            className="mb-2 mt-[14px] font-extrabold tracking-[-0.02em]"
+            style={{ fontSize: 'clamp(22px, 2.8vw, 32px)', lineHeight: 1.1 }}
+          >
+            A measured band, not an age estimate.
+          </h2>
+          <p className="m-0 max-w-[640px] text-[14px] font-normal leading-[1.55] text-slate-600">
+            Sub-symptom aerobic dosing only helps if the band sits just below the individual&apos;s true
+            symptom threshold — and that threshold varies patient to patient. SST Trainer derives it from
+            the patient&apos;s own graded exertion test (the Buffalo Concussion Treadmill/Bike Test), then
+            holds them to a band beneath it. The leading commercial concussion-rehab app, Rhea, instead
+            estimates the dose from age-predicted maximum heart rate — a fixed share of 220 − age — with no
+            graded test to individualise it, which can sit 10+ bpm off a given patient&apos;s measured
+            threshold.
+          </p>
+
+          <div className="mt-6 grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+            {WEDGE.map((w) => (
+              <div key={w.title} className="rounded-[16px] border border-slate-200 bg-slate-50 p-5">
+                <h3 className="m-0 text-[15px] font-extrabold leading-[1.2] tracking-[-0.01em]">
+                  {w.title}
+                </h3>
+                <p className="mt-2 text-[13px] font-normal leading-[1.5] text-slate-500">{w.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-6 max-w-[760px] text-[12.5px] leading-[1.5] text-slate-500">
+            Leddy &amp; Willer, Current Sports Medicine Reports 2013 (graded exercise testing / BCTT);
+            Leddy et al., JAMA Pediatrics 2019 (measured-threshold randomised trial); Chizuk et al., JMIR
+            Formative Research 2025 (Rhea&apos;s age-predicted prescription). To our knowledge, no other
+            commercial concussion app combines a measured heart-rate threshold, verification-gated
+            progression, and a serial measured-HRt trajectory for clinician review.
+          </p>
+        </div>
+      </section>
 
       {/* ── Why clinics use it ─────────────────────────────────────────── */}
       <section className="mx-auto max-w-[1180px] px-8 pb-11 pt-1.5">

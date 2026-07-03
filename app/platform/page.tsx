@@ -316,6 +316,75 @@ export default function PlatformHome() {
         <DeviceMockupCard />
       </header>
 
+      {/* Measured, not estimated — the wedge */}
+      <section className="mx-auto max-w-[1180px] px-8 pb-14 pt-2">
+        <div className="rounded-[22px] border border-[#e2ecec] bg-white px-9 py-9">
+          <div className="mb-7 flex max-w-[740px] flex-col gap-2.5">
+            <span className="text-[12px] font-bold uppercase leading-none tracking-[0.14em] text-[#3c7a1f]">
+              Measured, not estimated
+            </span>
+            <h2
+              className="m-0 font-extrabold tracking-[-0.02em]"
+              style={{ fontSize: 'clamp(24px, 3vw, 34px)', lineHeight: 1.1 }}
+            >
+              The dose is a heart-rate band. We measure where it sits.
+            </h2>
+            <p className="m-0 text-[15px] font-normal leading-[1.55] text-[#42565a]">
+              Sub-symptom aerobic recovery works by training in a heart-rate band set just below the point
+              where symptoms intensify. That threshold is individual to you — so SST Trainer measures it
+              with a symptom-limited graded exertion test (the Buffalo test), rather than estimating it
+              from your age.
+            </p>
+          </div>
+
+          <div
+            className="grid gap-4"
+            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}
+          >
+            <div className="rounded-[16px] border border-[#e6d9d7] bg-[#fbf4f3] p-6">
+              <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#b2564c]">
+                Estimated from age
+              </span>
+              <p className="mt-3 text-[14px] leading-[1.55] text-[#5d7174]">
+                The leading commercial concussion-rehab app, Rhea, prescribes the dose from an age formula
+                — a fixed share of 220 − age — with no graded test to individualise it. An age estimate can
+                sit 10+ bpm off a given person&apos;s true threshold.
+              </p>
+              <p className="mt-3 text-[11.5px] leading-[1.4] text-[#9bafb0]">
+                Chizuk et al., JMIR Formative Research 2025; Hutchison et al., JMIR Formative Research 2023
+              </p>
+            </div>
+            <div className="rounded-[16px] border border-[#d8ecc4] bg-[#f2f8eb] p-6">
+              <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#3c7a1f]">
+                Measured from a graded test
+              </span>
+              <p className="mt-3 text-[14px] leading-[1.55] text-[#3b4f52]">
+                SST Trainer finds your own heart-rate threshold on the Buffalo test, then sets the band
+                just below it. Only live, verified wearable sessions advance the dose — the band never
+                ratchets up on an unverified number, and is capped at your measured threshold.
+              </p>
+              <p className="mt-3 text-[11.5px] leading-[1.4] text-[#7c9598]">
+                Leddy et al., JAMA Pediatrics 2019; Leddy &amp; Willer, Current Sports Medicine Reports 2013
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-6 max-w-[880px] text-[13px] leading-[1.55] text-[#5d7174]">
+            The sub-symptom-threshold protocol SST Trainer delivers is endorsed by international consensus
+            and supported by randomised-trial evidence (Leddy et al., JAMA Pediatrics 2019; Patricios et
+            al., British Journal of Sports Medicine 2023). To our knowledge, no other commercial concussion
+            app combines a measured heart-rate threshold, verification-gated training, and a serial
+            measured-HRt trajectory your clinician reviews.{' '}
+            <Link
+              href="/platform/evidence"
+              className="font-semibold text-[#3c7a1f] underline underline-offset-2"
+            >
+              See the sources →
+            </Link>
+          </p>
+        </div>
+      </section>
+
       {/* Compatible devices (navy) + nav cards */}
       <section className="mx-auto max-w-[1180px] px-8 pb-14 pt-2">
         <div className="rounded-[22px] px-9 py-8" style={{ background: PLATFORM.navy }}>
