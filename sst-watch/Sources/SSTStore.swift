@@ -30,6 +30,11 @@ struct SSTState: Codable {
     var clinicName: String?
     var patientName: String?
 
+    /// Single data agreement accepted (one screen, one button — covers HR
+    /// reading, symptom entries, on-watch storage and clinic sync). Optional so
+    /// states persisted before this field decode fine.
+    var consentedAt: Date?
+
     // Clinical state.
     var prescription: Prescription?
     var sessions: [SessionLog]
@@ -50,6 +55,7 @@ struct SSTState: Codable {
             clinicCode: nil,
             clinicName: nil,
             patientName: nil,
+            consentedAt: nil,
             prescription: nil,
             sessions: [],
             verifiedSessionCount: 0,
@@ -98,6 +104,11 @@ struct SSTState: Codable {
 
     mutating func markCleared(at date: Date = Date()) {
         redFlagClearedAt = date
+        save()
+    }
+
+    mutating func markConsented(at date: Date = Date()) {
+        consentedAt = date
         save()
     }
 

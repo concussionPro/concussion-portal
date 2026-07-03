@@ -23,6 +23,7 @@ final class SSTFlow: ObservableObject {
 
     // Where the app is right now.
     enum Step: Equatable {
+        case consent
         case onboarding
         case symptomProfile
         case readiness
@@ -50,17 +51,30 @@ final class SSTFlow: ObservableObject {
     @Published var lastDecision: ProgressionDecision?
 
     init() {
-        state = SSTState.load()
-        step = (state.prescription != nil) ? .home : .onboarding
+        let loaded = SSTState.load()
+        state = loaded
+        if loaded.prescription != nil {
+            step = .home
+        } else {
+            step = (loaded.consentedAt == nil) ? .consent : .onboarding
+        }
     }
 
     // MARK: - Launch
 
     func onLaunch() {
-        Task {
-            await workout.requestAuthorization()
-            await SSTSync.flushPending()
-        }
+        Task { await SSTSync.flushPending() }
+    }
+
+    // MARK: - Consent (single agreement, no toggle stack)
+
+    /// One agreement covers everything the app touches: heart rate during
+    /// sessions, symptom entries, on-watch storage, clinic sync when linked.
+    /// The OS Health prompt follows immediately so it lands with context.
+    func acceptConsent() {
+        state.markConsented()
+        Task { await workout.requestAuthorization() }
+        step = .onboarding
     }
 
     // MARK: - Navigation helpers
@@ -82,9 +96,11 @@ final class SSTFlow: ObservableObject {
 
     // MARK: - Onboarding
 
-    func completeOnboarding(code: String, clinicName: String?, patientName: String) {
+    /// A clinic code is optional: without one the app runs fully standalone —
+    /// syncs no-op on the empty code (nothing queues) until a clinic is linked.
+    func completeOnboarding(code: String?, clinicName: String?, patientName: String) {
         state.setClinic(code: code, name: clinicName)
-        state.patientName = patientName
+        state.patientName = patientName.isEmpty ? nil : patientName
         state.save()
         step = .symptomProfile
     }
@@ -286,6 +302,8 @@ struct SSTRootView: View {
     var body: some View {
         Group {
             switch flow.step {
+            case .consent:
+                ConsentView()
             case .onboarding:
                 OnboardingView()
             case .symptomProfile:

@@ -4,7 +4,49 @@ import SwiftUI
 // Watch text entry is limited, so the code field leans on scribble/dictation
 // with an explicit submit and a live validation result.
 
-// MARK: - Clinic code + patient name
+// MARK: - Data agreement (single screen, one button — never a toggle stack)
+
+struct ConsentView: View {
+    @EnvironmentObject var flow: SSTFlow
+
+    private static let points: [(icon: String, text: String)] = [
+        ("heart.fill", "Reads your heart rate from this watch during tests and training"),
+        ("waveform.path.ecg", "Keeps the symptom scores you enter"),
+        ("applewatch", "Everything is stored on this watch — no account"),
+        ("building.2", "Shared with your clinic only if you link one"),
+    ]
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                ScreenTitle(text: "Your data", subtitle: "One agreement, in plain terms")
+
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Self.points, id: \.text) { p in
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: p.icon)
+                                .foregroundStyle(.blue)
+                                .font(.caption)
+                                .frame(width: 16)
+                            Text(p.text).font(.caption2)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                PrimaryButton(title: "Agree & continue", systemImage: "checkmark") {
+                    flow.acceptConsent()
+                }
+                Text("The watch will ask for Health access next.")
+                    .font(.caption2).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 4)
+        }
+    }
+}
+
+// MARK: - Clinic code + patient name (optional — self-guided needs neither)
 
 struct OnboardingView: View {
     @EnvironmentObject var flow: SSTFlow
@@ -49,6 +91,17 @@ struct OnboardingView: View {
                         validate()
                     }
                     .disabled(code.trimmingCharacters(in: .whitespaces).isEmpty || checking)
+
+                    // Self-guided: the whole app works without a clinic —
+                    // nothing syncs until a code is linked.
+                    Button {
+                        flow.completeOnboarding(code: nil, clinicName: nil, patientName: name.trimmingCharacters(in: .whitespaces))
+                    } label: {
+                        Label("Self-guided — no clinic", systemImage: "person.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(checking)
                 }
 
                 if validated == true {
