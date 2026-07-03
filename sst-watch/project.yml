@@ -26,6 +26,8 @@ targets:
       path: Sources/Info.plist
       properties:
         WKApplication: true
+        # Standalone watch app, no iPhone companion — required for install.
+        WKWatchOnly: true
         NSHealthShareUsageDescription: "SST Trainer reads your heart rate during the graded test and training sessions to pace your recovery to your measured threshold."
         NSHealthUpdateUsageDescription: "SST Trainer records your training sessions as workouts."
         WKBackgroundModes:

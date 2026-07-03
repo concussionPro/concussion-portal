@@ -36,6 +36,9 @@ struct SSTState: Codable {
     var verifiedSessionCount: Int
     var lastTestAt: Date?
     var lastRedFlagAt: Date?
+    /// Patient confirmed a clinician has reviewed + cleared them since the last
+    /// red flag. Optional so states persisted before this field decode fine.
+    var redFlagClearedAt: Date?
 
     // Failed-sync retry queue.
     var pendingSessions: [PendingSync]
@@ -52,6 +55,7 @@ struct SSTState: Codable {
             verifiedSessionCount: 0,
             lastTestAt: nil,
             lastRedFlagAt: nil,
+            redFlagClearedAt: nil,
             pendingSessions: []
         )
     }
@@ -90,6 +94,19 @@ struct SSTState: Codable {
     mutating func markRedFlag(at date: Date = Date()) {
         lastRedFlagAt = date
         save()
+    }
+
+    mutating func markCleared(at date: Date = Date()) {
+        redFlagClearedAt = date
+        save()
+    }
+
+    /// A red flag locks testing AND training until the patient confirms a
+    /// clinician has cleared them (mirrors the web red-flag lock).
+    var redFlagLocked: Bool {
+        guard let flagged = lastRedFlagAt else { return false }
+        guard let cleared = redFlagClearedAt else { return true }
+        return cleared < flagged
     }
 }
 

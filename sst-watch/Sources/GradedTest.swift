@@ -16,6 +16,9 @@ struct GradedTestView: View {
 
     @State private var stages: [TestStage] = []
     @State private var remaining = 60
+    // Wall-clock anchor for the stage countdown — ticks can be throttled
+    // (wrist-down), so `remaining` derives from elapsed time, never tick counts.
+    @State private var stageStartedAt = Date()
     @State private var symptom = 0
     @State private var rpe = 12
     @State private var useRPE = false
@@ -82,14 +85,25 @@ struct GradedTestView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(workout.bpm == nil && stages.isEmpty)
+
+                // Red-flag stop: severe/warning symptoms end the test as a
+                // red-flag termination — NEVER as exhaustion (which would sync
+                // a false clearance signal to the clinic).
+                Button(role: .destructive) { finish(redFlag: true) } label: {
+                    Label("Warning sign — stop", systemImage: "exclamationmark.triangle.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(.red)
             }
             .padding(.horizontal, 4)
         }
+        .onAppear { stageStartedAt = Date() }
         .onReceive(ticker) { _ in
-            if remaining > 0 {
-                remaining -= 1
-                if remaining == 0 { Haptics.play(.stop) }   // stage end
-            }
+            let elapsed = Int(Date().timeIntervalSince(stageStartedAt))
+            let next = max(0, stageSeconds - elapsed)
+            if next == 0, remaining > 0 { Haptics.play(.stop) }   // stage end
+            remaining = next
         }
     }
 
@@ -125,11 +139,13 @@ struct GradedTestView: View {
         if spike || stages.count >= maxStages {
             finish()
         } else {
-            remaining = stageSeconds   // next stage; carry the symptom score forward
+            // Next stage; carry the symptom score forward.
+            stageStartedAt = Date()
+            remaining = stageSeconds
         }
     }
 
-    private func finish() {
-        flow.completeGradedTest(stages: stages)
+    private func finish(redFlag: Bool = false) {
+        flow.completeGradedTest(stages: stages, redFlagStop: redFlag)
     }
 }

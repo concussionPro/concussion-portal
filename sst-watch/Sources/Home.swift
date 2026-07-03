@@ -13,7 +13,9 @@ struct HomeView: View {
             VStack(spacing: 12) {
                 header
 
-                if let p = rx {
+                if flow.state.redFlagLocked {
+                    redFlagLockCard
+                } else if let p = rx {
                     bandCard(p)
                     PrimaryButton(title: "Start session", systemImage: "play.fill") {
                         flow.beginTraining()
@@ -65,6 +67,22 @@ struct HomeView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    /// Red-flag lock: testing and training stay blocked until the patient
+    /// confirms a clinician has reviewed + cleared them (mirrors the web lock).
+    private var redFlagLockCard: some View {
+        VStack(spacing: 10) {
+            MessageCard(
+                icon: "exclamationmark.triangle.fill",
+                iconColor: .red,
+                title: "Paused for review",
+                body: "A warning sign came up. Training and testing stay paused until a clinician has reviewed you and cleared you to resume."
+            )
+            PrimaryButton(title: "A clinician has cleared me", systemImage: "checkmark.seal", tint: .green) {
+                flow.confirmClearance()
+            }
+        }
     }
 
     @ViewBuilder

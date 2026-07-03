@@ -69,9 +69,15 @@ final class SSTFlow: ObservableObject {
     func goProgress() { step = .progress }
 
     /// Start (or re-start) the graded-test funnel from Home. If no symptoms are
-    /// selected yet, collect them first.
+    /// selected yet, collect them first. Blocked while red-flag locked.
     func startTestFlow() {
+        guard !state.redFlagLocked else { return }
         step = selectedSymptoms.isEmpty ? .symptomProfile : .readiness
+    }
+
+    /// Patient confirms a clinician has reviewed + cleared them → unlock.
+    func confirmClearance() {
+        state.markCleared()
     }
 
     // MARK: - Onboarding
@@ -107,13 +113,17 @@ final class SSTFlow: ObservableObject {
     }
 
     /// Graded test finished — compute the threshold, sync it, show the result.
-    func completeGradedTest(stages: [TestStage]) {
+    /// An invalid test (no stages logged) neither syncs nor starts the 48h
+    /// re-test clock — an aborted 10-second attempt must not lock out a real one.
+    func completeGradedTest(stages: [TestStage], redFlagStop: Bool = false) {
         workout.stop()
-        let result = SSTProtocol.detectHRt(stages: stages, restingSymptom: restingSymptom)
+        let result = SSTProtocol.detectHRt(stages: stages, restingSymptom: restingSymptom, redFlagStop: redFlagStop)
         lastResult = result
-        state.markTested()
+        if result.interpretation != .invalid {
+            state.markTested()
+            Task { await postThreshold(result: result, stages: stages, redFlagStop: redFlagStop) }
+        }
         if result.interpretation == .redFlag { state.markRedFlag() }
-        Task { await postThreshold(result: result, stages: stages) }
         step = .result
     }
 
@@ -137,6 +147,7 @@ final class SSTFlow: ObservableObject {
     }
 
     var canRetest: Bool {
+        guard !state.redFlagLocked else { return false }
         guard let h = hoursSinceLastTest else { return true }
         return h >= Double(SSTProtocol.retestMinHours)
     }
@@ -154,6 +165,7 @@ final class SSTFlow: ObservableObject {
     // MARK: - Training
 
     func beginTraining() {
+        guard !state.redFlagLocked else { return }
         Task { try? await workout.start() }
         step = .training
     }
@@ -189,13 +201,16 @@ final class SSTFlow: ObservableObject {
 
     // MARK: - Sync payloads
 
-    private func postThreshold(result: ThresholdResult, stages: [TestStage]) async {
+    private func postThreshold(result: ThresholdResult, stages: [TestStage], redFlagStop: Bool = false) async {
         // No raw Optionals in a JSONSerialization payload — unwrap or omit. The
         // hrtBpm/bandLow/bandHigh keys are lifted to top-level columns by
         // postSession, so use those exact names.
+        let termination = redFlagStop ? "red-flag"
+            : (result.interpretation == .physiologic ? "symptom-limited" : "exhaustion-limited")
         var payload: [String: Any] = [
             "eventType": "threshold",
             "interpretation": result.interpretation.rawValue,
+            "termination": termination,
             "restingSymptom": restingSymptom,
             "hrSource": HRSource.liveWatch.rawValue,   // "watch"
             "hrVerified": true,

@@ -27,11 +27,11 @@ struct ResultView: View {
                         title: "Stop for now",
                         body: "The test flagged something that needs a clinician. Please seek medical review before training."
                     )
-                case .none:
+                case .invalid, .none:
                     MessageCard(
                         icon: "questionmark.circle",
                         title: "No result",
-                        body: "Let's try the test again."
+                        body: "Not enough of the test was recorded to read anything from it. Let's try again when you're ready."
                     )
                 }
 

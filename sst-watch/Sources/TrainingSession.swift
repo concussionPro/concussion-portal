@@ -15,10 +15,13 @@ struct TrainingSessionView: View {
 
     @State private var phase: Phase = .preSymptom
 
-    // Live-session state.
+    // Live-session state. Elapsed derives from the wall clock, never tick
+    // counts — throttled ticks (wrist-down) must not undercount the session
+    // and block legitimate advances.
     @State private var total = SSTProtocol.prescribedMinutes * 60
     @State private var remaining = SSTProtocol.prescribedMinutes * 60
     @State private var elapsed = 0
+    @State private var sessionStartedAt = Date()
     @State private var readings: [SessionReading] = []
     @State private var lastZone: Zone? = nil
     @State private var overCeiling = false
@@ -65,6 +68,7 @@ struct TrainingSessionView: View {
                     symptomNow = preSymptom
                     total = (flow.state.prescription?.minutes ?? SSTProtocol.prescribedMinutes) * 60
                     remaining = total
+                    sessionStartedAt = Date()
                     phase = .live
                     Haptics.play(.start)
                 }
@@ -149,13 +153,13 @@ struct TrainingSessionView: View {
     }
 
     private func tick() {
-        remaining = max(0, remaining - 1)
-        elapsed += 1
+        elapsed = Int(Date().timeIntervalSince(sessionStartedAt))
+        remaining = max(0, total - elapsed)
 
         if let bpm = workout.bpm {
-            // Verified = the logged value IS the fresh live reading.
-            let verified = SSTProtocol.isVerifiedReading(logged: bpm, liveFresh: workout.bpm)
-            readings.append(SessionReading(bpm: bpm, verified: verified))
+            // Fresh by construction: SSTWorkout nils bpm after 5s without a
+            // sample, so a non-nil bpm here IS the live sensor reading.
+            readings.append(SessionReading(bpm: bpm, verified: true))
 
             let z = zone(bpm: bpm, low: band.low, high: band.high)
             if z == .over, lastZone != .over {
@@ -265,7 +269,12 @@ struct TrainingSessionView: View {
         var peak = peakSymptom
         if feeling == .worse { peak = max(peak, preSymptom + SSTProtocol.sessionStopRise) }
 
-        let verified = SSTProtocol.sessionVerified(readings: readings, source: .liveWatch)
+        // Dropout seconds produce NO readings, so session verification must
+        // also require the readings to COVER the session — otherwise a mostly
+        // sensor-dark session would still count as fully verified evidence.
+        let coveragePct = elapsed > 0 ? readings.count * 100 / elapsed : 0
+        let verified = coveragePct >= SSTProtocol.verifiedReadingMinPct
+            && SSTProtocol.sessionVerified(readings: readings, source: .liveWatch)
         let log = SessionLog(
             avgHeartRate: avgHR,
             peakHeartRate: peakHR,

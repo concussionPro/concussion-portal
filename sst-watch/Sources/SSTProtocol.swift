@@ -41,16 +41,22 @@ enum SSTProtocol {
     /// HRt from a completed graded test: the HR at the first stage whose symptom
     /// score rose ≥ provocationRise over the resting baseline. Returns nil for a
     /// no-intolerance test (reached exhaustion/max with no provocation).
-    static func detectHRt(stages: [TestStage], restingSymptom: Int) -> ThresholdResult {
+    /// Mirrors detectThreshold in protocol.ts: a red-flag termination trumps
+    /// everything (never mint an HRt from a test that ended on a warning sign),
+    /// and a test with no logged stages is invalid — NOT a clearance signal.
+    static func detectHRt(stages: [TestStage], restingSymptom: Int, redFlagStop: Bool = false) -> ThresholdResult {
+        if redFlagStop || stages.contains(where: { $0.redFlag }) {
+            return ThresholdResult(interpretation: .redFlag, hrt: nil, bandLow: nil, bandHigh: nil)
+        }
+        if stages.isEmpty {
+            return ThresholdResult(interpretation: .invalid, hrt: nil, bandLow: nil, bandHigh: nil)
+        }
         for s in stages where (s.symptomScore - restingSymptom) >= provocationRise {
             let (lo, hi) = band(fromHRt: s.heartRate)
             return ThresholdResult(interpretation: .physiologic, hrt: s.heartRate,
                                    bandLow: lo, bandHigh: hi)
         }
         // No provocation across the whole test.
-        if let last = stages.last, last.redFlag {
-            return ThresholdResult(interpretation: .redFlag, hrt: nil, bandLow: nil, bandHigh: nil)
-        }
         return ThresholdResult(interpretation: .noIntolerance, hrt: nil, bandLow: nil, bandHigh: nil)
     }
 
@@ -73,6 +79,7 @@ enum SSTProtocol {
     /// exceed the measured HRt (→ retest at the cap). Regression is never gated.
     static func decide(current: Prescription, sessions: [SessionLog]) -> ProgressionDecision {
         // Regression: a recent flare run lowers the band immediately (ungated).
+        // Safety evidence counts from EVERY session, verified or not.
         let recent = Array(sessions.suffix(regressRecentWindow))
         let flares = recent.filter { $0.flare }.count
         if flares >= regressFlareCount {
@@ -80,11 +87,16 @@ enum SSTProtocol {
             let newLower = Int((Double(newUpper) * (bandLowerPct / bandUpperPct)).rounded())
             return .regress(newLower: newLower, newUpper: newUpper)
         }
+        // A single recent flare (any source) blocks an advance — hold and rebuild.
+        if flares > 0 { return .hold }
 
         // Advance: needs `cleanNeeded` consecutive LIVE-VERIFIED clean sessions.
-        let lastN = Array(sessions.suffix(cleanNeeded))
+        // Unverified sessions are EXCLUDED from advance evidence (mirrors
+        // protocol.ts), not treated as breaking the run — their safety data
+        // already counted above.
+        let lastN = Array(sessions.filter { $0.verified }.suffix(cleanNeeded))
         let cleanVerified = lastN.count == cleanNeeded
-            && lastN.allSatisfy { $0.verified && !$0.flare && $0.minutesPct >= 80 }
+            && lastN.allSatisfy { !$0.flare && $0.minutesPct >= 80 }
         if cleanVerified {
             // Ceiling is capped at the measured HRt: at the cap, prescribe a re-test.
             if current.bandHigh >= current.hrt {
@@ -101,7 +113,7 @@ enum SSTProtocol {
 
 // ── value types (mirror protocol.ts) ────────────────────────────────────────
 
-enum Interpretation: String, Codable { case physiologic, noIntolerance = "no-intolerance", redFlag = "red-flag" }
+enum Interpretation: String, Codable { case physiologic, noIntolerance = "no-intolerance", redFlag = "red-flag", invalid }
 enum HRSource: String, Codable { case liveWatch = "watch", manual }
 
 struct TestStage: Codable {
