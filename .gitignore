@@ -45,3 +45,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# SST native shell — generated platform projects
+sst-native/node_modules/
+sst-native/ios/
+sst-native/android/
+sst-native/www/

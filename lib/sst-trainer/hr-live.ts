@@ -32,8 +32,29 @@ export interface LiveHrConnection {
 
 // ── capability detection ─────────────────────────────────────────────────────
 
-/** True only where Web Bluetooth + a secure context are actually available. */
+/**
+ * True when running inside the native app shell (Capacitor). The native shell
+ * provides Bluetooth through CoreBluetooth (iOS) / Android BLE via the
+ * @capacitor-community/bluetooth-le plugin, which the shell registers on
+ * window.Capacitor.Plugins.BluetoothLe. This is how the watch pairs on iPhone,
+ * where Apple does not ship Web Bluetooth.
+ */
+function nativeBle(): NativeBlePlugin | null {
+  if (typeof window === 'undefined') return null
+  const cap = (window as unknown as { Capacitor?: CapacitorGlobal }).Capacitor
+  if (!cap?.isNativePlatform?.()) return null
+  return cap.Plugins?.BluetoothLe ?? null
+}
+
+/**
+ * True where a real BLE heart-rate device can be paired: the native app shell
+ * (any wearable that broadcasts, on iOS + Android), OR Web Bluetooth in a
+ * secure context (Android Chrome / desktop Chrome). Covers Garmin, Polar,
+ * WHOOP, Coros, Suunto, Wahoo and any chest strap — every wearable that
+ * broadcasts the standard heart-rate profile.
+ */
 export function bluetoothSupported(): boolean {
+  if (nativeBle()) return true
   if (typeof navigator === 'undefined') return false
   const secure = typeof window === 'undefined' ? true : window.isSecureContext
   return secure && !!(navigator as unknown as { bluetooth?: unknown }).bluetooth
@@ -80,6 +101,86 @@ interface BluetoothApi {
   }): Promise<BleDevice>
 }
 
+// ── native (Capacitor) BLE plugin surface we touch ───────────────────────────
+// We call the plugin RAW via window.Capacitor.Plugins.BluetoothLe so the web
+// app carries NO native dependency — the plugin exists only inside the native
+// shell (see sst-native/). One HR code path serves every wearable on iOS,
+// Android and the web.
+interface NativeBleListener { remove(): Promise<void> }
+interface NativeBlePlugin {
+  initialize(opts?: Record<string, unknown>): Promise<void>
+  requestDevice(opts: { services?: string[] }): Promise<{ deviceId: string; name?: string }>
+  connect(opts: { deviceId: string }): Promise<void>
+  disconnect(opts: { deviceId: string }): Promise<void>
+  startNotifications(opts: { deviceId: string; service: string; characteristic: string }): Promise<void>
+  stopNotifications(opts: { deviceId: string; service: string; characteristic: string }): Promise<void>
+  addListener(event: string, cb: (result: { value: string }) => void): Promise<NativeBleListener>
+}
+interface CapacitorGlobal {
+  isNativePlatform?(): boolean
+  Plugins?: { BluetoothLe?: NativeBlePlugin }
+}
+
+// Standard Bluetooth SIG Heart Rate profile — full 128-bit UUIDs (the native
+// plugin wants full form; the web layer accepts the 'heart_rate' alias).
+const HR_SERVICE_UUID = '0000180d-0000-1000-8000-00805f9b34fb'
+const HR_MEASUREMENT_UUID = '00002a37-0000-1000-8000-00805f9b34fb'
+
+/** base64 (native characteristic value) → DataView for parseHeartRate. */
+function base64ToDataView(b64: string): DataView {
+  const bin = atob(b64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return new DataView(bytes.buffer)
+}
+
+/**
+ * REAL native BLE heart-rate connection (iOS CoreBluetooth / Android BLE via
+ * the Capacitor plugin). Same standard HR profile, same parse, same
+ * LiveHrConnection shape as the web path — so every consuming screen is
+ * unchanged. Shows the OS device picker filtered to heart-rate wearables.
+ *
+ * NOTE: exercised on-device (a real watch + the native build); the web build
+ * never runs this branch.
+ */
+async function connectNativeBleHr(plugin: NativeBlePlugin): Promise<LiveHrConnection> {
+  await plugin.initialize().catch(() => {})
+  const device = await plugin.requestDevice({ services: [HR_SERVICE_UUID] })
+  await plugin.connect({ deviceId: device.deviceId })
+
+  const listeners = new Set<(bpm: number) => void>()
+  const notifyEvent = `notification|${device.deviceId}|${HR_SERVICE_UUID}|${HR_MEASUREMENT_UUID}`
+  const handle = await plugin.addListener(notifyEvent, (result) => {
+    if (!result?.value) return
+    const bpm = parseHeartRate(base64ToDataView(result.value))
+    if (bpm != null) listeners.forEach((cb) => cb(bpm))
+  })
+  await plugin.startNotifications({
+    deviceId: device.deviceId,
+    service: HR_SERVICE_UUID,
+    characteristic: HR_MEASUREMENT_UUID,
+  })
+
+  let stopped = false
+  return {
+    label: device.name || 'Bluetooth HR',
+    subscribe(cb) {
+      listeners.add(cb)
+      return () => listeners.delete(cb)
+    },
+    stop() {
+      if (stopped) return
+      stopped = true
+      listeners.clear()
+      handle.remove().catch(() => {})
+      plugin
+        .stopNotifications({ deviceId: device.deviceId, service: HR_SERVICE_UUID, characteristic: HR_MEASUREMENT_UUID })
+        .catch(() => {})
+        .finally(() => plugin.disconnect({ deviceId: device.deviceId }).catch(() => {}))
+    },
+  }
+}
+
 /**
  * Parse the Heart Rate Measurement characteristic (0x2A37).
  * Byte 0 = flags; bit 0 selects 8-bit (clear) vs 16-bit (set) HR value.
@@ -102,6 +203,11 @@ function parseHeartRate(value: DataView): number | null {
  * back to manual entry on rejection.
  */
 export async function connectBluetoothHr(): Promise<LiveHrConnection> {
+  // Native app shell (iOS/Android) → CoreBluetooth / Android BLE. This is the
+  // path that pairs a wearable on iPhone, where Web Bluetooth does not exist.
+  const native = nativeBle()
+  if (native) return connectNativeBleHr(native)
+
   const bt = (navigator as unknown as { bluetooth?: BluetoothApi }).bluetooth
   if (!bt) throw new Error('Web Bluetooth is not available in this browser.')
 
