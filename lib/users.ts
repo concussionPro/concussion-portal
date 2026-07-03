@@ -190,6 +190,14 @@ async function ensureEmailIndex() {
 // the active workshop. created_at is the closest purchase-time proxy the
 // users table has (there is no per-purchase timestamp column); the round
 // start is deliberately generous so current-round buyers aren't missed.
+// PAID-registrant filter shared by every seat/threshold count: internal/test
+// accounts (is_test) and comped access (signup_source 'alumni-grant') must
+// never count toward launching a workshop date or occupy a "paid" seat —
+// the 2026-07-03 board showed Zac's own accounts + a demo user + a comp as
+// "Paid Registrants (5)". Comps still hold real access; they just aren't
+// revenue and don't move thresholds.
+const COMP_SOURCE = 'alumni-grant'
+
 export async function getEnrollmentCount(location: string): Promise<number> {
   const roundStart = CONFIG.WORKSHOP.ROUND_START[location]
   if (roundStart) {
@@ -198,12 +206,16 @@ export async function getEnrollmentCount(location: string): Promise<number> {
       WHERE access_level = 'full-course'
         AND workshop_location = ${location}
         AND created_at >= ${roundStart}
+        AND is_test IS NOT TRUE
+        AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
     `
     return rows[0]?.count || 0
   }
   const { rows } = await sql`
     SELECT COUNT(*)::int AS count FROM users
     WHERE access_level = 'full-course' AND workshop_location = ${location}
+      AND is_test IS NOT TRUE
+      AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
   `
   return rows[0]?.count || 0
 }
@@ -220,11 +232,15 @@ export async function getEnrollmentsByLocation(location: string): Promise<Array<
         WHERE access_level = 'full-course'
           AND workshop_location = ${location}
           AND created_at >= ${roundStart}
+          AND is_test IS NOT TRUE
+          AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
         ORDER BY created_at DESC
       `
     : await sql`
         SELECT name, email, created_at FROM users
         WHERE access_level = 'full-course' AND workshop_location = ${location}
+          AND is_test IS NOT TRUE
+          AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
         ORDER BY created_at DESC
       `
   return rows.map(r => ({
@@ -234,13 +250,15 @@ export async function getEnrollmentsByLocation(location: string): Promise<Array<
   }))
 }
 
-// Full-course users with NO workshop location — mostly manual sales created
-// via /admin/create-user before the form had a city selector. Surfaced on
-// the workshop seat board so these sales aren't invisible.
+// PAID full-course users with NO workshop location — legacy/manual sales
+// without a city. Excludes internal (is_test) and comped accounts: the board
+// labels these "Paid Registrants", so only genuinely paid rows may appear.
 export async function getEnrollmentsWithoutLocation(): Promise<Array<{ name: string; email: string; createdAt: string }>> {
   const { rows } = await sql`
     SELECT name, email, created_at FROM users
     WHERE access_level = 'full-course' AND workshop_location IS NULL
+      AND is_test IS NOT TRUE
+      AND COALESCE(signup_source, '') <> ${COMP_SOURCE}
     ORDER BY created_at DESC
   `
   return rows.map(r => ({
