@@ -51,3 +51,9 @@ sst-native/node_modules/
 sst-native/ios/
 sst-native/android/
 sst-native/www/
+
+# SST watch — xcodegen output + build artifacts
+sst-watch/SSTWatch.xcodeproj/
+sst-watch/build/
+sst-watch/DerivedData/
+sst-watch/Sources/Info.plist
