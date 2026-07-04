@@ -73,6 +73,20 @@ final class SSTWorkout: NSObject, ObservableObject {
 
     /// Begin a workout session + live builder and start streaming heart rate.
     func start() async throws {
+        #if targetEnvironment(simulator)
+        // The watch simulator has no HR sensor — feed a LABELLED demo waveform
+        // so flows are drivable on a Mac. FIRST, before any HealthKit call:
+        // beginCollection can throw on the sim (and callers `try?` it), which
+        // would otherwise kill the feed and strand every HR-gated screen.
+        // Compiled out of device builds; the `simulated` flag routes every
+        // consumer to unverified handling.
+        isStreaming = true
+        bpm = nil
+        lastSampleAt = nil
+        startStaleTimer()
+        startSimulatedFeed()
+        return
+        #else
         guard HKHealthStore.isHealthDataAvailable() else {
             throw SSTWorkoutError.healthDataUnavailable
         }
@@ -101,12 +115,6 @@ final class SSTWorkout: NSObject, ObservableObject {
         bpm = nil
         lastSampleAt = nil
         startStaleTimer()
-
-        #if targetEnvironment(simulator)
-        // The watch simulator has no HR sensor — feed a LABELLED demo waveform
-        // so flows are drivable on a Mac. Compiled out of device builds; the
-        // `simulated` flag routes every consumer to unverified handling.
-        startSimulatedFeed()
         #endif
     }
 
