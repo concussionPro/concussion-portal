@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
@@ -24,81 +25,113 @@ export default function ClinicalTestingPage() {
   )
 }
 
-/** Animated ECG trace + measured band — the SST tile's visual identity. */
-function SstInstrumentVisual() {
+/** Apple-Watch mockup running a live SST session — the tile shows WHAT IT
+ *  IS: the program on the patient's wrist. Real ticking bpm, zone state and
+ *  session ring (respects nothing fancier than opacity/width transitions). */
+function SstWatchVisual() {
+  const [bpm, setBpm] = useState(121)
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setBpm((b) => {
+        const next = b + (Math.random() < 0.5 ? -1 : 1) * (Math.random() < 0.3 ? 2 : 1)
+        return Math.min(131, Math.max(112, next))
+      })
+    }, 1100)
+    return () => clearInterval(iv)
+  }, [])
+  const inBand = bpm >= 114 && bpm <= 128
   return (
-    <div className="relative h-full min-h-[190px] overflow-hidden rounded-xl bg-[#0d1830]">
-      <div className="absolute inset-x-0 top-[38%] h-[26%] border-y border-teal-400/25 bg-teal-400/10" />
-      <span className="absolute left-3 top-[26%] text-[9px] font-bold uppercase tracking-[0.14em] text-red-300/80">
-        threshold 142
-      </span>
-      <span className="absolute left-3 top-[67%] text-[9px] font-bold uppercase tracking-[0.14em] text-teal-300/80">
-        band 114–128
-      </span>
-      <svg viewBox="0 0 300 120" className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
-        <path
-          d="M0 62 L30 62 L38 58 L46 66 L54 62 L66 62 L72 30 L78 88 L84 62 L120 62 L128 58 L136 66 L144 62 L156 62 L162 32 L168 86 L174 62 L210 62 L218 58 L226 66 L234 62 L246 62 L252 30 L258 88 L264 62 L300 62"
-          fill="none"
-          stroke="#2dd4bf"
-          strokeWidth="1.8"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          style={{ strokeDasharray: 640, strokeDashoffset: 640, animation: 'ct-trace 3.2s linear infinite' }}
-        />
-      </svg>
-      <div className="absolute right-3 top-3 text-right">
-        <p
-          className="m-0 font-mono text-[30px] font-bold leading-none text-teal-300"
-          style={{ animation: 'ct-pulse 1s ease-in-out infinite' }}
-        >
-          121
-        </p>
-        <p className="m-0 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">bpm · in band</p>
+    <div className="relative flex h-full min-h-[210px] items-center justify-center overflow-hidden rounded-xl bg-[#0d1830]">
+      {/* ambient glow */}
+      <div className="absolute h-40 w-40 rounded-full bg-teal-400/10 blur-2xl" />
+      {/* strap */}
+      <div className="absolute top-0 h-[26px] w-[74px] rounded-b-[14px] bg-[#1d2b47]" />
+      <div className="absolute bottom-0 h-[26px] w-[74px] rounded-t-[14px] bg-[#1d2b47]" />
+      {/* case */}
+      <div className="relative z-10 h-[150px] w-[126px] rounded-[34px] border border-slate-600/60 bg-black p-[7px] shadow-[0_16px_36px_-14px_rgba(0,0,0,.8)]">
+        {/* crown + side button */}
+        <span className="absolute -right-[4px] top-[34px] h-[18px] w-[5px] rounded-r-[3px] bg-slate-600" />
+        <span className="absolute -right-[3px] top-[62px] h-[26px] w-[3.5px] rounded-r-[2px] bg-slate-700" />
+        {/* screen */}
+        <div className="flex h-full w-full flex-col items-center justify-between rounded-[27px] bg-[#060b16] px-2.5 py-2.5">
+          <div className="flex w-full items-center justify-between">
+            <span className="text-[7px] font-bold uppercase tracking-[0.12em] text-slate-500">SST</span>
+            <span className="font-mono text-[7px] text-slate-500">14:32</span>
+          </div>
+          <div className="text-center">
+            <p className="m-0 font-mono text-[30px] font-bold leading-none text-teal-300 transition-opacity">
+              {bpm}
+            </p>
+            <p className={`m-0 mt-0.5 text-[7px] font-bold uppercase tracking-[0.14em] ${inBand ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {inBand ? 'in band' : 'ease off'}
+            </p>
+          </div>
+          {/* band bar with live marker */}
+          <div className="w-full">
+            <div className="relative h-[5px] w-full overflow-hidden rounded-full bg-slate-800">
+              <div className="absolute inset-y-0 left-[30%] w-[45%] bg-teal-500/50" />
+              <span
+                className="absolute top-1/2 h-[9px] w-[2.5px] -translate-y-1/2 rounded-full bg-white transition-[left] duration-700"
+                style={{ left: `${Math.min(94, Math.max(4, ((bpm - 100) / 40) * 100))}%` }}
+              />
+            </div>
+            <p className="m-0 mt-1 text-center font-mono text-[6.5px] text-slate-500">band 114–128 · HRt 142</p>
+          </div>
+        </div>
       </div>
-      <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
-        <span
-          className="h-1.5 w-1.5 rounded-full bg-emerald-400"
-          style={{ animation: 'ct-pulse 1s ease-in-out infinite' }}
-        />
-        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">live · verified</span>
-      </div>
+      <span className="absolute bottom-2.5 right-3 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">
+        On their wrist · or any watch via the phone app
+      </span>
     </div>
   )
 }
 
-/** Paper report-card motif — the baseline tile is a DOCUMENT product, so its
- *  identity is the printed SCAT6 report: paper, rules, a filed stamp. */
-function BaselineInstrumentVisual() {
-  const recall = [1, 1, 1, 0, 1, 0, 1, 1, 0, 1] // 7/10 chips
+/** Laptop mockup mid-baseline — the tile shows WHAT IT IS: an athlete
+ *  self-completing the SCAT6 on any computer. Checkboxes tick in sequence
+ *  via staggered CSS keyframes. */
+function BaselineLaptopVisual() {
+  const words = ['Jacket', 'Pepper', 'Cotton', 'Dollar', 'Mirror']
   return (
-    <div className="relative flex h-full min-h-[190px] flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-[#fdfcf9] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.8)]">
-      {/* filed stamp */}
-      <span
-        className="absolute right-3 top-3 rotate-[8deg] rounded border-2 border-emerald-600/60 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700/80"
-        style={{ animation: 'none' }}
-      >
-        Baseline on file
-      </span>
-      <div>
-        <p className="m-0 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">SCAT6 · athlete report</p>
-        <p className="m-0 mt-1 font-mono text-[24px] font-bold leading-tight text-[#16243f]">
-          4<span className="text-[12px] text-slate-400">/132 severity</span>
-        </p>
-      </div>
-      <div>
-        <p className="m-0 mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">
-          Delayed recall · 7/10
-        </p>
-        <div className="flex gap-1">
-          {recall.map((f, i) => (
-            <span key={i} className={`h-2.5 flex-1 rounded-sm ${f ? 'bg-[#b45309]/70' : 'bg-slate-200'}`} />
-          ))}
+    <div className="relative flex h-full min-h-[210px] flex-col items-center justify-end overflow-hidden rounded-xl bg-gradient-to-b from-[#eef4f4] to-[#dde8e8] pt-4">
+      {/* screen */}
+      <div className="relative z-10 w-[78%] rounded-t-[10px] border border-slate-300 border-b-0 bg-white shadow-[0_14px_30px_-16px_rgba(51,65,85,.5)]">
+        {/* browser chrome */}
+        <div className="flex items-center gap-1 rounded-t-[9px] border-b border-slate-200 bg-slate-100 px-2 py-[5px]">
+          <span className="h-[5px] w-[5px] rounded-full bg-red-300" />
+          <span className="h-[5px] w-[5px] rounded-full bg-amber-300" />
+          <span className="h-[5px] w-[5px] rounded-full bg-emerald-300" />
+          <span className="mx-auto rounded bg-white px-2 py-[2px] font-mono text-[6px] text-slate-400">
+            /preseason/b/YOURCODE
+          </span>
+        </div>
+        <div className="px-3 py-2.5">
+          <div className="mb-1.5 flex gap-[3px]">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <span key={n} className={`h-[3px] flex-1 rounded-full ${n <= 3 ? 'bg-[#0d7377]' : 'bg-slate-200'}`} />
+            ))}
+          </div>
+          <p className="m-0 text-[7px] font-bold text-slate-700">Step 3 of 6 · Immediate memory</p>
+          <p className="m-0 mb-1.5 text-[6px] text-slate-400">Select the words you remember</p>
+          <div className="flex flex-wrap gap-1">
+            {words.map((w, i) => (
+              <span
+                key={w}
+                className="rounded-[4px] border border-slate-200 px-1.5 py-[3px] text-[6.5px] font-semibold text-slate-600"
+                style={{ animation: `ct-tick 4.5s ease-in-out ${i * 0.7}s infinite` }}
+              >
+                {w}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
-      <div className="flex items-center justify-between border-t border-dashed border-slate-300 pt-2.5">
-        <span className="font-mono text-[10px] font-bold text-[#b45309]">PDF → clinic inbox</span>
-        <span className="font-mono text-[10px] text-slate-400">repeat-test ready</span>
+      {/* deck */}
+      <div className="relative z-10 h-[9px] w-[92%] rounded-b-[8px] rounded-t-[2px] bg-gradient-to-b from-slate-200 to-slate-300 shadow-[0_6px_14px_-6px_rgba(51,65,85,.4)]">
+        <span className="absolute left-1/2 top-0 h-[3px] w-[14%] -translate-x-1/2 rounded-b-[3px] bg-slate-300" />
       </div>
+      <span className="absolute right-3 top-2.5 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">
+        Any computer · no app · ~5 min
+      </span>
     </div>
   )
 }
@@ -201,6 +234,7 @@ function Shell() {
       <style>{`
         @keyframes ct-trace { from { stroke-dashoffset: 640 } to { stroke-dashoffset: 0 } }
         @keyframes ct-pulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
+        @keyframes ct-tick { 0%, 12% { background: #fff; color: #475569; border-color: #e2e8f0 } 16%, 80% { background: #0d7377; color: #fff; border-color: #0d7377 } 90%, 100% { background: #fff; color: #475569; border-color: #e2e8f0 } }
       `}</style>
       <Sidebar />
       <main className="flex-1 ml-0 md:ml-64 p-6 sm:p-8">
@@ -228,7 +262,7 @@ function Shell() {
               body="The graded test measures where symptoms actually begin; patients train at 80–90% of it with live heart rate from their own watch, and every verified session builds the recovery trajectory."
               cta="Open the SST Trainer"
               href="/clinical-testing/sst"
-              visual={<SstInstrumentVisual />}
+              visual={<SstWatchVisual />}
             />
             <InstrumentTile
               tag="SCAT6 baseline · self-administered"
@@ -236,7 +270,7 @@ function Shell() {
               body="One link covers a whole club: athletes self-complete the SCAT6 baseline in ~5 minutes, a PDF report reaches your inbox per athlete, and the record is on file for the day you need it."
               cta="Open Baseline Testing"
               href="/clinical-testing/baseline"
-              visual={<BaselineInstrumentVisual />}
+              visual={<BaselineLaptopVisual />}
               variant="light"
             />
           </div>
