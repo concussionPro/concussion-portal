@@ -7,12 +7,12 @@ import { HR_SOURCES, isNativeApp, type HrSource } from '@/components/sst-trainer
 import {
   bluetoothSupported,
   cameraSupported,
-  connectBluetoothHr,
   connectCameraPpg,
   type LiveHrConnection,
 } from '@/lib/sst-trainer/hr-live'
 import { validateClinicCode } from '@/lib/sst-trainer/clinic-sync'
 import { PrimaryButton } from '@/components/sst-trainer/shell'
+import SstConnectWizard from '@/components/platform/SstConnectWizard'
 
 /**
  * Onboarding (the "Welcome" step) of the full-screen /platform/app.
@@ -102,6 +102,8 @@ export default function SstOnboarding({
   // The source currently mid-pair (set on tap, BEFORE the async connect resolves
   // and updates `device`) so the tapped row shows "Connecting…" right away.
   const [pendingId, setPendingId] = useState<string | null>(null)
+  // Bluetooth source the connect wizard is open for (null = closed).
+  const [wizardSource, setWizardSource] = useState<HrSource | null>(null)
   // capability detection runs on the client only (navigator isn't on the server).
   const [caps, setCaps] = useState({ bt: false, cam: false })
   // running inside the native app shell? (Capacitor — real BLE on iPhone too).
@@ -161,26 +163,11 @@ export default function SstOnboarding({
     }
 
     if (d.connect === 'bluetooth') {
-      if (!caps.bt) {
-        onPair(d, null)
-        setPairStatus('unavailable')
-        setPairError('Bluetooth pairing needs our iPhone/Android app, or Chrome / Edge on Android or desktop — you can still train with manual entry here.')
-        return
-      }
-      setPendingId(d.id)
-      setPairStatus('connecting')
-      try {
-        // connectBluetoothHr() calls requestDevice() first, preserving the gesture.
-        const conn = await connectBluetoothHr()
-        onPair(d, conn)
-        setPairStatus('connected')
-      } catch {
-        onPair(d, null) // user cancelled the chooser or pairing failed → manual
-        setPairStatus('error')
-        setPairError('Couldn’t connect that sensor — check your watch is broadcasting, then try again. Or type your heart rate in.')
-      } finally {
-        setPendingId(null)
-      }
+      // The guided wizard owns the whole bluetooth path now: environment check,
+      // broadcast instructions, error-diagnosed pairing, live signal check.
+      // It also handles the no-Web-Bluetooth browsers (explains + offers
+      // manual) — no more "get our app" dead end.
+      setWizardSource(d)
       return
     }
 
@@ -206,8 +193,9 @@ export default function SstOnboarding({
     }
   }
 
-  const sourceDisabled = (s: HrSource) =>
-    (s.connect === 'bluetooth' && !caps.bt) || (s.connect === 'camera' && !caps.cam)
+  // Bluetooth is never disabled: the wizard handles unsupported browsers with
+  // an explanation + manual fallback instead of a greyed-out row.
+  const sourceDisabled = (s: HrSource) => s.connect === 'camera' && !caps.cam
 
   const nameMissing = mode === 'clinic-code' && patientName.trim().length === 0
   const codeNotValid = mode === 'clinic-code' && codeStatus !== 'valid'
@@ -383,11 +371,7 @@ export default function SstOnboarding({
             const selected = s.id === device.id
             const disabled = sourceDisabled(s)
             const subtitle =
-              disabled && s.connect === 'bluetooth'
-                ? 'Needs our app, or Chrome / Edge on Android or desktop'
-                : disabled && s.connect === 'camera'
-                  ? 'Needs camera access (HTTPS)'
-                  : s.method
+              disabled && s.connect === 'camera' ? 'Needs camera access (HTTPS)' : s.method
             return (
               <button
                 key={s.id}
@@ -489,13 +473,26 @@ export default function SstOnboarding({
             You&rsquo;re in the app — your watch or strap pairs directly over Bluetooth (iPhone
             included). Turn on its heart-rate broadcast, tap the top option and pick your device.
           </span>
-        ) : !caps.bt ? (
-          <span className="text-[10px] leading-snug text-[#9bafb0]">
-            Live Bluetooth tracking runs in our iPhone or Android app, or in Chrome / Edge on
-            Android or desktop. On this browser you can still train with manual entry.
-          </span>
         ) : null}
       </div>
+
+      <SstConnectWizard
+        open={wizardSource !== null}
+        onClose={() => setWizardSource(null)}
+        onConnected={(conn) => {
+          if (wizardSource) onPair(wizardSource, conn)
+          setPairStatus('connected')
+          setPairError(null)
+          setWizardSource(null)
+        }}
+        onManual={() => {
+          const manual = HR_SOURCES.find((s) => s.connect === 'manual')
+          if (manual) onPair(manual, null)
+          setPairStatus('connected')
+          setPairError(null)
+          setWizardSource(null)
+        }}
+      />
 
       {/* De-identified data consent — opt-in, withdrawable. QA / service-quality
           framing (NOT "research"): the stated purpose is monitoring + improving
