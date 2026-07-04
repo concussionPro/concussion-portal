@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from 'next'
 import { Hanken_Grotesk, Space_Grotesk } from 'next/font/google'
-import { requireAiCourseAccess } from '@/components/ai-course/CourseGate'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SST Trainer platform site (/platform/*) — the clinic-facing funnel.
 //
-// GATED PRE-LAUNCH: admin / demo-key / enrolled only (Zac: "hidden behind my
-// api key"). The whole route group sits behind requireAiCourseAccess + noindex
-// until launch. Reach it via the admin cookie, x-admin-key, or the demo key.
+// PUBLIC funnel (2026-07-05): marketing pages are open for clinic pitching;
+// noindex retained for now (direct-link outreach, SEO decision separate).
+// The app itself (/platform/app) is gated in its own nested layout.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const hanken = Hanken_Grotesk({
@@ -51,9 +50,10 @@ export const viewport: Viewport = {
 }
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
-  // Gate the entire platform site behind admin/demo/enrolled.
-  await requireAiCourseAccess('/login')
-
+  // PUBLIC since 2026-07-05 (owner: "we want to start pitching to clinics") —
+  // the pre-launch requireAiCourseAccess gate is lifted for the marketing
+  // funnel (/platform, /clinicians, /evidence, /pricing, /founding: self-serve
+  // clinic provisioning). The APP stays gated: app/platform/app/layout.tsx.
   return (
     <div
       className={`${hanken.variable} ${spaceGrotesk.variable}`}

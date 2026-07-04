@@ -11,6 +11,7 @@ import {
   Send,
   Loader2,
   LayoutDashboard,
+  Users,
 } from 'lucide-react'
 
 /**
@@ -169,13 +170,22 @@ export function SstClinicCard() {
             {clinic.code}
           </p>
         </div>
-        <Link
-          href={hubUrl}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors"
-        >
-          <LayoutDashboard className="w-3.5 h-3.5" />
-          Open Clinical Hub
-        </Link>
+        <div className="flex flex-none flex-wrap gap-2">
+          <Link
+            href="/clinical-testing/patients"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors"
+          >
+            <Users className="w-3.5 h-3.5" />
+            Patients
+          </Link>
+          <Link
+            href={hubUrl}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors"
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            Live hub
+          </Link>
+        </div>
       </div>
 
       <p className="mt-3 text-[13px] text-muted-foreground leading-relaxed">
