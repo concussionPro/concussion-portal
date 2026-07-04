@@ -2,10 +2,17 @@ import SwiftUI
 import Combine
 
 // The graded exertion test — the measurement instrument. 60-second stages,
-// live HR big and central, a per-stage symptom score (0–10) and optional RPE.
-// A stage is logged at the 60s mark, or early on a symptom spike. The test
-// ends on a ≥3-pt symptom rise over rest (→ HRt), exhaustion, or the stage cap.
-// HR is only ever the live reading — a stage cannot be logged without one.
+// live HR big and central, a per-stage symptom score (0–10). The first screen
+// is deliberately scroll-free: HR + symptom picker + log, nothing else — the
+// stop controls live below the fold.
+//
+// Crossing the ≥3-pt symptom rise ENDS THE TEST AUTOMATICALLY (that stage's HR
+// is the HRt by definition — asking for a confirming tap mid-symptom-spike is
+// wrong). Per the BCTT (Leddy 2013), RPE's protocol job is qualifying the
+// EXHAUSTION termination (volitional fatigue = RPE ≥ 17 without provocation →
+// the no-intolerance/refer signal), so it is asked ONCE at the exhaustion
+// stop, never per minute. HR is only ever the live reading — a stage cannot
+// be logged without one.
 
 struct GradedTestView: View {
     @EnvironmentObject var flow: SSTFlow
@@ -20,8 +27,9 @@ struct GradedTestView: View {
     // (wrist-down), so `remaining` derives from elapsed time, never tick counts.
     @State private var stageStartedAt = Date()
     @State private var symptom = 0
-    @State private var rpe = 12
-    @State private var useRPE = false
+    // Terminal RPE (Borg 6–20), asked once when the patient stops for exhaustion.
+    @State private var exhaustionRPE = 17
+    @State private var askExhaustionRPE = false
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -29,29 +37,23 @@ struct GradedTestView: View {
     private var symptomRise: Int { symptom - flow.restingSymptom }
     private var spike: Bool { symptomRise >= SSTProtocol.provocationRise }
 
-    /// Log is allowed at the end of the stage, or immediately on a symptom
-    /// spike — but never without a live heart rate.
-    private var canLog: Bool {
-        guard workout.bpm != nil else { return false }
-        return remaining == 0 || spike
-    }
-
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 6) {
+                // Compact header: minute + small countdown ring on one row, so
+                // HR and the symptom picker fit without scrolling.
                 HStack {
-                    Text("Minute \(minute)").font(.headline)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Minute \(minute)").font(.headline)
+                        Text("of \(maxStages)").font(.caption2).foregroundStyle(.secondary)
+                    }
                     Spacer()
-                    Text("of \(maxStages)").font(.caption2).foregroundStyle(.secondary)
+                    stageRing
                 }
-
-                stageRing
 
                 HRReadout(bpm: workout.bpm, tint: spike ? .orange : .primary)
 
                 HRSourceStatus(workout: workout)
-
-                Divider()
 
                 CrownScorePicker(
                     title: "How bad are your symptoms right now?",
@@ -59,25 +61,20 @@ struct GradedTestView: View {
                     accent: spike ? .orange : .blue,
                     descriptor: symptomWord
                 )
-                if spike {
-                    Label("Symptom spike — logging ends the test", systemImage: "exclamationmark.triangle")
+                if spike, workout.bpm == nil {
+                    Label("Symptoms are up 3+ — the test ends as soon as your heart rate reads", systemImage: "exclamationmark.triangle")
                         .font(.caption2).foregroundStyle(.orange)
                         .multilineTextAlignment(.center)
                 }
 
-                Toggle(isOn: $useRPE) { Text("Rate how hard it feels (optional)").font(.caption) }
-                if useRPE {
-                    CrownScorePicker(title: "How hard does it feel?", value: $rpe, range: 6...20, accent: .purple, descriptor: borgWord)
-                }
-
                 PrimaryButton(
-                    title: remaining == 0 ? "Log minute \(minute)" : (spike ? "Log now — end test" : "Log at 0:00"),
+                    title: remaining == 0 ? "Log minute \(minute)" : "Log at 0:00",
                     systemImage: "square.and.pencil",
-                    tint: spike ? .orange : .blue
-                ) { logStage(early: remaining > 0) }
-                .disabled(!canLog)
+                    tint: .blue
+                ) { logStage() }
+                .disabled(workout.bpm == nil || remaining > 0)
 
-                Button(role: .destructive) { finish() } label: {
+                Button(role: .destructive) { stopForExhaustion() } label: {
                     Label("Stop — exhausted", systemImage: "stop.circle")
                         .frame(maxWidth: .infinity)
                 }
@@ -103,31 +100,64 @@ struct GradedTestView: View {
             if next == 0, remaining > 0 { Haptics.play(.stop) }   // stage end
             remaining = next
         }
+        // Threshold crossed → auto-log the provoking stage and end the test.
+        // The tap that moved the score IS the report; no confirming tap needed.
+        .onChange(of: symptom) { _, _ in
+            if spike, workout.bpm != nil {
+                Haptics.play(.directionUp)
+                logStage()
+            }
+        }
+        .sheet(isPresented: $askExhaustionRPE) { exhaustionSheet }
     }
 
     private var stageRing: some View {
         ZStack {
-            Circle().stroke(Color.gray.opacity(0.25), lineWidth: 7)
+            Circle().stroke(Color.gray.opacity(0.25), lineWidth: 5)
             Circle()
                 .trim(from: 0, to: CGFloat(remaining) / CGFloat(stageSeconds))
                 .stroke(remaining == 0 ? Color.green : Color.blue,
-                        style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                        style: StrokeStyle(lineWidth: 5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.25), value: remaining)
             Text(remaining == 0 ? "Log" : "\(remaining)")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .font(.system(size: 15, weight: .bold, design: .rounded))
                 .monospacedDigit()
         }
-        .frame(width: 76, height: 76)
+        .frame(width: 42, height: 42)
     }
 
-    private func logStage(early: Bool) {
+    /// One-off Borg rating on the exhaustion stop — qualifies the termination
+    /// (RPE ≥ 17 = true volitional exhaustion → a trustworthy no-intolerance).
+    private var exhaustionSheet: some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                CrownScorePicker(
+                    title: "How hard was it when you stopped?",
+                    value: $exhaustionRPE,
+                    range: 6...20,
+                    accent: .purple,
+                    descriptor: borgWord
+                )
+                PrimaryButton(title: "End test", systemImage: "checkmark") {
+                    if !stages.isEmpty {
+                        stages[stages.count - 1].rpe = exhaustionRPE
+                    }
+                    askExhaustionRPE = false
+                    finish()
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+    }
+
+    private func logStage() {
         guard let hr = workout.bpm else { return }
         let stage = TestStage(
             minute: minute,
             heartRate: hr,
             symptomScore: symptom,
-            rpe: useRPE ? rpe : nil,
+            rpe: nil,
             redFlag: false
         )
         stages.append(stage)
@@ -140,6 +170,15 @@ struct GradedTestView: View {
             // Next stage; carry the symptom score forward.
             stageStartedAt = Date()
             remaining = stageSeconds
+        }
+    }
+
+    private func stopForExhaustion() {
+        // Nothing logged yet → nothing to qualify; finish() maps it to invalid.
+        if stages.isEmpty {
+            finish()
+        } else {
+            askExhaustionRPE = true
         }
     }
 

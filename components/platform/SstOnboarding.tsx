@@ -17,10 +17,11 @@ import SstConnectWizard from '@/components/platform/SstConnectWizard'
 /**
  * Onboarding (the "Welcome" step) of the full-screen /platform/app.
  *
- * LAUNCH MODE: clinic-code only. The self-guided toggle exists but is hidden
- * unless NEXT_PUBLIC_SST_SELF_GUIDED === 'true' — at launch every patient
- * arrives via their clinician's code (usually pre-filled from the QR deep
- * link ?clinic=CODE).
+ * SELF-GUIDED IS ON BY DEFAULT (owner decision 2026-07-04, matching the watch
+ * app): the app must be fully usable without a clinic code — a code links a
+ * clinician and turns on sync, it is never a wall. Set
+ * NEXT_PUBLIC_SST_SELF_GUIDED=false to restore the clinic-code-only gate.
+ * QR deep links (?clinic=CODE) still land in clinic-code mode pre-filled.
  *
  * The clinic code is VALIDATED here (GET /api/sst/validate-code) and confirmed
  * with the clinic's real name — a typo can't silently orphan a patient's data.
@@ -37,7 +38,7 @@ import SstConnectWizard from '@/components/platform/SstConnectWizard'
  *  - web iOS Safari (no Web Bluetooth): honestly points to our app or manual.
  */
 
-const SELF_GUIDED_ENABLED = process.env.NEXT_PUBLIC_SST_SELF_GUIDED === 'true'
+const SELF_GUIDED_ENABLED = process.env.NEXT_PUBLIC_SST_SELF_GUIDED !== 'false'
 
 const GOALS: { id: string; label: string }[] = [
   { id: 'sport', label: 'Sport' },
