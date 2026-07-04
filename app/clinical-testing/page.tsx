@@ -66,22 +66,24 @@ function SstInstrumentVisual() {
   )
 }
 
-/** SCAT6 score-summary motif — the baseline tile's visual identity. */
+/** Paper report-card motif — the baseline tile is a DOCUMENT product, so its
+ *  identity is the printed SCAT6 report: paper, rules, a filed stamp. */
 function BaselineInstrumentVisual() {
   const recall = [1, 1, 1, 0, 1, 0, 1, 1, 0, 1] // 7/10 chips
   return (
-    <div className="relative flex h-full min-h-[190px] flex-col justify-between overflow-hidden rounded-xl bg-[#0d1830] p-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="m-0 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Symptom severity</p>
-          <p className="m-0 font-mono text-[26px] font-bold leading-tight text-teal-300">
-            4<span className="text-[13px] text-slate-500">/132</span>
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="m-0 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Baseline</p>
-          <p className="m-0 font-mono text-[13px] font-bold text-emerald-400">ON FILE</p>
-        </div>
+    <div className="relative flex h-full min-h-[190px] flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-[#fdfcf9] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.8)]">
+      {/* filed stamp */}
+      <span
+        className="absolute right-3 top-3 rotate-[8deg] rounded border-2 border-emerald-600/60 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700/80"
+        style={{ animation: 'none' }}
+      >
+        Baseline on file
+      </span>
+      <div>
+        <p className="m-0 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">SCAT6 · athlete report</p>
+        <p className="m-0 mt-1 font-mono text-[24px] font-bold leading-tight text-[#16243f]">
+          4<span className="text-[12px] text-slate-400">/132 severity</span>
+        </p>
       </div>
       <div>
         <p className="m-0 mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">
@@ -89,20 +91,13 @@ function BaselineInstrumentVisual() {
         </p>
         <div className="flex gap-1">
           {recall.map((f, i) => (
-            <span key={i} className={`h-2.5 flex-1 rounded-sm ${f ? 'bg-teal-400/80' : 'bg-slate-600/50'}`} />
+            <span key={i} className={`h-2.5 flex-1 rounded-sm ${f ? 'bg-[#b45309]/70' : 'bg-slate-200'}`} />
           ))}
         </div>
       </div>
-      <div>
-        <p className="m-0 mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Report</p>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded-md bg-teal-400/15 px-2 py-1 font-mono text-[10px] font-bold text-teal-300">
-            PDF → clinic inbox
-          </span>
-          <span className="rounded-md bg-slate-700/60 px-2 py-1 font-mono text-[10px] font-bold text-slate-300">
-            repeat-test ready
-          </span>
-        </div>
+      <div className="flex items-center justify-between border-t border-dashed border-slate-300 pt-2.5">
+        <span className="font-mono text-[10px] font-bold text-[#b45309]">PDF → clinic inbox</span>
+        <span className="font-mono text-[10px] text-slate-400">repeat-test ready</span>
       </div>
     </div>
   )
@@ -115,6 +110,7 @@ function InstrumentTile({
   cta,
   href,
   visual,
+  variant = 'dark',
 }: {
   tag: string
   title: string
@@ -122,18 +118,26 @@ function InstrumentTile({
   cta: string
   href: string
   visual: React.ReactNode
+  /** dark = live instrument (SST); light = clinical document (baseline) —
+   *  deliberately opposite identities so the two never read as one product. */
+  variant?: 'dark' | 'light'
 }) {
+  const dark = variant === 'dark'
   return (
     <Link
       href={href}
-      className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl bg-[#16243f] p-5 shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)] transition-transform duration-200 hover:-translate-y-0.5"
+      className={`group relative flex flex-col gap-4 overflow-hidden rounded-2xl p-5 transition-transform duration-200 hover:-translate-y-0.5 ${
+        dark
+          ? 'bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]'
+          : 'border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]'
+      }`}
     >
       {visual}
       <div>
-        <p className="m-0 text-[10px] font-bold uppercase tracking-[0.16em] text-teal-300/90">{tag}</p>
-        <h2 className="m-0 mt-1 text-[20px] font-extrabold tracking-tight text-white">{title}</h2>
-        <p className="m-0 mt-1.5 text-[12.5px] leading-relaxed text-slate-300/90">{body}</p>
-        <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 transition-colors group-hover:text-teal-200">
+        <p className={`m-0 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-teal-300/90' : 'text-[#b45309]'}`}>{tag}</p>
+        <h2 className={`m-0 mt-1 text-[20px] font-extrabold tracking-tight ${dark ? 'text-white' : 'text-[#16243f]'}`}>{title}</h2>
+        <p className={`m-0 mt-1.5 text-[12.5px] leading-relaxed ${dark ? 'text-slate-300/90' : 'text-slate-500'}`}>{body}</p>
+        <span className={`mt-3 inline-flex items-center gap-1.5 text-[13px] font-bold transition-colors ${dark ? 'text-teal-300 group-hover:text-teal-200' : 'text-[#b45309] group-hover:text-[#92400e]'}`}>
           {cta}
           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
         </span>
@@ -233,6 +237,7 @@ function Shell() {
               cta="Open Baseline Testing"
               href="/clinical-testing/baseline"
               visual={<BaselineInstrumentVisual />}
+              variant="light"
             />
           </div>
 
