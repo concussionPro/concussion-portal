@@ -100,10 +100,8 @@ struct TrainingSessionView: View {
                     Text(z.label)
                         .font(.footnote).fontWeight(.semibold)
                         .foregroundStyle(z.color)
-                } else {
-                    Text("Waiting for heart rate…")
-                        .font(.caption2).foregroundStyle(.secondary)
                 }
+                HRSourceStatus(workout: workout)
 
                 if easeOff {
                     Label("Ease off — above your band", systemImage: "arrow.down.circle.fill")
@@ -158,8 +156,9 @@ struct TrainingSessionView: View {
 
         if let bpm = workout.bpm {
             // Fresh by construction: SSTWorkout nils bpm after 5s without a
-            // sample, so a non-nil bpm here IS the live sensor reading.
-            readings.append(SessionReading(bpm: bpm, verified: true))
+            // sample, so a non-nil bpm here IS the live sensor reading — except
+            // the simulator's demo feed, which is never verified.
+            readings.append(SessionReading(bpm: bpm, verified: !workout.simulated))
 
             let z = zone(bpm: bpm, low: band.low, high: band.high)
             if z == .over, lastZone != .over {

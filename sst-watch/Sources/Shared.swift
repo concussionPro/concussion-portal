@@ -111,6 +111,43 @@ struct CrownScorePicker: View {
     }
 }
 
+// MARK: - HR source status (under the readout wherever HR is required)
+//
+// The watch IS the wearable — its own sensor via Health access. This makes the
+// three non-reading states explicit instead of a dead "waiting…" line, and
+// brands the simulator's demo feed so it can never pass for a measurement.
+
+struct HRSourceStatus: View {
+    @ObservedObject var workout: SSTWorkout
+
+    var body: some View {
+        if workout.simulated {
+            Label("Simulated heart rate — demo only", systemImage: "wand.and.stars")
+                .font(.caption2).foregroundStyle(.orange)
+                .multilineTextAlignment(.center)
+        } else if workout.bpm == nil {
+            if workout.authorized {
+                Text("Reading your heart rate — keep the watch snug on your wrist…")
+                    .font(.caption2).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            } else {
+                VStack(spacing: 6) {
+                    Text("Health access is off — SST reads your heart rate from this watch.")
+                        .font(.caption2).foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                    Button {
+                        Task { await workout.requestAuthorization() }
+                    } label: {
+                        Label("Allow Health access", systemImage: "heart.text.square")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Buttons
 
 struct PrimaryButton: View {

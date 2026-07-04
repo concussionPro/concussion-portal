@@ -228,8 +228,8 @@ final class SSTFlow: ObservableObject {
             "interpretation": result.interpretation.rawValue,
             "termination": termination,
             "restingSymptom": restingSymptom,
-            "hrSource": HRSource.liveWatch.rawValue,   // "watch"
-            "hrVerified": true,
+            "hrSource": workout.simulated ? "simulated" : HRSource.liveWatch.rawValue,
+            "hrVerified": !workout.simulated,
             "stages": stages.map { s -> [String: Any] in
                 var d: [String: Any] = [
                     "minute": s.minute,
@@ -266,7 +266,7 @@ final class SSTFlow: ObservableObject {
             "flare": log.flare,
             "feeling": feeling.rawValue,
             "verified": log.verified,
-            "hrSource": HRSource.liveWatch.rawValue,
+            "hrSource": workout.simulated ? "simulated" : HRSource.liveWatch.rawValue,
             "hrVerified": log.verified,
             "decision": decisionLabel(decision)
         ]

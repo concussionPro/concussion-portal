@@ -26,6 +26,9 @@ final class SSTWorkout: NSObject, ObservableObject {
     @Published var isStreaming: Bool = false
     /// True once the user has granted heart-rate access.
     @Published var authorized: Bool = false
+    /// True when bpm comes from the simulator demo feed, never a real sensor.
+    /// Readings from a simulated feed are NEVER verified and never sync as real.
+    @Published var simulated: Bool = false
 
     private let healthStore = HKHealthStore()
     private var session: HKWorkoutSession?
@@ -33,6 +36,7 @@ final class SSTWorkout: NSObject, ObservableObject {
 
     private var lastSampleAt: Date?
     private var staleTimer: Timer?
+    private var simTimer: Timer?
 
     /// ~5s with no sample → clear bpm (mirrors the web staleness watchdog).
     private static let staleSeconds: TimeInterval = 5
@@ -97,12 +101,22 @@ final class SSTWorkout: NSObject, ObservableObject {
         bpm = nil
         lastSampleAt = nil
         startStaleTimer()
+
+        #if targetEnvironment(simulator)
+        // The watch simulator has no HR sensor — feed a LABELLED demo waveform
+        // so flows are drivable on a Mac. Compiled out of device builds; the
+        // `simulated` flag routes every consumer to unverified handling.
+        startSimulatedFeed()
+        #endif
     }
 
     /// End the session + builder cleanly and stop publishing HR.
     func stop() {
         staleTimer?.invalidate()
         staleTimer = nil
+        simTimer?.invalidate()
+        simTimer = nil
+        simulated = false
 
         let endingBuilder = builder
         let endingSession = session
@@ -130,6 +144,24 @@ final class SSTWorkout: NSObject, ObservableObject {
         bpm = Int(value.rounded())
         lastSampleAt = Date()
     }
+
+    #if targetEnvironment(simulator)
+    /// Demo HR: a slow climb with jitter (rest ~80 toward ~150) — enough to
+    /// exercise zones, bands and thresholds. Clearly labelled in the UI.
+    private func startSimulatedFeed() {
+        simulated = true
+        simTimer?.invalidate()
+        simTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                let current = self.bpm ?? 80
+                let drift = current < 150 ? Int.random(in: 0...3) : 0
+                let jitter = Int.random(in: -2...2)
+                self.ingest(bpm: Double(min(170, max(65, current + drift + jitter))))
+            }
+        }
+    }
+    #endif
 
     // MARK: - Staleness watchdog
 

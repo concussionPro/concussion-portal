@@ -49,10 +49,7 @@ struct GradedTestView: View {
 
                 HRReadout(bpm: workout.bpm, tint: spike ? .orange : .primary)
 
-                if workout.bpm == nil {
-                    Text("Waiting for heart rate…")
-                        .font(.caption2).foregroundStyle(.secondary)
-                }
+                HRSourceStatus(workout: workout)
 
                 Divider()
 
