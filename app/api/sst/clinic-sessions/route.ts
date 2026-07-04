@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
-import { isRegisteredClinic, verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
+import { getClinic, isRegisteredClinic, verifyViewKey } from '@/lib/sst-trainer/clinic-registry'
 
 /**
  * GET /api/sst/clinic-sessions?code=CEA-1234&k=<viewKey>
@@ -98,7 +98,8 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ clinicCode: code, patientCount: patients.length, patients })
+    const clinicName = (await getClinic(code))?.clinicName ?? null
+    return NextResponse.json({ clinicCode: code, clinicName, patientCount: patients.length, patients })
   } catch (err) {
     console.error('SST clinic-sessions read error:', err)
     return NextResponse.json({ error: 'Could not load sessions' }, { status: 500 })

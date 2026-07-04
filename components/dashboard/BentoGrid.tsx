@@ -276,7 +276,10 @@ export function BentoGrid({ accessLevel: accessLevelProp, workshopLocation, onWo
       </Card>
 
       {/* ── 5. Clinical Toolkit → becomes Clinical Hub when launched ── */}
-      <Card href={hubForPaid ? '/clinical-hub' : '/clinical-toolkit'}>
+      {/* Bare /clinical-hub renders the DEMO roster (no code/key params) —
+          route paid users through Clinical Testing, which owns their real
+          code + private hub link. */}
+      <Card href={hubForPaid ? '/clinical-testing' : '/clinical-toolkit'}>
         <div className="flex items-center gap-3 mb-3">
           <div className={cn(
             'w-9 h-9 rounded-xl flex items-center justify-center',
