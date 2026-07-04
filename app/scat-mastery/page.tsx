@@ -146,7 +146,7 @@ export default function SCATMasteryPage() {
         // previously a blind 1.5s setTimeout could navigate before gtag had
         // even loaded, silently dropping the conversion.
         setSuccessData(data)
-        await fireSignupConversionThenNavigate(email.trim().toLowerCase(), '/scat-course')
+        await fireSignupConversionThenNavigate(email.trim().toLowerCase(), '/modules/101')
         return
       } else {
         setError(data.error || 'Something went wrong. Please try again.')

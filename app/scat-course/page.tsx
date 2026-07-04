@@ -266,7 +266,62 @@ export default function SCATCoursePage() {
           </div>
         )}
 
-        {/* Clinical-Grade Fillable PDFs - PRIMARY RECOMMENDATION */}
+        {/* Course Modules */}
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">Your Course Modules</h2>
+
+          <div className="space-y-4">
+            {modules.map((module) => {
+              const completed = isModuleComplete(module.id)
+
+              return (
+                <Link
+                  key={module.id}
+                  href={`/modules/${module.id}`}
+                  className={`block bg-white rounded-xl p-6 shadow-sm border-2 transition-all ${
+                    completed
+                      ? 'border-green-200 hover:border-green-300'
+                      : 'border-slate-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                      completed ? 'bg-green-100' : 'bg-blue-100'
+                    }`}>
+                      {completed ? (
+                        <CheckCircle className="w-6 h-6 text-green-600" />
+                      ) : (
+                        <BookOpen className="w-6 h-6 text-blue-600" />
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-900 mb-1">{module.title}</h3>
+                          <p className="text-slate-600 text-sm">{module.subtitle}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-slate-600">{module.duration}</div>
+                          <div className="text-xs text-slate-500">{module.points > 0 ? `${module.points} CPD ${module.points === 1 ? 'point' : 'points'}` : 'Free module'}</div>
+                        </div>
+                      </div>
+
+                      {completed && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-semibold mt-2">
+                          <CheckCircle className="w-4 h-4" />
+                          Completed
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Clinical-Grade Fillable PDFs - moved BELOW modules — activation first (2026-07-05) */}
         <div className="mb-12">
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-6 mb-6">
             <div className="flex items-start gap-4">
@@ -347,60 +402,6 @@ export default function SCATCoursePage() {
           </div>
         </div>
 
-        {/* Course Modules */}
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Your Course Modules</h2>
-
-          <div className="space-y-4">
-            {modules.map((module) => {
-              const completed = isModuleComplete(module.id)
-
-              return (
-                <Link
-                  key={module.id}
-                  href={`/modules/${module.id}`}
-                  className={`block bg-white rounded-xl p-6 shadow-sm border-2 transition-all ${
-                    completed
-                      ? 'border-green-200 hover:border-green-300'
-                      : 'border-slate-200 hover:border-blue-300'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                      completed ? 'bg-green-100' : 'bg-blue-100'
-                    }`}>
-                      {completed ? (
-                        <CheckCircle className="w-6 h-6 text-green-600" />
-                      ) : (
-                        <BookOpen className="w-6 h-6 text-blue-600" />
-                      )}
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-900 mb-1">{module.title}</h3>
-                          <p className="text-slate-600 text-sm">{module.subtitle}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-semibold text-slate-600">{module.duration}</div>
-                          <div className="text-xs text-slate-500">{module.points > 0 ? `${module.points} CPD ${module.points === 1 ? 'point' : 'points'}` : 'Free module'}</div>
-                        </div>
-                      </div>
-
-                      {completed && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-semibold mt-2">
-                          <CheckCircle className="w-4 h-4" />
-                          Completed
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
 
         {/* Upgrade CTA */}
         <div className="mt-12 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border-2 border-purple-200">
