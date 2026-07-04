@@ -76,36 +76,86 @@ function Shell() {
   return (
     <div className="flex h-screen overflow-hidden dashboard-bg">
       <Sidebar />
-      <main className="ml-0 flex h-full min-w-0 flex-1 flex-col p-4 md:ml-64 sm:p-6">
-        {/* compact header row */}
-        <div className="mb-3 flex flex-none flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/clinical-testing"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" /> Clinical Testing
-            </Link>
-            <span className="hidden text-slate-300 sm:inline">/</span>
-            <h1 className="hidden text-sm font-bold tracking-tight text-foreground sm:block">
-              SST Trainer
-            </h1>
-          </div>
-          <p className="hidden text-[11.5px] text-muted-foreground lg:block">
-            Run the flow on the left · hand patients their code on the right
-          </p>
+      <main className="ml-0 flex h-full min-w-0 flex-1 flex-col md:ml-64">
+        {/* slim workspace header */}
+        <div className="flex flex-none items-center gap-3 border-b border-slate-200/70 bg-white/70 px-4 py-2.5 backdrop-blur sm:px-6">
+          <Link
+            href="/clinical-testing"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" /> Clinical Testing
+          </Link>
+          <span className="text-slate-300">/</span>
+          <h1 className="text-sm font-bold tracking-tight text-foreground">SST Trainer</h1>
         </div>
 
-        {/* landscape workspace: device frame + clinic panel, no page scroll */}
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 lg:grid-cols-[minmax(360px,430px)_minmax(0,1fr)]">
-          <div className="h-full min-h-0 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)]">
-            <PlatformApp />
-          </div>
-          <div className="hidden h-full min-h-0 overflow-y-auto overscroll-contain lg:block">
-            <SstClinicCard />
+        {/* landscape workspace. grid-rows-[minmax(0,1fr)] is LOAD-BEARING:
+            without it the row grows to the app's full height and everything
+            below the fold is clipped unreachable inside overflow-hidden. */}
+        <div className="min-h-0 flex-1 px-4 py-4 sm:px-6">
+          <div className="mx-auto grid h-full max-w-[1120px] grid-cols-1 grid-rows-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(380px,450px)_minmax(0,1fr)]">
+            {/* the app, in a device frame that scrolls internally */}
+            <div className="h-full min-h-0 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-[0_18px_40px_-22px_rgba(22,36,63,0.4)]">
+              <PlatformApp />
+            </div>
+            {/* clinician rail: clinic panel + chair-side runbook */}
+            <div className="hidden h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain pb-2 pr-1 lg:flex">
+              <SstClinicCard />
+              <RunbookCard />
+            </div>
           </div>
         </div>
       </main>
+    </div>
+  )
+}
+
+/** Chair-side runbook — fills the clinician rail with the actual workflow
+ *  instead of dead space. */
+function RunbookCard() {
+  const steps = [
+    {
+      n: '1',
+      title: 'Pair the patient’s watch',
+      body: 'Broadcast mode on their Garmin/Polar/WHOOP or a chest strap — the app walks them through it. No wearable? Manual entry runs everything (it just never advances the band).',
+    },
+    {
+      n: '2',
+      title: 'Run the graded test with them',
+      body: 'Use the app on the left, or their phone. One symptom score a minute; the test ends itself at a 3-point rise — that heart rate is their measured threshold, and the 80–90% band is prescribed on the spot.',
+    },
+    {
+      n: '3',
+      title: 'Send them home with your code',
+      body: 'QR or emailed invite from the panel above. Home sessions stream live to your Clinical Hub while they train, and verified clean sessions step the band up automatically.',
+    },
+    {
+      n: '4',
+      title: 'Review the trajectory',
+      body: 'The serial measured-threshold curve is the recovery instrument — flares, holds and re-tests all land in your hub with flags for review.',
+    },
+  ]
+  return (
+    <div className="glass-premium rounded-2xl p-6">
+      <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
+        Chair-side runbook
+      </p>
+      <h2 className="mb-4 text-base font-bold tracking-tight text-foreground">
+        A patient through the flow, start to finish
+      </h2>
+      <div className="flex flex-col gap-4">
+        {steps.map((s) => (
+          <div key={s.n} className="flex items-start gap-3">
+            <span className="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-[#16243f] text-[12px] font-bold text-white">
+              {s.n}
+            </span>
+            <div>
+              <p className="m-0 text-[13px] font-bold text-foreground">{s.title}</p>
+              <p className="m-0 mt-0.5 text-xs leading-relaxed text-muted-foreground">{s.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
