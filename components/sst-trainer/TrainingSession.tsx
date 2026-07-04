@@ -119,6 +119,7 @@ export default function TrainingSession({
   const [heartRate, setHeartRate] = useState('')
   const [manualLogs, setManualLogs] = useState(0)
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [adjustBaseline, setAdjustBaseline] = useState(false)
   const [confirmContinue, setConfirmContinue] = useState(false)
   const [endFeel, setEndFeel] = useState<'same' | 'better' | 'worse' | null>(null)
   const [zoneToast, setZoneToast] = useState<'ease-off' | 'back-in' | null>(null)
@@ -588,22 +589,29 @@ export default function TrainingSession({
         </div>
       </div>
 
-      {/* live bpm auto-fills this; manual overrides; stale feed clears it */}
-      <div className="flex items-center gap-2.5">
-        <input
-          type="number"
-          inputMode="numeric"
-          value={heartRate}
-          onChange={(e) => setHeartRate(e.target.value)}
-          placeholder="Heart rate (bpm)"
-          className={`flex-1 rounded-[14px] border-[1.5px] border-[#cdd9da] bg-white px-3.5 py-3 text-base text-[#16282b] outline-none focus:border-[#5b9aa6] ${numFont}`}
-        />
-        <SecondaryButton onClick={logReading} disabled={!hrValid} className="whitespace-nowrap px-4 py-3">
-          Log{manualLogs > 0 ? ` (${manualLogs})` : ''}
-        </SecondaryButton>
-      </div>
+      {/* Manual HR entry exists ONLY for the manual/camera tiers chosen at
+          onboarding. With a live paired sensor the gauge IS the reading —
+          a typed number next to it is clutter and an integrity risk. */}
+      {hrConnect !== 'bluetooth' && (
+        <div className="flex items-center gap-2.5">
+          <input
+            type="number"
+            inputMode="numeric"
+            value={heartRate}
+            onChange={(e) => setHeartRate(e.target.value)}
+            placeholder="Heart rate (bpm)"
+            className={`min-w-0 flex-1 rounded-[14px] border-[1.5px] border-[#cdd9da] bg-white px-3.5 py-3 text-base text-[#16282b] outline-none focus:border-[#5b9aa6] ${numFont}`}
+          />
+          <SecondaryButton onClick={logReading} disabled={!hrValid} className="whitespace-nowrap px-4 py-3">
+            Log{manualLogs > 0 ? ` (${manualLogs})` : ''}
+          </SecondaryButton>
+        </div>
+      )}
 
-      {/* symptom check */}
+      {/* symptom check — same aligned pattern as the guided test: label row,
+          then one flat strip sharing the container edges. The baseline strip is
+          collapsed behind "adjust" — two stacked full-width bar rows read as a
+          broken layout and the baseline is rarely touched mid-session. */}
       <div className="flex flex-col gap-2.5 border-t border-[#dde7e7] pt-3">
         <div className="flex items-baseline justify-between">
           <span className="text-xs font-semibold text-[#3b4f52]">Symptom check now</span>
@@ -618,7 +626,7 @@ export default function TrainingSession({
         <SegmentBars
           value={currentSymptom}
           onChange={updateSymptom}
-          variant="ramp"
+          variant="flat"
           danger={symptomRise >= SESSION_STOP_RISE}
           ariaLabel="Current symptom level, 0 to 10"
         />
@@ -626,14 +634,23 @@ export default function TrainingSession({
           <p className="m-0 text-[10.5px] leading-snug text-[#9bafb0]">
             Before you started: {preSymptom}/10
           </p>
-          <span className="text-[10.5px] text-[#9bafb0]">adjust ↓</span>
+          <button
+            type="button"
+            onClick={() => setAdjustBaseline((v) => !v)}
+            aria-expanded={adjustBaseline}
+            className="text-[10.5px] font-semibold text-[#3c7681] underline decoration-[#a7c7cc] underline-offset-2"
+          >
+            {adjustBaseline ? 'done' : 'adjust'}
+          </button>
         </div>
-        <SegmentBars
-          value={preSymptom}
-          onChange={setPreSymptom}
-          variant="flat"
-          ariaLabel="Symptom level before you started, 0 to 10"
-        />
+        {adjustBaseline && (
+          <SegmentBars
+            value={preSymptom}
+            onChange={setPreSymptom}
+            variant="flat"
+            ariaLabel="Symptom level before you started, 0 to 10"
+          />
+        )}
       </div>
 
       {/* cancel confirm — leaving is never a silent discard */}

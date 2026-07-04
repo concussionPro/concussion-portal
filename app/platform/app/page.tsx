@@ -92,7 +92,17 @@ function sessionDayLabel(at: number): string {
   return `${d.toLocaleDateString('en-AU', { weekday: 'long' })}’s`
 }
 
-export default function PlatformAppPage() {
+export default function PlatformAppPage({
+  publicSurface = false,
+}: {
+  /**
+   * true when rendered on the PUBLIC /sst-trainer route: patients arrive with
+   * their clinic's code (the paying clinic's distribution). Self-guided mode —
+   * the full product without a code — exists only on this gated /platform/app
+   * surface (paid/enrolled/admin), never on the public one.
+   */
+  publicSurface?: boolean
+}) {
   const [step, setStep] = useState<AppStep>('welcome')
   const [hydrated, setHydrated] = useState(false)
   const [welcomeBack, setWelcomeBack] = useState(false)
@@ -455,6 +465,7 @@ export default function PlatformAppPage() {
         <SstOnboarding
           key={urlClinicCode ?? 'no-clinic-param'}
           device={device}
+          allowSelfGuided={!publicSurface}
           initialClinicCode={urlClinicCode}
           onPair={handlePair}
           onStart={(r: OnboardingResult) => {

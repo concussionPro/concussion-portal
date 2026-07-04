@@ -36,7 +36,9 @@ export default function SstEntry() {
   }, [])
 
   if (view === 'deciding') return null
-  if (view === 'app') return <PlatformApp />
+  // publicSurface: patients enter with their clinic's code — the full
+  // self-guided version lives only on the gated /platform/app surface.
+  if (view === 'app') return <PlatformApp publicSurface />
   return (
     <SstLanding
       onStart={() => {

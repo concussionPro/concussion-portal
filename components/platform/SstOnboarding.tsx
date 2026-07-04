@@ -17,11 +17,13 @@ import SstConnectWizard from '@/components/platform/SstConnectWizard'
 /**
  * Onboarding (the "Welcome" step) of the full-screen /platform/app.
  *
- * SELF-GUIDED IS ON BY DEFAULT (owner decision 2026-07-04, matching the watch
- * app): the app must be fully usable without a clinic code — a code links a
- * clinician and turns on sync, it is never a wall. Set
- * NEXT_PUBLIC_SST_SELF_GUIDED=false to restore the clinic-code-only gate.
- * QR deep links (?clinic=CODE) still land in clinic-code mode pre-filled.
+ * SELF-GUIDED IS SURFACE-GATED (owner decision 2026-07-04, superseding the
+ * same-day default-on): the full no-code version is a PAID capability — it
+ * renders only where the page passes `allowSelfGuided` (the gated
+ * /platform/app surface). The public /sst-trainer entry is clinic-code only:
+ * the code IS the paying clinic's distribution. QR deep links (?clinic=CODE)
+ * land in clinic-code mode pre-filled. NEXT_PUBLIC_SST_SELF_GUIDED=true
+ * force-enables self-guided everywhere (dev/testing).
  *
  * The clinic code is VALIDATED here (GET /api/sst/validate-code) and confirmed
  * with the clinic's real name — a typo can't silently orphan a patient's data.
@@ -38,7 +40,7 @@ import SstConnectWizard from '@/components/platform/SstConnectWizard'
  *  - web iOS Safari (no Web Bluetooth): honestly points to our app or manual.
  */
 
-const SELF_GUIDED_ENABLED = process.env.NEXT_PUBLIC_SST_SELF_GUIDED !== 'false'
+const SELF_GUIDED_FORCED = process.env.NEXT_PUBLIC_SST_SELF_GUIDED === 'true'
 
 const GOALS: { id: string; label: string }[] = [
   { id: 'sport', label: 'Sport' },
@@ -80,6 +82,7 @@ export default function SstOnboarding({
   onPair,
   onStart,
   initialClinicCode,
+  allowSelfGuided = false,
 }: {
   device: HrSource
   /** lifts the chosen source + the REAL connection (or null for manual) up to the page */
@@ -87,9 +90,12 @@ export default function SstOnboarding({
   onStart: (result: OnboardingResult) => void
   /** pre-fill from a per-clinic QR deep link (/sst-trainer?clinic=CODE) */
   initialClinicCode?: string
+  /** self-guided (no clinic code) is a paid-surface capability — see header */
+  allowSelfGuided?: boolean
 }) {
+  const selfGuidedEnabled = allowSelfGuided || SELF_GUIDED_FORCED
   const [mode, setMode] = useState<TrainerMode>(
-    SELF_GUIDED_ENABLED && !initialClinicCode ? 'self-guided' : 'clinic-code',
+    selfGuidedEnabled && !initialClinicCode ? 'self-guided' : 'clinic-code',
   )
   const [clinicCode, setClinicCode] = useState(initialClinicCode ?? '')
   const [codeStatus, setCodeStatus] = useState<CodeStatus>('idle')
@@ -231,8 +237,8 @@ export default function SstOnboarding({
         </p>
       </div>
 
-      {/* mode segmented control — hidden at launch (clinic-code only) */}
-      {SELF_GUIDED_ENABLED && (
+      {/* mode segmented control — paid surface only (public entry is clinic-code) */}
+      {selfGuidedEnabled && (
         <div className="flex flex-col gap-2">
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#849c9c]">
             How are you using this?

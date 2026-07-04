@@ -66,7 +66,7 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
             style={{ background: '#ccfbf1', color: '#0f766e' }}
           >
             <span className="h-[7px] w-[7px] rounded-full" style={{ background: ACCENT }} />
-            Concussion exercise rehab — self-guided or with your clinician
+            Concussion exercise rehab — prescribed and overseen by your clinician
           </span>
 
           <h1 className="m-0 text-[clamp(36px,4.7vw,60px)] font-extrabold leading-[1.01] tracking-[-0.03em]">
@@ -85,7 +85,7 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
               className="flex cursor-pointer items-center gap-2 rounded-[13px] border-none px-[22px] py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
               style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.7)' }}
             >
-              Start now — it&rsquo;s free
+              I have a clinic code — start
             </button>
             <Link
               href="/platform"
@@ -105,7 +105,7 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
             </span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
             <span className="text-[13px] font-semibold leading-[1.4] text-slate-500">
-              No account needed
+              No account — just your clinic code
             </span>
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function SstLanding({ onStart }: { onStart: () => void }) {
             className="cursor-pointer rounded-[13px] border-none px-6 py-[15px] text-[15px] font-bold leading-none text-white transition-transform active:scale-[0.98]"
             style={{ background: ACCENT, boxShadow: '0 12px 26px -10px rgba(13,148,136,.6)' }}
           >
-            Start now — free
+            Start with your clinic code
           </button>
         </div>
       </section>
