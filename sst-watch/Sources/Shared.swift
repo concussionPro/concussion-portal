@@ -64,7 +64,11 @@ struct HRReadout: View {
     }
 }
 
-// MARK: - Digital Crown 0–10 (and any small integer range) picker
+// MARK: - 0–10 (and any small integer range) score picker
+//
+// Deliberately NOT crown-driven: a focusable digitalCrownRotation inside a
+// ScrollView captures the crown and kills page scrolling (broke the safety
+// check screen). Big −/+ targets are also simpler for foggy patients.
 
 struct CrownScorePicker: View {
     let title: String
@@ -72,40 +76,38 @@ struct CrownScorePicker: View {
     var range: ClosedRange<Int> = 0...10
     var accent: Color = .blue
 
-    @State private var crown = 0.0
-
     var body: some View {
         VStack(spacing: 2) {
             Text(title)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-            Text("\(value)")
-                .font(.system(size: 40, weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(accent)
-                .contentTransition(.numericText())
-            Text("Turn the crown")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            HStack(spacing: 10) {
+                stepButton("minus", enabled: value > range.lowerBound) { value -= 1 }
+                Text("\(value)")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(accent)
+                    .contentTransition(.numericText())
+                    .frame(minWidth: 52)
+                stepButton("plus", enabled: value < range.upperBound) { value += 1 }
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 6)
-        .focusable()
-        .digitalCrownRotation(
-            $crown,
-            from: Double(range.lowerBound),
-            through: Double(range.upperBound),
-            by: 1,
-            sensitivity: .low,
-            isContinuous: false,
-            isHapticFeedbackEnabled: true
-        )
-        .onChange(of: crown) { _, newValue in
-            let v = Int(newValue.rounded())
-            if v != value { value = v }
+    }
+
+    private func stepButton(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button {
+            action()
+            Haptics.play(.click)
+        } label: {
+            Image(systemName: symbol)
+                .font(.title3.weight(.bold))
+                .frame(width: 40, height: 36)
         }
-        .onAppear { crown = Double(value) }
+        .buttonStyle(.bordered)
+        .disabled(!enabled)
     }
 }
 
