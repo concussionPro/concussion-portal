@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { X, ArrowRight, Shield, Award, Calendar } from 'lucide-react'
 import { trackEvent, trackLeadConversion } from '@/lib/analytics'
+import { useSession } from '@/contexts/SessionContext'
 
 /**
  * Exit-intent popup — captures email by offering free SCAT6 Mastery course.
@@ -29,6 +30,10 @@ const EXCLUDED_PREFIXES = [
 
 export function ExitIntentPopup() {
   const pathname = usePathname()
+  // NEVER show lead capture to a signed-in user — they're already in the
+  // funnel (or a paying customer). useSession fetches standalone here (no
+  // provider in the root layout); while loading we stay disarmed.
+  const { user, isLoading: sessionLoading } = useSession()
   const [show, setShow] = useState(false)
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
@@ -36,7 +41,8 @@ export function ExitIntentPopup() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
 
-  const isExcluded = EXCLUDED_PREFIXES.some(p => pathname.startsWith(p))
+  const isExcluded =
+    !!user || sessionLoading || EXCLUDED_PREFIXES.some(p => pathname.startsWith(p))
   // On prospect-demo surfaces (/p/* and /proposals/*) the SCAT-capture form
   // is wrong — these visitors have already received cold outreach. Show a
   // book-a-call variant instead. General portal browsers keep the SCAT

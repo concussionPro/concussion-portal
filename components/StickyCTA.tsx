@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { ArrowRight, X } from 'lucide-react'
 import Link from 'next/link'
+import { useSession } from '@/contexts/SessionContext'
 
 // Pages where the sticky CTA should NOT appear.
 // Keep in sync (in intent) with ExitIntentPopup EXCLUDED_PREFIXES: workshop
@@ -39,6 +40,8 @@ const EXCLUDED_PATHS = [
 
 export function StickyCTA() {
   const pathname = usePathname()
+  // Signed-in users never see marketing chrome (standalone session fetch).
+  const { user, isLoading: sessionLoading } = useSession()
   const [dismissed, setDismissed] = useState(false)
   const [visible, setVisible] = useState(false)
 
@@ -59,7 +62,8 @@ export function StickyCTA() {
   }, [])
 
   // Don't show on excluded paths
-  const isExcluded = EXCLUDED_PATHS.some(p => pathname.startsWith(p))
+  const isExcluded =
+    !!user || sessionLoading || EXCLUDED_PATHS.some(p => pathname.startsWith(p))
   if (isExcluded || dismissed || !visible) return null
 
   const handleDismiss = () => {

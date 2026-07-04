@@ -20,9 +20,13 @@ const navItems: Array<{
 }> = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
+  // Clinical Testing = the live patient tools (SST Trainer + pre-season
+  // baseline), primary in the paid toolkit — owner directive 2026-07-04.
+  { icon: Stethoscope, label: 'Clinical Testing', href: '/clinical-testing', paidOnly: true },
   { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit', paidOnly: true },
   { icon: Mail, label: 'Outreach Kit', href: '/outreach-kit', paidOnly: true },
-  { icon: Stethoscope, label: 'Admin Workflow', href: '/admin-workflow', paidOnly: true },
+  // Admin Workflow removed: Hub Pack material (clinic operations), not
+  // individual-course content — /admin-workflow now explains + pitches the Hub.
   { icon: Activity, label: 'SCAT Forms', href: '/scat-forms' },
   { icon: Library, label: 'Reference Repository', href: '/references', paidOnly: true },
   { icon: BookMarked, label: 'Complete Reference', href: '/complete-reference', paidOnly: true },

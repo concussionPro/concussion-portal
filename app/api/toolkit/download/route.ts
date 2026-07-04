@@ -47,6 +47,11 @@ export async function GET(req: NextRequest) {
     if (!paidAccess && !bundleOwner) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+    // Admin-workflow modules are Hub Pack material (clinic operations), not
+    // individual-course content — owner directive 2026-07-04.
+    if (kit === 'admin') {
+      return NextResponse.json({ error: 'Hub Pack content' }, { status: 403 })
+    }
   }
 
   const zip = new JSZip()
@@ -56,25 +61,29 @@ export async function GET(req: NextRequest) {
   // README
   root.file('README.md', readme(kit, null))
 
+  // Files ship as .doc (Word-compatible HTML): they open directly in
+  // Word/Pages/Google Docs as EDITABLE documents the clinic can put on its
+  // own letterhead — "web templates" that only lived in the browser were the
+  // complaint. The HTML renderers are unchanged; Word reads them natively.
   if (kit === 'all' || kit === 'clinical') {
     const folder = root.folder('01-Clinical-Toolkit')!
     DISCHARGE_TEMPLATES.forEach((t, i) => {
-      folder.file(`${String(i + 1).padStart(2, '0')}-${t.slug}.html`, renderClinicalHTML(t))
+      folder.file(`${String(i + 1).padStart(2, '0')}-${t.slug}.doc`, renderClinicalHTML(t))
     })
-    folder.file('00-Documentation-Principles.html', renderPrinciplesHTML(DOCUMENTATION_PRINCIPLES))
+    folder.file('00-Documentation-Principles.doc', renderPrinciplesHTML(DOCUMENTATION_PRINCIPLES))
   }
 
   if (kit === 'all' || kit === 'outreach') {
     const folder = root.folder('02-Outreach-Kit')!
     OUTREACH_TEMPLATES.forEach((t, i) => {
-      folder.file(`${String(i + 1).padStart(2, '0')}-${t.slug}.html`, renderOutreachHTML(t))
+      folder.file(`${String(i + 1).padStart(2, '0')}-${t.slug}.doc`, renderOutreachHTML(t))
     })
   }
 
-  if (kit === 'all' || kit === 'admin') {
+  if ((kit === 'all' && isAdmin) || kit === 'admin') {
     const folder = root.folder('03-Admin-Workflow')!
     ADMIN_COURSE_MODULES.forEach((m) => {
-      folder.file(`${String(m.id).padStart(2, '0')}-${m.slug}.html`, renderAdminModuleHTML(m))
+      folder.file(`${String(m.id).padStart(2, '0')}-${m.slug}.doc`, renderAdminModuleHTML(m))
     })
   }
 

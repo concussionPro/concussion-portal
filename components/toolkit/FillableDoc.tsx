@@ -53,10 +53,19 @@ export function FillableDoc({
       if (raw) {
         const parsed = JSON.parse(raw)
         if (parsed && typeof parsed === 'object') {
+          // SANITISE: before the previewMode guard existed, touring a prospect
+          // portal wrote THAT clinic's branding into this shared buyer key —
+          // paid users then saw "Advanced Health Pain & Injury Clinic" as
+          // their default. Drop any value carrying known bleed strings.
+          const cleaned = Object.fromEntries(
+            Object.entries(parsed as Record<string, string>).filter(
+              ([, v]) => typeof v !== 'string' || !/advanced health/i.test(v),
+            ),
+          )
           // localStorage takes precedence over defaults (user edits persist),
           // but defaults fill gaps for keys the user hasn't touched.
           // eslint-disable-next-line react-hooks/set-state-in-effect
-          setValues({ ...(defaultValues ?? {}), ...parsed })
+          setValues({ ...(defaultValues ?? {}), ...cleaned })
         }
       }
     } catch {
