@@ -370,8 +370,10 @@ function Shell() {
           <div className="flex flex-col gap-5">
             <ClinicCard />
 
+            {/* the two distinct instruments, side by side */}
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div className="glass-premium rounded-2xl p-6 sm:p-8">
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col gap-3">
                 <div className="w-11 h-11 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-none">
                   <HeartPulse className="w-5 h-5 text-accent" strokeWidth={1.8} />
                 </div>
@@ -394,6 +396,39 @@ function Shell() {
                   </Link>
                 </div>
               </div>
+            </div>
+
+            {/* Pre-season baseline — always visible; the personalised link
+                lives in the clinic card once a code exists. */}
+            <div className="glass-premium rounded-2xl p-6 sm:p-8">
+              <div className="flex flex-col gap-3">
+                <div className="w-11 h-11 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-none">
+                  <ClipboardList className="w-5 h-5 text-accent" strokeWidth={1.8} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-[0.14em] font-bold text-accent mb-0.5">
+                    SCAT6 baseline — self-administered
+                  </p>
+                  <h2 className="text-lg font-bold text-foreground tracking-tight mb-1.5">
+                    Pre-Season Baseline Testing
+                  </h2>
+                  <p className="text-[13px] text-muted-foreground leading-relaxed mb-4">
+                    Share one link with your sports clubs and athletes self-complete the SCAT6
+                    baseline in about five minutes — symptom scale, orientation, memory,
+                    concentration and delayed recall. A PDF report is emailed to your clinic for
+                    every athlete, stored for repeat-test comparison. Your personalised club link
+                    appears in the clinic card above once your code exists.
+                  </p>
+                  <Link
+                    href="/clinical-testing/baseline"
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-accent text-white text-[13px] font-bold hover:bg-accent/90 transition-colors shadow-sm"
+                  >
+                    Open Baseline Testing
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
         </div>

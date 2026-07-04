@@ -73,17 +73,20 @@ function Shell() {
   return (
     <div className="flex min-h-screen dashboard-bg">
       <Sidebar />
-      <main className="flex-1 ml-0 md:ml-64">
-        <div className="px-4 pt-4">
+      <main className="flex-1 ml-0 md:ml-64 p-4 sm:p-6">
+        {/* One centred instrument column: back link, then the app framed as a
+            device card — not a full-bleed page lost in the content area. */}
+        <div className="mx-auto max-w-[560px]">
           <Link
             href="/clinical-testing"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" /> Clinical Testing
           </Link>
+          <div className="rounded-2xl border border-slate-200 bg-[#f7fafa] shadow-sm">
+            <PlatformApp />
+          </div>
         </div>
-        {/* The app brings its own shell (header, progress, 480px column). */}
-        <PlatformApp />
       </main>
     </div>
   )
