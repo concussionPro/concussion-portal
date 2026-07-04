@@ -237,7 +237,7 @@ export async function sendPostPurchaseLoginEmail(opts: {
   attachments?: Array<{ filename: string; content: Buffer | string }>
 }): Promise<boolean> {
   const baseUrl = opts.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-  const loginUrl = `${baseUrl}/auth/verify?token=${opts.token}&utm_source=email&utm_medium=email&utm_campaign=purchase_welcome`
+  const loginUrl = `${baseUrl}/api/auth/verify?token=${opts.token}&utm_source=email&utm_medium=email&utm_campaign=purchase_welcome`
 
   const isFullCourse = opts.accessLevel === 'full-course'
   const firstName = opts.firstName ? escapeHtml(opts.firstName.split(' ')[0]) : 'there'
@@ -343,7 +343,7 @@ export async function sendPostPurchaseLoginEmail(opts: {
  */
 export async function sendMagicLinkEmail(email: string, token: string, origin?: string): Promise<boolean> {
   const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
-  const loginUrl = `${baseUrl}/auth/verify?token=${token}`
+  const loginUrl = `${baseUrl}/api/auth/verify?token=${token}`
 
   return sendEmail({
     to: email,

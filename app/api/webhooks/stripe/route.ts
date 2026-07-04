@@ -567,7 +567,7 @@ async function handleShortCoursePurchase(
   // session when they click the link (same pattern as handleBookPurchase).
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || CONFIG.SEO.SITE_URL || 'https://portal.concussion-education-australia.com'
   const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course')
-  const loginUrl = `${baseUrl}/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=short_course_purchase&next=${encodeURIComponent(course.route)}`
+  const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=short_course_purchase&redirect=${encodeURIComponent(course.route)}`
 
   try {
     await sendEmail({
@@ -633,7 +633,7 @@ async function handleBookPurchase(
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.concussion-education-australia.com'
   const token = createMagicToken(userId, customerEmail, customerName, (existing?.accessLevel || 'preview') as 'preview' | 'online-only' | 'full-course')
-  const loginUrl = `${baseUrl}/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=reference_purchase`
+  const loginUrl = `${baseUrl}/api/auth/verify?token=${token}&utm_source=email&utm_medium=email&utm_campaign=reference_purchase`
   const downloadUrl = `${baseUrl}/api/reference/download`
 
   // Generate tax invoice — same best-effort policy as course purchase.

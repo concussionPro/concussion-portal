@@ -114,7 +114,7 @@ export function generateMagicLinkJWT(
   baseUrl: string
 ): string {
   const token = createMagicToken(userId, email, name, accessLevel, NURTURE_TTL_MS)
-  return `${baseUrl}/auth/verify?token=${token}`
+  return `${baseUrl}/api/auth/verify?token=${token}`
 }
 
 // Verify magic link token
