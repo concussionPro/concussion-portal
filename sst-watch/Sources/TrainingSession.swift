@@ -31,7 +31,6 @@ struct TrainingSessionView: View {
     @State private var preSymptom = 0
     @State private var peakSymptom = 0
     @State private var symptomNow = 0
-    @State private var showSymptom = false
     @State private var stoppedForSymptom = false
 
     // Summary.
@@ -116,35 +115,22 @@ struct TrainingSessionView: View {
 
                 Divider()
 
-                Button { showSymptom = true } label: {
-                    Label("Symptoms changed?", systemImage: "waveform.path.ecg")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
+                // Inline symptom score — no sheet, no save tap. A change
+                // applies immediately; a ≥2-point rise stops the session.
+                CrownScorePicker(title: "Symptoms now", value: $symptomNow, descriptor: symptomWord, accentFor: symptomSeverityColor)
+                    .onChange(of: symptomNow) { _, v in
+                        peakSymptom = max(peakSymptom, v)
+                        if (v - preSymptom) >= SSTProtocol.sessionStopRise {
+                            Haptics.play(.failure)
+                            endSession(stoppedForSymptom: true)
+                        }
+                    }
 
                 Button(role: .destructive) { endSession(stoppedForSymptom: false) } label: {
                     Label("End session", systemImage: "stop.circle")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-            }
-            .padding(.horizontal, 4)
-        }
-        .sheet(isPresented: $showSymptom) { symptomSheet }
-    }
-
-    private var symptomSheet: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                CrownScorePicker(title: "How bad are your symptoms right now?", value: $symptomNow, descriptor: symptomWord, accentFor: symptomSeverityColor)
-                PrimaryButton(title: "Save", systemImage: "checkmark") {
-                    peakSymptom = max(peakSymptom, symptomNow)
-                    showSymptom = false
-                    if (symptomNow - preSymptom) >= SSTProtocol.sessionStopRise {
-                        Haptics.play(.failure)
-                        endSession(stoppedForSymptom: true)
-                    }
-                }
             }
             .padding(.horizontal, 4)
         }
