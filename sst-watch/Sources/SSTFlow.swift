@@ -139,6 +139,14 @@ final class SSTFlow: ObservableObject {
         lastResult = result
         if result.interpretation != .invalid {
             state.markTested()
+            // Serial record — every real test is a trajectory event; only a
+            // live-sensor measurement counts as verified (never the sim feed).
+            state.appendThreshold(ThresholdRecord(
+                date: Date(),
+                hrt: result.hrt,
+                interpretation: result.interpretation,
+                verified: !workout.simulated
+            ))
             Task { await postThreshold(result: result, stages: stages, redFlagStop: redFlagStop) }
         }
         if result.interpretation == .redFlag { state.markRedFlag() }

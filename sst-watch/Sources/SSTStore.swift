@@ -38,6 +38,9 @@ struct SSTState: Codable {
     // Clinical state.
     var prescription: Prescription?
     var sessions: [SessionLog]
+    /// Serial graded-test record — the recovery-trajectory instrument.
+    /// Optional so states persisted before this field decode fine.
+    var thresholds: [ThresholdRecord]?
     var verifiedSessionCount: Int
     var lastTestAt: Date?
     var lastRedFlagAt: Date?
@@ -58,6 +61,7 @@ struct SSTState: Codable {
             consentedAt: nil,
             prescription: nil,
             sessions: [],
+            thresholds: [],
             verifiedSessionCount: 0,
             lastTestAt: nil,
             lastRedFlagAt: nil,
@@ -89,6 +93,13 @@ struct SSTState: Codable {
 
     mutating func setPrescription(_ p: Prescription?) {
         prescription = p
+        save()
+    }
+
+    mutating func appendThreshold(_ record: ThresholdRecord) {
+        var list = thresholds ?? []
+        list.append(record)
+        thresholds = list
         save()
     }
 

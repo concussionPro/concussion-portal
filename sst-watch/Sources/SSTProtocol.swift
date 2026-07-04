@@ -131,6 +131,17 @@ struct ThresholdResult: Codable {
     var bandHigh: Int?
 }
 
+/// One graded test in the serial record — the recovery-trajectory instrument
+/// (the measured-HRt curve over time, mirroring SstTrajectory on the web).
+/// Non-measurable outcomes (no-intolerance / red-flag) are kept as clinical
+/// events; `verified` = live-sensor measurement (the simulator feed is not).
+struct ThresholdRecord: Codable {
+    var date: Date
+    var hrt: Int?
+    var interpretation: Interpretation
+    var verified: Bool
+}
+
 struct SessionReading: Codable { var bpm: Int; var verified: Bool }
 
 struct Prescription: Codable {
