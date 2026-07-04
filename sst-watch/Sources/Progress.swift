@@ -35,15 +35,11 @@ struct ProgressScreen: View {
                 }
 
                 if sessions.isEmpty {
-                    MessageCard(icon: "list.bullet.rectangle",
+                    MessageCard(icon: "chart.xyaxis.line",
                                 title: "No sessions yet",
-                                body: "Your training history will show here.")
+                                body: "Your training chart will show here.")
                 } else {
-                    VStack(spacing: 6) {
-                        ForEach(Array(sessions.enumerated().reversed()), id: \.offset) { item in
-                            sessionRow(index: item.offset, log: item.element)
-                        }
-                    }
+                    sessionTrend
                 }
 
                 PrimaryButton(title: "Back", systemImage: "chevron.left", tint: .gray) {
@@ -134,6 +130,70 @@ struct ProgressScreen: View {
         return max(0, lo)...hi
     }
 
+    // MARK: - Session trend (peak HR vs band — mirrors the web Trend chart)
+
+    @ViewBuilder
+    private var sessionTrend: some View {
+        VStack(spacing: 4) {
+            HStack {
+                Text("Sessions")
+                    .font(.caption).fontWeight(.semibold)
+                Spacer()
+                if let p = flow.state.prescription {
+                    Text("band \(p.bandLow)–\(p.bandHigh)")
+                        .font(.system(size: 10)).monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Chart {
+                if let p = flow.state.prescription {
+                    // Training band (shaded) + the do-not-exceed ceiling.
+                    RectangleMark(
+                        xStart: .value("Start", -1),
+                        xEnd: .value("End", sessions.count),
+                        yStart: .value("Low", p.bandLow),
+                        yEnd: .value("High", p.bandHigh)
+                    )
+                    .foregroundStyle(.teal.opacity(0.15))
+                    RuleMark(y: .value("Ceiling", p.hrt))
+                        .foregroundStyle(.red.opacity(0.7))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                }
+                ForEach(Array(sessions.enumerated()), id: \.offset) { item in
+                    LineMark(
+                        x: .value("Session", item.offset),
+                        y: .value("Peak HR", item.element.peakHeartRate)
+                    )
+                    .foregroundStyle(.teal)
+                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
+                    PointMark(
+                        x: .value("Session", item.offset),
+                        y: .value("Peak HR", item.element.peakHeartRate)
+                    )
+                    .foregroundStyle(item.element.flare ? .orange : .teal)
+                }
+            }
+            .chartXAxis(.hidden)
+            .chartXScale(domain: -1...max(1, sessions.count))
+            .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) }
+            .frame(height: 76)
+
+            HStack(spacing: 8) {
+                Label("flare", systemImage: "circle.fill")
+                    .font(.system(size: 9)).foregroundStyle(.orange)
+                Label("ceiling", systemImage: "line.diagonal")
+                    .font(.system(size: 9)).foregroundStyle(.red)
+                Spacer()
+                Text("\(sessions.count) session\(sessions.count == 1 ? "" : "s")")
+                    .font(.system(size: 9)).foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(.gray.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+    }
+
     private func decisionBanner(_ d: ProgressionDecision) -> some View {
         let (text, icon, color): (String, String, Color) = {
             switch d {
@@ -151,24 +211,4 @@ struct ProgressScreen: View {
             .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
     }
 
-    private func sessionRow(index: Int, log: SessionLog) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: log.verified ? "checkmark.seal.fill" : "seal")
-                .foregroundStyle(log.verified ? .green : .secondary)
-                .font(.footnote)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Session \(index + 1)").font(.caption).fontWeight(.semibold)
-                Text("\(log.avgHeartRate) avg · \(log.minutesPct)% · sx \(log.preSymptom)→\(log.peakSymptom)")
-                    .font(.caption2).foregroundStyle(.secondary)
-            }
-            Spacer()
-            if log.flare {
-                Image(systemName: "flame.fill").foregroundStyle(.orange).font(.caption2)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
-        .padding(.horizontal, 6)
-        .background(.gray.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
-    }
 }
