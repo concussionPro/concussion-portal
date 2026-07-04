@@ -385,7 +385,7 @@ async function sendCertificateEmail(opts: {
                     Whats next
                   </p>
                   <p style="margin: 0 0 12px 0; font-size: 14px; color: #475569;">
-                    Youve already got the full Concussion Clinical Mastery course — your workshop seat is locked in for <strong>Sat 13 June 2026, Rydges Exhibition St (Melbourne CBD)</strong>. Logistics email goes out 1 week prior.
+                    Youve already got the full Concussion Clinical Mastery course — your in-person workshop seat is included. Your nominated city's date locks in once it reaches its Ready-to-Train threshold, and the logistics email goes out 1 week prior.
                   </p>
                   <p style="margin: 0 0 0 0; font-size: 13px; color: #475569;">
                     Questions about the workshop, your modules, or CPD logging? Reply to this email.
@@ -402,11 +402,11 @@ async function sendCertificateEmail(opts: {
                   </p>
                   <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 18px; margin-bottom: 12px;">
                     <div style="font-size: 11px; font-weight: 700; color: #a16207; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
-                      In-person workshop · Saturday 13 June 2026
+                      In-person workshop · your nominated city
                     </div>
                     <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 17px;">Concussion Clinical Mastery — workshop add-on</h3>
                     <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569; line-height: 1.5;">
-                      Rydges Exhibition St (Melbourne CBD). Full-day hands-on practice: VOMS, oculomotor, BESS, cervical, return-to-play decision pathways. Brings your total to 14 CPD hours.
+                      Full-day hands-on practice: VOMS, oculomotor, BESS, cervical, return-to-play decision pathways. Runs city-by-city as each hits its threshold — nominate yours at upgrade. Brings your total to 14 CPD hours.
                     </p>
                     <a href="https://portal.concussion-education-australia.com/pricing?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=workshop-add-on" style="display: inline-block; padding: 9px 18px; background: #a16207; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
                       Add the workshop →
@@ -430,7 +430,7 @@ async function sendCertificateEmail(opts: {
                     </div>
                     <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 17px;">Concussion Clinical Mastery</h3>
                     <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569; line-height: 1.5;">
-                      The full clinical course — 8 online modules + a full-day in-person Melbourne workshop (13 June 2026). Osteopathy Australia–endorsed. Goes deep on assessment, persistent symptoms, return-to-play, rehabilitation by phenotype.
+                      The full clinical course — 8 online modules + a full-day in-person workshop in your nominated city. Osteopathy Australia–endorsed. Goes deep on assessment, persistent symptoms, return-to-play, rehabilitation by phenotype.
                     </p>
                     <a href="https://portal.concussion-education-australia.com/pricing?utm_source=email&utm_medium=email&utm_campaign=certificate-upsell&utm_content=ccm-flagship" style="display: inline-block; padding: 9px 18px; background: #a16207; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
                       View pricing →

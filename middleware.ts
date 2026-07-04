@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { sql } from '@vercel/postgres'
 
 // Edge-compatible constant-time string comparison
 // Pads shorter string to prevent leaking length via timing
@@ -32,6 +33,12 @@ const PAID_DOCS = new Set([
   '/docs/SCAT6_Flat.pdf',
   '/docs/SCOAT6_Flat.pdf',
   '/docs/Child_SCAT6_Flat.pdf',
+  // Paid Word/image templates (2026-07-05 audit: these were world-readable —
+  // the matcher only covered .pdf/.zip, so raw /docs/ URLs bypassed the gate)
+  '/docs/Email Template Pack.docx',
+  '/docs/Employer _ School Letter Template.docx',
+  '/docs/Return-to-School Plan Template (DOCX).docx',
+  '/docs/RehabFlow.png',
 ])
 
 // Edge-compatible HMAC-SHA256 signature verification (base64url)
@@ -74,7 +81,7 @@ async function verifyAdminCookieEdge(token: string | undefined): Promise<boolean
 }
 
 // Edge-compatible session verification using Web Crypto API
-async function verifySessionEdge(token: string): Promise<{ accessLevel: string; exp: number } | null> {
+async function verifySessionEdge(token: string): Promise<{ accessLevel: string; email?: string; exp: number } | null> {
   try {
     const parts = token.split('.')
     if (parts.length !== 2) return null
@@ -240,7 +247,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Handle /docs/ file access (PDFs and ZIPs)
-  if (pathname.startsWith('/docs/') && (pathname.endsWith('.pdf') || pathname.endsWith('.zip'))) {
+  if (pathname.startsWith('/docs/') && /\.(pdf|zip|docx|png)$/.test(pathname)) {
     // Public docs — always allow
     if (PUBLIC_DOCS.has(pathname)) {
       return NextResponse.next()
@@ -268,6 +275,23 @@ export async function middleware(request: NextRequest) {
         const session = await verifySessionEdge(sessionToken)
         if (session && (session.accessLevel === 'online-only' || session.accessLevel === 'full-course')) {
           return NextResponse.next()
+        }
+        // Reference+Toolkit (A$97) bundle owners are accessLevel 'preview' with
+        // a DB flag — every /api/* download grants them, but this CDN gate
+        // didn't (2026-07-05 audit: paying tier got 401 on Download-All).
+        // Rare path, one indexed lookup, @vercel/postgres is edge-safe.
+        if (session?.email) {
+          try {
+            const { rows } = await sql`
+              SELECT 1 FROM users
+              WHERE LOWER(email) = LOWER(${session.email})
+                AND reference_book_purchased_at IS NOT NULL
+              LIMIT 1
+            `
+            if (rows.length > 0) return NextResponse.next()
+          } catch {
+            /* fall through to 401 — never fail open on a paid asset */
+          }
         }
       }
       return NextResponse.json(
@@ -359,6 +383,8 @@ export const config = {
     '/CourseContent_2026.pdf',
     '/docs/:path*.pdf',
     '/docs/:path*.zip',
+    '/docs/:path*.docx',
+    '/docs/:path*.png',
     '/resources/:path*.pdf',
     '/api/:path*',
     '/admin/:path*',

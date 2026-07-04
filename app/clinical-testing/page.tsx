@@ -41,44 +41,61 @@ function SstWatchVisual() {
   }, [])
   const inBand = bpm >= 114 && bpm <= 128
   return (
-    <div className="relative flex h-full min-h-[210px] items-center justify-center overflow-hidden rounded-xl bg-[#0d1830]">
+    <div className="relative flex h-full min-h-[230px] items-center justify-center overflow-hidden rounded-xl bg-[#0d1830] py-4">
       {/* ambient glow */}
-      <div className="absolute h-40 w-40 rounded-full bg-teal-400/10 blur-2xl" />
-      {/* strap */}
-      <div className="absolute top-0 h-[26px] w-[74px] rounded-b-[14px] bg-[#1d2b47]" />
-      <div className="absolute bottom-0 h-[26px] w-[74px] rounded-t-[14px] bg-[#1d2b47]" />
-      {/* case */}
-      <div className="relative z-10 h-[150px] w-[126px] rounded-[34px] border border-slate-600/60 bg-black p-[7px] shadow-[0_16px_36px_-14px_rgba(0,0,0,.8)]">
-        {/* crown + side button */}
-        <span className="absolute -right-[4px] top-[34px] h-[18px] w-[5px] rounded-r-[3px] bg-slate-600" />
-        <span className="absolute -right-[3px] top-[62px] h-[26px] w-[3.5px] rounded-r-[2px] bg-slate-700" />
-        {/* screen */}
-        <div className="flex h-full w-full flex-col items-center justify-between rounded-[27px] bg-[#060b16] px-2.5 py-2.5">
-          <div className="flex w-full items-center justify-between">
-            <span className="text-[7px] font-bold uppercase tracking-[0.12em] text-slate-500">SST</span>
-            <span className="font-mono text-[7px] text-slate-500">14:32</span>
-          </div>
-          <div className="text-center">
-            <p className="m-0 font-mono text-[30px] font-bold leading-none text-teal-300 transition-opacity">
-              {bpm}
-            </p>
-            <p className={`m-0 mt-0.5 text-[7px] font-bold uppercase tracking-[0.14em] ${inBand ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {inBand ? 'in band' : 'ease off'}
-            </p>
-          </div>
-          {/* band bar with live marker */}
-          <div className="w-full">
-            <div className="relative h-[5px] w-full overflow-hidden rounded-full bg-slate-800">
-              <div className="absolute inset-y-0 left-[30%] w-[45%] bg-teal-500/50" />
-              <span
-                className="absolute top-1/2 h-[9px] w-[2.5px] -translate-y-1/2 rounded-full bg-white transition-[left] duration-700"
-                style={{ left: `${Math.min(94, Math.max(4, ((bpm - 100) / 40) * 100))}%` }}
-              />
+      <div className="absolute h-44 w-44 rounded-full bg-teal-400/10 blur-2xl" />
+
+      {/* the watch: one connected column (strap–case–strap), so the tile can
+          be any height without the straps detaching from the case */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* top strap: tapers into the lugs */}
+        <div className="h-[34px] w-[58px] rounded-t-[12px] bg-gradient-to-b from-[#2a3a58] to-[#1d2b47]" />
+        <div className="-mt-[2px] h-[8px] w-[74px] rounded-t-[10px] bg-[#151f36]" />
+
+        {/* case — dark aluminium bezel with a highlight edge */}
+        <div className="relative -mt-[1px] h-[152px] w-[128px] rounded-[38px] bg-gradient-to-b from-slate-500 via-slate-700 to-slate-800 p-[3px] shadow-[0_18px_40px_-14px_rgba(0,0,0,.85)]">
+          {/* digital crown + side button, protruding from the case edge */}
+          <span className="absolute -right-[6px] top-[30px] h-[22px] w-[8px] rounded-[3px] bg-gradient-to-b from-slate-300 via-slate-500 to-slate-600 shadow-[1px_1px_2px_rgba(0,0,0,.5)]" />
+          <span className="absolute -right-[4px] top-[64px] h-[30px] w-[5px] rounded-[2.5px] bg-gradient-to-b from-slate-500 to-slate-700" />
+
+          {/* black glass inset */}
+          <div className="relative h-full w-full overflow-hidden rounded-[35px] bg-black p-[6px]">
+            {/* screen */}
+            <div className="relative flex h-full w-full flex-col items-center justify-between overflow-hidden rounded-[29px] bg-[#060b16] px-2.5 py-2.5">
+              {/* glass reflection */}
+              <div className="pointer-events-none absolute -left-6 -top-10 h-24 w-24 rotate-[24deg] rounded-full bg-white/[0.05]" />
+              <div className="flex w-full items-center justify-between">
+                <span className="text-[7px] font-bold uppercase tracking-[0.12em] text-slate-500">SST</span>
+                <span className="font-mono text-[7px] text-slate-500">14:32</span>
+              </div>
+              <div className="text-center">
+                <p className="m-0 font-mono text-[30px] font-bold leading-none text-teal-300 transition-opacity">
+                  {bpm}
+                </p>
+                <p className={`m-0 mt-0.5 text-[7px] font-bold uppercase tracking-[0.14em] ${inBand ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {inBand ? 'in band' : 'ease off'}
+                </p>
+              </div>
+              {/* band bar with live marker */}
+              <div className="w-full">
+                <div className="relative h-[5px] w-full overflow-hidden rounded-full bg-slate-800">
+                  <div className="absolute inset-y-0 left-[30%] w-[45%] bg-teal-500/50" />
+                  <span
+                    className="absolute top-1/2 h-[9px] w-[2.5px] -translate-y-1/2 rounded-full bg-white transition-[left] duration-700"
+                    style={{ left: `${Math.min(94, Math.max(4, ((bpm - 100) / 40) * 100))}%` }}
+                  />
+                </div>
+                <p className="m-0 mt-1 text-center font-mono text-[6.5px] text-slate-500">band 114–128 · HRt 142</p>
+              </div>
             </div>
-            <p className="m-0 mt-1 text-center font-mono text-[6.5px] text-slate-500">band 114–128 · HRt 142</p>
           </div>
         </div>
+
+        {/* bottom strap */}
+        <div className="-mb-[2px] h-[8px] w-[74px] rounded-b-[10px] bg-[#151f36]" />
+        <div className="-mt-[1px] h-[34px] w-[58px] rounded-b-[12px] bg-gradient-to-t from-[#2a3a58] to-[#1d2b47]" />
       </div>
+
       <span className="absolute bottom-2.5 right-3 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">
         On their wrist · or any watch via the phone app
       </span>
