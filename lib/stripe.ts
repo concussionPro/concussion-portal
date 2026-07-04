@@ -234,7 +234,9 @@ export async function createCourseCheckoutSession({
     // Bundle credit already applied to the line item — don't let a promo
     // code stack a second discount on top of it.
     allowPromotionCodes = false
-  } else if (promoCode) {
+  } else if (promoCode && !(promoCode.toUpperCase() === 'SCAT6' && courseType !== 'online-only')) {
+    // SCAT6 ($50 completion reward) is ONLY valid on the online course —
+    // enforced here, never left to Stripe dashboard coupon config.
     try {
       const promoCodes = await stripe.promotionCodes.list({ code: promoCode.toUpperCase(), active: true, limit: 1 })
       if (promoCodes.data.length > 0) {

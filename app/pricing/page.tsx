@@ -176,7 +176,7 @@ function PricingContent() {
     },
     {
       q: "How are workshop dates confirmed?",
-      a: "We run workshops as demand in each city opens up. Q1 2026 workshops ran across all three cities. Drop your details on the interest list for your preferred city — you'll get 6 weeks' notice when the date is locked in. Registered participants choose their preferred date first.",
+      a: "We run workshops as demand in each city opens up — Melbourne's first round ran in June 2026, and the next rounds launch city-by-city. Drop your details on the interest list for your preferred city — you'll get 6 weeks' notice when the date is locked in. Registered participants choose their preferred date first.",
     },
     {
       q: 'How much time does the course take?',

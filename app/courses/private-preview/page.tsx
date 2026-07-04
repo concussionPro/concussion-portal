@@ -105,7 +105,7 @@ export default async function PreviewPage() {
               <div className="flex items-center justify-between mb-3">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
                   <BookOpen className="w-3 h-3" />
-                  Launches 1 June 2026
+                  Now live
                 </span>
                 <span className="text-[11px] font-bold text-slate-600">
                   <span className="line-through text-slate-400 mr-1">A$197</span>
@@ -116,7 +116,7 @@ export default async function PreviewPage() {
                 AI in Clinical Practice
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                3 CPD hours · 9 modules · Tier A/B/C framework. <strong className="text-foreground">Heidi featured as the Tier A healthcare-purpose-built AU scribe in Module 2 (Tool Selection).</strong>
+                2 CPD hours · 9 modules · Tier A/B/C framework. <strong className="text-foreground">Heidi featured as the Tier A healthcare-purpose-built AU scribe in Module 2 (Tool Selection).</strong>
               </p>
             </div>
             <div className="px-5 py-3 border-t border-accent/15 bg-accent/[0.03] flex items-center justify-between text-xs">
