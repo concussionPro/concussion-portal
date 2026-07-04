@@ -21,7 +21,10 @@ import { trackEvent, trackLeadConversion } from '@/lib/analytics'
 const EXCLUDED_PREFIXES = [
   '/dashboard', '/login', '/admin', '/checkout', '/pricing',
   '/courses', '/course', '/in-person', '/learning', '/settings', '/scat-mastery',
-  '/scat6-download', '/scat-course', '/preseason/b',
+  '/scat6-download', '/scat-course',
+  // Product apps + their landings: patients and clinics mid-flow are never
+  // course-lead-capture targets (owner directive 2026-07-04).
+  '/preseason', '/sst-trainer', '/platform',
 ]
 
 export function ExitIntentPopup() {

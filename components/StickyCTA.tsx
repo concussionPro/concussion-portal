@@ -26,7 +26,11 @@ const EXCLUDED_PATHS = [
   '/references',
   '/complete-reference',
   '/certificate',
-  '/preseason/b',
+  // Product apps + their landings (owner directive 2026-07-04): no course
+  // cross-sell chrome on patient/clinic product surfaces.
+  '/preseason',
+  '/sst-trainer',
+  '/platform',
   '/scat-mastery',
   '/preview',
   // Lead-capture page — the $-course sticky bar competes with the email gate.
