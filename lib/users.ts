@@ -310,5 +310,20 @@ export async function updateUserProfile(
     UPDATE users SET name = ${newName}, nurture_unsubscribed = ${newUnsub}, progress_emails_opted_out = ${newProgressOptOut} WHERE id = ${userId}
   `
 
+  // Zero-tolerance rule: ANY unsubscribe writes the master blacklist too.
+  // Settings-toggle unsubs previously only set nurture_unsubscribed, leaving
+  // the user reachable by the prospect/partner lanes (2026-07-05 audit).
+  if (updates.nurtureUnsubscribed === true) {
+    try {
+      await sql`
+        INSERT INTO email_suppression (email, reason, source)
+        VALUES (${user.email.toLowerCase()}, 'unsubscribed', 'settings-toggle')
+        ON CONFLICT (email) DO NOTHING
+      `
+    } catch (err) {
+      console.error(`[updateUserProfile] email_suppression insert failed for ${user.email.slice(0, 3)}***:`, err)
+    }
+  }
+
   return { ...user, name: newName, nurtureUnsubscribed: newUnsub, progressEmailsOptedOut: newProgressOptOut }
 }
