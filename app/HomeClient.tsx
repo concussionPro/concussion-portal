@@ -9,6 +9,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { OtherCityInterest } from '@/components/OtherCityInterest'
 import { HomepageAiCourseCard } from '@/components/HomepageAiCourseCard'
 import { LocationInterestCard } from '@/components/LocationInterestCard'
+import { SstWatchVisual, BaselineLaptopVisual, InstrumentKeyframes } from '@/components/clinical/InstrumentVisuals'
 import { trackShopClick } from '@/lib/analytics'
 
 export default function HomeClient() {
@@ -56,31 +57,31 @@ export default function HomeClient() {
                   Australia&apos;s most comprehensive concussion CPD. {CONFIG.COURSE.TOTAL_MODULES} online modules + hands-on SCAT6, VOMS &amp; BESS training. Up to {CONFIG.COURSE.TOTAL_CPD_POINTS} CPD hours.
                 </p>
 
-                {/* CTAs — two equally prominent entry points: free SCAT course
-                    and a try-the-modules preview. Compare pricing demoted to a
-                    tertiary text link below. */}
+                {/* CTAs — the paid course leads (owner, 2026-07-05: the
+                    landing under-weighted the offer); free start is the
+                    secondary door, preview + forms tertiary. */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
                   <Link
-                    href="/scat-mastery"
+                    href="/pricing"
                     className="btn-primary px-8 py-4 rounded-xl text-base font-bold inline-flex items-center justify-center gap-2 shadow-lg"
                   >
-                    Start Free SCAT6 Course
+                    View pricing &amp; enrol
                     <ArrowRight className="w-4.5 h-4.5" />
                   </Link>
                   <Link
-                    href="/preview"
+                    href="/scat-mastery"
                     className="px-8 py-4 rounded-xl text-base font-bold text-[var(--accent)] bg-white border-2 border-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors inline-flex items-center justify-center gap-2 shadow-md"
                   >
-                    Try Modules Free
+                    Start with the free SCAT6 course
                     <ArrowRight className="w-4.5 h-4.5" />
                   </Link>
                 </div>
                 <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
                   <Link
-                    href="/pricing"
+                    href="/preview"
                     className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors"
                   >
-                    Compare pricing →
+                    Preview the modules →
                   </Link>
                   <Link
                     href="/scat-forms"
@@ -212,6 +213,87 @@ export default function HomeClient() {
           </div>
         </section>
 
+        {/* ── Workshop locations ───────────────────────────── */}
+        <section className="section-padding relative z-10">
+          <div className="max-w-[960px] mx-auto">
+            <div className="text-center mb-8 md:mb-10">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)] mb-2">
+                <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+                Hands-on workshops across Australia
+              </span>
+              <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
+                Where the <span className="text-gradient">practical day</span> runs
+              </h2>
+              <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-lg mx-auto">
+                The in-person day — VOMS, BESS, vestibular &amp; cervical assessment on real cases — runs in major cities as demand opens. Register and you&apos;ll be first to know when your city&apos;s date is confirmed.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {([
+                { city: 'Melbourne', citySlug: 'melbourne', img: '/locations/melbourne.webp', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Register for the next Melbourne round' },
+                { city: 'Sydney', citySlug: 'sydney', img: '/locations/sydney.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Sydney's date is confirmed" },
+                { city: 'Byron Bay', citySlug: 'byron-bay', img: '/locations/byron-bay.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Byron Bay's date is confirmed" },
+              ] as const).map((loc) => (
+                <LocationInterestCard key={loc.city} {...loc} />
+              ))}
+            </div>
+            <p className="mt-5 text-center text-sm text-[var(--muted-foreground)]">
+              Somewhere else? The Complete Course is buyable any time — you nominate your city at
+              checkout, and the date launches once your city hits its threshold.
+            </p>
+          </div>
+        </section>
+
+        {/* ── Clinical instruments — included with the course ───────────── */}
+        <section className="section-padding relative z-10">
+          <InstrumentKeyframes />
+          <div className="max-w-[960px] mx-auto">
+            <div className="text-center mb-8 md:mb-10">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)] mb-2">
+                Included with the course
+              </span>
+              <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
+                Two clinical instruments, <span className="text-gradient">not just modules</span>
+              </h2>
+              <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-xl mx-auto">
+                Every enrolment includes your own clinic code and the tools to use it: prescribe
+                measured-threshold exercise rehab from your patients&apos; own watches, and run
+                self-administered SCAT6 baselines for whole clubs.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="flex flex-col overflow-hidden rounded-2xl bg-[#16243f] shadow-[0_18px_40px_-18px_rgba(22,36,63,0.55)]">
+                <SstWatchVisual />
+                <div className="p-5">
+                  <h3 className="m-0 text-lg font-extrabold tracking-tight text-white">SST Trainer</h3>
+                  <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-300/90">
+                    A graded test measures each patient&apos;s symptom threshold; they train just under
+                    it — live heart rate, verified progression, every session on your dashboard.
+                  </p>
+                  <Link href="/sst-trainer" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-300 hover:text-teal-200">
+                    See the patient app <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+              <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(100,116,139,0.45)]">
+                <BaselineLaptopVisual />
+                <div className="p-5">
+                  <h3 className="m-0 text-lg font-extrabold tracking-tight text-[#16243f]">Pre-Season Baseline Testing</h3>
+                  <p className="m-0 mt-1 text-[13px] leading-relaxed text-slate-500">
+                    One link per club: athletes self-complete the SCAT6 baseline in ~5 minutes and a
+                    PDF report lands in your inbox — on file for the day it matters.
+                  </p>
+                  <Link href="/preseason" className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#b45309] hover:text-[#92400e]">
+                    See how clubs use it <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
 
         {/* ── Stats bento grid ────────────────────────────── */}
         <section className="px-5 md:px-8 pb-16 md:pb-20 relative z-10">
@@ -247,33 +329,6 @@ export default function HomeClient() {
         </section>
 
 
-        {/* ── Workshop locations ───────────────────────────── */}
-        <section className="section-padding relative z-10">
-          <div className="max-w-[960px] mx-auto">
-            <div className="text-center mb-8 md:mb-10">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)] mb-2">
-                <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
-                Hands-on workshops across Australia
-              </span>
-              <h2 className="text-2xl md:text-[2rem] font-bold tracking-tight text-[var(--foreground)] mb-3">
-                Where the <span className="text-gradient">practical day</span> runs
-              </h2>
-              <p className="text-sm md:text-base text-[var(--muted-foreground)] max-w-lg mx-auto">
-                The in-person day — VOMS, BESS, vestibular &amp; cervical assessment on real cases — runs in major cities as demand opens. Register and you&apos;ll be first to know when your city&apos;s date is confirmed.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {([
-                { city: 'Melbourne', citySlug: 'melbourne', img: '/locations/melbourne.webp', status: 'Delivered · Jun 2026', dotClass: 'bg-slate-400', statusTextClass: 'text-slate-600', caption: 'Register for the next Melbourne round' },
-                { city: 'Sydney', citySlug: 'sydney', img: '/locations/sydney.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Sydney's date is confirmed" },
-                { city: 'Byron Bay', citySlug: 'byron-bay', img: '/locations/byron-bay.jpg', status: 'Registering interest', dotClass: 'bg-orange-500 animate-pulse', statusTextClass: 'text-orange-700', caption: "Be first to know when Byron Bay's date is confirmed" },
-              ] as const).map((loc) => (
-                <LocationInterestCard key={loc.city} {...loc} />
-              ))}
-            </div>
-          </div>
-        </section>
 
 
         {/* ── Free SCAT Training ───────────────────────────── */}

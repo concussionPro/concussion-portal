@@ -206,44 +206,8 @@ export default function SCATCoursePage() {
           </div>
         )}
 
-        {/* Reference + Toolkit — natural next step after free SCAT course */}
-        <div className="mb-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="grid md:grid-cols-[auto_1fr] gap-6">
-            <Link href="/reference" className="relative block md:w-[180px] h-[220px] md:h-full bg-slate-900 overflow-hidden group">
-              <img
-                src="/ccm-cover.png"
-                alt="Clinical Reference + Toolkit 2026"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </Link>
-            <div className="p-5 md:p-6 md:pl-0">
-              <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full mb-2">
-                <span className="text-[10px] font-bold text-orange-900 uppercase tracking-wide">Step up · A$97</span>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-1">
-                Go deeper — the Clinical Reference + 10-piece Toolkit
-              </h3>
-              <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-                256-page referenced text plus the 2026 Clinical Toolkit — cheat sheet, patient handouts, PPCS + referral flowcharts, RehabFlow, RTP/RTL/RTW ladder, editable letter templates. Everything you need to apply what the SCAT course starts.
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {['Cheat sheet', 'Patient handout', 'PPCS flowchart', 'Referral map', 'RehabFlow', '+ 5 more'].map(t => (
-                  <span key={t} className="text-[11px] bg-slate-100 text-slate-700 px-2 py-1 rounded">{t}</span>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-3 items-center">
-                <Link
-                  href="/reference"
-                  className="inline-flex items-center gap-1.5 bg-slate-900 text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-slate-800 transition-colors"
-                >
-                  See what&apos;s inside
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <span className="text-xs text-slate-500">Instant download · Lifetime access · 7-day money-back</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* A$97 Reference+Toolkit bundle RETIRED as a sellable (owner,
+            2026-07-05) — existing owners keep access via isBookOwner. */}
 
         {/* Certificate Banner — shown when course is complete */}
         {allComplete && (
