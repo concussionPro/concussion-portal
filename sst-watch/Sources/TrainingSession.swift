@@ -62,7 +62,7 @@ struct TrainingSessionView: View {
         ScrollView {
             VStack(spacing: 12) {
                 ScreenTitle(text: "Before you start", subtitle: "Set a baseline")
-                CrownScorePicker(title: "How bad are your symptoms right now?", value: $preSymptom, descriptor: symptomWord)
+                CrownScorePicker(title: "How bad are your symptoms right now?", value: $preSymptom, descriptor: symptomWord, accentFor: symptomSeverityColor)
                 PrimaryButton(title: "Begin", systemImage: "play.fill") {
                     peakSymptom = preSymptom
                     symptomNow = preSymptom
@@ -136,7 +136,7 @@ struct TrainingSessionView: View {
     private var symptomSheet: some View {
         ScrollView {
             VStack(spacing: 12) {
-                CrownScorePicker(title: "How bad are your symptoms right now?", value: $symptomNow, descriptor: symptomWord)
+                CrownScorePicker(title: "How bad are your symptoms right now?", value: $symptomNow, descriptor: symptomWord, accentFor: symptomSeverityColor)
                 PrimaryButton(title: "Save", systemImage: "checkmark") {
                     peakSymptom = max(peakSymptom, symptomNow)
                     showSymptom = false

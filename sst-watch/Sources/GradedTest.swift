@@ -58,8 +58,8 @@ struct GradedTestView: View {
                 CrownScorePicker(
                     title: "How bad are your symptoms right now?",
                     value: $symptom,
-                    accent: spike ? .orange : .blue,
-                    descriptor: symptomWord
+                    descriptor: symptomWord,
+                    accentFor: symptomSeverityColor
                 )
                 if spike, workout.bpm == nil {
                     Label("Symptoms are up 3+ — the test ends as soon as your heart rate reads", systemImage: "exclamationmark.triangle")

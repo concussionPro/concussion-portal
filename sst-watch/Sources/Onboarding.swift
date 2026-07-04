@@ -246,7 +246,7 @@ struct ReadinessView: View {
                     }
                 } else {
                     Divider()
-                    CrownScorePicker(title: "How bad are your symptoms right now?", value: $resting, descriptor: symptomWord)
+                    CrownScorePicker(title: "How bad are your symptoms right now?", value: $resting, descriptor: symptomWord, accentFor: symptomSeverityColor)
 
                     if restingTooHigh {
                         MessageCard(

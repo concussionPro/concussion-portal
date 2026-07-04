@@ -78,6 +78,10 @@ struct CrownScorePicker: View {
     /// Plain-language word for the current value ("Mild", "Hard") — scores mean
     /// nothing to a patient mid-exercise without one.
     var descriptor: ((Int) -> String)? = nil
+    /// Value-dependent accent (e.g. severity colours) — overrides `accent`.
+    var accentFor: ((Int) -> Color)? = nil
+
+    private var liveAccent: Color { accentFor?(value) ?? accent }
 
     var body: some View {
         VStack(spacing: 2) {
@@ -90,7 +94,7 @@ struct CrownScorePicker: View {
                 Text("\(value)")
                     .font(.system(size: 40, weight: .bold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(accent)
+                    .foregroundStyle(liveAccent)
                     .contentTransition(.numericText())
                     .frame(minWidth: 52)
                 stepButton("plus", enabled: value < range.upperBound) { value += 1 }
@@ -98,7 +102,7 @@ struct CrownScorePicker: View {
             if let word = descriptor?(value) {
                 Text(word)
                     .font(.caption2).fontWeight(.semibold)
-                    .foregroundStyle(accent)
+                    .foregroundStyle(liveAccent)
                     .contentTransition(.opacity)
             }
         }
@@ -230,6 +234,16 @@ struct ScreenTitle: View {
 }
 
 // MARK: - Plain-language scale anchors
+
+/// Severity → colour: none green, mild blue, moderate orange, severe+ red.
+func symptomSeverityColor(_ v: Int) -> Color {
+    switch v {
+    case 0:      return .green
+    case 1...3:  return .blue
+    case 4...6:  return .orange
+    default:     return .red
+    }
+}
 
 /// 0–10 symptom severity in words (VAS anchors a patient can act on).
 func symptomWord(_ v: Int) -> String {
