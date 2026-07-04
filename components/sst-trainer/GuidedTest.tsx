@@ -279,6 +279,15 @@ export default function GuidedTest({
     cuedRef.current = false
   }
 
+  // Threshold crossed → the test ends itself. Setting a ≥3-point rise IS the
+  // report — never ask for a confirming tap while someone's symptoms climb.
+  // The HR-jump confirm inside logMinute still intercepts implausible values,
+  // and with no valid HR the Log button remains as the manual path.
+  useEffect(() => {
+    if (reachesThreshold && hrValid && confirmJump === null) logMinute()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symptomScore])
+
   /** Early termination (exhaustion / red-flag). */
   const endEarly = (termination: TestTermination) => {
     const stages =
@@ -486,20 +495,23 @@ export default function GuidedTest({
         </div>
       </div>
 
-      {/* compact symptom level */}
-      <div className="flex items-center gap-2.5">
-        <span className="whitespace-nowrap text-[11.5px] font-semibold text-[#3b4f52]">
-          Symptom level
-        </span>
-        <div className="flex-1">
-          <SegmentBars
-            value={symptomScore}
-            onChange={setSymptomScore}
-            variant="flat"
-            ariaLabel="Current symptom level, 0 to 10"
-          />
+      {/* symptom level — label row above the bars so the strip shares the same
+          left/right edges as every other block (the inline label pushed the
+          bars past the container edge) */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs font-semibold text-[#3b4f52]">Symptom level</span>
+          <span className={`text-[15px] text-[#5b9aa6] ${numFont}`}>
+            {symptomScore}
+            <span className="text-[10px] text-[#9bafb0]">/10</span>
+          </span>
         </div>
-        <span className={`w-4 text-right text-[15px] text-[#5b9aa6] ${numFont}`}>{symptomScore}</span>
+        <SegmentBars
+          value={symptomScore}
+          onChange={setSymptomScore}
+          variant="flat"
+          ariaLabel="Current symptom level, 0 to 10"
+        />
       </div>
 
       {/* HR-jump confirm — never silently mint an HRt from a typo */}

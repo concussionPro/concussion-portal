@@ -152,7 +152,7 @@ export function SegmentBars({
           aria-checked={i === value}
           aria-label={`${i}`}
           onClick={() => onChange(i)}
-          className="flex-1 cursor-pointer rounded-[4px] border-none p-0 transition-[height,background] duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16282b] focus-visible:ring-offset-1"
+          className="min-w-0 flex-1 basis-0 cursor-pointer rounded-[4px] border-none p-0 transition-[height,background] duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16282b] focus-visible:ring-offset-1"
           style={{
             height: variant === 'ramp' ? 13 + i * 2.6 : 18,
             background: i <= value ? col : '#d8e4e4',
