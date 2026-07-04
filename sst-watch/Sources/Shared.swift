@@ -75,6 +75,9 @@ struct CrownScorePicker: View {
     @Binding var value: Int
     var range: ClosedRange<Int> = 0...10
     var accent: Color = .blue
+    /// Plain-language word for the current value ("Mild", "Hard") — scores mean
+    /// nothing to a patient mid-exercise without one.
+    var descriptor: ((Int) -> String)? = nil
 
     var body: some View {
         VStack(spacing: 2) {
@@ -91,6 +94,12 @@ struct CrownScorePicker: View {
                     .contentTransition(.numericText())
                     .frame(minWidth: 52)
                 stepButton("plus", enabled: value < range.upperBound) { value += 1 }
+            }
+            if let word = descriptor?(value) {
+                Text(word)
+                    .font(.caption2).fontWeight(.semibold)
+                    .foregroundStyle(accent)
+                    .contentTransition(.opacity)
             }
         }
         .frame(maxWidth: .infinity)
@@ -217,6 +226,34 @@ struct ScreenTitle: View {
             }
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Plain-language scale anchors
+
+/// 0–10 symptom severity in words (VAS anchors a patient can act on).
+func symptomWord(_ v: Int) -> String {
+    switch v {
+    case 0:      return "None"
+    case 1...3:  return "Mild"
+    case 4...6:  return "Moderate"
+    case 7...9:  return "Severe"
+    default:     return "Worst possible"
+    }
+}
+
+/// Borg 6–20 effort in words (standard RPE verbal anchors).
+func borgWord(_ v: Int) -> String {
+    switch v {
+    case ...6:    return "No effort"
+    case 7...8:   return "Extremely light"
+    case 9...10:  return "Very light"
+    case 11...12: return "Light"
+    case 13...14: return "Somewhat hard"
+    case 15...16: return "Hard"
+    case 17...18: return "Very hard"
+    case 19:      return "Extremely hard"
+    default:      return "Maximal effort"
     }
 }
 

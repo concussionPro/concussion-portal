@@ -30,6 +30,7 @@ final class SSTFlow: ObservableObject {
         case gradedTest
         case result
         case home
+        case program
         case training
         case progress
         case blocked(String)   // red flag / rest-today terminal card
@@ -81,6 +82,7 @@ final class SSTFlow: ObservableObject {
 
     func goHome() { step = .home }
     func goProgress() { step = .progress }
+    func goProgram() { step = .program }
 
     /// Start (or re-start) the graded-test funnel from Home. If no symptoms are
     /// selected yet, collect them first. Blocked while red-flag locked.
@@ -143,13 +145,16 @@ final class SSTFlow: ObservableObject {
         step = .result
     }
 
-    /// Accept the result screen: physiologic → save the prescription and go
-    /// Home; anything else just returns Home (Home adapts when there is no band).
+    /// Accept the result screen: physiologic → save the prescription and show
+    /// the program (the continuation page — what the band means and what to do
+    /// next); anything else returns Home (Home adapts when there is no band).
     func acceptResult() {
         if let r = lastResult,
            r.interpretation == .physiologic,
            let hrt = r.hrt, let lo = r.bandLow, let hi = r.bandHigh {
             state.setPrescription(Prescription(hrt: hrt, bandLow: lo, bandHigh: hi))
+            step = .program
+            return
         }
         step = .home
     }
@@ -316,6 +321,8 @@ struct SSTRootView: View {
                 ResultView()
             case .home:
                 HomeView()
+            case .program:
+                ProgramView()
             case .training:
                 TrainingSessionView(workout: flow.workout)
             case .progress:

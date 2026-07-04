@@ -54,9 +54,10 @@ struct GradedTestView: View {
                 Divider()
 
                 CrownScorePicker(
-                    title: "Symptoms now (0–10)",
+                    title: "How bad are your symptoms right now?",
                     value: $symptom,
-                    accent: spike ? .orange : .blue
+                    accent: spike ? .orange : .blue,
+                    descriptor: symptomWord
                 )
                 if spike {
                     Label("Symptom spike — logging ends the test", systemImage: "exclamationmark.triangle")
@@ -64,9 +65,9 @@ struct GradedTestView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                Toggle(isOn: $useRPE) { Text("Add effort (RPE)").font(.caption) }
+                Toggle(isOn: $useRPE) { Text("Rate how hard it feels (optional)").font(.caption) }
                 if useRPE {
-                    CrownScorePicker(title: "Effort (Borg 6–20)", value: $rpe, range: 6...20, accent: .purple)
+                    CrownScorePicker(title: "How hard does it feel?", value: $rpe, range: 6...20, accent: .purple, descriptor: borgWord)
                 }
 
                 PrimaryButton(

@@ -509,7 +509,9 @@ export default function SstOnboarding({
           className="mt-0.5 h-4 w-4 flex-none accent-[#3c7681]"
         />
         <span className="text-[11.5px] leading-snug text-[#3c5658]">
-          I agree that my <strong>de-identified</strong> session data may be used to monitor and improve this service and the quality of care. No name or contact details are shared, and I can withdraw any time. Declining doesn&rsquo;t affect my care — my results still go to my own clinician.
+          {/* {' '} is load-bearing: the Turbopack prod build eats a plain
+              space after an inline element (rendered "de-identifiedsession") */}
+          I agree that my <strong>de-identified</strong>{' '}session data may be used to monitor and improve this service and the quality of care. No name or contact details are shared, and I can withdraw any time. Declining doesn&rsquo;t affect my care — my results still go to my own clinician.
         </span>
       </label>
 

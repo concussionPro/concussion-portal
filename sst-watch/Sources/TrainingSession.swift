@@ -62,7 +62,7 @@ struct TrainingSessionView: View {
         ScrollView {
             VStack(spacing: 12) {
                 ScreenTitle(text: "Before you start", subtitle: "Set a baseline")
-                CrownScorePicker(title: "Symptoms right now (0–10)", value: $preSymptom)
+                CrownScorePicker(title: "How bad are your symptoms right now?", value: $preSymptom, descriptor: symptomWord)
                 PrimaryButton(title: "Begin", systemImage: "play.fill") {
                     peakSymptom = preSymptom
                     symptomNow = preSymptom
@@ -136,7 +136,7 @@ struct TrainingSessionView: View {
     private var symptomSheet: some View {
         ScrollView {
             VStack(spacing: 12) {
-                CrownScorePicker(title: "Symptoms now (0–10)", value: $symptomNow)
+                CrownScorePicker(title: "How bad are your symptoms right now?", value: $symptomNow, descriptor: symptomWord)
                 PrimaryButton(title: "Save", systemImage: "checkmark") {
                     peakSymptom = max(peakSymptom, symptomNow)
                     showSymptom = false
@@ -223,23 +223,23 @@ struct TrainingSessionView: View {
                 Divider()
                 Text("How do you feel vs before?")
                     .font(.footnote).foregroundStyle(.secondary)
+                Text("Tap one — that saves the session.")
+                    .font(.caption2).foregroundStyle(.tertiary)
+                // One tap ends the flow: the feeling answer IS the save.
+                // People are post-exercise on a small screen — no extra confirm.
                 HStack(spacing: 6) {
                     ForEach(Feeling.allCases, id: \.self) { f in
                         Button {
                             feeling = f
-                            Haptics.play(.click)
+                            Haptics.play(.success)
+                            commit()
                         } label: {
                             Text(f.title).font(.caption).frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
-                        .tint(feeling == f ? tint(for: f) : .gray)
+                        .tint(tint(for: f))
                     }
                 }
-
-                PrimaryButton(title: "Save session", systemImage: "checkmark") {
-                    commit()
-                }
-                .disabled(feeling == nil)
             }
             .padding(.horizontal, 4)
         }

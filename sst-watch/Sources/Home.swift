@@ -21,6 +21,11 @@ struct HomeView: View {
                         flow.beginTraining()
                     }
                     retestButton
+                    Button { flow.goProgram() } label: {
+                        Label("My program", systemImage: "list.clipboard")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
                     Button { flow.goProgress() } label: {
                         Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
                             .frame(maxWidth: .infinity)
