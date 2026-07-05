@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
   const code = (body.code as string | undefined)?.toUpperCase() || 'DEMO00'
   const patient = (body.patient as string | undefined) || 'Jordan Pike'
   const to = (body.to as string | undefined) || 'z.lew87@gmail.com'
+  // dryRun: build everything, send nothing — for deploy probes and previews.
+  const dryRun = body.dryRun === true
 
   let data = await loadGpReportData(code, patient).catch(() => null)
   if (!data) return NextResponse.json({ error: 'no episode data' }, { status: 404 })
@@ -52,6 +54,9 @@ export async function POST(req: NextRequest) {
   }
 
   const pdf = renderGpReportPdf(data)
+  if (dryRun) {
+    return NextResponse.json({ ok: true, dryRun: true, to, code, patient, mocked, bytes: pdf.length, format: 'pdf' })
+  }
   const ok = await sendEmailWithAttachment({
     to,
     subject: `${mocked ? 'MOCK — ' : ''}SST Trainer GP episode report (PDF)`,
