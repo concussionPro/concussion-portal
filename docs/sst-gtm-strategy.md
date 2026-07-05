@@ -31,19 +31,27 @@ All claims 3-0 adversarially verified; sources in the research output.
 SST Trainer makes it visible and self-enforcing with zero added clinic
 time. That is why a clinician needs it — not features, the 12-vs-21.5.
 
-### T1 rebuilt on the money number
+### T1 — APPROVED TRACK (owner, 2026-07-06): facts only, no competitors
 Subject: the other 39%
-> In the adolescent sub-threshold exercise data, patients who actually did
-> their prescribed sessions recovered in a median 12 days. The ones who
-> didn't took 21.5. Nearly 4 in 10 didn't — and with a paper diary, you
-> find out at re-test.
+> Two numbers from the sub-threshold exercise literature:
 >
-> SST Trainer makes the dose visible: their own watch holds the measured
-> band at home, every session verifies itself, flares flag to you same-day.
+> — Patients who completed their prescribed sessions recovered in a median
+>   12 days. Those who didn't took 21.5. Nearly 4 in 10 didn't complete them
+>   — and with a paper diary, that surfaces at re-test.
+> — Across rehab trials, app-supported home programs consistently beat
+>   paper handouts for adherence.
 >
-> CCMI doesn't do this. Physitrack doesn't. Symptom trackers don't.
+> SST Trainer closes that gap: the patient's own watch holds their measured
+> band at home, every session verifies itself, and flares reach you the day
+> they happen — so the dose that drives the 12-day recovery actually gets
+> done.
 >
 > Onboarding founding clinics now — reply "interested."
+
+Rules locked by owner: recovery times WITH vs WITHOUT compliance; tool vs
+no-tool adherence evidence; NEVER name competitors; facts → how SST Trainer
+closes them. Claims hedges: 12/21.5 = adolescent SRC cohort (associational);
+adherence-tool evidence = rehab populations broadly, short-term.
 
 ## 1. The one insight everything hangs off
 The competitor is not CCMI or Rhea. **The competitor is verbal advice and hope.**
