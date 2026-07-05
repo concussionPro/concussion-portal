@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyModuleQuiz } from '@/lib/quiz-verify'
 import { verifySessionToken } from '@/lib/jwt-session'
 import { findUserById } from '@/lib/users'
 import {
@@ -69,18 +70,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Validate quiz scores — 75% required for each module with a quiz
+    // SERVER-SIDE quiz verification (2026-07-05): the progress blob is
+    // client-authored, so `completed`/`quizScore` are never trusted for a
+    // CPD document. Each module's result is recomputed from the stored
+    // per-question answers against the server answer key — fail closed.
     const failedModules = moduleIds.filter(id => {
-      const mod = progress[String(id)]
-      if (mod?.quizTotalQuestions && mod.quizTotalQuestions > 0) {
-        const score = (mod.quizScore || 0) / mod.quizTotalQuestions
-        return score < 0.75
-      }
-      return false
+      const v = verifyModuleQuiz(id, progress[String(id)]?.quizAnswers)
+      // Modules without a quiz (no-quiz-data with total 0) don't gate.
+      if (v.reason === 'no-quiz-data') return false
+      return !v.ok
     })
     if (failedModules.length > 0) {
       return NextResponse.json(
-        { error: `You need at least 75% on all quizzes. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${failedModules.join(', ')}.` },
+        { error: `You need at least 75% on all quizzes, verified from your saved answers. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${failedModules.join(', ')} (answers save automatically when you submit a quiz).` },
         { status: 403 }
       )
     }
@@ -179,18 +181,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate quiz scores — 75% required for each module with a quiz
+    // SERVER-SIDE quiz verification (2026-07-05): the progress blob is
+    // client-authored, so `completed`/`quizScore` are never trusted for a
+    // CPD document. Each module's result is recomputed from the stored
+    // per-question answers against the server answer key — fail closed.
     const failedModules = moduleIds.filter(id => {
-      const mod = progress[String(id)]
-      if (mod?.quizTotalQuestions && mod.quizTotalQuestions > 0) {
-        const score = (mod.quizScore || 0) / mod.quizTotalQuestions
-        return score < 0.75
-      }
-      return false
+      const v = verifyModuleQuiz(id, progress[String(id)]?.quizAnswers)
+      // Modules without a quiz (no-quiz-data with total 0) don't gate.
+      if (v.reason === 'no-quiz-data') return false
+      return !v.ok
     })
     if (failedModules.length > 0) {
       return NextResponse.json(
-        { error: `You need at least 75% on all quizzes. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${failedModules.join(', ')}.` },
+        { error: `You need at least 75% on all quizzes, verified from your saved answers. Retake the quiz in module${failedModules.length > 1 ? 's' : ''} ${failedModules.join(', ')} (answers save automatically when you submit a quiz).` },
         { status: 403 }
       )
     }

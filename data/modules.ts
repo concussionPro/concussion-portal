@@ -827,6 +827,7 @@ export const modules: Module[] = [
       },
     ],
     clinicalReferences: [
+      'Australian Institute of Sport, Australian Medical Association, ACSEP & Sports Medicine Australia. (2024). Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
       'Giza, C. C., & Hovda, D. A. (2014). The new neurometabolic cascade of concussion. Neurosurgery, 75 Suppl 4, S24-33.',
       'McCrory, P., et al. (2017). Consensus statement on concussion in sport-the 5th international conference on concussion in sport (Berlin 2016). British Journal of Sports Medicine, 51(11), 838-847.',
       'Patricios, J. S., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport (Amsterdam 2022). British Journal of Sports Medicine, 57(11), 695-711.',
@@ -836,11 +837,11 @@ export const modules: Module[] = [
       'Schneider, K. J., et al. (2017). Cervicovestibular rehabilitation in sport-related concussion: a randomised controlled trial. British Journal of Sports Medicine, 51(15), 1013-1019.',
       'Master, C. L., et al. (2018). Vision and vestibular system dysfunction predicts prolonged concussion recovery in children. Clinical Journal of Sport Medicine, 28(2), 139-145.',
       'Mucha, A., et al. (2014). A brief vestibular/ocular motor screening (VOMS) assessment to evaluate concussions. American Journal of Sports Medicine, 42(10), 2479-2486.',
-      'Clausen, M., Pendergast, D. R., & Willer, B. (2017). Cerebral blood flow during treadmill exercise is a marker of physiological postconcussion syndrome in female athletes. Journal of Head Trauma Rehabilitation, 32(1), 1-8.',
+      'Clausen, M., Pendergast, D. R., Willer, B., & Leddy, J. (2016). Cerebral blood flow during treadmill exercise is a marker of physiological postconcussion syndrome in female athletes. Journal of Head Trauma Rehabilitation, 31(3), 215-224.',
       'McCrea, M., et al. (2021). Role of advanced neuroimaging, fluid biomarkers and genetic testing in the assessment of sport-related concussion: a systematic review. British Journal of Sports Medicine, 55(8), 447-461.',
       'Zetterberg, H., & Blennow, K. (2016). Fluid biomarkers for mild traumatic brain injury and related conditions. Nature Reviews Neurology, 12(10), 563-574.',
       'Banyan Biomarkers. (2018). FDA authorizes marketing of first blood test to aid in the evaluation of concussion in adults [Press release].',
-      'Leddy, J. J., et al. (2018). Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. JAMA Pediatrics, 173(4), 319-325.',
+      'Leddy, J. J., et al. (2019). Early subthreshold aerobic exercise for sport-related concussion: a randomized clinical trial. JAMA Pediatrics, 173(4), 319-325.',
       'Silverberg, N. D., et al. (2020). Management of concussion and mild traumatic brain injury: a synthesis of practice guidelines. Archives of Physical Medicine and Rehabilitation, 101(2), 382-393.',
     ],
     parts: [
@@ -1473,6 +1474,7 @@ export const modules: Module[] = [
       },
     ],
     clinicalReferences: [
+      'Australian Institute of Sport, Australian Medical Association, ACSEP & Sports Medicine Australia. (2024). Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
       'Patricios, J. S., et al. (2023). Consensus statement on concussion in sport: The 6th International Conference on Concussion in Sport-Amsterdam, October 2022. British Journal of Sports Medicine, 57(11), 695-711. https://doi.org/10.1136/bjsports-2023-106898',
       'Broglio, S. P., & Guskiewicz, K. M. (2009). Concussion in sports: The sideline assessment. Sports Health, 1(5), 361-369. https://doi.org/10.1177/1941738109343158',
       'Galetta, K. M., Liu, M., Leong, D. F., Ventura, R. E., Galetta, S. L., & Balcer, L. J. (2015). The King-Devick test of rapid number naming for concussion detection: Meta-analysis and systematic review. Concussion, 1(1), 37-49. https://doi.org/10.2217/cnc.15.8',
@@ -1971,6 +1973,7 @@ export const modules: Module[] = [
       },
     ],
     clinicalReferences: [
+      'Australian Institute of Sport, Australian Medical Association, ACSEP & Sports Medicine Australia. (2024). Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
       'Patricios, J. S., et al. (2023). Consensus statement on concussion in sport: The 6th International Conference on Concussion in Sport-Amsterdam, October 2022. British Journal of Sports Medicine, 57(11), 695-711. https://doi.org/10.1136/bjsports-2023-106898',
       'Mucha, A., Collins, M. W., Elbin, R. J., Furman, J. M., & Coppel, D. B. (2014). A brief vestibular/ocular motor screening (VOMS) assessment to evaluate concussions: Preliminary findings. The American Journal of Sports Medicine, 42(10), 2479-2486. https://doi.org/10.1177/0363546514545282',
       'Bell, D. R., Guskiewicz, K. M., Clark, M. A., & Padua, D. A. (2011). Systematic review of the Balance Error Scoring System. Sports Health, 3(3), 287-295. https://doi.org/10.1177/1941738111403122',
@@ -2533,6 +2536,7 @@ export const modules: Module[] = [
       },
     ],
     clinicalReferences: [
+      'Australian Institute of Sport, Australian Medical Association, ACSEP & Sports Medicine Australia. (2024). Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
       'Patricios, J. S., et al. (2023). Consensus statement on concussion in sport: The 6th International Conference on Concussion in Sport-Amsterdam, October 2022. British Journal of Sports Medicine, 57(11), 695-711. https://doi.org/10.1136/bjsports-2023-106898',
       'Ellis, M. J., Leddy, J. J., & Willer, B. (2015). Physiological, vestibulo-ocular and cervicogenic post-concussion disorders: An evidence-based classification system with directions for treatment. Brain Injury, 29(2), 238-248. https://doi.org/10.1080/02699052.2014.965207',
       'Leddy, J. J., Haider, M. N., Ellis, M., & Willer, B. S. (2018). Exercise is medicine for concussion. Current Sports Medicine Reports, 17(8), 262-270. https://doi.org/10.1249/JSR.0000000000000505',
@@ -3081,6 +3085,8 @@ export const modules: Module[] = [
       },
     ],
     clinicalReferences: [
+      'Australian Institute of Sport, Australian Medical Association, ACSEP & Sports Medicine Australia. (2024). Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
+      'Patricios, J. S., Schneider, K. J., Dvorak, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport, Amsterdam 2022. British Journal of Sports Medicine, 57(11), 695-711. https://doi.org/10.1136/bjsports-2023-106898',
       'Ellis, M. J., Leddy, J. J., & Willer, B. (2015). Physiological, vestibulo-ocular and cervicogenic post-concussion disorders: An evidence-based classification system with directions for treatment. Brain Injury, 29(2), 238-248. https://doi.org/10.1080/02699052.2014.965207',
       'Schneider, K. J., Leddy, J. J., Guskiewicz, K. M., et al. (2017). Rest and treatment/rehabilitation following sport-related concussion: A systematic review. British Journal of Sports Medicine, 51(12), 930-934. https://doi.org/10.1136/bjsports-2016-097475',
       'Master, C. L., Scheiman, M., Gallaway, M., et al. (2016). Vision diagnoses are common after concussion in adolescents. Clinical Pediatrics, 55(3), 260-267. https://doi.org/10.1177/0009922815594367',
@@ -3536,6 +3542,7 @@ export const modules: Module[] = [
       },
     ],
     clinicalReferences: [
+      'Australian Institute of Sport, Australian Medical Association, ACSEP & Sports Medicine Australia. (2024). Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
       'Patricios, J. S., et al. (2023). Consensus statement on concussion in sport: The 6th International Conference on Concussion in Sport-Amsterdam, October 2022. British Journal of Sports Medicine, 57(11), 695-711. https://doi.org/10.1136/bjsports-2023-106898',
       'McCrory, P., et al. (2017). Consensus statement on concussion in sport: The 5th International Conference on Concussion in Sport held in Berlin, October 2016. British Journal of Sports Medicine, 51(11), 838-847. https://doi.org/10.1136/bjsports-2017-097699',
       'DeMatteo, C., Stazyk, K., Singh, S. K., et al. (2018). A balanced protocol for return to school for children and youth following concussive injury. Clinical Pediatrics, 54(8), 783-792. https://doi.org/10.1177/0009922814567305',
@@ -4043,6 +4050,8 @@ export const modules: Module[] = [
       },
     ],
     clinicalReferences: [
+      'Australian Institute of Sport, Australian Medical Association, ACSEP & Sports Medicine Australia. (2024). Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
+      'Patricios, J. S., Schneider, K. J., Dvorak, J., et al. (2023). Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport, Amsterdam 2022. British Journal of Sports Medicine, 57(11), 695-711. https://doi.org/10.1136/bjsports-2023-106898',
       'Ellis, M. J., Leddy, J. J., & Willer, B. (2015). Physiological, vestibulo-ocular and cervicogenic post-concussion disorders: An evidence-based classification system with directions for treatment. Brain Injury, 29(2), 238-248. https://doi.org/10.1080/02699052.2014.965207',
       'Mucha, A., Collins, M. W., Elbin, R. J., Furman, J. M., & Coppel, D. B. (2014). A brief vestibular/ocular motor screening (VOMS) assessment to evaluate concussions: Preliminary findings. The American Journal of Sports Medicine, 42(10), 2479-2486. https://doi.org/10.1177/0363546514545282',
       'Leddy, J. J., Baker, J. G., & Willer, B. (2016). Active rehabilitation of concussion and post-concussion syndrome. Physical Medicine and Rehabilitation Clinics of North America, 27(2), 437-454. https://doi.org/10.1016/j.pmr.2015.12.003',
@@ -4497,6 +4506,7 @@ export const modules: Module[] = [
       },
     ],
     clinicalReferences: [
+      'Australian Institute of Sport, Australian Medical Association, ACSEP & Sports Medicine Australia. (2024). Australian Concussion Guidelines for Youth and Community Sport. Australian Sports Commission.',
       'Patricios, J. S., et al. (2023). Consensus statement on concussion in sport: The 6th International Conference on Concussion in Sport-Amsterdam, October 2022. British Journal of Sports Medicine, 57(11), 695-711. https://doi.org/10.1136/bjsports-2023-106898',
       'Anderson, E. E., & McCartney, J. S. (2020). Ethical considerations in sports medicine. Clinics in Sports Medicine, 39(1), 175-192. https://doi.org/10.1016/j.csm.2019.08.011',
       'Baugh, C. M., Kroshus, E., Stamm, J. M., Daneshvar, D. H., & Stern, R. A. (2014). Clinical practices in collegiate concussion management. The American Journal of Sports Medicine, 42(6), 1582-1589. https://doi.org/10.1177/0363546514529636',

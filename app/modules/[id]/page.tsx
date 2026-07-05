@@ -726,6 +726,27 @@ function ModulePageContent({ moduleId, router, userEmail }: { moduleId: number; 
                 {(() => {
                   const lastModuleId = isSCATModule ? 103 : 8
                   const hasNext = moduleId < lastModuleId
+                  // Course finished (paid 8/8): the certificate is the payoff —
+                  // surface it HERE, not buried in Settings (2026-07-05 audit).
+                  if (!hasNext && !isSCATModule) {
+                    return (
+                      <>
+                        <button
+                          onClick={() => router.push('/settings#certificate')}
+                          className="px-8 py-3.5 bg-[var(--accent)] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2"
+                        >
+                          Claim your 8-CPD certificate
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => router.push('/learning')}
+                          className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+                        >
+                          Back to all modules
+                        </button>
+                      </>
+                    )
+                  }
                   return (
                     <button
                       onClick={() => router.push(hasNext ? `/modules/${moduleId + 1}` : '/learning')}
