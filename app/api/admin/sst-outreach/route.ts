@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
 
     // SST prospect pipeline: engine prospects tagged sst_target + the
     // researched seed pen (sst_targets — pre-enrichment, no emails yet).
-    let pipeline: { engineByStatus: Array<{ status: string; n: number }>; seed: Array<{ country: string; source: string; n: number }>; seedList: Array<{ name: string; city: string; country: string; source: string; qualification: string; status: string }> } = { engineByStatus: [], seed: [], seedList: [] }
+    let pipeline: { engineByStatus: Array<{ status: string; n: number }>; seed: Array<{ country: string; source: string; n: number }>; seedList: Array<{ name: string; city: string; country: string; source: string; qualification: string; status: string }>; engineTargets?: Array<{ name: string; city: string; state: string; discipline: string; status: string; email_domain: string }> } = { engineByStatus: [], seed: [], seedList: [] }
     try {
       const { rows: engineByStatus } = await sql<{ status: string; n: number }>`
         SELECT status, COUNT(*)::int AS n FROM prospect_clinics WHERE sst_target GROUP BY status ORDER BY n DESC
@@ -82,7 +82,15 @@ export async function GET(req: NextRequest) {
       const { rows: seedList } = await sql<{ name: string; city: string; country: string; source: string; qualification: string; status: string }>`
         SELECT name, city, country, source, qualification, status FROM sst_targets ORDER BY country, source, name
       `
-      pipeline = { engineByStatus, seed, seedList }
+      const { rows: engineTargets } = await sql<{ name: string; city: string; state: string; discipline: string; status: string; email_domain: string }>`
+        SELECT name, city, state, contact_discipline AS discipline, status,
+               split_part(contact_email, '@', 2) AS email_domain
+        FROM prospect_clinics
+        WHERE sst_target AND status IN ('approved', 'researching', 'opened', 'sent', 'engaged-elsewhere')
+        ORDER BY CASE status WHEN 'opened' THEN 0 WHEN 'approved' THEN 1 WHEN 'researching' THEN 2 WHEN 'sent' THEN 3 ELSE 4 END, name
+        LIMIT 400
+      `
+      pipeline = { engineByStatus, seed, seedList, engineTargets }
     } catch { /* tables appear after first prospecting run */ }
 
     return NextResponse.json({

@@ -5735,6 +5735,7 @@ function SstOutreachTab() {
       engineByStatus: Array<{ status: string; n: number }>
       seed: Array<{ country: string; source: string; n: number }>
       seedList: Array<{ name: string; city: string; country: string; source: string; qualification: string; status: string }>
+      engineTargets?: Array<{ name: string; city: string; state: string; discipline: string; status: string; email_domain: string }>
     }
     summary: {
       provisioned: number; activated: number; activationRate: number; dark14: number
@@ -5798,11 +5799,36 @@ function SstOutreachTab() {
               </span>
             ))}
           </div>
-          <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
+          {(data.pipeline.engineTargets?.length ?? 0) > 0 && (
+            <div className="overflow-x-auto max-h-[420px] overflow-y-auto border-b border-slate-100">
+              <table className="w-full text-xs">
+                <thead className="bg-[rgba(13,115,119,0.08)] sticky top-0">
+                  <tr>
+                    {['Clinic (verified email)', 'City', 'State', 'Discipline', 'Domain', 'Status'].map((h) => (
+                      <th key={h} className="px-3 py-2.5 text-left text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.pipeline.engineTargets!.map((t, i) => (
+                    <tr key={i} className="border-t border-slate-100 hover:bg-slate-50/60">
+                      <td className="px-3 py-2 font-semibold text-[var(--foreground)]">{t.name}</td>
+                      <td className="px-3 py-2 text-[var(--muted-foreground)]">{t.city}</td>
+                      <td className="px-3 py-2 text-[var(--muted-foreground)]">{t.state}</td>
+                      <td className="px-3 py-2 text-[var(--muted-foreground)] capitalize">{t.discipline}</td>
+                      <td className="px-3 py-2 font-mono text-[10px] text-[var(--muted-foreground)]">{t.email_domain}</td>
+                      <td className="px-3 py-2"><span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">{t.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
             <table className="w-full text-xs">
               <thead className="bg-[rgba(13,115,119,0.05)] sticky top-0">
                 <tr>
-                  {['Target', 'City', 'Country', 'Source', 'Why qualified', 'Status'].map((h) => (
+                  {['Seed target (email sourcing)', 'City', 'Country', 'Source', 'Why qualified', 'Status'].map((h) => (
                     <th key={h} className="px-3 py-2.5 text-left text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">{h}</th>
                   ))}
                 </tr>
