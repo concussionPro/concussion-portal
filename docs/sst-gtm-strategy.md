@@ -31,27 +31,32 @@ All claims 3-0 adversarially verified; sources in the research output.
 SST Trainer makes it visible and self-enforcing with zero added clinic
 time. That is why a clinician needs it — not features, the 12-vs-21.5.
 
-### T1 — APPROVED TRACK (owner, 2026-07-06): facts only, no competitors
-Subject: the other 39%
-> Two numbers from the sub-threshold exercise literature:
->
-> — Patients who completed their prescribed sessions recovered in a median
->   12 days. Those who didn't took 21.5. Nearly 4 in 10 didn't complete them
->   — and with a paper diary, that surfaces at re-test.
-> — Across rehab trials, app-supported home programs consistently beat
->   paper handouts for adherence.
->
-> SST Trainer closes that gap: the patient's own watch holds their measured
-> band at home, every session verifies itself, and flares reach you the day
-> they happen — so the dose that drives the 12-day recovery actually gets
-> done.
->
-> Onboarding founding clinics now — reply "interested."
+### T1 — LOCKED COPY (owner-corrected 2026-07-06: plain cold-B2B, facts + offer, complete sentences, no cryptic subjects)
 
-Rules locked by owner: recovery times WITH vs WITHOUT compliance; tool vs
-no-tool adherence evidence; NEVER name competitors; facts → how SST Trainer
-closes them. Claims hedges: 12/21.5 = adolescent SRC cohort (associational);
-adherence-tool evidence = rehab populations broadly, short-term.
+Subject: Compliance in concussion exercise rehab
+
+> Hi {firstName},
+>
+> Two findings from the sub-threshold exercise literature: patients who
+> completed their prescribed home sessions recovered in a median 12 days,
+> versus 21.5 for those who didn't — and nearly 4 in 10 didn't. On a paper
+> diary, that only surfaces at re-test.
+>
+> SST Trainer closes the between-visit gap. The patient's own watch holds
+> their measured heart-rate band at home, every session verifies itself,
+> and symptom flares reach you the same day they happen.
+>
+> We're onboarding a founding group of clinics now — set up within the
+> week, founding terms locked in for good. Reply "interested" and I'll
+> take care of the rest.
+>
+> Zac Lewis — Osteopath, Concussion Education Australia
+
+Owner rules (cumulative): recovery times with/without compliance; tool-vs-
+no-tool adherence evidence allowed; NEVER name competitors; plain concrete
+subject a clinic owner parses instantly (no teaser subjects); facts then
+the offer's value; complete sentences — copy must never read half-finished.
+Claims hedges: 12/21.5 = adolescent SRC cohort, associational.
 
 ## 1. The one insight everything hangs off
 The competitor is not CCMI or Rhea. **The competitor is verbal advice and hope.**
