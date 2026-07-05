@@ -92,8 +92,11 @@ struct OnboardingView: View {
                     }
                     .disabled(code.trimmingCharacters(in: .whitespaces).isEmpty || checking)
 
-                    // Self-guided: the whole app works without a clinic —
-                    // nothing syncs until a code is linked.
+                    // Self-guided exists in DEBUG builds only. The STORE build
+                    // is clinician-gated (owner, 2026-07-05): a validated clinic
+                    // code is the activation key — public download, no code, no
+                    // program. Self-guided ships later, post-TGA, as an update.
+                    #if DEBUG
                     Button {
                         flow.completeOnboarding(code: nil, clinicName: nil, patientName: name.trimmingCharacters(in: .whitespaces))
                     } label: {
@@ -102,6 +105,12 @@ struct OnboardingView: View {
                     }
                     .buttonStyle(.bordered)
                     .disabled(checking)
+                    #else
+                    Text("Your clinician's code links your training to their review — ask your clinic for it.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    #endif
                 }
 
                 if validated == true {
