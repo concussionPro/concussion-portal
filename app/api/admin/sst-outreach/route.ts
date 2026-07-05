@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { isAdminRequest } from '@/lib/require-admin'
+import { ensureSstClinicsTable } from '@/lib/sst-trainer/clinic-registry'
 
 /**
  * GET /api/admin/sst-outreach — the SST launch funnel, replies-only doctrine
@@ -14,6 +15,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
+    // Fresh envs have no sst_clinics until the first provisioning — the
+    // funnel tab must render (empty), not 500.
+    await ensureSstClinicsTable()
     const { rows: clinics } = await sql<{
       code: string
       clinic_name: string

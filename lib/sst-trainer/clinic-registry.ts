@@ -110,7 +110,7 @@ function generateCode(): string {
   return code
 }
 
-async function ensureSstClinicsTable(): Promise<void> {
+export async function ensureSstClinicsTable(): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS sst_clinics (
       code TEXT PRIMARY KEY,
