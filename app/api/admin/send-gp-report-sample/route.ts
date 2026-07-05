@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/require-admin'
 import { sendEmail } from '@/lib/resend-client'
+import { buildGpReportHtml } from '@/lib/sst-trainer/gp-report-html'
 
 /**
  * POST /api/admin/send-gp-report-sample
@@ -21,15 +22,10 @@ export async function POST(req: NextRequest) {
   const patient = (body.patient as string | undefined) || 'Jordan Pike'
   const to = (body.to as string | undefined) || 'z.lew87@gmail.com'
 
-  const origin = req.nextUrl.origin
-  const res = await fetch(
-    `${origin}/api/sst/gp-report?code=${encodeURIComponent(code)}&patient=${encodeURIComponent(patient)}`,
-    { cache: 'no-store' },
-  )
-  if (!res.ok) {
-    return NextResponse.json({ error: `report fetch failed: ${res.status}` }, { status: 502 })
+  let html = await buildGpReportHtml(code, patient).catch(() => null)
+  if (!html) {
+    return NextResponse.json({ error: 'report build failed (no episode data?)' }, { status: 404 })
   }
-  let html = await res.text()
 
   // Demo episodes have a single test — inject a labelled mock trajectory so
   // the emailed preview shows the actual instrument.
