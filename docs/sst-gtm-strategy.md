@@ -1,5 +1,8 @@
 # SST Trainer — Go-To-Market Strategy (canonical)
 **Status: DRAFT — nothing ships until Zac approves this document.** 2026-07-05.
+**Pitch sections 4 (T1–T3) are SUPERSEDED pending the practice-reality deep
+dive (delivery-gap research, in flight) — the need case must be grounded in
+cited numbers about what clinics do today, not product-outward reasoning.**
 
 ## 1. The one insight everything hangs off
 The competitor is not CCMI or Rhea. **The competitor is verbal advice and hope.**
@@ -100,6 +103,9 @@ Never opens/clicks.
 ## 9. Launch order (gated on this doc's approval)
 1. Zac approves/edits this document.
 2. Load T1–T3 into the engine as the SST sequence (template signoff flow).
+   **Wire into /admin/analytics at the same push** (owner): SST sequence
+   sends/replies/portal-reads as a distinct segment — same replies-only
+   doctrine, never blended into the course-outreach numbers.
 3. Course-grad announcement (warm, in-portal + email).
 4. AU cold sends resume with SST sequence for hub-tier clinics.
 5. Weekly digest ships.
