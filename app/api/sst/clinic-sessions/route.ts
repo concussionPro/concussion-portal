@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
           p.thresholds.length +
             new Set(p.trainings.map((t) => {
               const d = new Date(t.created_at)
-              return `${d.getFullYear()}-${Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000 + 4) / 7)}`
+              return `w${Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 86400000 + 4) / 7)}`
             })).size >= 5,
         lastActivity: (p.trainings[p.trainings.length - 1] ?? latest)?.created_at ?? null,
       }

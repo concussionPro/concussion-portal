@@ -8,7 +8,7 @@
  * shell. That decision lives in SstEntry (client-side — it reads
  * localStorage).
  *
- * SELF-GUIDED IS ON (owner decision 2026-07-04): the app is fully usable
+ * SELF-GUIDED IS SURFACE-GATED (owner decision 2026-07-04, later same day): the PUBLIC route is clinic-code only; self-guided renders solely on the gated /platform/app surface. See SstOnboarding docs.
  * without a clinic code — a code links a clinician and turns on sync, it is
  * never a wall. The PWA manifest + service worker live in this segment's
  * layout (which keeps the noindex metadata), so install-to-home-screen works

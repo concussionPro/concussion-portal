@@ -54,6 +54,7 @@ export function SstClinicCard() {
   const [showQr, setShowQr] = useState(false)
   // patient invite
   const [patientEmail, setPatientEmail] = useState('')
+  const [patientName, setPatientName] = useState('')
   const [inviteState, setInviteState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [inviteError, setInviteError] = useState('')
 
@@ -93,7 +94,7 @@ export function SstClinicCard() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ patientEmail: patientEmail.trim() }),
+        body: JSON.stringify({ patientEmail: patientEmail.trim(), patientName: patientName.trim() || undefined }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || 'Send failed.')
@@ -104,7 +105,7 @@ export function SstClinicCard() {
       setInviteError(e instanceof Error ? e.message : 'Send failed.')
       setInviteState('error')
     }
-  }, [patientEmail])
+  }, [patientEmail, patientName])
 
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://portal.concussion-education-australia.com'
@@ -136,6 +137,13 @@ export function SstClinicCard() {
           your Clinical Hub, and the same code runs your pre-season baseline link. Takes one field.
         </p>
         <div className="flex flex-wrap gap-2">
+          <input
+            type="text"
+            value={patientName}
+            onChange={(e) => setPatientName(e.target.value)}
+            placeholder="Patient first name (optional)"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] outline-none focus:border-[var(--accent)]"
+          />
           <input
             type="text"
             value={clinicName}

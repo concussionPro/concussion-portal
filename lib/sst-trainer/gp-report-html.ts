@@ -100,7 +100,7 @@ export async function buildGpReportHtml(code: string, patientLabel: string): Pro
       verified: t.payload?.hrVerified === true && src !== 'manual' && src !== undefined,
     }
   })
-  const verifiedSessions = trainings.filter((t) => t.payload?.hrVerified === true).length
+  const verifiedSessions = trainings.filter((t) => t.payload?.hrVerified === true && (t.payload?.hrSource as string | undefined) !== 'manual' && (t.payload?.hrSource as string | undefined) !== undefined).length
   const flares = trainings.filter((t) => {
     const pre = typeof t.payload?.preSymptom === 'number' ? (t.payload.preSymptom as number) : null
     const peak = typeof t.payload?.peakSymptom === 'number' ? (t.payload.peakSymptom as number) : null
