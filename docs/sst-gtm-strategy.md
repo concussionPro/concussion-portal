@@ -85,6 +85,14 @@ order of buying power for a private-practice owner:
 5. **Zero added admin** — anything that adds unpaid minutes loses, no
    matter how clinically right it is.
 
+**HEADLINE FEATURE (owner 2026-07-06): the auto-written GP report.** At
+episode end (≈ the 5-visit CDM envelope) the app produces the single-page
+PDF the clinician already owes the referring GP — trajectory, symptom
+tables, and a clearance-or-extend recommendation, ready to sign. This is
+wants 1+2+5 in one artifact (look good to the referrer · objective
+clearance backing · zero admin) and belongs in T2, the landing page, and
+every demo. "The app writes the report Medicare requires."
+
 Mapping: trajectory + same-day flare flags → wants 1&2. Watch-verified
 sessions in front of the patient → want 3. Baseline club links + verified
 completion → want 4. Decision-pull notifications, no dashboards-to-check

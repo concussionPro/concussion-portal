@@ -145,8 +145,8 @@ function RunbookCard() {
     },
     {
       n: '4',
-      title: 'Review the trajectory',
-      body: 'The serial measured-threshold curve is the recovery instrument — flares, holds and re-tests all land in your hub with flags for review.',
+      title: 'Review the trajectory, sign the report',
+      body: 'The serial measured-threshold curve is the recovery instrument — flares, holds and re-tests land in your hub with flags. At episode end the app writes the GP report (trajectory, symptom tables, clearance-or-extend recommendation) as a single-page PDF — you review and sign.',
     },
   ]
   return (

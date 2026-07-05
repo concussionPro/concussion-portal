@@ -165,133 +165,150 @@ function sectionTitle(doc: jsPDF, title: string, y: number): number {
 }
 
 export function renderGpReportPdf(d: GpReportData): Buffer {
+  // SINGLE PAGE, quick-scan order (owner 2026-07-06): a GP reads who → what
+  // → verdict first, evidence after. Recommendation sits directly under the
+  // header; trajectory + symptom tables are the supporting evidence below.
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const W = 210
-  let y = 22
+  let y = 18
 
-  // Header
-  doc.setFontSize(15)
+  // ── Header ──────────────────────────────────────────────────────────
+  doc.setFontSize(14)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...SLATE8)
-  doc.text('Sub-Symptom Threshold Exercise Program', 20, y)
-  y += 6.5
-  doc.setFontSize(11)
-  doc.setTextColor(...TEAL)
-  doc.text('Episode report for the referring practitioner', 20, y)
-  y += 8
+  doc.text('Sub-Symptom Threshold Exercise Program — Episode Report', 20, y)
+  y += 6
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(...SLATE5)
-  doc.text(
-    `Patient: ${d.patientLabel}   ·   Condition: ${d.condition}   ·   Episode: ${fmt(d.firstDate)} – ${fmt(d.lastDate)}`,
-    20, y,
-  )
-  y += 4.5
-  doc.text(
-    `Supervising clinic: ${d.clinicName}   ·   Report generated: ${fmt(new Date())}   ·   Supports the written report to the referrer (MBS CDM allied-health items)`,
-    20, y,
-  )
-  y += 4
+  doc.text(`Patient: ${d.patientLabel}   ·   ${d.condition}   ·   Episode ${fmt(d.firstDate)} – ${fmt(d.lastDate)}`, 20, y)
+  y += 4.2
+  doc.text(`Supervising clinic: ${d.clinicName}   ·   Generated ${fmt(new Date())}   ·   Supports the CDM written report to the referrer`, 20, y)
+  y += 3.4
   doc.setDrawColor(...TEAL)
   doc.setLineWidth(0.5)
   doc.line(20, y, W - 20, y)
-  y += 9
+  y += 7
 
-  // Program summary
-  y = sectionTitle(doc, 'Program summary', y)
-  y = bullets(doc, [
-    `Graded symptom-threshold tests completed: ${d.testCount} (Buffalo protocol; test terminates at a sustained 3-point symptom rise or volitional exhaustion).`,
-    d.latestHrt != null
-      ? `Latest measured threshold: ${d.latestHrt} bpm — prescribed home-training band ${d.bandLow}–${d.bandHigh} bpm (80–90% of measured threshold).`
-      : 'Latest graded test: threshold not measurable (see interpretation below).',
-    `Latest test interpretation: ${d.interp ?? 'pending re-test'}.`,
-    `Home program: ~20 minutes of aerobic work inside the prescribed band, monitored live from the patient's own heart-rate device.`,
-  ], 22, y, W - 44)
-  y += 3
+  // ── Recommendation (the verdict, first) ─────────────────────────────
+  const recColor = d.clearanceReady ? TEAL : AMBER
+  const recTitle = d.clearanceReady
+    ? 'RECOMMENDATION — referral back for clearance review'
+    : 'RECOMMENDATION — extension of the treatment plan'
+  const recBody = d.clearanceReady
+    ? 'Latest graded re-test provoked no symptom exacerbation to volitional exhaustion (recovered exercise tolerance). Program goal met on objective criteria — recommend medical review for return-to-sport clearance, subject to your assessment and code-of-sport stand-down requirements.'
+    : 'Latest graded test still provokes symptoms below expected capacity — exercise intolerance improving but unresolved. Recommend extending the treatment plan: continued supervised sub-symptom training, re-testing to objective resolution before clearance.'
+  const recLines = doc.splitTextToSize(recBody, W - 52)
+  const recH = 10 + recLines.length * 4.2
+  doc.setDrawColor(...recColor)
+  doc.setLineWidth(0.8)
+  doc.roundedRect(20, y, W - 40, recH, 2, 2, 'S')
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...recColor)
+  doc.text(recTitle, 24, y + 6)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.setTextColor(...SLATE8)
+  doc.text(recLines, 24, y + 11)
+  y += recH + 7
 
-  // Trajectory chart
-  y = sectionTitle(doc, 'Measured threshold trajectory', y)
+  // ── Key numbers strip ────────────────────────────────────────────────
+  doc.setFontSize(9)
+  doc.setTextColor(...SLATE8)
+  const pct = d.sessionsTotal > 0 ? Math.round((d.sessionsVerified / d.sessionsTotal) * 100) : 0
+  doc.setFont('helvetica', 'bold')
+  doc.text(
+    `${d.testCount} graded tests   ·   latest threshold ${d.latestHrt != null ? `${d.latestHrt} bpm (band ${d.bandLow}–${d.bandHigh})` : 'not measurable'}   ·   ${d.sessionsTotal} home sessions, ${pct}% sensor-verified   ·   ${d.flares} flare${d.flares === 1 ? '' : 's'}`,
+    20, y,
+  )
+  doc.setFont('helvetica', 'normal')
+  y += 7
+
+  // ── Trajectory ───────────────────────────────────────────────────────
+  y = sectionTitle(doc, 'Measured symptom-threshold trajectory (bpm per graded test)', y)
   const usable = d.traj.filter((p) => typeof p.hrt === 'number') as Array<{ date: string; hrt: number; verified: boolean }>
   if (usable.length >= 2) {
-    const cx = 22, cw = W - 52, ch = 42, cy = y + 2
+    const cx = 24, cw = W - 56, ch = 30, cy = y + 3
     const vals = usable.map((p) => p.hrt)
     const mn = Math.min(...vals) - 8, mx = Math.max(...vals) + 8
     const X = (i: number) => cx + (i / (usable.length - 1)) * cw
     const Y = (v: number) => cy + ch - ((v - mn) / (mx - mn || 1)) * ch
     doc.setDrawColor(...TEAL)
     doc.setLineWidth(0.6)
-    for (let i = 1; i < usable.length; i++) {
-      doc.line(X(i - 1), Y(usable[i - 1].hrt), X(i), Y(usable[i].hrt))
-    }
+    for (let i = 1; i < usable.length; i++) doc.line(X(i - 1), Y(usable[i - 1].hrt), X(i), Y(usable[i].hrt))
     doc.setFontSize(8)
     for (let i = 0; i < usable.length; i++) {
-      const p = usable[i]
-      if (p.verified) doc.setFillColor(...TEAL)
+      const pnt = usable[i]
+      if (pnt.verified) doc.setFillColor(...TEAL)
       else doc.setFillColor(148, 163, 184)
-      doc.circle(X(i), Y(p.hrt), 1.4, 'F')
+      doc.circle(X(i), Y(pnt.hrt), 1.3, 'F')
+      doc.setFont('helvetica', 'bold')
       doc.setTextColor(...SLATE8)
-      doc.text(String(p.hrt), X(i), Y(p.hrt) - 3, { align: 'center' })
+      doc.text(String(pnt.hrt), X(i), Y(pnt.hrt) - 2.6, { align: 'center' })
+      doc.setFont('helvetica', 'normal')
       doc.setTextColor(...SLATE5)
-      doc.text(new Date(p.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }), X(i), cy + ch + 5, { align: 'center' })
+      doc.text(new Date(pnt.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }), X(i), cy + ch + 4.5, { align: 'center' })
     }
-    y = cy + ch + 9
-    doc.setFontSize(8)
+    y = cy + ch + 8
+    doc.setFontSize(7.5)
     doc.setTextColor(...SLATE5)
-    doc.text('Teal points: sensor-verified measurements. Grey: unverified source. Values are the symptom-threshold heart rate (bpm) at each graded test.', 22, y)
-    y += 8
+    doc.text('Teal = sensor-verified · grey = unverified source', 24, y)
+    y += 6
   } else {
-    y = bullets(doc, ['Fewer than two measured thresholds recorded — the trajectory chart is produced from the second graded test onward.'], 22, y, W - 44)
-    y += 3
+    doc.setFontSize(8.5)
+    doc.setTextColor(...SLATE5)
+    doc.text('Chart available from the second graded test.', 24, y)
+    y += 6
   }
 
-  // table renderer: header row + zebra data rows
+  // ── Tables ───────────────────────────────────────────────────────────
   const table = (headers: string[], widths: number[], rows: string[][], startY: number): number => {
     let ty = startY
     const x0 = 20
-    doc.setFontSize(8.5)
+    doc.setFontSize(8)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(...SLATE5)
     let x = x0
     headers.forEach((h, i) => { doc.text(h, x + 1.5, ty); x += widths[i] })
-    ty += 1.6
+    ty += 1.4
     doc.setDrawColor(203, 213, 225)
     doc.setLineWidth(0.25)
     doc.line(x0, ty, x0 + widths.reduce((a, b) => a + b, 0), ty)
-    ty += 4.2
+    ty += 3.9
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...SLATE8)
     for (const row of rows) {
       x = x0
       row.forEach((cell, i) => { doc.text(cell, x + 1.5, ty); x += widths[i] })
-      ty += 4.6
+      ty += 4.1
     }
-    return ty + 2
+    return ty + 1.5
   }
 
-  // Graded tests — symptom data
   y = sectionTitle(doc, 'Graded tests — symptom data', y)
   y = table(
     ['Date', 'Resting sx', 'Sx at end', 'Rise', 'HRt (bpm)', 'Result', 'HR source'],
-    [24, 22, 21, 14, 22, 44, 22],
-    d.tests.map((t) => [
+    [24, 22, 21, 14, 22, 45, 21],
+    d.tests.slice(-6).map((t) => [
       new Date(t.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
       t.restingSx != null ? `${t.restingSx}/10` : '—',
       t.endSx != null ? `${t.endSx}/10` : '—',
       t.restingSx != null && t.endSx != null ? `+${Math.max(0, t.endSx - t.restingSx)}` : '—',
       t.hrt != null ? String(t.hrt) : '—',
-      (t.interpretation ?? '—').replace('no-intolerance', 'no intolerance (recovered)').replace('intolerance', 'intolerance'),
+      (t.interpretation ?? '—').replace('no-intolerance', 'no intolerance (recovered)'),
       t.verified ? 'verified' : 'unverified',
     ]),
     y,
   )
-  y += 2
+  y += 3
 
-  // Recent home sessions — symptom data
-  y = sectionTitle(doc, `Home sessions — symptom data (last ${d.sessionRows.length} of ${d.sessionsTotal})`, y)
+  const recent = d.sessionRows.slice(-8)
+  y = sectionTitle(doc, `Home sessions — symptom data (last ${recent.length} of ${d.sessionsTotal})`, y)
   y = table(
     ['Date', 'Pre sx', 'Peak sx', 'Rise', 'Minutes', 'HR', 'Flare'],
     [24, 18, 18, 14, 18, 24, 18],
-    d.sessionRows.map((r) => [
+    recent.map((r) => [
       new Date(r.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
       r.pre != null ? `${r.pre}/10` : '—',
       r.peak != null ? `${r.peak}/10` : '—',
@@ -302,76 +319,32 @@ export function renderGpReportPdf(d: GpReportData): Buffer {
     ]),
     y,
   )
-  doc.setFontSize(8)
+  doc.setFontSize(7.5)
   doc.setTextColor(...SLATE5)
   doc.text(
-    `Totals: ${d.sessionsTotal} sessions over ${d.weeks} week${d.weeks === 1 ? '' : 's'} (~${(d.sessionsTotal / d.weeks).toFixed(1)}/wk) · ${d.sessionsVerified} sensor-verified (${d.sessionsTotal > 0 ? Math.round((d.sessionsVerified / d.sessionsTotal) * 100) : 0}%) · ${d.flares} flare${d.flares === 1 ? '' : 's'} · sessions auto-stop at a 2-point rise · progression advances on verified clean sessions only`,
+    `~${(d.sessionsTotal / d.weeks).toFixed(1)} sessions/week over ${d.weeks} week${d.weeks === 1 ? '' : 's'} · sessions auto-stop at a 2-point symptom rise · band progression advances only on verified, symptom-clean sessions`,
     20, y, { maxWidth: W - 40 },
   )
-  y += 10
+  y += 9
 
-  // second page if the recommendation won't fit
-  if (y > 240) { doc.addPage(); y = 24 }
-
-  // Recommendation — compact
-  const recColor = d.clearanceReady ? TEAL : AMBER
-  const recTitle = d.clearanceReady
-    ? 'Recommendation: referral back for clearance review'
-    : 'Recommendation: extension of the treatment plan'
-  const recBody = d.clearanceReady
-    ? [
-        'Latest re-test: no symptom exacerbation to volitional exhaustion — recovered exercise tolerance; program goal met on objective criteria.',
-        'Recommend medical review for clearance to return to sport, subject to your assessment and code-of-sport stand-down requirements.',
-      ]
-    : [
-        'Latest test still provokes symptoms below expected capacity — exercise intolerance improving but unresolved (trajectory above).',
-        'Recommend extension of the treatment plan: continued supervised sub-symptom training with re-testing to objective resolution before clearance.',
-      ]
-  doc.setDrawColor(...recColor)
-  doc.setLineWidth(0.7)
-  const boxTop = y
-  let by = y + 7
-  doc.setFontSize(10.5)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(...recColor)
-  doc.text(recTitle, 24, by)
-  doc.setFont('helvetica', 'normal')
-  by += 6
-  doc.setFontSize(9.5)
-  doc.setTextColor(...SLATE8)
-  for (const line of recBody) {
-    const lines = doc.splitTextToSize(line, W - 56)
-    doc.setFillColor(...recColor)
-    doc.circle(25.2, by - 1.2, 0.8, 'F')
-    doc.text(lines, 28.5, by)
-    by += lines.length * 4.4 + 1.6
-  }
-  doc.roundedRect(20, boxTop, W - 40, by - boxTop + 2, 2, 2, 'S')
-  y = by + 12
-
-  // Signature
+  // ── Signature ────────────────────────────────────────────────────────
+  const sy = Math.min(Math.max(y + 4, 252), 262)
   doc.setDrawColor(148, 163, 184)
   doc.setLineWidth(0.3)
-  doc.line(20, y, 95, y)
-  doc.setFontSize(8.5)
+  doc.line(20, sy, 95, sy)
+  doc.setFontSize(8)
   doc.setTextColor(...SLATE5)
-  doc.text('Supervising clinician — name, signature, date', 20, y + 4)
+  doc.text('Supervising clinician — name, signature, date', 20, sy + 3.8)
 
-  // Subtle CEA footer
+  // ── Subtle CEA footer ────────────────────────────────────────────────
   const fy = 285
   doc.setDrawColor(...TEAL)
   doc.setLineWidth(0.4)
   doc.line(20, fy - 5, W - 20, fy - 5)
   doc.setFontSize(7.5)
   doc.setTextColor(...SLATE5)
-  doc.text(
-    'Generated by SST Trainer  ·  Concussion Education Australia  ·  concussion-education-australia.com',
-    20, fy,
-  )
-  doc.text(
-    'Decision-support only — this report is not a diagnosis or clearance. The supervising clinician reviews and signs before transmission.',
-    20, fy + 3.6,
-  )
+  doc.text('Generated by SST Trainer  ·  Concussion Education Australia  ·  concussion-education-australia.com', 20, fy)
+  doc.text('Decision-support only — not a diagnosis or clearance. The supervising clinician reviews and signs before transmission.', 20, fy + 3.6)
 
   return Buffer.from(doc.output('arraybuffer'))
 }
