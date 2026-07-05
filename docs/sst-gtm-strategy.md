@@ -4,6 +4,47 @@
 dive (delivery-gap research, in flight) — the need case must be grounded in
 cited numbers about what clinics do today, not product-outward reasoning.**
 
+## 0. THE GROUNDED NEED CASE (deep-research verified, 2026-07-05)
+All claims 3-0 adversarially verified; sources in the research output.
+
+**The delivery gap, in numbers:**
+- Guideline care = BCTT-measured HRt → 80–90% band, ~20 min/day, 6 of 7
+  days (Amsterdam 2023 first-line). Real-world practice substitutes
+  age-estimated HR targets and symptom self-adjustment because Buffalo
+  testing is impractical outside clinic (high-grade treadmill, time), and
+  providers are documented as often unaware of the guidelines.
+- Between-visit monitoring today is a PAPER DIARY, an optional phone call,
+  and re-tests at weeks 3/6/9. HR is watched only during in-clinic sessions.
+- **Adherence is the failure point with a measured cost: only 61% of
+  adolescents met even two-thirds of prescribed SSTAE volume — and the
+  adherent recovered in a median 12 days vs 21.5 for the non-adherent
+  (p=0.016, PMC9378725).** Home-exercise adherence in physio generally
+  runs as low as 50%.
+- **Nobody sells the fix**: CCMI documents the in-clinic Buffalo test but
+  ships no HR-guided home supervision; Physitrack is generic HEP software;
+  Rhea's own site markets symptoms going "undetected for weeks between
+  appointments" yet does not claim measured-HRt positioning. The
+  measured-threshold home-supervision slot is EMPTY.
+
+**The step function**: the one variable worth ~10 days of recovery
+(adherence to the measured-band dose) is invisible in today's workflow.
+SST Trainer makes it visible and self-enforcing with zero added clinic
+time. That is why a clinician needs it — not features, the 12-vs-21.5.
+
+### T1 rebuilt on the money number
+Subject: the other 39%
+> In the adolescent sub-threshold exercise data, patients who actually did
+> their prescribed sessions recovered in a median 12 days. The ones who
+> didn't took 21.5. Nearly 4 in 10 didn't — and with a paper diary, you
+> find out at re-test.
+>
+> SST Trainer makes the dose visible: their own watch holds the measured
+> band at home, every session verifies itself, flares flag to you same-day.
+>
+> CCMI doesn't do this. Physitrack doesn't. Symptom trackers don't.
+>
+> Onboarding founding clinics now — reply "interested."
+
 ## 1. The one insight everything hangs off
 The competitor is not CCMI or Rhea. **The competitor is verbal advice and hope.**
 Concussion-literate clinicians already prescribe sub-symptom aerobic exercise —
