@@ -5731,6 +5731,11 @@ export default function AnalyticsDashboard() {
    the SST sequence ships in the prospect engine. (owner 2026-07-06) */
 function SstOutreachTab() {
   const [data, setData] = useState<{
+    pipeline?: {
+      engineByStatus: Array<{ status: string; n: number }>
+      seed: Array<{ country: string; source: string; n: number }>
+      seedList: Array<{ name: string; city: string; country: string; source: string; qualification: string; status: string }>
+    }
     summary: {
       provisioned: number; activated: number; activationRate: number; dark14: number
       totalPatients: number; sessionsThisWeek: number
@@ -5775,6 +5780,49 @@ function SstOutreachTab() {
           </div>
         ))}
       </div>
+
+      {data.pipeline && (data.pipeline.engineByStatus.length > 0 || data.pipeline.seedList.length > 0) && (
+        <div className="card p-0 overflow-hidden">
+          <div className="px-4 pt-4 pb-2">
+            <SectionTitle title="Target pipeline" subtitle="Engine prospects tagged SST-fit (sendable once the sequence loads) + researched AU/NZ seed targets awaiting email enrichment" />
+          </div>
+          <div className="px-4 pb-3 flex flex-wrap gap-2 text-[11px]">
+            {data.pipeline.engineByStatus.map((r) => (
+              <span key={r.status} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-600">
+                engine · {r.status}: <span className="tabular-nums font-bold text-[var(--foreground)]">{r.n}</span>
+              </span>
+            ))}
+            {data.pipeline.seed.map((r) => (
+              <span key={`${r.country}-${r.source}`} className="rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 font-semibold text-teal-700">
+                seed · {r.country} {r.source}: <span className="tabular-nums font-bold">{r.n}</span>
+              </span>
+            ))}
+          </div>
+          <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-[rgba(13,115,119,0.05)] sticky top-0">
+                <tr>
+                  {['Target', 'City', 'Country', 'Source', 'Why qualified', 'Status'].map((h) => (
+                    <th key={h} className="px-3 py-2.5 text-left text-[10px] uppercase tracking-wider text-[var(--muted-foreground)] font-bold">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.pipeline.seedList.map((t) => (
+                  <tr key={`${t.name}-${t.city}`} className="border-t border-slate-100 hover:bg-slate-50/60">
+                    <td className="px-3 py-2 font-semibold text-[var(--foreground)]">{t.name}</td>
+                    <td className="px-3 py-2 text-[var(--muted-foreground)]">{t.city}</td>
+                    <td className="px-3 py-2 text-[var(--muted-foreground)]">{t.country}</td>
+                    <td className="px-3 py-2"><span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">{t.source}</span></td>
+                    <td className="px-3 py-2 text-[var(--muted-foreground)] max-w-[320px]">{t.qualification}</td>
+                    <td className="px-3 py-2 text-[var(--muted-foreground)]">{t.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="card p-0 overflow-hidden">
         <div className="px-4 pt-4 pb-2">

@@ -69,7 +69,24 @@ export async function GET(req: NextRequest) {
       (c) => !c.first_session_at && Date.now() - new Date(c.created_at).getTime() > 14 * 86_400_000,
     ).length
 
+    // SST prospect pipeline: engine prospects tagged sst_target + the
+    // researched seed pen (sst_targets — pre-enrichment, no emails yet).
+    let pipeline: { engineByStatus: Array<{ status: string; n: number }>; seed: Array<{ country: string; source: string; n: number }>; seedList: Array<{ name: string; city: string; country: string; source: string; qualification: string; status: string }> } = { engineByStatus: [], seed: [], seedList: [] }
+    try {
+      const { rows: engineByStatus } = await sql<{ status: string; n: number }>`
+        SELECT status, COUNT(*)::int AS n FROM prospect_clinics WHERE sst_target GROUP BY status ORDER BY n DESC
+      `
+      const { rows: seed } = await sql<{ country: string; source: string; n: number }>`
+        SELECT country, source, COUNT(*)::int AS n FROM sst_targets GROUP BY country, source ORDER BY country, n DESC
+      `
+      const { rows: seedList } = await sql<{ name: string; city: string; country: string; source: string; qualification: string; status: string }>`
+        SELECT name, city, country, source, qualification, status FROM sst_targets ORDER BY country, source, name
+      `
+      pipeline = { engineByStatus, seed, seedList }
+    } catch { /* tables appear after first prospecting run */ }
+
     return NextResponse.json({
+      pipeline,
       summary: {
         provisioned,
         activated,
