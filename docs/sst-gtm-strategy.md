@@ -195,6 +195,13 @@ Subject: "Closing the founding group"
 computed from actual founding count — never faked (ACL + honesty doctrine).
 
 ## 5. The offer (founding partnership)
+**PRICING PROPOSAL (owner, 2026-07-06 — pending final):** 30-day free
+trial · $29/mo individual clinician · $49/mo per clinic (all clinicians,
+unlimited patients) · founding clinics lock their rate for good · prices
+rise with traction (lock honoured — ACL). Supersedes the A$99/mo framing
+on /platform/pricing once confirmed — that page must be updated BEFORE
+any send that names a price. Only the T2 warm-pricing variant names it.
+
 - Set up now: clinic code, patient links, QR, invites, hub — same week.
 - No charge through the founding period; **A$99/month locked for life** at
   paid launch (Clinical Testing becomes a subscription — owner, 2026-07-05).
