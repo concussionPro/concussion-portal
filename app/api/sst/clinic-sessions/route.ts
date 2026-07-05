@@ -94,6 +94,19 @@ export async function GET(request: NextRequest) {
         sessionCount: p.trainings.length,
         // 'no-intolerance' on a re-test = recovered → clinician clearance review
         clearanceReady: interp === 'no-intolerance',
+        // GP-report trigger (owner 2026-07-06): Medicare CDM funds ~5 allied
+        // health services/yr, with a written report owed to the referring GP
+        // after the last one. The app doesn't record clinic visits, so the
+        // proxy is clinic ENCOUNTER-EQUIVALENTS: each graded test + each
+        // distinct training week (≈ one weekly review). Due at ≥5, or the
+        // moment the patient is clearance-ready (report = the referral back).
+        gpReportDue:
+          interp === 'no-intolerance' ||
+          p.thresholds.length +
+            new Set(p.trainings.map((t) => {
+              const d = new Date(t.created_at)
+              return `${d.getFullYear()}-${Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000 + 4) / 7)}`
+            })).size >= 5,
         lastActivity: (p.trainings[p.trainings.length - 1] ?? latest)?.created_at ?? null,
       }
     })

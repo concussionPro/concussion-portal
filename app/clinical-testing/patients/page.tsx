@@ -14,6 +14,7 @@ import {
   Users,
   LayoutDashboard,
   Flag,
+  FileText,
 } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
 import { isOwnerEmail } from '@/lib/owner'
@@ -49,6 +50,7 @@ interface Clinic {
 interface PatientRow {
   name: string
   condition: string | null
+  gpReportDue?: boolean
   hrt: number | null
   bandLow: number | null
   bandHigh: number | null
@@ -73,7 +75,7 @@ function sessionFlare(s: Record<string, unknown>): boolean {
   return pre != null && peak != null && peak - pre >= 2
 }
 
-function PatientCard({ patient }: { patient: PatientRow }) {
+function PatientCard({ patient, clinic }: { patient: PatientRow; clinic: Clinic }) {
   const [open, setOpen] = useState(false)
   const recent = [...patient.sessions].slice(-6).reverse()
 
@@ -91,6 +93,11 @@ function PatientCard({ patient }: { patient: PatientRow }) {
             {patient.clearanceReady && (
               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                 <Flag className="h-3 w-3" /> clearance review
+              </span>
+            )}
+            {patient.gpReportDue && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700">
+                <FileText className="h-3 w-3" /> GP report due
               </span>
             )}
           </p>
@@ -122,6 +129,18 @@ function PatientCard({ patient }: { patient: PatientRow }) {
         <div className="border-t border-black/5 px-5 pb-5 pt-4">
           {/* the instrument: serial measured HRt with provenance */}
           <SstTrajectory points={patient.hrtTrajectory} />
+
+          {/* Referring-practitioner report (owner 2026-07-06): auto-built from
+              the episode — clearance referral or extend-plan recommendation. */}
+          <a
+            href={`/api/sst/gp-report?code=${encodeURIComponent(clinic.code)}&k=${encodeURIComponent(clinic.viewKey)}&patient=${encodeURIComponent(patient.name)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            {patient.clearanceReady ? 'GP report — clearance referral' : 'GP report — episode summary'}
+          </a>
 
           {recent.length > 0 && (
             <div className="mt-4">
@@ -326,7 +345,7 @@ function Shell() {
           {state === 'ready' && patients && patients.length > 0 && (
             <div className="flex flex-col gap-3">
               {patients.map((p) => (
-                <PatientCard key={p.name} patient={p} />
+                clinic && <PatientCard key={p.name} patient={p} clinic={clinic} />
               ))}
             </div>
           )}
