@@ -33,7 +33,15 @@ time. That is why a clinician needs it — not features, the 12-vs-21.5.
 
 ### T1 — LOCKED COPY (owner-corrected 2026-07-06: plain cold-B2B, facts + offer, complete sentences, no cryptic subjects)
 
-Subject: Compliance in concussion exercise rehab
+Subjects (benefit-led, engine rotates variants; owner direction 2026-07-06):
+- "Data-backed concussion rehab" (safe, lead variant)
+- "Compliant patients recover ~10 days faster" (quantified, attributed to
+  compliance per the study — NOT to the app; defensible)
+- "Verified home rehab for concussion patients"
+- "Measurable compliance in concussion rehab"
+BLOCKED: invented effectiveness percentages ("20% more effective") — no
+source → AHPRA advertising exposure. Any quantified subject must trace to
+a citable figure and attribute it to what the study measured.
 
 > Hi {firstName},
 >
