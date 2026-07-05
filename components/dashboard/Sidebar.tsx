@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { ProgressRing } from './ProgressRing'
 import { useProgress } from '@/contexts/ProgressContext'
 import { useSession } from '@/contexts/SessionContext'
+import { isOwnerEmail } from '@/lib/owner'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -17,12 +18,14 @@ const navItems: Array<{
   href: string
   soon?: boolean
   paidOnly?: boolean
+  ownerOnly?: boolean
 }> = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: BookOpen, label: 'Learning Suite', href: '/learning' },
   // Clinical Testing = the live patient tools (SST Trainer + pre-season
-  // baseline), primary in the paid toolkit — owner directive 2026-07-04.
-  { icon: Stethoscope, label: 'Clinical Testing', href: '/clinical-testing', paidOnly: true },
+  // baseline). PRE-RELEASE: ownerOnly until the subscription launch
+  // (owner directive 2026-07-05) — hidden from every other dashboard.
+  { icon: Stethoscope, label: 'Clinical Testing', href: '/clinical-testing', paidOnly: true, ownerOnly: true },
   { icon: FileText, label: 'Clinical Toolkit', href: '/clinical-toolkit', paidOnly: true },
   { icon: Mail, label: 'Outreach Kit', href: '/outreach-kit', paidOnly: true },
   // Admin Workflow removed: Hub Pack material (clinic operations), not
@@ -142,7 +145,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1">
-          {navItems.map((item) => {
+          {navItems.filter((item) => !item.ownerOnly || isOwnerEmail(sessionUser?.email)).map((item) => {
             const isActive =
               pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
             const isLocked = item.paidOnly && user?.accessLevel === 'preview'

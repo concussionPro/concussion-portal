@@ -8,6 +8,8 @@ import PlatformApp from '@/app/platform/app/page'
 import Link from 'next/link'
 import { Lock, ArrowRight, ChevronLeft } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
+import { isOwnerEmail } from '@/lib/owner'
+import { ClinicalTestingComingSoon } from '@/components/clinical/ClinicalTestingComingSoon'
 import { SstWatchVisual } from '@/components/clinical/InstrumentVisuals'
 
 /**
@@ -42,6 +44,12 @@ function Shell() {
         </main>
       </div>
     )
+  }
+
+  // PRE-RELEASE (owner directive 2026-07-05): only the owner's test dash
+  // sees the suite until the subscription launch — regardless of tier.
+  if (!isOwnerEmail(user?.email)) {
+    return <ClinicalTestingComingSoon />
   }
 
   if (isPreview) {
