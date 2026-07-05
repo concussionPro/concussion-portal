@@ -119,6 +119,22 @@ in-clinic-only testing (CCMI), supervision continues after the patient leaves.
 Recovery-duration outcomes are always attributed to the literature (Leddy
 2019; Amsterdam 2023), never to the app.
 
+## 3a. SCALE REQUIREMENT (owner 2026-07-06): ~1,000 adopting clinics
+Niche lists are seeds, not the business: 24 NZ ACC suppliers ≈ A$1-2k MRR
+at full adoption. The 1k-clinic path prices at founding A$49 ≈ A$49k MRR
+(list-rate later cohorts >A$100k). Therefore the ICP is EVERY AU/NZ clinic
+that sees concussion patients and manages them with advice — all sports/
+MSK physio, osteo, chiro-with-sports, EP practices — not just
+concussion-branded clinics. Funnel math at doctrine reply-rates needs a
+5,000-10,000 verified-contact universe:
+  1. Engine base (Apollo, Hunter-verified): broadened tagging DONE —
+     every allied-health prospect is SST-targetable.
+  2. Apollo re-import #2 with the hardened clinical gate: physio/osteo/
+     chiro/EP, AU+NZ (~2,000-4,000 net-new estimated).
+  3. Directory sweeps: APA find-a-physio (per-postcode), PNZ/SEPNZ, ACC
+     supplier staff, Google Places "physiotherapy" AU/NZ metros.
+  4. Course-grad + free-course base: warm cross-sell lane.
+
 ## 3. Who we pitch (in order)
 1. **Course graduates + warm base** — already protocol-trained; the portal
    already teaches the tools as applied science. Founding cohort seed. Zero CAC.
@@ -195,7 +211,19 @@ Subject: "Closing the founding group"
 computed from actual founding count — never faked (ACL + honesty doctrine).
 
 ## 5. The offer (founding partnership)
-**PRICING PROPOSAL (owner, 2026-07-06 — pending final):** 30-day free
+**TRIAL (owner 2026-07-06, LOCKED): "Your first 5 patients are free."**
+Usage-based: 5 patient episodes (distinct patient, ≥1 graded test) per
+clinic code — no card, no clock. Calendar trials expire mid-episode;
+patient-count self-scales, the trial metric IS the activation metric, and
+patient #6 converts the clinic at the moment of need. 14-day-dark
+concierge nudge stays. Founding clinics convert onto the founding lock.
+
+**PRICING (researched 2026-07-06, pending owner sign-off):** List A$79
+solo · A$179 clinic (≤5 clinicians) · A$299 large (6–15) · chains/ACC
+per-site. FOUNDING LOCK FOR LIFE: A$29 / A$49 / A$99. Grounded: Physitrack
+A$31/practitioner; CCMI ~$125/mo + $10/pt; Cliniko US$45/95/145 bands;
+VALD gives HEP free → price as concussion infrastructure. Original flat
+proposal (superseded):** 30-day free
 trial · $29/mo individual clinician · $49/mo per clinic (all clinicians,
 unlimited patients) · founding clinics lock their rate for good · prices
 rise with traction (lock honoured — ACL). Supersedes the A$99/mo framing
@@ -209,6 +237,17 @@ any send that names a price. Only the T2 warm-pricing variant names it.
   the referral directory launches (the retention moat).
 - Cap the cohort at a REAL number (owner to set: suggest 25). Scarcity is
   only used if enforced.
+
+## 5a. REVERSE FUNNEL (owner 2026-07-06): SST feeds the course
+Every SST clinic signup gets a LEARNING-PORTAL ACCOUNT: the Clinical
+Testing suite (SST + baseline, their clinic code) is INCLUDED with their
+subscription/trial; every other portal asset — the 8 modules, toolkit,
+reference library — renders purchase-gated (show-then-sell cards already
+built). The tool is the acquisition wedge; the course is the upsell.
+Build at founding launch: provisioning creates/links a portal user with an
+sst entitlement; /clinical-testing gates become (paid-course OR
+sst-entitled OR owner); sidebar shows Clinical Testing unlocked + the rest
+locked → /pricing.
 
 ## 6. Dust-proofing (product commitments the marketing relies on)
 1. **Weekly clinic digest email** — "3 patients training · 1 flare to review

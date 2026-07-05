@@ -23,12 +23,12 @@ city searches). Nothing fabricated. Companion to sst-gtm-strategy.md.
 2. **AU/NZ multi-site groups** — Lifecare (national chain, runs a CCMI
    service line), Physio Inq (franchise), The Headache Clinic NZ (10 sites),
    Advanced Vestibular Clinics (5 sites + telehealth). One deal, many sites.
-3. **CCMI-affiliated clinics (~32 AU/NZ)** — PROVEN buyers of concussion
-   SaaS. Pitch SST as the exercise-rehab layer their platform doesn't
-   provide (measured HRt + home supervision), never a replacement.
-   CCMI has NO QLD/SA footprint — Brisbane/Adelaide independents are
-   unlocked targets. CXDX (cxdx.au) is CCMI's AU/NZ channel partner — watch
-   or court.
+3. **CCMI-affiliated clinics: DISQUALIFIED from cold pitch (owner
+   2026-07-06)** — platform-locked; the reply is "we use CCMI." Held at
+   status=disqualified for a future switch/ecosystem play only. THE ICP IS
+   THE TOOL-LESS CLINIC — any clinic managing concussion with verbal
+   advice and no supervision tool. CCMI's absence in QLD/SA makes
+   Brisbane/Adelaide the densest tool-less ground.
 
 ## NZ copy rules (compliance)
 - NO Medicare references in NZ-facing copy — ACC framing instead (referral
