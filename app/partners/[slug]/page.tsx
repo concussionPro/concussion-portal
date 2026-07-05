@@ -66,7 +66,9 @@ export default async function PartnerPage({ params }: PageProps) {
   const h = await headers()
   const userAgent = h.get('user-agent') ?? undefined
   const viewerIp = h.get('x-forwarded-for')?.split(',')[0]?.trim()
-  recordPartnerView({ partnerId: partner.id, viewerIp, userAgent, section: 'landing' })
+  // AWAITED (2026-07-05): fire-and-forget writes were dropped when the
+  // lambda froze post-response — landing views never landed in the table.
+  await recordPartnerView({ partnerId: partner.id, viewerIp, userAgent, section: 'landing' })
     .catch((err) => console.error('[Partner view tracking failed]', err))
 
   return (

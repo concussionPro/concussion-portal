@@ -401,6 +401,12 @@ function EndOfTrialPitch({
         <ArrowLeft className="w-3 h-3" />
         Back to Learning Suite
       </Link>
+      <Link
+        href={`/p/${slug}${kq}#pricing`}
+        className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-[13px] font-bold text-white hover:opacity-90 transition-opacity"
+      >
+        See pricing for your clinic →
+      </Link>
     </section>
   )
 }

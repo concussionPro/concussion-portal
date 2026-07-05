@@ -69,7 +69,7 @@ export default async function ProspectLearningSuite({ params, searchParams }: Pa
       <main className="flex-1 ml-0 md:ml-64">
         <div data-track-section="learning-suite" className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <Link
-            href={`/p/${clinic.slug}${kq}`}
+            href={`/p/${clinic.slug}${kq}#pricing`}
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors mb-4"
           >
             <ArrowLeft className="w-3 h-3" />

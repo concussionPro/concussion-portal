@@ -12,7 +12,7 @@
 import { useState } from 'react'
 import {
   Home, BookOpen, Brain, Activity, FileText, Library, BookMarked,
-  ExternalLink, TrendingUp, Stethoscope, Lock, Menu, X,
+  ExternalLink, TrendingUp, Stethoscope, Lock, Menu, X, Tag,
 } from 'lucide-react'
 
 export type ActiveSection =
@@ -154,6 +154,11 @@ function SidebarBody({
         <Item label="Learning Suite" icon={BookOpen}
           href={active === 'learning' ? undefined : `${portalBase}/learning${ak}`}
           active={active === 'learning'} onClick={onLinkClick} />
+        {/* Persistent pricing path (2026-07-05): pricing sat ~7 sections deep
+            with the dominant CTAs navigating away first — real prospects
+            (106s dwell) left without EVER seeing it. Pricing LOUD doctrine. */}
+        <Item label="Investment & Pricing" icon={Tag}
+          href={`${portalBase}${ak}#pricing`} onClick={onLinkClick} />
         {/* Free tools carry ?prospect={slug} so the engagement engine can
             attribute signups back to this clinic (users.source_prospect_slug). */}
         <Item label="SCAT Forms" icon={Activity} href={`/scat-forms?prospect=${encodeURIComponent(slug)}`} external onClick={onLinkClick} />
