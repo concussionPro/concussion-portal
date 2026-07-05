@@ -66,6 +66,30 @@ subject a clinic owner parses instantly (no teaser subjects); facts then
 the offer's value; complete sentences — copy must never read half-finished.
 Claims hedges: 12/21.5 = adolescent SRC cohort, associational.
 
+## 1a. What clinicians WANT (the buying motives — needs ≠ wants)
+The delivery-gap numbers are the NEED. Nobody buys a need. The wants, in
+order of buying power for a private-practice owner:
+
+1. **To look good when it counts** — recoveries their patients feel and
+   talk about; a recovery curve they can show a parent or coach. Word of
+   mouth and GP referrals follow visible competence.
+2. **Certainty on the scary decision** — clearance. Kids, contact sport,
+   liability. They want to walk into the return-to-play call feeling
+   covered by something objective, not a symptom conversation.
+3. **Expert status** — to be THE concussion clinic in their area. Tools
+   patients haven't seen elsewhere confer it instantly ("put your watch
+   on — I'll see every session you do at home").
+4. **Full books without chasing** — patients who complete their course of
+   care instead of ghosting after visit two; clubs whose athletes route
+   back to them.
+5. **Zero added admin** — anything that adds unpaid minutes loses, no
+   matter how clinically right it is.
+
+Mapping: trajectory + same-day flare flags → wants 1&2. Watch-verified
+sessions in front of the patient → want 3. Baseline club links + verified
+completion → want 4. Decision-pull notifications, no dashboards-to-check
+→ want 5. COPY RULE: lead with a want, prove with the need numbers.
+
 ## 1. The one insight everything hangs off
 The competitor is not CCMI or Rhea. **The competitor is verbal advice and hope.**
 Concussion-literate clinicians already prescribe sub-symptom aerobic exercise —
